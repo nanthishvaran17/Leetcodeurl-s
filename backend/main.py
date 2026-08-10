@@ -45,19 +45,32 @@ app.include_router(audit.router)
 app.include_router(public.router)
 
 # Mount Static File Directories
-REPORTS_DIR = os.path.join(os.path.dirname(__file__), "reports")
-os.makedirs(REPORTS_DIR, exist_ok=True)
-app.mount("/static/reports", StaticFiles(directory=REPORTS_DIR), name="reports")
+is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")
+if is_vercel:
+    REPORTS_DIR = "/tmp/reports"
+else:
+    REPORTS_DIR = os.path.join(os.path.dirname(__file__), "reports")
+
+try:
+    os.makedirs(REPORTS_DIR, exist_ok=True)
+    app.mount("/static/reports", StaticFiles(directory=REPORTS_DIR), name="reports")
+except Exception as e:
+    logger.warning(f"Could not mount static reports directory: {e}")
 
 @app.on_event("startup")
 def on_startup():
     logger.info("Initializing database & tables...")
-    seed_database()
-    logger.info("Starting background scheduler...")
     try:
-        start_scheduler()
+        seed_database()
     except Exception as e:
-        logger.warning(f"Scheduler initialization note: {e}")
+        logger.warning(f"Database seed skipped or noted: {e}")
+        
+    if not is_vercel:
+        logger.info("Starting background scheduler...")
+        try:
+            start_scheduler()
+        except Exception as e:
+            logger.warning(f"Scheduler initialization note: {e}")
     logger.info("Backend Application ready and listening!")
 
 from fastapi import WebSocket, WebSocketDisconnect

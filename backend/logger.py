@@ -12,16 +12,14 @@ logger.setLevel(logging.INFO)
 # Formatter
 formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] [%(name)s]: %(message)s")
 
-# File Handler
-file_handler = RotatingFileHandler(LOG_FILE, maxBytes=10*1024*1024, backupCount=5, encoding="utf-8")
-file_handler.setFormatter(formatter)
-file_handler.setLevel(logging.INFO)
-
-# Console Handler
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(formatter)
-console_handler.setLevel(logging.INFO)
-
 if not logger.handlers:
-    logger.addHandler(file_handler)
+    try:
+        os.makedirs(LOG_DIR, exist_ok=True)
+        file_handler = RotatingFileHandler(LOG_FILE, maxBytes=10*1024*1024, backupCount=5, encoding="utf-8")
+        file_handler.setFormatter(formatter)
+        file_handler.setLevel(logging.INFO)
+        logger.addHandler(file_handler)
+    except Exception:
+        pass # Fallback to console logging if filesystem is read-only (e.g. Vercel)
+        
     logger.addHandler(console_handler)
