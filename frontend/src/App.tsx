@@ -69,6 +69,7 @@ export const App: React.FC = () => {
               summaryData={summaryData}
               onViewDashboard={() => setActiveTab('dashboard')}
               onOpenLogin={() => setShowLoginModal(true)}
+              onSelectStudent={handleSelectStudent}
             />
           )}
 

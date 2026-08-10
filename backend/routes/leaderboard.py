@@ -23,12 +23,13 @@ def get_leaderboard(
         joinedload(Student.department),
         joinedload(Student.section),
         joinedload(Student.stats)
-    ).filter(Student.is_active == True)
+    ).filter((Student.is_active == True) | (Student.is_active.is_(None)))
 
     if dept_id:
         query = query.filter(Student.department_id == dept_id)
-    if year_level:
-        query = query.filter(Student.year_level == year_level)
+    if year_level and year_level.strip().upper() not in ['ALL', 'ALL YEARS', '']:
+        from sqlalchemy import func
+        query = query.filter(func.upper(Student.year_level) == year_level.strip().upper())
     if section_id:
         query = query.filter(Student.section_id == section_id)
 

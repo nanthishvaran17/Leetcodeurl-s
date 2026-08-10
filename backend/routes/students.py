@@ -33,7 +33,7 @@ def get_students(
 
     if dept_id:
         query = query.filter(Student.department_id == dept_id)
-    if year_level:
+    if year_level and year_level.strip().upper() not in ['ALL', 'ALL YEARS', '']:
         query = query.filter(func.upper(Student.year_level) == year_level.strip().upper())
     if section_id:
         query = query.filter(Student.section_id == section_id)
@@ -45,11 +45,7 @@ def get_students(
             (Student.username.ilike(s))
         )
 
-    query = query.outerjoin(LeetCodeProfileStats).order_by(
-        func.coalesce(LeetCodeProfileStats.total_solved, 0).desc(),
-        Student.name.asc()
-    )
-    students = query.all()
+    students = query.order_by(Student.name.asc()).all()
     
     if not students:
         return []
@@ -139,6 +135,36 @@ def create_student(
     db.commit()
 
     return StudentOut.from_orm(student)
+
+@router.delete("/{student_id}")
+def delete_student(
+    student_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student record not found.")
+
+    reg_no = student.reg_no
+    name = student.name
+
+    db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id == student_id).delete()
+    db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id == student_id).delete()
+    db.delete(student)
+
+    audit = AuditLog(
+        user_id=current_user.id,
+        user_name=current_user.username,
+        action="DELETE_STUDENT",
+        details=f"Deleted student record {reg_no} ({name})"
+    )
+    db.add(audit)
+    db.commit()
+
+    update_all_rankings_and_badges(db)
+
+    return {"message": f"Successfully deleted student record {reg_no} ({name})"}
 
 @router.post("/import-preview")
 async def import_preview(file: UploadFile = File(...), db: Session = Depends(get_db)):

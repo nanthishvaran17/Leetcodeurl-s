@@ -118,32 +118,35 @@ export const ReportsPage: React.FC = () => {
   return (
     <div className="space-y-8 pb-10 animate-fade-in">
       
-      {/* Top Banner & Action */}
-      <div className="glass-card p-6 md:p-8 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-xl flex flex-wrap items-center justify-between gap-6 relative overflow-hidden">
-        <div className="space-y-1.5 relative z-10 max-w-2xl">
-          <div className="flex items-center space-x-2 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase tracking-wider">
-            <Sparkles className="w-4 h-4 animate-pulse" />
-            <span>Nandha Engineering College Export Suite</span>
+      {/* Header Banner */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-2xl border border-brand-500/30">
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
+          <div className="space-y-3 max-w-2xl">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>NANDHA ENGINEERING COLLEGE EXPORT SUITE</span>
+            </div>
+
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight">
+              Reports & <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Export Center</span>
+            </h1>
+
+            <p className="text-xs md:text-sm text-gray-300 font-bold tracking-wide">
+              Download individual formatted Excel workbooks, executive PDF summaries, and dispatch automated Sunday email reports to management
+            </p>
           </div>
-          <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
-            Reports & Export Center
-          </h2>
-          <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-            Download individual formatted Excel workbooks, executive PDF summaries, and dispatch automated Sunday email reports to management.
-          </p>
+
+          <button
+            onClick={handleSendWeeklyEmail}
+            disabled={isSendingEmail}
+            className="flex items-center space-x-2.5 px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 text-white rounded-2xl text-xs font-black shadow-xl shadow-emerald-500/30 transition-all transform hover:scale-105"
+          >
+            <Mail className={`w-4 h-4 ${isSendingEmail ? 'animate-bounce' : ''}`} />
+            <span>{isSendingEmail ? 'Dispatching Emails...' : '📧 Dispatch Weekly Email Report Now'}</span>
+          </button>
         </div>
-
-        <button
-          onClick={handleSendWeeklyEmail}
-          disabled={isSendingEmail}
-          className="relative z-10 flex items-center space-x-2.5 px-6 py-3.5 bg-gradient-to-r from-indigo-600 to-brand-600 hover:from-indigo-700 hover:to-brand-700 disabled:opacity-50 text-white rounded-2xl text-xs font-extrabold shadow-lg shadow-indigo-600/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
-        >
-          <Mail className={`w-4 h-4 ${isSendingEmail ? 'animate-bounce' : ''}`} />
-          <span>{isSendingEmail ? 'Dispatching Emails...' : '📧 Dispatch Weekly Email Report Now'}</span>
-        </button>
-
-        {/* Subtle background glow */}
-        <div className="absolute -top-24 -right-24 w-64 h-64 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
       </div>
 
       {/* Grid of Standardized Equal-Height Cards */}

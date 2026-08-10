@@ -1,9 +1,11 @@
+import os
 import io
+import shutil
 import datetime
 from typing import Optional
 from sqlalchemy.orm import Session
 
-from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, HRFlowable
@@ -13,9 +15,52 @@ from backend.models import Student, WeeklySession, WeeklySessionSnapshot, Depart
 from backend.config import settings
 from backend.logger import logger
 
+def get_college_logo_path() -> Optional[str]:
+    """
+    Generates and returns the official Nandha Engineering College Emblem logo image for ReportLab PDF generation.
+    """
+    assets_dir = os.path.join(os.path.dirname(__file__), "assets")
+    os.makedirs(assets_dir, exist_ok=True)
+    emblem_path = os.path.join(assets_dir, "nandha_emblem.png")
+
+    # 1. Check if emblem already exists and is valid
+    if os.path.exists(emblem_path) and os.path.getsize(emblem_path) > 500:
+        return emblem_path
+
+    # 2. Check artifact directory for user uploaded image files
+    import glob
+    artifacts_dir = r"C:\Users\Nanth\.gemini\antigravity-ide\brain\c359f76e-577f-48b8-9306-ec7d344b7d1e"
+    if os.path.exists(artifacts_dir):
+        pngs = glob.glob(os.path.join(artifacts_dir, "*.png"))
+        if pngs:
+            pngs.sort(key=os.path.getmtime, reverse=True)
+            for candidate in pngs:
+                if os.path.getsize(candidate) > 500:
+                    try:
+                        shutil.copy(candidate, emblem_path)
+                        return emblem_path
+                    except Exception:
+                        pass
+
+    # 3. Fallback to generator script
+    try:
+        from backend.assets.generate_pdf_logo import generate_nandha_college_logo
+        return generate_nandha_college_logo()
+    except Exception as e:
+        logger.warning(f"Could not auto-generate PDF emblem logo: {e}")
+        if os.path.exists(emblem_path):
+            return emblem_path
+        return None
+
 def generate_pdf_summary_report(db: Session, dept_id: Optional[int] = None) -> bytes:
     """
-    Generates a PDF executive summary report using ReportLab.
+    Generates an official Nandha Engineering College PDF executive summary report using ReportLab.
+    Features:
+    - Official College Logo on the Left
+    - Centered College Header Text
+    - Executive Summary Metrics Box
+    - Top 20 Performers Leaderboard
+    - Clean Professional Formatting (Signatures Removed as requested)
     """
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
@@ -35,25 +80,46 @@ def generate_pdf_summary_report(db: Session, dept_id: Optional[int] = None) -> b
         'DocTitle',
         parent=styles['Heading1'],
         fontName='Helvetica-Bold',
-        fontSize=20,
-        leading=24,
-        textColor=colors.HexColor('#1B365D'),
-        alignment=0
+        fontSize=16,
+        leading=20,
+        textColor=colors.HexColor('#0F172A'),
+        alignment=1
+    )
+
+    address_style = ParagraphStyle(
+        'DocAddress',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=8.5,
+        leading=11,
+        textColor=colors.HexColor('#0284C7'),
+        alignment=1
     )
     
     subtitle_style = ParagraphStyle(
         'DocSubTitle',
         parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=9.5,
+        leading=13,
+        textColor=colors.HexColor('#334155'),
+        alignment=1
+    )
+
+    meta_style = ParagraphStyle(
+        'DocMeta',
+        parent=styles['Normal'],
         fontName='Helvetica',
-        fontSize=10,
-        leading=14,
-        textColor=colors.HexColor('#555555')
+        fontSize=8.5,
+        leading=11,
+        textColor=colors.HexColor('#64748B'),
+        alignment=1
     )
 
     header_cell_style = ParagraphStyle(
         'HeaderCell',
         fontName='Helvetica-Bold',
-        fontSize=10,
+        fontSize=9,
         textColor=colors.white,
         alignment=1
     )
@@ -61,118 +127,155 @@ def generate_pdf_summary_report(db: Session, dept_id: Optional[int] = None) -> b
     cell_style = ParagraphStyle(
         'NormalCell',
         fontName='Helvetica',
-        fontSize=9,
+        fontSize=8.5,
         leading=11,
-        textColor=colors.HexColor('#333333')
+        textColor=colors.HexColor('#334155')
     )
 
     cell_bold_style = ParagraphStyle(
         'BoldCell',
         fontName='Helvetica-Bold',
-        fontSize=9,
+        fontSize=8.5,
         leading=11,
-        textColor=colors.HexColor('#1B365D')
+        textColor=colors.HexColor('#0F172A'),
+        alignment=1
     )
 
-    # 1. Header Section
+    # 1. Header Section - Official Nandha Engineering College Logo & Banner
     dept_obj = db.query(Department).filter(Department.id == dept_id).first() if dept_id else None
-    dept_text = f"Department: {dept_obj.name}" if dept_obj else "All Departments"
+    dept_text = f"Department of {dept_obj.name}" if dept_obj else "Department of Computer Science and Engineering (Cyber Security & IoT)"
 
-    story.append(Paragraph(settings.COLLEGE_NAME.upper(), title_style))
-    story.append(Spacer(1, 4))
-    story.append(Paragraph(f"Weekly LeetCode Session Performance Report & Leaderboard | {dept_text}", subtitle_style))
-    story.append(Paragraph(f"Generated on: {datetime.datetime.now().strftime('%d-%b-%Y %I:%M %p IST')}", subtitle_style))
-    story.append(Spacer(1, 10))
-    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#1B365D'), spaceAfter=15))
+    # Header Paragraphs
+    p_title = Paragraph("NANDHA ENGINEERING COLLEGE (AUTONOMOUS)", title_style)
+    p_address = Paragraph("Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai | Erode - 638 052, Tamil Nadu", address_style)
+    p_dept = Paragraph(dept_text, subtitle_style)
+    p_report = Paragraph("Weekly LeetCode Session Performance Report & Executive Leaderboard", subtitle_style)
+    p_meta = Paragraph(f"Generated on: {datetime.datetime.now().strftime('%d-%b-%Y %I:%M %p IST')}", meta_style)
+
+    header_text_elements = [
+        p_title,
+        Spacer(1, 2),
+        p_address,
+        Spacer(1, 3),
+        p_dept,
+        Spacer(1, 2),
+        p_report,
+        Spacer(1, 2),
+        p_meta
+    ]
+
+    logo_path = get_college_logo_path()
+    if logo_path and os.path.exists(logo_path):
+        try:
+            img = Image(logo_path, width=1.5*inch, height=1.0*inch)
+            header_table = Table([[img, header_text_elements]], colWidths=[1.6*inch, 5.4*inch])
+            header_table.setStyle(TableStyle([
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+                ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+            ]))
+            story.append(header_table)
+        except Exception as e:
+            logger.warning(f"Could not render logo image in PDF: {e}")
+            for el in header_text_elements:
+                story.append(el)
+    else:
+        for el in header_text_elements:
+            story.append(el)
+
+    story.append(Spacer(1, 8))
+    story.append(HRFlowable(width="100%", thickness=2, color=colors.HexColor('#0284C7'), spaceAfter=12))
 
     # 2. Executive Summary Metrics
-    latest_session = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
-    
-    student_query = db.query(Student).filter(Student.is_active == True)
+    student_query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
     if dept_id:
         student_query = student_query.filter(Student.department_id == dept_id)
     students = student_query.all()
     total_students = len(students)
 
-    started_count = 0
-    not_started_count = 0
-    total_progress = 0
-
-    if latest_session:
-        snapshots = db.query(WeeklySessionSnapshot).filter(
-            WeeklySessionSnapshot.session_id == latest_session.id
-        ).all()
-        
-        stud_ids = {s.id for s in students}
-        for sn in snapshots:
-            if sn.student_id in stud_ids:
-                if sn.status == "STARTED":
-                    started_count += 1
-                    total_progress += sn.problems_added
-                else:
-                    not_started_count += 1
-
-    avg_progress = round(total_progress / total_students, 1) if total_students > 0 else 0.0
+    started_count = sum(1 for s in students if s.stats and s.stats.total_solved > 0)
+    not_started_count = total_students - started_count
+    
+    total_solved_sum = sum((s.stats.total_solved if s.stats else 0) for s in students)
+    avg_progress = round(total_solved_sum / max(total_students, 1), 1)
 
     # Top student
     top_student = sorted(students, key=lambda x: (x.stats.total_solved if x.stats else 0), reverse=True)
     top_name = top_student[0].name if top_student else "N/A"
 
     summary_data = [
-        [Paragraph("Total Students", header_cell_style), Paragraph("Started", header_cell_style),
-         Paragraph("Not Started", header_cell_style), Paragraph("Avg Progress", header_cell_style), Paragraph("Top Performer", header_cell_style)],
-        [Paragraph(str(total_students), cell_bold_style), Paragraph(str(started_count), cell_bold_style),
-         Paragraph(str(not_started_count), cell_bold_style), Paragraph(f"+{avg_progress}", cell_bold_style), Paragraph(top_name, cell_bold_style)]
+        [
+            Paragraph("Total Students", header_cell_style),
+            Paragraph("Active Solvers", header_cell_style),
+            Paragraph("Not Started", header_cell_style),
+            Paragraph("Avg Progress", header_cell_style),
+            Paragraph("Top Performer", header_cell_style)
+        ],
+        [
+            Paragraph(str(total_students), cell_bold_style),
+            Paragraph(str(started_count), cell_bold_style),
+            Paragraph(str(not_started_count), cell_bold_style),
+            Paragraph(f"+{avg_progress}", cell_bold_style),
+            Paragraph(top_name, cell_bold_style)
+        ]
     ]
 
-    summary_table = Table(summary_data, colWidths=[1.1*inch, 1.1*inch, 1.1*inch, 1.2*inch, 2.3*inch])
+    summary_table = Table(summary_data, colWidths=[1.2*inch, 1.2*inch, 1.2*inch, 1.2*inch, 2.2*inch])
     summary_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1B365D')),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0F172A')),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
-        ('BACKGROUND', (0, 1), (-1, 1), colors.HexColor('#F8F9FA')),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 7),
+        ('TOPPADDING', (0, 0), (-1, -1), 7),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CBD5E1')),
+        ('BACKGROUND', (0, 1), (-1, 1), colors.HexColor('#F8FAFC')),
     ]))
     story.append(summary_table)
-    story.append(Spacer(1, 15))
+    story.append(Spacer(1, 14))
 
-    # 3. Top College Leaderboard Table
-    story.append(Paragraph("College Leaderboard Summary (Top Performers)", ParagraphStyle('SecTitle', parent=styles['Heading2'], textColor=colors.HexColor('#1B365D'))))
+    # 3. Top 20 College Leaderboard Table
+    story.append(Paragraph("College Leaderboard Summary (Top 20 Performers)", ParagraphStyle('SecTitle', parent=styles['Heading2'], fontName='Helvetica-Bold', fontSize=11, textColor=colors.HexColor('#0F172A'))))
     story.append(Spacer(1, 6))
 
-    lb_headers = [Paragraph("Rank", header_cell_style), Paragraph("Register No", header_cell_style),
-                  Paragraph("Student Name", header_cell_style), Paragraph("Dept", header_cell_style),
-                  Paragraph("Year", header_cell_style), Paragraph("Sec", header_cell_style),
-                  Paragraph("Solved", header_cell_style), Paragraph("Progress", header_cell_style)]
+    lb_headers = [
+        Paragraph("Rank", header_cell_style),
+        Paragraph("Register No", header_cell_style),
+        Paragraph("Student Name", header_cell_style),
+        Paragraph("Dept", header_cell_style),
+        Paragraph("Year", header_cell_style),
+        Paragraph("Sec", header_cell_style),
+        Paragraph("Solved", header_cell_style),
+        Paragraph("Progress", header_cell_style)
+    ]
 
     lb_rows = [lb_headers]
 
-    for rank, s in enumerate(top_student[:15], 1):
+    # Top 20 Performers (Clean rank strings without special prefix artifacts)
+    for rank, s in enumerate(top_student[:20], 1):
         latest_prog = db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id == s.id).order_by(WeeklyStudentProgress.id.desc()).first()
         prog_str = f"+{latest_prog.weekly_progress}" if latest_prog else "+0"
+        rank_str = f"#{rank}"
 
         lb_rows.append([
-            Paragraph(f"#{rank}", cell_bold_style),
+            Paragraph(rank_str, cell_bold_style),
             Paragraph(s.reg_no, cell_style),
             Paragraph(s.name, cell_style),
-            Paragraph(s.department.code if s.department else "", cell_style),
+            Paragraph(s.department.code if s.department else "CSE", cell_style),
             Paragraph(s.year_level, cell_style),
-            Paragraph(s.section.name if s.section else "", cell_style),
+            Paragraph(s.section.name if s.section else "A", cell_style),
             Paragraph(str(s.stats.total_solved if s.stats else 0), cell_bold_style),
             Paragraph(prog_str, cell_style)
         ])
 
-    lb_table = Table(lb_rows, colWidths=[0.6*inch, 1.2*inch, 2.0*inch, 0.8*inch, 0.6*inch, 0.5*inch, 0.7*inch, 0.8*inch])
+    lb_table = Table(lb_rows, colWidths=[0.6*inch, 1.2*inch, 2.2*inch, 0.8*inch, 0.6*inch, 0.4*inch, 0.6*inch, 0.6*inch])
     lb_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1B365D')),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0F172A')),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('TOPPADDING', (0, 0), (-1, -1), 5),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E0E0E0')),
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F8F9FA')])
+        ('TOPPADDING', (0, 0), (-1, -1), 4.5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4.5),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E2E8F0')),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F8FAFC')])
     ]))
 
     story.append(lb_table)

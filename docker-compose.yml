@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  leetcode-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nandha_leetcode_platform
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - ENVIRONMENT=production
+    volumes:
+      - ./backend/data:/app/backend/data
+      - ./backend/reports:/app/backend/reports

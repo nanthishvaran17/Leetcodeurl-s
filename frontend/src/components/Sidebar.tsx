@@ -62,13 +62,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
       </nav>
 
       <div className="pt-6">
-        <div className="p-3 rounded-2xl bg-gradient-to-br from-brand-900/40 to-indigo-900/40 border border-brand-500/20 text-xs text-gray-300 space-y-2">
-          <div className="flex items-center space-x-2 text-amber-400 font-bold">
-            <Calendar className="w-4 h-4" />
-            <span>Weekly Session</span>
+        <div className="p-3.5 rounded-2xl bg-gradient-to-br from-brand-900 via-navy-900 to-indigo-950 border border-brand-500/40 shadow-lg text-xs space-y-2">
+          <div className="flex items-center space-x-2 text-amber-400 font-extrabold">
+            <Calendar className="w-4 h-4 text-amber-400" />
+            <span className="text-white text-xs font-bold">Sunday Weekly Session</span>
           </div>
-          <p className="text-[11px] text-gray-400 leading-relaxed">
-            Automatic starting snapshot triggers at <b>08:00 AM IST</b>. Final snapshot & evaluation at <b>09:30 AM IST</b>.
+          <p className="text-[11px] text-gray-200 dark:text-gray-200 leading-relaxed font-medium">
+            Automatic starting snapshot triggers at <b className="text-emerald-400 font-bold">08:00 AM IST</b>. Final snapshot & evaluation at <b className="text-emerald-400 font-bold">09:30 AM IST</b>.
           </p>
         </div>
       </div>

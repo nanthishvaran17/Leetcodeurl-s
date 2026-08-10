@@ -379,11 +379,15 @@ def seed_database():
                 db.commit()
                 db.refresh(stud)
 
-                stats = LeetCodeProfileStats(
-                    student_id=stud.id,
-                    status=url_status
-                )
-                db.add(stats)
+                # Seed specific stats for #1 College Ranker NANTHISH S (732224CC031)
+                if reg == "732224CC031":
+                    stats.total_solved = 645
+                    stats.easy_solved = 213
+                    stats.medium_solved = 323
+                    stats.hard_solved = 109
+                    stats.contest_rating = 1845.5
+                    stats.contest_global_ranking = 14200
+                    stats.status = "OK"
             else:
                 stud.name = name
                 stud.department_id = d_id
@@ -393,6 +397,36 @@ def seed_database():
                 stud.username = username
                 stud.is_active = True
                 if email: stud.email = email
+
+                if reg == "732224CC031" and stud.stats:
+                    stud.stats.total_solved = 645
+                    stud.stats.easy_solved = 213
+                    stud.stats.medium_solved = 323
+                    stud.stats.hard_solved = 109
+                    stud.stats.contest_rating = 1845.5
+                    stud.stats.contest_global_ranking = 14200
+                    stud.stats.status = "OK"
+
+            # Create or update WeeklyStudentProgress for NANTHISH S with 200-day active streak
+            if reg == "732224CC031":
+                prog = db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id == stud.id).first()
+                if not prog:
+                    prog = WeeklyStudentProgress(
+                        student_id=stud.id,
+                        weekly_progress=12,
+                        streak_count=200,
+                        consistency_score=99.8,
+                        college_rank=1,
+                        dept_rank=1,
+                        year_rank=1,
+                        section_rank=1
+                    )
+                    db.add(prog)
+                else:
+                    prog.streak_count = 200
+                    prog.weekly_progress = 12
+                    prog.college_rank = 1
+                    prog.dept_rank = 1
 
         db.commit()
 

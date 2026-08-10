@@ -40,7 +40,8 @@ class Settings(BaseSettings):
     TELEGRAM_CHAT_ID: str = ""
     
     # College Branding
-    COLLEGE_NAME: str = "College of Engineering & Technology"
+    COLLEGE_NAME: str = "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)"
+    COLLEGE_ADDRESS: str = "ERODE - 638 052, TAMIL NADU"
     COLLEGE_LOGO_URL: str = "/logo.png"
 
     class Config:

@@ -77,6 +77,15 @@ query getUserContest($username: String!) {
     globalRanking
     attendedContestsCount
   }
+  userContestRankingHistory(username: $username) {
+    attended
+    problemsSolved
+    totalProblems
+    contest {
+      title
+      startTime
+    }
+  }
 }
 """
 
@@ -178,6 +187,9 @@ async def fetch_leetcode_profile(url: Optional[str], force_refresh: bool = False
         # 2. Fetch Contest Ranking
         contest_rating = None
         contest_global_ranking = None
+        recent_contest_name = None
+        recent_contest_score = None
+        
         try:
             payload_contest = {
                 "query": USER_CONTEST_QUERY,
@@ -192,6 +204,17 @@ async def fetch_leetcode_profile(url: Optional[str], force_refresh: bool = False
                     if c_rating is not None:
                         contest_rating = round(float(c_rating), 1)
                     contest_global_ranking = contest_info.get("globalRanking")
+                
+                # Fetch recent contest score
+                contest_history = c_data.get("data", {}).get("userContestRankingHistory", [])
+                attended_contests = [c for c in contest_history if c.get("attended")]
+                if attended_contests:
+                    latest = attended_contests[-1]
+                    recent_contest_name = latest.get("contest", {}).get("title")
+                    solved = latest.get("problemsSolved", 0)
+                    total = latest.get("totalProblems", 4)
+                    recent_contest_score = f"{solved} / {total}"
+                    
         except Exception as e:
             logger.info(f"No contest ranking for '{username}': {e}")
 
@@ -204,6 +227,8 @@ async def fetch_leetcode_profile(url: Optional[str], force_refresh: bool = False
             "hard_solved": hard_solved,
             "contest_rating": contest_rating,
             "contest_global_ranking": contest_global_ranking,
+            "recent_contest_name": recent_contest_name,
+            "recent_contest_score": recent_contest_score,
             "public_profile_ranking": profile_ranking,
             "error_message": None
         }

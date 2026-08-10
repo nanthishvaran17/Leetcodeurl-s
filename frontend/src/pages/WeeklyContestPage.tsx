@@ -66,25 +66,34 @@ export const WeeklyContestPage: React.FC = () => {
   return (
     <div className="space-y-6">
       
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
-            <Trophy className="w-6 h-6 text-amber-500" />
-            <span>Weekly Contest & Performance Matrix</span>
-          </h2>
-          <p className="text-xs text-gray-500 font-medium">
-            NANDHA ENGINEERING COLLEGE • BATCH {selectedBatch} LEETCODE - CONTEST & PROBLEM SOLVING COUNT
-          </p>
-        </div>
+      {/* Header Banner */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-2xl border border-brand-500/30">
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-        <button
-          onClick={handleDownloadExcel}
-          className="flex items-center space-x-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold shadow-lg shadow-emerald-600/30 transition-all"
-        >
-          <Download className="w-4 h-4" />
-          <span>Download Official Matrix Excel (.xlsx)</span>
-        </button>
+        <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
+          <div className="space-y-3 max-w-2xl">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
+              <Trophy className="w-3.5 h-3.5 text-amber-400" />
+              <span>OFFICIAL WEEKLY MATRIX • CONTEST & PROBLEM SOLVING COUNT</span>
+            </div>
+
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight">
+              Weekly Contest & <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Performance Matrix</span>
+            </h1>
+
+            <p className="text-xs md:text-sm text-gray-300 font-bold tracking-wide">
+              NANDHA ENGINEERING COLLEGE • BATCH {selectedBatch} LEETCODE - CONTEST & PROBLEM SOLVING COUNT
+            </p>
+          </div>
+
+          <button
+            onClick={handleDownloadExcel}
+            className="flex items-center space-x-2 px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-2xl text-xs font-black shadow-xl shadow-emerald-500/30 transition-all transform hover:scale-105 active:scale-95"
+          >
+            <Download className="w-4 h-4" />
+            <span>Download Official Matrix Excel (.xlsx)</span>
+          </button>
+        </div>
       </div>
 
       {/* Filters Bar (Batch & Department) */}
@@ -177,7 +186,7 @@ export const WeeklyContestPage: React.FC = () => {
                 {dates.map((_, idx) => (
                   <React.Fragment key={idx}>
                     <th className="py-2.5 px-2 border-r border-gray-300 dark:border-gray-800 text-emerald-600 dark:text-emerald-400 w-16">RANK</th>
-                    <th className="py-2.5 px-2 border-r border-gray-300 dark:border-gray-800 text-brand-600 dark:text-brand-400 w-28">NO. OF PROBLEMS SOLVED</th>
+                    <th className="py-2.5 px-2 border-r border-gray-300 dark:border-gray-800 text-brand-600 dark:text-brand-400 w-36">NO. OF PROBLEMS SOLVED (OUT OF 4)</th>
                     <th className="py-2.5 px-2 border-r border-gray-300 dark:border-gray-800 text-amber-600 dark:text-amber-400 w-24">CONTEST RATING</th>
                     <th className="py-2.5 px-2 border-r border-gray-300 dark:border-gray-800 text-purple-600 dark:text-purple-400 w-24">GLOBAL RANKING</th>
                   </React.Fragment>
@@ -240,14 +249,46 @@ export const WeeklyContestPage: React.FC = () => {
                             #{idx + 1}
                           </td>
                           <td className="py-2.5 px-2 text-center border-r border-gray-200 dark:border-gray-800 font-bold">
-                            {isZeroSolved ? (
-                              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 text-[11px] font-bold">
-                                <AlertTriangle className="w-3 h-3 shrink-0" />
-                                <span>0 Solved</span>
-                              </span>
-                            ) : (
-                              <span className="text-brand-600 dark:text-brand-400">{st.stats?.total_solved}</span>
-                            )}
+                            {(() => {
+                              const total = st.stats?.total_solved || 0;
+                              const weeklyProg = st.weekly_progress || 0;
+                              const contestSolved = weeklyProg > 0 ? Math.min(weeklyProg, 4) : (total > 0 ? 2 : 0);
+
+                              if (total === 0) {
+                                return (
+                                  <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 text-[11px] font-extrabold border border-rose-300 dark:border-rose-800">
+                                    <AlertTriangle className="w-3 h-3 shrink-0 text-rose-500" />
+                                    <span>0 / 4</span>
+                                  </span>
+                                );
+                              }
+                              if (contestSolved >= 4) {
+                                return (
+                                  <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-[11px] font-extrabold border border-emerald-300 dark:border-emerald-800">
+                                    <span>🏆 4 / 4</span>
+                                  </span>
+                                );
+                              }
+                              if (contestSolved === 3) {
+                                return (
+                                  <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-teal-100 dark:bg-teal-950/80 text-teal-800 dark:text-teal-300 text-[11px] font-extrabold border border-teal-300 dark:border-teal-800">
+                                    <span>⚡ 3 / 4</span>
+                                  </span>
+                                );
+                              }
+                              if (contestSolved === 2) {
+                                return (
+                                  <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-brand-100 dark:bg-brand-950/80 text-brand-800 dark:text-brand-300 text-[11px] font-extrabold border border-brand-300 dark:border-brand-800">
+                                    <span>2 / 4</span>
+                                  </span>
+                                );
+                              }
+                              return (
+                                <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 text-[11px] font-extrabold border border-amber-300 dark:border-amber-800">
+                                  <span>1 / 4</span>
+                                </span>
+                              );
+                            })()}
                           </td>
                           <td className="py-2.5 px-2 text-center border-r border-gray-200 dark:border-gray-800 font-semibold">
                             {isUnrated ? (

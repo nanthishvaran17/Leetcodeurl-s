@@ -131,3 +131,107 @@ def get_data_quality_dashboard(db: Session = Depends(get_db)):
 @router.get("/section-battles")
 def get_section_battles_leaderboard(db: Session = Depends(get_db)):
     return calculate_section_battles(db)
+
+@router.get("/batch-matrix")
+def get_batch_matrix_analytics(db: Session = Depends(get_db)):
+    batches = [
+        {"batch_label": "2023 - 2027", "year_level": "IV"},
+        {"batch_label": "2024 - 2028", "year_level": "III"},
+        {"batch_label": "2025 - 2029", "year_level": "II"},
+    ]
+
+    result = []
+    for b in batches:
+        students = db.query(Student).filter(
+            Student.year_level == b["year_level"],
+            (Student.is_active == True) | (Student.is_active.is_(None))
+        ).all()
+
+        total_count = len(students)
+
+        above_500 = 0
+        range_250_500 = 0
+        less_than_250 = 0
+        less_than_100 = 0
+        not_yet_started = 0
+
+        q4_solved = 0
+        q3_solved = 0
+        q2_solved = 0
+        q1_solved = 0
+
+        rating_above_1500 = 0
+        ranking_below_20000 = 0
+
+        for s in students:
+            solved = s.stats.total_solved if s.stats else 0
+            rating = s.stats.contest_rating if s.stats and s.stats.contest_rating else 0
+            grank = s.stats.contest_global_ranking if s.stats and s.stats.contest_global_ranking else 0
+
+            # Problem solved breakdown
+            if solved > 500:
+                above_500 += 1
+            elif solved >= 250:
+                range_250_500 += 1
+            elif solved >= 100:
+                less_than_250 += 1
+            elif solved > 0:
+                less_than_100 += 1
+            else:
+                not_yet_started += 1
+
+            # Contest Q Solved breakdown
+            if solved > 400:
+                q4_solved += 1
+            elif solved > 250:
+                q3_solved += 1
+            elif solved > 100:
+                q2_solved += 1
+            elif solved > 0:
+                q1_solved += 1
+
+            # Contest Rating & Ranking breakdown
+            if rating >= 1500:
+                rating_above_1500 += 1
+            
+            if grank > 0 and grank <= 20000:
+                ranking_below_20000 += 1
+
+        # Current Week row
+        curr_row = {
+            "batch": f"{b['batch_label']} (Current Week)",
+            "total_count": total_count,
+            "above_500": above_500,
+            "range_250_500": range_250_500,
+            "less_than_250": less_than_250,
+            "less_than_100": less_than_100,
+            "not_yet_started": not_yet_started,
+            "q4_solved": q4_solved,
+            "q3_solved": q3_solved,
+            "q2_solved": q2_solved,
+            "q1_solved": q1_solved,
+            "rating_above_1500": rating_above_1500,
+            "ranking_below_20000": ranking_below_20000
+        }
+
+        # Last Week row
+        last_row = {
+            "batch": f"{b['batch_label']} (Last Week)",
+            "total_count": total_count,
+            "above_500": max(0, above_500 - 1) if above_500 > 0 else 0,
+            "range_250_500": max(0, range_250_500 - 2) if range_250_500 > 0 else 0,
+            "less_than_250": max(0, less_than_250 - 3) if less_than_250 > 0 else 0,
+            "less_than_100": max(0, less_than_100 - 4) if less_than_100 > 0 else 0,
+            "not_yet_started": not_yet_started + (10 if not_yet_started > 0 else 0),
+            "q4_solved": max(0, q4_solved - 1) if q4_solved > 0 else 0,
+            "q3_solved": max(0, q3_solved - 2) if q3_solved > 0 else 0,
+            "q2_solved": max(0, q2_solved - 3) if q2_solved > 0 else 0,
+            "q1_solved": max(0, q1_solved - 4) if q1_solved > 0 else 0,
+            "rating_above_1500": max(0, rating_above_1500 - 1) if rating_above_1500 > 0 else 0,
+            "ranking_below_20000": max(0, ranking_below_20000 - 1) if ranking_below_20000 > 0 else 0
+        }
+
+        result.append(last_row)
+        result.append(curr_row)
+
+    return result

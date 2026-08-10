@@ -3,6 +3,8 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { Sun, Moon, Shield, User, LogOut, Clock, Activity } from 'lucide-react';
 
+import { CollegeLogo } from './CollegeLogo';
+
 interface NavbarProps {
   currentSessionStatus?: string;
   onOpenLogin: () => void;
@@ -23,19 +25,22 @@ export const Navbar: React.FC<NavbarProps> = ({
     <header className="sticky top-0 z-30 w-full glass-card border-b border-gray-200 dark:border-gray-800 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
-        {/* Brand */}
+        {/* Official Nandha Engineering College (NEC 25 Years) Brand Header */}
         <div 
           onClick={() => setActiveTab('landing')}
           className="flex items-center space-x-3 cursor-pointer group"
         >
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform">
-            <Shield className="w-5 h-5" />
-          </div>
+          <CollegeLogo className="w-11 h-11" />
           <div>
-            <h1 className="font-extrabold text-lg tracking-tight gradient-heading">
-              LeetTracker <span className="text-xs px-2 py-0.5 rounded-full bg-brand-100 text-brand-700 dark:bg-brand-900/50 dark:text-brand-300 font-semibold ml-1">v2.0</span>
+            <h1 className="font-black text-base tracking-tight text-gray-900 dark:text-white flex items-center space-x-2">
+              <span>NANDHA ENGINEERING COLLEGE</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-black shadow-sm">
+                AUTONOMOUS
+              </span>
             </h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium hidden sm:block">College Weekly Session Platform</p>
+            <p className="text-xs text-brand-600 dark:text-brand-400 font-extrabold hidden sm:block tracking-wide">
+              LeetCode Weekly Performance Tracker & Analytics
+            </p>
           </div>
         </div>
 

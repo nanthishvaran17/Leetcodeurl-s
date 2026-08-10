@@ -74,6 +74,9 @@ class LeetCodeProfileStats(Base):
     contest_global_ranking = Column(Integer, nullable=True)
     public_profile_ranking = Column(Integer, nullable=True)
     
+    recent_contest_name = Column(String(150), nullable=True)
+    recent_contest_score = Column(String(20), nullable=True) # e.g. "3 / 4"
+    
     status = Column(String(50), default="DATA UNAVAILABLE") # OK, MISSING LINK, INVALID LINK, PROFILE NOT FOUND, DATA UNAVAILABLE
     error_message = Column(Text, nullable=True)
     last_updated = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)

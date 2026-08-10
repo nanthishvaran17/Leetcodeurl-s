@@ -119,7 +119,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
               <div className="space-y-2">
                 <h4 className="font-bold text-xs text-rose-600 dark:text-rose-400">Validation Errors Breakdown:</h4>
                 <div className="max-h-40 overflow-y-auto border rounded-xl divide-y text-xs border-rose-200 dark:border-rose-900/60">
-                  {preview.invalid_rows.map((inv: any, i: int) => (
+                  {preview.invalid_rows.map((inv: any, i: number) => (
                     <div key={i} className="p-2.5 flex items-center justify-between text-rose-800 dark:text-rose-300 bg-rose-50/50 dark:bg-rose-950/30">
                       <span>Row {inv.row}: <b>{inv.reg_no || 'No Reg'}</b> ({inv.name || 'No Name'})</span>
                       <span className="font-semibold">{inv.errors}</span>

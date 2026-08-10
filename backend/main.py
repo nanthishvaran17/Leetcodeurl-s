@@ -81,3 +81,9 @@ def health_check():
         "app_name": settings.APP_NAME,
         "timezone": settings.TIMEZONE
     }
+
+# Production Static Build Mount (Serves Frontend SPA bundle on single port)
+FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
+if os.path.exists(FRONTEND_DIST):
+    app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")
+

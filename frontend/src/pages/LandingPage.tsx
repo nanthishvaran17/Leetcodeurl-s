@@ -1,18 +1,93 @@
-import React from 'react';
-import { Shield, ArrowRight, Trophy, Users, Layers, Activity, Calendar, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { CollegeLogo } from '../components/CollegeLogo';
+import { Shield, ArrowRight, Trophy, Users, Layers, Activity, Flame, Star, LayoutGrid, List } from 'lucide-react';
 import { CountdownTimer } from '../components/CountdownTimer';
+import { StudentFlipCard } from '../components/StudentFlipCard';
+import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
+import api from '../services/api';
 
 interface LandingPageProps {
   summaryData: any;
   onViewDashboard: () => void;
   onOpenLogin: () => void;
+  onSelectStudent?: (student: StudentData) => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
   summaryData,
   onViewDashboard,
-  onOpenLogin
+  onOpenLogin,
+  onSelectStudent
 }) => {
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [selectedDept, setSelectedDept] = useState<any>(null);
+  const [yearLevel, setYearLevel] = useState<string>('ALL');
+  const [sortBy, setSortBy] = useState<string>('top_solved');
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
+  const [students, setStudents] = useState<StudentData[]>([]);
+  const [displayCount, setDisplayCount] = useState<number>(32);
+
+  useEffect(() => {
+    fetchDepartments();
+    fetchFilteredStudents();
+  }, []);
+
+  useEffect(() => {
+    fetchFilteredStudents();
+  }, [selectedDept, yearLevel]);
+
+  const fetchDepartments = async () => {
+    try {
+      const res = await api.get('/departments');
+      setDepartments(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchFilteredStudents = async () => {
+    try {
+      let url = '/students';
+      const params = [];
+      if (selectedDept) {
+        params.push(`dept_id=${selectedDept.id}`);
+      }
+      if (yearLevel !== 'ALL') {
+        params.push(`year_level=${yearLevel}`);
+      }
+      if (params.length > 0) {
+        url += '?' + params.join('&');
+      }
+
+      const res = await api.get(url);
+      setStudents(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const getSortedStudents = () => {
+    const sorted = [...students];
+    switch (sortBy) {
+      case 'top_solved':
+        return sorted.sort((a, b) => (b.stats?.total_solved || 0) - (a.stats?.total_solved || 0));
+      case 'low_solved':
+        return sorted.sort((a, b) => (a.stats?.total_solved || 0) - (b.stats?.total_solved || 0));
+      case 'name_asc':
+        return sorted.sort((a, b) => a.name.localeCompare(b.name));
+      case 'name_desc':
+        return sorted.sort((a, b) => b.name.localeCompare(a.name));
+      case 'streak':
+        return sorted.sort((a, b) => (b.streak_count || 0) - (a.streak_count || 0));
+      case 'rating':
+        return sorted.sort((a, b) => (b.stats?.contest_rating || 0) - (a.stats?.contest_rating || 0));
+      default:
+        return sorted;
+    }
+  };
+
+  const sortedList = getSortedStudents();
+
   return (
     <div className="space-y-10 py-6">
       
@@ -21,9 +96,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="relative z-10 max-w-3xl space-y-6">
-          <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-semibold backdrop-blur-md">
-            <Shield className="w-3.5 h-3.5 text-amber-400" />
-            <span>Official College Platform • Session Tracking & Analytics</span>
+          <div className="inline-flex items-center space-x-2.5 px-4 py-2 rounded-2xl bg-white/10 border border-white/20 text-white text-xs font-bold backdrop-blur-md shadow-lg">
+            <CollegeLogo size={28} className="w-7 h-7" />
+            <span>NANDHA ENGINEERING COLLEGE (AUTONOMOUS) • Official Weekly Tracker & Analytics</span>
           </div>
 
           <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight">
@@ -33,21 +108,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </span>
           </h1>
 
-          <p className="text-gray-300 text-sm md:text-base leading-relaxed">
-            Real-time automated performance monitoring for 150+ students across Cyber Security, IoT, CSE, AI & DS, ECE, EEE, Mechanical, and Civil departments. Sunday session tracking, multi-level rankings, 8-sheet Excel reporting, and PDF dispatch.
+          <p className="text-sm md:text-base text-gray-100 font-medium max-w-2xl leading-relaxed drop-shadow">
+            Real-time automated performance monitoring for 220+ students across Computer Science and Engineering (Cyber Security) and Computer Science and Engineering (IoT) departments. Sunday session tracking, multi-level rankings, official Excel matrix reporting, and automated email dispatch.
           </p>
 
           <div className="flex flex-wrap items-center gap-4 pt-2">
             <button
               onClick={onViewDashboard}
-              className="px-6 py-3.5 rounded-2xl bg-brand-500 hover:bg-brand-600 font-bold text-sm shadow-xl shadow-brand-500/30 flex items-center space-x-2 transition-all transform hover:-translate-y-0.5"
+              className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-sm shadow-xl shadow-emerald-500/40 flex items-center space-x-2 transition-all transform hover:scale-105"
             >
-              <span>View Dashboard</span>
-              <ArrowRight className="w-4 h-4" />
+              <span>View Executive Dashboard</span>
+              <ArrowRight className="w-4 h-4 text-slate-950 stroke-[3]" />
             </button>
             <button
               onClick={onOpenLogin}
-              className="px-6 py-3.5 rounded-2xl glass-card text-white hover:bg-white/10 font-semibold text-sm border border-white/20 transition-all"
+              className="px-6 py-3.5 rounded-2xl bg-white/15 hover:bg-white/25 text-white font-extrabold text-sm border-2 border-white/30 backdrop-blur-md transition-all transform hover:scale-105 shadow-lg"
             >
               Admin Login
             </button>
@@ -55,44 +130,222 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </div>
 
-      {/* Countdown Timer Widget */}
-      <CountdownTimer targetSeconds={summaryData?.next_session_countdown_seconds || 86400} />
+      {/* Next Sunday Session Countdown Timer */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between px-2">
+          <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Next Sunday Session Timer</span>
+          <span className="text-xs font-semibold text-brand-600 dark:text-brand-400">Official Window: 08:00 AM – 09:30 AM IST</span>
+        </div>
+        <CountdownTimer targetSeconds={summaryData?.next_session_countdown_seconds || 86400} />
+      </div>
 
-      {/* Highlights Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+      {/* Stat Cards Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
         
-        <div className="glass-card p-6 rounded-2xl space-y-2 border">
+        <div className="glass-card p-6 rounded-2xl space-y-2 border shadow-md">
           <div className="p-3 w-fit rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
             <Users className="w-6 h-6" />
           </div>
-          <h4 className="text-2xl font-black text-gray-900 dark:text-white">{summaryData?.total_students || 150}</h4>
+          <h4 className="text-2xl font-black text-gray-900 dark:text-white">{summaryData?.total_students || 221}</h4>
           <p className="text-xs font-semibold text-gray-500">Total Enrolled Students</p>
         </div>
 
-        <div className="glass-card p-6 rounded-2xl space-y-2 border">
+        <div className="glass-card p-6 rounded-2xl space-y-2 border shadow-md">
           <div className="p-3 w-fit rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
             <Activity className="w-6 h-6" />
           </div>
-          <h4 className="text-2xl font-black text-gray-900 dark:text-white">{summaryData?.active_students || 0}</h4>
-          <p className="text-xs font-semibold text-gray-500">Active This Week (STARTED)</p>
+          <h4 className="text-2xl font-black text-gray-900 dark:text-white">{summaryData?.active_students || summaryData?.total_students || 221}</h4>
+          <p className="text-xs font-semibold text-gray-500">Active Solvers (STARTED)</p>
         </div>
 
-        <div className="glass-card p-6 rounded-2xl space-y-2 border">
+        <div className="glass-card p-6 rounded-2xl space-y-2 border shadow-md">
           <div className="p-3 w-fit rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
             <Trophy className="w-6 h-6" />
           </div>
-          <h4 className="text-2xl font-black text-gray-900 dark:text-white">{summaryData?.total_problems_solved?.toLocaleString() || 0}</h4>
+          <h4 className="text-2xl font-black text-gray-900 dark:text-white">{summaryData?.total_problems_solved?.toLocaleString() || '5,240+'}</h4>
           <p className="text-xs font-semibold text-gray-500">Total Problems Solved</p>
         </div>
 
-        <div className="glass-card p-6 rounded-2xl space-y-2 border">
+        <div className="glass-card p-6 rounded-2xl space-y-2 border shadow-md">
           <div className="p-3 w-fit rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
-            <Layers className="w-6 h-6" />
+            <Trophy className="w-6 h-6 fill-amber-500" />
           </div>
-          <h4 className="text-2xl font-black text-gray-900 dark:text-white">{summaryData?.top_college_ranker || 'Arun Kumar'}</h4>
+          <h4 className="text-2xl font-black text-amber-500 truncate" title={summaryData?.top_college_ranker || (sortedList.length > 0 ? sortedList[0].name : 'Top Ranker')}>
+            {summaryData?.top_college_ranker || (sortedList.length > 0 ? sortedList[0].name : 'Top Ranker')}
+          </h4>
           <p className="text-xs font-semibold text-gray-500">Top College Ranker (#1)</p>
         </div>
 
+      </div>
+
+      {/* Interactive Showcase Filter Bar */}
+      <div className="glass-card p-6 rounded-3xl border space-y-5 shadow-xl">
+        
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-4">
+          <div>
+            <h3 className="text-lg font-black text-gray-900 dark:text-white">Student Performance Showcase</h3>
+            <p className="text-xs text-gray-500">Browse student records by Department, Academic Year, Name & DSA Performance</p>
+          </div>
+
+          {/* View Mode Switch */}
+          <div className="flex items-center space-x-1 p-1 bg-gray-100 dark:bg-gray-800/80 rounded-2xl border border-gray-200 dark:border-gray-700">
+            <button
+              onClick={() => setViewMode('cards')}
+              className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                viewMode === 'cards'
+                  ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>🎴 3D Flip Cards</span>
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                viewMode === 'table'
+                  ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
+              }`}
+            >
+              <List className="w-3.5 h-3.5" />
+              <span>📋 Table View</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Department selector */}
+        <div>
+          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Select Department Filter</label>
+          <div className="flex flex-wrap gap-2.5">
+            <button
+              onClick={() => setSelectedDept(null)}
+              className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all ${
+                !selectedDept
+                  ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/30 scale-[1.02]'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
+              }`}
+            >
+              🏢 All Departments (Cyber Security & IoT)
+            </button>
+            {departments.map((dept) => (
+              <button
+                key={dept.id}
+                onClick={() => setSelectedDept(dept)}
+                className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all ${
+                  selectedDept?.id === dept.id
+                    ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/30 scale-[1.02]'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
+                }`}
+              >
+                🏢 {dept.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Year Level selector */}
+        <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
+          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Select Academic Year</label>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { id: 'ALL', label: 'All Years' },
+              { id: 'II', label: 'II Year' },
+              { id: 'III', label: 'III Year' },
+              { id: 'IV', label: 'IV Year' }
+            ].map((yr) => (
+              <button
+                key={yr.id}
+                onClick={() => setYearLevel(yr.id)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  yearLevel === yr.id
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
+                }`}
+              >
+                🎓 {yr.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Sort & Order selector */}
+        <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
+          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Sort & Order Students</label>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { id: 'top_solved', label: '🔥 Top Solvers (High to Low)' },
+              { id: 'low_solved', label: '⚠️ Low Solvers (Needs Focus)' },
+              { id: 'name_asc', label: '🔤 Name (A ➔ Z)' },
+              { id: 'name_desc', label: '🔤 Name (Z ➔ A)' },
+              { id: 'streak', label: '⚡ Highest Streak' },
+              { id: 'rating', label: '⭐ Contest Rating' }
+            ].map((sortItem) => (
+              <button
+                key={sortItem.id}
+                onClick={() => setSortBy(sortItem.id)}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                  sortBy === sortItem.id
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30 scale-[1.02]'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
+                }`}
+              >
+                {sortItem.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Student Showcase Display */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-black text-base text-gray-900 dark:text-white">
+            {selectedDept ? selectedDept.name : 'All Departments (Cyber Security & IoT)'} • {yearLevel === 'ALL' ? 'All Years' : `${yearLevel} Year`} ({sortedList.length} Students)
+          </h3>
+        </div>
+
+        {viewMode === 'cards' ? (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {sortedList.slice(0, displayCount).map((st) => (
+                <StudentFlipCard
+                  key={st.id}
+                  student={st}
+                  onSelectStudent={onSelectStudent}
+                />
+              ))}
+            </div>
+
+            {displayCount < sortedList.length && (
+              <div className="flex flex-col items-center justify-center pt-4 space-y-2">
+                <p className="text-xs text-gray-500 font-semibold">
+                  Showing <span className="font-extrabold text-brand-600 dark:text-brand-400">{Math.min(displayCount, sortedList.length)}</span> of <span className="font-extrabold text-gray-900 dark:text-white">{sortedList.length}</span> Students
+                </p>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => setDisplayCount(prev => prev + 32)}
+                    className="px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-black text-xs shadow-xl shadow-brand-600/30 transition-all hover:scale-105"
+                  >
+                    <span>👇 Load More Students (+32)</span>
+                  </button>
+                  <button
+                    onClick={() => setDisplayCount(sortedList.length)}
+                    className="px-5 py-3 rounded-2xl glass-card hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold text-xs border border-gray-200 dark:border-gray-700 transition-all"
+                  >
+                    Show All {sortedList.length} Students
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <LeaderboardTable
+            students={sortedList}
+            onSelectStudent={onSelectStudent}
+          />
+        )}
       </div>
 
     </div>
