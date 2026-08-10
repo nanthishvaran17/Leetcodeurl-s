@@ -1,0 +1,331 @@
+[2026-08-10 21:07:03,292] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:07:45,105] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:08:15,268] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:08:15,270] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:08:36,901] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:08:36,905] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:08:37,250] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:08:37,252] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:08:37,252] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:09:25,669] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:09:25,963] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:09:25,964] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:09:25,964] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:15:53,041] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:15:53,041] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:15:53,934] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:15:53,936] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:15:53,936] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:16:34,670] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:16:35,058] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:16:35,060] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:16:35,060] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:16:35,104] [INFO] [leetcode_tracker]: Starting 8:00 AM Baseline Snapshot for Session ID 1...
+[2026-08-10 21:16:35,174] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:16:35,602] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:16:35,604] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:16:35,604] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:16:59,047] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:16:59,415] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:16:59,417] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:16:59,418] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:17:11,741] [WARNING] [leetcode_tracker]: GraphQL error for 'erichto': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:17:14,531] [WARNING] [leetcode_tracker]: GraphQL error for 'invalid_user_9999': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:17:40,455] [WARNING] [leetcode_tracker]: Network error fetching 'Ammu1927' (Attempt 1/3): Server disconnected without sending a response.
+[2026-08-10 21:18:52,075] [WARNING] [leetcode_tracker]: GraphQL error for 'KISHORE_CHAND': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:19:02,860] [WARNING] [leetcode_tracker]: GraphQL error for 'XDb4OxGxp6': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:19:06,467] [WARNING] [leetcode_tracker]: GraphQL error for 'M1c4D2Ur5h': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:19:11,383] [WARNING] [leetcode_tracker]: GraphQL error for 'Thariq2525': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:19:16,989] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:19:17,664] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:19:17,665] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:19:17,665] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:20:12,005] [WARNING] [leetcode_tracker]: GraphQL error for 'Rithanika_Venakatac': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:20:28,088] [WARNING] [leetcode_tracker]: Network error fetching 'Rithu16122006' (Attempt 1/3): Server disconnected without sending a response.
+[2026-08-10 21:20:40,603] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:20:40,930] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:20:40,932] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:20:40,932] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:21:10,161] [WARNING] [leetcode_tracker]: GraphQL error for 'rFIIQ4f2JS': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:21:35,187] [WARNING] [leetcode_tracker]: Network error fetching 'SriselvanP' (Attempt 1/3): 
+[2026-08-10 21:21:56,489] [WARNING] [leetcode_tracker]: Network error fetching 'subashmurugan212' (Attempt 1/3): 
+[2026-08-10 21:22:32,963] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:22:33,261] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:22:33,262] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:22:33,262] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:22:40,952] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:22:41,260] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:22:41,262] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:22:41,263] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:23:54,973] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:23:54,978] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:23:55,366] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:23:55,369] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:23:55,369] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:23:55,369] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:23:55,372] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:23:55,373] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:28:28,657] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:28:28,657] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:28:29,014] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:28:29,016] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:28:29,021] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:28:29,023] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:28:29,026] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:28:29,033] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:28:36,588] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:28:36,591] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:28:36,987] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:28:36,988] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:28:36,990] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:28:36,990] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:28:36,990] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:28:36,990] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:29:53,578] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:29:53,581] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:29:53,929] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:29:53,930] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:29:53,931] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:29:53,932] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:29:53,932] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:29:53,933] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:32:03,876] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:32:03,890] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:32:04,635] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:32:04,637] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:32:04,637] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:36:03,814] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:36:04,186] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:36:04,188] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:36:04,188] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:36:04,454] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:36:04,857] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:36:04,859] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:36:04,860] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:40:07,704] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:40:07,705] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:40:08,101] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:40:08,104] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:40:08,104] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:40:08,112] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:40:08,114] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:40:08,115] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:42:25,282] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:42:25,283] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:42:25,657] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:42:25,657] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:42:25,659] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:42:25,659] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:42:25,660] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:42:25,660] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:44:06,991] [WARNING] [leetcode_tracker]: Network error fetching 'Ajay_A1277' (Attempt 1/3): [Errno 11001] getaddrinfo failed
+[2026-08-10 21:44:20,030] [WARNING] [leetcode_tracker]: Network error fetching 'Ajay_A1277' (Attempt 2/3): [Errno 11001] getaddrinfo failed
+[2026-08-10 21:45:03,124] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 21:45:03,515] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 21:45:03,517] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 21:45:03,518] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 21:46:36,189] [ERROR] [leetcode_tracker]: Failed to create database backup: [WinError 32] The process cannot access the file because it is being used by another process
+[2026-08-10 21:46:36,189] [INFO] [leetcode_tracker]: Database backup created: E:\Leetcode Web\data\backups\backup_leetcode_tracker_20260810_214636.db
+[2026-08-10 21:46:56,486] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'Ajay_A1277'
+[2026-08-10 21:46:56,488] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'Ammu1927'
+[2026-08-10 21:46:56,491] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'anushkumar_06'
+[2026-08-10 21:46:56,492] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'BHARATH1927'
+[2026-08-10 21:47:31,229] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'x8ggzaR6Gx'
+[2026-08-10 21:48:00,999] [WARNING] [leetcode_tracker]: Network error fetching 'Iniya3126' (Attempt 1/3): 
+[2026-08-10 21:48:05,880] [WARNING] [leetcode_tracker]: Network error fetching 'Iniya3126' (Attempt 1/3): Server disconnected without sending a response.
+[2026-08-10 21:48:44,869] [WARNING] [leetcode_tracker]: Network error fetching 'karthi_2007' (Attempt 1/3): 
+[2026-08-10 21:48:48,893] [WARNING] [leetcode_tracker]: Network error fetching 'karthi_2007' (Attempt 1/3): 
+[2026-08-10 21:49:07,160] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'success_lover_01'
+[2026-08-10 21:49:11,648] [WARNING] [leetcode_tracker]: GraphQL error for 'KISHORE_CHAND': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:49:25,023] [WARNING] [leetcode_tracker]: Network error fetching 'KISHORE_CHAND' (Attempt 1/3): Server disconnected without sending a response.
+[2026-08-10 21:49:41,285] [WARNING] [leetcode_tracker]: Network error fetching 'KISHORE_CHAND' (Attempt 2/3): 
+[2026-08-10 21:49:45,118] [WARNING] [leetcode_tracker]: GraphQL error for 'XDb4OxGxp6': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:49:52,775] [WARNING] [leetcode_tracker]: GraphQL error for 'KISHORE_CHAND': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:49:52,778] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'Laksana_Subramanian'
+[2026-08-10 21:49:52,780] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'XDb4OxGxp6'
+[2026-08-10 21:49:52,781] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'mahilnethra'
+[2026-08-10 21:49:58,101] [WARNING] [leetcode_tracker]: GraphQL error for 'M1c4D2Ur5h': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:50:02,579] [WARNING] [leetcode_tracker]: GraphQL error for 'M1c4D2Ur5h': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:50:18,114] [WARNING] [leetcode_tracker]: GraphQL error for 'Thariq2525': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:50:26,534] [WARNING] [leetcode_tracker]: Network error fetching 'Thariq2525' (Attempt 1/3): 
+[2026-08-10 21:50:38,567] [WARNING] [leetcode_tracker]: Network error fetching 'nanthishvaran_07' (Attempt 1/3): Server disconnected without sending a response.
+[2026-08-10 21:50:52,179] [WARNING] [leetcode_tracker]: Network error fetching 'Thariq2525' (Attempt 2/3): 
+[2026-08-10 21:50:55,036] [WARNING] [leetcode_tracker]: Network error fetching 'nanthishvaran_07' (Attempt 2/3): Server disconnected without sending a response.
+[2026-08-10 21:51:09,649] [WARNING] [leetcode_tracker]: Network error fetching 'Thariq2525' (Attempt 3/3): 
+[2026-08-10 21:51:11,564] [WARNING] [leetcode_tracker]: Network error fetching 'nanthishvaran_07' (Attempt 3/3): 
+[2026-08-10 21:51:47,034] [WARNING] [leetcode_tracker]: Network error fetching 'nithin_31_' (Attempt 1/3): 
+[2026-08-10 21:51:50,821] [WARNING] [leetcode_tracker]: Network error fetching 'Nivethytha0704' (Attempt 1/3): 
+[2026-08-10 21:52:03,060] [WARNING] [leetcode_tracker]: Network error fetching 'nithin_31_' (Attempt 2/3): 
+[2026-08-10 21:52:19,519] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'sahasri_04'
+[2026-08-10 21:52:49,935] [WARNING] [leetcode_tracker]: Network error fetching 'Pritss2206' (Attempt 1/3): 
+[2026-08-10 21:52:50,227] [WARNING] [leetcode_tracker]: Network error fetching 'Pritss2206' (Attempt 1/3): 
+[2026-08-10 21:53:16,293] [WARNING] [leetcode_tracker]: Network error fetching 'Pritss2206' (Attempt 2/3): Server disconnected without sending a response.
+[2026-08-10 21:53:16,430] [WARNING] [leetcode_tracker]: Network error fetching 'Pritss2206' (Attempt 2/3): Server disconnected without sending a response.
+[2026-08-10 21:54:16,039] [WARNING] [leetcode_tracker]: GraphQL error for 'Rithanika_Venakatac': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:54:23,598] [WARNING] [leetcode_tracker]: GraphQL error for 'Rithanika_Venakatac': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:54:23,600] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'Rithu16122006'
+[2026-08-10 21:54:38,050] [WARNING] [leetcode_tracker]: Network error fetching 'Rohith_2682006' (Attempt 1/3): 
+[2026-08-10 21:54:40,439] [WARNING] [leetcode_tracker]: Network error fetching 'Rohith_2682006' (Attempt 1/3): Server disconnected without sending a response.
+[2026-08-10 21:55:22,379] [WARNING] [leetcode_tracker]: Network error fetching 's8oyP1SH73' (Attempt 1/3): Server disconnected without sending a response.
+[2026-08-10 21:55:37,368] [WARNING] [leetcode_tracker]: Network error fetching 'shandeeshrp' (Attempt 1/3): 
+[2026-08-10 21:55:38,502] [WARNING] [leetcode_tracker]: Network error fetching 's8oyP1SH73' (Attempt 2/3): 
+[2026-08-10 21:55:56,516] [WARNING] [leetcode_tracker]: Network error fetching 's8oyP1SH73' (Attempt 3/3): Server disconnected without sending a response.
+[2026-08-10 21:55:56,740] [WARNING] [leetcode_tracker]: Network error fetching 'shandeeshrp' (Attempt 2/3): 
+[2026-08-10 21:56:31,332] [WARNING] [leetcode_tracker]: Network error fetching 'Priya_1410' (Attempt 1/3): Server disconnected without sending a response.
+[2026-08-10 21:56:34,559] [WARNING] [leetcode_tracker]: Network error fetching 'Priya_1410' (Attempt 1/3): Server disconnected without sending a response.
+[2026-08-10 21:56:59,472] [WARNING] [leetcode_tracker]: Network error fetching 'Priya_1410' (Attempt 2/3): 
+[2026-08-10 21:56:59,474] [WARNING] [leetcode_tracker]: Network error fetching 'Priya_1410' (Attempt 2/3): 
+[2026-08-10 21:57:18,702] [WARNING] [leetcode_tracker]: GraphQL error for 'rFIIQ4f2JS': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:57:25,461] [WARNING] [leetcode_tracker]: GraphQL error for 'rFIIQ4f2JS': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:57:41,231] [WARNING] [leetcode_tracker]: Network error fetching 'DJyWNuZj4N' (Attempt 1/3): 
+[2026-08-10 21:57:43,220] [WARNING] [leetcode_tracker]: Network error fetching 'SriselvanP' (Attempt 1/3): 
+[2026-08-10 21:57:59,061] [WARNING] [leetcode_tracker]: Network error fetching 'DJyWNuZj4N' (Attempt 2/3): 
+[2026-08-10 21:57:59,492] [WARNING] [leetcode_tracker]: Network error fetching 'SriselvanP' (Attempt 2/3): 
+[2026-08-10 21:58:32,018] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'subashmurugan212'
+[2026-08-10 21:58:37,341] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'suresh11092006'
+[2026-08-10 21:58:50,897] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'vignesh_1112'
+[2026-08-10 21:59:12,082] [WARNING] [leetcode_tracker]: GraphQL error for 'Mohammed_Affan_J': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:59:16,297] [WARNING] [leetcode_tracker]: GraphQL error for 'Mohammed_Affan_J': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:59:16,302] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'Saranraj_2580'
+[2026-08-10 21:59:29,165] [WARNING] [leetcode_tracker]: GraphQL error for 'LQatII0XhaQ': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:59:29,394] [WARNING] [leetcode_tracker]: GraphQL error for 'LQatII0XhaQ': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:59:45,219] [WARNING] [leetcode_tracker]: GraphQL error for 'ASHVIKAKILRAJAN': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:59:46,567] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'Abi_CC004'
+[2026-08-10 21:59:46,572] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'ASHVIKAKILRAJAN'
+[2026-08-10 21:59:50,355] [WARNING] [leetcode_tracker]: GraphQL error for '0MGVasBmsd': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:59:51,274] [WARNING] [leetcode_tracker]: GraphQL error for '0MGVasBmsd': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:59:51,967] [WARNING] [leetcode_tracker]: GraphQL error for 'iXZMxOzqMf': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:59:58,150] [WARNING] [leetcode_tracker]: GraphQL error for 'iXZMxOzqMf': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 21:59:59,527] [WARNING] [leetcode_tracker]: GraphQL error for '8Fr8Zz0vdVq': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:00:03,606] [WARNING] [leetcode_tracker]: GraphQL error for '8Fr8Zz0vdVq': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:00:11,765] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'problemset'
+[2026-08-10 22:00:13,455] [WARNING] [leetcode_tracker]: GraphQL error for '6oyrbP7Cn': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:00:19,737] [WARNING] [leetcode_tracker]: GraphQL error for '6oyrbP7Cn': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:00:33,965] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for '732225CC016'
+[2026-08-10 22:00:33,969] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'harishms2007'
+[2026-08-10 22:00:59,120] [WARNING] [leetcode_tracker]: GraphQL error for '7RHM08kNyY': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:01:04,201] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for '7RHM08kNyY'
+[2026-08-10 22:01:26,793] [WARNING] [leetcode_tracker]: Network error fetching 'Jeevi_AlgoQueen' (Attempt 1/3): 
+[2026-08-10 22:01:26,797] [WARNING] [leetcode_tracker]: Network error fetching 'Jeevi_AlgoQueen' (Attempt 1/3): 
+[2026-08-10 22:02:08,902] [WARNING] [leetcode_tracker]: GraphQL error for 'rBjc1qgtsB': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:02:09,422] [WARNING] [leetcode_tracker]: GraphQL error for 'rBjc1qgtsB': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:02:24,961] [WARNING] [leetcode_tracker]: Network error fetching '65lGBoRTZN' (Attempt 1/3): 
+[2026-08-10 22:02:25,176] [WARNING] [leetcode_tracker]: Network error fetching '65lGBoRTZN' (Attempt 1/3): 
+[2026-08-10 22:02:41,592] [WARNING] [leetcode_tracker]: Network error fetching '65lGBoRTZN' (Attempt 2/3): 
+[2026-08-10 22:02:41,653] [WARNING] [leetcode_tracker]: Network error fetching '65lGBoRTZN' (Attempt 2/3): 
+[2026-08-10 22:02:59,408] [WARNING] [leetcode_tracker]: Network error fetching '65lGBoRTZN' (Attempt 3/3): 
+[2026-08-10 22:02:59,410] [WARNING] [leetcode_tracker]: Network error fetching '65lGBoRTZN' (Attempt 3/3): 
+[2026-08-10 22:03:20,912] [WARNING] [leetcode_tracker]: GraphQL error for 'keertheesh': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:03:20,954] [WARNING] [leetcode_tracker]: GraphQL error for 'keertheesh': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:03:36,827] [WARNING] [leetcode_tracker]: Network error fetching 'profile' (Attempt 1/3): Server disconnected without sending a response.
+[2026-08-10 22:03:36,991] [WARNING] [leetcode_tracker]: Network error fetching 'profile' (Attempt 1/3): Server disconnected without sending a response.
+[2026-08-10 22:03:53,344] [WARNING] [leetcode_tracker]: Network error fetching 'profile' (Attempt 2/3): Server disconnected without sending a response.
+[2026-08-10 22:03:53,427] [WARNING] [leetcode_tracker]: Network error fetching 'profile' (Attempt 2/3): Server disconnected without sending a response.
+[2026-08-10 22:04:09,874] [WARNING] [leetcode_tracker]: Network error fetching 'profile' (Attempt 3/3): 
+[2026-08-10 22:04:09,959] [WARNING] [leetcode_tracker]: Network error fetching 'profile' (Attempt 3/3): 
+[2026-08-10 22:04:12,684] [WARNING] [leetcode_tracker]: Network error fetching 'LalithKumar19' (Attempt 1/3): [Errno 11001] getaddrinfo failed
+[2026-08-10 22:04:12,742] [WARNING] [leetcode_tracker]: Network error fetching 'LalithKumar19' (Attempt 1/3): [Errno 11001] getaddrinfo failed
+[2026-08-10 22:04:13,693] [WARNING] [leetcode_tracker]: Network error fetching 'LalithKumar19' (Attempt 2/3): [Errno 11001] getaddrinfo failed
+[2026-08-10 22:04:13,757] [WARNING] [leetcode_tracker]: Network error fetching 'LalithKumar19' (Attempt 2/3): [Errno 11001] getaddrinfo failed
+[2026-08-10 22:04:15,212] [WARNING] [leetcode_tracker]: Network error fetching 'LalithKumar19' (Attempt 3/3): [Errno 11001] getaddrinfo failed
+[2026-08-10 22:04:15,277] [WARNING] [leetcode_tracker]: Network error fetching 'LalithKumar19' (Attempt 3/3): [Errno 11001] getaddrinfo failed
+[2026-08-10 22:04:18,882] [WARNING] [leetcode_tracker]: GraphQL error for 'cbZx47N2Af': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:04:24,361] [WARNING] [leetcode_tracker]: GraphQL error for 'cbZx47N2Af': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:04:24,363] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'midesh_123'
+[2026-08-10 22:04:31,123] [WARNING] [leetcode_tracker]: GraphQL error for 'j01UT4oM0T': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:04:44,029] [WARNING] [leetcode_tracker]: Network error fetching 'j01UT4oM0T' (Attempt 1/3): 
+[2026-08-10 22:04:51,108] [WARNING] [leetcode_tracker]: GraphQL error for 'HR1IfJuaDf': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:04:52,683] [WARNING] [leetcode_tracker]: GraphQL error for 'j01UT4oM0T': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:04:52,685] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'Mukeshmukesh123'
+[2026-08-10 22:04:52,687] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'Nava_sakthi'
+[2026-08-10 22:04:52,688] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'HR1IfJuaDf'
+[2026-08-10 22:05:02,135] [WARNING] [leetcode_tracker]: GraphQL error for 'POOVARASU_': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:05:04,377] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'POOVARASU_'
+[2026-08-10 22:05:04,378] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'PradeepaM_'
+[2026-08-10 22:05:13,838] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'f0Gm3IZrgv'
+[2026-08-10 22:05:58,136] [WARNING] [leetcode_tracker]: GraphQL error for 'ZAWXjcjOUw': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:06:01,277] [WARNING] [leetcode_tracker]: GraphQL error for 'ZAWXjcjOUw': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:06:03,644] [WARNING] [leetcode_tracker]: GraphQL error for 'm2gQcjuz57': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:06:03,646] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'problemset'
+[2026-08-10 22:06:03,779] [WARNING] [leetcode_tracker]: GraphQL error for 'm2gQcjuz57': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:06:03,781] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'problemset'
+[2026-08-10 22:06:13,037] [WARNING] [leetcode_tracker]: GraphQL error for 'rMkHpSQTH6': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:06:13,873] [WARNING] [leetcode_tracker]: GraphQL error for 'rMkHpSQTH6': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:06:31,210] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'WbcKc8koB8'
+[2026-08-10 22:06:36,146] [WARNING] [leetcode_tracker]: GraphQL error for 'YI7QFq600': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:06:40,517] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'YI7QFq600'
+[2026-08-10 22:06:41,207] [WARNING] [leetcode_tracker]: GraphQL error for 'XXqTDMCg8v': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:06:44,502] [WARNING] [leetcode_tracker]: GraphQL error for 'XXqTDMCg8v': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:06:46,743] [WARNING] [leetcode_tracker]: GraphQL error for '00uzqPrwKt': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:06:49,019] [WARNING] [leetcode_tracker]: GraphQL error for '00uzqPrwKt': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:06:53,338] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'problemset'
+[2026-08-10 22:07:01,064] [WARNING] [leetcode_tracker]: GraphQL error for 'tharanya008': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:07:01,720] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'problemset'
+[2026-08-10 22:07:01,721] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'tharanya008'
+[2026-08-10 22:07:04,078] [WARNING] [leetcode_tracker]: GraphQL error for '2M4WMu7ICq': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:07:07,032] [WARNING] [leetcode_tracker]: GraphQL error for '2M4WMu7ICq': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:07:17,075] [WARNING] [leetcode_tracker]: GraphQL error for 'AnvarAhamed1234': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:07:18,921] [WARNING] [leetcode_tracker]: GraphQL error for 'AnvarAhamed1234': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:07:37,443] [WARNING] [leetcode_tracker]: GraphQL error for 'LINGESWARAN_6': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:07:39,579] [WARNING] [leetcode_tracker]: GraphQL error for 'LINGESWARAN_6': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:08:24,414] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'DHARSHAN_X0'
+[2026-08-10 22:08:35,790] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'Gayathri_VP'
+[2026-08-10 22:08:50,585] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'Gokulkrishna_26'
+[2026-08-10 22:08:50,591] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'gokulps'
+[2026-08-10 22:09:03,567] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'ZDHinXS03z'
+[2026-08-10 22:09:19,141] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'Deepak_2d'
+[2026-08-10 22:10:04,005] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'NANTHEES_NS-14'
+[2026-08-10 22:10:10,825] [WARNING] [leetcode_tracker]: GraphQL error for 'NIRAI_NIKILAN': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:10:19,992] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'NIRAI_NIKILAN'
+[2026-08-10 22:10:19,994] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for '732225ci030-nisha-c'
+[2026-08-10 22:10:29,190] [WARNING] [leetcode_tracker]: GraphQL error for 'qXuSu2Zg8M': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:10:33,113] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'qXuSu2Zg8M'
+[2026-08-10 22:10:40,488] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'praveena_selvaraj'
+[2026-08-10 22:10:50,791] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'pugazhenthi123'
+[2026-08-10 22:11:08,842] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'Roshan_v46'
+[2026-08-10 22:11:18,781] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'salini-25'
+[2026-08-10 22:11:23,043] [WARNING] [leetcode_tracker]: GraphQL error for 'Sanjaaiiii_': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:11:25,838] [WARNING] [leetcode_tracker]: GraphQL error for 'Sanjaaiiii_': [{'message': 'That user does not exist.', 'locations': [{'line': 3, 'column': 3}], 'path': ['matchedUser'], 'extensions': {'handled': True, 'skip_sentry': True}}, {'message': 'User matching query does not exist.', 'locations': [{'line': 17, 'column': 3}], 'path': ['userContestRanking']}]
+[2026-08-10 22:11:53,188] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'Sathish_chml'
+[2026-08-10 22:11:55,045] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'GAgrm4ykwn'
+[2026-08-10 22:11:56,334] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'GAgrm4ykwn'
+[2026-08-10 22:12:25,361] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'swedhan_s'
+[2026-08-10 22:12:25,364] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'Thamaraikannan_mr_2007'
+[2026-08-10 22:12:51,007] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'yaleneypoofsin'
+[2026-08-10 22:12:57,973] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'AathavanThiyakeswaran'
+[2026-08-10 22:13:11,288] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'deepadharshini_10'
+[2026-08-10 22:13:34,828] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'Janaranshini_17'
+[2026-08-10 22:13:34,831] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'kani_shaa'
+[2026-08-10 22:13:52,151] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'mowna_14'
+[2026-08-10 22:13:52,152] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'PRAVEEN360'
+[2026-08-10 22:14:00,288] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'j123kcmcm'
+[2026-08-10 22:14:45,903] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'Steffy_15'
+[2026-08-10 22:14:52,492] [INFO] [leetcode_tracker]: Returning cached LeetCode stats for 'Vignesh_2639'
+[2026-08-10 22:14:56,195] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-10 22:14:57,866] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-10 22:14:59,490] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-10 22:15:01,258] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-10 22:15:04,669] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 22:15:05,022] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 22:15:05,024] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 22:15:05,025] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 22:23:39,476] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 22:23:39,925] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 22:23:39,927] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 22:23:39,928] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 22:24:08,020] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 22:24:08,378] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 22:24:08,379] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 22:24:08,379] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 22:29:17,937] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 22:29:18,291] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 22:29:18,294] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 22:29:18,294] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 22:29:36,457] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 22:29:36,798] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 22:29:36,799] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 22:29:36,800] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-10 22:30:34,365] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-10 22:30:34,696] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-10 22:30:34,697] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).
+[2026-08-10 22:30:34,698] [INFO] [leetcode_tracker]: Backend Application ready and listening!
