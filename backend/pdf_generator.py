@@ -75,11 +75,11 @@ def generate_pdf_summary_report(db: Session, dept_id: Optional[int] = None) -> b
     story = []
     styles = getSampleStyleSheet()
 
-    # Custom styles
+    # Custom styles - Times New Roman font ONLY
     title_style = ParagraphStyle(
         'DocTitle',
         parent=styles['Heading1'],
-        fontName='Helvetica-Bold',
+        fontName='Times-Bold',
         fontSize=16,
         leading=20,
         textColor=colors.HexColor('#0F172A'),
@@ -89,7 +89,7 @@ def generate_pdf_summary_report(db: Session, dept_id: Optional[int] = None) -> b
     address_style = ParagraphStyle(
         'DocAddress',
         parent=styles['Normal'],
-        fontName='Helvetica-Bold',
+        fontName='Times-Bold',
         fontSize=8.5,
         leading=11,
         textColor=colors.HexColor('#0284C7'),
@@ -99,7 +99,7 @@ def generate_pdf_summary_report(db: Session, dept_id: Optional[int] = None) -> b
     subtitle_style = ParagraphStyle(
         'DocSubTitle',
         parent=styles['Normal'],
-        fontName='Helvetica-Bold',
+        fontName='Times-Bold',
         fontSize=9.5,
         leading=13,
         textColor=colors.HexColor('#334155'),
@@ -109,7 +109,7 @@ def generate_pdf_summary_report(db: Session, dept_id: Optional[int] = None) -> b
     meta_style = ParagraphStyle(
         'DocMeta',
         parent=styles['Normal'],
-        fontName='Helvetica',
+        fontName='Times-Roman',
         fontSize=8.5,
         leading=11,
         textColor=colors.HexColor('#64748B'),
@@ -118,7 +118,7 @@ def generate_pdf_summary_report(db: Session, dept_id: Optional[int] = None) -> b
 
     header_cell_style = ParagraphStyle(
         'HeaderCell',
-        fontName='Helvetica-Bold',
+        fontName='Times-Bold',
         fontSize=9,
         textColor=colors.white,
         alignment=1
@@ -126,7 +126,7 @@ def generate_pdf_summary_report(db: Session, dept_id: Optional[int] = None) -> b
 
     cell_style = ParagraphStyle(
         'NormalCell',
-        fontName='Helvetica',
+        fontName='Times-Roman',
         fontSize=8.5,
         leading=11,
         textColor=colors.HexColor('#334155')
@@ -134,7 +134,7 @@ def generate_pdf_summary_report(db: Session, dept_id: Optional[int] = None) -> b
 
     cell_bold_style = ParagraphStyle(
         'BoldCell',
-        fontName='Helvetica-Bold',
+        fontName='Times-Bold',
         fontSize=8.5,
         leading=11,
         textColor=colors.HexColor('#0F172A'),

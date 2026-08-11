@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     SMTP_USERNAME: str = ""
     SMTP_PASSWORD: str = ""
     SMTP_FROM_EMAIL: str = ""
-    REPORT_RECIPIENT_EMAILS: str = ""
+    REPORT_RECIPIENT_EMAILS: str = "nanthishvaran17@gmail.com, msanthoshkumar@nandhaengg.org"
     
     # Telegram / WhatsApp
     TELEGRAM_BOT_TOKEN: str = ""

@@ -61,10 +61,18 @@ export const ReportsPage: React.FC = () => {
     downloadReportFile('/reports/export-pdf', 'Executive_PDF_Summary.pdf');
   };
 
+  const handleDownloadWord = () => {
+    downloadReportFile('/reports/export-word', 'Executive_Word_Summary.docx');
+  };
+
+  const [recipientInput, setRecipientInput] = useState<string>("nanthishvaran17@gmail.com, msanthoshkumar@nandhaengg.org");
+
   const handleSendWeeklyEmail = async () => {
     setIsSendingEmail(true);
     try {
-      const res = await api.post('/reports/send-weekly-email');
+      const res = await api.post('/reports/send-weekly-email', {
+        recipient_emails: recipientInput
+      });
       alert(res.data.message);
       fetchEmailLogs();
     } catch (err: any) {
@@ -154,14 +162,26 @@ export const ReportsPage: React.FC = () => {
     {
       id: 'pdf-summary',
       title: 'Executive PDF Summary Report',
-      badge: 'PRINTABLE PDF',
+      badge: 'PRINTABLE PDF (TIMES NEW ROMAN)',
       badgeColor: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
-      description: 'High-resolution printable PDF report with official college header branding, executive summary table, department statistics, and top performers.',
+      description: 'High-resolution printable PDF report with official college header branding, executive summary table, department statistics, and top performers styled strictly in Times New Roman.',
       filename: 'Executive_PDF_Summary.pdf',
       icon: FileText,
       iconBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
       btnGradient: 'from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 shadow-rose-600/30',
       onClick: handleDownloadPDF
+    },
+    {
+      id: 'word-summary',
+      title: 'Executive Word Summary (.DOCX)',
+      badge: 'WORD DOCX (TIMES NEW ROMAN)',
+      badgeColor: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+      description: 'Editable Microsoft Word document report with official Nandha Engineering College header, executive summary table, and student performance roster styled in Times New Roman.',
+      filename: 'Executive_Word_Summary.docx',
+      icon: FileText,
+      iconBg: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+      btnGradient: 'from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 shadow-blue-600/30',
+      onClick: handleDownloadWord
     }
   ];
 
@@ -196,6 +216,53 @@ export const ReportsPage: React.FC = () => {
             <Mail className={`w-4 h-4 ${isSendingEmail ? 'animate-bounce' : ''}`} />
             <span>{isSendingEmail ? 'Dispatching Emails...' : '📧 Dispatch Weekly Email Report Now'}</span>
           </button>
+        </div>
+      </div>
+
+      {/* Email Report Dispatch Configuration Card */}
+      <div className="glass-card p-6 md:p-8 rounded-3xl border border-emerald-500/30 dark:border-emerald-500/20 shadow-xl space-y-4 bg-gradient-to-r from-emerald-500/5 via-teal-500/5 to-transparent">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+              <Mail className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-lg font-black text-gray-900 dark:text-white">
+                Email Report Dispatch Configuration
+              </h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-bold">
+                Automated & manual weekly email dispatch target recipients for Nandha Engineering College Management
+              </p>
+            </div>
+          </div>
+          
+          <button
+            onClick={handleSendWeeklyEmail}
+            disabled={isSendingEmail}
+            className="flex items-center space-x-2 px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 text-white rounded-2xl text-xs font-black shadow-lg shadow-emerald-500/30 transition-all transform hover:scale-105"
+          >
+            <Send className={`w-4 h-4 ${isSendingEmail ? 'animate-bounce' : ''}`} />
+            <span>{isSendingEmail ? 'Dispatching...' : '📧 Send Report to Management Now'}</span>
+          </button>
+        </div>
+
+        <div className="space-y-2 pt-2">
+          <label className="block text-xs font-black text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+            Recipient Email Addresses (Comma Separated)
+          </label>
+          <div className="flex items-center space-x-3">
+            <input
+              type="text"
+              value={recipientInput}
+              onChange={(e) => setRecipientInput(e.target.value)}
+              placeholder="e.g. nanthishvaran17@gmail.com, msanthoshkumar@nandhaengg.org"
+              className="flex-1 px-4 py-3 bg-white dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-2xl text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none shadow-inner"
+            />
+          </div>
+          <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center space-x-1">
+            <CheckCircle2 className="w-3.5 h-3.5 inline" />
+            <span>Configured Recipients: <b>nanthishvaran17@gmail.com</b> and <b>msanthoshkumar@nandhaengg.org</b></span>
+          </p>
         </div>
       </div>
 

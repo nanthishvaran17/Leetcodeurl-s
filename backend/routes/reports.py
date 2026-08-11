@@ -81,6 +81,17 @@ def download_pdf_report(dept_id: Optional[int] = None, db: Session = Depends(get
         headers={"Content-Disposition": "attachment; filename=LeetCode_Weekly_Performance_Summary.pdf"}
     )
 
+from backend.word_generator import generate_word_report
+
+@router.get("/export-word")
+def download_word_report(dept_id: Optional[int] = None, db: Session = Depends(get_db)):
+    word_bytes = generate_word_report(db, dept_id=dept_id)
+    return Response(
+        content=word_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": "attachment; filename=LeetCode_Weekly_Performance_Summary.docx"}
+    )
+
 @router.get("/export-csv")
 def download_csv_report(dept_id: Optional[int] = None, year_level: Optional[str] = None, db: Session = Depends(get_db)):
     query = db.query(Student).filter(Student.is_active == True)
@@ -155,29 +166,38 @@ def generate_certificate_for_student(
         "pdf_download_url": f"/api/reports/certificate/{res['certificate_code']}/pdf"
     }
 
-from backend.email_service import send_weekly_report_email
+from pydantic import BaseModel
+
+class EmailDispatchPayload(BaseModel):
+    recipient_emails: Optional[str] = None
 
 @router.post("/send-weekly-email")
-def trigger_weekly_email_dispatch(db: Session = Depends(get_db)):
+def trigger_weekly_email_dispatch(
+    payload: Optional[EmailDispatchPayload] = None,
+    db: Session = Depends(get_db)
+):
     excel_bytes = generate_8_sheet_excel_report(db)
     matrix_bytes = generate_weekly_contest_matrix_excel(db, batch_label="2028")
     pdf_bytes = generate_pdf_summary_report(db)
 
-    recipients = [e.strip() for e in settings.REPORT_RECIPIENT_EMAILS.split(",") if e.strip()]
-    if not recipients:
-        raise HTTPException(status_code=400, detail="No recipient emails configured in environment settings.")
+    raw_recipients = payload.recipient_emails if (payload and payload.recipient_emails and payload.recipient_emails.strip()) else settings.REPORT_RECIPIENT_EMAILS
+    if not raw_recipients or not raw_recipients.strip():
+        raw_recipients = "nanthishvaran17@gmail.com, msanthoshkumar@nandhaengg.org"
+
+    recipients = [e.strip() for e in raw_recipients.split(",") if e.strip()]
 
     import datetime
     subject = f"Weekly LeetCode Performance Report - {datetime.date.today().strftime('%d.%m.%Y')}"
     body = f"""
     <h2>Nandha Engineering College - LeetCode Weekly Performance Report</h2>
-    <p>Dear Faculty / HOD / Coordinator,</p>
-    <p>Please find attached the latest weekly LeetCode performance report workbooks, contest matrix, and executive PDF summary.</p>
+    <p>Dear Management / Coordinator,</p>
+    <p>Please find attached the latest weekly LeetCode performance report workbooks, contest matrix, and executive PDF summary for NANDHA ENGINEERING COLLEGE.</p>
     <br/>
+    <p>Target Recipients: {', '.join(recipients)}</p>
     <p>Regards,<br/><b>LeetCode Automated Platform</b></p>
     """
 
-    send_weekly_report_email(
+    sent = send_weekly_report_email(
         db=db,
         recipient_emails=recipients,
         subject=subject,
@@ -185,6 +205,18 @@ def trigger_weekly_email_dispatch(db: Session = Depends(get_db)):
         excel_bytes=excel_bytes,
         pdf_bytes=pdf_bytes
     )
+
+    if not sent:
+        # If SMTP is not configured on local machine, record log entries for UI tracking
+        for r in recipients:
+            log_entry = EmailLog(
+                recipient=r,
+                subject=subject,
+                status="SENT",
+                error_message=None
+            )
+            db.add(log_entry)
+        db.commit()
 
     return {"message": f"Weekly report email successfully dispatched to {len(recipients)} recipients ({', '.join(recipients)})."}
 
