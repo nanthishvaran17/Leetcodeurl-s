@@ -101,8 +101,11 @@ def on_startup():
         logger.info("Starting background scheduler...")
         try:
             start_scheduler()
+            import asyncio
+            from backend.sync_engine import run_batch_sync
+            asyncio.create_task(run_batch_sync(limit=None))
         except Exception as e:
-            logger.warning(f"Scheduler initialization note: {e}")
+            logger.warning(f"Scheduler / Live Sync initialization note: {e}")
     elif not SCHEDULER_AVAILABLE:
         logger.warning("Scheduler skipped — pandas/numpy not available (Application Control policy).")
     logger.info("Backend Application ready and listening!")

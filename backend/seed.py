@@ -454,25 +454,25 @@ def seed_database():
                     c_rating, c_rank = 1920.5, 8900
                     st_status = "OK"
                 elif reg == "732224CC031":
-                    tot, ez, med, hd = 645, 213, 323, 109
-                    c_rating, c_rank = 1845.5, 14200
+                    tot, ez, med, hd = 706, 271, 326, 109
+                    c_rating, c_rank = 1627.0, 179015
                     st_status = "OK"
-                elif url and "leetcode.com" in url.lower():
-                    tot = 35 + (seed_val * 17) % 450
-                    ez = int(tot * 0.48)
-                    med = int(tot * 0.42)
-                    hd = tot - ez - med
-                    c_rating = round(1380 + (seed_val * 7) % 420, 1)
-                    c_rank = 120000 + (seed_val * 153) % 400000
+                elif reg == "23CC059":
+                    tot, ez, med, hd = 416, 199, 174, 43
+                    c_rating, c_rank = 1611.0, 180129
+                    st_status = "OK"
+                elif reg == "23CC039":
+                    tot, ez, med, hd = 382, 183, 160, 39
+                    c_rating, c_rank = 1597.0, 179823
+                    st_status = "OK"
+                elif reg == "732225CI048":
+                    tot, ez, med, hd = 29, 13, 12, 4
+                    c_rating, c_rank = None, 3655364
                     st_status = "OK"
                 else:
-                    tot = 45 + (seed_val * 13) % 220
-                    ez = int(tot * 0.50)
-                    med = int(tot * 0.40)
-                    hd = tot - ez - med
-                    c_rating = round(1355.3 + (seed_val * 3) % 150, 1)
-                    c_rank = 350000 + (seed_val * 100) % 500000
-                    st_status = "OK"
+                    tot, ez, med, hd = 0, 0, 0, 0
+                    c_rating, c_rank = None, None
+                    st_status = "NOT STARTED"
 
                 stud = db.query(Student).filter(Student.reg_no == reg).first()
                 if not stud:
