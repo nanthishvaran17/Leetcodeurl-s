@@ -18,6 +18,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   const [students, setStudents] = useState<StudentData[]>([]);
   const [displayCount, setDisplayCount] = useState<number>(32);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [solvedFilter, setSolvedFilter] = useState<string>('ALL');
 
   useEffect(() => {
     fetchDepartments();
@@ -113,7 +114,18 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
     }
   };
 
-  const sortedList = getSortedStudents();
+  const getFilteredSolvedStudents = (list: StudentData[]) => {
+    switch (solvedFilter) {
+      case 'above_500':  return list.filter(s => (s.stats?.total_solved || 0) > 500);
+      case '250_500':    return list.filter(s => { const t = s.stats?.total_solved || 0; return t >= 250 && t <= 500; });
+      case '101_250':    return list.filter(s => { const t = s.stats?.total_solved || 0; return t >= 101 && t < 250; });
+      case 'less_100':   return list.filter(s => { const t = s.stats?.total_solved || 0; return t > 0 && t < 100; });
+      case 'not_started':return list.filter(s => !s.stats || s.stats.total_solved === 0);
+      default:           return list;
+    }
+  };
+
+  const sortedList = getFilteredSolvedStudents(getSortedStudents());
 
   return (
     <div className="space-y-6">
@@ -248,26 +260,55 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           </div>
         </div>
 
-        {/* Contest Mode selector */}
+        {/* Contest Mode selector (Only shown when Weekly Contest Matrix view is selected) */}
+        {viewMode === 'contest' && (
+          <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
+            <label className="block text-xs font-bold text-amber-500 dark:text-amber-400 uppercase tracking-wider mb-2">🏆 Select Contest Participation Mode (Public Live vs Virtual)</label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { id: 'ALL', label: '🏢 All Contest Modes' },
+                { id: 'PUBLIC', label: '🟢 Public Live (08:00 AM – 09:30 AM IST)' },
+                { id: 'VIRTUAL', label: '🔵 Virtual Contest (Post 09:30 AM)' },
+                { id: 'NOT_STARTED', label: '🔴 Not Yet Started' }
+              ].map((mode) => (
+                <button
+                  key={mode.id}
+                  onClick={() => setContestMode(mode.id)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                    contestMode === mode.id
+                      ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
+                  }`}
+                >
+                  {mode.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Number of Problems Solved filter */}
         <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
-          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Select Contest Participation Mode (Public Live vs Virtual)</label>
+          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Number of Problems Solved</label>
           <div className="flex flex-wrap gap-2">
             {[
-              { id: 'ALL', label: '🏢 All Contest Modes' },
-              { id: 'PUBLIC', label: '🟢 Public Live (08:00 AM – 09:30 AM IST)' },
-              { id: 'VIRTUAL', label: '🔵 Virtual Contest (Post 09:30 AM)' },
-              { id: 'NOT_STARTED', label: '🔴 Not Yet Started' }
-            ].map((mode) => (
+              { id: 'ALL',         label: '🟢 All Students' },
+              { id: 'above_500',   label: '🏆 Above 500' },
+              { id: '250_500',     label: '🔵 250 – 500' },
+              { id: '101_250',     label: '🟡 101 – 250' },
+              { id: 'less_100',    label: '🔴 Less than 100' },
+              { id: 'not_started', label: '⬛ Not Yet Started' },
+            ].map((f) => (
               <button
-                key={mode.id}
-                onClick={() => setContestMode(mode.id)}
+                key={f.id}
+                onClick={() => setSolvedFilter(f.id)}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  contestMode === mode.id
-                    ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30'
+                  solvedFilter === f.id
+                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30 scale-[1.02]'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
                 }`}
               >
-                {mode.label}
+                {f.label}
               </button>
             ))}
           </div>
@@ -275,15 +316,15 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
 
         {/* Sort & Order selector */}
         <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
-          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Sort & Order Students</label>
+          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Sort &amp; Order Students</label>
           <div className="flex flex-wrap gap-2">
             {[
               { id: 'top_solved', label: '🔥 Top Solvers (High to Low)' },
               { id: 'low_solved', label: '⚠️ Low Solvers (Needs Focus)' },
-              { id: 'name_asc', label: '🔤 Name (A ➔ Z)' },
-              { id: 'name_desc', label: '🔤 Name (Z ➔ A)' },
-              { id: 'streak', label: '⚡ Highest Streak' },
-              { id: 'rating', label: '⭐ Contest Rating' }
+              { id: 'name_asc',   label: '🔤 Name (A ➤ Z)' },
+              { id: 'name_desc',  label: '🔤 Name (Z ➤ A)' },
+              { id: 'streak',     label: '⚡ Highest Streak' },
+              { id: 'rating',     label: '⭐ Contest Rating' }
             ].map((sortItem) => (
               <button
                 key={sortItem.id}
@@ -306,7 +347,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-extrabold text-sm text-gray-900 dark:text-white">
-            {selectedDept ? selectedDept.name : 'All Departments (Cyber Security & IoT)'} • {yearLevel === 'ALL' ? 'All Years' : `${yearLevel} Year`} ({sortedList.length} Students)
+            {selectedDept ? selectedDept.name : 'All Departments (Cyber Security & IoT)'} • {yearLevel === 'ALL' ? 'All Years' : `${yearLevel} Year`}{solvedFilter !== 'ALL' ? ` • ${({'above_500':'Above 500','250_500':'250–500','101_250':'101–250','less_100':'<100','not_started':'Not Started'}[solvedFilter] ?? '')} Solved` : ''} ({sortedList.length} Students)
           </h3>
         </div>
 

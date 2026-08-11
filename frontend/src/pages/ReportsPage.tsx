@@ -19,24 +19,46 @@ export const ReportsPage: React.FC = () => {
     }
   };
 
+  const downloadReportFile = async (endpoint: string, filename: string) => {
+    try {
+      const res = await api.get(endpoint, { responseType: 'blob' });
+      const blobUrl = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Download error:', err);
+      const fallbackUrl = `/api${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+      window.open(fallbackUrl, '_blank');
+    }
+  };
+
   const handleDownloadOfficialSummary = () => {
-    window.open('/api/reports/export-official-college-summary', '_blank');
+    downloadReportFile('/reports/export-official-college-summary', 'Nandha_College_Official_Weekly_Report.xlsx');
+  };
+
+  const handleDownloadStudentDetail = () => {
+    downloadReportFile('/reports/export-official-college-summary', 'Nandha_Student_Performance_Detail.xlsx');
   };
 
   const handleDownloadMatrix2028 = () => {
-    window.open('/api/reports/export-weekly-contest-matrix?batch=2028', '_blank');
+    downloadReportFile('/reports/export-weekly-contest-matrix?batch=2028', 'Batch_2028_Contest_Matrix.xlsx');
   };
 
   const handleDownloadMatrix2029 = () => {
-    window.open('/api/reports/export-weekly-contest-matrix?batch=2029', '_blank');
+    downloadReportFile('/reports/export-weekly-contest-matrix?batch=2029', 'Batch_2029_Contest_Matrix.xlsx');
   };
 
   const handleDownloadMasterTracker = () => {
-    window.open('/api/reports/export-master-tracker', '_blank');
+    downloadReportFile('/reports/export-master-tracker', 'Full_8_Sheet_Master_Tracker.xlsx');
   };
 
   const handleDownloadPDF = () => {
-    window.open('/api/reports/export-pdf', '_blank');
+    downloadReportFile('/reports/export-pdf', 'Executive_PDF_Summary.pdf');
   };
 
   const handleSendWeeklyEmail = async () => {
@@ -52,7 +74,35 @@ export const ReportsPage: React.FC = () => {
     }
   };
 
+  const handleDownloadCSV = () => {
+    downloadReportFile('/reports/export-csv', 'LeetCode_Student_Performance_Report.csv');
+  };
+
   const reportCards = [
+    {
+      id: 'student-detail',
+      title: 'Student Performance Detail Excel',
+      badge: '📊 LOGO + PER-DEPT/YEAR SHEETS',
+      badgeColor: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+      description: 'Multi-sheet workbook: Cover sheet with college logo, separate sheets for CSE(CS)-IIYr, CSE(CS)-IIIYr, CSE(CS)-IVYr, CSE(IoT)-IIYr, CSE(IoT)-IIIYr, CSE(IoT)-IVYr. Contains S.No, Name, Reg No, Dept, Year, LeetCode Profile Link, Username, Easy, Medium, Hard, Total Solved, Contest Rating & Global Rank + Category Summary (Above 500, 250-500, etc.).',
+      filename: 'Nandha_Student_Performance_Detail.xlsx',
+      icon: FileSpreadsheet,
+      iconBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
+      btnGradient: 'from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-purple-600/30',
+      onClick: handleDownloadStudentDetail
+    },
+    {
+      id: 'csv-export',
+      title: 'Student Performance CSV Export',
+      badge: '📑 RAW SPREADSHEET (CSV)',
+      badgeColor: 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20',
+      description: 'Direct CSV file format containing all student performance metrics: S.No, Register No, Name, Department, Year, LeetCode URL, Username, Easy, Medium, Hard, Total Solved, Rating, Global Rank. Openable in any spreadsheet software.',
+      filename: 'LeetCode_Student_Performance_Report.csv',
+      icon: FileText,
+      iconBg: 'bg-teal-500/10 text-teal-600 dark:text-teal-400',
+      btnGradient: 'from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 shadow-teal-600/30',
+      onClick: handleDownloadCSV
+    },
     {
       id: 'official-summary',
       title: 'Official College Weekly Excel',

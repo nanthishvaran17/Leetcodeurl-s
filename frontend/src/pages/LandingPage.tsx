@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CollegeLogo } from '../components/CollegeLogo';
-import { Shield, ArrowRight, Trophy, Users, Layers, Activity, Flame, Star, LayoutGrid, List } from 'lucide-react';
+import { Shield, ArrowRight, Trophy, Users, Layers, Activity, Flame, Star, LayoutGrid, List, RefreshCw } from 'lucide-react';
 import { CountdownTimer } from '../components/CountdownTimer';
 import { StudentFlipCard } from '../components/StudentFlipCard';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
@@ -22,10 +22,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [departments, setDepartments] = useState<any[]>([]);
   const [selectedDept, setSelectedDept] = useState<any>(null);
   const [yearLevel, setYearLevel] = useState<string>('ALL');
+  const [solvedFilter, setSolvedFilter] = useState<string>('ALL');
   const [sortBy, setSortBy] = useState<string>('top_solved');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [students, setStudents] = useState<StudentData[]>([]);
   const [displayCount, setDisplayCount] = useState<number>(32);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [refreshingId, setRefreshingId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchDepartments();
@@ -35,6 +38,33 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   useEffect(() => {
     fetchFilteredStudents();
   }, [selectedDept, yearLevel]);
+
+  const handleRefreshAll = async () => {
+    setRefreshing(true);
+    try {
+      await api.post('/students/refresh-all');
+      // Wait 4 seconds for background task to start, then refetch
+      setTimeout(async () => {
+        await fetchFilteredStudents();
+        setRefreshing(false);
+      }, 4000);
+    } catch (err) {
+      console.error(err);
+      setRefreshing(false);
+    }
+  };
+
+  const handleRefreshStudent = async (studentId: number) => {
+    setRefreshingId(studentId);
+    try {
+      await api.post(`/students/${studentId}/refresh`);
+      await fetchFilteredStudents();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setRefreshingId(null);
+    }
+  };
 
   const fetchDepartments = async () => {
     try {
@@ -86,7 +116,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     }
   };
 
-  const sortedList = getSortedStudents();
+  const getFilteredSolvedStudents = (list: StudentData[]) => {
+    switch (solvedFilter) {
+      case 'above_500':
+        return list.filter(s => (s.stats?.total_solved || 0) > 500);
+      case '250_500':
+        return list.filter(s => { const t = s.stats?.total_solved || 0; return t >= 250 && t <= 500; });
+      case '101_250':
+        return list.filter(s => { const t = s.stats?.total_solved || 0; return t >= 101 && t < 250; });
+      case 'less_100':
+        return list.filter(s => { const t = s.stats?.total_solved || 0; return t > 0 && t < 100; });
+      case 'not_started':
+        return list.filter(s => !s.stats || s.stats.total_solved === 0);
+      default:
+        return list;
+    }
+  };
+
+  const sortedList = getFilteredSolvedStudents(getSortedStudents());
 
   return (
     <div className="space-y-10 py-6">
@@ -119,12 +166,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             >
               <span>View Executive Dashboard</span>
               <ArrowRight className="w-4 h-4 text-slate-950 stroke-[3]" />
-            </button>
-            <button
-              onClick={onOpenLogin}
-              className="px-6 py-3.5 rounded-2xl bg-white/15 hover:bg-white/25 text-white font-extrabold text-sm border-2 border-white/30 backdrop-blur-md transition-all transform hover:scale-105 shadow-lg"
-            >
-              Admin Login
             </button>
           </div>
         </div>
@@ -269,6 +310,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
         </div>
 
+        {/* Number of Problems Solved filter */}
+        <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
+          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Number of Problems Solved</label>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { id: 'ALL',        label: '🟢 All Students',    color: '' },
+              { id: 'above_500',  label: '🏆 Above 500',        color: 'emerald' },
+              { id: '250_500',    label: '🔵 250 – 500',         color: 'blue' },
+              { id: '101_250',    label: '🟡 101 – 250',         color: 'amber' },
+              { id: 'less_100',   label: '🔴 Less than 100',    color: 'rose' },
+              { id: 'not_started',label: '⬛ Not Yet Started',  color: 'gray' },
+            ].map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setSolvedFilter(f.id)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  solvedFilter === f.id
+                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30 scale-[1.02]'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
         {/* Sort & Order selector */}
         <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
           <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Sort & Order Students</label>
@@ -300,10 +367,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       {/* Student Showcase Display */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <h3 className="font-black text-base text-gray-900 dark:text-white">
-            {selectedDept ? selectedDept.name : 'All Departments (Cyber Security & IoT)'} • {yearLevel === 'ALL' ? 'All Years' : `${yearLevel} Year`} ({sortedList.length} Students)
+            {selectedDept ? selectedDept.name : 'All Departments (Cyber Security & IoT)'} • {yearLevel === 'ALL' ? 'All Years' : `${yearLevel} Year`}{solvedFilter !== 'ALL' ? ` • ${({'above_500':'Above 500','250_500':'250–500','101_250':'101–250','less_100':'<100','not_started':'Not Started'}[solvedFilter] ?? '')} Solved` : ''} ({sortedList.length} Students)
           </h3>
+          <button
+            onClick={handleRefreshAll}
+            disabled={refreshing}
+            className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              refreshing
+                ? 'bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed'
+                : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/30'
+            }`}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+            <span>{refreshing ? 'Refreshing...' : '🔄 Refresh All LeetCode Stats'}</span>
+          </button>
         </div>
 
         {viewMode === 'cards' ? (
@@ -344,6 +423,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <LeaderboardTable
             students={sortedList}
             onSelectStudent={onSelectStudent}
+            onRefreshStudent={handleRefreshStudent}
           />
         )}
       </div>

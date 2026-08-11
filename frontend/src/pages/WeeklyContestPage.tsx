@@ -55,12 +55,40 @@ export const WeeklyContestPage: React.FC = () => {
     }
   };
 
-  const handleDownloadExcel = () => {
-    let url = `/api/reports/export-weekly-contest-matrix?batch=${selectedBatch}`;
-    if (selectedDept) {
-      url += `&dept_id=${selectedDept.id}`;
+  const downloadReportFile = async (endpoint: string, filename: string) => {
+    try {
+      const res = await api.get(endpoint, { responseType: 'blob' });
+      const blobUrl = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Download error:', err);
+      const fallbackUrl = `/api${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+      window.open(fallbackUrl, '_blank');
     }
-    window.open(url, '_blank');
+  };
+
+  const handleDownloadCurrentWeek = () => {
+    let endpoint = `/reports/export-current-week-matrix?batch=${selectedBatch}`;
+    if (selectedDept) endpoint += `&dept_id=${selectedDept.id}`;
+    downloadReportFile(endpoint, `LeetCode_Current_Week_Matrix_Batch_${selectedBatch}.xlsx`);
+  };
+
+  const handleDownloadLastWeek = () => {
+    let endpoint = `/reports/export-last-week-matrix?batch=${selectedBatch}`;
+    if (selectedDept) endpoint += `&dept_id=${selectedDept.id}`;
+    downloadReportFile(endpoint, `LeetCode_Last_Week_Matrix_Batch_${selectedBatch}.xlsx`);
+  };
+
+  const handleDownloadExcel = () => {
+    let endpoint = `/reports/export-weekly-contest-matrix?batch=${selectedBatch}`;
+    if (selectedDept) endpoint += `&dept_id=${selectedDept.id}`;
+    downloadReportFile(endpoint, `LeetCode_Weekly_Contest_Matrix_Batch_${selectedBatch}.xlsx`);
   };
 
   return (
@@ -86,13 +114,30 @@ export const WeeklyContestPage: React.FC = () => {
             </p>
           </div>
 
-          <button
-            onClick={handleDownloadExcel}
-            className="flex items-center space-x-2 px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-2xl text-xs font-black shadow-xl shadow-emerald-500/30 transition-all transform hover:scale-105 active:scale-95"
-          >
-            <Download className="w-4 h-4" />
-            <span>Download Official Matrix Excel (.xlsx)</span>
-          </button>
+          {/* Download Buttons */}
+          <div className="flex flex-wrap gap-2.5">
+            <button
+              onClick={handleDownloadCurrentWeek}
+              className="flex items-center space-x-2 px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-2xl text-xs font-black shadow-xl shadow-emerald-500/30 transition-all transform hover:scale-105 active:scale-95"
+            >
+              <Download className="w-4 h-4" />
+              <span>📅 Current Week (.xlsx)</span>
+            </button>
+            <button
+              onClick={handleDownloadLastWeek}
+              className="flex items-center space-x-2 px-5 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-2xl text-xs font-black shadow-xl shadow-indigo-500/30 transition-all transform hover:scale-105 active:scale-95"
+            >
+              <Download className="w-4 h-4" />
+              <span>⏮️ Last Week (.xlsx)</span>
+            </button>
+            <button
+              onClick={handleDownloadExcel}
+              className="flex items-center space-x-2 px-5 py-3 bg-gradient-to-r from-slate-600 to-gray-700 hover:from-slate-700 hover:to-gray-800 text-white rounded-2xl text-xs font-black shadow-lg transition-all transform hover:scale-105 active:scale-95"
+            >
+              <Download className="w-4 h-4" />
+              <span>📊 Full Matrix (.xlsx)</span>
+            </button>
+          </div>
         </div>
       </div>
 

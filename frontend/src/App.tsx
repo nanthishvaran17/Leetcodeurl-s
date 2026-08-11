@@ -18,7 +18,10 @@ import { ImportModal } from './components/ImportModal';
 import { StudentData } from './components/LeaderboardTable';
 import api from './services/api';
 
+import { useAuth } from './context/AuthContext';
+
 export const App: React.FC = () => {
+  const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState('landing');
   const [selectedStudent, setSelectedStudent] = useState<StudentData | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -38,9 +41,17 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleTabChange = (tab: string) => {
+    if (!isAuthenticated && tab !== 'landing' && tab !== 'public') {
+      setShowLoginModal(true);
+      return;
+    }
+    setActiveTab(tab);
+  };
+
   const handleSelectStudent = (student: StudentData) => {
     setSelectedStudent(student);
-    setActiveTab('profile');
+    handleTabChange('profile');
   };
 
   return (
@@ -51,14 +62,14 @@ export const App: React.FC = () => {
         currentSessionStatus={summaryData?.current_session?.status || "UPCOMING"}
         onOpenLogin={() => setShowLoginModal(true)}
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleTabChange}
       />
 
       <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex gap-6">
         
-        {/* Left Sidebar (Only visible when not on landing/login modal) */}
-        {activeTab !== 'landing' && (
-          <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+        {/* Left Sidebar (Only visible for authenticated Admin and when not on landing page) */}
+        {isAuthenticated && activeTab !== 'landing' && (
+          <Sidebar activeTab={activeTab} setActiveTab={handleTabChange} />
         )}
 
         {/* Main Content View Container */}
@@ -67,7 +78,7 @@ export const App: React.FC = () => {
           {activeTab === 'landing' && (
             <LandingPage
               summaryData={summaryData}
-              onViewDashboard={() => setActiveTab('dashboard')}
+              onViewDashboard={() => handleTabChange('dashboard')}
               onOpenLogin={() => setShowLoginModal(true)}
               onSelectStudent={handleSelectStudent}
             />
@@ -77,7 +88,7 @@ export const App: React.FC = () => {
             <DashboardPage
               onSelectStudent={handleSelectStudent}
               onOpenImport={() => setShowImportModal(true)}
-              onNavigateTab={(tab) => setActiveTab(tab)}
+              onNavigateTab={(tab) => handleTabChange(tab)}
             />
           )}
 

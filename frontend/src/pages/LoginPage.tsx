@@ -57,7 +57,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="e.g. admin"
+              placeholder="Username"
               required
               className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-navy-900 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
             />
@@ -95,9 +95,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         </button>
       </form>
 
-      <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/40 text-[11px] text-gray-500 text-center">
-        Default Super Admin: <b>admin</b> / <b>admin123</b>
-      </div>
+
 
     </div>
   );

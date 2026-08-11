@@ -6,7 +6,12 @@ export function useLiveLeaderboard(onUpdate?: (data: any) => void) {
 
   useEffect(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws/leaderboard`;
+    // In prod use VITE_API_URL; in dev use backend port 8000 directly
+    const apiUrl = import.meta.env.VITE_API_URL;
+    const wsHost = apiUrl
+      ? apiUrl.replace(/^https?:\/\//, '')
+      : '127.0.0.1:8000';
+    const wsUrl = `${protocol}//${wsHost}/ws/leaderboard`;
 
     let socket: WebSocket | null = null;
     let pingInterval: any = null;
