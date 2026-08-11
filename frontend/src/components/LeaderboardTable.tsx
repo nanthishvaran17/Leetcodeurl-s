@@ -6,7 +6,9 @@ export interface StudentData {
   id: number;
   reg_no: string;
   name: string;
-  department?: { name: string; code: string };
+  email?: string;
+  department_id?: number;
+  department?: { id?: number; name: string; code: string };
   year_level: string;
   section?: { name: string };
   leetcode_url?: string;
@@ -18,6 +20,7 @@ export interface StudentData {
     hard_solved: number;
     contest_rating?: number;
     contest_global_ranking?: number;
+    public_profile_ranking?: number;
     recent_contest_name?: string;
     recent_contest_score?: string;
     status: string;
@@ -118,27 +121,29 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
               const totalSolved = student.stats?.total_solved || 0;
               const contestSolvedRatio = student.stats?.recent_contest_score || (totalSolved > 400 ? '4 / 4' : totalSolved > 250 ? '3 / 4' : totalSolved > 100 ? '2 / 4' : totalSolved > 0 ? '1 / 4' : '0 / 4');
               const recentContestName = student.stats?.recent_contest_name || 'Weekly Contest';
-              const contestRating = student.stats?.contest_rating ? student.stats.contest_rating.toFixed(1) : '1355.3';
-              const globalRanking = student.stats?.contest_global_ranking ? `#${student.stats.contest_global_ranking}` : `#${809000 + (student.id * 137)}`;
+              const contestRating = student.stats?.contest_rating ? student.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '1,355.3';
+              
+              const rawRank = student.stats?.public_profile_ranking || student.stats?.contest_global_ranking;
+              const globalRanking = rawRank ? `#${rawRank.toLocaleString('en-US')}` : 'Unranked';
               const username = student.username || student.leetcode_url?.split('/u/')[1]?.replace('/', '') || `${student.name.replace(/\s+/g, '_')}`;
 
-              // Determine Participation Mode (Public Live vs Virtual vs Not Started)
+              // Determine Participation Mode (Public Live vs Not Started)
               let modeBadge = (
                 <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-400/30">
                   <span>🟢 Public Live (08:00–09:30 AM)</span>
                 </span>
               );
 
-              if (totalSolved === 0) {
+              if (totalSolved === 0 || student.stats?.status === "NOT STARTED") {
                 modeBadge = (
                   <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-400/30">
                     <span>🔴 Not Yet Started</span>
                   </span>
                 );
-              } else if (student.id % 4 === 0) {
+              } else if (student.stats?.status === "MISSING LINK" || student.stats?.status === "INVALID LINK") {
                 modeBadge = (
-                  <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-400/30">
-                    <span>🔵 Virtual Contest (Post 09:30 AM)</span>
+                  <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-400/30">
+                    <span>⚠️ Link Issue</span>
                   </span>
                 );
               }

@@ -2,6 +2,7 @@ import datetime
 from sqlalchemy.orm import Session
 from backend.models import WeeklySession, WeeklySessionSnapshot, Student, LeetCodeProfileStats
 from backend.leetcode_client import fetch_leetcode_profile
+from backend.sync_engine import sync_single_student_db
 from backend.ranking import update_all_rankings_and_badges
 from backend.config import settings
 from backend.logger import logger
@@ -50,24 +51,8 @@ async def trigger_start_snapshot(db: Session, session_id: int):
         # Fetch current profile stats (using cached if fresh or update)
         stats_dict = await fetch_leetcode_profile(student.leetcode_url)
         
-        # Update student profile stats in DB
-        if not student.stats:
-            student.stats = LeetCodeProfileStats(student_id=student.id)
-
-        if stats_dict["status"] == "OK":
-            student.stats.total_solved = stats_dict["total_solved"]
-            student.stats.easy_solved = stats_dict["easy_solved"]
-            student.stats.medium_solved = stats_dict["medium_solved"]
-            student.stats.hard_solved = stats_dict["hard_solved"]
-            student.stats.contest_rating = stats_dict["contest_rating"]
-            student.stats.contest_global_ranking = stats_dict["contest_global_ranking"]
-            student.stats.public_profile_ranking = stats_dict["public_profile_ranking"]
-            student.stats.status = "OK"
-        else:
-            student.stats.status = stats_dict["status"]
-            student.stats.error_message = stats_dict.get("error_message")
-
-        student.stats.last_updated = datetime.datetime.utcnow()
+        # Update student profile stats in DB using centralized sync_single_student_db
+        sync_single_student_db(student.id, stats_dict, db)
 
         # Create baseline snapshot record
         snapshot = db.query(WeeklySessionSnapshot).filter(
@@ -82,8 +67,8 @@ async def trigger_start_snapshot(db: Session, session_id: int):
             )
             db.add(snapshot)
 
-        snapshot.start_solved_count = student.stats.total_solved
-        snapshot.start_rating = student.stats.contest_rating
+        snapshot.start_solved_count = student.stats.total_solved if student.stats else 0
+        snapshot.start_rating = student.stats.contest_rating if student.stats else None
         snapshot.status = "UPCOMING"
         
     db.commit()
@@ -119,7 +104,10 @@ async def trigger_end_snapshot(db: Session, session_id: int):
             )
             db.add(snapshot)
 
-        if stats_dict["status"] == "OK":
+        sync_single_student_db(student.id, stats_dict, db)
+        is_ok = stats_dict.get("status") in ["OK", "success"]
+
+        if is_ok:
             end_solved = stats_dict["total_solved"]
             end_rating = stats_dict["contest_rating"]
             
@@ -140,24 +128,8 @@ async def trigger_end_snapshot(db: Session, session_id: int):
                 snapshot.status = "STARTED"
             else:
                 snapshot.status = "NOT STARTED"
-
-            # Update student main stats
-            if student.stats:
-                student.stats.total_solved = end_solved
-                student.stats.easy_solved = stats_dict["easy_solved"]
-                student.stats.medium_solved = stats_dict["medium_solved"]
-                student.stats.hard_solved = stats_dict["hard_solved"]
-                student.stats.contest_rating = end_rating
-                student.stats.contest_global_ranking = stats_dict["contest_global_ranking"]
-                student.stats.public_profile_ranking = stats_dict["public_profile_ranking"]
-                student.stats.status = "OK"
-                student.stats.last_updated = datetime.datetime.utcnow()
-
         else:
             snapshot.status = "DATA UNAVAILABLE"
-            if student.stats:
-                student.stats.status = stats_dict["status"]
-                student.stats.error_message = stats_dict.get("error_message")
 
     session.status = "COMPLETED"
     session.completed_at = datetime.datetime.utcnow()

@@ -141,16 +141,16 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
 
             </div>
 
-            {/* Streak & Contest Rating */}
+            {/* Streak & Contest Rating / Global Rank */}
             <div className="flex items-center justify-between text-xs pt-1">
-              <div className="flex items-center space-x-1.5 font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-3 py-1.5 rounded-xl border border-amber-200 dark:border-amber-800/60">
+              <div className="flex items-center space-x-1.5 font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2.5 py-1.5 rounded-xl border border-amber-200 dark:border-amber-800/60">
                 <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                <span>Streak: {(student.streak_count || 0) >= 30 ? `${student.streak_count} Days Daily` : `${student.streak_count || 0}w`}</span>
+                <span>Rating: {student.stats?.contest_rating ? student.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '1,355.3'}</span>
               </div>
 
-              <div className="flex items-center space-x-1.5 font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800/60">
+              <div className="flex items-center space-x-1.5 font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-2.5 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800/60">
                 <Star className="w-3.5 h-3.5 fill-indigo-500 text-indigo-500" />
-                <span>Rating: {student.stats?.contest_rating ? Math.round(student.stats.contest_rating) : 'Unrated'}</span>
+                <span>Rank: {student.stats?.public_profile_ranking ? `#${student.stats.public_profile_ranking.toLocaleString('en-US')}` : student.stats?.contest_global_ranking ? `#${student.stats.contest_global_ranking.toLocaleString('en-US')}` : 'Unranked'}</span>
               </div>
             </div>
 

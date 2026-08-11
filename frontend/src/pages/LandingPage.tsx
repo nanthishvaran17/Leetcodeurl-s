@@ -76,6 +76,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   };
 
   const fetchFilteredStudents = async () => {
+    let loadedFromApi = false;
     try {
       let url = '/students';
       const params = [];
@@ -90,9 +91,70 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       }
 
       const res = await api.get(url);
-      setStudents(res.data);
+      if (res.data && res.data.length > 0 && res.data.some((s: any) => (s.stats?.total_solved || 0) > 0)) {
+        setStudents(res.data);
+        loadedFromApi = true;
+      }
     } catch (err) {
-      console.error(err);
+      console.warn("REST API request delayed, reading directly from Cloud Firestore...", err);
+    }
+
+    if (!loadedFromApi) {
+      try {
+        const { getOrInitDb } = await import('../services/firebase');
+        const { collection, getDocs } = await import('firebase/firestore');
+        const firestoreDb = getOrInitDb();
+        const studSnap = await getDocs(collection(firestoreDb, "students"));
+        const statsSnap = await getDocs(collection(firestoreDb, "leetcodeStats"));
+
+        const statsMap = new Map();
+        statsSnap.forEach(docSnap => {
+          statsMap.set(docSnap.id, docSnap.data());
+        });
+
+        const list: StudentData[] = [];
+        studSnap.forEach(docSnap => {
+          const sData = docSnap.data();
+          const sStats = statsMap.get(docSnap.id) || {};
+          const deptCode = sData.department || 'GEN';
+          const yr = sData.year || 'III';
+
+          // Filter by dept and year if selected
+          if (selectedDept && selectedDept.code && deptCode !== selectedDept.code) return;
+          if (yearLevel !== 'ALL' && yr !== yearLevel) return;
+
+          list.push({
+            id: sData.id || Number(docSnap.id),
+            reg_no: sData.registerNo || '',
+            name: sData.name || '',
+            email: sData.email || '',
+            department: deptCode,
+            year_level: yr,
+            section: sData.section || 'A',
+            leetcode_url: sData.leetcodeProfileUrl || '',
+            username: sData.leetcodeUsername || '',
+            college_rank: sStats.collegeRank || 1,
+            weekly_progress: sStats.weeklySolved || 0,
+            streak_count: sStats.streakCount || 0,
+            consistency_score: sStats.consistencyScore || 0,
+            stats: {
+              total_solved: sStats.totalSolved || 0,
+              easy_solved: sStats.easySolved || 0,
+              medium_solved: sStats.mediumSolved || 0,
+              hard_solved: sStats.hardSolved || 0,
+              contest_rating: sStats.contestRating || 1355.3,
+              contest_global_ranking: sStats.globalRanking,
+              status: sStats.status || 'OK'
+            }
+          });
+        });
+
+        if (list.length > 0) {
+          setStudents(list);
+        }
+      } catch (fErr) {
+        console.error("Firestore direct read error in LandingPage", fErr);
+      }
     }
   };
 

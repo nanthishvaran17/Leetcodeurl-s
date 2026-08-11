@@ -1,10 +1,25 @@
 import axios from 'axios';
 
-// In dev: use Vite proxy (relative URL, so /api/... goes through proxy to localhost:8000/api/...)
-// In prod: use VITE_API_URL env var (set to Render backend URL)
-const API_BASE = import.meta.env.VITE_API_URL
-  ? `${import.meta.env.VITE_API_URL}/api`
-  : '/api';
+// Smart API Base URL Resolution for Local Development vs Production Hosting
+const getApiBaseUrl = () => {
+  const isLocal = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  
+  const envUrl = import.meta.env.VITE_API_URL;
+  
+  if (isLocal) {
+    return envUrl ? `${envUrl}/api` : '/api';
+  }
+  
+  // Production Cloud Hosting (Firebase Hosting -> Render FastAPI Backend)
+  if (envUrl && !envUrl.includes('localhost')) {
+    return `${envUrl}/api`;
+  }
+  
+  return 'https://leetcodeurl-s.onrender.com/api';
+};
+
+const API_BASE = getApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE,

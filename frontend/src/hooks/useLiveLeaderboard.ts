@@ -15,12 +15,20 @@ export function useLiveLeaderboard(onUpdate?: (data: any) => void) {
     let pingInterval: ReturnType<typeof setInterval> | null = null;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const apiUrl = import.meta.env.VITE_API_URL;
-    const wsHost = apiUrl
-      ? apiUrl.replace(/^https?:\/\//, '')
-      : window.location.host;
-    const wsUrl = `${protocol}//${wsHost}/ws/leaderboard`;
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const envUrl = import.meta.env.VITE_API_URL;
+    let wsUrl: string;
+
+    if (!isLocal || (envUrl && !envUrl.includes('localhost'))) {
+      const targetHost = (envUrl && !envUrl.includes('localhost'))
+        ? envUrl.replace(/^https?:\/\//, '')
+        : 'leetcodeurl-s.onrender.com';
+      wsUrl = `wss://${targetHost}/ws/leaderboard`;
+    } else {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsHost = envUrl ? envUrl.replace(/^https?:\/\//, '') : window.location.host;
+      wsUrl = `${protocol}//${wsHost}/ws/leaderboard`;
+    }
 
     const connect = () => {
       if (!isMounted) return;

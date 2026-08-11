@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isStaffOrAdmin() {
+      return isAuthenticated() && (
+        getUserData().role == 'staff' || 
+        getUserData().role == 'admin' ||
+        getUserData().role == 'Super Admin'
+      );
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        getUserData().role == 'admin' || 
+        getUserData().role == 'Super Admin'
+      );
+    }
+
+    // Users Collection: users/{uid}
+    match /users/{userId} {
+      // Authenticated users can read their own profile, staff/admin can read all
+      allow read: if isOwner(userId) || isStaffOrAdmin();
+
+      // Creating new user doc on Google Sign-In (default role MUST be 'student')
+      allow create: if isOwner(userId) && request.resource.data.role == 'student';
+
+      // Updating user doc: Owner can update personal fields, but CANNOT modify role!
+      allow update: if (isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin();
+
+      // Only Admin can delete users
+      allow delete: if isAdmin();
+    }
+
+    // Students Collection: students/{studentId}
+    match /students/{studentId} {
+      allow read: if isAuthenticated();
+      allow write: if isStaffOrAdmin();
+    }
+
+    // LeetCode Stats Collection: leetcodeStats/{studentId}
+    match /leetcodeStats/{studentId} {
+      allow read: if isAuthenticated();
+      allow write: if isStaffOrAdmin();
+    }
+
+    // Leaderboard Collection: leaderboard/{studentId}
+    match /leaderboard/{studentId} {
+      allow read: if isAuthenticated();
+      allow write: if isStaffOrAdmin();
+    }
+
+    // Daily Stats Collection: dailyStats/{id}
+    match /dailyStats/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isStaffOrAdmin();
+    }
+
+    // Activity Logs Collection: activityLogs/{id}
+    match /activityLogs/{id} {
+      allow create: if isAuthenticated();
+      allow read: if isStaffOrAdmin();
+      allow update, delete: if isAdmin();
+    }
+  }
+}

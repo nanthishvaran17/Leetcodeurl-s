@@ -30,7 +30,7 @@ except Exception:
     generate_pdf_summary_report = None
 
 from backend.email_service import send_weekly_report_email
-from backend.routes.students import _bg_refresh_all_students
+from backend.sync_engine import run_batch_sync
 from backend.logger import logger
 
 tz = get_tz(settings.TIMEZONE)
@@ -97,7 +97,7 @@ async def daily_auto_refresh_job():
     """
     logger.info("Executing Scheduled Job: Daily Live Stats Sync with LeetCode...")
     try:
-        await _bg_refresh_all_students()
+        await run_batch_sync()
         logger.info("Daily Live Stats Sync completed successfully.")
     except Exception as e:
         logger.error(f"Error in daily_auto_refresh_job: {e}")

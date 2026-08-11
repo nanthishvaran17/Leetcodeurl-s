@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Shield, Lock, User, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { GoogleSignInButton } from '../components/GoogleSignInButton';
 import api from '../services/api';
 
 interface LoginPageProps {
@@ -31,14 +32,27 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
   };
 
   return (
-    <div className="max-w-md mx-auto my-12 glass-card p-8 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-xl space-y-6">
+    <div className="max-w-md mx-auto my-6 glass-card p-8 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-2xl space-y-6">
       
       <div className="text-center space-y-2">
         <div className="w-12 h-12 rounded-2xl bg-brand-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-brand-600/30">
           <Shield className="w-6 h-6" />
         </div>
-        <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white">Admin Authentication</h2>
-        <p className="text-xs text-gray-500">Sign in to manage students, trigger sessions & download reports</p>
+        <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white">Portal Sign In</h2>
+        <p className="text-xs text-gray-500">Access Student, Staff or Admin dashboard with Google or Password</p>
+      </div>
+
+      {/* Google Authentication Button */}
+      <div className="space-y-2">
+        <GoogleSignInButton onSuccess={onSuccess} />
+      </div>
+
+      {/* Divider */}
+      <div className="relative flex items-center justify-center">
+        <div className="border-t border-gray-200 dark:border-gray-800 w-full"></div>
+        <span className="bg-white dark:bg-navy-950 px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest absolute">
+          OR ADMIN LOGIN
+        </span>
       </div>
 
       {error && (
@@ -57,7 +71,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Username"
+              placeholder="Admin Username"
               required
               className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-navy-900 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
             />
@@ -90,12 +104,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
               <span>Authenticating...</span>
             </>
           ) : (
-            <span>Sign In to Dashboard</span>
+            <span>Sign In to Admin Dashboard</span>
           )}
         </button>
       </form>
-
-
 
     </div>
   );

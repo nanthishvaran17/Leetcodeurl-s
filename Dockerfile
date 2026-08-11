@@ -1,33 +1,29 @@
-# Multi-stage Dockerfile for Nandha College LeetCode Platform
-# Stage 1: Build Frontend
-FROM node:18-alpine AS frontend-builder
-WORKDIR /app/frontend
-COPY frontend/package*.json ./
-RUN npm install
-COPY frontend/ ./
-RUN npm run build
+# Production Dockerfile for FastAPI + APScheduler on Render
+FROM python:3.10-slim
 
-# Stage 2: Backend & Production Server
-FROM python:3.10-slim AS runner
 WORKDIR /app
 
-# Install dependencies
-COPY requirements.txt ./
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install python packages
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend source
+# Copy backend code and files
 COPY backend/ ./backend/
 
-# Copy built frontend bundle from Stage 1 into frontend/dist
-COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
-
-# Expose API & Frontend Web Port
+# Expose port (Render automatically sets PORT env var, defaults to 8000)
+ENV PORT=8000
 EXPOSE 8000
 
-# Set Environment Variables
-ENV PYTHONUNBUFFERED=1
-ENV ENVIRONMENT=production
-ENV PORT=8000
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:8000/health || exit 1
 
-# Command to run production server using Render dynamic PORT
+# Start Uvicorn ASGI server
 CMD ["sh", "-c", "python -m uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

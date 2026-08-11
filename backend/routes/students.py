@@ -109,7 +109,7 @@ def create_student(
     if existing:
         raise HTTPException(status_code=400, detail=f"Student with Register No '{student_in.reg_no}' already exists.")
 
-    username, url_status = extract_leetcode_username(student_in.leetcode_url)
+    username, std_url, url_status = extract_leetcode_username(student_in.leetcode_url)
 
     student = Student(
         reg_no=student_in.reg_no.upper(),
@@ -189,98 +189,39 @@ def import_commit(
     
     return {"message": f"Successfully imported {imported_count} students.", "count": imported_count}
 
+from backend.sync_engine import run_batch_sync, sync_single_student_by_id, sync_tracker
+
+@router.get("/sync-status")
+def get_students_sync_status():
+    return sync_tracker.to_dict()
+
 @router.post("/{student_id}/refresh")
-async def refresh_single_student(student_id: int, db: Session = Depends(get_db)):
-    student = db.query(Student).filter(Student.id == student_id).first()
-    if not student:
-        raise HTTPException(status_code=404, detail="Student not found")
-
-    stats_dict = await fetch_leetcode_profile(student.leetcode_url, force_refresh=True)
-
-    if not student.stats:
-        student.stats = LeetCodeProfileStats(student_id=student.id)
-
-    student.stats.total_solved = stats_dict["total_solved"]
-    student.stats.easy_solved = stats_dict["easy_solved"]
-    student.stats.medium_solved = stats_dict["medium_solved"]
-    student.stats.hard_solved = stats_dict["hard_solved"]
-    student.stats.contest_rating = stats_dict["contest_rating"]
-    student.stats.contest_global_ranking = stats_dict["contest_global_ranking"]
-    student.stats.public_profile_ranking = stats_dict["public_profile_ranking"]
-    student.stats.status = stats_dict["status"]
-    student.stats.error_message = stats_dict.get("error_message")
-
-    db.commit()
-    update_all_rankings_and_badges(db)
-
-    # Broadcast live update to all open WebSocket clients
+async def refresh_single_student(student_id: int):
     try:
-        from backend.websocket_manager import manager
-        await manager.broadcast({
-            "type": "STUDENT_UPDATED",
-            "student_id": student.id,
-            "name": student.name,
-            "total_solved": student.stats.total_solved
-        })
-    except Exception:
-        pass
-
-    return {"message": f"Refreshed stats for {student.name}", "stats": stats_dict}
-
-from fastapi import BackgroundTasks
-from backend.database import SessionLocal
-
-async def _bg_refresh_all_students():
-    db = SessionLocal()
-    try:
-        students = db.query(Student).filter(Student.is_active == True).all()
-        semaphore = asyncio.Semaphore(3)
-
-        async def fetch_one(student):
-            if not student.leetcode_url:
-                return None
-            async with semaphore:
-                try:
-                    stats_dict = await fetch_leetcode_profile(student.leetcode_url, force_refresh=True)
-                    await asyncio.sleep(0.15)
-                    return (student.id, stats_dict)
-                except Exception as e:
-                    return None
-
-        tasks = [fetch_one(s) for s in students]
-        results = await asyncio.gather(*tasks)
-
-        student_map = {s.id: s for s in students}
-        for res in results:
-            if res:
-                student_id, stats_dict = res
-                student = student_map.get(student_id)
-                if student:
-                    if not student.stats:
-                        student.stats = LeetCodeProfileStats(student_id=student.id)
-                        db.add(student.stats)
-
-                    student.stats.total_solved = stats_dict["total_solved"]
-                    student.stats.easy_solved = stats_dict["easy_solved"]
-                    student.stats.medium_solved = stats_dict["medium_solved"]
-                    student.stats.hard_solved = stats_dict["hard_solved"]
-                    student.stats.contest_rating = stats_dict["contest_rating"]
-                    student.stats.contest_global_ranking = stats_dict["contest_global_ranking"]
-                    student.stats.public_profile_ranking = stats_dict["public_profile_ranking"]
-                    student.stats.status = stats_dict["status"]
-                    student.stats.error_message = stats_dict.get("error_message")
-
-        db.commit()
-        update_all_rankings_and_badges(db)
-    finally:
-        db.close()
+        result = await sync_single_student_by_id(student_id)
+        if result.get("status") == "failed":
+            raise HTTPException(status_code=400, detail=result.get("error", "Sync failed"))
+        return {"message": f"Refreshed stats for {result.get('name')}", "stats": result.get("stats")}
+    except ValueError as val_err:
+        raise HTTPException(status_code=404, detail=str(val_err))
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=f"Sync error: {err}")
 
 @router.post("/refresh-all")
-async def refresh_all_students(background_tasks: BackgroundTasks):
-    is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")
-    if is_vercel:
-        await _bg_refresh_all_students()
-        return {"message": "Live stats refreshed for all active students!", "status": "complete"}
-    
-    background_tasks.add_task(_bg_refresh_all_students)
-    return {"message": "Live stats refresh started in background for all 221 students!", "status": "processing"}
+async def refresh_all_students(
+    background_tasks: BackgroundTasks,
+    limit: Optional[int] = None
+):
+    if sync_tracker.is_running:
+        return {
+            "message": "Live stats refresh is already running in background.",
+            "status": "busy",
+            "progress": sync_tracker.to_dict()
+        }
+
+    background_tasks.add_task(run_batch_sync, limit=limit)
+    return {
+        "message": "Live stats refresh started in background for all students!",
+        "status": "processing",
+        "sync_status_url": "/api/students/sync-status"
+    }

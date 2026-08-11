@@ -1,0 +1,384 @@
+import re
+import time
+import asyncio
+import httpx
+from typing import Dict, Any, Tuple, Optional
+from backend.config import settings
+from backend.logger import logger
+
+# In-memory cache: username -> { "timestamp": float, "data": dict }
+_profile_cache: Dict[str, Dict[str, Any]] = {}
+
+RESERVED_USERNAMES = {
+    'contest', 'problems', 'explore', 'discuss', 'interview',
+    'store', 'signup', 'login', 'profile', 'account', 'problemset'
+}
+
+def extract_leetcode_username(url_or_username: Optional[str]) -> Tuple[Optional[str], Optional[str], str]:
+    """
+    Extract username and generate standardized profile URL from LeetCode URL or username string.
+    Examples:
+      - https://leetcode.com/u/john_doe/ -> ("john_doe", "https://leetcode.com/u/john_doe/", "OK")
+      - https://leetcode.com/u/login/MADAN__200/ -> ("MADAN__200", "https://leetcode.com/u/MADAN__200/", "OK")
+      - https://leetcode.com/john_doe -> ("john_doe", "https://leetcode.com/u/john_doe/", "OK")
+      - john_doe -> ("john_doe", "https://leetcode.com/u/john_doe/", "OK")
+    Returns (username, profile_url, status)
+    """
+    if not url_or_username or not str(url_or_username).strip():
+        return None, None, "MISSING LINK"
+    
+    cleaned = str(url_or_username).strip()
+    
+    # Handle pure username string if given
+    if re.match(r'^[a-zA-Z0-9_-]{3,35}$', cleaned):
+        if cleaned.lower() not in RESERVED_USERNAMES:
+            std_url = f"https://leetcode.com/u/{cleaned}/"
+            return cleaned, std_url, "OK"
+        return None, None, "INVALID LINK"
+
+    # Strip domain and prefixes like /u/, /login/, /profile/
+    cleaned_path = re.sub(
+        r'^https?:\/\/(?:www\.)?leetcode\.com\/(?:u\/)?(?:login\/)?(?:profile\/)?',
+        '',
+        cleaned,
+        flags=re.IGNORECASE
+    )
+    cleaned_path = cleaned_path.strip('/')
+    
+    match = re.match(r'^([a-zA-Z0-9_-]{3,35})', cleaned_path)
+    if match:
+        username = match.group(1)
+        if username.lower() in RESERVED_USERNAMES:
+            return None, None, "INVALID LINK"
+        std_url = f"https://leetcode.com/u/{username}/"
+        return username, std_url, "OK"
+    
+    return None, None, "INVALID LINK"
+
+GRAPHQL_URL = "https://leetcode.com/graphql"
+
+USER_PROFILE_QUERY = """
+query getUserProfile($username: String!) {
+  matchedUser(username: $username) {
+    username
+    profile {
+      ranking
+      userAvatar
+      realName
+    }
+    submitStatsGlobal {
+      acSubmissionNum {
+        difficulty
+        count
+      }
+    }
+    submitStats {
+      acSubmissionNum {
+        difficulty
+        count
+      }
+    }
+  }
+}
+"""
+
+USER_CONTEST_QUERY = """
+query getUserContest($username: String!) {
+  userContestRanking(username: $username) {
+    rating
+    globalRanking
+    attendedContestsCount
+  }
+  userContestRankingHistory(username: $username) {
+    attended
+    problemsSolved
+    totalProblems
+    contest {
+      title
+      startTime
+    }
+  }
+}
+"""
+
+def fetch_leetcode_profile_sync(
+    url_or_username: Optional[str],
+    force_refresh: bool = False,
+    timeout: Optional[float] = None,
+    max_retries: Optional[int] = None
+) -> Dict[str, Any]:
+    """Synchronous wrapper for fetch_leetcode_profile."""
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    
+    return loop.run_until_complete(
+        fetch_leetcode_profile(
+            url_or_username=url_or_username,
+            force_refresh=force_refresh,
+            timeout=timeout,
+            max_retries=max_retries
+        )
+    )
+
+async def fetch_leetcode_profile(
+    url_or_username: Optional[str],
+    force_refresh: bool = False,
+    timeout: Optional[float] = None,
+    max_retries: Optional[int] = None
+) -> Dict[str, Any]:
+    """
+    Fetches publicly available LeetCode profile statistics cleanly and safely.
+    Returns normalized dict:
+    {
+        "username": str or None,
+        "profile_url": str or None,
+        "total_solved": int,
+        "easy_solved": int,
+        "medium_solved": int,
+        "hard_solved": int,
+        "contest_rating": float or None,
+        "contest_global_rank": int or None,
+        "contest_global_ranking": int or None,
+        "leetcode_global_rank": int or None,
+        "public_profile_ranking": int or None,
+        "recent_contest_name": str or None,
+        "recent_contest_score": str or None,
+        "status": "success" | "failed" | "MISSING LINK" | "INVALID LINK",
+        "error": str or None,
+        "error_message": str or None,
+        "fetch_duration": float
+    }
+    """
+    start_time = time.time()
+    req_timeout = timeout or float(settings.REQUEST_TIMEOUT)
+    retries = max_retries or int(settings.MAX_RETRIES)
+
+    username, profile_url, url_status = extract_leetcode_username(url_or_username)
+    if url_status != "OK" or not username:
+        duration = round(time.time() - start_time, 3)
+        err_msg = f"Invalid or missing profile URL: {url_status}"
+        return {
+            "username": username,
+            "profile_url": profile_url or (str(url_or_username) if url_or_username else ""),
+            "total_solved": 0,
+            "easy_solved": 0,
+            "medium_solved": 0,
+            "hard_solved": 0,
+            "contest_rating": None,
+            "contest_global_rank": None,
+            "contest_global_ranking": None,
+            "leetcode_global_rank": None,
+            "public_profile_ranking": None,
+            "recent_contest_name": None,
+            "recent_contest_score": None,
+            "status": url_status,  # MISSING LINK or INVALID LINK
+            "error": err_msg,
+            "error_message": err_msg,
+            "fetch_duration": duration
+        }
+    
+    # Check in-memory cache
+    now = time.time()
+    cache_ttl = settings.CACHE_DURATION * 60
+    if not force_refresh and username in _profile_cache:
+        cached_item = _profile_cache[username]
+        if now - cached_item["timestamp"] < cache_ttl:
+            return cached_item["data"]
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Content-Type": "application/json",
+        "Accept": "*/*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Origin": "https://leetcode.com",
+        "Referer": f"https://leetcode.com/u/{username}/"
+    }
+
+    matched_user = None
+    last_error_detail = ""
+
+    # Fine-grained timeouts: quick connection connect timeout, adequate read timeout
+    timeout_cfg = httpx.Timeout(connect=5.0, read=req_timeout, write=5.0, pool=5.0)
+    limits_cfg = httpx.Limits(max_keepalive_connections=10, max_connections=20)
+
+    async with httpx.AsyncClient(timeout=timeout_cfg, limits=limits_cfg, follow_redirects=True, http2=False) as client:
+        # 1. Fetch Profile & Submission Stats
+        payload_profile = {
+            "query": USER_PROFILE_QUERY,
+            "variables": {"username": username}
+        }
+
+        for attempt in range(1, retries + 1):
+            try:
+                res = await client.post(GRAPHQL_URL, json=payload_profile, headers=headers)
+                if res.status_code == 200:
+                    data = res.json()
+                    # Check for GraphQL errors
+                    gql_errors = data.get("errors")
+                    if gql_errors and not data.get("data"):
+                        last_error_detail = f"GraphQL Error: {gql_errors[0].get('message', 'Unknown GraphQL error')}"
+                        logger.warning(f"GraphQL error for '{username}' (Attempt {attempt}/{retries}): {last_error_detail}")
+                    else:
+                        matched_user = data.get("data", {}).get("matchedUser")
+                        if matched_user is not None:
+                            break
+                        else:
+                            last_error_detail = f"User '{username}' does not exist on LeetCode (matchedUser is null)"
+                            break
+                else:
+                    last_error_detail = f"HTTP {res.status_code} response from LeetCode"
+                    logger.warning(f"LeetCode returned HTTP {res.status_code} for user '{username}' (Attempt {attempt}/{retries})")
+            
+            except httpx.TimeoutException:
+                last_error_detail = "Network timeout"
+                logger.warning(f"Timeout fetching profile for '{username}' (Attempt {attempt}/{retries})")
+            except (httpx.RemoteProtocolError, httpx.ConnectError, httpx.NetworkError) as net_err:
+                last_error_detail = f"Network connection drop ({type(net_err).__name__})"
+                logger.warning(f"Connection issue for '{username}' (Attempt {attempt}/{retries}): {last_error_detail}")
+            except Exception as e:
+                last_error_detail = f"{type(e).__name__}: {str(e) or 'Request failed'}"
+                logger.warning(f"Error fetching profile for '{username}' (Attempt {attempt}/{retries}): {last_error_detail}")
+
+            if attempt < retries and matched_user is None and "matchedUser is null" not in last_error_detail:
+                await asyncio.sleep(0.3 * attempt)
+
+        # Fallback: REST Proxy API if GraphQL failed due to blocking or timeout
+        if not matched_user and "matchedUser is null" not in last_error_detail:
+            try:
+                fb_res = await client.get(f"https://alfa-leetcode-api.onrender.com/userProfile/{username}", timeout=8.0)
+                if fb_res.status_code == 200:
+                    fb_data = fb_res.json()
+                    if "totalSolved" in fb_data or fb_data.get("username"):
+                        duration = round(time.time() - start_time, 3)
+                        tot_s = fb_data.get("totalSolved", 0)
+                        ez_s = fb_data.get("easySolved", 0)
+                        med_s = fb_data.get("mediumSolved", 0)
+                        hd_s = fb_data.get("hardSolved", 0)
+                        p_rank = fb_data.get("ranking")
+                        
+                        result = {
+                            "username": username,
+                            "profile_url": profile_url,
+                            "total_solved": tot_s,
+                            "easy_solved": ez_s,
+                            "medium_solved": med_s,
+                            "hard_solved": hd_s,
+                            "contest_rating": None,
+                            "contest_global_rank": None,
+                            "contest_global_ranking": None,
+                            "leetcode_global_rank": p_rank,
+                            "public_profile_ranking": p_rank,
+                            "recent_contest_name": None,
+                            "recent_contest_score": None,
+                            "status": "success",
+                            "error": None,
+                            "error_message": None,
+                            "fetch_duration": duration
+                        }
+                        _profile_cache[username] = {"timestamp": now, "data": result}
+                        return result
+            except Exception as fb_err:
+                logger.info(f"Fallback API note for '{username}': {fb_err}")
+
+        # If user is not found or failed completely
+        if not matched_user:
+            duration = round(time.time() - start_time, 3)
+            err_msg = f"Profile load failed: {last_error_detail}"
+            status_code = "PROFILE NOT FOUND" if "matchedUser is null" in last_error_detail else "failed"
+            
+            result = {
+                "username": username,
+                "profile_url": profile_url,
+                "total_solved": 0,
+                "easy_solved": 0,
+                "medium_solved": 0,
+                "hard_solved": 0,
+                "contest_rating": None,
+                "contest_global_rank": None,
+                "contest_global_ranking": None,
+                "leetcode_global_rank": None,
+                "public_profile_ranking": None,
+                "recent_contest_name": None,
+                "recent_contest_score": None,
+                "status": status_code,
+                "error": err_msg,
+                "error_message": err_msg,
+                "fetch_duration": duration
+            }
+            _profile_cache[username] = {"timestamp": now, "data": result}
+            return result
+
+        # Parse submission stats
+        submit_stats = (
+            matched_user.get("submitStatsGlobal", {}).get("acSubmissionNum") or 
+            matched_user.get("submitStats", {}).get("acSubmissionNum") or []
+        )
+        solved_map = {item.get("difficulty"): item.get("count", 0) for item in submit_stats if isinstance(item, dict)}
+
+        total_solved = solved_map.get("All", 0)
+        easy_solved = solved_map.get("Easy", 0)
+        medium_solved = solved_map.get("Medium", 0)
+        hard_solved = solved_map.get("Hard", 0)
+        profile_ranking = matched_user.get("profile", {}).get("ranking")
+
+        # 2. Fetch Contest Ranking
+        contest_rating = None
+        contest_global_ranking = None
+        recent_contest_name = None
+        recent_contest_score = None
+        
+        try:
+            payload_contest = {
+                "query": USER_CONTEST_QUERY,
+                "variables": {"username": username}
+            }
+            res_contest = await client.post(GRAPHQL_URL, json=payload_contest, headers=headers)
+            if res_contest.status_code == 200:
+                c_data = res_contest.json()
+                contest_info = c_data.get("data", {}).get("userContestRanking")
+                if isinstance(contest_info, dict):
+                    c_rating = contest_info.get("rating")
+                    if c_rating is not None:
+                        contest_rating = round(float(c_rating), 1)
+                    contest_global_ranking = contest_info.get("globalRanking")
+                
+                # Fetch recent contest score
+                contest_history = c_data.get("data", {}).get("userContestRankingHistory") or []
+                if isinstance(contest_history, list):
+                    attended_contests = [c for c in contest_history if isinstance(c, dict) and c.get("attended")]
+                    if attended_contests:
+                        latest = attended_contests[-1]
+                        recent_contest_name = latest.get("contest", {}).get("title")
+                        solved = latest.get("problemsSolved", 0)
+                        total = latest.get("totalProblems", 4)
+                        recent_contest_score = f"{solved} / {total}"
+        except Exception as e:
+            logger.info(f"Contest stats skipped for '{username}': {e}")
+
+        duration = round(time.time() - start_time, 3)
+
+        result = {
+            "username": username,
+            "profile_url": profile_url,
+            "total_solved": total_solved,
+            "easy_solved": easy_solved,
+            "medium_solved": medium_solved,
+            "hard_solved": hard_solved,
+            "contest_rating": contest_rating,
+            "contest_global_rank": contest_global_ranking,
+            "contest_global_ranking": contest_global_ranking,
+            "leetcode_global_rank": profile_ranking,
+            "public_profile_ranking": profile_ranking,
+            "recent_contest_name": recent_contest_name,
+            "recent_contest_score": recent_contest_score,
+            "status": "success",
+            "error": None,
+            "error_message": None,
+            "fetch_duration": duration
+        }
+
+        _profile_cache[username] = {"timestamp": now, "data": result}
+        return result

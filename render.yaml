@@ -1,12 +1,15 @@
 services:
   - type: web
-    name: Leetcodeurl-s
+    name: leetcodeurl-s
     env: docker
+    dockerfilePath: Dockerfile
     plan: free
-    region: oregon
+    region: singapore
+    healthCheckPath: /health
     envVars:
       - key: PORT
-        value: 10000
-      - key: ENVIRONMENT
-        value: production
-
+        value: 8000
+      - key: TIMEZONE
+        value: Asia/Kolkata
+      - key: VITE_FIREBASE_PROJECT_ID
+        value: leetcode-student-data

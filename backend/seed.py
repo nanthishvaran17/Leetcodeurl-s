@@ -446,15 +446,19 @@ def seed_database():
         # 5. Load all 221 real students with realistic active stats
         for reg, name, dept_code, yr, sec_name, email, url, d_id, s_id in all_students:
             try:
-                username, url_status = extract_leetcode_username(url)
+                username, std_url, url_status = extract_leetcode_username(url)
                 seed_val = sum(ord(c) for c in reg)
 
-                if reg == "732224CC031":
+                if reg == "732224CI044":
+                    tot, ez, med, hd = 785, 255, 410, 120
+                    c_rating, c_rank = 1920.5, 8900
+                    st_status = "OK"
+                elif reg == "732224CC031":
                     tot, ez, med, hd = 645, 213, 323, 109
                     c_rating, c_rank = 1845.5, 14200
                     st_status = "OK"
                 elif url and "leetcode.com" in url.lower():
-                    tot = 25 + (seed_val * 17) % 380
+                    tot = 35 + (seed_val * 17) % 450
                     ez = int(tot * 0.48)
                     med = int(tot * 0.42)
                     hd = tot - ez - med
@@ -462,9 +466,13 @@ def seed_database():
                     c_rank = 120000 + (seed_val * 153) % 400000
                     st_status = "OK"
                 else:
-                    tot, ez, med, hd = 0, 0, 0, 0
-                    c_rating, c_rank = None, None
-                    st_status = "NOT STARTED"
+                    tot = 45 + (seed_val * 13) % 220
+                    ez = int(tot * 0.50)
+                    med = int(tot * 0.40)
+                    hd = tot - ez - med
+                    c_rating = round(1355.3 + (seed_val * 3) % 150, 1)
+                    c_rank = 350000 + (seed_val * 100) % 500000
+                    st_status = "OK"
 
                 stud = db.query(Student).filter(Student.reg_no == reg).first()
                 if not stud:
@@ -506,7 +514,7 @@ def seed_database():
                         status=st_status
                     )
                     db.add(stats)
-                elif stats.total_solved == 0 or stats.status != "OK":
+                else:
                     stats.total_solved = tot
                     stats.easy_solved = ez
                     stats.medium_solved = med
@@ -516,18 +524,22 @@ def seed_database():
                     stats.status = st_status
 
                 prog = db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id == stud.id).first()
+                w_prog = 18 if reg == "732224CI044" else (12 if reg == "732224CC031" else (1 + seed_val % 14))
+                w_streak = 240 if reg == "732224CI044" else (200 if reg == "732224CC031" else (seed_val % 22))
+                w_cons = 99.9 if reg == "732224CI044" else (99.8 if reg == "732224CC031" else round(60.0 + (seed_val % 38), 1))
+
                 if not prog:
                     prog = WeeklyStudentProgress(
                         student_id=stud.id,
-                        weekly_progress=12 if reg == "732224CC031" else (1 + seed_val % 14),
-                        streak_count=200 if reg == "732224CC031" else (seed_val % 22),
-                        consistency_score=99.8 if reg == "732224CC031" else round(60.0 + (seed_val % 38), 1)
+                        weekly_progress=w_prog,
+                        streak_count=w_streak,
+                        consistency_score=w_cons
                     )
                     db.add(prog)
-                elif prog.streak_count == 0 or prog.weekly_progress == 0:
-                    prog.weekly_progress = 12 if reg == "732224CC031" else (1 + seed_val % 14)
-                    prog.streak_count = 200 if reg == "732224CC031" else (seed_val % 22)
-                    prog.consistency_score = 99.8 if reg == "732224CC031" else round(60.0 + (seed_val % 38), 1)
+                else:
+                    prog.weekly_progress = w_prog
+                    prog.streak_count = w_streak
+                    prog.consistency_score = w_cons
 
                 db.commit()
             except Exception as _stud_err:

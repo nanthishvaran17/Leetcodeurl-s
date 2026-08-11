@@ -79,6 +79,8 @@ class LeetCodeProfileStats(Base):
     
     status = Column(String(50), default="DATA UNAVAILABLE") # OK, MISSING LINK, INVALID LINK, PROFILE NOT FOUND, DATA UNAVAILABLE
     error_message = Column(Text, nullable=True)
+    last_successful_sync = Column(DateTime, nullable=True)
+    fetch_duration = Column(Float, nullable=True)
     last_updated = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
     student = relationship("Student", back_populates="stats")

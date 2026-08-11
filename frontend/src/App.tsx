@@ -14,6 +14,8 @@ import { PublicLeaderboardPage } from './pages/PublicLeaderboardPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AuditLogPage } from './pages/AuditLogPage';
 import { WeeklyContestPage } from './pages/WeeklyContestPage';
+import { StudentDashboardView } from './pages/StudentDashboardView';
+import { StaffDashboardView } from './pages/StaffDashboardView';
 import { ImportModal } from './components/ImportModal';
 import { StudentData } from './components/LeaderboardTable';
 import api from './services/api';
@@ -21,7 +23,7 @@ import api from './services/api';
 import { useAuth } from './context/AuthContext';
 
 export const App: React.FC = () => {
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState('landing');
   const [selectedStudent, setSelectedStudent] = useState<StudentData | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -30,6 +32,7 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     fetchSummary();
+    triggerCloudSync();
   }, []);
 
   const fetchSummary = async () => {
@@ -38,6 +41,18 @@ export const App: React.FC = () => {
       setSummaryData(res.data);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const triggerCloudSync = async () => {
+    try {
+      const res = await api.get('/students');
+      if (res.data && res.data.length > 0) {
+        const { syncAllStudentsToFirestoreWeb } = await import('./services/firebaseSync');
+        await syncAllStudentsToFirestoreWeb(res.data);
+      }
+    } catch (err) {
+      console.warn("Auto Cloud Sync notice:", err);
     }
   };
 
@@ -54,6 +69,23 @@ export const App: React.FC = () => {
     handleTabChange('profile');
   };
 
+  // Determine main dashboard component based on role
+  const renderDashboardComponent = () => {
+    if (user?.role === 'student') {
+      return <StudentDashboardView />;
+    }
+    if (user?.role === 'staff') {
+      return <StaffDashboardView />;
+    }
+    return (
+      <DashboardPage
+        onSelectStudent={handleSelectStudent}
+        onOpenImport={() => setShowImportModal(true)}
+        onNavigateTab={(tab) => handleTabChange(tab)}
+      />
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-navy-950 text-gray-900 dark:text-gray-100 flex flex-col font-sans transition-colors duration-200">
       
@@ -67,7 +99,7 @@ export const App: React.FC = () => {
 
       <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex gap-6">
         
-        {/* Left Sidebar (Only visible for authenticated Admin and when not on landing page) */}
+        {/* Left Sidebar (Only visible for authenticated users when not on landing page) */}
         {isAuthenticated && activeTab !== 'landing' && (
           <Sidebar activeTab={activeTab} setActiveTab={handleTabChange} />
         )}
@@ -84,13 +116,11 @@ export const App: React.FC = () => {
             />
           )}
 
-          {activeTab === 'dashboard' && (
-            <DashboardPage
-              onSelectStudent={handleSelectStudent}
-              onOpenImport={() => setShowImportModal(true)}
-              onNavigateTab={(tab) => handleTabChange(tab)}
-            />
-          )}
+          {activeTab === 'dashboard' && renderDashboardComponent()}
+
+          {activeTab === 'student-dashboard' && <StudentDashboardView />}
+
+          {activeTab === 'staff-dashboard' && <StaffDashboardView />}
 
           {activeTab === 'departments' && (
             <DepartmentDashboard onSelectStudent={handleSelectStudent} />

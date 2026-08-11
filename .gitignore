@@ -41,9 +41,14 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Environment Variables & Data
+# Environment Variables & Secrets
 .env
-.env.local
+.env.*
+!.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+serviceAccountKey.json
 data/*.db
 !data/.gitkeep
 

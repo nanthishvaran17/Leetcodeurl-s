@@ -1,8 +1,7 @@
 import React from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { Sun, Moon, Shield, User, LogOut, Clock, Activity } from 'lucide-react';
-
+import { Sun, Moon, Shield, User, LogOut, Clock, Activity, Lock } from 'lucide-react';
 import { CollegeLogo } from './CollegeLogo';
 
 interface NavbarProps {
@@ -22,7 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { user, logout, isAuthenticated } = useAuth();
 
   return (
-    <header className="sticky top-0 z-30 w-full glass-card border-b border-gray-200 dark:border-gray-800 transition-colors">
+    <header className="sticky top-0 z-30 w-full glass-card border-b border-gray-200 dark:border-gray-800 transition-colors shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
         {/* Official Nandha Engineering College (NEC 25 Years) Brand Header */}
@@ -66,28 +65,47 @@ export const Navbar: React.FC<NavbarProps> = ({
             {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-700" />}
           </button>
 
-          {/* Auth Button */}
-          {isAuthenticated ? (
-            <div className="flex items-center space-x-2">
-              <span className="text-xs font-medium text-gray-700 dark:text-gray-300 hidden sm:inline">
-                {user?.username} ({user?.role})
-              </span>
+          {/* Auth Button / User Profile */}
+          {isAuthenticated && user ? (
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 pl-2">
+                {user.photoURL ? (
+                  <img
+                    src={user.photoURL}
+                    alt={user.name}
+                    className="w-8 h-8 rounded-full border-2 border-brand-500 object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-brand-600 text-white font-black text-xs flex items-center justify-center">
+                    {user.name ? user.name[0] : 'U'}
+                  </div>
+                )}
+                <div className="hidden sm:block text-left">
+                  <div className="text-xs font-extrabold text-gray-900 dark:text-white truncate max-w-[120px]">
+                    {user.name || user.username}
+                  </div>
+                  <div className="text-[10px] text-brand-600 dark:text-brand-400 font-bold uppercase tracking-wider">
+                    {user.role}
+                  </div>
+                </div>
+              </div>
+
               <button
                 onClick={logout}
                 className="p-2 rounded-xl text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors flex items-center space-x-1 text-xs font-semibold"
-                title="Logout"
+                title="Sign Out"
               >
                 <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">Logout</span>
+                <span className="hidden sm:inline">Sign Out</span>
               </button>
             </div>
           ) : (
             <button
               onClick={onOpenLogin}
-              className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs shadow-md shadow-brand-600/30 transition-all flex items-center space-x-1.5"
+              className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md shadow-brand-600/30 transition-all flex items-center space-x-1.5"
             >
               <User className="w-4 h-4" />
-              <span>Admin Login</span>
+              <span>Portal Sign In</span>
             </button>
           )}
 

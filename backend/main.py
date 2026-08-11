@@ -18,7 +18,7 @@ from backend.logger import logger
 from backend.routes import (
     auth, students, departments, sessions,
     leaderboard, analytics, reports, settings as settings_route,
-    audit, public
+    audit, public, sync
 )
 
 app = FastAPI(
@@ -27,11 +27,28 @@ app = FastAPI(
     version="2.0.0"
 )
 
+# Health Endpoint for Render / Cloud Monitors
+@app.get("/health")
+def health_check():
+    return {
+        "status": "healthy",
+        "service": "College LeetCode Weekly Tracker API",
+        "version": "2.0.0",
+        "environment": os.environ.get("RENDER_SERVICE_ID", "local")
+    }
+
 # CORS Configuration
-origins = ["*"]
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:3000",
+    "https://leetcode-student-data.web.app",
+    "https://leetcode-student-data.firebaseapp.com"
+]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=r"https://.*\.web\.app|https://.*\.firebaseapp\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -40,6 +57,7 @@ app.add_middleware(
 # Mount Routers
 app.include_router(auth.router)
 app.include_router(students.router)
+app.include_router(sync.router)
 app.include_router(departments.router)
 app.include_router(sessions.router)
 app.include_router(leaderboard.router)
@@ -62,13 +80,22 @@ try:
 except Exception as e:
     logger.warning(f"Could not mount static reports directory: {e}")
 
+from backend.migrate_db import run_db_migrations
+
 @app.on_event("startup")
 def on_startup():
     logger.info("Initializing database & tables...")
     try:
+        run_db_migrations()
+    except Exception as _mig_err:
+        logger.warning(f"Database migration note: {_mig_err}")
+
+    try:
         seed_database()
+        from backend.assets.reseed_all_stats import reseed_all_student_stats
+        reseed_all_student_stats()
     except Exception as e:
-        logger.warning(f"Database seed skipped or noted: {e}")
+        logger.warning(f"Database seed/reseed skipped or noted: {e}")
         
     if not is_vercel and SCHEDULER_AVAILABLE:
         logger.info("Starting background scheduler...")

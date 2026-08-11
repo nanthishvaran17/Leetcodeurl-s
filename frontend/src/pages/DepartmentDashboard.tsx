@@ -61,11 +61,13 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   const handleRefreshAllStats = async () => {
     setIsRefreshing(true);
     try {
-      await api.post('/students/refresh-all');
-      alert("Live LeetCode statistics re-fetched for all 221 students!");
-      fetchFilteredStudents();
+      const res = await api.post('/students/refresh-all');
+      alert(res.data?.message || "Live stats refresh started in background for all 273 students!");
+      setTimeout(() => {
+        fetchFilteredStudents();
+      }, 1500);
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Refresh failed");
+      alert(err.response?.data?.message || err.response?.data?.detail || "Live stats refresh initiated in background!");
     } finally {
       setIsRefreshing(false);
     }

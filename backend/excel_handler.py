@@ -84,7 +84,7 @@ def validate_excel_import(db: Session, file_bytes: bytes) -> Dict[str, Any]:
             elif year_str in ["3", "3RD"]: year_str = "III"
             elif year_str in ["4", "4TH"]: year_str = "IV"
 
-        username, url_status = extract_leetcode_username(url)
+        username, std_url, url_status = extract_leetcode_username(url)
 
         if errors:
             invalid_rows.append({

@@ -67,7 +67,12 @@ class LeetCodeStatsOut(BaseModel):
     contest_rating: Optional[float] = None
     contest_global_ranking: Optional[int] = None
     public_profile_ranking: Optional[int] = None
+    recent_contest_name: Optional[str] = None
+    recent_contest_score: Optional[str] = None
     status: str = "DATA UNAVAILABLE"
+    error_message: Optional[str] = None
+    last_successful_sync: Optional[datetime.datetime] = None
+    fetch_duration: Optional[float] = None
     last_updated: Optional[datetime.datetime] = None
 
     class Config:
