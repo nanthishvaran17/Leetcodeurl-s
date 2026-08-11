@@ -373,66 +373,55 @@ def _create_dept_year_sheet(wb, dept, year_lvl: str, students_list, db: Session)
     TNR = "Times New Roman"
     navy_fill   = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
     header_fill = PatternFill(start_color="2E5B88", end_color="2E5B88", fill_type="solid")
-    alt_fill    = PatternFill(start_color="EEF3F8", end_color="EEF3F8", fill_type="solid")
-    green_fill  = PatternFill(start_color="E6F4EA", end_color="E6F4EA", fill_type="solid")
-    yellow_fill = PatternFill(start_color="FFF9E6", end_color="FFF9E6", fill_type="solid")
-    red_fill    = PatternFill(start_color="FDECEA", end_color="FDECEA", fill_type="solid")
+    alt_fill    = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
+    white_fill  = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
 
     center = Alignment(horizontal="center", vertical="center", wrap_text=True)
     left   = Alignment(horizontal="left",   vertical="center", wrap_text=True)
 
     # --- Title rows ---
-    ws.merge_cells("A1:M1")
+    ws.merge_cells("A1:K1")
     ws["A1"] = "NANDHA ENGINEERING COLLEGE (AUTONOMOUS), ERODE – 638 052"
     ws["A1"].font = Font(name=TNR, size=13, bold=True, color="FFFFFF")
     ws["A1"].alignment = center
     ws["A1"].fill = navy_fill
 
-    ws.merge_cells("A2:M2")
-    ws["A2"] = f"Department of {dept.name}  |  {year_display}  |  LeetCode Performance Report  |  {datetime.date.today().strftime('%d.%m.%Y')}"
-    ws["A2"].font = Font(name=TNR, size=11, bold=True, color="FFFFFF")
+    dept_title = f"Department of {dept.name} | {year_display} | LeetCode Performance Report | {datetime.date.today().strftime('%d.%m.%Y')}"
+    ws.merge_cells("A2:K2")
+    ws["A2"] = dept_title.upper()
+    ws["A2"].font = Font(name=TNR, size=10, bold=True, color="FFFFFF")
     ws["A2"].alignment = center
     ws["A2"].fill = header_fill
 
     ws.row_dimensions[1].height = 28
     ws.row_dimensions[2].height = 22
 
-    # --- Column headers (row 3) ---
+    # --- Column headers (row 3) --- 11 Columns (Contest Rating & Global Rank REMOVED as requested)
     headers = [
         "S.No", "Register No", "Student Name", "Department", "Year",
         "LeetCode URL", "Username",
-        "Easy\nSolved", "Medium\nSolved", "Hard\nSolved", "Total\nSolved",
-        "Contest\nRating", "Global\nRank"
+        "Easy\nSolved", "Medium\nSolved", "Hard\nSolved", "Total\nSolved"
     ]
-    col_widths = [6, 16, 28, 12, 8, 32, 18, 9, 9, 9, 10, 11, 12]
+    col_widths = [6, 16, 28, 12, 8, 36, 18, 10, 10, 10, 12]
 
     for col_idx, (hdr, width) in enumerate(zip(headers, col_widths), start=1):
         cell = ws.cell(row=3, column=col_idx, value=hdr)
         cell.font = Font(name=TNR, size=10, bold=True, color="FFFFFF")
-        cell.fill = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
+        cell.fill = navy_fill
         cell.alignment = center
         _apply_border(cell, "FFFFFF")
         ws.column_dimensions[get_column_letter(col_idx)].width = width
 
-    ws.row_dimensions[3].height = 36
+    ws.row_dimensions[3].height = 32
 
-    # --- Data rows ---
-    sorted_students = sorted(students_list, key=lambda s: (s.stats.total_solved if s.stats else 0), reverse=True)
+    # --- Data rows (Sorted alphabetically/numerically by Register No starting from 1) ---
+    sorted_students = sorted(students_list, key=lambda s: s.reg_no or "")
 
     for idx, student in enumerate(sorted_students, start=1):
         row = 3 + idx
         stats = student.stats
         total = stats.total_solved if stats else 0
-
-        # Row background based on performance
-        if total > 500:
-            row_fill = green_fill
-        elif total >= 250:
-            row_fill = PatternFill(start_color="E3F2FD", end_color="E3F2FD", fill_type="solid")
-        elif total > 0:
-            row_fill = alt_fill if idx % 2 == 0 else PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
-        else:
-            row_fill = red_fill
+        row_fill = alt_fill if idx % 2 == 0 else white_fill
 
         lc_url = student.leetcode_url or ""
         lc_user = student.username or (lc_url.split('/')[-1] if lc_url else "")
@@ -448,9 +437,7 @@ def _create_dept_year_sheet(wb, dept, year_lvl: str, students_list, db: Session)
             stats.easy_solved   if stats else 0,
             stats.medium_solved if stats else 0,
             stats.hard_solved   if stats else 0,
-            total,
-            round(stats.contest_rating, 1) if stats and stats.contest_rating else "",
-            stats.contest_global_ranking   if stats and stats.contest_global_ranking else "",
+            total
         ]
 
         for col_idx, value in enumerate(row_data, start=1):
@@ -458,7 +445,7 @@ def _create_dept_year_sheet(wb, dept, year_lvl: str, students_list, db: Session)
             cell.fill = row_fill
             cell.font = Font(name=TNR, size=10)
             cell.alignment = center if col_idx not in (3, 6, 7) else left
-            _apply_border(cell, "C0C0C0")
+            _apply_border(cell, "CBD5E1")
 
         # Hyperlink for LeetCode URL (col 6)
         if lc_url:
@@ -466,7 +453,7 @@ def _create_dept_year_sheet(wb, dept, year_lvl: str, students_list, db: Session)
             link_cell.hyperlink = lc_url
             link_cell.font = Font(name=TNR, size=10, color="0563C1", underline="single")
 
-        ws.row_dimensions[row].height = 18
+        ws.row_dimensions[row].height = 20
 
     # --- Summary mini-table below data ---
     summary_row = 3 + len(sorted_students) + 2
@@ -477,11 +464,12 @@ def _create_dept_year_sheet(wb, dept, year_lvl: str, students_list, db: Session)
     lt100        = sum(1 for s in sorted_students if s.stats and 0 < s.stats.total_solved < 100)
     not_started  = sum(1 for s in sorted_students if not s.stats or s.stats.total_solved == 0)
 
-    ws.merge_cells(f"A{summary_row}:M{summary_row}")
-    ws[f"A{summary_row}"] = "Number of Problems Solved — Category Summary"
+    ws.merge_cells(f"A{summary_row}:K{summary_row}")
+    ws[f"A{summary_row}"] = "NUMBER OF PROBLEMS SOLVED — CATEGORY SUMMARY"
     ws[f"A{summary_row}"].font = Font(name=TNR, size=10, bold=True, color="FFFFFF")
     ws[f"A{summary_row}"].fill = navy_fill
     ws[f"A{summary_row}"].alignment = center
+    ws.row_dimensions[summary_row].height = 24
 
     cat_headers = ["Above 500", "250 – 500", "101 – 250", "Less than 100", "Not Yet Started", "Total Students"]
     cat_values  = [above_500,   b250_500,    b101_250,    lt100,           not_started,       total_count]
@@ -489,14 +477,13 @@ def _create_dept_year_sheet(wb, dept, year_lvl: str, students_list, db: Session)
     for ci, (h, v) in enumerate(zip(cat_headers, cat_values)):
         hc = ws.cell(row=summary_row+1, column=ci+1, value=h)
         vc = ws.cell(row=summary_row+2, column=ci+1, value=v)
-        hc.font = Font(name=TNR, size=9, bold=True)
-        hc.fill = header_fill
         hc.font = Font(name=TNR, size=9, bold=True, color="FFFFFF")
+        hc.fill = header_fill
         hc.alignment = center
         vc.font = Font(name=TNR, size=10, bold=True)
         vc.alignment = center
-        _apply_border(hc)
-        _apply_border(vc)
+        _apply_border(hc, "CBD5E1")
+        _apply_border(vc, "CBD5E1")
 
 
 def _create_analytics_summary_sheet(wb, db: Session):
