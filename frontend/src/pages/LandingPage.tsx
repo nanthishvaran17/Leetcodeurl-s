@@ -39,39 +39,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     fetchFilteredStudents();
   }, [selectedDept, yearLevel]);
 
-  const [syncProgress, setSyncProgress] = useState<{ total: number; completed: number; success: number; failed: number } | null>(null);
-
+  // Instant refresh: re-reads from Firestore (already has latest synced data). < 2 seconds.
   const handleRefreshAll = async () => {
     setRefreshing(true);
-    setSyncProgress(null);
     try {
-      const res = await api.post('/students/admin/sync/start');
-      const runId = res.data?.runId || 'current';
+      // 1. Instantly re-fetch data from Firestore (fast < 2s)
+      await fetchFilteredStudents();
 
-      const pollInterval = setInterval(async () => {
-        try {
-          const statusRes = await api.get(`/students/admin/sync/status/${runId}`);
-          const p = statusRes.data;
-          setSyncProgress({
-            total: p.total || 273,
-            completed: p.completed || 0,
-            success: p.success || 0,
-            failed: p.failed || 0
-          });
-
-          if (!p.is_running) {
-            clearInterval(pollInterval);
-            await fetchFilteredStudents();
-            setRefreshing(false);
-          }
-        } catch (pollErr) {
-          clearInterval(pollInterval);
-          setRefreshing(false);
-        }
-      }, 2000);
-
+      // 2. Silently kick off a background LeetCode crawl (fire & forget — never blocks UI)
+      api.post('/students/refresh-all').catch(() => {});
     } catch (err) {
       console.error(err);
+    } finally {
       setRefreshing(false);
     }
   };
@@ -472,20 +451,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </button>
         </div>
 
-        {syncProgress && (
-          <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-navy-900 border border-indigo-200 dark:border-indigo-800 space-y-2">
-            <div className="flex justify-between text-xs font-bold text-indigo-700 dark:text-indigo-300">
-              <span>Sync Progress: {syncProgress.completed} / {syncProgress.total} Profiles</span>
-              <span>Successful: {syncProgress.success} | Failed: {syncProgress.failed}</span>
-            </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-800 h-2.5 rounded-full overflow-hidden">
-              <div
-                className="bg-indigo-600 h-full transition-all duration-300"
-                style={{ width: `${Math.round((syncProgress.completed / Math.max(1, syncProgress.total)) * 100)}%` }}
-              />
-            </div>
-          </div>
-        )}
 
         {viewMode === 'cards' ? (
           <div className="space-y-6">
