@@ -265,5 +265,10 @@ async def _bg_refresh_all_students():
 
 @router.post("/refresh-all")
 async def refresh_all_students(background_tasks: BackgroundTasks):
+    is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")
+    if is_vercel:
+        await _bg_refresh_all_students()
+        return {"message": "Live stats refreshed for all active students!", "status": "complete"}
+    
     background_tasks.add_task(_bg_refresh_all_students)
     return {"message": "Live stats refresh started in background for all 221 students!", "status": "processing"}
