@@ -24,6 +24,9 @@ export interface StudentData {
     recent_contest_name?: string;
     recent_contest_score?: string;
     status: string;
+    sync_status?: string;
+    source?: string;
+    last_verified_at?: string;
   };
   college_rank?: number;
   dept_rank?: number;

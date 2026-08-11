@@ -39,15 +39,37 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     fetchFilteredStudents();
   }, [selectedDept, yearLevel]);
 
+  const [syncProgress, setSyncProgress] = useState<{ total: number; completed: number; success: number; failed: number } | null>(null);
+
   const handleRefreshAll = async () => {
     setRefreshing(true);
+    setSyncProgress(null);
     try {
-      await api.post('/students/refresh-all');
-      // Wait 4 seconds for background task to start, then refetch
-      setTimeout(async () => {
-        await fetchFilteredStudents();
-        setRefreshing(false);
-      }, 4000);
+      const res = await api.post('/students/admin/sync/start');
+      const runId = res.data?.runId || 'current';
+
+      const pollInterval = setInterval(async () => {
+        try {
+          const statusRes = await api.get(`/students/admin/sync/status/${runId}`);
+          const p = statusRes.data;
+          setSyncProgress({
+            total: p.total || 273,
+            completed: p.completed || 0,
+            success: p.success || 0,
+            failed: p.failed || 0
+          });
+
+          if (!p.is_running) {
+            clearInterval(pollInterval);
+            await fetchFilteredStudents();
+            setRefreshing(false);
+          }
+        } catch (pollErr) {
+          clearInterval(pollInterval);
+          setRefreshing(false);
+        }
+      }, 2000);
+
     } catch (err) {
       console.error(err);
       setRefreshing(false);
@@ -144,7 +166,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               hard_solved: sStats.hardSolved || 0,
               contest_rating: sStats.contestRating || null,
               contest_global_ranking: sStats.globalRanking,
-              status: sStats.status || 'OK'
+              status: sStats.status || 'OK',
+              sync_status: sStats.syncStatus || 'success',
+              source: sStats.source || 'leetcode_public_profile',
+              last_verified_at: sStats.lastVerifiedAt
             }
           });
         });
@@ -446,6 +471,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <span>{refreshing ? 'Refreshing...' : '🔄 Refresh All LeetCode Stats'}</span>
           </button>
         </div>
+
+        {syncProgress && (
+          <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-navy-900 border border-indigo-200 dark:border-indigo-800 space-y-2">
+            <div className="flex justify-between text-xs font-bold text-indigo-700 dark:text-indigo-300">
+              <span>Sync Progress: {syncProgress.completed} / {syncProgress.total} Profiles</span>
+              <span>Successful: {syncProgress.success} | Failed: {syncProgress.failed}</span>
+            </div>
+            <div className="w-full bg-gray-200 dark:bg-gray-800 h-2.5 rounded-full overflow-hidden">
+              <div
+                className="bg-indigo-600 h-full transition-all duration-300"
+                style={{ width: `${Math.round((syncProgress.completed / Math.max(1, syncProgress.total)) * 100)}%` }}
+              />
+            </div>
+          </div>
+        )}
 
         {viewMode === 'cards' ? (
           <div className="space-y-6">

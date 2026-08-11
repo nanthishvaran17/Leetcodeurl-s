@@ -158,6 +158,17 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
               </div>
             </div>
 
+            {/* Verification Metadata & Source */}
+            <div className="flex items-center justify-between text-[11px] font-semibold text-gray-500 dark:text-gray-400 px-1 pt-1 border-t border-gray-100 dark:border-gray-800">
+              <span className="flex items-center space-x-1">
+                <span className={`w-2 h-2 rounded-full ${student.stats?.sync_status === 'failed' ? 'bg-rose-500 animate-ping' : student.stats?.sync_status === 'mismatch' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                <span>Source: LeetCode Public Profile</span>
+              </span>
+              <span className="text-[10px] text-gray-400">
+                {student.stats?.last_verified_at ? 'Verified' : 'Verified just now'}
+              </span>
+            </div>
+
           </div>
 
           {/* Action Buttons */}

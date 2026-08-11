@@ -73,7 +73,8 @@ sync_tracker = SyncProgressTracker()
 
 def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Session) -> Student:
     """
-    Updates student LeetCode statistics in database with Old Data Fallback rule.
+    Updates student LeetCode statistics in database with strict identity verification
+    and Old Data Fallback rule.
     """
     student = db.query(Student).filter(Student.id == student_id).first()
     if not student:
@@ -83,14 +84,42 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
         student.stats = LeetCodeProfileStats(student_id=student.id)
         db.add(student.stats)
 
+    # 1. Identity Mapping Verification
+    fetched_username = stats_dict.get("username")
+    expected_username = student.username
+    if expected_username and fetched_username and expected_username.lower() != fetched_username.lower():
+        err_msg = f"CRITICAL IDENTITY MISMATCH: Fetched username '{fetched_username}' does not match expected student username '{expected_username}' for Reg {student.reg_no}"
+        logger.error(err_msg)
+        student.stats.sync_status = "mismatch"
+        student.stats.status = "MISMATCH"
+        student.stats.error_message = err_msg
+        db.commit()
+        db.refresh(student)
+        return student
+
     status = stats_dict.get("status")
     is_success = status in ["success", "OK"]
+    
+    # 2. Sum Validation Check
+    tot = stats_dict.get("total_solved", 0)
+    ez = stats_dict.get("easy_solved", 0)
+    med = stats_dict.get("medium_solved", 0)
+    hd = stats_dict.get("hard_solved", 0)
+    if is_success and (ez + med + hd != tot) and tot > 0:
+        err_msg = f"CRITICAL STATS MISMATCH for {student.reg_no}: {ez} + {med} + {hd} != {tot}"
+        logger.error(err_msg)
+        student.stats.sync_status = "mismatch"
+        student.stats.status = "MISMATCH"
+        student.stats.error_message = err_msg
+        db.commit()
+        db.refresh(student)
+        return student
 
     if is_success:
-        student.stats.total_solved = stats_dict.get("total_solved", 0)
-        student.stats.easy_solved = stats_dict.get("easy_solved", 0)
-        student.stats.medium_solved = stats_dict.get("medium_solved", 0)
-        student.stats.hard_solved = stats_dict.get("hard_solved", 0)
+        student.stats.total_solved = tot
+        student.stats.easy_solved = ez
+        student.stats.medium_solved = med
+        student.stats.hard_solved = hd
         student.stats.contest_rating = stats_dict.get("contest_rating")
         student.stats.contest_global_ranking = stats_dict.get("contest_global_rank") or stats_dict.get("contest_global_ranking")
         student.stats.public_profile_ranking = stats_dict.get("leetcode_global_rank") or stats_dict.get("public_profile_ranking")
@@ -98,24 +127,30 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
         student.stats.recent_contest_score = stats_dict.get("recent_contest_score")
         
         student.stats.status = "OK"
+        student.stats.sync_status = "success"
+        student.stats.source = "leetcode_public_profile"
         student.stats.error_message = None
-        student.stats.last_successful_sync = datetime.datetime.utcnow()
+        now_utc = datetime.datetime.now(datetime.timezone.utc)
+        student.stats.last_successful_sync = now_utc
+        student.stats.last_verified_at = now_utc
         student.stats.fetch_duration = stats_dict.get("fetch_duration")
     else:
         # OLD DATA FALLBACK: DO NOT erase previous total_solved / contest ratings!
-        # Preserve old stats, only update status & error_message.
+        # Preserve old stats, only update sync_status & error_message.
         student.stats.status = status or "failed"
+        student.stats.sync_status = "failed"
         student.stats.error_message = stats_dict.get("error") or stats_dict.get("error_message") or "Sync failed"
         student.stats.fetch_duration = stats_dict.get("fetch_duration")
 
-    student.stats.last_updated = datetime.datetime.utcnow()
+    student.stats.last_updated = datetime.datetime.now(datetime.timezone.utc)
     db.commit()
     db.refresh(student)
     return student
 
-async def sync_single_student_by_id(student_id: int) -> Dict[str, Any]:
+async def sync_single_student_by_id(student_id: int, timeout: float = 30.0) -> Dict[str, Any]:
     """
-    Fetches LeetCode stats for a single student by ID, updates DB, and updates rankings.
+    Fetches LeetCode stats for a single student by ID with 30-second timeout constraint.
+    If timeout occurs, preserves last known good data and returns timeout status.
     """
     db = SessionLocal()
     try:
@@ -124,38 +159,64 @@ async def sync_single_student_by_id(student_id: int) -> Dict[str, Any]:
             return {"status": "failed", "error": f"Student ID {student_id} not found."}
 
         url_or_username = student.leetcode_url or student.username
-        logger.info(f"[INFO] Syncing single student: {student.reg_no} ({student.name}) - {url_or_username}")
+        logger.info(f"[INFO] Syncing single student (Timeout <= 30s): {student.reg_no} ({student.name}) - {url_or_username}")
 
-        stats_dict = await fetch_leetcode_profile(url_or_username, force_refresh=True)
-        updated_student = sync_single_student_db(student.id, stats_dict, db)
-
-        # Update rankings & sync to Cloud Firestore
         try:
-            update_all_rankings_and_badges(db)
-            from backend.assets.sync_firestore import sync_database_to_firestore
-            sync_database_to_firestore()
-        except Exception as r_err:
-            logger.warning(f"Rankings update / Firestore sync note: {r_err}")
+            stats_dict = await asyncio.wait_for(
+                fetch_leetcode_profile(url_or_username, force_refresh=True, timeout=12.0),
+                timeout=timeout
+            )
+            updated_student = sync_single_student_db(student.id, stats_dict, db)
 
-        # Broadcast live update over websocket if available
-        try:
-            from backend.websocket_manager import manager
-            await manager.broadcast({
-                "type": "STUDENT_UPDATED",
+            try:
+                update_all_rankings_and_badges(db)
+                from backend.assets.sync_firestore import sync_database_to_firestore
+                sync_database_to_firestore()
+            except Exception as r_err:
+                logger.warning(f"Rankings update / Firestore sync note: {r_err}")
+
+            # Broadcast live update over websocket if available
+            try:
+                from backend.websocket_manager import manager
+                await manager.broadcast({
+                    "type": "STUDENT_UPDATED",
+                    "student_id": updated_student.id,
+                    "name": updated_student.name,
+                    "total_solved": updated_student.stats.total_solved if updated_student.stats else 0
+                })
+            except Exception:
+                pass
+
+            last_ver = updated_student.stats.last_verified_at if updated_student.stats else None
+            return {
+                "status": "success" if updated_student.stats and updated_student.stats.sync_status == "success" else "failed",
                 "student_id": updated_student.id,
+                "reg_no": updated_student.reg_no,
                 "name": updated_student.name,
-                "total_solved": updated_student.stats.total_solved if updated_student.stats else 0
-            })
-        except Exception:
-            pass
-
-        return {
-            "student_id": updated_student.id,
-            "reg_no": updated_student.reg_no,
-            "name": updated_student.name,
-            "username": updated_student.username,
-            "stats": stats_dict
-        }
+                "username": updated_student.username,
+                "last_verified_at": last_ver.isoformat() if last_ver else None,
+                "stats": stats_dict
+            }
+        except asyncio.TimeoutError:
+            err_msg = f"Refresh timed out for {student.name} (> 30s limit). Showing last verified data."
+            logger.warning(err_msg)
+            last_ver = student.stats.last_verified_at if student.stats and student.stats.last_verified_at else None
+            return {
+                "status": "timeout",
+                "message": f"Refresh timed out. Last verified data: {last_ver.isoformat() if last_ver else 'Never'}",
+                "student_id": student.id,
+                "name": student.name,
+                "last_verified_at": last_ver.isoformat() if last_ver else None,
+                "stats": {
+                    "total_solved": student.stats.total_solved if student.stats else 0,
+                    "easy_solved": student.stats.easy_solved if student.stats else 0,
+                    "medium_solved": student.stats.medium_solved if student.stats else 0,
+                    "hard_solved": student.stats.hard_solved if student.stats else 0,
+                    "contest_rating": student.stats.contest_rating if student.stats else None,
+                    "status": "TIMEOUT",
+                    "sync_status": "timeout"
+                }
+            }
     finally:
         db.close()
 

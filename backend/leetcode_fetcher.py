@@ -1,5 +1,6 @@
 import re
 import time
+import datetime
 import asyncio
 import httpx
 from typing import Dict, Any, Tuple, Optional
@@ -358,7 +359,19 @@ async def fetch_leetcode_profile(
         except Exception as e:
             logger.info(f"Contest stats skipped for '{username}': {e}")
 
+        # Statistics Validation: easy + medium + hard == total_solved
+        calculated_total = easy_solved + medium_solved + hard_solved
+        if total_solved == 0 and calculated_total > 0:
+            total_solved = calculated_total
+
+        is_valid_sum = (easy_solved + medium_solved + hard_solved == total_solved)
+        sync_status = "success" if is_valid_sum else "mismatch"
+        error_detail = None if is_valid_sum else f"Difficulty sum mismatch: {easy_solved} + {medium_solved} + {hard_solved} != {total_solved}"
+        if not is_valid_sum:
+            logger.warning(f"CRITICAL STATS MISMATCH for user '{username}': {error_detail}")
+
         duration = round(time.time() - start_time, 3)
+        verified_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
         result = {
             "username": username,
@@ -374,9 +387,12 @@ async def fetch_leetcode_profile(
             "public_profile_ranking": profile_ranking,
             "recent_contest_name": recent_contest_name,
             "recent_contest_score": recent_contest_score,
-            "status": "success",
-            "error": None,
-            "error_message": None,
+            "status": "success" if is_valid_sum else "MISMATCH",
+            "sync_status": sync_status,
+            "source": "leetcode_public_profile",
+            "last_verified_at": verified_at,
+            "error": error_detail,
+            "error_message": error_detail,
             "fetch_duration": duration
         }
 

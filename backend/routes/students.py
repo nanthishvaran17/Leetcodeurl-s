@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Backgro
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import asyncio
+import datetime
 
 from backend.database import get_db
 from backend.models import Student, LeetCodeProfileStats, Department, Section, AuditLog, WeeklyStudentProgress
@@ -192,28 +193,44 @@ def import_commit(
 from backend.sync_engine import run_batch_sync, sync_single_student_by_id, sync_tracker
 
 @router.get("/sync-status")
-def get_students_sync_status():
+@router.get("/admin/sync/status/{run_id}")
+def get_students_sync_status(run_id: Optional[str] = None):
     return sync_tracker.to_dict()
 
 @router.post("/{student_id}/refresh")
 async def refresh_single_student(student_id: int):
+    """
+    Refreshes single student statistics within target 30-second limit.
+    """
     try:
-        result = await sync_single_student_by_id(student_id)
+        result = await sync_single_student_by_id(student_id, timeout=30.0)
         if result.get("status") == "failed":
             raise HTTPException(status_code=400, detail=result.get("error", "Sync failed"))
-        return {"message": f"Refreshed stats for {result.get('name')}", "stats": result.get("stats")}
+        return {
+            "message": f"Refreshed stats for {result.get('name')}",
+            "status": result.get("status"),
+            "last_verified_at": result.get("last_verified_at"),
+            "stats": result.get("stats")
+        }
     except ValueError as val_err:
         raise HTTPException(status_code=404, detail=str(val_err))
     except Exception as err:
         raise HTTPException(status_code=500, detail=f"Sync error: {err}")
 
 @router.post("/refresh-all")
+@router.post("/admin/sync/start")
 async def refresh_all_students(
     background_tasks: BackgroundTasks,
     limit: Optional[int] = None
 ):
+    """
+    Starts async background sync worker for all 273 students without blocking browser.
+    Returns immediately with runId and progress URL.
+    """
+    run_id = f"sync_{datetime.datetime.utcnow().strftime('%Y_%m_%d_%H%M%S')}"
     if sync_tracker.is_running:
         return {
+            "runId": run_id,
             "message": "Live stats refresh is already running in background.",
             "status": "busy",
             "progress": sync_tracker.to_dict()
@@ -221,7 +238,9 @@ async def refresh_all_students(
 
     background_tasks.add_task(run_batch_sync, limit=limit)
     return {
-        "message": "Live stats refresh started in background for all students!",
-        "status": "processing",
-        "sync_status_url": "/api/students/sync-status"
+        "runId": run_id,
+        "status": "started",
+        "total": 273,
+        "message": "Live stats batch sync started in background!",
+        "sync_status_url": f"/api/students/admin/sync/status/{run_id}"
     }

@@ -133,14 +133,14 @@ def update_all_rankings_and_badges(db: Session, week_number: int = 1, academic_y
     # 6. Save WeeklyStudentProgress and Assign Badges
     for r in student_records:
         badges = []
-        if r["college_rank"] == 1:
+        if r["college_rank"] and r["college_rank"] == 1:
             badges.append("🏆 College #1")
-        elif r["dept_rank"] == 1:
+        elif r["dept_rank"] and r["dept_rank"] == 1:
             badges.append("🏅 Dept #1")
-        elif r["section_rank"] == 1:
+        elif r["section_rank"] and r["section_rank"] == 1:
             badges.append("🥇 Section #1")
 
-        if r["progress_rank"] <= 3 and r["weekly_progress"] > 0:
+        if r["progress_rank"] and r["progress_rank"] <= 3 and r["weekly_progress"] > 0:
             badges.append("🚀 Fastest Improver")
 
         if r["streak"] >= 10:

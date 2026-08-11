@@ -70,8 +70,11 @@ class LeetCodeStatsOut(BaseModel):
     recent_contest_name: Optional[str] = None
     recent_contest_score: Optional[str] = None
     status: str = "DATA UNAVAILABLE"
+    sync_status: Optional[str] = "not_started"
+    source: Optional[str] = "leetcode_public_profile"
     error_message: Optional[str] = None
     last_successful_sync: Optional[datetime.datetime] = None
+    last_verified_at: Optional[datetime.datetime] = None
     fetch_duration: Optional[float] = None
     last_updated: Optional[datetime.datetime] = None
 

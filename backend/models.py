@@ -78,8 +78,11 @@ class LeetCodeProfileStats(Base):
     recent_contest_score = Column(String(20), nullable=True) # e.g. "3 / 4"
     
     status = Column(String(50), default="DATA UNAVAILABLE") # OK, MISSING LINK, INVALID LINK, PROFILE NOT FOUND, DATA UNAVAILABLE
+    sync_status = Column(String(50), default="not_started") # success, failed, mismatch, not_started
+    source = Column(String(100), default="leetcode_public_profile")
     error_message = Column(Text, nullable=True)
     last_successful_sync = Column(DateTime, nullable=True)
+    last_verified_at = Column(DateTime(timezone=True), nullable=True)
     fetch_duration = Column(Float, nullable=True)
     last_updated = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
