@@ -222,7 +222,7 @@ async def _bg_refresh_all_students():
     db = SessionLocal()
     try:
         students = db.query(Student).filter(Student.is_active == True).all()
-        semaphore = asyncio.Semaphore(12)
+        semaphore = asyncio.Semaphore(3)
 
         async def fetch_one(student):
             if not student.leetcode_url:
@@ -230,6 +230,7 @@ async def _bg_refresh_all_students():
             async with semaphore:
                 try:
                     stats_dict = await fetch_leetcode_profile(student.leetcode_url, force_refresh=True)
+                    await asyncio.sleep(0.15)
                     return (student.id, stats_dict)
                 except Exception as e:
                     return None

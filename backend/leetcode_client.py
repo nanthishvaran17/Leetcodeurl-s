@@ -126,15 +126,18 @@ async def fetch_leetcode_profile(url: Optional[str], force_refresh: bool = False
             return cached_item["data"]
 
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
         "Content-Type": "application/json",
+        "Accept": "*/*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Origin": "https://leetcode.com",
         "Referer": f"https://leetcode.com/u/{username}/"
     }
 
-    retries = 2
-    timeout = 10.0
+    retries = 3
+    timeout = 12.0
 
-    async with httpx.AsyncClient(timeout=timeout) as client:
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
         # 1. Fetch Profile & Submission Stats
         payload_profile = {
             "query": USER_PROFILE_QUERY,
@@ -142,6 +145,7 @@ async def fetch_leetcode_profile(url: Optional[str], force_refresh: bool = False
         }
 
         matched_user = None
+        last_error_detail = ""
         for attempt in range(retries):
             try:
                 res = await client.post(GRAPHQL_URL, json=payload_profile, headers=headers)
@@ -150,10 +154,16 @@ async def fetch_leetcode_profile(url: Optional[str], force_refresh: bool = False
                     matched_user = data.get("data", {}).get("matchedUser")
                     if matched_user:
                         break
-                await asyncio.sleep(0.3)
+                    else:
+                        last_error_detail = f"User '{username}' matchedUser is null"
+                else:
+                    last_error_detail = f"HTTP status {res.status_code}"
+                    logger.warning(f"LeetCode API returned HTTP {res.status_code} for user '{username}' (Attempt {attempt+1}/{retries})")
+                await asyncio.sleep(0.5 * (attempt + 1))
             except Exception as e:
-                logger.warning(f"Error fetching profile for '{username}': {e}")
-                await asyncio.sleep(0.3)
+                last_error_detail = f"{type(e).__name__}: {str(e) or 'Network request failed'}"
+                logger.warning(f"Error fetching profile for '{username}' (Attempt {attempt+1}/{retries}): {last_error_detail}")
+                await asyncio.sleep(0.5 * (attempt + 1))
 
         if not matched_user:
             result = {
@@ -166,7 +176,7 @@ async def fetch_leetcode_profile(url: Optional[str], force_refresh: bool = False
                 "contest_rating": None,
                 "contest_global_ranking": None,
                 "public_profile_ranking": None,
-                "error_message": f"Profile for '{username}' not found on LeetCode."
+                "error_message": f"Profile for '{username}' could not be loaded ({last_error_detail})."
             }
             _profile_cache[username] = {"timestamp": now, "data": result}
             return result

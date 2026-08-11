@@ -17,10 +17,20 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
-            // Silently handle proxy reconnection when uvicorn reloads
+          proxy.on('error', (err, _req, res) => {
+            // Send graceful 503 response if backend is offline/reloading instead of hanging request
+            if (res && 'writeHead' in res && !res.headersSent) {
+              res.writeHead(503, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Backend service unavailable or starting up', detail: err.message }));
+            }
           });
         },
+      },
+      '/ws': {
+        target: 'http://127.0.0.1:8000',
+        ws: true,
+        changeOrigin: true,
+        secure: false,
       },
     },
   },

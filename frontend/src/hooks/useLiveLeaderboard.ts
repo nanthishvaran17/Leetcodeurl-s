@@ -1,27 +1,40 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 export function useLiveLeaderboard(onUpdate?: (data: any) => void) {
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<any>(null);
+  const onUpdateRef = useRef(onUpdate);
 
   useEffect(() => {
+    onUpdateRef.current = onUpdate;
+  }, [onUpdate]);
+
+  useEffect(() => {
+    let isMounted = true;
+    let socket: WebSocket | null = null;
+    let pingInterval: ReturnType<typeof setInterval> | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    // In prod use VITE_API_URL; in dev use backend port 8000 directly
     const apiUrl = import.meta.env.VITE_API_URL;
     const wsHost = apiUrl
       ? apiUrl.replace(/^https?:\/\//, '')
-      : '127.0.0.1:8000';
+      : window.location.host;
     const wsUrl = `${protocol}//${wsHost}/ws/leaderboard`;
 
-    let socket: WebSocket | null = null;
-    let pingInterval: any = null;
-
     const connect = () => {
+      if (!isMounted) return;
+
       try {
         socket = new WebSocket(wsUrl);
 
         socket.onopen = () => {
+          if (!isMounted) {
+            socket?.close();
+            return;
+          }
           setIsConnected(true);
+          if (pingInterval) clearInterval(pingInterval);
           pingInterval = setInterval(() => {
             if (socket && socket.readyState === WebSocket.OPEN) {
               socket.send('ping');
@@ -30,38 +43,54 @@ export function useLiveLeaderboard(onUpdate?: (data: any) => void) {
         };
 
         socket.onmessage = (event) => {
-          if (event.data === 'pong') return;
+          if (!isMounted || event.data === 'pong') return;
           try {
             const data = JSON.parse(event.data);
             setLastMessage(data);
-            if (onUpdate) onUpdate(data);
+            if (onUpdateRef.current) onUpdateRef.current(data);
           } catch (e) {
             console.error('WebSocket parse error:', e);
           }
         };
 
         socket.onclose = () => {
-          setIsConnected(false);
           if (pingInterval) clearInterval(pingInterval);
-          // Auto reconnect after 5s
-          setTimeout(connect, 5000);
+          if (!isMounted) return;
+
+          setIsConnected(false);
+          // Auto reconnect after 5s if still mounted
+          reconnectTimer = setTimeout(connect, 5000);
         };
 
         socket.onerror = (err) => {
+          if (!isMounted) return;
           console.warn('WebSocket connection note:', err);
         };
       } catch (err) {
+        if (!isMounted) return;
         console.warn('WebSocket init exception:', err);
+        reconnectTimer = setTimeout(connect, 5000);
       }
     };
 
     connect();
 
     return () => {
+      isMounted = false;
       if (pingInterval) clearInterval(pingInterval);
-      if (socket) socket.close();
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      if (socket) {
+        // Remove event handlers to prevent triggering onclose/onerror during cleanup teardown
+        socket.onopen = null;
+        socket.onmessage = null;
+        socket.onclose = null;
+        socket.onerror = null;
+        socket.close();
+      }
+      setIsConnected(false);
     };
   }, []);
 
   return { isConnected, lastMessage };
 }
+

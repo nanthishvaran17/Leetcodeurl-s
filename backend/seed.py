@@ -394,6 +394,16 @@ def seed_database():
                 db.commit()
                 db.refresh(stud)
 
+                stats = LeetCodeProfileStats(
+                    student_id=stud.id,
+                    total_solved=0,
+                    easy_solved=0,
+                    medium_solved=0,
+                    hard_solved=0,
+                    status="NOT_FETCHED"
+                )
+                db.add(stats)
+
                 # Seed specific stats for #1 College Ranker NANTHISH S (732224CC031)
                 if reg == "732224CC031":
                     stats.total_solved = 645
@@ -412,6 +422,17 @@ def seed_database():
                 stud.username = username
                 stud.is_active = True
                 if email: stud.email = email
+
+                if not stud.stats:
+                    stats = LeetCodeProfileStats(
+                        student_id=stud.id,
+                        total_solved=0,
+                        easy_solved=0,
+                        medium_solved=0,
+                        hard_solved=0,
+                        status="NOT_FETCHED"
+                    )
+                    db.add(stats)
 
                 if reg == "732224CC031" and stud.stats:
                     stud.stats.total_solved = 645
