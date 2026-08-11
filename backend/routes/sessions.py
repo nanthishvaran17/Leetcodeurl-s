@@ -33,12 +33,17 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
     top_college_ranker = None
 
     if students:
-        total_problems = sum((s.stats.total_solved if s.stats else 0) for s in students)
+        # Guard: total_solved can be NULL in DB even when stats row exists
+        total_problems = sum((s.stats.total_solved or 0) if s.stats else 0 for s in students)
         ratings = [s.stats.contest_rating for s in students if s.stats and s.stats.contest_rating]
         if ratings:
             highest_rating = max(ratings)
 
-        sorted_s = sorted(students, key=lambda x: (x.stats.total_solved if x.stats else 0), reverse=True)
+        sorted_s = sorted(
+            students,
+            key=lambda x: (x.stats.total_solved or 0) if x.stats else 0,
+            reverse=True
+        )
         if sorted_s:
             top_college_ranker = sorted_s[0].name
 
@@ -46,16 +51,16 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         snapshots = db.query(WeeklySessionSnapshot).filter(WeeklySessionSnapshot.session_id == current_session.id).all()
         if snapshots:
             for sn in snapshots:
-                if sn.status == "STARTED" or sn.problems_added > 0:
+                if sn.status == "STARTED" or (sn.problems_added or 0) > 0:
                     active_students += 1
                 else:
                     not_started_students += 1
         else:
             # Fallback based on live student stats
-            active_students = sum(1 for s in students if s.stats and s.stats.total_solved > 0)
+            active_students = sum(1 for s in students if s.stats and (s.stats.total_solved or 0) > 0)
             not_started_students = total_students - active_students
     else:
-        active_students = sum(1 for s in students if s.stats and s.stats.total_solved > 0)
+        active_students = sum(1 for s in students if s.stats and (s.stats.total_solved or 0) > 0)
         not_started_students = total_students - active_students
 
     avg_solved = round(total_problems / total_students, 1) if total_students > 0 else 0.0

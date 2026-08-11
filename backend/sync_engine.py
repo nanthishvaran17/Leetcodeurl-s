@@ -24,8 +24,10 @@ class SyncProgressTracker:
         self.end_time: Optional[str] = None
         self.recent_logs: List[str] = []
         self._lock = asyncio.Lock()
+        self.run_id: Optional[str] = None  # Firestore syncRuns/{runId}
+        self._fs_client = None             # Lazy Firestore client
 
-    def reset(self, total_students: int):
+    def reset(self, total_students: int, run_id: Optional[str] = None):
         self.is_running = True
         self.total = total_students
         self.completed = 0
@@ -36,6 +38,10 @@ class SyncProgressTracker:
         self.start_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.end_time = None
         self.recent_logs = []
+        self.run_id = run_id
+        self._fs_client = None
+        # Write initial syncRuns document
+        self._write_firestore_progress(status="running")
 
     def record_completed(self, is_success: bool, log_msg: str):
         self.completed += 1
@@ -51,9 +57,62 @@ class SyncProgressTracker:
         if len(self.recent_logs) > 50:
             self.recent_logs.pop(0)
 
+        # Write real-time progress to Firestore every 5 completions
+        if self.completed % 5 == 0 or self.completed == self.total:
+            self._write_firestore_progress(status="running")
+
+    def _get_fs_client(self):
+        """Lazily initialise Firestore Admin SDK (best-effort)."""
+        if self._fs_client is not None:
+            return self._fs_client
+        try:
+            import firebase_admin
+            from firebase_admin import credentials, firestore as fs_module
+            import os
+            if not firebase_admin._apps:
+                sa_path = os.path.join(
+                    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                    "serviceAccountKey.json"
+                )
+                if os.path.exists(sa_path):
+                    cred = credentials.Certificate(sa_path)
+                    firebase_admin.initialize_app(cred)
+                elif os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"):
+                    firebase_admin.initialize_app(credentials.ApplicationDefault())
+                else:
+                    return None
+            self._fs_client = fs_module.client()
+        except Exception:
+            self._fs_client = None
+        return self._fs_client
+
+    def _write_firestore_progress(self, status: str = "running"):
+        """Write current progress to Firestore syncRuns/{runId} (best-effort, never throws)."""
+        if not self.run_id:
+            return
+        try:
+            client = self._get_fs_client()
+            if not client:
+                return
+            client.collection("syncRuns").document(self.run_id).set({
+                "runId":       self.run_id,
+                "status":      status,
+                "total":       self.total,
+                "processed":   self.completed,
+                "successful":  self.success,
+                "failed":      self.failed,
+                "pending":     self.pending,
+                "startedAt":   self.start_time,
+                "completedAt": self.end_time,
+                "updatedAt":   datetime.datetime.now().isoformat()
+            })
+        except Exception:
+            pass  # Never let Firestore failures block the sync
+
     def finish(self):
         self.is_running = False
         self.end_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self._write_firestore_progress(status="completed")
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -99,21 +158,26 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
 
     status = stats_dict.get("status")
     is_success = status in ["success", "OK"]
-    
-    # 2. Sum Validation Check
-    tot = stats_dict.get("total_solved", 0)
-    ez = stats_dict.get("easy_solved", 0)
-    med = stats_dict.get("medium_solved", 0)
-    hd = stats_dict.get("hard_solved", 0)
-    if is_success and (ez + med + hd != tot) and tot > 0:
-        err_msg = f"CRITICAL STATS MISMATCH for {student.reg_no}: {ez} + {med} + {hd} != {tot}"
-        logger.error(err_msg)
-        student.stats.sync_status = "mismatch"
-        student.stats.status = "MISMATCH"
-        student.stats.error_message = err_msg
-        db.commit()
-        db.refresh(student)
-        return student
+
+    # 2. Sum Validation Check — use 0 as arithmetic sentinel only; actual DB write uses None for failed
+    tot = stats_dict.get("total_solved")   # May be None for failed/missing fetches
+    ez  = stats_dict.get("easy_solved")
+    med = stats_dict.get("medium_solved")
+    hd  = stats_dict.get("hard_solved")
+
+    # Only validate the sum when all values are present integers and fetch succeeded
+    if is_success and all(v is not None for v in [tot, ez, med, hd]):
+        tot_int, ez_int, med_int, hd_int = int(tot), int(ez), int(med), int(hd)
+        if (ez_int + med_int + hd_int != tot_int) and tot_int > 0:
+            err_msg = f"CRITICAL STATS MISMATCH for {student.reg_no}: {ez_int} + {med_int} + {hd_int} != {tot_int}"
+            logger.error(err_msg)
+            student.stats.sync_status = "mismatch"
+            student.stats.status = "MISMATCH"
+            student.stats.error_message = err_msg
+            db.commit()
+            db.refresh(student)
+            return student
+
 
     if is_success:
         student.stats.total_solved = tot
@@ -178,11 +242,15 @@ async def sync_single_student_by_id(student_id: int, timeout: float = 30.0) -> D
             # Broadcast live update over websocket if available
             try:
                 from backend.websocket_manager import manager
+                # Never send false-zero — only send stats if actually verified
+                stats_obj = updated_student.stats
+                is_verified = stats_obj and stats_obj.sync_status in ("success", "OK")
                 await manager.broadcast({
                     "type": "STUDENT_UPDATED",
                     "student_id": updated_student.id,
                     "name": updated_student.name,
-                    "total_solved": updated_student.stats.total_solved if updated_student.stats else 0
+                    "sync_status": stats_obj.sync_status if stats_obj else "pending",
+                    "total_solved": (stats_obj.total_solved if is_verified else None)
                 })
             except Exception:
                 pass
@@ -200,7 +268,10 @@ async def sync_single_student_by_id(student_id: int, timeout: float = 30.0) -> D
         except asyncio.TimeoutError:
             err_msg = f"Refresh timed out for {student.name} (> 30s limit). Showing last verified data."
             logger.warning(err_msg)
-            last_ver = student.stats.last_verified_at if student.stats and student.stats.last_verified_at else None
+            st = student.stats
+            last_ver = st.last_verified_at if (st and st.last_verified_at) else None
+            # Preserve previously verified stats — never invent zeros
+            is_prev_verified = st and st.sync_status in ("success", "OK") and st.last_verified_at is not None
             return {
                 "status": "timeout",
                 "message": f"Refresh timed out. Last verified data: {last_ver.isoformat() if last_ver else 'Never'}",
@@ -208,11 +279,11 @@ async def sync_single_student_by_id(student_id: int, timeout: float = 30.0) -> D
                 "name": student.name,
                 "last_verified_at": last_ver.isoformat() if last_ver else None,
                 "stats": {
-                    "total_solved": student.stats.total_solved if student.stats else 0,
-                    "easy_solved": student.stats.easy_solved if student.stats else 0,
-                    "medium_solved": student.stats.medium_solved if student.stats else 0,
-                    "hard_solved": student.stats.hard_solved if student.stats else 0,
-                    "contest_rating": student.stats.contest_rating if student.stats else None,
+                    "total_solved":   (st.total_solved   if is_prev_verified else None),
+                    "easy_solved":    (st.easy_solved    if is_prev_verified else None),
+                    "medium_solved":  (st.medium_solved  if is_prev_verified else None),
+                    "hard_solved":    (st.hard_solved    if is_prev_verified else None),
+                    "contest_rating": (st.contest_rating if is_prev_verified else None),
                     "status": "TIMEOUT",
                     "sync_status": "timeout"
                 }
@@ -220,10 +291,12 @@ async def sync_single_student_by_id(student_id: int, timeout: float = 30.0) -> D
     finally:
         db.close()
 
-async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 3, per_worker_delay: float = 0.3) -> Dict[str, Any]:
+async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 3, per_worker_delay: float = 0.3, pre_run_id: Optional[str] = None) -> Dict[str, Any]:
     """
     Executes controlled queue sync for active students.
     Respects SYNC_LIMIT env variable or explicit `limit` argument.
+    pre_run_id: If provided, uses this as the Firestore syncRuns document ID (so the frontend
+                can subscribe before the sync starts).
     """
     # Check SYNC_LIMIT env var if limit parameter is not explicitly passed
     env_limit = os.environ.get("SYNC_LIMIT")
@@ -242,10 +315,12 @@ async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 3, per_
             students = students[:limit]
 
         total_count = len(students)
-        sync_tracker.reset(total_count)
+        # Use pre_run_id if provided (so Firestore document matches what frontend subscribed to)
+        run_id = pre_run_id or f"sync_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        sync_tracker.reset(total_count, run_id=run_id)
 
-        logger.info(f"[INFO] Starting batch LeetCode sync for {total_count} students (Concurrency: {max_workers})...")
-        sync_tracker.recent_logs.append(f"[INFO] Starting sync for {total_count} students...")
+        logger.info(f"[INFO] Starting batch LeetCode sync for {total_count} students (Concurrency: {max_workers}, RunID: {run_id})...")
+        sync_tracker.recent_logs.append(f"[INFO] Starting sync for {total_count} students, RunID: {run_id}...")
 
         queue = asyncio.Queue()
         for st in students:
@@ -311,7 +386,6 @@ async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 3, per_
 
         try:
             from backend.websocket_manager import manager
-            import asyncio
             asyncio.create_task(manager.broadcast({"type": "LEADERBOARD_UPDATED", "timestamp": time.time()}))
         except Exception as _ws_err:
             logger.warning(f"WebSocket broadcast note: {_ws_err}")
@@ -321,7 +395,9 @@ async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 3, per_
         logger.info(summary_log)
         sync_tracker.recent_logs.append(summary_log)
 
-        return sync_tracker.to_dict()
+        result = sync_tracker.to_dict()
+        result["runId"] = run_id
+        return result
 
     finally:
         db.close()

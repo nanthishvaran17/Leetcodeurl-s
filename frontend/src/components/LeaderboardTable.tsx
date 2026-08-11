@@ -1,6 +1,30 @@
 import React from 'react';
-import { ExternalLink, Trophy, Flame, Award, CheckCircle2, AlertTriangle, XCircle, RefreshCw, Wifi, Trash2 } from 'lucide-react';
+import { ExternalLink, Trophy, Flame, Award, CheckCircle2, AlertTriangle, XCircle, RefreshCw, Wifi, Trash2, Clock, AlertCircle } from 'lucide-react';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
+
+// Sync state helpers — mirrors StudentFlipCard logic
+function getSyncState(syncStatus?: string, lastVerifiedAt?: string): 'pending'|'syncing'|'verified'|'failed'|'mismatch'|'stale'|'invalid_profile' {
+  if (syncStatus === 'invalid_profile' || syncStatus === 'INVALID_LINK' || syncStatus === 'MISSING_LINK') return 'invalid_profile';
+  if (syncStatus === 'syncing') return 'syncing';
+  if (!syncStatus || syncStatus === 'pending' || syncStatus === 'not_started') return 'pending';
+  if (syncStatus === 'success' || syncStatus === 'OK') {
+    if (lastVerifiedAt) {
+      const age = Date.now() - new Date(lastVerifiedAt).getTime();
+      if (age > 24 * 60 * 60 * 1000) return 'stale';
+    }
+    return 'verified';
+  }
+  if (syncStatus === 'mismatch' || syncStatus === 'data_mismatch') return 'mismatch';
+  return 'failed';
+}
+function formatAgo(ts?: string): string {
+  if (!ts) return '';
+  const s = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+  if (s < 60) return `${s}s ago`;
+  if (s < 3600) return `${Math.floor(s/60)}m ago`;
+  if (s < 86400) return `${Math.floor(s/3600)}h ago`;
+  return `${Math.floor(s/86400)}d ago`;
+}
 
 export interface StudentData {
   id: number;
@@ -121,19 +145,26 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
             </tr>
           ) : (
             students.map((student, idx) => {
-              const totalSolved = student.stats?.total_solved || 0;
-              const isSolver = totalSolved > 0;
-              const contestSolvedRatio = student.stats?.recent_contest_score || (totalSolved > 400 ? '4 / 4' : totalSolved > 250 ? '3 / 4' : totalSolved > 100 ? '2 / 4' : totalSolved > 0 ? '1 / 4' : '0 / 4');
+              const syncState = getSyncState(student.stats?.sync_status, student.stats?.last_verified_at);
+              const isVerified = syncState === 'verified' || syncState === 'stale';
+
+              // RULE: Never show 0 for unverified students
+              const totalSolved = isVerified ? (student.stats?.total_solved ?? 0) : null;
+              const isSolver = isVerified && (totalSolved ?? 0) > 0;
+
+              const contestSolvedRatio = student.stats?.recent_contest_score || (
+                !isVerified ? '— / 4' :
+                (totalSolved ?? 0) > 400 ? '4 / 4' : (totalSolved ?? 0) > 250 ? '3 / 4' :
+                (totalSolved ?? 0) > 100 ? '2 / 4' : (totalSolved ?? 0) > 0 ? '1 / 4' : '0 / 4'
+              );
               const recentContestName = student.stats?.recent_contest_name || 'Weekly Contest';
-              // Only show contest rating for active solvers — 0-solved students show 'Unrated'
               const contestRating = (isSolver && student.stats?.contest_rating)
                 ? student.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-                : 'Unrated';
-              
+                : (isVerified ? 'Unrated' : '—');
               const rawRank = isSolver ? (student.stats?.public_profile_ranking || student.stats?.contest_global_ranking) : null;
-              const globalRanking = rawRank ? `#${rawRank.toLocaleString('en-US')}` : 'Unranked';
-              // Only active solvers get a college rank — unranked students show a gray badge
+              const globalRanking = rawRank ? `#${rawRank.toLocaleString('en-US')}` : (isVerified ? 'Unranked' : '—');
               const effectiveCollegeRank = isSolver ? (student.college_rank || idx + 1) : undefined;
+              const verifiedAgo = formatAgo(student.stats?.last_verified_at);
               const username = student.username || student.leetcode_url?.split('/u/')[1]?.replace('/', '') || `${student.name.replace(/\s+/g, '_')}`;
 
               // Determine Participation Mode (Public Live vs Not Started)
@@ -165,7 +196,11 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   <td className="py-3 px-4 font-bold">
                     {isSolver
                       ? getRankBadge(effectiveCollegeRank)
-                      : <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 border border-gray-300 dark:border-gray-700">Unranked</span>
+                      : syncState === 'pending'
+                        ? <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500 border border-gray-300 dark:border-gray-700"><Clock className="w-3 h-3" /><span>Pending</span></span>
+                        : syncState === 'failed'
+                          ? <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-600 dark:bg-rose-950 dark:text-rose-400 border border-rose-300"><AlertCircle className="w-3 h-3" /><span>Failed</span></span>
+                          : <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 border border-gray-300 dark:border-gray-700">Unranked</span>
                     }
                   </td>
 
@@ -191,7 +226,10 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   </td>
 
                   <td className="py-3 px-4 text-center font-bold text-gray-900 dark:text-white text-sm">
-                    {totalSolved}
+                    {!isVerified
+                      ? <span className="text-gray-400 dark:text-gray-600 text-xs">{syncState === 'pending' ? '⏳ Pending' : syncState === 'failed' ? '🔴 Failed' : '—'}</span>
+                      : totalSolved
+                    }
                   </td>
 
                   <td className="py-3 px-4 text-center bg-brand-50/40 dark:bg-brand-950/20">

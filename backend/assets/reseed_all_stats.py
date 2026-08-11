@@ -18,7 +18,6 @@ def reseed_all_student_stats():
 
         updated_count = 0
         for s in students:
-            seed_val = sum(ord(c) for c in s.reg_no)
             reg = s.reg_no
 
             if reg == "732224CI044":
@@ -32,9 +31,16 @@ def reseed_all_student_stats():
                 st_status = "OK"
                 w_prog, w_streak, w_cons = 12, 200, 99.8
             else:
-                tot, ez, med, hd = 0, 0, 0, 0
+                # If stats already exist and are verified or > 0, preserve them!
+                if s.stats and s.stats.total_solved is not None and s.stats.total_solved > 0:
+                    continue  # Keep existing verified stats
+                elif s.stats and s.stats.status and s.stats.status in ("OK", "success"):
+                    continue  # Keep existing verified stats
+
+                # For unfetched students: set as pending with None stats (never false zero/OK)
+                tot, ez, med, hd = None, None, None, None
                 c_rating, c_rank = None, None
-                st_status = "NOT STARTED" if not s.leetcode_url else "OK"
+                st_status = "pending" if s.leetcode_url else "NOT STARTED"
                 w_prog, w_streak, w_cons = 0, 0, 0.0
 
             if not s.stats:

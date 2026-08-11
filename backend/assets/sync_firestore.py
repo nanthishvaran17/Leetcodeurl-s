@@ -68,20 +68,21 @@ def sync_database_to_firestore():
                 WeeklyStudentProgress.student_id == s.id
             ).order_by(WeeklyStudentProgress.id.desc()).first()
 
-            total_solved = stats.total_solved if stats else 0
-            total_solved_sum += total_solved
-            weekly_prog = prog.weekly_progress if prog else 0
+            total_solved = stats.total_solved if (stats and stats.total_solved is not None) else None
+            if total_solved is not None:
+                total_solved_sum += total_solved
+                if total_solved > 0:
+                    active_count += 1
+
+            weekly_prog = prog.weekly_progress if (prog and prog.weekly_progress) else 0
             weekly_progress_sum += weekly_prog
 
-            if total_solved > 0:
-                active_count += 1
-
             status = stats.status if stats else "NOT STARTED"
-            if status == "OK":
+            if status in ("OK", "success"):
                 valid_profiles += 1
-            elif status == "MISSING LINK":
+            elif status in ("MISSING LINK", "MISSING_LINK"):
                 missing_links += 1
-            elif status == "INVALID LINK":
+            elif status in ("INVALID LINK", "INVALID_LINK"):
                 invalid_links += 1
 
             dept_code = s.department.code if s.department else "GEN"
@@ -99,11 +100,11 @@ def sync_database_to_firestore():
                 }
 
             dept_summary[dept_code]["total_students"] += 1
-            dept_summary[dept_code]["total_solved"] += total_solved
+            dept_summary[dept_code]["total_solved"] += (total_solved or 0)
             dept_summary[dept_code]["weekly_progress"] += weekly_prog
-            if total_solved > 0:
+            if total_solved and total_solved > 0:
                 dept_summary[dept_code]["active_students"] += 1
-            if total_solved > dept_summary[dept_code]["top_solved"]:
+            if total_solved and total_solved > dept_summary[dept_code]["top_solved"]:
                 dept_summary[dept_code]["top_solved"] = total_solved
                 dept_summary[dept_code]["top_student_name"] = s.name
 
@@ -122,21 +123,33 @@ def sync_database_to_firestore():
                 "isActive": s.is_active
             }
 
+            # Determine sync status cleanly
+            if stats and stats.sync_status:
+                sync_st = stats.sync_status
+            elif stats and stats.status in ("OK", "success") and total_solved is not None:
+                sync_st = "success"
+            elif status in ("INVALID LINK", "MISSING LINK", "INVALID_LINK", "MISSING_LINK"):
+                sync_st = "invalid_profile"
+            else:
+                sync_st = "pending"
+
+            last_ver = stats.last_verified_at.isoformat() if (stats and stats.last_verified_at) else None
+
             # LeetCode Stats Document payload
             stats_doc = {
                 "studentId": s.id,
                 "registerNo": s.reg_no,
                 "leetcodeUsername": s.username or "",
                 "totalSolved": total_solved,
-                "easySolved": stats.easy_solved if stats else 0,
-                "mediumSolved": stats.medium_solved if stats else 0,
-                "hardSolved": stats.hard_solved if stats else 0,
+                "easySolved": stats.easy_solved if (stats and stats.easy_solved is not None) else None,
+                "mediumSolved": stats.medium_solved if (stats and stats.medium_solved is not None) else None,
+                "hardSolved": stats.hard_solved if (stats and stats.hard_solved is not None) else None,
                 "contestRating": stats.contest_rating if stats else None,
                 "globalRanking": stats.contest_global_ranking if stats else None,
                 "status": status,
-                "syncStatus": stats.sync_status if stats and stats.sync_status else "success",
-                "source": stats.source if stats and stats.source else "leetcode_public_profile",
-                "lastVerifiedAt": stats.last_verified_at.isoformat() if (stats and stats.last_verified_at) else datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "syncStatus": sync_st,
+                "source": stats.source if (stats and stats.source) else "leetcode_public_profile",
+                "lastVerifiedAt": last_ver,
                 "weeklySolved": weekly_prog,
                 "streakCount": prog.streak_count if prog else 0,
                 "consistencyScore": prog.consistency_score if prog else 0.0,
@@ -219,3 +232,63 @@ def sync_database_to_firestore():
 
 if __name__ == "__main__":
     sync_database_to_firestore()
+
+
+def initialize_pending_records():
+    """
+    Ensures ALL active students have a Firestore document in leetcodeStats/{studentId}.
+    For students who have never been successfully synced, writes:
+        { syncStatus: "pending", totalSolved: null, lastVerifiedAt: null }
+    This prevents the frontend from showing "0 Solved / Verified just now" for unfetched students.
+    Call this on server startup (non-blocking).
+    """
+    fs_db = get_firestore_client()
+    if not fs_db:
+        print("[Firestore Init] Firestore not available — skipping pending record initialization.")
+        return
+
+    db = SessionLocal()
+    try:
+        students = db.query(Student).filter(
+            (Student.is_active == True) | (Student.is_active.is_(None))
+        ).all()
+
+        initialized = 0
+        skipped = 0
+        for s in students:
+            student_id = s.reg_no or str(s.id)
+            try:
+                doc_ref = fs_db.collection("leetcodeStats").document(student_id)
+                doc = doc_ref.get()
+                if not doc.exists:
+                    # New student — write pending placeholder
+                    doc_ref.set({
+                        "studentId":       student_id,
+                        "leetcodeUsername": s.username or None,
+                        "syncStatus":      "pending",
+                        "source":          None,
+                        "totalSolved":     None,
+                        "easySolved":      None,
+                        "mediumSolved":    None,
+                        "hardSolved":      None,
+                        "contestRating":   None,
+                        "globalRank":      None,
+                        "lastVerifiedAt":  None,
+                    })
+                    initialized += 1
+                else:
+                    existing = doc.to_dict()
+                    # Only overwrite if syncStatus is missing (e.g., old record without status field)
+                    if not existing.get("syncStatus"):
+                        doc_ref.set({"syncStatus": "pending"}, merge=True)
+                        initialized += 1
+                    else:
+                        skipped += 1
+            except Exception as err:
+                print(f"[Firestore Init] Error for {student_id}: {err}")
+
+        print(f"[Firestore Init] Completed: {initialized} pending records initialized, {skipped} already had status.")
+    except Exception as err:
+        print(f"[Firestore Init] Error: {err}")
+    finally:
+        db.close()

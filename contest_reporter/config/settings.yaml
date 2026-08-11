@@ -1,0 +1,21 @@
+student:
+  name: "Nanthish S"
+  reg_no: "732224CC031"
+  college: "Nandha Engineering College (Autonomous)"
+  department: "CSE (Cyber Security)"
+  year: "III"
+  section: "A"
+  leetcode_username: "nanthishvaran_07"
+  leetcode_profile_url: "https://leetcode.com/u/nanthishvaran_07/"
+
+# Rating milestones to watch and celebrate in the report
+rating_milestones: [1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2400]
+
+# Number of past contests to include in the rolling average
+rolling_avg_weeks: 5
+
+# If true, include topic-weakness analysis in PDF and email
+include_tag_weakness: true
+
+# Output directory (relative to contest_reporter/)
+output_dir: "output"

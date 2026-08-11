@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CollegeLogo } from '../components/CollegeLogo';
-import { Shield, ArrowRight, Trophy, Users, Layers, Activity, Flame, Star, LayoutGrid, List, RefreshCw } from 'lucide-react';
+import { Shield, ArrowRight, Trophy, Users, Layers, Activity, Flame, Star, LayoutGrid, List, RefreshCw, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { CountdownTimer } from '../components/CountdownTimer';
 import { StudentFlipCard } from '../components/StudentFlipCard';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
@@ -39,18 +39,55 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     fetchFilteredStudents();
   }, [selectedDept, yearLevel]);
 
-  // Instant refresh: re-reads from Firestore (already has latest synced data). < 2 seconds.
+  const [syncProgress, setSyncProgress] = useState<{ total: number; processed: number; successful: number; failed: number; is_running: boolean } | null>(null);
+  const syncUnsubRef = useRef<(() => void) | null>(null);
+
+  // Handles "Refresh All" — kicks off background LeetCode crawl in backend,
+  // then subscribes to Firestore syncRuns/{runId} for real-time progress.
   const handleRefreshAll = async () => {
+    if (syncProgress?.is_running) return; // block duplicate sync
     setRefreshing(true);
     try {
-      // 1. Instantly re-fetch data from Firestore (fast < 2s)
+      // 1. Re-fetch immediately from Firestore cache (instant)
       await fetchFilteredStudents();
 
-      // 2. Silently kick off a background LeetCode crawl (fire & forget — never blocks UI)
-      api.post('/students/refresh-all').catch(() => {});
+      // 2. Fire background crawl — returns runId immediately
+      const res = await api.post('/students/refresh-all');
+      const runId: string = res.data?.runId || 'current';
+
+      // 3. Subscribe to Firestore syncRuns/{runId} for real-time progress
+      try {
+        const { getOrInitDb } = await import('../services/firebase');
+        const { doc, onSnapshot } = await import('firebase/firestore');
+        const fsDb = getOrInitDb();
+
+        // Unsubscribe any previous listener
+        if (syncUnsubRef.current) syncUnsubRef.current();
+
+        const unsub = onSnapshot(doc(fsDb, 'syncRuns', runId), (snap) => {
+          if (!snap.exists()) return;
+          const d = snap.data();
+          setSyncProgress({
+            total:      d.total      ?? 273,
+            processed:  d.processed  ?? 0,
+            successful: d.successful ?? 0,
+            failed:     d.failed     ?? 0,
+            is_running: d.status === 'running'
+          });
+          if (d.status !== 'running') {
+            unsub();
+            syncUnsubRef.current = null;
+            setRefreshing(false);
+            fetchFilteredStudents();
+          }
+        });
+        syncUnsubRef.current = unsub;
+      } catch {
+        // Firestore unavailable — just finish refreshing
+        setRefreshing(false);
+      }
     } catch (err) {
       console.error(err);
-    } finally {
       setRefreshing(false);
     }
   };
@@ -92,7 +129,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       }
 
       const res = await api.get(url);
-      if (res.data && res.data.length > 0 && res.data.some((s: any) => (s.stats?.total_solved || 0) > 0)) {
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setStudents(res.data);
         loadedFromApi = true;
       }
@@ -246,43 +283,62 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <CountdownTimer targetSeconds={summaryData?.next_session_countdown_seconds || 86400} />
       </div>
 
-      {/* Stat Cards Grid */}
+      {/* Stat Cards Grid — Data-quality-aware */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-        
-        <div className="glass-card p-6 rounded-2xl space-y-2 border shadow-md">
-          <div className="p-3 w-fit rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
-            <Users className="w-6 h-6" />
-          </div>
-          <h4 className="text-2xl font-black text-gray-900 dark:text-white">{summaryData?.total_students || 221}</h4>
-          <p className="text-xs font-semibold text-gray-500">Total Enrolled Students</p>
-        </div>
+        {(() => {
+          // Compute verified/pending/failed from loaded students
+          const verified = students.filter(s => s.stats?.sync_status === 'success').length;
+          const pending  = students.filter(s => !s.stats?.sync_status || s.stats.sync_status === 'pending' || s.stats.sync_status === 'not_started').length;
+          const failed   = students.filter(s => s.stats?.sync_status === 'failed' || s.stats?.sync_status === 'mismatch').length;
+          const activeSolvers = students.filter(s => s.stats?.sync_status === 'success' && (s.stats?.total_solved ?? 0) > 0).length;
+          const verifiedProblems = students
+            .filter(s => s.stats?.sync_status === 'success')
+            .reduce((sum, s) => sum + (s.stats?.total_solved ?? 0), 0);
 
-        <div className="glass-card p-6 rounded-2xl space-y-2 border shadow-md">
-          <div className="p-3 w-fit rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-            <Activity className="w-6 h-6" />
-          </div>
-          <h4 className="text-2xl font-black text-gray-900 dark:text-white">{summaryData?.active_students || summaryData?.total_students || 221}</h4>
-          <p className="text-xs font-semibold text-gray-500">Active Solvers (STARTED)</p>
-        </div>
+          return (
+            <>
+              <div className="glass-card p-6 rounded-2xl space-y-2 border shadow-md">
+                <div className="p-3 w-fit rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                  <Users className="w-6 h-6" />
+                </div>
+                <h4 className="text-2xl font-black text-gray-900 dark:text-white">{summaryData?.total_students || students.length || 273}</h4>
+                <p className="text-xs font-semibold text-gray-500">Total Enrolled Students</p>
+              </div>
 
-        <div className="glass-card p-6 rounded-2xl space-y-2 border shadow-md">
-          <div className="p-3 w-fit rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
-            <Trophy className="w-6 h-6" />
-          </div>
-          <h4 className="text-2xl font-black text-gray-900 dark:text-white">{summaryData?.total_problems_solved?.toLocaleString() || '5,240+'}</h4>
-          <p className="text-xs font-semibold text-gray-500">Total Problems Solved</p>
-        </div>
+              <div className="glass-card p-6 rounded-2xl space-y-2 border shadow-md">
+                <div className="p-3 w-fit rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <h4 className="text-2xl font-black text-gray-900 dark:text-white">{verified}</h4>
+                <p className="text-xs font-semibold text-gray-500">Verified Profiles</p>
+                {(pending > 0 || failed > 0) && (
+                  <p className="text-[10px] text-gray-400">
+                    ⏳ {pending} Pending{failed > 0 ? ` • 🔴 ${failed} Failed` : ''}
+                  </p>
+                )}
+              </div>
 
-        <div className="glass-card p-6 rounded-2xl space-y-2 border shadow-md">
-          <div className="p-3 w-fit rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
-            <Trophy className="w-6 h-6 fill-amber-500" />
-          </div>
-          <h4 className="text-2xl font-black text-amber-500 truncate" title={summaryData?.top_college_ranker || (sortedList.length > 0 ? sortedList[0].name : 'Top Ranker')}>
-            {summaryData?.top_college_ranker || (sortedList.length > 0 ? sortedList[0].name : 'Top Ranker')}
-          </h4>
-          <p className="text-xs font-semibold text-gray-500">Top College Ranker (#1)</p>
-        </div>
+              <div className="glass-card p-6 rounded-2xl space-y-2 border shadow-md">
+                <div className="p-3 w-fit rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                  <Trophy className="w-6 h-6" />
+                </div>
+                <h4 className="text-2xl font-black text-gray-900 dark:text-white">{verifiedProblems.toLocaleString()}</h4>
+                <p className="text-xs font-semibold text-gray-500">Verified Problems Solved</p>
+                <p className="text-[10px] text-gray-400">from {activeSolvers} active solvers</p>
+              </div>
 
+              <div className="glass-card p-6 rounded-2xl space-y-2 border shadow-md">
+                <div className="p-3 w-fit rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                  <Trophy className="w-6 h-6 fill-amber-500" />
+                </div>
+                <h4 className="text-2xl font-black text-amber-500 truncate" title={summaryData?.top_college_ranker || (sortedList.length > 0 ? sortedList[0].name : 'Top Ranker')}>
+                  {summaryData?.top_college_ranker || (sortedList.length > 0 ? sortedList[0].name : 'Top Ranker')}
+                </h4>
+                <p className="text-xs font-semibold text-gray-500">Top College Ranker (#1)</p>
+              </div>
+            </>
+          );
+        })()}
       </div>
 
       {/* Interactive Showcase Filter Bar */}
@@ -439,17 +495,56 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </h3>
           <button
             onClick={handleRefreshAll}
-            disabled={refreshing}
+            disabled={refreshing || syncProgress?.is_running}
             className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              refreshing
+              refreshing || syncProgress?.is_running
                 ? 'bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed'
                 : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/30'
             }`}
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-            <span>{refreshing ? 'Refreshing...' : '🔄 Refresh All LeetCode Stats'}</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing || syncProgress?.is_running ? 'animate-spin' : ''}`} />
+            <span>
+              {syncProgress?.is_running
+                ? `Syncing... ${syncProgress.processed} / ${syncProgress.total}`
+                : refreshing ? 'Refreshing...' : '🔄 Refresh All LeetCode Stats'
+              }
+            </span>
           </button>
         </div>
+
+        {/* Sync Progress Bar — Firestore real-time listener */}
+        {syncProgress && (
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-navy-900 dark:to-indigo-950 border border-indigo-200 dark:border-indigo-800 space-y-2.5">
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-extrabold text-indigo-700 dark:text-indigo-300 flex items-center space-x-1.5">
+                <RefreshCw className={`w-3.5 h-3.5 ${syncProgress.is_running ? 'animate-spin' : ''}`} />
+                <span>{syncProgress.is_running ? '🔄 Syncing LeetCode Statistics...' : '✅ Sync Complete'}</span>
+              </span>
+              <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                {syncProgress.processed} / {syncProgress.total}
+              </span>
+            </div>
+            <div className="w-full bg-indigo-100 dark:bg-indigo-900/50 h-3 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full transition-all duration-500"
+                style={{ width: `${Math.round((syncProgress.processed / Math.max(1, syncProgress.total)) * 100)}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-[11px] font-semibold">
+              <span className="text-emerald-600 dark:text-emerald-400 flex items-center space-x-1">
+                <CheckCircle2 className="w-3 h-3" />
+                <span>✅ {syncProgress.successful} Successful</span>
+              </span>
+              <span className="text-gray-500">{Math.round((syncProgress.processed / Math.max(1, syncProgress.total)) * 100)}%</span>
+              {syncProgress.failed > 0 && (
+                <span className="text-rose-500 flex items-center space-x-1">
+                  <AlertCircle className="w-3 h-3" />
+                  <span>🔴 {syncProgress.failed} Failed</span>
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
 
         {viewMode === 'cards' ? (

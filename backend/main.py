@@ -1,4 +1,5 @@
 import os
+import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -96,19 +97,29 @@ def on_startup():
         reseed_all_student_stats()
     except Exception as e:
         logger.warning(f"Database seed/reseed skipped or noted: {e}")
-        
+
+    # Ensure all 273 students have a Firestore document with syncStatus:pending
+    # so the frontend never shows "0 Solved / Verified just now" for unfetched students.
+    try:
+        from backend.assets.sync_firestore import initialize_pending_records
+        initialize_pending_records()
+    except Exception as _init_err:
+        logger.warning(f"Firestore pending init note: {_init_err}")
+
     if not is_vercel and SCHEDULER_AVAILABLE:
         logger.info("Starting background scheduler...")
         try:
             start_scheduler()
-            import asyncio
-            from backend.sync_engine import run_batch_sync
-            asyncio.create_task(run_batch_sync(limit=None))
+            # NOTE: Intentionally NOT running run_batch_sync() on startup.
+            # Starting a 273-student crawl on every Render restart would cause
+            # duplicate concurrent syncs and unnecessary LeetCode API load.
+            # Sync is triggered explicitly via POST /students/refresh-all.
         except Exception as e:
-            logger.warning(f"Scheduler / Live Sync initialization note: {e}")
+            logger.warning(f"Scheduler initialization note: {e}")
     elif not SCHEDULER_AVAILABLE:
         logger.warning("Scheduler skipped — pandas/numpy not available (Application Control policy).")
     logger.info("Backend Application ready and listening!")
+
 
 from fastapi import WebSocket, WebSocketDisconnect
 from backend.websocket_manager import manager

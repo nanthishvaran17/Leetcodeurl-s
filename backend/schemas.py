@@ -60,10 +60,10 @@ class StudentUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 class LeetCodeStatsOut(BaseModel):
-    total_solved: int = 0
-    easy_solved: int = 0
-    medium_solved: int = 0
-    hard_solved: int = 0
+    total_solved: Optional[int] = None
+    easy_solved: Optional[int] = None
+    medium_solved: Optional[int] = None
+    hard_solved: Optional[int] = None
     contest_rating: Optional[float] = None
     contest_global_ranking: Optional[int] = None
     public_profile_ranking: Optional[int] = None

@@ -1,0 +1,10 @@
+recipients:
+  - name: "Dr. Faculty Name"
+    email: "faculty@nec.edu.in"
+    role: "Faculty"
+  - name: "Prof. HOD Name"
+    email: "hod.cse@nec.edu.in"
+    role: "HOD"
+  - name: "Dr. Coordinator Name"
+    email: "coordinator.cse@nec.edu.in"
+    role: "Coordinator"

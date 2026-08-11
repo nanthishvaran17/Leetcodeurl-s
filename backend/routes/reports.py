@@ -110,9 +110,10 @@ def download_csv_report(dept_id: Optional[int] = None, year_level: Optional[str]
         "Hard Solved", "Total Solved", "Contest Rating", "Global Rank"
     ])
     
-    sorted_students = sorted(students, key=lambda s: (s.stats.total_solved if s.stats else 0), reverse=True)
+    sorted_students = sorted(students, key=lambda s: (s.stats.total_solved or 0) if s.stats else 0, reverse=True)
     for idx, s in enumerate(sorted_students, start=1):
         st = s.stats
+        is_verified = st and st.sync_status in ("success", "OK")
         writer.writerow([
             idx,
             s.reg_no,
@@ -121,12 +122,12 @@ def download_csv_report(dept_id: Optional[int] = None, year_level: Optional[str]
             s.year_level,
             s.leetcode_url or "",
             s.username or "",
-            st.easy_solved if st else 0,
-            st.medium_solved if st else 0,
-            st.hard_solved if st else 0,
-            st.total_solved if st else 0,
-            round(st.contest_rating, 1) if st and st.contest_rating else "",
-            st.contest_global_ranking if st and st.contest_global_ranking else ""
+            (st.easy_solved   if is_verified else "") if st else "",
+            (st.medium_solved if is_verified else "") if st else "",
+            (st.hard_solved   if is_verified else "") if st else "",
+            (st.total_solved  if is_verified else "") if st else "",
+            round(st.contest_rating, 1) if (is_verified and st and st.contest_rating) else "",
+            st.contest_global_ranking if (is_verified and st and st.contest_global_ranking) else ""
         ])
         
     csv_bytes = output.getvalue().encode('utf-8-sig') # UTF-8 BOM for Excel compatibility

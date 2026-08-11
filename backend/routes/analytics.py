@@ -21,7 +21,7 @@ def compare_departments(db: Session = Depends(get_db)):
         if total_stud == 0:
             continue
 
-        total_solved = sum((s.stats.total_solved if s.stats else 0) for s in students)
+        total_solved = sum((s.stats.total_solved or 0) if s.stats else 0 for s in students)
         avg_solved = round(total_solved / total_stud, 1)
 
         weekly_prog_total = 0
@@ -36,7 +36,7 @@ def compare_departments(db: Session = Depends(get_db)):
         avg_progress = round(weekly_prog_total / total_stud, 1)
         participation = round((active_count / total_stud * 100), 1)
 
-        top_stud = max(students, key=lambda x: (x.stats.total_solved if x.stats else 0), default=None)
+        top_stud = max(students, key=lambda x: (x.stats.total_solved or 0) if x.stats else 0, default=None)
 
         results.append({
             "department_id": dept.id,
@@ -164,9 +164,9 @@ def get_batch_matrix_analytics(db: Session = Depends(get_db)):
         ranking_below_20000 = 0
 
         for s in students:
-            solved = s.stats.total_solved if s.stats else 0
-            rating = s.stats.contest_rating if s.stats and s.stats.contest_rating else 0
-            grank = s.stats.contest_global_ranking if s.stats and s.stats.contest_global_ranking else 0
+            solved = (s.stats.total_solved or 0) if s.stats else 0
+            rating = (s.stats.contest_rating or 0) if (s.stats and s.stats.contest_rating) else 0
+            grank = (s.stats.contest_global_ranking or 0) if (s.stats and s.stats.contest_global_ranking) else 0
 
             # Problem solved breakdown
             if solved > 500:

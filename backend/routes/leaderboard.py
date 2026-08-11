@@ -65,11 +65,11 @@ def get_leaderboard(
 
     # Sort based on criteria
     if sort_by == "solved":
-        results.sort(key=lambda x: (x.stats.total_solved if x.stats else 0), reverse=True)
+        results.sort(key=lambda x: (x.stats.total_solved or 0) if x.stats else 0, reverse=True)
     elif sort_by == "progress":
         results.sort(key=lambda x: (x.weekly_progress or 0), reverse=True)
     elif sort_by == "rating":
-        results.sort(key=lambda x: (x.stats.contest_rating if (x.stats and x.stats.contest_rating) else -1), reverse=True)
+        results.sort(key=lambda x: (x.stats.contest_rating or -1) if (x.stats and x.stats.contest_rating) else -1, reverse=True)
     elif sort_by == "streak":
         results.sort(key=lambda x: (x.streak_count or 0), reverse=True)
 
@@ -96,9 +96,9 @@ def get_top_performers(db: Session = Depends(get_db)):
             st_out.badge_list = latest_prog.badge_list or []
         st_outs.append(st_out)
 
-    highest_solved = max(st_outs, key=lambda x: (x.stats.total_solved if x.stats else 0), default=None)
+    highest_solved = max(st_outs, key=lambda x: (x.stats.total_solved or 0) if x.stats else 0, default=None)
     highest_progress = max(st_outs, key=lambda x: (x.weekly_progress or 0), default=None)
-    highest_rating = max(st_outs, key=lambda x: (x.stats.contest_rating if (x.stats and x.stats.contest_rating) else -1), default=None)
+    highest_rating = max(st_outs, key=lambda x: (x.stats.contest_rating or -1) if (x.stats and x.stats.contest_rating) else -1, default=None)
     longest_streak = max(st_outs, key=lambda x: (x.streak_count or 0), default=None)
 
     return {

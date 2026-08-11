@@ -40,10 +40,10 @@ def update_all_rankings_and_badges(db: Session, week_number: int = 1, academic_y
     # Gather data dict per student
     student_records = []
     for s in students:
-        total_solved = s.stats.total_solved if s.stats else 0
-        easy = s.stats.easy_solved if s.stats else 0
-        med = s.stats.medium_solved if s.stats else 0
-        hard = s.stats.hard_solved if s.stats else 0
+        total_solved = (s.stats.total_solved or 0) if s.stats else 0
+        easy = (s.stats.easy_solved or 0) if s.stats else 0
+        med = (s.stats.medium_solved or 0) if s.stats else 0
+        hard = (s.stats.hard_solved or 0) if s.stats else 0
         rating = s.stats.contest_rating if s.stats else None
 
         # Fetch latest weekly snapshot for this week

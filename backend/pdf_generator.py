@@ -193,14 +193,14 @@ def generate_pdf_summary_report(db: Session, dept_id: Optional[int] = None) -> b
     students = student_query.all()
     total_students = len(students)
 
-    started_count = sum(1 for s in students if s.stats and s.stats.total_solved > 0)
+    started_count = sum(1 for s in students if s.stats and (s.stats.total_solved or 0) > 0)
     not_started_count = total_students - started_count
     
-    total_solved_sum = sum((s.stats.total_solved if s.stats else 0) for s in students)
+    total_solved_sum = sum((s.stats.total_solved or 0) if s.stats else 0 for s in students)
     avg_progress = round(total_solved_sum / max(total_students, 1), 1)
 
     # Top student
-    top_student = sorted(students, key=lambda x: (x.stats.total_solved if x.stats else 0), reverse=True)
+    top_student = sorted(students, key=lambda x: (x.stats.total_solved or 0) if x.stats else 0, reverse=True)
     top_name = top_student[0].name if top_student else "N/A"
 
     summary_data = [
@@ -263,7 +263,7 @@ def generate_pdf_summary_report(db: Session, dept_id: Optional[int] = None) -> b
             Paragraph(s.department.code if s.department else "CSE", cell_style),
             Paragraph(s.year_level, cell_style),
             Paragraph(s.section.name if s.section else "A", cell_style),
-            Paragraph(str(s.stats.total_solved if s.stats else 0), cell_bold_style),
+            Paragraph(str((s.stats.total_solved or 0) if s.stats else 0), cell_bold_style),
             Paragraph(prog_str, cell_style)
         ])
 

@@ -164,17 +164,17 @@ async def fetch_leetcode_profile(
         return {
             "username": username,
             "profile_url": profile_url or (str(url_or_username) if url_or_username else ""),
-            "total_solved": 0,
-            "easy_solved": 0,
-            "medium_solved": 0,
-            "hard_solved": 0,
-            "contest_rating": None,
-            "contest_global_rank": None,
-            "contest_global_ranking": None,
-            "leetcode_global_rank": None,
-            "public_profile_ranking": None,
-            "recent_contest_name": None,
-            "recent_contest_score": None,
+            "total_solved":   None,  # Not fetched — not zero
+            "easy_solved":    None,
+            "medium_solved":  None,
+            "hard_solved":    None,
+            "contest_rating":         None,
+            "contest_global_rank":     None,
+            "contest_global_ranking":  None,
+            "leetcode_global_rank":    None,
+            "public_profile_ranking":  None,
+            "recent_contest_name":     None,
+            "recent_contest_score":    None,
             "status": url_status,  # MISSING LINK or INVALID LINK
             "error": err_msg,
             "error_message": err_msg,
@@ -289,21 +289,21 @@ async def fetch_leetcode_profile(
             duration = round(time.time() - start_time, 3)
             err_msg = f"Profile load failed: {last_error_detail}"
             status_code = "PROFILE NOT FOUND" if "matchedUser is null" in last_error_detail else "failed"
-            
+
             result = {
                 "username": username,
                 "profile_url": profile_url,
-                "total_solved": 0,
-                "easy_solved": 0,
-                "medium_solved": 0,
-                "hard_solved": 0,
-                "contest_rating": None,
-                "contest_global_rank": None,
-                "contest_global_ranking": None,
-                "leetcode_global_rank": None,
-                "public_profile_ranking": None,
-                "recent_contest_name": None,
-                "recent_contest_score": None,
+                "total_solved":   None,  # Profile not loaded — cannot claim zero
+                "easy_solved":    None,
+                "medium_solved":  None,
+                "hard_solved":    None,
+                "contest_rating":         None,
+                "contest_global_rank":     None,
+                "contest_global_ranking":  None,
+                "leetcode_global_rank":    None,
+                "public_profile_ranking":  None,
+                "recent_contest_name":     None,
+                "recent_contest_score":    None,
                 "status": status_code,
                 "error": err_msg,
                 "error_message": err_msg,

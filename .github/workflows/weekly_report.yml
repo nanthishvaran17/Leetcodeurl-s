@@ -1,0 +1,72 @@
+name: LeetCode Weekly Contest Reporter
+
+on:
+  # Run Monday 04:30 UTC = 10:00 AM IST
+  # (contest ends Sunday ~9:30 PM IST; rating settles by ~11 PM IST;
+  #  the built-in rating-settled check will retry if it hasn't yet)
+  schedule:
+    - cron: '30 4 * * 1'   # Monday 04:30 UTC
+
+  # Allow manual trigger from Actions tab
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run with mock data (no email)'
+        type: boolean
+        default: false
+      force:
+        description: 'Re-send even if already sent for this contest'
+        type: boolean
+        default: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contest_reporter
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: contest_reporter/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run LeetCode Contest Reporter
+        env:
+          LEETCODE_USERNAME:            ${{ secrets.LEETCODE_USERNAME }}
+          SMTP_HOST:                    smtp.gmail.com
+          SMTP_PORT:                    587
+          SMTP_USER:                    ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD:                ${{ secrets.SMTP_PASSWORD }}
+          SENDER_NAME:                  "NEC LeetCode Tracker"
+          RATING_SETTLED_RETRIES:       1
+          RATING_SETTLED_WAIT_MINUTES:  20
+        run: |
+          FLAGS=""
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            FLAGS="$FLAGS --dry-run"
+          fi
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            FLAGS="$FLAGS --force"
+          fi
+          python main.py $FLAGS
+
+      - name: Upload report artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: leetcode-report-${{ github.run_id }}
+          path: |
+            contest_reporter/output/*.xlsx
+            contest_reporter/output/*.pdf
+            contest_reporter/logs/*.log
+          retention-days: 30

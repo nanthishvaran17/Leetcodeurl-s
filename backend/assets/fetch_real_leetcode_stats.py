@@ -94,15 +94,22 @@ async def fetch_real_all_students():
                 success_count += 1
                 print(f"  -> SUCCESS: {s.name}: {tot} Solved (Easy:{ez}, Med:{med}, Hard:{hd}) | Rating: {c_rating or 'Unrated'}")
             else:
-                s.stats.total_solved = 0
-                s.stats.easy_solved = 0
-                s.stats.medium_solved = 0
-                s.stats.hard_solved = 0
-                s.stats.contest_rating = None
-                s.stats.contest_global_ranking = None
-                s.stats.status = real_data.get("status", "PROFILE NOT FOUND")
-                failed_count += 1
-                print(f"  -> FAILED/UNAVAILABLE for {s.name} ({username}): {real_data.get('error', 'Profile not found')}")
+                # Fetch failed or profile unavailable — DO NOT set total_solved to 0!
+                # Unless the API successfully responded and verified 0 solved.
+                if status == "success" and real_data.get("total_solved") == 0:
+                    s.stats.total_solved = 0
+                    s.stats.easy_solved = 0
+                    s.stats.medium_solved = 0
+                    s.stats.hard_solved = 0
+                    s.stats.status = "OK"
+                    print(f"  -> VERIFIED ZERO: {s.name} ({username}) has 0 solved.")
+                else:
+                    err_status = "invalid_profile" if status in ("PROFILE_NOT_FOUND", "INVALID_LINK") else "failed"
+                    s.stats.status = err_status
+                    if not s.stats.total_solved:
+                        s.stats.total_solved = None
+                    failed_count += 1
+                    print(f"  -> FAILED/UNAVAILABLE for {s.name} ({username}): status={err_status}")
 
             if idx % 10 == 0:
                 db.commit()

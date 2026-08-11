@@ -225,22 +225,24 @@ async def refresh_all_students(
 ):
     """
     Starts async background sync worker for all 273 students without blocking browser.
-    Returns immediately with runId and progress URL.
+    Returns immediately with runId. Frontend subscribes to Firestore syncRuns/{runId} for progress.
     """
-    run_id = f"sync_{datetime.datetime.utcnow().strftime('%Y_%m_%d_%H%M%S')}"
     if sync_tracker.is_running:
+        existing_run_id = sync_tracker.run_id or "current"
         return {
-            "runId": run_id,
+            "runId": existing_run_id,
             "message": "Live stats refresh is already running in background.",
             "status": "busy",
             "progress": sync_tracker.to_dict()
         }
 
-    background_tasks.add_task(run_batch_sync, limit=limit)
+    # Pre-generate a deterministic runId so the frontend can subscribe to Firestore immediately
+    run_id = f"sync_{datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+    background_tasks.add_task(run_batch_sync, limit=limit, pre_run_id=run_id)
     return {
         "runId": run_id,
         "status": "started",
         "total": 273,
-        "message": "Live stats batch sync started in background!",
+        "message": "Live stats batch sync started in background! Subscribe to Firestore syncRuns/" + run_id,
         "sync_status_url": f"/api/students/admin/sync/status/{run_id}"
     }
