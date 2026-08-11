@@ -252,17 +252,17 @@ def seed_database():
     
     # Auto-migrate: add new columns if they don't exist (for existing databases)
     from sqlalchemy import text
-    with engine.connect() as conn:
-        try:
+    try:
+        with engine.begin() as conn:
             conn.execute(text("ALTER TABLE leetcode_profile_stats ADD COLUMN recent_contest_name VARCHAR(150)"))
-            conn.commit()
-        except Exception:
-            pass  # Column already exists
-        try:
+    except Exception:
+        pass  # Column already exists
+
+    try:
+        with engine.begin() as conn:
             conn.execute(text("ALTER TABLE leetcode_profile_stats ADD COLUMN recent_contest_score VARCHAR(20)"))
-            conn.commit()
-        except Exception:
-            pass  # Column already exists
+    except Exception:
+        pass  # Column already exists
     
     db: Session = SessionLocal()
 
