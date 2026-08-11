@@ -1406,3 +1406,9 @@
 [2026-08-11 10:27:40,683] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
 [2026-08-11 10:27:40,728] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
 [2026-08-11 10:29:37,136] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-11 10:32:55,277] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-11 10:32:55,798] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-11 10:32:56,067] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-11 10:32:56,070] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-11 10:32:56,071] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs (08:00 AM & 09:30 AM) + Daily Auto-Sync (00:00 & 12:00 IST) registered.
+[2026-08-11 10:32:56,071] [INFO] [leetcode_tracker]: Backend Application ready and listening!
