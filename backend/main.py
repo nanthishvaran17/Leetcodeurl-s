@@ -6,7 +6,12 @@ from fastapi.staticfiles import StaticFiles
 from backend.config import settings
 from backend.database import engine, Base
 from backend.seed import seed_database
-from backend.scheduler import start_scheduler
+try:
+    from backend.scheduler import start_scheduler
+    SCHEDULER_AVAILABLE = True
+except Exception as _sched_err:
+    start_scheduler = None
+    SCHEDULER_AVAILABLE = False
 from backend.logger import logger
 
 # Import routes
@@ -65,12 +70,14 @@ def on_startup():
     except Exception as e:
         logger.warning(f"Database seed skipped or noted: {e}")
         
-    if not is_vercel:
+    if not is_vercel and SCHEDULER_AVAILABLE:
         logger.info("Starting background scheduler...")
         try:
             start_scheduler()
         except Exception as e:
             logger.warning(f"Scheduler initialization note: {e}")
+    elif not SCHEDULER_AVAILABLE:
+        logger.warning("Scheduler skipped — pandas/numpy not available (Application Control policy).")
     logger.info("Backend Application ready and listening!")
 
 from fastapi import WebSocket, WebSocketDisconnect

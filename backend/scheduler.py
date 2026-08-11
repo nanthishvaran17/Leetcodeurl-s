@@ -14,9 +14,23 @@ except ImportError:
 from backend.config import settings
 from backend.database import SessionLocal
 from backend.session_tracker import get_or_create_current_session, trigger_start_snapshot, trigger_end_snapshot
-from backend.excel_handler import generate_8_sheet_excel_report
-from backend.pdf_generator import generate_pdf_summary_report
+try:
+    from backend.excel_handler import generate_8_sheet_excel_report
+    EXCEL_AVAILABLE = True
+except Exception as e:
+    EXCEL_AVAILABLE = False
+    generate_8_sheet_excel_report = None
+    logger_placeholder = None
+
+try:
+    from backend.pdf_generator import generate_pdf_summary_report
+    PDF_AVAILABLE = True
+except Exception:
+    PDF_AVAILABLE = False
+    generate_pdf_summary_report = None
+
 from backend.email_service import send_weekly_report_email
+from backend.routes.students import _bg_refresh_all_students
 from backend.logger import logger
 
 tz = get_tz(settings.TIMEZONE)
@@ -46,10 +60,10 @@ async def sunday_end_job():
         session = get_or_create_current_session(db)
         await trigger_end_snapshot(db, session.id)
 
-        # Generate reports
-        excel_bytes = generate_8_sheet_excel_report(db)
-        matrix_bytes = generate_weekly_contest_matrix_excel(db, batch_label="2028")
-        pdf_bytes = generate_pdf_summary_report(db)
+        # Generate reports (skip if numpy/pandas not available)
+        excel_bytes = generate_8_sheet_excel_report(db) if EXCEL_AVAILABLE else None
+        matrix_bytes = None  # Optional feature
+        pdf_bytes = generate_pdf_summary_report(db) if PDF_AVAILABLE else None
 
         # Email list
         recipients = [e.strip() for e in settings.REPORT_RECIPIENT_EMAILS.split(",") if e.strip()]
@@ -77,6 +91,17 @@ async def sunday_end_job():
     finally:
         db.close()
 
+async def daily_auto_refresh_job():
+    """
+    Scheduled daily: Auto-syncs live LeetCode stats for all active students.
+    """
+    logger.info("Executing Scheduled Job: Daily Live Stats Sync with LeetCode...")
+    try:
+        await _bg_refresh_all_students()
+        logger.info("Daily Live Stats Sync completed successfully.")
+    except Exception as e:
+        logger.error(f"Error in daily_auto_refresh_job: {e}")
+
 def start_scheduler():
     """
     Starts the APScheduler cron jobs.
@@ -97,5 +122,14 @@ def start_scheduler():
         replace_existing=True
     )
 
+    # Daily Auto-Refresh Cron: Runs every day at 00:00 AM IST and 12:00 PM IST
+    scheduler.add_job(
+        daily_auto_refresh_job,
+        CronTrigger(hour='0,12', minute=0, timezone=tz),
+        id='daily_auto_refresh_stats',
+        replace_existing=True
+    )
+
     scheduler.start()
-    logger.info("APScheduler started: Sunday jobs registered (08:00 AM & 09:30 AM IST).")
+    logger.info("APScheduler started: Sunday jobs (08:00 AM & 09:30 AM) + Daily Auto-Sync (00:00 & 12:00 IST) registered.")
+

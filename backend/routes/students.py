@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List, Optional
+import asyncio
 
 from backend.database import get_db
 from backend.models import Student, LeetCodeProfileStats, Department, Section, AuditLog, WeeklyStudentProgress
@@ -194,7 +195,7 @@ async def refresh_single_student(student_id: int, db: Session = Depends(get_db))
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
 
-    stats_dict = await fetch_leetcode_profile(student.leetcode_url)
+    stats_dict = await fetch_leetcode_profile(student.leetcode_url, force_refresh=True)
 
     if not student.stats:
         student.stats = LeetCodeProfileStats(student_id=student.id)

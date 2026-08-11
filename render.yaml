@@ -1,11 +1,12 @@
 services:
   - type: web
-    name: nandha-leetcode-platform
+    name: Leetcodeurl-s
     env: docker
     plan: free
-    region: singapore
+    region: oregon
     envVars:
       - key: PORT
-        value: 8000
+        value: 10000
       - key: ENVIRONMENT
         value: production
+

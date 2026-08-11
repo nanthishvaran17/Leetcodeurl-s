@@ -29,5 +29,5 @@ ENV PYTHONUNBUFFERED=1
 ENV ENVIRONMENT=production
 ENV PORT=8000
 
-# Command to run production server
-CMD ["python", "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Command to run production server using Render dynamic PORT
+CMD ["sh", "-c", "python -m uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

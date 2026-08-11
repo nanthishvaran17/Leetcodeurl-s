@@ -15,9 +15,12 @@ try:
 except Exception:
     DATA_DIR = "/tmp"
 
-# Replace relative path if sqlite
-db_url = settings.DATABASE_URL
-if is_vercel:
+# Replace relative path if sqlite or handle Render postgres:// connection strings
+db_url = os.environ.get("DATABASE_URL", settings.DATABASE_URL)
+
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+elif is_vercel:
     db_url = "sqlite:////tmp/leetcode_tracker.db"
 elif db_url.startswith("sqlite:///./"):
     db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), db_url.replace("sqlite:///./", ""))
