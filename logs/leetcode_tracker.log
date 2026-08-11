@@ -5150,3 +5150,49 @@
 [2026-08-11 22:12:45,621] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs (08:00 AM & 09:30 AM) + Daily Auto-Sync (00:00 & 12:00 IST) registered.
 [2026-08-11 22:12:45,622] [INFO] [leetcode_tracker]: Backend Application ready and listening!
 [2026-08-11 22:12:45,634] [INFO] [leetcode_tracker]: [INFO] Starting batch LeetCode sync for 273 students (Concurrency: 3)...
+[2026-08-11 22:12:59,803] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-11 22:13:03,219] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-11 22:13:05,277] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-11 22:13:06,458] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-11 22:13:08,652] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-11 22:13:10,794] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-11 22:13:10,801] [INFO] [leetcode_tracker]: APScheduler started: Sunday jobs (08:00 AM & 09:30 AM) + Daily Auto-Sync (00:00 & 12:00 IST) registered.
+[2026-08-11 22:13:10,802] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-11 22:13:10,821] [INFO] [leetcode_tracker]: [INFO] Starting batch LeetCode sync for 273 students (Concurrency: 3)...
+[2026-08-11 22:13:12,524] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-11 22:13:12,560] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-11 22:14:13,298] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-11 22:14:13,301] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-11 22:14:13,611] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-11 22:14:14,987] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-11 22:14:17,977] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-11 22:14:25,419] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-11 22:14:56,976] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-11 22:15:02,079] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-11 22:15:08,647] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-11 22:15:28,510] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-11 22:16:53,298] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-11 22:17:18,179] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-11 22:17:20,104] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-11 22:17:21,562] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-11 22:17:21,882] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-11 22:17:28,809] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-11 22:17:29,130] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-11 22:17:29,838] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-11 22:17:30,176] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-11 22:17:32,931] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-11 22:19:27,583] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-11 22:19:48,707] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-11 22:21:23,313] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-11 22:21:23,336] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-11 22:21:37,200] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-11 22:21:37,201] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-11 22:21:47,478] [INFO] [leetcode_tracker]: Generated Certificate CERT-3DCAD150 for student NANTHISH S
+[2026-08-11 22:22:06,345] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-11 22:22:07,927] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-11 22:22:10,323] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-11 22:26:11,133] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-11 22:26:11,461] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-11 22:26:11,500] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-11 22:26:16,034] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-11 22:26:16,037] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
