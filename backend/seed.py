@@ -450,8 +450,8 @@ def seed_database():
                 seed_val = sum(ord(c) for c in reg)
 
                 if reg == "732224CI044":
-                    tot, ez, med, hd = 785, 255, 410, 120
-                    c_rating, c_rank = 1920.5, 8900
+                    tot, ez, med, hd = 682, 225, 305, 152
+                    c_rating, c_rank = 1923.0, 34009
                     st_status = "OK"
                 elif reg == "732224CC031":
                     tot, ez, med, hd = 706, 271, 326, 109

@@ -22,31 +22,20 @@ def reseed_all_student_stats():
             reg = s.reg_no
 
             if reg == "732224CI044":
-                tot, ez, med, hd = 785, 255, 410, 120
-                c_rating, c_rank = 1920.5, 8900
+                tot, ez, med, hd = 682, 225, 305, 152
+                c_rating, c_rank = 1923.0, 34009
                 st_status = "OK"
-                w_prog, w_streak, w_cons = 18, 240, 99.9
+                w_prog, w_streak, w_cons = 18, 148, 99.9
             elif reg == "732224CC031":
-                tot, ez, med, hd = 645, 213, 323, 109
-                c_rating, c_rank = 1845.5, 14200
+                tot, ez, med, hd = 706, 271, 326, 109
+                c_rating, c_rank = 1627.0, 179015
                 st_status = "OK"
                 w_prog, w_streak, w_cons = 12, 200, 99.8
-            elif s.leetcode_url and "leetcode.com" in s.leetcode_url.lower():
-                tot = 35 + (seed_val * 17) % 450
-                ez = int(tot * 0.48)
-                med = int(tot * 0.42)
-                hd = tot - ez - med
-                c_rating = round(1380.0 + (seed_val * 7) % 420, 1)
-                c_rank = 120000 + (seed_val * 153) % 400000
-                st_status = "OK"
-                w_prog = 1 + (seed_val % 15)
-                w_streak = seed_val % 45
-                w_cons = round(65.0 + (seed_val % 33), 1)
             else:
-                tot, ez, med, hd = 15, 10, 5, 0
-                c_rating, c_rank = 1355.3, None
-                st_status = "OK"
-                w_prog, w_streak, w_cons = 1, 3, 50.0
+                tot, ez, med, hd = 0, 0, 0, 0
+                c_rating, c_rank = None, None
+                st_status = "NOT STARTED" if not s.leetcode_url else "OK"
+                w_prog, w_streak, w_cons = 0, 0, 0.0
 
             if not s.stats:
                 s.stats = LeetCodeProfileStats(student_id=s.id)

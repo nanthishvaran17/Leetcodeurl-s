@@ -133,7 +133,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             section: sData.section || 'A',
             leetcode_url: sData.leetcodeProfileUrl || '',
             username: sData.leetcodeUsername || '',
-            college_rank: sStats.collegeRank || 1,
+            college_rank: sStats.collegeRank || null,
             weekly_progress: sStats.weeklySolved || 0,
             streak_count: sStats.streakCount || 0,
             consistency_score: sStats.consistencyScore || 0,
@@ -450,13 +450,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         {viewMode === 'cards' ? (
           <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {sortedList.slice(0, displayCount).map((st) => (
-                <StudentFlipCard
-                  key={st.id}
-                  student={st}
-                  onSelectStudent={onSelectStudent}
-                />
-              ))}
+              {sortedList.slice(0, displayCount).map((st, idx) => {
+                const computedRank = (sortBy === 'top_solved' && !selectedDept && yearLevel === 'ALL' && solvedFilter === 'ALL') ? idx + 1 : st.college_rank;
+                return (
+                  <StudentFlipCard
+                    key={st.id}
+                    student={{ ...st, college_rank: computedRank ?? (idx + 1) }}
+                    onSelectStudent={onSelectStudent}
+                  />
+                );
+              })}
             </div>
 
             {displayCount < sortedList.length && (
