@@ -445,14 +445,16 @@ def seed_database():
                         status=st_status
                     )
                     db.add(stats)
-                elif stud.stats.total_solved == 0 or stud.stats.status == "NOT_FETCHED":
-                    stud.stats.total_solved = tot
-                    stud.stats.easy_solved = ez
-                    stud.stats.medium_solved = med
-                    stud.stats.hard_solved = hd
-                    stud.stats.contest_rating = c_rating
-                    stud.stats.contest_global_ranking = c_rank
-                    stud.stats.status = st_status
+                else:
+                    # Update stats if 0 or uninitialized
+                    if stud.stats.total_solved == 0 or stud.stats.status in ["NOT_FETCHED", "NOT STARTED", "DATA UNAVAILABLE", None]:
+                        stud.stats.total_solved = tot
+                        stud.stats.easy_solved = ez
+                        stud.stats.medium_solved = med
+                        stud.stats.hard_solved = hd
+                        stud.stats.contest_rating = c_rating
+                        stud.stats.contest_global_ranking = c_rank
+                        stud.stats.status = st_status
 
             prog = db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id == stud.id).first()
             if not prog:
