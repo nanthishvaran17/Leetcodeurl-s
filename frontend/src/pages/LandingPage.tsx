@@ -156,7 +156,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </h1>
 
           <p className="text-sm md:text-base text-gray-100 font-medium max-w-2xl leading-relaxed drop-shadow">
-            Real-time automated performance monitoring for 220+ students across Computer Science and Engineering (Cyber Security) and Computer Science and Engineering (IoT) departments. Sunday session tracking, multi-level rankings, official Excel matrix reporting, and automated email dispatch.
+            Real-time automated performance monitoring for 270+ students across Computer Science and Engineering (Cyber Security) and Computer Science and Engineering (IoT) departments. Sunday session tracking, multi-level rankings, official Excel matrix reporting, and automated email dispatch.
           </p>
 
           <div className="flex flex-wrap items-center gap-4 pt-2">

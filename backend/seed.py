@@ -246,6 +246,61 @@ II_YEAR_CSE_IOT = [
     ("732225CI061", "YALENEY POOFSIN C", "CSE(IOT)", "II", "A", "", "https://leetcode.com/u/yaleneypoofsin"),
     ("732225CI062", "YAZHINI M P", "CSE(IOT)", "II", "A", "", "https://leetcode.com/u/Yazhini-0508/"),
 ]
+# III Year CSE(IOT) Students (52 records)
+III_YEAR_CSE_IOT = [
+    ("732224CI001", "AADHISH S B", "CSE(IOT)", "III", "A", "", ""),
+    ("732224CI004", "ABISHEK C", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/Abishek0007/"),
+    ("732224CI005", "AISHWARYA E", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/aishueswaran/"),
+    ("732224CI006", "AKKSHAYAA K", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/AkkshayaaK/"),
+    ("732224CI007", "ANU SRI S", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/anu_07/"),
+    ("732224CI008", "BHARATH K", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/Spidy_42/"),
+    ("732224CI010", "DIVYA S", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/divya_sd/"),
+    ("732224CI011", "ELAVARASAN B", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/prince__11/"),
+    ("732224CI012", "GUHAN D", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/Guhan_12_/a"),
+    ("732224CI013", "HARISH S", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/Harish_48/"),
+    ("732224CI014", "JANANI PRIYA V", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/janani_08_/"),
+    ("732224CI015", "JESRA BEGAM ABDUL RAHUMAN", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/jesra005/"),
+    ("732224CI016", "KABILESH R", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/kabilesh_7/"),
+    ("732224CI017", "KANNIGA PARAMESWARI S B", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/KANNIGA_SB/"),
+    ("732224CI018", "KARTHEESHWAR T", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/kartheeshwar/"),
+    ("732224CI019", "KAVINRAJ R", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/kavin629/"),
+    ("732224CI021", "LASHMEE SRI C B", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/Lash1686/"),
+    ("732224CI022", "LOGESH M S", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/Logesh_1204_/"),
+    ("732224CI023", "MADHANKUMAR K", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/_madan_km_"),
+    ("732224CI024", "MADHANRAJ A", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/madhan_11_/"),
+    ("732224CI025", "MADHESWARAN P", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/madhes_187142_/"),
+    ("732224CI026", "MEENA E", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/MeenaElangovan/"),
+    ("732224CI028", "MOHANA PRASATH S", "CSE(IOT)", "III", "A", "", ""),
+    ("732224CI029", "MYTHREYAN K", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/Mythreyan_64/"),
+    ("732224CI030", "NANDHINI G", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/GNandhini_09/"),
+    ("732224CI031", "NAVANITH S R", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/NavanithSenthil/"),
+    ("732224CI032", "NAVEEN KUMAR D", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/naveenkumar1713/"),
+    ("732224CI033", "NAVEEN R", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/naveen2501/"),
+    ("732224CI034", "NISHA S", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/Nisha_Sivakumar/"),
+    ("732224CI035", "NISHANTH S", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/sivanishanth2006/"),
+    ("732224CI036", "PAVITHRAA M", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/pavithraa_28/"),
+    ("732224CI037", "PRAJIN SANKAR A U", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/PrajinSankar/"),
+    ("732224CI038", "PRAVEEN S", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/praveen__13/"),
+    ("732224CI039", "PREMKUMAR K", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/Prem_kumar_karuna/"),
+    ("732224CI040", "RAGHAVAN G", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/Raghavan_0116_/"),
+    ("732224CI041", "RAGUL J M", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/ragul_006/"),
+    ("732224CI042", "RAHUL KUMAR L", "CSE(IOT)", "III", "A", "", ""),
+    ("732224CI043", "RANJITH KUMAR C", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/ranjith_2006/"),
+    ("732224CI044", "RITHANYA S", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/RithanyaSivagami/"),
+    ("732224CI045", "ROHITH S", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/Rohith_2006_S/"),
+    ("732224CI046", "ROJASRI S", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/Rojasri_007_/"),
+    ("732224CI047", "RUPESH S NAIR", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/Rupesh_08nair_20/"),
+    ("732224CI048", "SAI SIDDHARDH S", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/SaiSiddhardh_007/"),
+    ("732224CI049", "SANJAY G", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/sanjay_gireesh"),
+    ("732224CI050", "SATHYANARAYANAN R", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/iiX42fQP6I/"),
+    ("732224CI051", "SIDDAESHWAR K", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/siddaesh_siddu/"),
+    ("732224CI052", "SUDHARSAN B", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/sudharsanbalsubramaniyam/"),
+    ("732224CI053", "SUDHARSHAN J", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/_sudharshan_J/"),
+    ("732224CI054", "SUSIDHARAN S", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/susidharan_21/"),
+    ("732224CI055", "VELMURUGAN T", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/vel_muruga_/"),
+    ("732224CI056", "VIJAY PRABHU.M", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/vijayprabhu56/"),
+    ("732224CIR01", "SOWMIYA K", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/sowmiya4306/"),
+]
 
 def seed_database():
     Base.metadata.create_all(bind=engine)
@@ -328,6 +383,13 @@ def seed_database():
             sec_cs_ii = Section(name="A", department_id=cs_dept.id, year_level="II")
             db.add(sec_cs_ii)
 
+        sec_iot_iii = db.query(Section).filter(
+            Section.department_id == iot_dept.id, Section.year_level == "III", Section.name == "A"
+        ).first()
+        if not sec_iot_iii:
+            sec_iot_iii = Section(name="A", department_id=iot_dept.id, year_level="III")
+            db.add(sec_iot_iii)
+
         sec_iot_ii = db.query(Section).filter(
             Section.department_id == iot_dept.id, Section.year_level == "II", Section.name == "A"
         ).first()
@@ -339,6 +401,7 @@ def seed_database():
         db.refresh(sec_cs_iv)
         db.refresh(sec_cs_iii)
         db.refresh(sec_cs_ii)
+        db.refresh(sec_iot_iii)
         db.refresh(sec_iot_ii)
 
         # 4. Super Admin User
@@ -355,7 +418,7 @@ def seed_database():
             admin_user.hashed_password = get_password_hash("admin123")
         db.commit()
 
-        # Combine all 4 datasets (Total 221 real students)
+        # Combine all 5 datasets (Total 273 real students)
         all_students = []
         for row in IV_YEAR_CSE_CS:
             all_students.append((*row, cs_dept.id, sec_cs_iv.id))
@@ -363,6 +426,8 @@ def seed_database():
             all_students.append((*row, cs_dept.id, sec_cs_iii.id))
         for row in II_YEAR_CSE_CS:
             all_students.append((*row, cs_dept.id, sec_cs_ii.id))
+        for row in III_YEAR_CSE_IOT:
+            all_students.append((*row, iot_dept.id, sec_iot_iii.id))
         for row in II_YEAR_CSE_IOT:
             all_students.append((*row, iot_dept.id, sec_iot_ii.id))
 
