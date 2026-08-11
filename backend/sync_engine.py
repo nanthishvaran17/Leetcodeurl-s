@@ -129,11 +129,13 @@ async def sync_single_student_by_id(student_id: int) -> Dict[str, Any]:
         stats_dict = await fetch_leetcode_profile(url_or_username, force_refresh=True)
         updated_student = sync_single_student_db(student.id, stats_dict, db)
 
-        # Update rankings
+        # Update rankings & sync to Cloud Firestore
         try:
             update_all_rankings_and_badges(db)
+            from backend.assets.sync_firestore import sync_database_to_firestore
+            sync_database_to_firestore()
         except Exception as r_err:
-            logger.warning(f"Rankings update note: {r_err}")
+            logger.warning(f"Rankings update / Firestore sync note: {r_err}")
 
         # Broadcast live update over websocket if available
         try:
@@ -238,6 +240,20 @@ async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 3, per_
         # Recalculate college & department rankings after batch complete
         logger.info("[INFO] Recalculating rankings and badges...")
         update_all_rankings_and_badges(db)
+
+        # Sync 100% updated data directly to Cloud Firestore & trigger WebSocket update
+        try:
+            from backend.assets.sync_firestore import sync_database_to_firestore
+            sync_database_to_firestore()
+        except Exception as _fs_err:
+            logger.warning(f"Firestore sync note: {_fs_err}")
+
+        try:
+            from backend.websocket_manager import manager
+            import asyncio
+            asyncio.create_task(manager.broadcast({"type": "LEADERBOARD_UPDATED", "timestamp": time.time()}))
+        except Exception as _ws_err:
+            logger.warning(f"WebSocket broadcast note: {_ws_err}")
 
         sync_tracker.finish()
         summary_log = f"[INFO] Sync completed! Total: {sync_tracker.total}, Success: {sync_tracker.success}, Failed: {sync_tracker.failed}"
