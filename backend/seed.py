@@ -415,18 +415,9 @@ def seed_database():
                         is_active=True
                     )
                     db.add(stud)
-                    db.flush()
-                else:
-                    stud.name = name
-                    stud.department_id = d_id
-                    stud.year_level = yr
-                    stud.section_id = s_id
-                    stud.leetcode_url = url
-                    stud.username = username
-                    stud.is_active = True
-                    if email: stud.email = email
+                    db.commit()
+                    db.refresh(stud)
 
-                if not stud.stats:
                     stats = LeetCodeProfileStats(
                         student_id=stud.id,
                         total_solved=tot,
@@ -438,19 +429,7 @@ def seed_database():
                         status=st_status
                     )
                     db.add(stats)
-                else:
-                    # Update stats if 0 or uninitialized
-                    if stud.stats.total_solved == 0 or stud.stats.status in ["NOT_FETCHED", "NOT STARTED", "DATA UNAVAILABLE", None]:
-                        stud.stats.total_solved = tot
-                        stud.stats.easy_solved = ez
-                        stud.stats.medium_solved = med
-                        stud.stats.hard_solved = hd
-                        stud.stats.contest_rating = c_rating
-                        stud.stats.contest_global_ranking = c_rank
-                        stud.stats.status = st_status
 
-                prog = db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id == stud.id).first()
-                if not prog:
                     prog = WeeklyStudentProgress(
                         student_id=stud.id,
                         weekly_progress=12 if reg == "732224CC031" else (1 + seed_val % 14),
@@ -458,8 +437,50 @@ def seed_database():
                         consistency_score=99.8 if reg == "732224CC031" else round(60.0 + (seed_val % 38), 1)
                     )
                     db.add(prog)
+                    db.commit()
+                else:
+                    stud.name = name
+                    stud.department_id = d_id
+                    stud.year_level = yr
+                    stud.section_id = s_id
+                    stud.leetcode_url = url
+                    stud.username = username
+                    stud.is_active = True
+                    if email: stud.email = email
 
-                db.commit()
+                    stats = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id == stud.id).first()
+                    if not stats:
+                        stats = LeetCodeProfileStats(
+                            student_id=stud.id,
+                            total_solved=tot,
+                            easy_solved=ez,
+                            medium_solved=med,
+                            hard_solved=hd,
+                            contest_rating=c_rating,
+                            contest_global_ranking=c_rank,
+                            status=st_status
+                        )
+                        db.add(stats)
+                    elif stats.total_solved == 0 or stats.status in ["NOT_FETCHED", "NOT STARTED", "DATA UNAVAILABLE", None]:
+                        stats.total_solved = tot
+                        stats.easy_solved = ez
+                        stats.medium_solved = med
+                        stats.hard_solved = hd
+                        stats.contest_rating = c_rating
+                        stats.contest_global_ranking = c_rank
+                        stats.status = st_status
+
+                    prog = db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id == stud.id).first()
+                    if not prog:
+                        prog = WeeklyStudentProgress(
+                            student_id=stud.id,
+                            weekly_progress=12 if reg == "732224CC031" else (1 + seed_val % 14),
+                            streak_count=200 if reg == "732224CC031" else (seed_val % 22),
+                            consistency_score=99.8 if reg == "732224CC031" else round(60.0 + (seed_val % 38), 1)
+                        )
+                        db.add(prog)
+
+                    db.commit()
             except Exception as _stud_err:
                 db.rollback()
                 print(f"Error seeding student {reg}: {_stud_err}")
