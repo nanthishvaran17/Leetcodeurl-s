@@ -375,63 +375,51 @@ def seed_database():
 
         # 5. Load all 221 real students with realistic active stats
         for reg, name, dept_code, yr, sec_name, email, url, d_id, s_id in all_students:
-            username, url_status = extract_leetcode_username(url)
-            seed_val = sum(ord(c) for c in reg)
+            try:
+                username, url_status = extract_leetcode_username(url)
+                seed_val = sum(ord(c) for c in reg)
 
-            if reg == "732224CC031":
-                tot, ez, med, hd = 645, 213, 323, 109
-                c_rating, c_rank = 1845.5, 14200
-                st_status = "OK"
-            elif url and "leetcode.com" in url.lower():
-                tot = 25 + (seed_val * 17) % 380
-                ez = int(tot * 0.48)
-                med = int(tot * 0.42)
-                hd = tot - ez - med
-                c_rating = round(1380 + (seed_val * 7) % 420, 1)
-                c_rank = 120000 + (seed_val * 153) % 400000
-                st_status = "OK"
-            else:
-                tot, ez, med, hd = 0, 0, 0, 0
-                c_rating, c_rank = None, None
-                st_status = "NOT STARTED"
+                if reg == "732224CC031":
+                    tot, ez, med, hd = 645, 213, 323, 109
+                    c_rating, c_rank = 1845.5, 14200
+                    st_status = "OK"
+                elif url and "leetcode.com" in url.lower():
+                    tot = 25 + (seed_val * 17) % 380
+                    ez = int(tot * 0.48)
+                    med = int(tot * 0.42)
+                    hd = tot - ez - med
+                    c_rating = round(1380 + (seed_val * 7) % 420, 1)
+                    c_rank = 120000 + (seed_val * 153) % 400000
+                    st_status = "OK"
+                else:
+                    tot, ez, med, hd = 0, 0, 0, 0
+                    c_rating, c_rank = None, None
+                    st_status = "NOT STARTED"
 
-            stud = db.query(Student).filter(Student.reg_no == reg).first()
-            if not stud:
-                stud = Student(
-                    reg_no=reg,
-                    name=name,
-                    department_id=d_id,
-                    year_level=yr,
-                    section_id=s_id,
-                    email=email if email else None,
-                    leetcode_url=url,
-                    username=username,
-                    is_active=True
-                )
-                db.add(stud)
-                db.commit()
-                db.refresh(stud)
-
-                stats = LeetCodeProfileStats(
-                    student_id=stud.id,
-                    total_solved=tot,
-                    easy_solved=ez,
-                    medium_solved=med,
-                    hard_solved=hd,
-                    contest_rating=c_rating,
-                    contest_global_ranking=c_rank,
-                    status=st_status
-                )
-                db.add(stats)
-            else:
-                stud.name = name
-                stud.department_id = d_id
-                stud.year_level = yr
-                stud.section_id = s_id
-                stud.leetcode_url = url
-                stud.username = username
-                stud.is_active = True
-                if email: stud.email = email
+                stud = db.query(Student).filter(Student.reg_no == reg).first()
+                if not stud:
+                    stud = Student(
+                        reg_no=reg,
+                        name=name,
+                        department_id=d_id,
+                        year_level=yr,
+                        section_id=s_id,
+                        email=email if email else None,
+                        leetcode_url=url,
+                        username=username,
+                        is_active=True
+                    )
+                    db.add(stud)
+                    db.flush()
+                else:
+                    stud.name = name
+                    stud.department_id = d_id
+                    stud.year_level = yr
+                    stud.section_id = s_id
+                    stud.leetcode_url = url
+                    stud.username = username
+                    stud.is_active = True
+                    if email: stud.email = email
 
                 if not stud.stats:
                     stats = LeetCodeProfileStats(
@@ -456,17 +444,20 @@ def seed_database():
                         stud.stats.contest_global_ranking = c_rank
                         stud.stats.status = st_status
 
-            prog = db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id == stud.id).first()
-            if not prog:
-                prog = WeeklyStudentProgress(
-                    student_id=stud.id,
-                    weekly_progress=12 if reg == "732224CC031" else (1 + seed_val % 14),
-                    streak_count=200 if reg == "732224CC031" else (seed_val % 22),
-                    consistency_score=99.8 if reg == "732224CC031" else round(60.0 + (seed_val % 38), 1)
-                )
-                db.add(prog)
+                prog = db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id == stud.id).first()
+                if not prog:
+                    prog = WeeklyStudentProgress(
+                        student_id=stud.id,
+                        weekly_progress=12 if reg == "732224CC031" else (1 + seed_val % 14),
+                        streak_count=200 if reg == "732224CC031" else (seed_val % 22),
+                        consistency_score=99.8 if reg == "732224CC031" else round(60.0 + (seed_val % 38), 1)
+                    )
+                    db.add(prog)
 
-        db.commit()
+                db.commit()
+            except Exception as _stud_err:
+                db.rollback()
+                print(f"Error seeding student {reg}: {_stud_err}")
 
         # Recalculate college, department, year, section rankings and badges for all students
         try:
