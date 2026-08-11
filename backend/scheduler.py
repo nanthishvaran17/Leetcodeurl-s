@@ -122,14 +122,22 @@ def start_scheduler():
         replace_existing=True
     )
 
-    # Daily Auto-Refresh Cron: Runs every day at 00:00 AM IST and 12:00 PM IST
+    # Periodic Auto-Refresh Cron: Runs every 2 hours all week long to catch live problem solves
     scheduler.add_job(
         daily_auto_refresh_job,
-        CronTrigger(hour='0,12', minute=0, timezone=tz),
-        id='daily_auto_refresh_stats',
+        CronTrigger(hour='*/2', minute='0', timezone=tz),
+        id='periodic_2hr_auto_refresh',
+        replace_existing=True
+    )
+
+    # Periodic Sunday Session Sync: Runs every 15 minutes on Sunday between 08:00 AM and 09:30 AM IST
+    scheduler.add_job(
+        daily_auto_refresh_job,
+        CronTrigger(day_of_week='sun', hour='8,9', minute='0,15,30,45', timezone=tz),
+        id='sunday_session_live_15min_refresh',
         replace_existing=True
     )
 
     scheduler.start()
-    logger.info("APScheduler started: Sunday jobs (08:00 AM & 09:30 AM) + Daily Auto-Sync (00:00 & 12:00 IST) registered.")
+    logger.info("APScheduler started: Sunday session 15-min live sync + Every 2-Hour 24/7 Auto-Sync registered.")
 

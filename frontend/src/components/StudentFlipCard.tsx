@@ -16,9 +16,11 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
   const medium = student.stats?.medium_solved || 0;
   const hard = student.stats?.hard_solved || 0;
   const rank = student.college_rank;
+  const isSolver = totalSolved > 0;
+  const effectiveRank = isSolver ? rank : undefined;
 
   const getRankBadgeStyle = (r?: number) => {
-    if (!r) return 'bg-gray-100 dark:bg-gray-800 text-gray-400 border-gray-300 dark:border-gray-700';
+    if (!isSolver || !r) return 'bg-gray-100 dark:bg-navy-950 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-800';
     if (r === 1) return 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/30 border-amber-300';
     if (r === 2) return 'bg-gradient-to-r from-slate-200 via-gray-100 to-slate-400 text-slate-900 font-extrabold shadow-sm shadow-slate-400/20 border-slate-300';
     if (r === 3) return 'bg-gradient-to-r from-amber-700 via-amber-600 to-amber-800 text-amber-100 font-extrabold shadow-sm shadow-amber-700/20 border-amber-600';
@@ -41,15 +43,17 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
           
           {/* Card Top: Rank & Department Pill */}
           <div className="flex items-center justify-between">
-            <span className={`px-3 py-1 rounded-full text-xs border uppercase tracking-wider flex items-center space-x-1 ${getRankBadgeStyle(rank)}`}>
-              {rank === 1 ? (
+            <span className={`px-3 py-1 rounded-full text-xs border uppercase tracking-wider flex items-center space-x-1 ${getRankBadgeStyle(effectiveRank)}`}>
+              {!isSolver || !effectiveRank ? (
+                <span>Unranked</span>
+              ) : effectiveRank === 1 ? (
                 <><span>🥇</span><span>#1 Rank</span></>
-              ) : rank === 2 ? (
+              ) : effectiveRank === 2 ? (
                 <><span>🥈</span><span>#2 Rank</span></>
-              ) : rank === 3 ? (
+              ) : effectiveRank === 3 ? (
                 <><span>🥉</span><span>#3 Rank</span></>
               ) : (
-                <span>#{rank || '—'} Rank</span>
+                <span>#{effectiveRank} Rank</span>
               )}
             </span>
 

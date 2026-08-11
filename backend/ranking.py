@@ -3,25 +3,26 @@ from sqlalchemy.orm import Session
 from backend.models import Student, LeetCodeProfileStats, WeeklyStudentProgress, WeeklySessionSnapshot
 from backend.logger import logger
 
-def calculate_competition_ranks(scores: List[float]) -> List[int]:
+def calculate_competition_ranks(scores: List[float]) -> List[Optional[int]]:
     """
     Computes competition ranks for a list of scores (higher is better).
+    Students with score <= 0 return None (Unranked).
     Tie handling: 500 -> 1, 450 -> 2, 450 -> 2, 300 -> 4
     """
     if not scores:
         return []
         
-    sorted_unique = sorted(list(set(scores)), reverse=True)
+    positive_scores = [val for val in scores if val and val > 0]
+    sorted_unique = sorted(list(set(positive_scores)), reverse=True)
     rank_map = {}
     
     current_rank = 1
     for val in sorted_unique:
         rank_map[val] = current_rank
-        # Count how many items had this value
         count = scores.count(val)
         current_rank += count
 
-    return [rank_map[val] for val in scores]
+    return [rank_map.get(val, None) for val in scores]
 
 def update_all_rankings_and_badges(db: Session, week_number: int = 1, academic_year: str = "2026-27"):
     """

@@ -451,11 +451,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {sortedList.slice(0, displayCount).map((st, idx) => {
-                const computedRank = (sortBy === 'top_solved' && !selectedDept && yearLevel === 'ALL' && solvedFilter === 'ALL') ? idx + 1 : st.college_rank;
+                const isSolver = (st.stats?.total_solved || 0) > 0;
+                const computedRank = (isSolver && sortBy === 'top_solved' && !selectedDept && yearLevel === 'ALL' && solvedFilter === 'ALL') ? idx + 1 : st.college_rank;
                 return (
                   <StudentFlipCard
                     key={st.id}
-                    student={{ ...st, college_rank: computedRank ?? (idx + 1) }}
+                    student={{ ...st, college_rank: isSolver ? (computedRank ?? (idx + 1)) : undefined }}
                     onSelectStudent={onSelectStudent}
                   />
                 );
