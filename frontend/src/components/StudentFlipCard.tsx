@@ -145,7 +145,7 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
             <div className="flex items-center justify-between text-xs pt-1">
               <div className="flex items-center space-x-1.5 font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2.5 py-1.5 rounded-xl border border-amber-200 dark:border-amber-800/60">
                 <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                <span>Rating: {student.stats?.contest_rating ? student.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '1,355.3'}</span>
+                <span>Rating: {student.stats?.contest_rating ? student.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : 'Unrated'}</span>
               </div>
 
               <div className="flex items-center space-x-1.5 font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-2.5 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800/60">

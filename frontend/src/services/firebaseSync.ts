@@ -51,7 +51,7 @@ export async function syncAllStudentsToFirestoreWeb(studentsList: any[]) {
         weeklySolved: s.weekly_progress || 0,
         streakCount: s.streak_count || 0,
         consistencyScore: s.consistency_score || 0,
-        collegeRank: s.college_rank || 1
+        collegeRank: s.college_rank || null
       }, { merge: true });
 
       count++;

@@ -142,7 +142,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               easy_solved: sStats.easySolved || 0,
               medium_solved: sStats.mediumSolved || 0,
               hard_solved: sStats.hardSolved || 0,
-              contest_rating: sStats.contestRating || 1355.3,
+              contest_rating: sStats.contestRating || null,
               contest_global_ranking: sStats.globalRanking,
               status: sStats.status || 'OK'
             }
