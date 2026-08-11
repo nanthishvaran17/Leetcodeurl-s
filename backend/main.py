@@ -19,7 +19,7 @@ from backend.logger import logger
 from backend.routes import (
     auth, students, departments, sessions,
     leaderboard, analytics, reports, settings as settings_route,
-    audit, public, sync
+    audit, public, sync, history, risk, goals, system_health
 )
 
 app = FastAPI(
@@ -67,6 +67,10 @@ app.include_router(reports.router)
 app.include_router(settings_route.router)
 app.include_router(audit.router)
 app.include_router(public.router)
+app.include_router(history.router)
+app.include_router(risk.router)
+app.include_router(goals.router)
+app.include_router(system_health.router)
 
 # Mount Static File Directories
 is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")

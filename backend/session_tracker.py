@@ -67,7 +67,7 @@ async def trigger_start_snapshot(db: Session, session_id: int):
             )
             db.add(snapshot)
 
-        snapshot.start_solved_count = student.stats.total_solved if student.stats else 0
+        snapshot.start_solved_count = (student.stats.total_solved or 0) if (student.stats and student.stats.total_solved is not None) else 0
         snapshot.start_rating = student.stats.contest_rating if student.stats else None
         snapshot.status = "UPCOMING"
         
@@ -100,7 +100,7 @@ async def trigger_end_snapshot(db: Session, session_id: int):
             snapshot = WeeklySessionSnapshot(
                 session_id=session_id,
                 student_id=student.id,
-                start_solved_count=student.stats.total_solved if student.stats else 0
+                start_solved_count=(student.stats.total_solved or 0) if (student.stats and student.stats.total_solved is not None) else 0
             )
             db.add(snapshot)
 
@@ -108,14 +108,14 @@ async def trigger_end_snapshot(db: Session, session_id: int):
         is_ok = stats_dict.get("status") in ["OK", "success"]
 
         if is_ok:
-            end_solved = stats_dict["total_solved"]
-            end_rating = stats_dict["contest_rating"]
+            end_solved = stats_dict.get("total_solved") or 0
+            end_rating = stats_dict.get("contest_rating")
             
             snapshot.end_solved_count = end_solved
             snapshot.end_rating = end_rating
             
             # Progress calculation
-            progress = end_solved - snapshot.start_solved_count
+            progress = end_solved - (snapshot.start_solved_count or 0)
             if progress < 0:
                 progress = 0
             snapshot.problems_added = progress
@@ -139,3 +139,10 @@ async def trigger_end_snapshot(db: Session, session_id: int):
 
     # Recalculate rankings & badges
     update_all_rankings_and_badges(db, week_number=session.week_number, academic_year=session.academic_year)
+
+    # Sync fresh calculations to Firestore
+    try:
+        from backend.assets.sync_firestore import sync_database_to_firestore
+        sync_database_to_firestore()
+    except Exception as fs_err:
+        logger.warning(f"Post-session Firestore sync note: {fs_err}")

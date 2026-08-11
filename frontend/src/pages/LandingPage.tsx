@@ -171,20 +171,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             section: sData.section || 'A',
             leetcode_url: sData.leetcodeProfileUrl || '',
             username: sData.leetcodeUsername || '',
-            college_rank: sStats.collegeRank || null,
-            weekly_progress: sStats.weeklySolved || 0,
-            streak_count: sStats.streakCount || 0,
-            consistency_score: sStats.consistencyScore || 0,
+            college_rank: sStats.collegeRank ?? null,
+            weekly_progress: sStats.weeklySolved ?? 0,
+            streak_count: sStats.streakCount ?? 0,
+            consistency_score: sStats.consistencyScore ?? 0,
             stats: {
-              total_solved: sStats.totalSolved || 0,
-              easy_solved: sStats.easySolved || 0,
-              medium_solved: sStats.mediumSolved || 0,
-              hard_solved: sStats.hardSolved || 0,
-              contest_rating: sStats.contestRating || null,
+              // RULE: null means "not yet fetched" — never convert to 0
+              total_solved: sStats.totalSolved ?? null,
+              easy_solved: sStats.easySolved ?? null,
+              medium_solved: sStats.mediumSolved ?? null,
+              hard_solved: sStats.hardSolved ?? null,
+              contest_rating: sStats.contestRating ?? null,
               contest_global_ranking: sStats.globalRanking,
-              status: sStats.status || 'OK',
-              sync_status: sStats.syncStatus || 'success',
-              source: sStats.source || 'leetcode_public_profile',
+              status: sStats.status || 'pending',
+              sync_status: sStats.syncStatus || 'pending',
+              source: sStats.source || null,
               last_verified_at: sStats.lastVerifiedAt
             }
           });

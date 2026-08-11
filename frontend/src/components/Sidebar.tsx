@@ -11,7 +11,9 @@ import {
   Globe,
   Award,
   Layers,
-  Calendar
+  Calendar,
+  TrendingUp,
+  Activity
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -22,12 +24,13 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
     { id: 'departments', label: 'Departments & Sections', icon: Layers },
     { id: 'weekly-contest', label: 'Weekly Contest Tracker', icon: Calendar },
-    { id: 'students', label: 'Student Master', icon: Users },
-    { id: 'leaderboard', label: 'Leaderboards', icon: Trophy },
+    { id: 'students', label: 'Student Leaderboard', icon: Users },
     { id: 'compare', label: 'Student Comparison', icon: BarChart3 },
     { id: 'quality', label: 'Data Quality Board', icon: CheckCircle2 },
+    { id: 'system-health', label: 'System Operations & Health', icon: Activity },
     { id: 'reports', label: 'Reports & Export', icon: FileSpreadsheet },
     { id: 'public', label: 'Public Shareable View', icon: Globe },
     { id: 'settings', label: 'Admin Settings', icon: Settings },
@@ -48,14 +51,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl font-medium text-xs transition-all ${
+              className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl font-medium text-xs text-left transition-all ${
                 isActive
                   ? 'bg-brand-600 text-white shadow-md shadow-brand-600/20 font-semibold'
                   : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800/60'
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-gray-400 dark:text-gray-500'}`} />
-              <span>{item.label}</span>
+              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-gray-400 dark:text-gray-500'}`} />
+              <span className="truncate text-left flex-1">{item.label}</span>
             </button>
           );
         })}

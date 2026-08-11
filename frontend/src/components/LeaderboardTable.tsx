@@ -38,19 +38,19 @@ export interface StudentData {
   leetcode_url?: string;
   username?: string;
   stats?: {
-    total_solved: number;
-    easy_solved: number;
-    medium_solved: number;
-    hard_solved: number;
-    contest_rating?: number;
-    contest_global_ranking?: number;
-    public_profile_ranking?: number;
+    total_solved: number | null;
+    easy_solved: number | null;
+    medium_solved: number | null;
+    hard_solved: number | null;
+    contest_rating?: number | null;
+    contest_global_ranking?: number | null;
+    public_profile_ranking?: number | null;
     recent_contest_name?: string;
     recent_contest_score?: string;
     status: string;
     sync_status?: string;
-    source?: string;
-    last_verified_at?: string;
+    source?: string | null;
+    last_verified_at?: string | null;
   };
   college_rank?: number;
   dept_rank?: number;

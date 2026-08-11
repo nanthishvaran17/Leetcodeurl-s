@@ -80,9 +80,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         studSnap.forEach(docSnap => {
           const sData = docSnap.data();
           const sStats = statsMap.get(docSnap.id) || {};
-          const totSolved = sStats.totalSolved || 0;
-          totalSolvedAll += totSolved;
-          if (totSolved > 0) activeCount++;
+          // RULE: null/undefined means "not yet fetched" — never convert to 0
+          const syncStatus = sStats.syncStatus || 'pending';
+          const isVerified = syncStatus === 'success' || syncStatus === 'OK';
+          const totSolved = isVerified ? (sStats.totalSolved ?? 0) : null;
+          if (totSolved !== null) totalSolvedAll += totSolved;
+          if (totSolved !== null && totSolved > 0) activeCount++;
 
           const dept = sData.department || 'GEN';
           if (!deptMap.has(dept)) {
@@ -115,47 +118,58 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             section: sData.section || 'A',
             leetcode_url: sData.leetcodeProfileUrl || '',
             username: sData.leetcodeUsername || '',
-            college_rank: sStats.collegeRank || 1,
-            weekly_progress: sStats.weeklySolved || 0,
-            streak_count: sStats.streakCount || 0,
-            consistency_score: sStats.consistencyScore || 0,
+            college_rank: sStats.collegeRank ?? null,
+            weekly_progress: sStats.weeklySolved ?? 0,
+            streak_count: sStats.streakCount ?? 0,
+            consistency_score: sStats.consistencyScore ?? 0,
             stats: {
-              total_solved: totSolved,
-              easy_solved: sStats.easySolved || 0,
-              medium_solved: sStats.mediumSolved || 0,
-              hard_solved: sStats.hardSolved || 0,
-              contest_rating: sStats.contestRating,
-              contest_global_ranking: sStats.globalRanking,
-              status: sStats.status || 'OK'
+              total_solved: totSolved,  // null if not verified
+              easy_solved: isVerified ? (sStats.easySolved ?? 0) : null,
+              medium_solved: isVerified ? (sStats.mediumSolved ?? 0) : null,
+              hard_solved: isVerified ? (sStats.hardSolved ?? 0) : null,
+              contest_rating: sStats.contestRating ?? null,
+              contest_global_ranking: sStats.globalRanking ?? null,
+              status: sStats.status || (isVerified ? 'OK' : 'pending'),
+              sync_status: syncStatus,
+              last_verified_at: sStats.lastVerifiedAt ?? null
             }
           });
         });
 
-        list.sort((a, b) => (b.stats?.total_solved || 0) - (a.stats?.total_solved || 0));
+        list.sort((a, b) => (b.stats?.total_solved ?? 0) - (a.stats?.total_solved ?? 0));
         setStudents(list.slice(0, 10));
 
+        // Compute verified counts from real sync states — NO hardcoded fallbacks
+        const verifiedCount = list.filter(s => s.stats?.sync_status === 'success' || s.stats?.sync_status === 'OK').length;
+        const pendingCount = list.filter(s => !s.stats?.sync_status || s.stats.sync_status === 'pending' || s.stats.sync_status === 'not_started').length;
+        const failedCount = list.filter(s => s.stats?.sync_status === 'failed' || s.stats?.sync_status === 'mismatch').length;
+
         setSummary({
-          total_students: list.length || 273,
-          active_students: activeCount || 265,
+          total_students: list.length,
+          active_students: activeCount,
           not_started_students: Math.max(0, list.length - activeCount),
-          total_problems_solved: totalSolvedAll || 45463,
-          average_weekly_progress: 166.5,
-          current_session: { status: 'UPCOMING' }
+          total_problems_solved: totalSolvedAll,
+          average_weekly_progress: 0,  // Will be computed from real data when available
+          current_session: { status: 'UPCOMING' },
+          verified_count: verifiedCount,
+          pending_count: pendingCount,
+          failed_count: failedCount
         });
 
         const formattedDepts = Array.from(deptMap.values()).map(d => ({
           ...d,
           participation_rate: d.total_students > 0 ? round((d.active_students / d.total_students) * 100, 1) : 0,
           avg_solved: d.total_students > 0 ? round(d.total_solved / d.total_students, 1) : 0,
-          avg_progress: 12.0
+          avg_progress: 0
         }));
         setDepartments(formattedDepts);
 
         setDataQuality({
-          total_students: list.length || 273,
-          valid_profiles: list.length || 273,
-          missing_links: 0,
-          health_score_percentage: 100
+          total_students: list.length,
+          valid_profiles: verifiedCount,
+          missing_links: pendingCount,
+          failed_count: failedCount,
+          health_score_percentage: list.length > 0 ? round((verifiedCount / list.length) * 100, 1) : 0
         });
       } catch (fErr) {
         console.error("Firestore direct read error", fErr);
@@ -210,9 +224,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     }
   };
 
-  const totalStudents = summary?.total_students || 273;
-  const activeStudents = summary?.active_students || 265;
-  const notStartedStudents = summary?.not_started_students || (totalStudents - activeStudents);
+  const totalStudents = summary?.total_students ?? 0;
+  const activeStudents = summary?.active_students ?? 0;
+  const notStartedStudents = summary?.not_started_students ?? (totalStudents - activeStudents);
   const participationRate = totalStudents > 0 ? ((activeStudents / totalStudents) * 100).toFixed(1) : "0";
 
   return (
@@ -232,12 +246,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             )}
           </span>
           <span className="font-extrabold text-gray-800 dark:text-gray-200">
-            <span className="text-emerald-600 dark:text-emerald-400">🟢 Cloud Firestore Live Sync Active</span>
+          <span className="text-emerald-600 dark:text-emerald-400">🟢 Cloud Firestore Sync</span>
           </span>
         </div>
 
         <div className="flex items-center space-x-3 text-gray-500 font-bold">
-          <span>🟢 Last Sync: Just Now</span>
+          <span>{loading ? '🔄 Loading...' : '🟢 Data loaded'}</span>
           <button
             onClick={fetchDashboardData}
             className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-navy-800 text-brand-600 dark:text-brand-400 transition-colors"
@@ -302,8 +316,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         <StatCard title="Total Students" value={totalStudents} icon={Users} color="blue" />
         <StatCard title="Active Students" value={activeStudents} icon={CheckCircle2} color="green" />
         <StatCard title="Not Started" value={notStartedStudents} icon={AlertTriangle} color="rose" />
-        <StatCard title="Total Problems Solved" value={(summary?.total_problems_solved || 45463).toLocaleString()} icon={Trophy} color="purple" />
-        <StatCard title="Avg Weekly Progress" value={`+${summary?.average_weekly_progress || 166.5}`} icon={Activity} color="indigo" />
+        <StatCard title="Total Problems Solved" value={(summary?.total_problems_solved ?? 0).toLocaleString()} icon={Trophy} color="purple" />
+        <StatCard title="Avg Weekly Progress" value={`+${summary?.average_weekly_progress ?? 0}`} icon={Activity} color="indigo" />
       </div>
 
       {/* Weekly Session Monitoring & Countdown Controls */}
@@ -470,7 +484,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <span>Top College Leaderboard</span>
           </h3>
           <button
-            onClick={() => onNavigateTab('leaderboard')}
+            onClick={() => onNavigateTab('students')}
             className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline"
           >
             View Full Leaderboard →

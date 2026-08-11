@@ -6,7 +6,7 @@ from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
-from backend.models import Student, LeetCodeProfileStats
+from backend.models import Student, LeetCodeProfileStats, StudentStatSnapshot
 from backend.leetcode_fetcher import fetch_leetcode_profile, extract_leetcode_username
 from backend.ranking import update_all_rankings_and_badges
 from backend.logger import logger
@@ -18,6 +18,7 @@ class SyncProgressTracker:
         self.completed: int = 0
         self.success: int = 0
         self.failed: int = 0
+        self.mismatch: int = 0
         self.pending: int = 0
         self.progress_percentage: float = 0.0
         self.start_time: Optional[str] = None
@@ -33,6 +34,7 @@ class SyncProgressTracker:
         self.completed = 0
         self.success = 0
         self.failed = 0
+        self.mismatch = 0
         self.pending = total_students
         self.progress_percentage = 0.0
         self.start_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -43,10 +45,13 @@ class SyncProgressTracker:
         # Write initial syncRuns document
         self._write_firestore_progress(status="running")
 
-    def record_completed(self, is_success: bool, log_msg: str):
+    def record_completed(self, is_success: bool, log_msg: str, is_mismatch: bool = False):
         self.completed += 1
         if is_success:
             self.success += 1
+        elif is_mismatch:
+            self.mismatch += 1
+            self.failed += 1  # mismatch counts as failed for total
         else:
             self.failed += 1
         self.pending = max(0, self.total - self.completed)
@@ -101,6 +106,7 @@ class SyncProgressTracker:
                 "processed":   self.completed,
                 "successful":  self.success,
                 "failed":      self.failed,
+                "mismatch":    self.mismatch,
                 "pending":     self.pending,
                 "startedAt":   self.start_time,
                 "completedAt": self.end_time,
@@ -121,6 +127,7 @@ class SyncProgressTracker:
             "completed": self.completed,
             "success": self.success,
             "failed": self.failed,
+            "mismatch": self.mismatch,
             "pending": self.pending,
             "progress_percentage": self.progress_percentage,
             "start_time": self.start_time,
@@ -129,6 +136,69 @@ class SyncProgressTracker:
         }
 
 sync_tracker = SyncProgressTracker()
+
+def capture_student_snapshot(student: Student, db: Session, run_id: Optional[str] = None) -> Optional[StudentStatSnapshot]:
+    """
+    Captures a historical snapshot of student stats and computes deltas relative to the latest snapshot.
+    Only captures if student.stats exists and has valid total_solved count.
+    """
+    if not student.stats or student.stats.total_solved is None or student.stats.sync_status != "success":
+        return None
+
+    try:
+        prev = db.query(StudentStatSnapshot).filter(
+            StudentStatSnapshot.student_id == student.id
+        ).order_by(StudentStatSnapshot.captured_at.desc()).first()
+
+        cur_tot = student.stats.total_solved or 0
+        cur_ez  = student.stats.easy_solved or 0
+        cur_med = student.stats.medium_solved or 0
+        cur_hd  = student.stats.hard_solved or 0
+        cur_rat = student.stats.contest_rating or 0.0
+
+        if prev:
+            prev_tot = prev.total_solved or 0
+            prev_ez  = prev.easy_solved or 0
+            prev_med = prev.medium_solved or 0
+            prev_hd  = prev.hard_solved or 0
+            prev_rat = prev.contest_rating or 0.0
+
+            delta_total  = max(0, cur_tot - prev_tot)
+            delta_easy   = max(0, cur_ez - prev_ez)
+            delta_medium = max(0, cur_med - prev_med)
+            delta_hard   = max(0, cur_hd - prev_hd)
+            delta_rating = round(cur_rat - prev_rat, 1)
+        else:
+            delta_total = 0
+            delta_easy = 0
+            delta_medium = 0
+            delta_hard = 0
+            delta_rating = 0.0
+
+        snapshot = StudentStatSnapshot(
+            student_id=student.id,
+            total_solved=student.stats.total_solved,
+            easy_solved=student.stats.easy_solved,
+            medium_solved=student.stats.medium_solved,
+            hard_solved=student.stats.hard_solved,
+            contest_rating=student.stats.contest_rating,
+            global_rank=student.stats.public_profile_ranking,
+            delta_total=delta_total,
+            delta_easy=delta_easy,
+            delta_medium=delta_medium,
+            delta_hard=delta_hard,
+            delta_rating=delta_rating,
+            captured_at=datetime.datetime.now(datetime.timezone.utc),
+            sync_run_id=run_id,
+            source=student.stats.source or "leetcode_public_profile"
+        )
+        db.add(snapshot)
+        db.commit()
+        db.refresh(snapshot)
+        return snapshot
+    except Exception as e:
+        logger.warning(f"Failed to capture snapshot for student {student.id}: {e}")
+        return None
 
 def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Session) -> Student:
     """
@@ -143,6 +213,11 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
         student.stats = LeetCodeProfileStats(student_id=student.id)
         db.add(student.stats)
 
+    # Always record this attempt timestamp
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
+    student.stats.last_attempt_at = now_utc
+    student.stats.retry_count = (student.stats.retry_count or 0)
+
     # 1. Identity Mapping Verification
     fetched_username = stats_dict.get("username")
     expected_username = student.username
@@ -150,8 +225,11 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
         err_msg = f"CRITICAL IDENTITY MISMATCH: Fetched username '{fetched_username}' does not match expected student username '{expected_username}' for Reg {student.reg_no}"
         logger.error(err_msg)
         student.stats.sync_status = "mismatch"
+        student.stats.validation_status = "identity_mismatch"
         student.stats.status = "MISMATCH"
         student.stats.error_message = err_msg
+        student.stats.error_code = "IDENTITY_MISMATCH"
+        student.stats.retry_count += 1
         db.commit()
         db.refresh(student)
         return student
@@ -172,8 +250,11 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
             err_msg = f"CRITICAL STATS MISMATCH for {student.reg_no}: {ez_int} + {med_int} + {hd_int} != {tot_int}"
             logger.error(err_msg)
             student.stats.sync_status = "mismatch"
+            student.stats.validation_status = "mismatch"
             student.stats.status = "MISMATCH"
             student.stats.error_message = err_msg
+            student.stats.error_code = "STATS_SUM_MISMATCH"
+            student.stats.retry_count += 1
             db.commit()
             db.refresh(student)
             return student
@@ -192,8 +273,11 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
         
         student.stats.status = "OK"
         student.stats.sync_status = "success"
+        student.stats.validation_status = "verified"
         student.stats.source = "leetcode_public_profile"
         student.stats.error_message = None
+        student.stats.error_code = None
+        student.stats.retry_count = 0  # Reset on success
         now_utc = datetime.datetime.now(datetime.timezone.utc)
         student.stats.last_successful_sync = now_utc
         student.stats.last_verified_at = now_utc
@@ -203,12 +287,29 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
         # Preserve old stats, only update sync_status & error_message.
         student.stats.status = status or "failed"
         student.stats.sync_status = "failed"
+        student.stats.validation_status = "pending"  # Was not verified this round
         student.stats.error_message = stats_dict.get("error") or stats_dict.get("error_message") or "Sync failed"
+        # Determine error_code from status
+        raw_status = stats_dict.get("status", "")
+        if "timeout" in str(stats_dict.get("error", "")).lower():
+            student.stats.error_code = "NETWORK_TIMEOUT"
+        elif raw_status == "PROFILE NOT FOUND":
+            student.stats.error_code = "PROFILE_NOT_FOUND"
+        elif raw_status in ("MISSING LINK", "INVALID LINK"):
+            student.stats.error_code = raw_status.replace(" ", "_")
+        else:
+            student.stats.error_code = "FETCH_FAILED"
+        student.stats.retry_count = (student.stats.retry_count or 0) + 1
         student.stats.fetch_duration = stats_dict.get("fetch_duration")
 
     student.stats.last_updated = datetime.datetime.now(datetime.timezone.utc)
     db.commit()
     db.refresh(student)
+
+    # Capture historical snapshot upon successful sync
+    if is_success:
+        capture_student_snapshot(student, db, run_id=sync_tracker.run_id)
+
     return student
 
 async def sync_single_student_by_id(student_id: int, timeout: float = 30.0) -> Dict[str, Any]:
@@ -347,6 +448,7 @@ async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 3, per_
 
                     stats = await fetch_leetcode_profile(url_or_username, force_refresh=True)
                     is_ok = stats.get("status") in ["success", "OK"]
+                    is_mismatch = stats.get("status") == "MISMATCH"
 
                     # Update student DB with Old Data Fallback rule
                     sync_single_student_db(st.id, stats, w_db)
@@ -359,7 +461,7 @@ async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 3, per_
                         log_msg = f"[WARN] Failed - {st.username or st.reg_no} ({err_detail})"
                         logger.warning(log_msg)
 
-                    sync_tracker.record_completed(is_ok, log_msg)
+                    sync_tracker.record_completed(is_ok, log_msg, is_mismatch=is_mismatch)
 
                 except Exception as ex:
                     log_msg = f"[ERROR] Worker error for student {student_id}: {ex}"

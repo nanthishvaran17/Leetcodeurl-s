@@ -16,6 +16,8 @@ import { AuditLogPage } from './pages/AuditLogPage';
 import { WeeklyContestPage } from './pages/WeeklyContestPage';
 import { StudentDashboardView } from './pages/StudentDashboardView';
 import { StaffDashboardView } from './pages/StaffDashboardView';
+import { GrowthIntelligencePage } from './pages/GrowthIntelligencePage';
+import { SystemHealthPage } from './pages/SystemHealthPage';
 import { ImportModal } from './components/ImportModal';
 import { StudentData } from './components/LeaderboardTable';
 import api from './services/api';
@@ -118,6 +120,8 @@ export const App: React.FC = () => {
 
           {activeTab === 'dashboard' && renderDashboardComponent()}
 
+          {activeTab === 'growth' && <GrowthIntelligencePage />}
+
           {activeTab === 'student-dashboard' && <StudentDashboardView />}
 
           {activeTab === 'staff-dashboard' && <StaffDashboardView />}
@@ -144,19 +148,16 @@ export const App: React.FC = () => {
             />
           )}
 
-          {activeTab === 'leaderboard' && (
-            <StudentMasterPage
-              onSelectStudent={handleSelectStudent}
-              onOpenImport={() => setShowImportModal(true)}
-            />
-          )}
-
           {activeTab === 'compare' && (
             <ComparePage />
           )}
 
           {activeTab === 'quality' && (
             <DataQualityPage />
+          )}
+
+          {activeTab === 'system-health' && (
+            <SystemHealthPage />
           )}
 
           {activeTab === 'reports' && (

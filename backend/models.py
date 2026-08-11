@@ -59,6 +59,7 @@ class Student(Base):
     progress_records = relationship("WeeklyStudentProgress", back_populates="student", cascade="all, delete-orphan")
     snapshots = relationship("WeeklySessionSnapshot", back_populates="student", cascade="all, delete-orphan")
     mentor_notes = relationship("MentorNote", back_populates="student", cascade="all, delete-orphan")
+    stat_snapshots = relationship("StudentStatSnapshot", back_populates="student", cascade="all, delete-orphan")
 
 class LeetCodeProfileStats(Base):
     __tablename__ = "leetcode_profile_stats"
@@ -66,10 +67,10 @@ class LeetCodeProfileStats(Base):
     id = Column(Integer, primary_key=True, index=True)
     student_id = Column(Integer, ForeignKey("students.id"), unique=True, nullable=False)
     
-    total_solved = Column(Integer, default=0)
-    easy_solved = Column(Integer, default=0)
-    medium_solved = Column(Integer, default=0)
-    hard_solved = Column(Integer, default=0)
+    total_solved = Column(Integer, nullable=True, default=None)
+    easy_solved = Column(Integer, nullable=True, default=None)
+    medium_solved = Column(Integer, nullable=True, default=None)
+    hard_solved = Column(Integer, nullable=True, default=None)
     contest_rating = Column(Float, nullable=True)
     contest_global_ranking = Column(Integer, nullable=True)
     public_profile_ranking = Column(Integer, nullable=True)
@@ -77,12 +78,16 @@ class LeetCodeProfileStats(Base):
     recent_contest_name = Column(String(150), nullable=True)
     recent_contest_score = Column(String(20), nullable=True) # e.g. "3 / 4"
     
-    status = Column(String(50), default="DATA UNAVAILABLE") # OK, MISSING LINK, INVALID LINK, PROFILE NOT FOUND, DATA UNAVAILABLE
-    sync_status = Column(String(50), default="not_started") # success, failed, mismatch, not_started
-    source = Column(String(100), default="leetcode_public_profile")
+    status = Column(String(50), default="pending") # OK, MISSING LINK, INVALID LINK, PROFILE NOT FOUND, pending
+    sync_status = Column(String(50), default="not_started") # success, failed, mismatch, not_started, pending
+    validation_status = Column(String(50), nullable=True)  # verified, mismatch, pending, identity_mismatch
+    source = Column(String(100), nullable=True)  # leetcode_public_profile — only set after real fetch
     error_message = Column(Text, nullable=True)
+    error_code = Column(String(50), nullable=True)  # NETWORK_TIMEOUT, PROFILE_NOT_FOUND, MISMATCH, IDENTITY_MISMATCH
     last_successful_sync = Column(DateTime, nullable=True)
     last_verified_at = Column(DateTime(timezone=True), nullable=True)
+    last_attempt_at = Column(DateTime(timezone=True), nullable=True)  # Tracks every sync attempt, success or fail
+    retry_count = Column(Integer, default=0, nullable=False)  # Number of failed fetch attempts
     fetch_duration = Column(Float, nullable=True)
     last_updated = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
@@ -230,3 +235,45 @@ class AdminSettingsModel(Base):
     id = Column(Integer, primary_key=True, index=True)
     key = Column(String(100), unique=True, nullable=False)
     value = Column(Text, nullable=False)
+
+class StudentStatSnapshot(Base):
+    __tablename__ = "student_stat_snapshots"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    
+    total_solved = Column(Integer, nullable=True)
+    easy_solved = Column(Integer, nullable=True)
+    medium_solved = Column(Integer, nullable=True)
+    hard_solved = Column(Integer, nullable=True)
+    contest_rating = Column(Float, nullable=True)
+    global_rank = Column(Integer, nullable=True)
+    
+    delta_total = Column(Integer, nullable=True, default=0)
+    delta_easy = Column(Integer, nullable=True, default=0)
+    delta_medium = Column(Integer, nullable=True, default=0)
+    delta_hard = Column(Integer, nullable=True, default=0)
+    delta_rating = Column(Float, nullable=True, default=0.0)
+    
+    captured_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
+    sync_run_id = Column(String(100), nullable=True)
+    source = Column(String(50), default="leetcode_public_profile")
+    
+    student = relationship("Student", back_populates="stat_snapshots")
+
+class StudentGoal(Base):
+    __tablename__ = "student_goals"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    
+    target_solved = Column(Integer, nullable=False)
+    target_date = Column(String(20), nullable=False) # YYYY-MM-DD
+    status = Column(String(30), default="IN_PROGRESS") # IN_PROGRESS, COMPLETED, OVERDUE
+    
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
+
+    student = relationship("Student")
+
+

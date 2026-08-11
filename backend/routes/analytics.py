@@ -197,7 +197,7 @@ def get_batch_matrix_analytics(db: Session = Depends(get_db)):
             if grank > 0 and grank <= 20000:
                 ranking_below_20000 += 1
 
-        # Current Week row
+        # Current Week row (real data from DB \u2014 no fake "Last Week" arithmetic offsets)
         curr_row = {
             "batch": f"{b['batch_label']} (Current Week)",
             "total_count": total_count,
@@ -214,24 +214,6 @@ def get_batch_matrix_analytics(db: Session = Depends(get_db)):
             "ranking_below_20000": ranking_below_20000
         }
 
-        # Last Week row
-        last_row = {
-            "batch": f"{b['batch_label']} (Last Week)",
-            "total_count": total_count,
-            "above_500": max(0, above_500 - 1) if above_500 > 0 else 0,
-            "range_250_500": max(0, range_250_500 - 2) if range_250_500 > 0 else 0,
-            "less_than_250": max(0, less_than_250 - 3) if less_than_250 > 0 else 0,
-            "less_than_100": max(0, less_than_100 - 4) if less_than_100 > 0 else 0,
-            "not_yet_started": not_yet_started + (10 if not_yet_started > 0 else 0),
-            "q4_solved": max(0, q4_solved - 1) if q4_solved > 0 else 0,
-            "q3_solved": max(0, q3_solved - 2) if q3_solved > 0 else 0,
-            "q2_solved": max(0, q2_solved - 3) if q2_solved > 0 else 0,
-            "q1_solved": max(0, q1_solved - 4) if q1_solved > 0 else 0,
-            "rating_above_1500": max(0, rating_above_1500 - 1) if rating_above_1500 > 0 else 0,
-            "ranking_below_20000": max(0, ranking_below_20000 - 1) if ranking_below_20000 > 0 else 0
-        }
-
-        result.append(last_row)
         result.append(curr_row)
 
     return result

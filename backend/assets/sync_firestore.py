@@ -133,40 +133,53 @@ def sync_database_to_firestore():
             else:
                 sync_st = "pending"
 
+            # LeetCode Stats Document payload — only set fields that have real values
             last_ver = stats.last_verified_at.isoformat() if (stats and stats.last_verified_at) else None
+            last_att = stats.last_attempt_at.isoformat() if (stats and getattr(stats, 'last_attempt_at', None)) else None
 
-            # LeetCode Stats Document payload
             stats_doc = {
                 "studentId": s.id,
                 "registerNo": s.reg_no,
                 "leetcodeUsername": s.username or "",
-                "totalSolved": total_solved,
+                "totalSolved": total_solved,  # null when not yet fetched
                 "easySolved": stats.easy_solved if (stats and stats.easy_solved is not None) else None,
                 "mediumSolved": stats.medium_solved if (stats and stats.medium_solved is not None) else None,
                 "hardSolved": stats.hard_solved if (stats and stats.hard_solved is not None) else None,
                 "contestRating": stats.contest_rating if stats else None,
-                "globalRanking": stats.contest_global_ranking if stats else None,
+                "globalRanking": stats.public_profile_ranking if stats else None,
                 "status": status,
                 "syncStatus": sync_st,
-                "source": stats.source if (stats and stats.source) else "leetcode_public_profile",
+                "validationStatus": getattr(stats, 'validation_status', None) if stats else None,
+                "source": stats.source if (stats and stats.source) else None,
                 "lastVerifiedAt": last_ver,
+                "lastAttemptAt": last_att,
+                "errorCode": getattr(stats, 'error_code', None) if stats else None,
+                "retryCount": getattr(stats, 'retry_count', 0) if stats else 0,
                 "weeklySolved": weekly_prog,
                 "streakCount": prog.streak_count if prog else 0,
                 "consistencyScore": prog.consistency_score if prog else 0.0,
                 "collegeRank": prog.college_rank if prog else None
             }
 
-            leaderboard_items.append({
-                "rank": prog.college_rank if (prog and prog.college_rank) else 9999,
-                "studentId": s.id,
-                "name": s.name,
-                "registerNo": s.reg_no,
-                "department": dept_code,
-                "section": s.section.name if s.section else "A",
-                "totalSolved": total_solved,
-                "contestRating": stats.contest_rating if stats else None,
-                "weeklyProgress": weekly_prog
-            })
+            # Only include verified students in the leaderboard — Rule 16
+            is_verified_for_lb = (
+                stats and
+                stats.sync_status in ("success", "OK") and
+                getattr(stats, 'validation_status', None) in ("verified", None) and  # None for backward compat
+                total_solved is not None
+            )
+            if is_verified_for_lb:
+                leaderboard_items.append({
+                    "rank": prog.college_rank if (prog and prog.college_rank) else 9999,
+                    "studentId": s.id,
+                    "name": s.name,
+                    "registerNo": s.reg_no,
+                    "department": dept_code,
+                    "section": s.section.name if s.section else "A",
+                    "totalSolved": total_solved,
+                    "contestRating": stats.contest_rating if stats else None,
+                    "weeklyProgress": weekly_prog
+                })
 
             if fs_db:
                 try:
@@ -222,6 +235,31 @@ def sync_database_to_firestore():
                 fs_db.collection("dataQuality").document("current").set(data_quality_kpis, merge=True)
                 for d in dept_list:
                     fs_db.collection("departmentStats").document(d["department_code"]).set(d, merge=True)
+
+                # Push growthStats/current
+                from backend.routes.history import get_top_improvers, get_college_delta
+                try:
+                    top_improvers_7d = [imp.dict() for imp in get_top_improvers(period="7d", limit=10, db=db)]
+                    delta_7d = get_college_delta(period="7d", db=db)
+                    fs_db.collection("growthStats").document("current").set({
+                        "top_improvers_7d": top_improvers_7d,
+                        "college_delta_7d": delta_7d,
+                        "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+                    }, merge=True)
+                except Exception as imp_err:
+                    print(f"Notice: growthStats calculation error: {imp_err}")
+
+                # Push riskSummary/current
+                from backend.routes.risk import get_risk_summary
+                try:
+                    risk_summary = get_risk_summary(db=db)
+                    fs_db.collection("riskSummary").document("current").set({
+                        "counts": risk_summary,
+                        "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+                    }, merge=True)
+                except Exception as risk_err:
+                    print(f"Notice: riskSummary calculation error: {risk_err}")
+
                 print("Cloud Firestore pre-calculated aggregations successfully updated!")
             except Exception as ex:
                 print(f"Error syncing Cloud Firestore aggregations: {ex}")
@@ -256,16 +294,19 @@ def initialize_pending_records():
         initialized = 0
         skipped = 0
         for s in students:
-            student_id = s.reg_no or str(s.id)
+            # Always use str(s.id) as the Firestore document ID — consistent with sync_database_to_firestore
+            student_doc_id = str(s.id)
             try:
-                doc_ref = fs_db.collection("leetcodeStats").document(student_id)
+                doc_ref = fs_db.collection("leetcodeStats").document(student_doc_id)
                 doc = doc_ref.get()
                 if not doc.exists:
                     # New student — write pending placeholder
                     doc_ref.set({
-                        "studentId":       student_id,
+                        "studentId":       s.id,
+                        "registerNo":      s.reg_no,
                         "leetcodeUsername": s.username or None,
                         "syncStatus":      "pending",
+                        "validationStatus": "pending",
                         "source":          None,
                         "totalSolved":     None,
                         "easySolved":      None,
@@ -274,18 +315,21 @@ def initialize_pending_records():
                         "contestRating":   None,
                         "globalRank":      None,
                         "lastVerifiedAt":  None,
+                        "lastAttemptAt":   None,
+                        "errorCode":       None,
+                        "retryCount":      0,
                     })
                     initialized += 1
                 else:
                     existing = doc.to_dict()
                     # Only overwrite if syncStatus is missing (e.g., old record without status field)
                     if not existing.get("syncStatus"):
-                        doc_ref.set({"syncStatus": "pending"}, merge=True)
+                        doc_ref.set({"syncStatus": "pending", "validationStatus": "pending"}, merge=True)
                         initialized += 1
                     else:
                         skipped += 1
             except Exception as err:
-                print(f"[Firestore Init] Error for {student_id}: {err}")
+                print(f"[Firestore Init] Error for {student_doc_id}: {err}")
 
         print(f"[Firestore Init] Completed: {initialized} pending records initialized, {skipped} already had status.")
     except Exception as err:

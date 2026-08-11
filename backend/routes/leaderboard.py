@@ -50,6 +50,12 @@ def get_leaderboard(
 
     results = []
     for st in students:
+        # Rule 16: Only sync_status=success AND validated students appear in leaderboard
+        if not st.stats or st.stats.sync_status not in ("success", "OK"):
+            continue
+        if st.stats.total_solved is None:
+            continue  # Skip students who have never been fetched
+
         st_out = StudentOut.from_orm(st)
         latest_prog = prog_map.get(st.id)
         if latest_prog:

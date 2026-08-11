@@ -69,14 +69,19 @@ class LeetCodeStatsOut(BaseModel):
     public_profile_ranking: Optional[int] = None
     recent_contest_name: Optional[str] = None
     recent_contest_score: Optional[str] = None
-    status: str = "DATA UNAVAILABLE"
+    status: str = "pending"
     sync_status: Optional[str] = "not_started"
-    source: Optional[str] = "leetcode_public_profile"
+    validation_status: Optional[str] = None
+    source: Optional[str] = None
     error_message: Optional[str] = None
+    error_code: Optional[str] = None
     last_successful_sync: Optional[datetime.datetime] = None
     last_verified_at: Optional[datetime.datetime] = None
+    last_attempt_at: Optional[datetime.datetime] = None
+    retry_count: Optional[int] = 0
     fetch_duration: Optional[float] = None
     last_updated: Optional[datetime.datetime] = None
+
 
     class Config:
         from_attributes = True
@@ -173,3 +178,40 @@ class AuditLogOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+class StudentStatSnapshotOut(BaseModel):
+    id: int
+    student_id: int
+    total_solved: Optional[int] = None
+    easy_solved: Optional[int] = None
+    medium_solved: Optional[int] = None
+    hard_solved: Optional[int] = None
+    contest_rating: Optional[float] = None
+    global_rank: Optional[int] = None
+    delta_total: Optional[int] = 0
+    delta_easy: Optional[int] = 0
+    delta_medium: Optional[int] = 0
+    delta_hard: Optional[int] = 0
+    delta_rating: Optional[float] = 0.0
+    captured_at: datetime.datetime
+    sync_run_id: Optional[str] = None
+    source: Optional[str] = "leetcode_public_profile"
+
+    class Config:
+        from_attributes = True
+
+class ImproverOut(BaseModel):
+    student_id: int
+    reg_no: str
+    name: str
+    department_code: str
+    year_level: str
+    section_name: Optional[str] = "A"
+    total_solved: Optional[int] = 0
+    delta_solved: int
+    delta_easy: int
+    delta_medium: int
+    delta_hard: int
+    delta_rating: float
+    current_contest_rating: Optional[float] = None
+

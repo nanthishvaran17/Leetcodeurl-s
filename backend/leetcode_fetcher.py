@@ -181,6 +181,9 @@ async def fetch_leetcode_profile(
             "fetch_duration": duration
         }
     
+    # Normalise username to lower-case so cache keys are always consistent
+    username = username.lower()
+
     # Check in-memory cache
     now = time.time()
     cache_ttl = settings.CACHE_DURATION * 60
