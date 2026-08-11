@@ -213,6 +213,18 @@ async def refresh_single_student(student_id: int, db: Session = Depends(get_db))
     db.commit()
     update_all_rankings_and_badges(db)
 
+    # Broadcast live update to all open WebSocket clients
+    try:
+        from backend.websocket_manager import manager
+        await manager.broadcast({
+            "type": "STUDENT_UPDATED",
+            "student_id": student.id,
+            "name": student.name,
+            "total_solved": student.stats.total_solved
+        })
+    except Exception:
+        pass
+
     return {"message": f"Refreshed stats for {student.name}", "stats": stats_dict}
 
 from fastapi import BackgroundTasks

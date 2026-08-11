@@ -166,6 +166,36 @@ async def fetch_leetcode_profile(url: Optional[str], force_refresh: bool = False
                 await asyncio.sleep(0.5 * (attempt + 1))
 
         if not matched_user:
+            # Secondary Fallback: Try public REST proxy APIs if GraphQL POST is rate-limited/blocked
+            try:
+                fb_res = await client.get(f"https://alfa-leetcode-api.onrender.com/userProfile/{username}", timeout=8.0)
+                if fb_res.status_code == 200:
+                    fb_data = fb_res.json()
+                    tot_s = fb_data.get("totalSolved", 0)
+                    if tot_s > 0 or "totalSolved" in fb_data:
+                        ez_s = fb_data.get("easySolved", 0)
+                        med_s = fb_data.get("mediumSolved", 0)
+                        hd_s = fb_data.get("hardSolved", 0)
+                        p_rank = fb_data.get("ranking")
+                        result = {
+                            "username": username,
+                            "status": "OK",
+                            "total_solved": tot_s,
+                            "easy_solved": ez_s,
+                            "medium_solved": med_s,
+                            "hard_solved": hd_s,
+                            "contest_rating": None,
+                            "contest_global_ranking": None,
+                            "recent_contest_name": None,
+                            "recent_contest_score": None,
+                            "public_profile_ranking": p_rank,
+                            "error_message": None
+                        }
+                        _profile_cache[username] = {"timestamp": now, "data": result}
+                        return result
+            except Exception as _fb_err:
+                logger.info(f"Fallback API fetch note for '{username}': {_fb_err}")
+
             result = {
                 "username": username,
                 "status": "PROFILE NOT FOUND",
