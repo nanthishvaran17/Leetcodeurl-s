@@ -366,12 +366,17 @@ def seed_database():
         for row in II_YEAR_CSE_IOT:
             all_students.append((*row, iot_dept.id, sec_iot_ii.id))
 
-        # Purge any old test students
-        real_reg_nos = {row[0] for row in all_students}
-        deleted_old = db.query(Student).filter(~Student.reg_no.in_(real_reg_nos)).delete(synchronize_session=False)
-        if deleted_old > 0:
-            print(f"Purged {deleted_old} old dummy test student records.")
-        db.commit()
+        # Purge any old test students safely without foreign key conflicts
+        try:
+            real_reg_nos = {row[0] for row in all_students}
+            old_students = db.query(Student).filter(~Student.reg_no.in_(real_reg_nos)).all()
+            if old_students:
+                for old_s in old_students:
+                    db.delete(old_s)
+                db.commit()
+        except Exception as _purge_err:
+            db.rollback()
+            print(f"Purge note: {_purge_err}")
 
         # 5. Load all 221 real students with realistic active stats
         for reg, name, dept_code, yr, sec_name, email, url, d_id, s_id in all_students:
