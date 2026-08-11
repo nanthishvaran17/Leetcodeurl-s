@@ -216,11 +216,39 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const handleGenerateReport = async () => {
     setGeneratingReport(true);
     try {
-      window.open('/api/reports/export-pdf', '_blank');
+      const res = await api.get('/reports/export-pdf', { responseType: 'blob' });
+      const blobUrl = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.setAttribute('download', `Nandha_LeetCode_Weekly_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
     } catch (err) {
       console.error("Report generation failed", err);
+      const baseUrl = api.defaults.baseURL || 'https://leetcodeurl-s.onrender.com/api';
+      window.open(`${baseUrl}/reports/export-pdf`, '_blank');
     } finally {
       setGeneratingReport(false);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const res = await api.get('/reports/export-excel', { responseType: 'blob' });
+      const blobUrl = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.setAttribute('download', `Nandha_LeetCode_College_Summary_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error("Excel export failed", err);
+      const baseUrl = api.defaults.baseURL || 'https://leetcodeurl-s.onrender.com/api';
+      window.open(`${baseUrl}/reports/export-excel`, '_blank');
     }
   };
 
@@ -292,7 +320,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             </button>
             
             <button
-              onClick={() => window.open('/api/reports/export-excel', '_blank')}
+              onClick={handleExportExcel}
               className="px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black text-xs shadow-lg shadow-emerald-500/30 flex items-center space-x-2 transition-all transform hover:scale-105"
             >
               <FileSpreadsheet className="w-4 h-4" />

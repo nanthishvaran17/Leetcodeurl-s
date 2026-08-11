@@ -10720,3 +10720,21 @@ WHERE ? = leetcode_profile_stats.student_id]
 [2026-08-12 01:13:41,672] [INFO] [leetcode_tracker]: Starting background scheduler...
 [2026-08-12 01:13:41,675] [INFO] [leetcode_tracker]: APScheduler started: Sunday session 15-min live sync + Every 2-Hour 24/7 Auto-Sync registered.
 [2026-08-12 01:13:41,675] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-12 01:23:24,062] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-12 01:23:24,127] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-12 01:23:24,776] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-12 01:23:24,780] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-12 01:23:25,101] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-12 01:23:26,446] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-12 01:23:26,795] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-12 01:23:26,840] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-12 01:23:26,964] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-12 01:23:26,969] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-12 01:23:28,451] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-12 01:23:29,342] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-12 01:23:29,667] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-12 01:23:30,695] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-12 01:23:37,480] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-12 01:23:37,519] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-12 01:23:38,621] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-12 01:23:38,624] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0

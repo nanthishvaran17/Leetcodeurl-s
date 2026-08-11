@@ -32,9 +32,11 @@ export const ReportsPage: React.FC = () => {
       window.URL.revokeObjectURL(blobUrl);
     } catch (err) {
       console.error('Download error:', err);
-      const fallbackUrl = `/api${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+      const baseUrl = api.defaults.baseURL || 'https://leetcodeurl-s.onrender.com/api';
+      const fallbackUrl = `${baseUrl}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
       window.open(fallbackUrl, '_blank');
     }
+
   };
 
   const handleDownloadOfficialSummary = () => {
