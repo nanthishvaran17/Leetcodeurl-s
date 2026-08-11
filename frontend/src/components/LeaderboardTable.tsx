@@ -122,12 +122,18 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
           ) : (
             students.map((student, idx) => {
               const totalSolved = student.stats?.total_solved || 0;
+              const isSolver = totalSolved > 0;
               const contestSolvedRatio = student.stats?.recent_contest_score || (totalSolved > 400 ? '4 / 4' : totalSolved > 250 ? '3 / 4' : totalSolved > 100 ? '2 / 4' : totalSolved > 0 ? '1 / 4' : '0 / 4');
               const recentContestName = student.stats?.recent_contest_name || 'Weekly Contest';
-              const contestRating = student.stats?.contest_rating ? student.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '1,355.3';
+              // Only show contest rating for active solvers — 0-solved students show 'Unrated'
+              const contestRating = (isSolver && student.stats?.contest_rating)
+                ? student.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+                : 'Unrated';
               
-              const rawRank = student.stats?.public_profile_ranking || student.stats?.contest_global_ranking;
+              const rawRank = isSolver ? (student.stats?.public_profile_ranking || student.stats?.contest_global_ranking) : null;
               const globalRanking = rawRank ? `#${rawRank.toLocaleString('en-US')}` : 'Unranked';
+              // Only active solvers get a college rank — unranked students show a gray badge
+              const effectiveCollegeRank = isSolver ? (student.college_rank || idx + 1) : undefined;
               const username = student.username || student.leetcode_url?.split('/u/')[1]?.replace('/', '') || `${student.name.replace(/\s+/g, '_')}`;
 
               // Determine Participation Mode (Public Live vs Not Started)
@@ -157,7 +163,10 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   className="hover:bg-brand-50/40 dark:hover:bg-brand-900/20 transition-colors font-medium text-xs"
                 >
                   <td className="py-3 px-4 font-bold">
-                    {getRankBadge(student.college_rank || idx + 1)}
+                    {isSolver
+                      ? getRankBadge(effectiveCollegeRank)
+                      : <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 border border-gray-300 dark:border-gray-700">Unranked</span>
+                    }
                   </td>
 
                   <td className="py-3 px-4 font-mono text-gray-500 font-bold">
