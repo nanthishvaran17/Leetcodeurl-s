@@ -45,3 +45,28 @@ def get_db():
         yield db
     finally:
         db.close()
+
+def run_migrations():
+    """Apply any missing column migrations to the existing SQLite database."""
+    if "sqlite" not in db_url:
+        return  # Only needed for local SQLite; production uses Render Postgres which auto-migrates via Base.metadata.create_all
+    try:
+        with engine.connect() as conn:
+            # Get existing columns
+            result = conn.execute(
+                __import__('sqlalchemy').text("PRAGMA table_info(leetcode_profile_stats)")
+            )
+            existing_cols = {row[1] for row in result}
+
+            migrations = [
+                ("sync_status",     "ALTER TABLE leetcode_profile_stats ADD COLUMN sync_status VARCHAR DEFAULT 'success'"),
+                ("source",          "ALTER TABLE leetcode_profile_stats ADD COLUMN source VARCHAR DEFAULT 'leetcode_public_profile'"),
+                ("last_verified_at","ALTER TABLE leetcode_profile_stats ADD COLUMN last_verified_at DATETIME"),
+            ]
+            for col_name, sql in migrations:
+                if col_name not in existing_cols:
+                    conn.execute(__import__('sqlalchemy').text(sql))
+                    conn.commit()
+                    print(f"[DB Migration] Added column: {col_name}")
+    except Exception as e:
+        print(f"[DB Migration] Warning: {e}")
