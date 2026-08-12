@@ -4,7 +4,7 @@ import { Shield, ArrowRight, Trophy, Users, Layers, Activity, Flame, Star, Layou
 import { CountdownTimer } from '../components/CountdownTimer';
 import { StudentFlipCard } from '../components/StudentFlipCard';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
-import api from '../services/api';
+import api, { triggerFullSync, getSyncStatus } from '../services/api';
 
 interface LandingPageProps {
   summaryData: any;
@@ -29,63 +29,76 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [displayCount, setDisplayCount] = useState<number>(32);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [refreshingId, setRefreshingId] = useState<number | null>(null);
+  const [syncProgress, setSyncProgress] = useState<{ total: number; processed: number; successful: number; failed: number; is_running: boolean } | null>(null);
+  const pollTimerRef = useRef<any>(null);
 
   useEffect(() => {
     fetchDepartments();
     fetchFilteredStudents();
+
+    // Check if sync is already running on mount
+    const checkInitialSync = async () => {
+      try {
+        const statusData = await getSyncStatus();
+        if (statusData.is_running) {
+          setSyncProgress({
+            total: statusData.total || 273,
+            processed: statusData.completed || 0,
+            successful: statusData.success || 0,
+            failed: statusData.failed || 0,
+            is_running: true
+          });
+          startSyncPolling();
+        }
+      } catch (err) {
+        console.warn("Sync status check note:", err);
+      }
+    };
+    checkInitialSync();
+
+    return () => {
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    };
   }, []);
 
   useEffect(() => {
     fetchFilteredStudents();
   }, [selectedDept, yearLevel]);
 
-  const [syncProgress, setSyncProgress] = useState<{ total: number; processed: number; successful: number; failed: number; is_running: boolean } | null>(null);
-  const syncUnsubRef = useRef<(() => void) | null>(null);
+  const startSyncPolling = () => {
+    if (pollTimerRef.current) clearInterval(pollTimerRef.current);
 
-  // Handles "Refresh All" — kicks off background LeetCode crawl in backend,
-  // then subscribes to Firestore syncRuns/{runId} for real-time progress.
-  const handleRefreshAll = async () => {
-    if (syncProgress?.is_running) return; // block duplicate sync
-    setRefreshing(true);
-    try {
-      // 1. Re-fetch immediately from Firestore cache (instant)
-      await fetchFilteredStudents();
-
-      // 2. Fire background crawl — returns runId immediately
-      const res = await api.post('/students/refresh-all');
-      const runId: string = res.data?.runId || 'current';
-
-      // 3. Subscribe to Firestore syncRuns/{runId} for real-time progress
+    pollTimerRef.current = setInterval(async () => {
       try {
-        const { getOrInitDb } = await import('../services/firebase');
-        const { doc, onSnapshot } = await import('firebase/firestore');
-        const fsDb = getOrInitDb();
-
-        // Unsubscribe any previous listener
-        if (syncUnsubRef.current) syncUnsubRef.current();
-
-        const unsub = onSnapshot(doc(fsDb, 'syncRuns', runId), (snap) => {
-          if (!snap.exists()) return;
-          const d = snap.data();
-          setSyncProgress({
-            total:      d.total      ?? 273,
-            processed:  d.processed  ?? 0,
-            successful: d.successful ?? 0,
-            failed:     d.failed     ?? 0,
-            is_running: d.status === 'running'
-          });
-          if (d.status !== 'running') {
-            unsub();
-            syncUnsubRef.current = null;
-            setRefreshing(false);
-            fetchFilteredStudents();
-          }
+        const statusData = await getSyncStatus();
+        setSyncProgress({
+          total: statusData.total || 273,
+          processed: statusData.completed || 0,
+          successful: statusData.success || 0,
+          failed: statusData.failed || 0,
+          is_running: statusData.is_running
         });
-        syncUnsubRef.current = unsub;
-      } catch {
-        // Firestore unavailable — just finish refreshing
+
+        if (!statusData.is_running) {
+          if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+          pollTimerRef.current = null;
+          setRefreshing(false);
+          await fetchFilteredStudents();
+        }
+      } catch (err) {
+        if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+        pollTimerRef.current = null;
         setRefreshing(false);
       }
+    }, 1000);
+  };
+
+  const handleRefreshAll = async () => {
+    if (refreshing || syncProgress?.is_running) return;
+    setRefreshing(true);
+    try {
+      await triggerFullSync('admin');
+      startSyncPolling();
     } catch (err) {
       console.error(err);
       setRefreshing(false);
