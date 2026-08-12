@@ -1,6 +1,6 @@
 import datetime
 import asyncio
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
