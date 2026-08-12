@@ -28,12 +28,14 @@ def get_current_sync_status(db: Session = Depends(get_db)):
     """
     Returns real-time sync progress status and tracker state.
     """
-    running_job = db.query(SyncJob).filter(SyncJob.status == "RUNNING").first()
+    comp = sync_tracker.completed
+    tot = sync_tracker.total or (running_job.total_records if running_job else 273)
     return {
         "is_running": sync_tracker.is_running or (running_job is not None),
         "job_id": running_job.job_id if running_job else sync_tracker.current_job_id,
-        "total": sync_tracker.total,
-        "completed": sync_tracker.completed,
+        "total": tot,
+        "completed": comp,
+        "processed": comp,
         "success": sync_tracker.success,
         "partial": sync_tracker.partial,
         "failed": sync_tracker.failed,

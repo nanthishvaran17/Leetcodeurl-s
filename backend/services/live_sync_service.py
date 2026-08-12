@@ -125,40 +125,41 @@ async def _run_full_sync_worker(job_id: str):
         partial_count = 0
         error_count = 0
 
-        # Concurrent rate-limited execution (batch size = 5)
-        batch_size = 5
-        for i in range(0, total_students, batch_size):
-            batch = students[i:i + batch_size]
-            tasks = [fetch_leetcode_profile(s.leetcode_url or s.username) for s in batch]
-            results = await asyncio.gather(*tasks, return_exceptions=True)
+        # Concurrent rate-limited execution with 1-by-1 live counter updates
+        semaphore = asyncio.Semaphore(5)
 
-            for student, res in zip(batch, results):
-                is_success, is_partial, is_error = _process_single_student_sync(db, job_id, student, res)
-                
-                if is_success:
-                    success_count += 1
-                    sync_tracker.update(success_inc=1, log_msg=f"✅ {student.name} ({student.reg_no}) - Fresh live data synced.")
-                elif is_partial:
-                    partial_count += 1
-                    sync_tracker.update(partial_inc=1, log_msg=f"⚠️ {student.name} ({student.reg_no}) - Preserved previous valid data.")
-                else:
-                    error_count += 1
-                    sync_tracker.update(failed_inc=1, log_msg=f"❌ {student.name} ({student.reg_no}) - Sync failed.")
+        async def _fetch_and_process(student: Student):
+            async with semaphore:
+                res = await fetch_leetcode_profile(student.leetcode_url or student.username)
+                return student, res
 
-                # Real-time WebSocket Progress Broadcast
-                await broadcast_sync_event({
-                    "type": "SYNC_PROGRESS",
-                    "job_id": job_id,
-                    "total": total_students,
-                    "completed": sync_tracker.completed,
-                    "success": success_count,
-                    "partial": partial_count,
-                    "failed": error_count,
-                    "progress_percentage": round((sync_tracker.completed / max(1, total_students)) * 100.0, 1),
-                    "recent_student": f"{student.name} ({student.reg_no})"
-                })
+        tasks = [_fetch_and_process(s) for s in students]
+        for fut in asyncio.as_completed(tasks):
+            student, res = await fut
+            is_success, is_partial, is_error = _process_single_student_sync(db, job_id, student, res)
+            
+            if is_success:
+                success_count += 1
+                sync_tracker.update(success_inc=1, log_msg=f"✅ {student.name} ({student.reg_no}) - Fresh live data synced.")
+            elif is_partial:
+                partial_count += 1
+                sync_tracker.update(partial_inc=1, log_msg=f"⚠️ {student.name} ({student.reg_no}) - Preserved previous valid data.")
+            else:
+                error_count += 1
+                sync_tracker.update(failed_inc=1, log_msg=f"❌ {student.name} ({student.reg_no}) - Sync failed.")
 
-            await asyncio.sleep(0.1)  # Gentle rate limiting
+            # Real-time Progress Broadcast on every student completion
+            await broadcast_sync_event({
+                "type": "SYNC_PROGRESS",
+                "job_id": job_id,
+                "total": total_students,
+                "completed": sync_tracker.completed,
+                "success": success_count,
+                "partial": partial_count,
+                "failed": error_count,
+                "progress_percentage": round((sync_tracker.completed / max(1, total_students)) * 100.0, 1),
+                "recent_student": f"{student.name} ({student.reg_no})"
+            })
 
         # 4. Dynamic Current Contest Matrix Refresh
         _sync_active_contest_data(db)
