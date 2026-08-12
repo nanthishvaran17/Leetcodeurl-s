@@ -42,19 +42,19 @@ async def trigger_start_snapshot(db: Session, session_id: int):
         return
 
     session.status = "ACTIVE"
+    session.baseline_snapshot_id = f"baseline_{session_id}"
     db.commit()
     logger.info(f"Starting 8:00 AM Baseline Snapshot for Session ID {session_id}...")
 
-    students = db.query(Student).filter(Student.is_active == True).all()
+    students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+    session.total_students = len(students)
+    db.commit()
 
     for student in students:
-        # Fetch current profile stats (using cached if fresh or update)
+        # Fetch current profile stats
         stats_dict = await fetch_leetcode_profile(student.leetcode_url)
-        
-        # Update student profile stats in DB using centralized sync_single_student_db
         sync_single_student_db(student.id, stats_dict, db)
 
-        # Create baseline snapshot record
         snapshot = db.query(WeeklySessionSnapshot).filter(
             WeeklySessionSnapshot.session_id == session_id,
             WeeklySessionSnapshot.student_id == student.id
@@ -67,8 +67,10 @@ async def trigger_start_snapshot(db: Session, session_id: int):
             )
             db.add(snapshot)
 
-        snapshot.start_solved_count = (student.stats.total_solved or 0) if (student.stats and student.stats.total_solved is not None) else 0
-        snapshot.start_rating = student.stats.contest_rating if student.stats else None
+        is_verified = student.stats and student.stats.sync_status in ("success", "OK")
+        
+        snapshot.start_solved_count = student.stats.total_solved if is_verified else None
+        snapshot.start_rating = student.stats.contest_rating if is_verified else None
         snapshot.status = "UPCOMING"
         
     db.commit()
@@ -76,21 +78,26 @@ async def trigger_start_snapshot(db: Session, session_id: int):
 
 async def trigger_end_snapshot(db: Session, session_id: int):
     """
-    Executed at 9:30 AM IST: Takes final snapshot, calculates progress & status (STARTED / NOT STARTED / DATA UNAVAILABLE).
+    Executed at 9:30 AM IST: Takes final snapshot, calculates progress ONLY on verified records.
     """
     session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
     if not session:
         logger.error(f"Session ID {session_id} not found.")
         return
 
+    session.final_snapshot_id = f"final_{session_id}"
     logger.info(f"Starting 9:30 AM Final Snapshot for Session ID {session_id}...")
 
-    students = db.query(Student).filter(Student.is_active == True).all()
+    students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+    
+    official_count = 0
+    virtual_count = 0
+    not_participated = 0
+    failed_count = 0
 
     for student in students:
-        # Fetch fresh data from LeetCode
         stats_dict = await fetch_leetcode_profile(student.leetcode_url)
-
+        
         snapshot = db.query(WeeklySessionSnapshot).filter(
             WeeklySessionSnapshot.session_id == session_id,
             WeeklySessionSnapshot.student_id == student.id
@@ -100,37 +107,57 @@ async def trigger_end_snapshot(db: Session, session_id: int):
             snapshot = WeeklySessionSnapshot(
                 session_id=session_id,
                 student_id=student.id,
-                start_solved_count=(student.stats.total_solved or 0) if (student.stats and student.stats.total_solved is not None) else 0
+                start_solved_count=None
             )
             db.add(snapshot)
 
         sync_single_student_db(student.id, stats_dict, db)
-        is_ok = stats_dict.get("status") in ["OK", "success"]
+        is_ok = stats_dict.get("validation_status") == "verified"
+
+        # Determine Participation for session summary
+        # We look at recent_contest_type if contest happened recently, or from contest_participations
+        c_type = stats_dict.get("recent_contest_type", "UNKNOWN")
+        if c_type == "OFFICIAL":
+            official_count += 1
+        elif c_type == "VIRTUAL":
+            virtual_count += 1
+        elif is_ok:
+            not_participated += 1
+        else:
+            failed_count += 1
 
         if is_ok:
-            end_solved = stats_dict.get("total_solved") or 0
+            end_solved = stats_dict.get("total_solved")
             end_rating = stats_dict.get("contest_rating")
             
             snapshot.end_solved_count = end_solved
             snapshot.end_rating = end_rating
             
-            # Progress calculation
-            progress = end_solved - (snapshot.start_solved_count or 0)
-            if progress < 0:
-                progress = 0
-            snapshot.problems_added = progress
-
-            if snapshot.start_rating and end_rating:
-                snapshot.rating_change = round(end_rating - snapshot.start_rating, 1)
-
-            # Assign Status based on progress threshold
-            if progress >= settings.PROGRESS_THRESHOLD:
-                snapshot.status = "STARTED"
+            # Progress calculation ONLY when BOTH baseline and final are verified
+            if snapshot.start_solved_count is not None and end_solved is not None:
+                progress = end_solved - snapshot.start_solved_count
+                snapshot.problems_added = max(0, progress)
+                
+                if progress >= settings.PROGRESS_THRESHOLD:
+                    snapshot.status = "STARTED"
+                else:
+                    snapshot.status = "NOT STARTED"
             else:
-                snapshot.status = "NOT STARTED"
+                snapshot.status = "DATA UNAVAILABLE"
+                snapshot.problems_added = 0
+
+            if snapshot.start_rating is not None and end_rating is not None:
+                snapshot.rating_change = round(end_rating - snapshot.start_rating, 1)
         else:
             snapshot.status = "DATA UNAVAILABLE"
+            snapshot.end_solved_count = None
+            snapshot.end_rating = None
+            snapshot.problems_added = 0
 
+    session.official_participants = official_count
+    session.virtual_participants = virtual_count
+    session.not_participated = not_participated
+    session.failed_verification = failed_count
     session.status = "COMPLETED"
     session.completed_at = datetime.datetime.utcnow()
     db.commit()
@@ -146,3 +173,4 @@ async def trigger_end_snapshot(db: Session, session_id: int):
         sync_database_to_firestore()
     except Exception as fs_err:
         logger.warning(f"Post-session Firestore sync note: {fs_err}")
+

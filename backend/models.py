@@ -60,6 +60,7 @@ class Student(Base):
     snapshots = relationship("WeeklySessionSnapshot", back_populates="student", cascade="all, delete-orphan")
     mentor_notes = relationship("MentorNote", back_populates="student", cascade="all, delete-orphan")
     stat_snapshots = relationship("StudentStatSnapshot", back_populates="student", cascade="all, delete-orphan")
+    contest_participations = relationship("ContestParticipation", back_populates="student", cascade="all, delete-orphan")
 
 class LeetCodeProfileStats(Base):
     __tablename__ = "leetcode_profile_stats"
@@ -75,6 +76,10 @@ class LeetCodeProfileStats(Base):
     contest_global_ranking = Column(Integer, nullable=True)
     public_profile_ranking = Column(Integer, nullable=True)
     
+    active_days = Column(Integer, nullable=True)
+    max_streak = Column(Integer, nullable=True)
+    recent_accepted = Column(Integer, nullable=True)
+
     recent_contest_name = Column(String(150), nullable=True)
     recent_contest_score = Column(String(20), nullable=True) # e.g. "3 / 4"
     
@@ -93,6 +98,33 @@ class LeetCodeProfileStats(Base):
 
     student = relationship("Student", back_populates="stats")
 
+class ContestParticipation(Base):
+    __tablename__ = "contest_participations"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    contest_id = Column(String(100), nullable=True, index=True)
+    contest_name = Column(String(150), nullable=False)
+    contest_date = Column(String(20), nullable=True) # YYYY-MM-DD
+    contest_start_time = Column(DateTime, nullable=True)
+    contest_end_time = Column(DateTime, nullable=True)
+    
+    participation_type = Column(String(30), default="UNKNOWN", index=True) # OFFICIAL, VIRTUAL, UNKNOWN
+    registered = Column(Boolean, default=False)
+    started = Column(Boolean, default=False)
+    submitted = Column(Boolean, default=False)
+    problems_solved = Column(Integer, default=0)
+    total_problems = Column(Integer, default=4)
+    contest_rank = Column(Integer, nullable=True)
+    contest_rating_before = Column(Float, nullable=True)
+    contest_rating_after = Column(Float, nullable=True)
+    submission_times = Column(JSON, nullable=True)
+    
+    verified_at = Column(DateTime, default=datetime.datetime.utcnow)
+    source = Column(String(100), default="leetcode_api")
+
+    student = relationship("Student", back_populates="contest_participations")
+
 class WeeklySession(Base):
     __tablename__ = "weekly_sessions"
     
@@ -104,6 +136,14 @@ class WeeklySession(Base):
     end_time = Column(String(10), default="09:30")
     status = Column(String(20), default="UPCOMING") # UPCOMING, ACTIVE, COMPLETED
     
+    baseline_snapshot_id = Column(String(100), nullable=True)
+    final_snapshot_id = Column(String(100), nullable=True)
+    total_students = Column(Integer, default=273)
+    official_participants = Column(Integer, default=0)
+    virtual_participants = Column(Integer, default=0)
+    not_participated = Column(Integer, default=0)
+    failed_verification = Column(Integer, default=0)
+
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)
 
@@ -275,5 +315,35 @@ class StudentGoal(Base):
     completed_at = Column(DateTime, nullable=True)
 
     student = relationship("Student")
+
+class HODSnapshot(Base):
+    __tablename__ = "hod_snapshots"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    snapshot_id = Column(String(100), unique=True, index=True, nullable=False)
+    title = Column(String(200), nullable=False)
+    academic_year = Column(String(20), default="2026-27")
+    metrics = Column(JSON, nullable=False)
+    status = Column(String(30), default="READY") # DRAFT, READY, PUBLISHED, ARCHIVED, INVALID
+    created_by = Column(String(100), default="HOD / System")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    verified_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class ReportHistory(Base):
+    __tablename__ = "report_history"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    report_id = Column(String(100), unique=True, index=True, nullable=False)
+    report_type = Column(String(100), nullable=False) # e.g. COLLEGE_EXECUTIVE, DEPT_REPORT
+    title = Column(String(200), nullable=False)
+    snapshot_id = Column(String(100), nullable=True) # Optional link to an HOD snapshot
+    filters = Column(JSON, nullable=True)
+    dataset = Column(JSON, nullable=False) # The frozen verified dataset
+    status = Column(String(30), default="GENERATED") # GENERATED, ERROR
+    
+    created_by = Column(String(100), default="System")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
 
 

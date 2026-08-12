@@ -60,10 +60,21 @@ async def sunday_end_job():
         session = get_or_create_current_session(db)
         await trigger_end_snapshot(db, session.id)
 
-        # Generate reports (skip if numpy/pandas not available)
-        excel_bytes = generate_8_sheet_excel_report(db) if EXCEL_AVAILABLE else None
-        matrix_bytes = None  # Optional feature
-        pdf_bytes = generate_pdf_summary_report(db) if PDF_AVAILABLE else None
+        from backend.services.report_engine import build_college_overview
+        dataset = build_college_overview(db)
+        verified = dataset.get("metrics", {}).get("verifiedStudents", 0)
+        total = dataset.get("metrics", {}).get("totalStudents", 0)
+        
+        # Block email dispatch if < 10% verified data
+        if total > 0 and (verified / total) < 0.1:
+            logger.warning(f"Aborting Sunday email dispatch: Verified data ({verified}/{total}) is below 10% threshold. Halting.")
+            return
+
+        from backend.excel_handler import generate_universal_excel
+        from backend.pdf_generator import generate_universal_pdf
+        
+        excel_bytes = generate_universal_excel(dataset)
+        pdf_bytes = generate_universal_pdf(dataset)
 
         # Email list
         recipients = [e.strip() for e in settings.REPORT_RECIPIENT_EMAILS.split(",") if e.strip()]
@@ -73,7 +84,7 @@ async def sunday_end_job():
             <h2>College LeetCode Weekly Performance Summary</h2>
             <p>Dear Faculty / HOD,</p>
             <p>The weekly Sunday LeetCode session (08:00 AM – 09:30 AM IST) for <b>{session.session_date}</b> has been completed.</p>
-            <p>Please find attached the detailed 8-Sheet Excel Report and PDF Summary Report.</p>
+            <p>Please find attached the detailed Excel Report and PDF Summary Report generated from verified data.</p>
             <br/>
             <p>Regards,<br/><b>LeetCode Automated Tracking Platform</b></p>
             """

@@ -268,6 +268,10 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
         student.stats.contest_rating = stats_dict.get("contest_rating")
         student.stats.contest_global_ranking = stats_dict.get("contest_global_rank") or stats_dict.get("contest_global_ranking")
         student.stats.public_profile_ranking = stats_dict.get("leetcode_global_rank") or stats_dict.get("public_profile_ranking")
+        
+        student.stats.active_days = stats_dict.get("active_days")
+        student.stats.max_streak = stats_dict.get("max_streak")
+        student.stats.recent_accepted = stats_dict.get("recent_accepted") or tot
         student.stats.recent_contest_name = stats_dict.get("recent_contest_name")
         student.stats.recent_contest_score = stats_dict.get("recent_contest_score")
         
@@ -282,6 +286,41 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
         student.stats.last_successful_sync = now_utc
         student.stats.last_verified_at = now_utc
         student.stats.fetch_duration = stats_dict.get("fetch_duration")
+
+        # Process Contest Participations (OFFICIAL vs VIRTUAL)
+        raw_parts = stats_dict.get("contest_participations") or []
+        from backend.models import ContestParticipation
+        for p in raw_parts:
+            c_name = p.get("contest_name")
+            p_type = p.get("participation_type", "UNKNOWN")
+            if not c_name:
+                continue
+            
+            existing_p = db.query(ContestParticipation).filter(
+                ContestParticipation.student_id == student.id,
+                ContestParticipation.contest_name == c_name,
+                ContestParticipation.participation_type == p_type
+            ).first()
+
+            if not existing_p:
+                existing_p = ContestParticipation(
+                    student_id=student.id,
+                    contest_name=c_name,
+                    participation_type=p_type
+                )
+                db.add(existing_p)
+
+            existing_p.contest_date = p.get("contest_date")
+            existing_p.registered = p.get("registered", True)
+            existing_p.started = p.get("started", True)
+            existing_p.submitted = p.get("submitted", True)
+            existing_p.problems_solved = p.get("problems_solved", 0)
+            existing_p.total_problems = p.get("total_problems", 4)
+            existing_p.contest_rank = p.get("contest_rank")
+            existing_p.contest_rating_after = p.get("contest_rating_after")
+            existing_p.verified_at = now_utc
+            existing_p.source = p.get("source", "leetcode_api")
+
     else:
         # OLD DATA FALLBACK: DO NOT erase previous total_solved / contest ratings!
         # Preserve old stats, only update sync_status & error_message.
@@ -392,18 +431,22 @@ async def sync_single_student_by_id(student_id: int, timeout: float = 30.0) -> D
     finally:
         db.close()
 
-async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 3, per_worker_delay: float = 0.3, pre_run_id: Optional[str] = None) -> Dict[str, Any]:
+async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 5, per_worker_delay: float = 0.3, pre_run_id: Optional[str] = None) -> Dict[str, Any]:
     """
     Executes controlled queue sync for active students.
-    Respects SYNC_LIMIT env variable or explicit `limit` argument.
-    pre_run_id: If provided, uses this as the Firestore syncRuns document ID (so the frontend
-                can subscribe before the sync starts).
+    Respects SYNC_LIMIT and LEETCODE_SYNC_CONCURRENCY env variables.
     """
-    # Check SYNC_LIMIT env var if limit parameter is not explicitly passed
     env_limit = os.environ.get("SYNC_LIMIT")
     if limit is None and env_limit:
         try:
             limit = int(env_limit)
+        except ValueError:
+            pass
+
+    env_workers = os.environ.get("LEETCODE_SYNC_CONCURRENCY")
+    if env_workers:
+        try:
+            max_workers = int(env_workers)
         except ValueError:
             pass
 

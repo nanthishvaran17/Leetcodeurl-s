@@ -1364,3 +1364,228 @@ def generate_single_week_matrix_excel(
     output.seek(0)
     return output.getvalue()
 
+
+def generate_snapshot_excel_report(db: Session, snapshot_id: str) -> bytes:
+    """
+    Generates an Excel workbook for the given HOD Snapshot containing a College Leaderboard
+    and separate Department Leaderboard sheets. Uses only Times New Roman.
+    """
+    from backend.models import HODSnapshot
+    snapshot = db.query(HODSnapshot).filter(HODSnapshot.snapshot_id == snapshot_id).first()
+    if not snapshot:
+        raise ValueError("Snapshot not found")
+        
+    metrics = snapshot.metrics
+    wb = openpyxl.Workbook()
+    wb.remove(wb.active) # Remove default sheet
+    
+    TNR = "Times New Roman"
+    font_bold_12 = Font(name=TNR, size=12, bold=True)
+    font_bold_11 = Font(name=TNR, size=11, bold=True)
+    font_bold_10 = Font(name=TNR, size=10, bold=True)
+    font_reg_10 = Font(name=TNR, size=10)
+    
+    center_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    left_align = Alignment(horizontal="left", vertical="center")
+    
+    thin_border = Border(
+        left=Side(style='thin', color='000000'),
+        right=Side(style='thin', color='000000'),
+        top=Side(style='thin', color='000000'),
+        bottom=Side(style='thin', color='000000')
+    )
+    
+    header_fill = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
+    header_font = Font(name=TNR, size=10, bold=True, color="FFFFFF")
+    
+    # 1. Compile all students
+    all_students = []
+    dept_summary = metrics.get("department_summary", {})
+    for dept, d_stats in dept_summary.items():
+        if "students" in d_stats:
+            for s in d_stats["students"]:
+                s["dept_name"] = dept
+                all_students.append(s)
+                
+    # Create College Leaderboard Sheet
+    ws_college = wb.create_sheet("College Leaderboard")
+    ws_college.sheet_view.showGridLines = False
+    
+    ws_college.merge_cells("A1:G1")
+    ws_college["A1"] = "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)"
+    ws_college["A1"].font = font_bold_12
+    ws_college["A1"].alignment = center_align
+    
+    ws_college.merge_cells("A2:G2")
+    ws_college["A2"] = f"Executive Snapshot: {snapshot.title}"
+    ws_college["A2"].font = font_bold_11
+    ws_college["A2"].alignment = center_align
+    
+    dt_str = snapshot.created_at.strftime('%d-%b-%Y %I:%M %p IST') if isinstance(snapshot.created_at, datetime.datetime) else snapshot.created_at
+    ws_college.merge_cells("A3:G3")
+    ws_college["A3"] = f"Frozen at: {dt_str}"
+    ws_college["A3"].font = font_bold_10
+    ws_college["A3"].alignment = center_align
+    
+    headers = ["Rank", "Register No", "Student Name", "Department", "Verification", "Total Solved", "Rating"]
+    for col_idx, text in enumerate(headers, start=1):
+        c = ws_college.cell(row=5, column=col_idx, value=text)
+        c.fill = header_fill
+        c.font = header_font
+        c.alignment = center_align
+        c.border = thin_border
+        
+    top_college = sorted(all_students, key=lambda x: x.get("total_solved") or 0, reverse=True)
+    
+    current_row = 6
+    for rank, s in enumerate(top_college, start=1):
+        vals = [
+            rank,
+            s.get("reg_no", ""),
+            s.get("name", ""),
+            s.get("dept_name", ""),
+            "Verified" if s.get("verified") else "Unverified",
+            s.get("total_solved") or 0,
+            s.get("contest_rating") or "N/A"
+        ]
+        
+        for col_idx, val in enumerate(vals, start=1):
+            c = ws_college.cell(row=current_row, column=col_idx, value=val)
+            c.font = font_reg_10
+            c.border = thin_border
+            c.alignment = left_align if col_idx == 3 else center_align
+            
+            if col_idx == 5:
+                if val == "Unverified":
+                    c.font = Font(name=TNR, size=10, bold=True, color="9C0006")
+                else:
+                    c.font = Font(name=TNR, size=10, bold=True, color="006100")
+        current_row += 1
+        
+    ws_college.column_dimensions['A'].width = 8
+    ws_college.column_dimensions['B'].width = 18
+    ws_college.column_dimensions['C'].width = 35
+    ws_college.column_dimensions['D'].width = 25
+    ws_college.column_dimensions['E'].width = 15
+    ws_college.column_dimensions['F'].width = 15
+    ws_college.column_dimensions['G'].width = 15
+    
+    # Create sheets for each department
+    for dept_name, d_stats in dept_summary.items():
+        safe_dept = str(dept_name)[:31]
+        ws_dept = wb.create_sheet(safe_dept)
+        ws_dept.sheet_view.showGridLines = False
+        
+        ws_dept.merge_cells("A1:F1")
+        ws_dept["A1"] = f"Department Leaderboard: {dept_name}"
+        ws_dept["A1"].font = font_bold_12
+        ws_dept["A1"].alignment = center_align
+        
+        ws_dept.merge_cells("A2:F2")
+        ws_dept["A2"] = f"Executive Snapshot: {snapshot.title}"
+        ws_dept["A2"].font = font_bold_11
+        ws_dept["A2"].alignment = center_align
+        
+        dept_headers = ["Rank", "Register No", "Student Name", "Verification", "Total Solved", "Rating"]
+        for col_idx, text in enumerate(dept_headers, start=1):
+            c = ws_dept.cell(row=4, column=col_idx, value=text)
+            c.fill = header_fill
+            c.font = header_font
+            c.alignment = center_align
+            c.border = thin_border
+            
+        dept_students = d_stats.get("students", [])
+        top_dept = sorted(dept_students, key=lambda x: x.get("total_solved") or 0, reverse=True)
+        
+        d_row = 5
+        for rank, s in enumerate(top_dept, start=1):
+            vals = [
+                rank,
+                s.get("reg_no", ""),
+                s.get("name", ""),
+                "Verified" if s.get("verified") else "Unverified",
+                s.get("total_solved") or 0,
+                s.get("contest_rating") or "N/A"
+            ]
+            for col_idx, val in enumerate(vals, start=1):
+                c = ws_dept.cell(row=d_row, column=col_idx, value=val)
+                c.font = font_reg_10
+                c.border = thin_border
+                c.alignment = left_align if col_idx == 3 else center_align
+                
+                if col_idx == 4:
+                    if val == "Unverified":
+                        c.font = Font(name=TNR, size=10, bold=True, color="9C0006")
+                    else:
+                        c.font = Font(name=TNR, size=10, bold=True, color="006100")
+            d_row += 1
+            
+        ws_dept.column_dimensions['A'].width = 8
+        ws_dept.column_dimensions['B'].width = 18
+        ws_dept.column_dimensions['C'].width = 35
+        ws_dept.column_dimensions['D'].width = 15
+        ws_dept.column_dimensions['E'].width = 15
+        ws_dept.column_dimensions['F'].width = 15
+        
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output.getvalue()
+
+
+def generate_universal_excel(report_data: dict) -> bytes:
+    """Generates a universal Excel file directly from the unified JSON dataset."""
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Report Data"
+    
+    font_bold = Font(name="Times New Roman", size=12, bold=True)
+    font_normal = Font(name="Times New Roman", size=11)
+    
+    ws["A1"] = "NANDHA ENGINEERING COLLEGE"
+    ws["A1"].font = font_bold
+    ws.merge_cells("A1:E1")
+    
+    ws["A2"] = f"Report: {report_data.get('title', 'Universal Report')}"
+    ws["A2"].font = font_bold
+    ws.merge_cells("A2:E2")
+    
+    ws["A3"] = f"Generated: {report_data.get('generatedAt', '')}"
+    ws["A4"] = f"Status: {report_data.get('dataStatus', 'UNKNOWN')}"
+    
+    row = 6
+    metrics = report_data.get("metrics", {})
+    if metrics:
+        ws[f"A{row}"] = "Executive Summary Metrics"
+        ws[f"A{row}"].font = font_bold
+        row += 1
+        for k, v in metrics.items():
+            ws[f"A{row}"] = str(k)
+            ws[f"B{row}"] = str(v)
+            row += 1
+            
+    row += 2
+    if "allStudents" in report_data:
+        ws[f"A{row}"] = "Student Data"
+        ws[f"A{row}"].font = font_bold
+        row += 1
+        
+        headers = ["Reg No", "Name", "Dept", "Year", "Solved", "Status"]
+        for i, h in enumerate(headers, start=1):
+            cell = ws.cell(row=row, column=i, value=h)
+            cell.font = font_bold
+        row += 1
+        
+        for s in report_data["allStudents"]:
+            ws.cell(row=row, column=1, value=s.get("reg_no", ""))
+            ws.cell(row=row, column=2, value=s.get("name", ""))
+            ws.cell(row=row, column=3, value=s.get("dept", ""))
+            ws.cell(row=row, column=4, value=s.get("year", ""))
+            ws.cell(row=row, column=5, value=s.get("total_solved", ""))
+            ws.cell(row=row, column=6, value=s.get("status", ""))
+            row += 1
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output.getvalue()

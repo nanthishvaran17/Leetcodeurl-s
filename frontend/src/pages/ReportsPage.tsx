@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Sparkles, Send, ShieldCheck } from 'lucide-react';
+import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Sparkles, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers } from 'lucide-react';
 import api from '../services/api';
+import { ReportPreview } from '../components/ReportPreview';
 
 export const ReportsPage: React.FC = () => {
   const [emailLogs, setEmailLogs] = useState<any[]>([]);
+  const [hodSnapshots, setHodSnapshots] = useState<any[]>([]);
   const [isSendingEmail, setIsSendingEmail] = useState<boolean>(false);
+  const [isGeneratingSnapshot, setIsGeneratingSnapshot] = useState<boolean>(false);
+  const [selectedSnapshotPreview, setSelectedSnapshotPreview] = useState<any>(null);
+  const [activeUniversalPreviewId, setActiveUniversalPreviewId] = useState<string | null>(null);
+  const [isGeneratingUniversal, setIsGeneratingUniversal] = useState<boolean>(false);
 
   useEffect(() => {
     fetchEmailLogs();
+    fetchHodSnapshots();
   }, []);
 
   const fetchEmailLogs = async () => {
@@ -19,6 +26,27 @@ export const ReportsPage: React.FC = () => {
     }
   };
 
+  const fetchHodSnapshots = async () => {
+    try {
+      const res = await api.get('/reports/hod-snapshots');
+      setHodSnapshots(res.data);
+    } catch (err) {
+      console.error("Failed to fetch HOD snapshots", err);
+    }
+  };
+
+  const handleGenerateHodSnapshot = async () => {
+    setIsGeneratingSnapshot(true);
+    try {
+      const res = await api.post('/reports/generate-hod-snapshot');
+      alert(res.data.message);
+      fetchHodSnapshots();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || "Failed to generate HOD snapshot.");
+    } finally {
+      setIsGeneratingSnapshot(false);
+    }
+  };
   const downloadReportFile = async (endpoint: string, filename: string) => {
     try {
       const res = await api.get(endpoint, { responseType: 'blob' });
@@ -81,6 +109,21 @@ export const ReportsPage: React.FC = () => {
       alert(err.response?.data?.detail || "Failed to dispatch email report.");
     } finally {
       setIsSendingEmail(false);
+    }
+  };
+
+  const handleGenerateUniversalReport = async (reportType: string, filters: any = {}) => {
+    setIsGeneratingUniversal(true);
+    try {
+      const res = await api.post('/reports/generate', {
+        report_type: reportType,
+        filters: filters
+      });
+      setActiveUniversalPreviewId(res.data.reportId);
+    } catch (err: any) {
+      alert(err.response?.data?.detail || "Failed to generate report.");
+    } finally {
+      setIsGeneratingUniversal(false);
     }
   };
 
@@ -218,6 +261,158 @@ export const ReportsPage: React.FC = () => {
             <Mail className={`w-4 h-4 ${isSendingEmail ? 'animate-bounce' : ''}`} />
             <span>{isSendingEmail ? 'Dispatching Emails...' : '📧 Dispatch Weekly Email Report Now'}</span>
           </button>
+        </div>
+      </div>
+
+      {/* Universal Institutional Reports Section */}
+      <div className="glass-card p-6 md:p-8 rounded-3xl border border-blue-500/30 dark:border-blue-500/20 shadow-xl space-y-6 bg-gradient-to-r from-blue-500/5 via-cyan-500/5 to-transparent">
+        <div className="flex items-center space-x-3 border-b border-gray-100 dark:border-gray-800 pb-4">
+          <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+            <Layers className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-black text-gray-900 dark:text-white">Universal Reports & Analytics</h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-bold">
+              Generate consistent datasets viewable via Preview, Excel, PDF, and Word.
+            </p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <button 
+            onClick={() => handleGenerateUniversalReport("COLLEGE_EXECUTIVE")}
+            disabled={isGeneratingUniversal}
+            className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 hover:border-blue-500 hover:shadow-lg transition-all text-left flex flex-col justify-between h-32 group"
+          >
+            <div className="font-bold text-gray-900 dark:text-white group-hover:text-blue-500">College Executive Overview</div>
+            <div className="text-xs text-gray-500">Full college performance stats & top 10.</div>
+          </button>
+
+          <button 
+            onClick={() => handleGenerateUniversalReport("DEPARTMENT_REPORT", { department: "CSE(CS)" })}
+            disabled={isGeneratingUniversal}
+            className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 hover:border-blue-500 hover:shadow-lg transition-all text-left flex flex-col justify-between h-32 group"
+          >
+            <div className="font-bold text-gray-900 dark:text-white group-hover:text-blue-500">CSE(CS) Department Report</div>
+            <div className="text-xs text-gray-500">Cyber Security department analytics.</div>
+          </button>
+
+          <button 
+            onClick={() => handleGenerateUniversalReport("ALL_STUDENTS_MASTER")}
+            disabled={isGeneratingUniversal}
+            className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 hover:border-blue-500 hover:shadow-lg transition-all text-left flex flex-col justify-between h-32 group"
+          >
+            <div className="font-bold text-gray-900 dark:text-white group-hover:text-blue-500">All Students Master</div>
+            <div className="text-xs text-gray-500">Complete 273 student roster & status.</div>
+          </button>
+          
+          <button 
+            onClick={() => handleGenerateUniversalReport("OFFICIAL_CONTEST")}
+            disabled={isGeneratingUniversal}
+            className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 hover:border-blue-500 hover:shadow-lg transition-all text-left flex flex-col justify-between h-32 group"
+          >
+            <div className="font-bold text-gray-900 dark:text-white group-hover:text-blue-500">Official Contest Report</div>
+            <div className="text-xs text-gray-500">Strictly official participation stats.</div>
+          </button>
+        </div>
+      </div>
+
+      {/* HOD Executive Snapshot Section */}
+      <div className="glass-card p-6 md:p-8 rounded-3xl border border-purple-500/30 dark:border-purple-500/20 shadow-xl space-y-6 bg-gradient-to-r from-purple-500/5 via-fuchsia-500/5 to-transparent">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
+              <Camera className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-lg font-black text-gray-900 dark:text-white">
+                Executive HOD Snapshots
+              </h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-bold">
+                Capture point-in-time verified performance data for HOD reporting. Never fakes zeroes.
+              </p>
+            </div>
+          </div>
+          
+          <button
+            onClick={handleGenerateHodSnapshot}
+            disabled={isGeneratingSnapshot}
+            className="flex items-center space-x-2 px-5 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 text-white rounded-2xl text-xs font-black shadow-lg shadow-purple-500/30 transition-all transform hover:scale-105"
+          >
+            <Camera className={`w-4 h-4 ${isGeneratingSnapshot ? 'animate-pulse' : ''}`} />
+            <span>{isGeneratingSnapshot ? 'Generating Snapshot...' : '📸 Capture New Snapshot'}</span>
+          </button>
+        </div>
+
+        {/* Snapshot History Table */}
+        <div className="bg-white/50 dark:bg-navy-950/50 rounded-2xl border border-purple-200/50 dark:border-purple-900/30 overflow-hidden">
+          {hodSnapshots.length === 0 ? (
+            <div className="p-6 text-center text-xs font-bold text-gray-500 dark:text-gray-400">
+              No HOD snapshots captured yet.
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-200/50 dark:divide-gray-800/50">
+              {hodSnapshots.map(snap => (
+                <div key={snap.snapshot_id} className="p-4 flex flex-col xl:flex-row xl:items-center justify-between gap-4 hover:bg-purple-50/50 dark:hover:bg-purple-900/10 transition-colors">
+                  <div className="space-y-1 min-w-[200px]">
+                    <h4 className="text-sm font-black text-gray-900 dark:text-white flex items-center space-x-2">
+                      <span>{snap.title}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">
+                        {snap.snapshot_id}
+                      </span>
+                    </h4>
+                    <div className="flex items-center space-x-4 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                      <span className="flex items-center space-x-1"><History className="w-3.5 h-3.5"/> <span>{new Date(snap.created_at).toLocaleString()}</span></span>
+                      <span>Verified: <span className="text-emerald-600 dark:text-emerald-400">{snap.metrics?.synced_students}</span> / {snap.metrics?.total_students}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex space-x-3 text-xs font-black mr-4">
+                      <div className="text-center px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl text-indigo-700 dark:text-indigo-400">
+                        <div className="text-lg">{snap.metrics?.total_solved_college || 0}</div>
+                        <div className="text-[9px] uppercase">College Solved</div>
+                      </div>
+                      <div className="text-center px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl text-emerald-700 dark:text-emerald-400">
+                        <div className="text-lg">{snap.metrics?.total_official_participations || 0}</div>
+                        <div className="text-[9px] uppercase">Official Parts</div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 border-l border-gray-200 dark:border-gray-800 pl-4">
+                      <button 
+                        onClick={() => setSelectedSnapshotPreview(snap)}
+                        className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-xs font-bold text-gray-700 dark:text-gray-300 transition-colors"
+                      >
+                        👁️ Preview
+                      </button>
+                      <button 
+                        onClick={() => downloadReportFile(`/reports/hod-snapshots/${snap.snapshot_id}/pdf`, `HOD_Snapshot_${snap.snapshot_id}.pdf`)}
+                        title="Download PDF"
+                        className="p-1.5 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 rounded-lg transition-colors"
+                      >
+                        <FileText className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => downloadReportFile(`/reports/hod-snapshots/${snap.snapshot_id}/excel`, `HOD_Snapshot_${snap.snapshot_id}.xlsx`)}
+                        title="Download Excel"
+                        className="p-1.5 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-600 rounded-lg transition-colors"
+                      >
+                        <FileSpreadsheet className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => downloadReportFile(`/reports/hod-snapshots/${snap.snapshot_id}/word`, `HOD_Snapshot_${snap.snapshot_id}.docx`)}
+                        title="Download Word"
+                        className="p-1.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 rounded-lg transition-colors"
+                      >
+                        <FileText className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -372,6 +567,172 @@ export const ReportsPage: React.FC = () => {
           </div>
         )}
       </div>
+      {/* Preview Modal */}
+      {selectedSnapshotPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-navy-950 w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col border border-gray-200 dark:border-gray-800 overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-navy-900/50">
+              <div className="space-y-1">
+                <h2 className="text-xl font-black text-gray-900 dark:text-white">
+                  {selectedSnapshotPreview.title}
+                </h2>
+                <div className="flex items-center space-x-2 text-xs font-semibold text-gray-500">
+                  <span>ID: {selectedSnapshotPreview.snapshot_id}</span>
+                  <span>•</span>
+                  <span>{new Date(selectedSnapshotPreview.created_at).toLocaleString()}</span>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedSnapshotPreview(null)}
+                className="p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-500 hover:text-gray-900 dark:hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto flex-1 space-y-6">
+              {/* Top Level Metrics */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-4 rounded-2xl bg-purple-50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900/30">
+                  <div className="text-[10px] uppercase font-black text-purple-500 mb-1">Total Students</div>
+                  <div className="text-2xl font-black text-purple-700 dark:text-purple-400">{selectedSnapshotPreview.metrics?.total_students || 0}</div>
+                </div>
+                <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30">
+                  <div className="text-[10px] uppercase font-black text-emerald-500 mb-1">Verified Solvers</div>
+                  <div className="text-2xl font-black text-emerald-700 dark:text-emerald-400">{selectedSnapshotPreview.metrics?.synced_students || 0}</div>
+                </div>
+                <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-900/30">
+                  <div className="text-[10px] uppercase font-black text-rose-500 mb-1">Unverified</div>
+                  <div className="text-2xl font-black text-rose-700 dark:text-rose-400">
+                    {(selectedSnapshotPreview.metrics?.total_students || 0) - (selectedSnapshotPreview.metrics?.synced_students || 0)}
+                  </div>
+                </div>
+                <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30">
+                  <div className="text-[10px] uppercase font-black text-indigo-500 mb-1">Total Solved</div>
+                  <div className="text-2xl font-black text-indigo-700 dark:text-indigo-400">{selectedSnapshotPreview.metrics?.total_solved_college || 0}</div>
+                </div>
+              </div>
+
+              {/* Department Breakdown */}
+              <div className="space-y-3">
+                <h3 className="font-bold text-sm text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-800 pb-2">Department Breakdown</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(selectedSnapshotPreview.metrics?.department_summary || {}).map(([dept, data]: [string, any]) => (
+                    <div key={dept} className="flex justify-between items-center p-3 rounded-xl bg-gray-50 dark:bg-navy-900/30">
+                      <span className="font-bold text-xs text-gray-700 dark:text-gray-300">{dept}</span>
+                      <div className="text-right text-xs">
+                        <div className="font-black text-gray-900 dark:text-white">{data.total_solved} Solved</div>
+                        <div className="text-[10px] text-gray-500">{data.synced_students} / {data.total_students} Verified</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Note about downloads */}
+              <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/30 text-xs font-medium text-amber-800 dark:text-amber-400">
+                <span className="font-bold block mb-1">💡 Full Roster Embedded</span>
+                This snapshot contains the fully frozen student roster. Download it in PDF, Excel, or Word format to view the detailed leaderboard.
+              </div>
+            </div>
+
+            {/* Modal Footer (Downloads) - Redesigned as Glass Cards */}
+            <div className="p-6 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-navy-900/50">
+              <div className="flex items-center space-x-2 mb-4">
+                <Download className="w-4 h-4 text-brand-500" />
+                <h3 className="text-sm font-black text-gray-900 dark:text-white">Export Frozen Snapshot</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* PDF Card */}
+                <div className="group bg-white dark:bg-navy-950 p-4 rounded-2xl border border-rose-200 dark:border-rose-900/30 shadow-sm hover:shadow-xl hover:border-rose-500/40 transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between">
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center justify-between">
+                      <div className="p-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold border bg-rose-500/10 text-rose-600 border-rose-500/20 uppercase">
+                        Printable PDF
+                      </span>
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-sm text-gray-900 dark:text-white group-hover:text-rose-600 transition-colors">Executive PDF</h4>
+                      <p className="text-[10px] text-gray-500 mt-1 leading-tight">High-resolution printable PDF report with top 20 performers styled strictly in Times New Roman.</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => downloadReportFile(`/reports/hod-snapshots/${selectedSnapshotPreview.snapshot_id}/pdf`, `HOD_Snapshot_${selectedSnapshotPreview.snapshot_id}.pdf`)}
+                    className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 text-white font-extrabold text-xs shadow-md group-hover:shadow-lg transition-all flex items-center justify-center space-x-2"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download PDF</span>
+                  </button>
+                </div>
+
+                {/* Excel Card */}
+                <div className="group bg-white dark:bg-navy-950 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-900/30 shadow-sm hover:shadow-xl hover:border-emerald-500/40 transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between">
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center justify-between">
+                      <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+                        <FileSpreadsheet className="w-5 h-5" />
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold border bg-emerald-500/10 text-emerald-600 border-emerald-500/20 uppercase">
+                        Spreadsheet
+                      </span>
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-sm text-gray-900 dark:text-white group-hover:text-emerald-600 transition-colors">Master Excel</h4>
+                      <p className="text-[10px] text-gray-500 mt-1 leading-tight">Multi-sheet workbook containing the College Leaderboard and separate Department sheets.</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => downloadReportFile(`/reports/hod-snapshots/${selectedSnapshotPreview.snapshot_id}/excel`, `HOD_Snapshot_${selectedSnapshotPreview.snapshot_id}.xlsx`)}
+                    className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-extrabold text-xs shadow-md group-hover:shadow-lg transition-all flex items-center justify-center space-x-2"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download Excel</span>
+                  </button>
+                </div>
+
+                {/* Word Card */}
+                <div className="group bg-white dark:bg-navy-950 p-4 rounded-2xl border border-blue-200 dark:border-blue-900/30 shadow-sm hover:shadow-xl hover:border-blue-500/40 transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between">
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center justify-between">
+                      <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold border bg-blue-500/10 text-blue-600 border-blue-500/20 uppercase">
+                        Editable Docx
+                      </span>
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-sm text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors">Word Summary</h4>
+                      <p className="text-[10px] text-gray-500 mt-1 leading-tight">Editable Microsoft Word document with an executive summary table and top performers.</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => downloadReportFile(`/reports/hod-snapshots/${selectedSnapshotPreview.snapshot_id}/word`, `HOD_Snapshot_${selectedSnapshotPreview.snapshot_id}.docx`)}
+                    className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-extrabold text-xs shadow-md group-hover:shadow-lg transition-all flex items-center justify-center space-x-2"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download Word</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Universal Report Previewer */}
+      {activeUniversalPreviewId && (
+        <ReportPreview 
+          reportId={activeUniversalPreviewId} 
+          onClose={() => setActiveUniversalPreviewId(null)} 
+        />
+      )}
 
     </div>
   );

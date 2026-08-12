@@ -3,7 +3,8 @@ import io
 import datetime
 from fastapi import APIRouter, Depends, Response, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, Dict, Any
+from pydantic import BaseModel
 
 from backend.config import settings
 from backend.database import get_db
@@ -94,7 +95,7 @@ def download_word_report(dept_id: Optional[int] = None, db: Session = Depends(ge
 
 @router.get("/export-csv")
 def download_csv_report(dept_id: Optional[int] = None, year_level: Optional[str] = None, db: Session = Depends(get_db)):
-    query = db.query(Student).filter(Student.is_active == True)
+    query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
     if dept_id:
         query = query.filter(Student.department_id == dept_id)
     if year_level and year_level.upper() != 'ALL':
@@ -107,13 +108,13 @@ def download_csv_report(dept_id: Optional[int] = None, year_level: Optional[str]
     writer.writerow([
         "S.No", "Register No", "Student Name", "Department", "Year",
         "LeetCode Profile Link", "Username", "Easy Solved", "Medium Solved",
-        "Hard Solved", "Total Solved", "Contest Rating", "Global Rank"
+        "Hard Solved", "Total Solved", "Contest Rating", "Global Rank", "Validation Status"
     ])
     
     sorted_students = sorted(students, key=lambda s: (s.stats.total_solved or 0) if s.stats else 0, reverse=True)
     for idx, s in enumerate(sorted_students, start=1):
         st = s.stats
-        is_verified = st and st.sync_status in ("success", "OK")
+        is_verified = st and st.validation_status == "verified"
         writer.writerow([
             idx,
             s.reg_no,
@@ -122,12 +123,13 @@ def download_csv_report(dept_id: Optional[int] = None, year_level: Optional[str]
             s.year_level,
             s.leetcode_url or "",
             s.username or "",
-            (st.easy_solved   if is_verified else "") if st else "",
-            (st.medium_solved if is_verified else "") if st else "",
-            (st.hard_solved   if is_verified else "") if st else "",
-            (st.total_solved  if is_verified else "") if st else "",
-            round(st.contest_rating, 1) if (is_verified and st and st.contest_rating) else "",
-            st.contest_global_ranking if (is_verified and st and st.contest_global_ranking) else ""
+            (st.easy_solved   if is_verified else "🔴") if st else "🔴",
+            (st.medium_solved if is_verified else "🔴") if st else "🔴",
+            (st.hard_solved   if is_verified else "🔴") if st else "🔴",
+            (st.total_solved  if is_verified else "🔴") if st else "🔴",
+            round(st.contest_rating, 1) if (is_verified and st and st.contest_rating) else "🔴",
+            st.contest_global_ranking if (is_verified and st and st.contest_global_ranking) else "🔴",
+            "VERIFIED" if is_verified else "UNVERIFIED"
         ])
         
     csv_bytes = output.getvalue().encode('utf-8-sig') # UTF-8 BOM for Excel compatibility
@@ -136,6 +138,190 @@ def download_csv_report(dept_id: Optional[int] = None, year_level: Optional[str]
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=LeetCode_Student_Performance_Report.csv"}
     )
+
+from backend.models import ReportHistory
+from backend.services.report_engine import (
+    build_college_overview, 
+    build_department_report, 
+    build_all_students_report, 
+    build_official_contest_report
+)
+
+class GenerateReportPayload(BaseModel):
+    report_type: str
+    filters: Optional[Dict[str, Any]] = {}
+
+@router.post("/generate")
+def generate_report(payload: GenerateReportPayload, db: Session = Depends(get_db)):
+    """
+    Unified endpoint to generate any report dataset and save it to history.
+    """
+    report_type = payload.report_type
+    filters = payload.filters or {}
+    
+    if report_type == "COLLEGE_EXECUTIVE":
+        dataset = build_college_overview(db, filters)
+        title = "College Executive Overview"
+    elif report_type == "DEPARTMENT_REPORT":
+        dept_name = filters.get("department", "CSE(CS)")
+        dataset = build_department_report(db, dept_name=dept_name, year=filters.get("year"), section=filters.get("section"))
+        title = dataset["title"]
+    elif report_type == "ALL_STUDENTS_MASTER":
+        dataset = build_all_students_report(db)
+        title = dataset["title"]
+    elif report_type == "OFFICIAL_CONTEST":
+        dataset = build_official_contest_report(db)
+        title = dataset["title"]
+    else:
+        raise HTTPException(status_code=400, detail=f"Unsupported report type: {report_type}")
+        
+    report_history = ReportHistory(
+        report_id=dataset["reportId"],
+        report_type=report_type,
+        title=title,
+        filters=filters,
+        dataset=dataset,
+        status="GENERATED"
+    )
+    db.add(report_history)
+    db.commit()
+    db.refresh(report_history)
+    
+    return report_history.dataset
+
+@router.get("/history")
+def get_report_history(db: Session = Depends(get_db)):
+    """Retrieves all generated reports (without full dataset payload for fast loading)."""
+    reports = db.query(ReportHistory).order_by(ReportHistory.created_at.desc()).all()
+    return [{
+        "report_id": r.report_id,
+        "report_type": r.report_type,
+        "title": r.title,
+        "created_at": r.created_at.isoformat(),
+        "created_by": r.created_by,
+        "status": r.status,
+        "dataStatus": r.dataset.get("dataStatus", "UNKNOWN"),
+        "verifiedStudents": r.dataset.get("metrics", {}).get("verifiedStudents", 0),
+        "totalStudents": r.dataset.get("metrics", {}).get("totalStudents", 0)
+    } for r in reports]
+
+@router.get("/{report_id}/preview")
+def get_report_preview(report_id: str, db: Session = Depends(get_db)):
+    """Fetches the full JSON dataset for a specific report."""
+    report = db.query(ReportHistory).filter(ReportHistory.report_id == report_id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+    return report.dataset
+
+from backend.excel_handler import generate_universal_excel
+from backend.pdf_generator import generate_universal_pdf
+from backend.word_generator import generate_universal_word
+
+@router.get("/{report_id}/excel")
+def download_universal_excel(report_id: str, db: Session = Depends(get_db)):
+    report = db.query(ReportHistory).filter(ReportHistory.report_id == report_id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+    excel_bytes = generate_universal_excel(report.dataset)
+    return Response(
+        content=excel_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={report.report_type}_{report.report_id}.xlsx"}
+    )
+
+@router.get("/{report_id}/pdf")
+def download_universal_pdf(report_id: str, db: Session = Depends(get_db)):
+    report = db.query(ReportHistory).filter(ReportHistory.report_id == report_id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+    pdf_bytes = generate_universal_pdf(report.dataset)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={report.report_type}_{report.report_id}.pdf"}
+    )
+
+@router.get("/{report_id}/word")
+def download_universal_word(report_id: str, db: Session = Depends(get_db)):
+    report = db.query(ReportHistory).filter(ReportHistory.report_id == report_id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+    word_bytes = generate_universal_word(report.dataset)
+    return Response(
+        content=word_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={report.report_type}_{report.report_id}.docx"}
+    )
+
+from backend.snapshot_generator import generate_hod_snapshot
+from backend.models import HODSnapshot
+
+@router.post("/generate-hod-snapshot")
+def create_hod_snapshot(title: Optional[str] = None, db: Session = Depends(get_db)):
+    """
+    Generates a new executive HOD snapshot.
+    """
+    snapshot = generate_hod_snapshot(db, title=title)
+    return {
+        "message": "HOD Snapshot created successfully",
+        "snapshot_id": snapshot.snapshot_id,
+        "title": snapshot.title,
+        "metrics": snapshot.metrics
+    }
+
+@router.get("/hod-snapshots")
+def get_hod_snapshots(db: Session = Depends(get_db)):
+    """
+    Retrieves all executive HOD snapshots.
+    """
+    snapshots = db.query(HODSnapshot).order_by(HODSnapshot.created_at.desc()).all()
+    return [{
+        "snapshot_id": s.snapshot_id,
+        "title": s.title,
+        "created_at": s.created_at.isoformat(),
+        "metrics": s.metrics
+    } for s in snapshots]
+
+
+from backend.pdf_generator import generate_snapshot_pdf_report
+from backend.excel_handler import generate_snapshot_excel_report
+from backend.word_generator import generate_snapshot_word_report
+
+@router.get("/hod-snapshots/{snapshot_id}/pdf")
+def download_snapshot_pdf(snapshot_id: str, db: Session = Depends(get_db)):
+    try:
+        pdf_bytes = generate_snapshot_pdf_report(db, snapshot_id)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename=HOD_Snapshot_{snapshot_id}.pdf"}
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+@router.get("/hod-snapshots/{snapshot_id}/excel")
+def download_snapshot_excel(snapshot_id: str, db: Session = Depends(get_db)):
+    try:
+        excel_bytes = generate_snapshot_excel_report(db, snapshot_id)
+        return Response(
+            content=excel_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename=HOD_Snapshot_{snapshot_id}.xlsx"}
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+@router.get("/hod-snapshots/{snapshot_id}/word")
+def download_snapshot_word(snapshot_id: str, db: Session = Depends(get_db)):
+    try:
+        word_bytes = generate_snapshot_word_report(db, snapshot_id)
+        return Response(
+            content=word_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": f"attachment; filename=HOD_Snapshot_{snapshot_id}.docx"}
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 @router.post("/generate-certificate/{student_id}")

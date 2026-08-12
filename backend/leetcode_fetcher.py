@@ -67,6 +67,11 @@ query getUserProfile($username: String!) {
       userAvatar
       realName
     }
+    userCalendar(username: $username) {
+      activeYears
+      totalActiveDays
+      streak
+    }
     submitStatsGlobal {
       acSubmissionNum {
         difficulty
@@ -92,8 +97,12 @@ query getUserContest($username: String!) {
   }
   userContestRankingHistory(username: $username) {
     attended
+    trendDirection
     problemsSolved
     totalProblems
+    finishTimeInSeconds
+    rating
+    ranking
     contest {
       title
       startTime
@@ -132,26 +141,7 @@ async def fetch_leetcode_profile(
 ) -> Dict[str, Any]:
     """
     Fetches publicly available LeetCode profile statistics cleanly and safely.
-    Returns normalized dict:
-    {
-        "username": str or None,
-        "profile_url": str or None,
-        "total_solved": int,
-        "easy_solved": int,
-        "medium_solved": int,
-        "hard_solved": int,
-        "contest_rating": float or None,
-        "contest_global_rank": int or None,
-        "contest_global_ranking": int or None,
-        "leetcode_global_rank": int or None,
-        "public_profile_ranking": int or None,
-        "recent_contest_name": str or None,
-        "recent_contest_score": str or None,
-        "status": "success" | "failed" | "MISSING LINK" | "INVALID LINK",
-        "error": str or None,
-        "error_message": str or None,
-        "fetch_duration": float
-    }
+    Strictly distinguishes Public Profile stats, Official Contest participation, and Virtual Contest participation.
     """
     start_time = time.time()
     req_timeout = timeout or float(settings.REQUEST_TIMEOUT)
@@ -164,7 +154,7 @@ async def fetch_leetcode_profile(
         return {
             "username": username,
             "profile_url": profile_url or (str(url_or_username) if url_or_username else ""),
-            "total_solved":   None,  # Not fetched — not zero
+            "total_solved":   None,  # Not fetched — never claim fake zero
             "easy_solved":    None,
             "medium_solved":  None,
             "hard_solved":    None,
@@ -173,9 +163,16 @@ async def fetch_leetcode_profile(
             "contest_global_ranking":  None,
             "leetcode_global_rank":    None,
             "public_profile_ranking":  None,
+            "active_days":             None,
+            "max_streak":              None,
+            "recent_accepted":         None,
             "recent_contest_name":     None,
             "recent_contest_score":    None,
+            "recent_contest_type":     "UNKNOWN",
+            "contest_participations":  [],
             "status": url_status,  # MISSING LINK or INVALID LINK
+            "sync_status": "failed",
+            "validation_status": "pending",
             "error": err_msg,
             "error_message": err_msg,
             "fetch_duration": duration
@@ -204,7 +201,7 @@ async def fetch_leetcode_profile(
     matched_user = None
     last_error_detail = ""
 
-    # Fine-grained timeouts: quick connection connect timeout, adequate read timeout
+    # Fine-grained timeouts
     timeout_cfg = httpx.Timeout(connect=5.0, read=req_timeout, write=5.0, pool=5.0)
     limits_cfg = httpx.Limits(max_keepalive_connections=10, max_connections=20)
 
@@ -220,7 +217,6 @@ async def fetch_leetcode_profile(
                 res = await client.post(GRAPHQL_URL, json=payload_profile, headers=headers)
                 if res.status_code == 200:
                     data = res.json()
-                    # Check for GraphQL errors
                     gql_errors = data.get("errors")
                     if gql_errors and not data.get("data"):
                         last_error_detail = f"GraphQL Error: {gql_errors[0].get('message', 'Unknown GraphQL error')}"
@@ -249,7 +245,7 @@ async def fetch_leetcode_profile(
             if attempt < retries and matched_user is None and "matchedUser is null" not in last_error_detail:
                 await asyncio.sleep(0.3 * attempt)
 
-        # Fallback: REST Proxy API if GraphQL failed due to blocking or timeout
+        # Fallback API if GraphQL failed
         if not matched_user and "matchedUser is null" not in last_error_detail:
             try:
                 fb_res = await client.get(f"https://alfa-leetcode-api.onrender.com/userProfile/{username}", timeout=8.0)
@@ -275,9 +271,16 @@ async def fetch_leetcode_profile(
                             "contest_global_ranking": None,
                             "leetcode_global_rank": p_rank,
                             "public_profile_ranking": p_rank,
+                            "active_days": None,
+                            "max_streak": None,
+                            "recent_accepted": None,
                             "recent_contest_name": None,
                             "recent_contest_score": None,
+                            "recent_contest_type": "UNKNOWN",
+                            "contest_participations": [],
                             "status": "success",
+                            "sync_status": "success",
+                            "validation_status": "verified",
                             "error": None,
                             "error_message": None,
                             "fetch_duration": duration
@@ -296,7 +299,7 @@ async def fetch_leetcode_profile(
             result = {
                 "username": username,
                 "profile_url": profile_url,
-                "total_solved":   None,  # Profile not loaded — cannot claim zero
+                "total_solved":   None,  # Never claim fake zero
                 "easy_solved":    None,
                 "medium_solved":  None,
                 "hard_solved":    None,
@@ -305,9 +308,16 @@ async def fetch_leetcode_profile(
                 "contest_global_ranking":  None,
                 "leetcode_global_rank":    None,
                 "public_profile_ranking":  None,
+                "active_days":             None,
+                "max_streak":              None,
+                "recent_accepted":         None,
                 "recent_contest_name":     None,
                 "recent_contest_score":    None,
+                "recent_contest_type":     "UNKNOWN",
+                "contest_participations":  [],
                 "status": status_code,
+                "sync_status": "failed",
+                "validation_status": "pending",
                 "error": err_msg,
                 "error_message": err_msg,
                 "fetch_duration": duration
@@ -328,12 +338,19 @@ async def fetch_leetcode_profile(
         hard_solved = solved_map.get("Hard", 0)
         profile_ranking = matched_user.get("profile", {}).get("ranking")
 
-        # 2. Fetch Contest Ranking
+        # Parse calendar info
+        user_calendar = matched_user.get("userCalendar") or {}
+        active_days = user_calendar.get("totalActiveDays")
+        max_streak = user_calendar.get("streak")
+
+        # 2. Fetch Contest Ranking & Detailed Contest History
         contest_rating = None
         contest_global_ranking = None
         recent_contest_name = None
         recent_contest_score = None
-        
+        recent_contest_type = "UNKNOWN"
+        contest_participations = []
+
         try:
             payload_contest = {
                 "query": USER_CONTEST_QUERY,
@@ -349,16 +366,53 @@ async def fetch_leetcode_profile(
                         contest_rating = round(float(c_rating), 1)
                     contest_global_ranking = contest_info.get("globalRanking")
                 
-                # Fetch recent contest score
+                # Fetch recent contest history and separate OFFICIAL vs VIRTUAL
                 contest_history = c_data.get("data", {}).get("userContestRankingHistory") or []
                 if isinstance(contest_history, list):
-                    attended_contests = [c for c in contest_history if isinstance(c, dict) and c.get("attended")]
+                    for item in contest_history:
+                        if not isinstance(item, dict):
+                            continue
+                        c_title = item.get("contest", {}).get("title") or "Weekly Contest"
+                        c_start = item.get("contest", {}).get("startTime")
+                        c_solved = item.get("problemsSolved", 0)
+                        c_total = item.get("totalProblems", 4)
+                        c_rank = item.get("ranking")
+                        c_rating = item.get("rating")
+                        is_attended = item.get("attended", False)
+
+                        # Determine participation type strictly:
+                        # OFFICIAL: attended == True with official rank/rating entry
+                        # VIRTUAL: attended == False but problemsSolved > 0 or virtual contest score
+                        if is_attended:
+                            part_type = "OFFICIAL"
+                        elif c_solved > 0:
+                            part_type = "VIRTUAL"
+                        else:
+                            part_type = "UNKNOWN"
+
+                        if part_type != "UNKNOWN":
+                            contest_participations.append({
+                                "contest_name": c_title,
+                                "contest_date": datetime.datetime.fromtimestamp(c_start).strftime("%Y-%m-%d") if c_start else None,
+                                "participation_type": part_type,
+                                "registered": True,
+                                "started": True,
+                                "submitted": True if c_solved > 0 else False,
+                                "problems_solved": c_solved,
+                                "total_problems": c_total,
+                                "contest_rank": c_rank if part_type == "OFFICIAL" else None,
+                                "contest_rating_after": c_rating if part_type == "OFFICIAL" else None,
+                                "source": "leetcode_graphql"
+                            })
+
+                    attended_contests = [c for c in contest_history if isinstance(c, dict) and (c.get("attended") or c.get("problemsSolved", 0) > 0)]
                     if attended_contests:
                         latest = attended_contests[-1]
                         recent_contest_name = latest.get("contest", {}).get("title")
                         solved = latest.get("problemsSolved", 0)
                         total = latest.get("totalProblems", 4)
                         recent_contest_score = f"{solved} / {total}"
+                        recent_contest_type = "OFFICIAL" if latest.get("attended") else "VIRTUAL"
         except Exception as e:
             logger.info(f"Contest stats skipped for '{username}': {e}")
 
@@ -388,10 +442,16 @@ async def fetch_leetcode_profile(
             "contest_global_ranking": contest_global_ranking,
             "leetcode_global_rank": profile_ranking,
             "public_profile_ranking": profile_ranking,
+            "active_days": active_days,
+            "max_streak": max_streak,
+            "recent_accepted": total_solved,
             "recent_contest_name": recent_contest_name,
             "recent_contest_score": recent_contest_score,
+            "recent_contest_type": recent_contest_type,
+            "contest_participations": contest_participations,
             "status": "success" if is_valid_sum else "MISMATCH",
             "sync_status": sync_status,
+            "validation_status": "verified" if is_valid_sum else "mismatch",
             "source": "leetcode_public_profile",
             "last_verified_at": verified_at,
             "error": error_detail,
@@ -401,3 +461,4 @@ async def fetch_leetcode_profile(
 
         _profile_cache[username] = {"timestamp": now, "data": result}
         return result
+
