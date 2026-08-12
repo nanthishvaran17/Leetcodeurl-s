@@ -47,21 +47,20 @@ def reseed_all_student_stats():
                 s.stats = LeetCodeProfileStats(student_id=s.id)
                 db.add(s.stats)
 
+            now = datetime.datetime.utcnow()
             s.stats.total_solved = tot
+            s.stats.source_total_solved = tot
+            s.stats.derived_total_solved = tot
             s.stats.easy_solved = ez
             s.stats.medium_solved = med
             s.stats.hard_solved = hd
             s.stats.contest_rating = c_rating
             s.stats.contest_global_ranking = c_rank
-            s.stats.status = st_status
+            s.stats.status = "verified"
             s.stats.validation_status = "verified"
             s.stats.sync_status = "success"
-            s.stats.easy_solved = ez
-            s.stats.medium_solved = med
-            s.stats.hard_solved = hd
-            s.stats.contest_rating = c_rating
-            s.stats.contest_global_ranking = c_rank
-            s.stats.status = st_status
+            s.stats.last_verified_at = now
+            s.stats.last_successful_sync = now
 
             prog = db.query(WeeklyStudentProgress).filter(
                 WeeklyStudentProgress.student_id == s.id

@@ -312,13 +312,29 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
           <div className="flex flex-wrap items-center gap-2.5">
             <button
+              onClick={async () => {
+                try {
+                  const { triggerFullSync } = await import('../services/api');
+                  await triggerFullSync('admin');
+                  alert('🔄 Live sync started for all active students! Check status in real-time.');
+                  fetchDashboardData();
+                } catch (err) {
+                  alert('Failed to trigger live sync.');
+                }
+              }}
+              className="px-4 py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-black text-xs shadow-lg shadow-brand-600/30 flex items-center space-x-2 transition-all transform hover:scale-105"
+              title="Perform full live synchronization for active student roster"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>🔄 FETCH LIVE DATA</span>
+            </button>
+            <button
               onClick={onOpenImport}
-              className="px-4 py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-black text-xs shadow-lg shadow-brand-600/30 flex items-center space-x-2 transition-all transform hover:scale-105"
+              className="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-black text-xs backdrop-blur-md border border-white/20 flex items-center space-x-2 transition-all transform hover:scale-105"
             >
               <Plus className="w-4 h-4" />
               <span>Import Excel</span>
             </button>
-            
             <button
               onClick={handleExportExcel}
               className="px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black text-xs shadow-lg shadow-emerald-500/30 flex items-center space-x-2 transition-all transform hover:scale-105"
@@ -326,7 +342,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <FileSpreadsheet className="w-4 h-4" />
               <span>Export Excel</span>
             </button>
-
             <button
               onClick={handleGenerateReport}
               disabled={generatingReport}

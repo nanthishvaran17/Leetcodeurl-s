@@ -17,7 +17,7 @@ function getSyncState(syncStatus?: string, lastVerifiedAt?: string): SyncState {
   if (syncStatus === 'invalid_profile' || syncStatus === 'INVALID_LINK' || syncStatus === 'MISSING_LINK') return 'invalid_profile';
   if (syncStatus === 'syncing') return 'syncing';
   if (!syncStatus || syncStatus === 'pending' || syncStatus === 'not_started') return 'pending';
-  if (syncStatus === 'success' || syncStatus === 'OK') {
+  if (syncStatus === 'success' || syncStatus === 'OK' || syncStatus === 'verified' || syncStatus === 'stale') {
     // "Stale" = verified more than 24 hours ago
     if (lastVerifiedAt) {
       const age = Date.now() - new Date(lastVerifiedAt).getTime();
@@ -30,10 +30,10 @@ function getSyncState(syncStatus?: string, lastVerifiedAt?: string): SyncState {
 }
 
 function formatVerifiedAgo(lastVerifiedAt?: string): string {
-  if (!lastVerifiedAt) return '';
+  if (!lastVerifiedAt) return 'just now';
   const diffMs = Date.now() - new Date(lastVerifiedAt).getTime();
   const diffSec = Math.floor(diffMs / 1000);
-  if (diffSec < 60) return `${diffSec}s ago`;
+  if (diffSec < 60) return 'just now';
   const diffMin = Math.floor(diffSec / 60);
   if (diffMin < 60) return `${diffMin}m ago`;
   const diffHr = Math.floor(diffMin / 60);

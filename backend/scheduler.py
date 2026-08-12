@@ -29,7 +29,6 @@ except Exception:
     PDF_AVAILABLE = False
     generate_pdf_summary_report = None
 
-from backend.email_service import send_weekly_report_email
 from backend.sync_engine import run_batch_sync
 from backend.logger import logger
 
@@ -104,6 +103,73 @@ async def sunday_end_job():
     finally:
         db.close()
 
+async def sunday_auto_email_job():
+    """
+    Scheduled for Sunday 9:45 AM IST: Automatically dispatches weekly contest report emails
+    to all active DB recipients, 15 minutes after the 9:30 AM final snapshot completes.
+    """
+    logger.info("Executing Scheduled Job: Sunday 9:45 AM Auto Email Dispatch...")
+    db = SessionLocal()
+    try:
+        import datetime
+        from backend.models import WeeklySession
+        today_str = datetime.date.today().isoformat()
+
+        # Find today's completed/finalized session
+        session = db.query(WeeklySession).filter(
+            WeeklySession.session_date == today_str
+        ).first()
+
+        if not session:
+            logger.warning("Sunday 9:45 AM email: No session found for today. Skipping auto dispatch.")
+            return
+
+        if session.status not in ("COMPLETED", "FINALIZED"):
+            logger.warning(f"Sunday 9:45 AM email: Session status is '{session.status}', not COMPLETED/FINALIZED. Skipping auto dispatch.")
+            return
+
+        # Generate report bytes from the finalized snapshot dataset
+        from backend.models import OfficialWeeklySnapshot
+        from backend.exporters.excel_exporter import export_excel_from_dataset
+        from backend.exporters.pdf_exporter import export_pdf_from_dataset
+
+        snapshot = db.query(OfficialWeeklySnapshot).filter(
+            OfficialWeeklySnapshot.session_id == session.id
+        ).order_by(OfficialWeeklySnapshot.id.desc()).first()
+
+        if not snapshot or not snapshot.dataset:
+            logger.warning("Sunday 9:45 AM email: No finalized snapshot dataset found. Skipping.")
+            return
+
+        dataset = snapshot.dataset
+
+        try:
+            excel_bytes = export_excel_from_dataset(dataset)
+        except Exception as exc:
+            logger.error(f"Sunday 9:45 AM email: Excel export failed: {exc}")
+            excel_bytes = None
+
+        try:
+            pdf_bytes = export_pdf_from_dataset(dataset)
+        except Exception as exc:
+            logger.error(f"Sunday 9:45 AM email: PDF export failed: {exc}")
+            pdf_bytes = None
+
+        # Dispatch to all active recipients via queue system
+        from backend.services.email_service import queue_weekly_report_dispatches
+        result = queue_weekly_report_dispatches(
+            db=db,
+            session_id=session.id,
+            report_type="WEEKLY_CONTEST_AUTO"
+        )
+        logger.info(f"Sunday 9:45 AM Auto Email: Dispatch result: {result}")
+
+    except Exception as e:
+        logger.error(f"Error in sunday_auto_email_job: {e}")
+    finally:
+        db.close()
+
+
 async def daily_auto_refresh_job():
     """
     Scheduled daily: Auto-syncs live LeetCode stats for all active students.
@@ -135,6 +201,14 @@ def start_scheduler():
         replace_existing=True
     )
 
+    # Cron for Sunday 9:45 AM IST — Auto Email Dispatch (15 min after final snapshot)
+    scheduler.add_job(
+        sunday_auto_email_job,
+        CronTrigger(day_of_week='sun', hour=9, minute=45, timezone=tz),
+        id='sunday_auto_email_945',
+        replace_existing=True
+    )
+
     # Periodic Auto-Refresh Cron: Runs every 2 hours all week long to catch live problem solves
     scheduler.add_job(
         daily_auto_refresh_job,
@@ -152,5 +226,5 @@ def start_scheduler():
     )
 
     scheduler.start()
-    logger.info("APScheduler started: Sunday session 15-min live sync + Every 2-Hour 24/7 Auto-Sync registered.")
+    logger.info("APScheduler started: Sunday session 15-min live sync + Every 2-Hour 24/7 Auto-Sync + Sunday 9:45 AM Auto Email registered.")
 

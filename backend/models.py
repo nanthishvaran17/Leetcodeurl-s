@@ -69,6 +69,8 @@ class LeetCodeProfileStats(Base):
     student_id = Column(Integer, ForeignKey("students.id"), unique=True, nullable=False)
     
     total_solved = Column(Integer, nullable=True, default=None)
+    source_total_solved = Column(Integer, nullable=True, default=None)
+    derived_total_solved = Column(Integer, nullable=True, default=None)
     easy_solved = Column(Integer, nullable=True, default=None)
     medium_solved = Column(Integer, nullable=True, default=None)
     hard_solved = Column(Integer, nullable=True, default=None)
@@ -435,6 +437,72 @@ class ReportHistory(Base):
     status = Column(String(30), default="GENERATED") # GENERATED, ERROR
     
     created_by = Column(String(100), default="System")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class SyncJob(Base):
+    __tablename__ = "sync_jobs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    job_id = Column(String(100), unique=True, index=True, nullable=False)
+    job_type = Column(String(50), default="FULL_SYNC") # FULL_SYNC, SINGLE_STUDENT, CONTEST_SYNC
+    started_at = Column(DateTime, default=datetime.datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
+    status = Column(String(30), default="RUNNING") # RUNNING, COMPLETED, COMPLETED_WITH_WARNINGS, FAILED
+    total_records = Column(Integer, default=0)
+    success_count = Column(Integer, default=0)
+    partial_count = Column(Integer, default=0)
+    error_count = Column(Integer, default=0)
+    triggered_by = Column(String(100), default="admin")
+
+
+class SyncJobItem(Base):
+    __tablename__ = "sync_job_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    job_id = Column(String(100), ForeignKey("sync_jobs.job_id"), index=True, nullable=False)
+    student_id = Column(Integer, ForeignKey("students.id"), index=True, nullable=False)
+    field = Column(String(50), nullable=False) # e.g. total_solved, easy_solved, medium_solved, hard_solved, contest_rating
+    status = Column(String(50), default="FRESH") # FRESH, LAST_VERIFIED, FETCH_ERROR, TIMEOUT, INVALID_PROFILE, DATA_INCONSISTENCY
+    old_value = Column(String(255), nullable=True)
+    new_value = Column(String(255), nullable=True)
+    error_code = Column(String(100), nullable=True)
+    attempt_count = Column(Integer, default=1)
+    completed_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class ReportEmailRecipient(Base):
+    __tablename__ = "report_email_recipients"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(150), nullable=False)
+    email = Column(String(150), unique=True, index=True, nullable=False)
+    role = Column(String(50), default="HOD") # MANAGEMENT, HOD, DEPARTMENT_COORDINATOR, ADMIN
+    department = Column(String(50), nullable=True) # CSE(CS), CSE(IoT), ALL
+    is_active = Column(Boolean, default=True)
+    receive_weekly_reports = Column(Boolean, default=True)
+    receive_hod_reports = Column(Boolean, default=True)
+    receive_error_reports = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class EmailDispatchLog(Base):
+    __tablename__ = "email_dispatch_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email_id = Column(String(100), unique=True, index=True, nullable=False)
+    report_id = Column(String(100), nullable=True)
+    session_id = Column(Integer, nullable=True)
+    idempotency_key = Column(String(255), index=True, nullable=False)
+    recipient = Column(String(150), index=True, nullable=False)
+    role = Column(String(50), default="HOD")
+    subject = Column(String(255), nullable=False)
+    status = Column(String(30), default="QUEUED") # QUEUED, SENDING, SENT, FAILED, RETRYING
+    attachment_count = Column(Integer, default=0)
+    total_attachment_bytes = Column(Integer, default=0)
+    error_message = Column(Text, nullable=True)
+    retry_count = Column(Integer, default=0)
+    sent_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 

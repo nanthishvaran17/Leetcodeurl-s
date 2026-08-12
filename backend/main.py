@@ -21,6 +21,7 @@ from backend.routes import (
     leaderboard, analytics, reports, settings as settings_route,
     audit, public, sync, history, risk, goals, system_health, weekly_contests
 )
+from backend.routes import email_reports
 
 app = FastAPI(
     title="College LeetCode Weekly Tracker API",
@@ -72,6 +73,7 @@ app.include_router(risk.router)
 app.include_router(goals.router)
 app.include_router(system_health.router)
 app.include_router(weekly_contests.router, prefix="/api")
+app.include_router(email_reports.router)
 
 # Mount Static File Directories
 is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")
@@ -166,5 +168,5 @@ FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist"
 if os.path.exists(FRONTEND_DIST):
     app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")
 
-logger.info("LeetCode Performance Tracker API is fully ready.")
+logger.info("LeetCode Performance Tracker API is fully ready & live sync engine active.")
 

@@ -182,9 +182,100 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
         story.append(t_top)
         story.append(Spacer(1, 10))
 
-    # 5. Full Roster Table
+    # 5a. Weekly Contest Participation Matrix (if this is a weekly contest dataset)
+    contest_rows = dataset.get("rows", [])
+    is_weekly = (
+        dataset.get("report_type", "").lower() in ("weekly_contest", "weekly contest")
+        or bool(contest_rows)
+    )
+
+    if is_weekly and contest_rows:
+        story.append(Paragraph(f"<b>Weekly Contest Participation Matrix ({len(contest_rows)} Students)</b>",
+                               ParagraphStyle('H2', fontName='Times-Bold', fontSize=10, textColor=colors.HexColor('#0F172A'))))
+        story.append(Spacer(1, 4))
+
+        STATUS_LABEL = {
+            "PUBLIC_ATTENDED":     "PUBLIC",
+            "ATTENDED":            "PUBLIC",
+            "VIRTUAL_ATTENDED":    "VIRTUAL",
+            "PUBLIC_NOT_ATTENDED": "NOT ATTENDED",
+            "NOT_ATTENDED":        "NOT ATTENDED",
+            "DATA_ERROR":          "DATA ERROR",
+            "PENDING":             "PENDING",
+        }
+
+        c_rows = [[
+            Paragraph("S.No",           header_cell_style),
+            Paragraph("Reg No",         header_cell_style),
+            Paragraph("Name",           header_cell_style),
+            Paragraph("Dept",           header_cell_style),
+            Paragraph("Yr",             header_cell_style),
+            Paragraph("Status",         header_cell_style),
+            Paragraph("Q1",             header_cell_style),
+            Paragraph("Q2",             header_cell_style),
+            Paragraph("Q3",             header_cell_style),
+            Paragraph("Q4",             header_cell_style),
+            Paragraph("Contest Solved", header_cell_style),
+            Paragraph("Rank",           header_cell_style),
+        ]]
+
+        table_style_cmds = [
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#0F172A')),
+            ('GRID', (0,0), (-1,-1), 0.4, colors.HexColor('#CBD5E1')),
+            ('TOPPADDING', (0,0), (-1,-1), 2),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 2),
+            ('FONTSIZE', (0,0), (-1,-1), 7.5),
+        ]
+
+        for idx, r in enumerate(contest_rows, 1):
+            p_status  = r.get("participation_status", "PENDING")
+            attended  = p_status in ("PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL_ATTENDED")
+            is_virtual = p_status == "VIRTUAL_ATTENDED"
+            status_label = STATUS_LABEL.get(p_status, p_status)
+
+            v_q1 = 1 if (r.get("q1") or 0) > 0 else 0
+            v_q2 = 1 if (r.get("q2") or 0) > 0 else 0
+            v_q3 = 1 if (r.get("q3") or 0) > 0 else 0
+            v_q4 = 1 if (r.get("q4") or 0) > 0 else 0
+            solved_cnt = v_q1 + v_q2 + v_q3 + v_q4
+
+            q1_p = Paragraph(str(v_q1) if attended else "—", cell_bold_style if attended else cell_style)
+            q2_p = Paragraph(str(v_q2) if attended else "—", cell_bold_style if attended else cell_style)
+            q3_p = Paragraph(str(v_q3) if attended else "—", cell_bold_style if attended else cell_style)
+            q4_p = Paragraph(str(v_q4) if attended else "—", cell_bold_style if attended else cell_style)
+
+            status_color = '#065F46' if (attended and not is_virtual) else ('#1E40AF' if is_virtual else '#991B1B')
+            status_para = Paragraph(
+                f"<font color='{status_color}'><b>{status_label}</b></font>",
+                ParagraphStyle('sc', fontName='Times-Bold', fontSize=7, alignment=1)
+            )
+
+            c_rows.append([
+                Paragraph(str(idx), cell_style),
+                Paragraph(r.get("reg_no", ""), cell_style),
+                Paragraph(r.get("name", ""), cell_style),
+                Paragraph(r.get("dept", ""), cell_style),
+                Paragraph(str(r.get("year", "")), cell_style),
+                status_para,
+                q1_p, q2_p, q3_p, q4_p,
+                Paragraph(str(solved_cnt) if attended else "—", cell_bold_style),
+                Paragraph(str(r.get("rank") or r.get("contest_rank") or "—") if attended else "—", cell_style),
+            ])
+
+            # Color rows
+            row_bg = colors.HexColor('#ECFDF5') if attended else colors.HexColor('#FFF1F2')
+            table_style_cmds.append(('BACKGROUND', (0, idx), (-1, idx), row_bg))
+
+        t_c = Table(c_rows, colWidths=[0.35*inch, 1.0*inch, 1.6*inch, 0.6*inch, 0.35*inch,
+                                        0.8*inch, 0.3*inch, 0.3*inch, 0.3*inch, 0.3*inch, 0.65*inch, 0.55*inch])
+
+        t_c.setStyle(TableStyle(table_style_cmds))
+        story.append(t_c)
+        story.append(Spacer(1, 10))
+
+    # 5b. Full Roster Table (for non-weekly datasets only)
     all_students = dataset.get("allStudents")
-    if all_students:
+    if all_students and not is_weekly:
         story.append(Paragraph(f"<b>Student Performance Roster ({len(all_students)} Students)</b>", ParagraphStyle('H2', fontName='Times-Bold', fontSize=10, textColor=colors.HexColor('#0F172A'))))
         story.append(Spacer(1, 4))
         all_rows = [[
@@ -219,7 +310,7 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
 
     # 6. Contest Participations
     participations = dataset.get("participations")
-    if participations:
+    if participations and not is_weekly:
         story.append(Paragraph("<b>Official Contest Participation Log</b>", ParagraphStyle('H2', fontName='Times-Bold', fontSize=10, textColor=colors.HexColor('#0F172A'))))
         story.append(Spacer(1, 4))
         p_rows = [[
@@ -257,3 +348,4 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
     pdf_bytes = buffer.getvalue()
     buffer.close()
     return pdf_bytes
+

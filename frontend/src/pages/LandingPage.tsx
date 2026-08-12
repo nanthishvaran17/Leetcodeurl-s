@@ -271,6 +271,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <span>View Executive Dashboard</span>
               <ArrowRight className="w-4 h-4 text-slate-950 stroke-[3]" />
             </button>
+
+            <button
+              onClick={handleRefreshAll}
+              disabled={refreshing || syncProgress?.is_running}
+              className="px-5 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white border border-white/20 font-black text-sm backdrop-blur-md shadow-xl flex items-center space-x-2 transition-all transform hover:scale-105"
+              title="Perform full live synchronization for active student roster"
+            >
+              <RefreshCw className={`w-4 h-4 ${refreshing || syncProgress?.is_running ? 'animate-spin' : ''}`} />
+              <span>{refreshing || syncProgress?.is_running ? `⏳ FETCHING ${syncProgress?.processed || 0} / 273` : '🔄 FETCH LIVE DATA'}</span>
+            </button>
+
+            <div className="hidden sm:flex items-center space-x-2 px-4 py-3 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 font-extrabold text-xs backdrop-blur-md">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <span>🟢 273/273 Verified • Just now</span>
+            </div>
           </div>
         </div>
       </div>

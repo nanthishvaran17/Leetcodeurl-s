@@ -203,92 +203,261 @@ def get_report_preview(report_id: str, db: Session = Depends(get_db)):
     return report.dataset
 
 from backend.models import OfficialWeeklySnapshot, WeeklySession
+from backend.routes.weekly_contests import matches_dept, matches_year
 
-def _get_dataset_for_id(report_id: str, db: Session):
+def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: str = "ALL"):
+
     # First check ReportHistory
     report = db.query(ReportHistory).filter(ReportHistory.report_id == report_id).first()
     if report:
-        return report.dataset, report.report_type, report.report_id
-    
-    # Second check OfficialWeeklySnapshot by session_id or contest_id
-    if report_id.isdigit():
-        session_id = int(report_id)
-        snap = db.query(OfficialWeeklySnapshot).filter(OfficialWeeklySnapshot.session_id == session_id).first()
-        if snap:
-            return snap.dataset, "Weekly_Contest", f"Session_{session_id}"
-        
-        ws = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
-        if ws:
-            # Fallback dataset construction if not finalized yet
-            from backend.routes.weekly_contests import get_session_matrix
-            mat = get_session_matrix(session_id=session_id, dept='ALL', year='ALL', db=db)
-            dataset = {
-                "report_id": f"Session_{session_id}",
-                "report_type": "Weekly_Contest",
-                "title": ws.contest_name,
-                "generated_at": datetime.datetime.utcnow().isoformat(),
-                "verified_at": datetime.datetime.utcnow().isoformat(),
-                "data_status": ws.status,
-                "metrics": {"totalStudents": ws.total_students, "officialAttended": ws.official_participants},
-                "distribution": {},
-                "data_quality": {"total_students": ws.total_students, "valid_count": ws.official_participants, "unverified_count": ws.not_participated, "missing_username_count": 0, "duplicate_reg_no_count": 0, "invalid_url_count": 0, "warnings": []},
-                "rows": mat.get("rows", [])
-            }
-            return dataset, "Weekly_Contest", f"Session_{session_id}"
+        dataset = report.dataset
+        r_type = report.report_type
+        r_id = report.report_id
+    else:
+        dataset = None
+        r_type = "Weekly_Contest"
+        r_id = f"Session_{report_id}"
 
-    raise HTTPException(status_code=404, detail=f"Report snapshot or Weekly Session '{report_id}' not found")
+        # Second check OfficialWeeklySnapshot by session_id
+        if report_id.isdigit():
+            session_id = int(report_id)
+            snap = db.query(OfficialWeeklySnapshot).filter(OfficialWeeklySnapshot.session_id == session_id).first()
+            if snap:
+                raw = snap.dataset or {}
+                all_snap_rows = raw.get("rows", [])
+                rows = [r for r in all_snap_rows if matches_dept(r.get("dept"), dept) and matches_year(r.get("year"), year)]
+                contest_name = raw.get("contestName", snap.contest_name or f"Session {session_id}")
+                session_date = raw.get("sessionDate", snap.contest_date or "")
+                safe_name = contest_name.replace(" ", "_").replace("/", "-")
+
+                # Map rows → allStudents & topStudents for exporter compatibility
+                all_students, top_students = [], []
+                q4_count = q3_count = q2_count = q1_count = 0
+                for r in rows:
+                    attended = r.get("participation_status", "") in ("PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL_ATTENDED")
+                    total_q = sum(1 for q in ["q1","q2","q3","q4"] if (r.get(q) or 0) > 0)
+                    if attended:
+                        if total_q == 4: q4_count += 1
+                        elif total_q == 3: q3_count += 1
+                        elif total_q == 2: q2_count += 1
+                        elif total_q == 1: q1_count += 1
+                    entry = {
+                        "reg_no":         r.get("reg_no", ""),
+                        "name":           r.get("name", ""),
+                        "dept":           r.get("dept", ""),
+                        "year":           r.get("year", ""),
+                        "easy":           r.get("q1", 0),
+                        "medium":         r.get("q2", 0),
+                        "hard":           r.get("q3", 0),
+                        "total_solved":   r.get("total_solved", 0) if attended else None,
+                        "contest_rating": r.get("contest_rating") if attended else None,
+                        "status":         r.get("participation_status", "PENDING"),
+                        "leetcode_url":   "",
+                        "username":       r.get("reg_no", ""),
+                        "rating":         float(r.get("contest_rating") or 0) if attended else None,
+                        "rank":           r.get("contest_rank", "—"),
+                        "score":          r.get("score", 0),
+                    }
+                    all_students.append(entry)
+                    if attended and (r.get("total_solved", 0) or 0) > 0:
+                        top_students.append(entry)
+                top_students.sort(key=lambda x: x.get("score", 0) or 0, reverse=True)
+
+                raw_metrics = raw.get("metrics", {})
+                attended_count = raw_metrics.get("officialAttended", 0)
+
+                dataset = {
+                    "report_id":   f"Session_{session_id}",
+                    "reportId":    f"Session_{session_id}",
+                    "report_type": "Weekly_Contest",
+                    "title":       f"{contest_name} — {session_date}",
+                    "generated_at": datetime.datetime.utcnow().isoformat(),
+                    "generatedAt":  datetime.datetime.utcnow().isoformat(),
+                    "verified_at":  raw.get("finalizedAt", datetime.datetime.utcnow().isoformat()),
+                    "data_status":  "FINALIZED",
+                    "dataStatus":   "FINALIZED",
+                    "metrics": {
+                        "Total Students":      raw_metrics.get("totalStudents", len(rows)),
+                        "Official Attended":   attended_count,
+                        "Virtual Attended":    raw_metrics.get("virtualAttended", 0),
+                        "Not Attended":        raw_metrics.get("notAttended", 0),
+                        "Data Errors":         raw_metrics.get("dataErrors", 0),
+                        "Participation Rate":  f"{raw_metrics.get('participationRate', 0)}%",
+                        "4 Q Solved":          q4_count,
+                        "3 Q Solved":          q3_count,
+                        "2 Q Solved":          q2_count,
+                        "1 Q Solved":          q1_count,
+                    },
+                    "distribution": {},
+                    "allStudents":  all_students,
+                    "topStudents":  top_students[:50],
+                    "data_quality": {
+                        "total_students":        raw_metrics.get("totalStudents", len(rows)),
+                        "valid_count":           attended_count,
+                        "unverified_count":      raw_metrics.get("notAttended", 0),
+                        "missing_username_count": 0,
+                        "duplicate_reg_no_count": 0,
+                        "invalid_url_count":      0,
+                        "warnings":              []
+                    },
+                    "rows": rows,
+                }
+                r_type = safe_name
+                r_id = session_date
+
+            if not dataset:
+                ws = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+                if ws:
+                    from backend.routes.weekly_contests import get_session_matrix
+                    mat = get_session_matrix(session_id=session_id, dept=dept, year=year, db=db)
+                    rows = mat.get("rows", [])
+
+                    all_students = []
+                    top_students = []
+                    for r in rows:
+                        attended = r.get("participation_status", "") in ("PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL_ATTENDED")
+                        entry = {
+                            "reg_no":      r.get("reg_no", ""),
+                            "name":        r.get("name", ""),
+                            "dept":        r.get("dept", ""),
+                            "year":        r.get("year", ""),
+                            "easy":        r.get("q1", 0),
+                            "medium":      r.get("q2", 0),
+                            "hard":        r.get("q3", 0),
+                            "total_solved": r.get("total_solved", 0) if attended else None,
+                            "contest_rating": r.get("rating") if attended else None,
+                            "status":      r.get("participation_status", "PENDING"),
+                            "leetcode_url": "",
+                            "username":    r.get("reg_no", ""),
+                            "rating":      float(r.get("rating") or 0) if attended else None,
+                            "rank":        r.get("rank", "-"),
+                            "score":       r.get("score", 0),
+                        }
+                        all_students.append(entry)
+                        if attended and (r.get("total_solved", 0) or 0) > 0:
+                            top_students.append(entry)
+
+                    top_students.sort(key=lambda x: x.get("score", 0) or 0, reverse=True)
+
+                    attended_count = sum(1 for r in rows if r.get("participation_status", "") in ("PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL_ATTENDED"))
+                    date_label = ws.session_date or datetime.datetime.today().strftime("%d.%m.%Y")
+                    safe_name  = (ws.contest_name or f"Session_{session_id}").replace(" ", "_").replace("/", "-")
+
+                    dataset = {
+                        "report_id":    f"Session_{session_id}",
+                        "reportId":     f"Session_{session_id}",
+                        "report_type":  "Weekly_Contest",
+                        "title":        f"{ws.contest_name} — {date_label}",
+                        "generated_at": datetime.datetime.utcnow().isoformat(),
+                        "generatedAt":  datetime.datetime.utcnow().isoformat(),
+                        "verified_at":  datetime.datetime.utcnow().isoformat(),
+                        "data_status":  ws.status,
+                        "dataStatus":   ws.status,
+                        "metrics": {
+                            "totalStudents":    ws.total_students or len(rows),
+                            "officialAttended": ws.official_participants or attended_count,
+                            "notAttended":      ws.not_participated or (len(rows) - attended_count),
+                            "contestName":      ws.contest_name,
+                            "sessionDate":      date_label,
+                        },
+                        "distribution": {},
+                        "allStudents":  all_students,
+                        "topStudents":  top_students[:50],
+                        "data_quality": {
+                            "total_students": ws.total_students,
+                            "valid_count":    ws.official_participants,
+                            "unverified_count": ws.not_participated,
+                            "missing_username_count": 0,
+                            "duplicate_reg_no_count": 0,
+                            "invalid_url_count": 0,
+                            "warnings": []
+                        },
+                        "rows": rows
+                    }
+                    r_type = safe_name
+                    r_id = date_label
+
+    if not dataset:
+        raise HTTPException(status_code=404, detail=f"Report snapshot or Weekly Session '{report_id}' not found")
+
+    # Optional department & year filtering if requested
+    if (dept and dept.upper() != "ALL") or (year and year.upper() != "ALL"):
+        dataset = dict(dataset)
+        if "rows" in dataset and dataset["rows"]:
+            dataset["rows"] = [
+                r for r in dataset["rows"]
+                if matches_dept(r.get("dept"), dept) and matches_year(r.get("year"), year)
+            ]
+        if "allStudents" in dataset and dataset["allStudents"]:
+            dataset["allStudents"] = [
+                s for s in dataset["allStudents"]
+                if matches_dept(s.get("dept"), dept) and matches_year(s.get("year"), year)
+            ]
+
+    return dataset, r_type, r_id
+
 
 @router.get("/{report_id}/excel")
-def download_universal_excel(report_id: str, db: Session = Depends(get_db)):
-    dataset, r_type, r_id = _get_dataset_for_id(report_id, db)
-    excel_bytes = export_excel_from_dataset(dataset)
-    return Response(
-        content=excel_bytes,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={r_type}_{r_id}.xlsx"}
-    )
+def download_universal_excel(report_id: str, dept: str = "ALL", year: str = "ALL", db: Session = Depends(get_db)):
+    try:
+        dataset, r_type, r_id = _get_dataset_for_id(report_id, db, dept=dept, year=year)
+        excel_bytes = export_excel_from_dataset(dataset)
+        safe_filename = f"Nandha_{r_type}_{r_id}.xlsx".replace(" ", "_")
+        return Response(
+            content=excel_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f'attachment; filename="{safe_filename}"'}
+        )
+    except Exception as e:
+        logger.error(f"Error generating Excel report: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate Excel report: {str(e)}")
 
 @router.get("/{report_id}/pdf")
-def download_universal_pdf(report_id: str, db: Session = Depends(get_db)):
-    dataset, r_type, r_id = _get_dataset_for_id(report_id, db)
+def download_universal_pdf(report_id: str, dept: str = "ALL", year: str = "ALL", db: Session = Depends(get_db)):
+    dataset, r_type, r_id = _get_dataset_for_id(report_id, db, dept=dept, year=year)
     pdf_bytes = export_pdf_from_dataset(dataset)
+    safe_filename = f"Nandha_{r_type}_{r_id}.pdf".replace(" ", "_")
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename={r_type}_{r_id}.pdf"}
+        headers={"Content-Disposition": f'attachment; filename="{safe_filename}"'}
     )
 
 @router.get("/{report_id}/word")
-def download_universal_word(report_id: str, db: Session = Depends(get_db)):
-    dataset, r_type, r_id = _get_dataset_for_id(report_id, db)
+def download_universal_word(report_id: str, dept: str = "ALL", year: str = "ALL", db: Session = Depends(get_db)):
+    dataset, r_type, r_id = _get_dataset_for_id(report_id, db, dept=dept, year=year)
     word_bytes = export_word_from_dataset(dataset)
+    safe_filename = f"Nandha_{r_type}_{r_id}.docx".replace(" ", "_")
     return Response(
         content=word_bytes,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        headers={"Content-Disposition": f"attachment; filename={r_type}_{r_id}.docx"}
+        headers={"Content-Disposition": f'attachment; filename="{safe_filename}"'}
     )
 
 @router.get("/{report_id}/csv")
-def download_universal_csv_by_id(report_id: str, db: Session = Depends(get_db)):
-    dataset, r_type, r_id = _get_dataset_for_id(report_id, db)
+def download_universal_csv_by_id(report_id: str, dept: str = "ALL", year: str = "ALL", db: Session = Depends(get_db)):
+    dataset, r_type, r_id = _get_dataset_for_id(report_id, db, dept=dept, year=year)
     csv_bytes = export_csv_from_dataset(dataset)
+    safe_filename = f"Nandha_{r_type}_{r_id}.csv".replace(" ", "_")
     return Response(
         content=csv_bytes,
         media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={r_type}_{r_id}.csv"}
+        headers={"Content-Disposition": f'attachment; filename="{safe_filename}"'}
     )
 
 @router.get("/{report_id}/zip")
-def download_universal_zip_bundle(report_id: str, db: Session = Depends(get_db)):
-    dataset, r_type, r_id = _get_dataset_for_id(report_id, db)
+def download_universal_zip_bundle(report_id: str, dept: str = "ALL", year: str = "ALL", db: Session = Depends(get_db)):
+    dataset, r_type, r_id = _get_dataset_for_id(report_id, db, dept=dept, year=year)
     zip_bytes = export_zip_bundle_from_dataset(dataset)
+    safe_filename = f"Nandha_{r_type}_{r_id}_All_Formats.zip".replace(" ", "_")
     return Response(
         content=zip_bytes,
         media_type="application/zip",
-        headers={"Content-Disposition": f"attachment; filename={r_type}_{r_id}_All_Formats.zip"}
+        headers={"Content-Disposition": f'attachment; filename="{safe_filename}"'}
     )
 
 from backend.snapshot_generator import generate_hod_snapshot
+
 from backend.models import HODSnapshot
 from backend.logger import logger
 

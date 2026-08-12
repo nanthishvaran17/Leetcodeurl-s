@@ -30,9 +30,9 @@ class Settings(BaseSettings):
     # Email Configuration
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
-    SMTP_USERNAME: str = ""
-    SMTP_PASSWORD: str = ""
-    SMTP_FROM_EMAIL: str = ""
+    SMTP_USERNAME: str = os.environ.get("SMTP_USERNAME", "nanthishvaran17@gmail.com")
+    SMTP_PASSWORD: str = os.environ.get("SMTP_PASSWORD", "xdzzakkpfrhzrfrj")  # App Password (spaces removed)
+    SMTP_FROM_EMAIL: str = os.environ.get("REPORT_FROM_EMAIL", "nanthishvaran17@gmail.com")
     REPORT_RECIPIENT_EMAILS: str = "nanthishvaran17@gmail.com, msanthoshkumar@nandhaengg.org"
     
     # Telegram / WhatsApp

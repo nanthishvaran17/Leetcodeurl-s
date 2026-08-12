@@ -61,6 +61,8 @@ interface StatSnapshot {
 
 export const GrowthIntelligencePage: React.FC = () => {
   const [period, setPeriod] = useState<'today' | '7d' | '30d' | 'all'>('7d');
+  const [deptFilter, setDeptFilter] = useState<string>('ALL');
+  const [yearFilter, setYearFilter] = useState<string>('ALL');
   const [improvers, setImprovers] = useState<Improver[]>([]);
   const [collegeDelta, setCollegeDelta] = useState<CollegeDelta | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -73,14 +75,14 @@ export const GrowthIntelligencePage: React.FC = () => {
 
   useEffect(() => {
     fetchGrowthData();
-  }, [period]);
+  }, [period, deptFilter, yearFilter]);
 
   const fetchGrowthData = async () => {
     setLoading(true);
     try {
       const [impRes, deltaRes] = await Promise.all([
-        api.get(`/growth/improvers?period=${period}&limit=25`),
-        api.get(`/growth/college-delta?period=${period}`)
+        api.get(`/growth/improvers?period=${period}&limit=25&dept=${deptFilter}&year=${yearFilter}`),
+        api.get(`/growth/college-delta?period=${period}&dept=${deptFilter}&year=${yearFilter}`)
       ]);
       setImprovers(impRes.data || []);
       setCollegeDelta(deltaRes.data || null);
@@ -129,21 +131,44 @@ export const GrowthIntelligencePage: React.FC = () => {
             </p>
           </div>
 
-          {/* Timeframe Selector Pills */}
-          <div className="flex items-center space-x-1.5 bg-navy-900/90 p-2 rounded-2xl border border-gray-700/80 shadow-inner self-start md:self-auto backdrop-blur-md">
-            {(['today', '7d', '30d', 'all'] as const).map((p) => (
-              <button
-                key={p}
-                onClick={() => setPeriod(p)}
-                className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
-                  period === p
-                    ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg shadow-brand-600/40 scale-105'
-                    : 'text-gray-300 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                {p === 'today' ? '📅 Today' : p === '7d' ? '⚡ 7 Days' : p === '30d' ? '📊 30 Days' : '🏆 All Time'}
-              </button>
-            ))}
+          {/* Filters & Timeframe Selector Pills */}
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              value={deptFilter}
+              onChange={(e) => setDeptFilter(e.target.value)}
+              className="px-3.5 py-2 rounded-2xl bg-navy-900/90 text-white text-xs font-bold border border-gray-700/80 backdrop-blur-md shadow-inner outline-none cursor-pointer hover:border-brand-500"
+            >
+              <option value="ALL">🏢 All Departments (Cyber Security & IoT)</option>
+              <option value="CSE(CS)">🏢 Computer Science & Engg (Cyber Security)</option>
+              <option value="CSE(IoT)">🏢 Computer Science & Engg (IoT)</option>
+            </select>
+
+            <select
+              value={yearFilter}
+              onChange={(e) => setYearFilter(e.target.value)}
+              className="px-3.5 py-2 rounded-2xl bg-navy-900/90 text-white text-xs font-bold border border-gray-700/80 backdrop-blur-md shadow-inner outline-none cursor-pointer hover:border-brand-500"
+            >
+              <option value="ALL">🎓 All Academic Years</option>
+              <option value="II">🎓 II Year</option>
+              <option value="III">🎓 III Year</option>
+              <option value="IV">🎓 IV Year</option>
+            </select>
+
+            <div className="flex items-center space-x-1.5 bg-navy-900/90 p-1.5 rounded-2xl border border-gray-700/80 shadow-inner backdrop-blur-md">
+              {(['today', '7d', '30d', 'all'] as const).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPeriod(p)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                    period === p
+                      ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg shadow-brand-600/40 scale-105'
+                      : 'text-gray-300 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  {p === 'today' ? '📅 Today' : p === '7d' ? '⚡ 7 Days' : p === '30d' ? '📊 30 Days' : '🏆 All Time'}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>

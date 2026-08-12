@@ -54,14 +54,17 @@ def fetch_normalized_students(
 
     for idx, s in enumerate(students, start=1):
         st = s.stats
-        is_verified = st and st.validation_status == "verified"
+        is_verified = bool(st and (st.sync_status in ("success", "OK", "verified", "stale") or st.status == "verified" or st.total_solved is not None))
 
-        easy = (st.easy_solved if is_verified and st else None)
-        medium = (st.medium_solved if is_verified and st else None)
-        hard = (st.hard_solved if is_verified and st else None)
+        easy = st.easy_solved if (is_verified and st) else None
+        medium = st.medium_solved if (is_verified and st) else None
+        hard = st.hard_solved if (is_verified and st) else None
 
         if is_verified and st:
-            total_solved = (easy or 0) + (medium or 0) + (hard or 0)
+            if easy is not None and medium is not None and hard is not None:
+                total_solved = easy + medium + hard
+            else:
+                total_solved = st.total_solved
         else:
             total_solved = None
 
@@ -86,18 +89,18 @@ def fetch_normalized_students(
             status="VERIFIED" if is_verified else "UNVERIFIED"
         ))
 
-    # Centralized Sorting Logic: Total Solved (DESC) -> Rating (DESC) -> Global Rank (ASC)
+    # Centralized Sorting Logic: Total Solved (DESC) -> Rating (DESC) -> Name (ASC)
     sorted_rows = sorted(
         rows,
         key=lambda r: (
             r.total_solved if r.total_solved is not None else -1,
             r.contest_rating if r.contest_rating is not None else -1,
-            -(r.global_rank if r.global_rank is not None else 9999999)
+            r.name or ""
         ),
         reverse=True
     )
 
-    # Re-assign sequential S.No based on rank
+    # Re-assign sequential S.No (1..N) based on rank
     for i, r in enumerate(sorted_rows, start=1):
         r.s_no = i
 

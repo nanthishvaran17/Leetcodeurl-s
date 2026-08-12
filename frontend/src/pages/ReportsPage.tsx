@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Sparkles, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers } from 'lucide-react';
+import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Sparkles, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers, Inbox } from 'lucide-react';
 import api from '../services/api';
 import { ReportPreview } from '../components/ReportPreview';
+import { EmailDeliveryTab } from '../components/EmailDeliveryTab';
 
 export const ReportsPage: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'reports' | 'email'>('reports');
   const [emailLogs, setEmailLogs] = useState<any[]>([]);
   const [hodSnapshots, setHodSnapshots] = useState<any[]>([]);
   const [isSendingEmail, setIsSendingEmail] = useState<boolean>(false);
@@ -273,16 +275,47 @@ export const ReportsPage: React.FC = () => {
             </p>
           </div>
 
-          <button
-            onClick={handleSendWeeklyEmail}
-            disabled={isSendingEmail}
-            className="flex items-center space-x-2.5 px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 text-white rounded-2xl text-xs font-black shadow-xl shadow-emerald-500/30 transition-all transform hover:scale-105"
+            <button
+            onClick={() => setActiveTab('email')}
+            className="flex items-center space-x-2.5 px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-2xl text-xs font-black shadow-xl shadow-emerald-500/30 transition-all transform hover:scale-105"
           >
-            <Mail className={`w-4 h-4 ${isSendingEmail ? 'animate-bounce' : ''}`} />
-            <span>{isSendingEmail ? 'Dispatching Emails...' : '📧 Dispatch Weekly Email Report Now'}</span>
+            <Mail className="w-4 h-4" />
+            <span>📧 Open Email Delivery Center</span>
           </button>
         </div>
       </div>
+
+      {/* Main Tab Navigation */}
+      <div className="flex items-center space-x-2 bg-gray-100 dark:bg-navy-900 p-1.5 rounded-2xl max-w-fit border border-gray-200 dark:border-gray-800">
+        <button
+          onClick={() => setActiveTab('reports')}
+          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all ${
+            activeTab === 'reports'
+              ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+          }`}
+        >
+          <FileSpreadsheet className="w-4 h-4" />
+          <span>📊 Reports & Downloads</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('email')}
+          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all ${
+            activeTab === 'email'
+              ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+          }`}
+        >
+          <Mail className="w-4 h-4" />
+          <span>📧 Automated Email Delivery</span>
+        </button>
+      </div>
+
+      {activeTab === 'email' ? (
+        <EmailDeliveryTab />
+      ) : (
+        <>
 
       {/* Universal Institutional Reports Section */}
       <div className="glass-card p-6 md:p-8 rounded-3xl border border-blue-500/30 dark:border-blue-500/20 shadow-xl space-y-6 bg-gradient-to-r from-blue-500/5 via-cyan-500/5 to-transparent">
@@ -839,6 +872,8 @@ export const ReportsPage: React.FC = () => {
           reportId={activeUniversalPreviewId} 
           onClose={() => setActiveUniversalPreviewId(null)} 
         />
+      )}
+        </>
       )}
 
     </div>

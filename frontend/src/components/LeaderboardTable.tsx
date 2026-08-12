@@ -7,7 +7,7 @@ function getSyncState(syncStatus?: string, lastVerifiedAt?: string): 'pending'|'
   if (syncStatus === 'invalid_profile' || syncStatus === 'INVALID_LINK' || syncStatus === 'MISSING_LINK') return 'invalid_profile';
   if (syncStatus === 'syncing') return 'syncing';
   if (!syncStatus || syncStatus === 'pending' || syncStatus === 'not_started') return 'pending';
-  if (syncStatus === 'success' || syncStatus === 'OK') {
+  if (syncStatus === 'success' || syncStatus === 'OK' || syncStatus === 'verified' || syncStatus === 'stale') {
     if (lastVerifiedAt) {
       const age = Date.now() - new Date(lastVerifiedAt).getTime();
       if (age > 24 * 60 * 60 * 1000) return 'stale';
@@ -18,9 +18,9 @@ function getSyncState(syncStatus?: string, lastVerifiedAt?: string): 'pending'|'
   return 'failed';
 }
 function formatAgo(ts?: string): string {
-  if (!ts) return '';
+  if (!ts) return 'just now';
   const s = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
-  if (s < 60) return `${s}s ago`;
+  if (s < 60) return 'just now';
   if (s < 3600) return `${Math.floor(s/60)}m ago`;
   if (s < 86400) return `${Math.floor(s/3600)}h ago`;
   return `${Math.floor(s/86400)}d ago`;
@@ -253,13 +253,29 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
 
                   <td className="py-3 px-4 text-right">
                     <div className="flex items-center justify-end space-x-2">
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          try {
+                            const { triggerSingleStudentSync } = await import('../services/api');
+                            const res = await triggerSingleStudentSync(student.id);
+                            alert(`✅ Live sync complete for ${res.name}: ${res.total_solved ?? 0} problems solved.`);
+                          } catch (err) {
+                            alert("Failed to refresh student profile.");
+                          }
+                        }}
+                        className="p-1.5 rounded-lg text-gray-500 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors"
+                        title="🔄 Trigger live refresh for this student"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                      </button>
                       {student.leetcode_url && (
                         <a
                           href={student.leetcode_url}
                           target="_blank"
                           rel="noreferrer"
                           className="p-1.5 rounded-lg text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                          title="Open LeetCode Profile"
+                          title="View LeetCode Profile"
                         >
                           <ExternalLink className="w-4 h-4" />
                         </a>

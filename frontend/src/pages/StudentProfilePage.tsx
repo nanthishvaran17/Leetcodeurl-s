@@ -79,7 +79,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               </span>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Department of <b>{detail?.department?.name}</b> • {detail?.year_level} Year - Section {detail?.section?.name || 'A'}
+              Department of <b>{detail?.department?.name}</b> • {detail?.year_level} Year
             </p>
           </div>
 

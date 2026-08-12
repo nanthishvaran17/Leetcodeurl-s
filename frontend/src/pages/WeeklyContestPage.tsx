@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Trophy, Calendar, RefreshCw, AlertTriangle, Download, FileSpreadsheet, 
-  FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Zap, Filter
+  FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Zap, Filter, Trash2
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -18,6 +18,7 @@ export const WeeklyContestPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [customCalendarDate, setCustomCalendarDate] = useState<string>('');
   const [isRetrying, setIsRetrying] = useState<boolean>(false);
+  const [deletingSessionId, setDeletingSessionId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchInitialContestData();
@@ -103,20 +104,72 @@ export const WeeklyContestPage: React.FC = () => {
     }
   };
 
+  const handleDeleteSession = async (sessionId: number, sessionLabel: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Don't trigger session select
+    const session = displaySessions.find(s => s.sessionId === sessionId);
+    if (session?.status === 'LIVE') {
+      alert('🔴 Cannot delete a LIVE session. Finalize the contest first.');
+      return;
+    }
+    if (!window.confirm(`⚠️ Permanently delete "${sessionLabel}"?\n\nThis will also delete all contest results, snapshots, and email logs for this session.\n\nThis action cannot be undone.`)) return;
+    setDeletingSessionId(sessionId);
+    try {
+      await api.delete(`/contests/sessions/${sessionId}`);
+      // Remove from local list
+      setSessionsList(prev => prev.filter(s => s.sessionId !== sessionId));
+      // If deleted session was selected, switch to the first remaining
+      if (selectedSessionId === sessionId) {
+        const remaining = sessionsList.filter(s => s.sessionId !== sessionId);
+        if (remaining.length > 0) handleSelectSession(remaining[0].sessionId);
+        else { setSelectedSessionId(null); setMatrixRows([]); setErrorLogs([]); setComparison(null); }
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to delete session.');
+    } finally {
+      setDeletingSessionId(null);
+    }
+  };
+
   const downloadReportFile = (format: string) => {
     if (!selectedSessionId) return;
-    const url = `/reports/${selectedSessionId}/${format}`;
+    const deptParam = encodeURIComponent(selectedDeptFilter || 'ALL');
+    const yearParam = encodeURIComponent(selectedYearFilter || 'ALL');
+    const url = `/reports/${selectedSessionId}/${format}?dept=${deptParam}&year=${yearParam}`;
+    // Use the selected session's metadata for the filename
+    const selSession = sessionsList.find(s => s.sessionId === selectedSessionId);
+
+    const dateLabel = (selSession?.sessionDate || 'Report').replace(/\./g, '-');
+    const contestLabel = (selSession?.contestName || `Session_${selectedSessionId}`)
+      .replace(/[^a-zA-Z0-9\-_() ]/g, '')
+      .replace(/ /g, '_')
+      .substring(0, 40);
+    const filterSuffix = (selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL')
+      ? `_${selectedDeptFilter}_${selectedYearFilter}`.replace(/[^a-zA-Z0-9\-_]/g, '')
+      : '';
+    const ext = format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : format === 'zip' ? 'zip' : format;
+    const filename = `Nandha_${contestLabel}${filterSuffix}_${dateLabel}.${ext}`;
     api.get(url, { responseType: 'blob' }).then(res => {
       const blobUrl = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement('a');
       link.href = blobUrl;
-      const ext = format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : format === 'zip' ? 'zip' : format;
-      link.setAttribute('download', `Nandha_Weekly_Contest_${currentSession?.sessionDate || 'Report'}.${ext}`);
+      link.setAttribute('download', filename);
       document.body.appendChild(link);
       link.click();
       link.remove();
+    }).catch(async (err) => {
+      console.error('Download failed:', err);
+      let errMsg = 'Failed to download report. Please try again.';
+      if (err.response?.data instanceof Blob) {
+        try {
+          const text = await err.response.data.text();
+          const parsed = JSON.parse(text);
+          if (parsed.detail) errMsg = parsed.detail;
+        } catch (_e) {}
+      }
+      alert(errMsg);
     });
   };
+
 
   if (loading) {
     return (
@@ -231,25 +284,40 @@ export const WeeklyContestPage: React.FC = () => {
         <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-100 dark:border-gray-800">
           {displaySessions.map((s) => {
             const isSelected = s.sessionId === selectedSessionId;
+            const isDeleting = deletingSessionId === s.sessionId;
             return (
-              <button
-                key={s.sessionId}
-                onClick={() => handleSelectSession(s.sessionId)}
-                className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center space-x-2.5 cursor-pointer ${
-                  isSelected
-                    ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/30 scale-105'
-                    : 'bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-navy-700'
-                }`}
-              >
-                <span>📅 {s.sessionDate}</span>
-                <span>•</span>
-                <span>{s.contestName}</span>
-                <span className={`px-2 py-0.5 text-[9px] rounded-full font-mono uppercase font-bold ${
-                  s.status === 'LIVE' ? 'bg-emerald-400 text-slate-900' : s.status === 'FINALIZED' ? 'bg-indigo-900 text-indigo-200' : 'bg-amber-400 text-slate-900'
-                }`}>
-                  {s.status}
-                </span>
-              </button>
+              <div key={s.sessionId} className="relative group">
+                <button
+                  onClick={() => handleSelectSession(s.sessionId)}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center space-x-2.5 cursor-pointer pr-8 ${
+                    isSelected
+                      ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/30 scale-105'
+                      : 'bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-navy-700'
+                  }`}
+                >
+                  <span>📅 {s.sessionDate}</span>
+                  <span>•</span>
+                  <span>{s.contestName}</span>
+                  <span className={`px-2 py-0.5 text-[9px] rounded-full font-mono uppercase font-bold ${
+                    s.status === 'LIVE' ? 'bg-emerald-400 text-slate-900' : s.status === 'FINALIZED' ? 'bg-indigo-900 text-indigo-200' : 'bg-amber-400 text-slate-900'
+                  }`}>
+                    {s.status}
+                  </span>
+                </button>
+                {/* Delete button — visible on hover, hidden for LIVE */}
+                {s.status !== 'LIVE' && (
+                  <button
+                    onClick={(e) => handleDeleteSession(s.sessionId, `${s.contestName} (${s.sessionDate})`, e)}
+                    disabled={isDeleting}
+                    title={`Delete ${s.contestName}`}
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all bg-red-500 hover:bg-red-600 text-white disabled:opacity-50"
+                  >
+                    {isDeleting
+                      ? <RefreshCw className="w-3 h-3 animate-spin" />
+                      : <Trash2 className="w-3 h-3" />}
+                  </button>
+                )}
+              </div>
             );
           })}
         </div>
@@ -390,6 +458,14 @@ export const WeeklyContestPage: React.FC = () => {
       {/* Tab Content 1: Question Matrix Table */}
       {activeTab === 'matrix' && (
         <div className="border border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden shadow-xl bg-white dark:bg-navy-900">
+          {/* Legend */}
+          <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800 flex flex-wrap items-center gap-x-5 gap-y-1.5 bg-gray-50 dark:bg-navy-950">
+            <span className="text-[10px] font-extrabold uppercase text-gray-400 tracking-wider">Legend:</span>
+            <span className="flex items-center gap-1.5 text-[10px] font-bold"><span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">🟢 PUBLIC</span> Public contest attended</span>
+            <span className="flex items-center gap-1.5 text-[10px] font-bold"><span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">🔵 VIRTUAL</span> Virtual attendance</span>
+            <span className="flex items-center gap-1.5 text-[10px] font-bold"><span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">🔴 NOT ATTENDED</span> Did not participate</span>
+            <span className="text-[10px] text-gray-400 font-bold">Q cells: <span className="text-emerald-600 font-black">1</span> = solved &nbsp;|&nbsp; <span className="text-rose-400 font-black">0</span> = not solved &nbsp;|&nbsp; <span className="text-gray-300 font-black">—</span> = not attended</span>
+          </div>
           <div className="max-h-[600px] overflow-y-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10">
@@ -417,36 +493,64 @@ export const WeeklyContestPage: React.FC = () => {
                   </tr>
                 ) : (
                   matrixRows.map((r, idx) => {
-                    const isAttended = r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'ATTENDED';
-                    const isNotAttended = r.participation_status === 'PUBLIC_NOT_ATTENDED';
-                    const isError = r.participation_status === 'DATA_ERROR';
+                    const isPublicAttended  = r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'ATTENDED';
+                    const isVirtualAttended = r.participation_status === 'VIRTUAL_ATTENDED';
+                    const isAttended        = isPublicAttended || isVirtualAttended;
+                    const isNotAttended     = r.participation_status === 'PUBLIC_NOT_ATTENDED' || r.participation_status === 'NOT_ATTENDED';
+                    const isError           = r.participation_status === 'DATA_ERROR';
+                    const isPending         = !isAttended && !isNotAttended && !isError;
+
+                    // Status badge config
+                    const statusBadge = isPublicAttended
+                      ? { cls: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300', label: '🟢 PUBLIC' }
+                      : isVirtualAttended
+                      ? { cls: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300', label: '🔵 VIRTUAL' }
+                      : isNotAttended
+                      ? { cls: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300', label: '🔴 NOT ATTENDED' }
+                      : isError
+                      ? { cls: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300', label: '⚠️ DATA ERROR' }
+                      : { cls: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300', label: '🟡 PENDING' };
+
+                    // Q cell renderer:
+                    // - Attended + solved → 1 (green)
+                    // - Attended + not solved → 0 (red dim)
+                    // - Not attended / pending / error → — (grey dash)
+                    const renderQ = (val: number) => {
+                      if (!isAttended) return <span className="text-gray-300 dark:text-gray-600 font-normal">—</span>;
+                      return val
+                        ? <span className="text-emerald-600 dark:text-emerald-400 font-black">1</span>
+                        : <span className="text-rose-400 dark:text-rose-500 font-bold">0</span>;
+                    };
 
                     return (
-                      <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-navy-800/50 transition-colors">
+                      <tr
+                        key={idx}
+                        className={`hover:bg-gray-50 dark:hover:bg-navy-800/50 transition-colors ${!isAttended ? 'opacity-60' : ''}`}
+                      >
                         <td className="px-4 py-2.5 text-center text-gray-400 font-mono">{idx + 1}</td>
-                        <td className="px-4 py-2.5 font-bold text-gray-900 dark:text-white">{r.reg_no}</td>
+                        <td className="px-4 py-2.5 font-bold text-gray-900 dark:text-white font-mono text-[11px]">{r.reg_no}</td>
                         <td className="px-4 py-2.5 font-semibold text-gray-800 dark:text-gray-200">{r.name}</td>
                         <td className="px-4 py-2.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{r.dept}</td>
-                        <td className="px-4 py-2.5 text-center">{r.year}</td>
+                        <td className="px-4 py-2.5 text-center text-gray-600 dark:text-gray-400 font-bold">{r.year}</td>
                         <td className="px-4 py-2.5 text-center">
-                          <span className={`px-2 py-0.5 text-[9px] font-extrabold rounded-full ${
-                            isAttended ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' :
-                            isNotAttended ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300' :
-                            isError ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' :
-                            'bg-slate-100 text-slate-700'
-                          }`}>
-                            {isAttended ? '🟢 ATTENDED' : isNotAttended ? '🔴 NOT ATTENDED' : isError ? '⚠️ DATA ERROR' : '🟡 PENDING'}
+                          <span className={`px-2 py-0.5 text-[9px] font-extrabold rounded-full whitespace-nowrap ${statusBadge.cls}`}>
+                            {statusBadge.label}
                           </span>
                         </td>
-                        <td className="px-4 py-2.5 text-center font-mono font-bold">{r.q1 ? "🟢 1" : "0"}</td>
-                        <td className="px-4 py-2.5 text-center font-mono font-bold">{r.q2 ? "🟢 1" : "0"}</td>
-                        <td className="px-4 py-2.5 text-center font-mono font-bold">{r.q3 ? "🟢 1" : "0"}</td>
-                        <td className="px-4 py-2.5 text-center font-mono font-bold">{r.q4 ? "🟢 1" : "0"}</td>
-                        <td className="px-4 py-2.5 text-right font-black text-brand-600 dark:text-brand-400">{r.total_solved}</td>
-                        <td className="px-4 py-2.5 text-right font-mono text-gray-600 dark:text-gray-400">{r.rank}</td>
+                        <td className="px-4 py-2.5 text-center">{renderQ(r.q1)}</td>
+                        <td className="px-4 py-2.5 text-center">{renderQ(r.q2)}</td>
+                        <td className="px-4 py-2.5 text-center">{renderQ(r.q3)}</td>
+                        <td className="px-4 py-2.5 text-center">{renderQ(r.q4)}</td>
+                        <td className="px-4 py-2.5 text-right font-black text-brand-600 dark:text-brand-400">
+                          {isAttended ? (r.total_solved ?? 0) : '—'}
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-mono text-gray-600 dark:text-gray-400">
+                          {isAttended ? (r.rank || '—') : '—'}
+                        </td>
                       </tr>
                     );
                   })
+
                 )}
               </tbody>
             </table>

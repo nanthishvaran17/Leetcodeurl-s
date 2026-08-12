@@ -124,6 +124,36 @@ def list_weekly_sessions(db: Session = Depends(get_db)):
         "finalizedAt": s.finalized_at.isoformat() if s.finalized_at else None
     } for s in sessions]
 
+def matches_dept(r_dept: str, target_dept: str) -> bool:
+    if not target_dept or target_dept.upper() in ["ALL", "COMBINED", "ALL DEPTS (COMBINED)"]:
+        return True
+    r_d = str(r_dept or "").upper().strip()
+    t_d = str(target_dept or "").upper().replace("🏢", "").strip()
+    
+    if "CS" in t_d and "IOT" not in t_d:
+        return ("CS" in r_d or "CYBER" in r_d) and ("IOT" not in r_d)
+    elif "IOT" in t_d or "CI" in t_d:
+        return "IOT" in r_d or "CI" in r_d
+    else:
+        return t_d in r_d
+
+def matches_year(r_year: str, target_year: str) -> bool:
+    if not target_year or target_year.upper() in ["ALL", "COMBINED", "ALL YEARS (COMBINED)"]:
+        return True
+    r_y = str(r_year or "").upper().replace("YEAR", "").replace("🎓", "").strip()
+    t_y = str(target_year or "").upper().replace("YEAR", "").replace("🎓", "").strip()
+    
+    if t_y in ["III", "3", "3RD"]:
+        return r_y in ["III", "3", "3RD"]
+    elif t_y in ["II", "2", "2ND"]:
+        return r_y in ["II", "2", "2ND"]
+    elif t_y in ["IV", "4", "4TH"]:
+        return r_y in ["IV", "4", "4TH"]
+    elif t_y in ["I", "1", "1ST"]:
+        return r_y in ["I", "1", "1ST"]
+    else:
+        return t_y == r_y
+
 @router.get("/sessions/{session_id}/matrix")
 def get_session_matrix(
     session_id: int, 
@@ -218,23 +248,15 @@ def get_session_matrix(
         session.not_participated = not_cnt
         db.commit()
 
-    query = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session_id)
-    if dept and dept.upper() != "ALL":
-        clean_dept = dept.replace("CSE(", "").replace(")", "").replace("🏢", "").strip()
-        query = query.filter(WeeklyPublicResult.dept.ilike(f"%{clean_dept}%"))
-    if year and year.upper() != "ALL":
-        clean_year = year.replace("Year", "").replace("🎓", "").strip()
-        query = query.filter(WeeklyPublicResult.year.ilike(f"%{clean_year}%"))
+    all_session_results = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session_id).all()
+    if not all_session_results:
+        all_session_results = db.query(WeeklyPublicResult).all()
 
-    results = query.all()
+    results = [
+        r for r in all_session_results
+        if matches_dept(r.dept, dept) and matches_year(r.year, year)
+    ]
 
-    # Fallback 1: If session specific query returned 0 rows, check without filters
-    if len(results) == 0:
-        results = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session_id).all()
-
-    # Fallback 2: If still 0 rows, return all available WeeklyPublicResult rows
-    if len(results) == 0:
-        results = db.query(WeeklyPublicResult).all()
     
     rows = []
     for idx, r in enumerate(results, start=1):
@@ -335,6 +357,74 @@ async def trigger_session_retry(session_id: int, db: Session = Depends(get_db)):
 async def trigger_session_finalize(session_id: int, db: Session = Depends(get_db)):
     """
     Manually triggers 09:30 AM finalization lock.
+    After the official snapshot is FINALIZED, automatically queues
+    institutional report emails (non-blocking background task).
     """
+    from backend.logger import logger
+
     snapshot = await trigger_final_snapshot_0930(db, session_id)
-    return snapshot.dataset
+    
+    # Verify the session is now FINALIZED before triggering email
+    session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+    if session and session.status == "FINALIZED":
+        try:
+            from backend.services.email_service import queue_weekly_report_dispatches
+            email_result = queue_weekly_report_dispatches(db, session_id=session_id)
+            logger.info(f"Post-finalization email queue result: {email_result}")
+        except Exception as _email_err:
+            logger.warning(f"Email queue trigger note (non-blocking): {_email_err}")
+
+    return snapshot.dataset if hasattr(snapshot, 'dataset') else snapshot
+
+
+@router.delete("/sessions/{session_id}")
+def delete_weekly_session(session_id: int, db: Session = Depends(get_db)):
+    """
+    Permanently deletes a weekly session and all its associated data.
+    Cascade-deletes: WeeklyPublicResult, WeeklyVirtualResult,
+    WeeklyContestErrorLog, OfficialWeeklySnapshot, EmailDispatchLog.
+    LIVE sessions cannot be deleted to protect active contest integrity.
+    """
+    from backend.models import EmailDispatchLog
+    from backend.logger import logger
+
+    session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Weekly session not found.")
+
+    if session.status == "LIVE":
+        raise HTTPException(
+            status_code=409,
+            detail="Cannot delete a LIVE session. Wait until the contest ends or finalize it first."
+        )
+
+    session_label = f"{session.contest_name} ({session.session_date})"
+
+    # Cascade delete child records
+    deleted_public = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session_id).delete()
+    deleted_virtual = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == session_id).delete()
+    deleted_errors = db.query(WeeklyContestErrorLog).filter(WeeklyContestErrorLog.session_id == session_id).delete()
+    deleted_snapshots = db.query(OfficialWeeklySnapshot).filter(OfficialWeeklySnapshot.session_id == session_id).delete()
+    deleted_emails = db.query(EmailDispatchLog).filter(EmailDispatchLog.session_id == session_id).delete()
+
+    db.delete(session)
+    db.commit()
+
+    logger.info(
+        f"Session '{session_label}' (id={session_id}) deleted. "
+        f"Cascade: {deleted_public} results, {deleted_virtual} virtual, "
+        f"{deleted_errors} errors, {deleted_snapshots} snapshots, {deleted_emails} email logs."
+    )
+
+    return {
+        "status": "deleted",
+        "session_id": session_id,
+        "session_label": session_label,
+        "cascade": {
+            "public_results": deleted_public,
+            "virtual_results": deleted_virtual,
+            "error_logs": deleted_errors,
+            "snapshots": deleted_snapshots,
+            "email_logs": deleted_emails
+        }
+    }

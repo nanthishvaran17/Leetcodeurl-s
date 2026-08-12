@@ -34,6 +34,8 @@ def run_db_migrations():
             ("active_days",          "INTEGER"),
             ("max_streak",           "INTEGER"),
             ("recent_accepted",      "INTEGER"),
+            ("source_total_solved",  "INTEGER"),
+            ("derived_total_solved", "INTEGER"),
         ]
         for col_name, col_type in columns_to_add:
             try:
@@ -81,6 +83,58 @@ def run_db_migrations():
             try:
                 cursor.execute(f"ALTER TABLE hod_snapshots ADD COLUMN {col_name} {col_type};")
                 print(f"Added column '{col_name}' to hod_snapshots.")
+            except Exception:
+                pass
+
+        # Auto-create email tables if missing
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS report_email_recipients (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name VARCHAR(150) NOT NULL,
+                email VARCHAR(150) UNIQUE NOT NULL,
+                role VARCHAR(50) DEFAULT 'HOD',
+                department VARCHAR(50),
+                is_active BOOLEAN DEFAULT 1,
+                receive_weekly_reports BOOLEAN DEFAULT 1,
+                receive_hod_reports BOOLEAN DEFAULT 1,
+                receive_error_reports BOOLEAN DEFAULT 1,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS email_dispatch_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email_id VARCHAR(100) UNIQUE NOT NULL,
+                report_id VARCHAR(100),
+                session_id INTEGER,
+                idempotency_key VARCHAR(255) NOT NULL,
+                recipient VARCHAR(150) NOT NULL,
+                role VARCHAR(50) DEFAULT 'HOD',
+                subject VARCHAR(255) NOT NULL,
+                status VARCHAR(30) DEFAULT 'QUEUED',
+                attachment_count INTEGER DEFAULT 0,
+                total_attachment_bytes INTEGER DEFAULT 0,
+                error_message TEXT,
+                retry_count INTEGER DEFAULT 0,
+                sent_at DATETIME,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+
+        # Seed default institutional recipients if table is empty or missing key contacts
+        default_recipients = [
+            ("Nanthishvaran", "nanthishvaran17@gmail.com", "ADMIN", "ALL"),
+            ("Prof. Santhosh Kumar M", "msanthoshkumar@nandhaengg.org", "MANAGEMENT", "ALL"),
+            ("HOD Cyber Security", "hod.cs@nandha.edu.in", "HOD", "CSE(CS)"),
+            ("HOD IoT", "hod.iot@nandha.edu.in", "HOD", "CSE(IoT)")
+        ]
+        for name, email, role, dept in default_recipients:
+            try:
+                cursor.execute(
+                    "INSERT OR IGNORE INTO report_email_recipients (name, email, role, department, is_active, receive_weekly_reports, receive_hod_reports, receive_error_reports) VALUES (?, ?, ?, ?, 1, 1, 1, 1);",
+                    (name, email, role, dept)
+                )
             except Exception:
                 pass
 

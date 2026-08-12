@@ -48,7 +48,16 @@ def export_word_from_dataset(dataset: dict) -> bytes:
     doc = Document()
     set_document_margins(doc, 0.75, 0.75, 0.75, 0.75)
 
-    # 1. Header Banner
+    # 1. Header Banner with Logo
+    logo_path = os.path.join(os.path.dirname(__file__), "..", "assets", "nandha_emblem.png")
+    if os.path.exists(logo_path):
+        try:
+            p_logo = doc.add_paragraph()
+            p_logo.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p_logo.add_run().add_picture(logo_path, width=Inches(1.1))
+        except Exception:
+            pass
+
     p_college = doc.add_paragraph()
     p_college.alignment = WD_ALIGN_PARAGRAPH.CENTER
     r_coll = p_college.add_run("NANDHA ENGINEERING COLLEGE (AUTONOMOUS)")
@@ -119,6 +128,89 @@ def export_word_from_dataset(dataset: dict) -> bytes:
                 set_cell_background(row_cells[1], "F8FAFC")
 
         doc.add_paragraph().paragraph_format.space_after = Pt(10)
+
+    # 3. Weekly Contest Participation Matrix (for Weekly Contest datasets)
+    contest_rows = dataset.get("rows", [])
+    is_weekly = (
+        dataset.get("report_type", "").lower() in ("weekly_contest", "weekly contest")
+        or bool(contest_rows)
+    )
+
+    if is_weekly and contest_rows:
+        doc.add_heading("II. Weekly Contest Participation Matrix", level=2)
+        p_hw = doc.paragraphs[-1]
+        for r in p_hw.runs:
+            r.font.name = "Times New Roman"
+            r.font.color.rgb = RGBColor(15, 23, 42)
+
+        STATUS_LABEL = {
+            "PUBLIC_ATTENDED":    "PUBLIC",
+            "ATTENDED":           "PUBLIC",
+            "VIRTUAL_ATTENDED":   "VIRTUAL",
+            "PUBLIC_NOT_ATTENDED":"NOT ATTENDED",
+            "NOT_ATTENDED":       "NOT ATTENDED",
+            "DATA_ERROR":         "DATA ERROR",
+            "PENDING":            "PENDING",
+        }
+
+        w_headers = ["S.No", "Reg No", "Student Name", "Dept", "Yr", "Status", "Q1", "Q2", "Q3", "Q4", "Contest Solved", "Rank"]
+        table_w = doc.add_table(rows=1 + len(contest_rows), cols=len(w_headers))
+        table_w.alignment = WD_TABLE_ALIGNMENT.CENTER
+
+        hdr_cells = table_w.rows[0].cells
+        for i, h in enumerate(w_headers):
+            p = hdr_cells[i].paragraphs[0]
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run = p.add_run(h)
+            run.font.name = "Times New Roman"
+            run.font.size = Pt(8.5)
+            run.font.bold = True
+            run.font.color.rgb = RGBColor(255, 255, 255)
+            set_cell_background(hdr_cells[i], "0F172A")
+
+        for idx, r in enumerate(contest_rows, start=1):
+            row_cells = table_w.rows[idx].cells
+            p_status = r.get("participation_status", "PENDING")
+            attended = p_status in ("PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL_ATTENDED")
+            status_str = STATUS_LABEL.get(p_status, p_status)
+
+            q1 = 1 if (r.get("q1") or 0) > 0 else 0
+            q2 = 1 if (r.get("q2") or 0) > 0 else 0
+            q3 = 1 if (r.get("q3") or 0) > 0 else 0
+            q4 = 1 if (r.get("q4") or 0) > 0 else 0
+            solved_cnt = q1 + q2 + q3 + q4
+
+            r_vals = [
+                str(idx),
+                r.get("reg_no", ""),
+                r.get("name", ""),
+                r.get("dept", ""),
+                str(r.get("year", "")),
+                status_str,
+                str(q1) if attended else "—",
+                str(q2) if attended else "—",
+                str(q3) if attended else "—",
+                str(q4) if attended else "—",
+                str(solved_cnt) if attended else "—",
+                str(r.get("rank") or r.get("contest_rank") or "—") if attended else "—",
+            ]
+
+            bg_hex = "ECFDF5" if attended else "FFF1F2"
+            for i, val in enumerate(r_vals):
+                set_cell_background(row_cells[i], bg_hex)
+                p = row_cells[i].paragraphs[0]
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER if i != 2 else WD_ALIGN_PARAGRAPH.LEFT
+                run = p.add_run(val)
+                run.font.name = "Times New Roman"
+                run.font.size = Pt(8)
+                if i in (0, 5, 10):
+                    run.font.bold = True
+                if i == 5:
+                    run.font.color.rgb = RGBColor(6, 95, 70) if attended else RGBColor(153, 27, 27)
+
+        doc.add_paragraph().paragraph_format.space_after = Pt(10)
+
+
 
     # 3. Problem Solving Category Summary Table
     distribution = dataset.get("distribution")

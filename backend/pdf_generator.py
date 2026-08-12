@@ -241,7 +241,6 @@ def generate_pdf_summary_report(db: Session, dept_id: Optional[int] = None) -> b
         Paragraph("Student Name", header_cell_style),
         Paragraph("Dept", header_cell_style),
         Paragraph("Year", header_cell_style),
-        Paragraph("Sec", header_cell_style),
         Paragraph("Solved", header_cell_style),
         Paragraph("Progress", header_cell_style)
     ]
@@ -260,12 +259,11 @@ def generate_pdf_summary_report(db: Session, dept_id: Optional[int] = None) -> b
             Paragraph(s.name, cell_style),
             Paragraph(s.department.code if s.department else "CSE", cell_style),
             Paragraph(s.year_level, cell_style),
-            Paragraph(s.section.name if s.section else "A", cell_style),
             Paragraph(str((s.stats.total_solved or 0) if s.stats else 0), cell_bold_style),
             Paragraph(prog_str, cell_style)
         ])
 
-    lb_table = Table(lb_rows, colWidths=[0.6*inch, 1.2*inch, 2.2*inch, 0.8*inch, 0.6*inch, 0.4*inch, 0.6*inch, 0.6*inch])
+    lb_table = Table(lb_rows, colWidths=[0.7*inch, 1.3*inch, 2.4*inch, 0.9*inch, 0.7*inch, 0.8*inch, 0.8*inch])
     lb_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0F172A')),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),

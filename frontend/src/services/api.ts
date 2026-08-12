@@ -36,4 +36,29 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+export const triggerFullSync = async (triggeredBy = 'admin') => {
+  const res = await api.post(`/sync/full?triggered_by=${triggeredBy}`);
+  return res.data;
+};
+
+export const getSyncStatus = async () => {
+  const res = await api.get('/sync/status');
+  return res.data;
+};
+
+export const getSyncJobDetails = async (jobId: string) => {
+  const res = await api.get(`/sync/jobs/${jobId}`);
+  return res.data;
+};
+
+export const triggerSingleStudentSync = async (studentId: number) => {
+  const res = await api.post(`/sync/student/${studentId}`);
+  return res.data;
+};
+
+export const getDataFreshness = async () => {
+  const res = await api.get('/data/freshness');
+  return res.data;
+};
+
 export default api;

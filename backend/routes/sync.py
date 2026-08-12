@@ -1,53 +1,120 @@
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
-from typing import Optional, Dict, Any
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+from sqlalchemy.orm import Session
+from typing import List, Optional, Dict, Any
 
-from backend.sync_engine import run_batch_sync, sync_single_student_by_id, sync_tracker
+from backend.database import get_db
+from backend.models import SyncJob, SyncJobItem, Student
+from backend.services.live_sync_service import (
+    start_full_sync_job,
+    sync_single_student,
+    get_system_freshness,
+    sync_tracker
+)
 
-router = APIRouter(prefix="/api/sync", tags=["LeetCode Sync"])
+router = APIRouter(tags=["Live Sync Engine"])
 
-@router.get("/status")
-def get_sync_status():
+@router.post("/api/sync/full")
+def trigger_full_sync(triggered_by: str = Query("admin"), db: Session = Depends(get_db)):
     """
-    Returns real-time synchronization progress.
+    Triggers institutional full roster live sync.
+    Enforces DB-level single-job lock and returns job_id immediately without blocking.
     """
-    return sync_tracker.to_dict()
+    result = start_full_sync_job(db, triggered_by=triggered_by)
+    return result
 
-@router.post("/all")
-async def sync_all_students(
-    background_tasks: BackgroundTasks,
-    limit: Optional[int] = Query(None, description="Limit number of students to sync (for testing)"),
-    max_workers: int = Query(3, description="Number of concurrent fetch workers"),
-):
-    """
-    Triggers controlled queue LeetCode synchronization for all active students (or limited N students).
-    Runs asynchronously in background without blocking web requests.
-    """
-    if sync_tracker.is_running:
-        return {
-            "message": "Sync is already in progress.",
-            "status": "busy",
-            "progress": sync_tracker.to_dict()
-        }
 
-    background_tasks.add_task(run_batch_sync, limit=limit, max_workers=max_workers)
-    
+@router.get("/api/sync/status")
+def get_current_sync_status(db: Session = Depends(get_db)):
+    """
+    Returns real-time sync progress status and tracker state.
+    """
+    running_job = db.query(SyncJob).filter(SyncJob.status == "RUNNING").first()
     return {
-        "message": f"LeetCode synchronization started in background{' (limit=' + str(limit) + ')' if limit else ''}.",
-        "status": "processing",
-        "sync_status_url": "/api/sync/status"
+        "is_running": sync_tracker.is_running or (running_job is not None),
+        "job_id": running_job.job_id if running_job else sync_tracker.current_job_id,
+        "total": sync_tracker.total,
+        "completed": sync_tracker.completed,
+        "success": sync_tracker.success,
+        "partial": sync_tracker.partial,
+        "failed": sync_tracker.failed,
+        "recent_logs": sync_tracker.recent_logs[-10:] if sync_tracker.recent_logs else []
     }
 
-@router.post("/student/{student_id}")
-async def sync_single_student(student_id: int):
+
+@router.get("/api/sync/jobs/{job_id}")
+def get_sync_job_details(job_id: str, db: Session = Depends(get_db)):
     """
-    Synchronizes LeetCode data for a single student.
+    Retrieves summary for a specific sync job ID.
     """
-    try:
-        result = await sync_single_student_by_id(student_id)
-        if result.get("status") == "failed":
-            raise HTTPException(status_code=400, detail=result.get("error", "Sync failed"))
-        return result
-    except ValueError as val_err:
-        raise HTTPException(status_code=404, detail=str(val_err))
-    except Exception as err:
-        raise HTTPException(status_code=500, detail=f"Sync error: {err}")
+    job = db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail=f"Sync job '{job_id}' not found")
+    return {
+        "job_id": job.job_id,
+        "job_type": job.job_type,
+        "started_at": job.started_at.isoformat() if job.started_at else None,
+        "completed_at": job.completed_at.isoformat() if job.completed_at else None,
+        "status": job.status,
+        "total_records": job.total_records,
+        "success_count": job.success_count,
+        "partial_count": job.partial_count,
+        "error_count": job.error_count,
+        "triggered_by": job.triggered_by
+    }
+
+
+@router.get("/api/sync/jobs/{job_id}/items")
+def get_sync_job_items(
+    job_id: str, 
+    limit: int = Query(100, ge=1, le=500), 
+    db: Session = Depends(get_db)
+):
+    """
+    Retrieves audit log items for a sync job, showing old_value -> new_value changes and field status.
+    """
+    items = db.query(SyncJobItem).filter(SyncJobItem.job_id == job_id).order_by(SyncJobItem.id.desc()).limit(limit).all()
+    return [{
+        "id": it.id,
+        "job_id": it.job_id,
+        "student_id": it.student_id,
+        "field": it.field,
+        "status": it.status,
+        "old_value": it.old_value,
+        "new_value": it.new_value,
+        "error_code": it.error_code,
+        "completed_at": it.completed_at.isoformat() if it.completed_at else None
+    } for it in items]
+
+
+@router.post("/api/sync/student/{student_id}")
+def trigger_single_student_sync(student_id: int, db: Session = Depends(get_db)):
+    """
+    Performs single-student instant live refresh.
+    Refreshes student stats, logs audit item, recalculates ranks, and returns updated student data.
+    """
+    res = sync_single_student(student_id, db)
+    if res.get("status") == "error":
+        raise HTTPException(status_code=400, detail=res.get("message", "Sync failed"))
+    return res
+
+
+@router.post("/api/sync/contest/{session_id}")
+def trigger_contest_session_sync(session_id: int, db: Session = Depends(get_db)):
+    """
+    Triggers live synchronization for a specific weekly contest session.
+    """
+    from backend.routes.weekly_contests import get_session_matrix
+    result = get_session_matrix(session_id=session_id, dept="ALL", year="ALL", db=db)
+    return {
+        "status": "success",
+        "session_id": session_id,
+        "total_matrix_rows": len(result.get("rows", []))
+    }
+
+
+@router.get("/api/data/freshness")
+def get_data_freshness_metadata(db: Session = Depends(get_db)):
+    """
+    Retrieves system-wide data freshness metadata, last sync timestamp, and status badges.
+    """
+    return get_system_freshness(db)
