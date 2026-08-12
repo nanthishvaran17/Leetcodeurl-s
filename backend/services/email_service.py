@@ -1,3 +1,5 @@
+import socket
+import ssl
 import os
 import io
 import zipfile
@@ -7,6 +9,77 @@ import datetime
 import time
 import threading
 from email.mime.multipart import MIMEMultipart
+
+class IPv4SMTP(smtplib.SMTP):
+    """
+    Enforces IPv4 resolution (socket.AF_INET) to prevent [Errno 101] Network is unreachable
+    in cloud environments like Render free containers where IPv6 routes are unavailable.
+    """
+    def _get_socket(self, host, port, timeout):
+        res = socket.getaddrinfo(host, port, socket.AF_INET, socket.SOCK_STREAM)
+        err = None
+        for af, socktype, proto, canonname, sa in res:
+            try:
+                sock = socket.socket(af, socktype, proto)
+                if timeout is not None and timeout != socket._GLOBAL_DEFAULT_TIMEOUT:
+                    sock.settimeout(timeout)
+                sock.connect(sa)
+                return sock
+            except socket.error as e:
+                err = e
+                if sock is not None:
+                    sock.close()
+        if err is not None:
+            raise err
+        raise socket.error("getaddrinfo returned empty list for IPv4")
+
+class IPv4SMTP_SSL(smtplib.SMTP_SSL):
+    """
+    Enforces IPv4 resolution (socket.AF_INET) for SSL (port 465) connections.
+    """
+    def _get_socket(self, host, port, timeout):
+        res = socket.getaddrinfo(host, port, socket.AF_INET, socket.SOCK_STREAM)
+        err = None
+        for af, socktype, proto, canonname, sa in res:
+            try:
+                sock = socket.socket(af, socktype, proto)
+                if timeout is not None and timeout != socket._GLOBAL_DEFAULT_TIMEOUT:
+                    sock.settimeout(timeout)
+                sock.connect(sa)
+                new_sock = self.context.wrap_socket(sock, server_hostname=self._host)
+                return new_sock
+            except socket.error as e:
+                err = e
+                if sock is not None:
+                    sock.close()
+        if err is not None:
+            raise err
+        raise socket.error("getaddrinfo returned empty list for IPv4")
+
+def connect_and_login_smtp(smtp_host: str, smtp_port: int, smtp_user: str, smtp_pass: str, timeout: int = 15):
+    """
+    Connects and logs into SMTP server using IPv4-enforced sockets.
+    Tries configured port first, then falls back between 587 (STARTTLS) and 465 (SSL).
+    """
+    attempts = []
+    ports_to_try = [
+        (smtp_port, smtp_port == 465),
+        (465 if smtp_port != 465 else 587, smtp_port != 465)
+    ]
+
+    for port, is_ssl in ports_to_try:
+        try:
+            if is_ssl:
+                server = IPv4SMTP_SSL(smtp_host, port, timeout=timeout)
+            else:
+                server = IPv4SMTP(smtp_host, port, timeout=timeout)
+                server.starttls()
+            server.login(smtp_user, smtp_pass)
+            return server
+        except Exception as exc:
+            attempts.append(f"Port {port} ({'SSL' if is_ssl else 'STARTTLS'}): {exc}")
+
+    raise RuntimeError(" | ".join(attempts))
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 from typing import List, Dict, Any, Optional, Tuple
@@ -62,10 +135,14 @@ def send_email(
             msg.attach(part)
 
     try:
-        with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
-            server.starttls()
-            server.login(smtp_user, smtp_pass)
+        server = connect_and_login_smtp(smtp_host, smtp_port, smtp_user, smtp_pass, timeout=15)
+        try:
             server.sendmail(from_email, recipient, msg.as_string())
+        finally:
+            try:
+                server.quit()
+            except Exception:
+                pass
         logger.info(f"Successfully sent email to '{recipient}' via Gmail SMTP")
         return True, None
     except Exception as exc:
@@ -320,10 +397,14 @@ def _process_email_queue_worker():
 
             if smtp_user and smtp_pass:
                 try:
-                    with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
-                        server.starttls()
-                        server.login(smtp_user, smtp_pass)
+                    server = connect_and_login_smtp(smtp_host, smtp_port, smtp_user, smtp_pass, timeout=15)
+                    try:
                         server.sendmail(from_email, log.recipient, msg.as_string())
+                    finally:
+                        try:
+                            server.quit()
+                        except Exception:
+                            pass
 
                     log.status = "SENT"
                     log.sent_at = datetime.datetime.utcnow()

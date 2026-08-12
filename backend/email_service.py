@@ -9,6 +9,8 @@ from backend.config import settings
 from backend.models import EmailLog, WeeklySession
 from backend.logger import logger
 
+from backend.services.email_service import connect_and_login_smtp
+
 def send_weekly_report_email(
     db: Session,
     recipient_emails: List[str],
@@ -38,6 +40,10 @@ def send_weekly_report_email(
         return False
 
     success_flag = True
+    smtp_host = getattr(settings, "SMTP_HOST", "smtp.gmail.com")
+    smtp_port = int(getattr(settings, "SMTP_PORT", 587))
+    smtp_user = settings.SMTP_USERNAME.strip() if settings.SMTP_USERNAME else ""
+    smtp_pass = settings.SMTP_PASSWORD.replace(" ", "") if settings.SMTP_PASSWORD else ""
 
     for recipient in recipient_emails:
         msg = MIMEMultipart()
@@ -58,10 +64,14 @@ def send_weekly_report_email(
             msg.attach(pdf_part)
 
         try:
-            with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=15) as server:
-                server.starttls()
-                server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
+            server = connect_and_login_smtp(smtp_host, smtp_port, smtp_user, smtp_pass, timeout=15)
+            try:
                 server.sendmail(msg['From'], recipient, msg.as_string())
+            finally:
+                try:
+                    server.quit()
+                except Exception:
+                    pass
 
             log_entry = EmailLog(
                 session_id=session_id,
