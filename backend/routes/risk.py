@@ -42,7 +42,7 @@ def get_risk_summary(db: Session = Depends(get_db)):
 
 @router.get("/students")
 def get_at_risk_students(
-    risk_level: Optional[str] = Query(None, regex="^(EXCELLENT|CONSISTENT|NEEDS_ATTENTION|AT_RISK|CRITICAL)$"),
+    risk_level: Optional[str] = Query(None, pattern="^(EXCELLENT|CONSISTENT|NEEDS_ATTENTION|AT_RISK|CRITICAL)$"),
     dept_id: Optional[int] = None,
     year_level: Optional[str] = None,
     limit: int = Query(50, ge=1, le=200),

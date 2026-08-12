@@ -8,8 +8,13 @@ def run_db_migrations():
     # Ensure all tables defined in Base (including new models like student_stat_snapshots) exist
     Base.metadata.create_all(bind=engine)
 
-    db_path = os.path.join(os.path.dirname(__file__), "..", "data", "leetcode_tracker.db")
-    if os.path.exists(db_path):
+    db_paths = [
+        os.path.join(os.path.dirname(__file__), "..", "data", "leetcode_tracker.db"),
+        os.path.join(os.path.dirname(__file__), "..", "leetcode_tracker.db")
+    ]
+    for db_path in db_paths:
+        if not os.path.exists(db_path):
+            continue
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         columns_to_add = [
@@ -38,18 +43,44 @@ def run_db_migrations():
                 pass  # Column already exists — safe to ignore
 
         session_cols = [
-            ("baseline_snapshot_id", "VARCHAR(100)"),
-            ("final_snapshot_id",    "VARCHAR(100)"),
-            ("total_students",       "INTEGER DEFAULT 273"),
-            ("official_participants","INTEGER DEFAULT 0"),
-            ("virtual_participants", "INTEGER DEFAULT 0"),
-            ("not_participated",     "INTEGER DEFAULT 0"),
-            ("failed_verification",  "INTEGER DEFAULT 0"),
+            ("academic_year",        "VARCHAR(20) DEFAULT '2026-27'"),
+            ("week_number",          "INTEGER"),
+            ("session_code",         "VARCHAR(50)"),
+            ("session_date",         "VARCHAR(20)"),
+            ("contest_id",           "VARCHAR(100)"),
+            ("contest_name",         "VARCHAR(200)"),
+            ("start_time",           "VARCHAR(20) DEFAULT '08:00'"),
+            ("end_time",             "VARCHAR(20) DEFAULT '09:30'"),
+            ("status",               "VARCHAR(30) DEFAULT 'SCHEDULED'"),
+            ("baseline_snapshot_id",  "VARCHAR(100)"),
+            ("final_snapshot_id",     "VARCHAR(100)"),
+            ("total_students",        "INTEGER DEFAULT 273"),
+            ("official_participants", "INTEGER DEFAULT 0"),
+            ("virtual_participants",  "INTEGER DEFAULT 0"),
+            ("not_participated",      "INTEGER DEFAULT 0"),
+            ("failed_verification",   "INTEGER DEFAULT 0"),
+            ("dataset_hash",          "VARCHAR(64)"),
+            ("created_at",            "DATETIME"),
+            ("completed_at",          "DATETIME"),
+            ("finalized_at",          "DATETIME"),
         ]
         for col_name, col_type in session_cols:
             try:
                 cursor.execute(f"ALTER TABLE weekly_sessions ADD COLUMN {col_name} {col_type};")
                 print(f"Added column '{col_name}' to weekly_sessions.")
+            except Exception:
+                pass
+
+        hod_cols = [
+            ("academic_year", "VARCHAR(20) DEFAULT '2026-27'"),
+            ("status",        "VARCHAR(30) DEFAULT 'READY'"),
+            ("created_by",    "VARCHAR(100) DEFAULT 'HOD / System'"),
+            ("verified_at",   "DATETIME"),
+        ]
+        for col_name, col_type in hod_cols:
+            try:
+                cursor.execute(f"ALTER TABLE hod_snapshots ADD COLUMN {col_name} {col_type};")
+                print(f"Added column '{col_name}' to hod_snapshots.")
             except Exception:
                 pass
 

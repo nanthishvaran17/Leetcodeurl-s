@@ -131,10 +131,13 @@ class WeeklySession(Base):
     id = Column(Integer, primary_key=True, index=True)
     academic_year = Column(String(20), default="2026-27")
     week_number = Column(Integer, nullable=False)
-    session_date = Column(String(20), nullable=False) # YYYY-MM-DD
+    session_code = Column(String(50), unique=True, index=True, nullable=True) # e.g. WEEK-2026-08-16
+    session_date = Column(String(20), nullable=False, index=True) # YYYY-MM-DD
+    contest_id = Column(String(100), nullable=True) # e.g. weekly-contest-470
+    contest_name = Column(String(150), default="Weekly Contest")
     start_time = Column(String(10), default="08:00")
     end_time = Column(String(10), default="09:30")
-    status = Column(String(20), default="UPCOMING") # UPCOMING, ACTIVE, COMPLETED
+    status = Column(String(20), default="SCHEDULED", index=True) # SCHEDULED, LIVE, FINALIZING, FINALIZED, ARCHIVED, ERROR
     
     baseline_snapshot_id = Column(String(100), nullable=True)
     final_snapshot_id = Column(String(100), nullable=True)
@@ -143,11 +146,16 @@ class WeeklySession(Base):
     virtual_participants = Column(Integer, default=0)
     not_participated = Column(Integer, default=0)
     failed_verification = Column(Integer, default=0)
+    dataset_hash = Column(String(100), nullable=True)
 
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)
+    finalized_at = Column(DateTime, nullable=True)
 
     snapshots = relationship("WeeklySessionSnapshot", back_populates="session", cascade="all, delete-orphan")
+    public_results = relationship("WeeklyPublicResult", back_populates="session", cascade="all, delete-orphan")
+    virtual_results = relationship("WeeklyVirtualResult", back_populates="session", cascade="all, delete-orphan")
+    error_logs = relationship("WeeklyContestErrorLog", back_populates="session", cascade="all, delete-orphan")
 
 class WeeklySessionSnapshot(Base):
     __tablename__ = "weekly_session_snapshots"
@@ -169,6 +177,90 @@ class WeeklySessionSnapshot(Base):
 
     session = relationship("WeeklySession", back_populates="snapshots")
     student = relationship("Student", back_populates="snapshots")
+
+class WeeklyPublicResult(Base):
+    __tablename__ = "weekly_public_results"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("weekly_sessions.id"), nullable=False, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    reg_no = Column(String(50), nullable=False)
+    name = Column(String(150), nullable=False)
+    dept = Column(String(20), nullable=False)
+    year = Column(String(10), nullable=False)
+
+    participation_status = Column(String(30), default="PENDING", index=True) # PUBLIC_ATTENDED, PUBLIC_NOT_ATTENDED, DATA_ERROR, PENDING
+    q1 = Column(Integer, default=0)
+    q2 = Column(Integer, default=0)
+    q3 = Column(Integer, default=0)
+    q4 = Column(Integer, default=0)
+    total_contest_solved = Column(Integer, default=0)
+    contest_score = Column(Integer, default=0)
+    contest_rank = Column(Integer, nullable=True)
+    contest_rating = Column(Float, nullable=True)
+    rating_change = Column(Float, default=0.0)
+
+    fetch_status = Column(String(30), default="PENDING") # SUCCESS, PARTIAL_SUCCESS, FETCH_ERROR, PENDING
+    error_reason = Column(String(100), nullable=True)
+    retry_count = Column(Integer, default=0)
+    last_fetched_at = Column(DateTime, nullable=True)
+
+    session = relationship("WeeklySession", back_populates="public_results")
+    student = relationship("Student")
+
+class WeeklyVirtualResult(Base):
+    __tablename__ = "weekly_virtual_results"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("weekly_sessions.id"), nullable=False, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    reg_no = Column(String(50), nullable=False)
+    name = Column(String(150), nullable=False)
+
+    participation_status = Column(String(30), default="VIRTUAL_ATTENDED")
+    q1 = Column(Integer, default=0)
+    q2 = Column(Integer, default=0)
+    q3 = Column(Integer, default=0)
+    q4 = Column(Integer, default=0)
+    total_contest_solved = Column(Integer, default=0)
+    contest_score = Column(Integer, default=0)
+    completed_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    session = relationship("WeeklySession", back_populates="virtual_results")
+    student = relationship("Student")
+
+class WeeklyContestErrorLog(Base):
+    __tablename__ = "weekly_contest_error_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("weekly_sessions.id"), nullable=False, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False)
+    reg_no = Column(String(50), nullable=False)
+    student_name = Column(String(150), nullable=False)
+    field_name = Column(String(50), default="contest_participation")
+    error_type = Column(String(50), default="FETCH_ERROR") # INVALID_LINK, RATE_LIMIT, TIMEOUT, PROFILE_NOT_FOUND, CONTEST_UNAVAILABLE, DATA_ERROR
+    error_message = Column(Text, nullable=True)
+    attempt_count = Column(Integer, default=1)
+    status = Column(String(20), default="UNRESOLVED") # UNRESOLVED, RESOLVED
+    last_attempt_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    session = relationship("WeeklySession", back_populates="error_logs")
+    student = relationship("Student")
+
+class OfficialWeeklySnapshot(Base):
+    __tablename__ = "official_weekly_snapshots"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("weekly_sessions.id"), unique=True, nullable=False)
+    contest_id = Column(String(100), nullable=False)
+    contest_name = Column(String(150), nullable=False)
+    contest_date = Column(String(20), nullable=False)
+    finalized_at = Column(DateTime, default=datetime.datetime.utcnow)
+    dataset = Column(JSON, nullable=False)
+    dataset_hash = Column(String(100), nullable=False)
+    student_count = Column(Integer, default=273)
+    error_count = Column(Integer, default=0)
+
 
 class WeeklyStudentProgress(Base):
     __tablename__ = "weekly_student_progress"

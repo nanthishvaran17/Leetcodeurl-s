@@ -11,6 +11,10 @@ export const ReportsPage: React.FC = () => {
   const [selectedSnapshotPreview, setSelectedSnapshotPreview] = useState<any>(null);
   const [activeUniversalPreviewId, setActiveUniversalPreviewId] = useState<string | null>(null);
   const [isGeneratingUniversal, setIsGeneratingUniversal] = useState<boolean>(false);
+  const [selectedReportType, setSelectedReportType] = useState<string>('STUDENT_PERFORMANCE');
+  const [selectedDept, setSelectedDept] = useState<string>('ALL');
+  const [selectedYear, setSelectedYear] = useState<string>('ALL');
+  const [selectedOutputScope, setSelectedOutputScope] = useState<string>('COLLEGE');
 
   useEffect(() => {
     fetchEmailLogs();
@@ -39,7 +43,15 @@ export const ReportsPage: React.FC = () => {
     setIsGeneratingSnapshot(true);
     try {
       const res = await api.post('/reports/generate-hod-snapshot');
-      alert(res.data.message);
+      const newSnapshot = {
+        snapshot_id: res.data.snapshot_id || `snap_${Date.now()}`,
+        title: res.data.title || "Executive HOD Snapshot",
+        created_at: new Date().toISOString(),
+        metrics: res.data.metrics || {}
+      };
+      alert(res.data.message || "HOD Executive Snapshot captured successfully!");
+      setHodSnapshots(prev => [newSnapshot, ...prev.filter(s => s.snapshot_id !== newSnapshot.snapshot_id)]);
+      setSelectedSnapshotPreview(newSnapshot);
       fetchHodSnapshots();
     } catch (err: any) {
       alert(err.response?.data?.detail || "Failed to generate HOD snapshot.");
@@ -112,12 +124,20 @@ export const ReportsPage: React.FC = () => {
     }
   };
 
-  const handleGenerateUniversalReport = async (reportType: string, filters: any = {}) => {
+  const handleGenerateUniversalReport = async (overrideType?: string, overrideFilters?: any) => {
     setIsGeneratingUniversal(true);
     try {
+      const reportType = overrideType || selectedReportType;
+      const department = overrideFilters?.department || selectedDept;
+      const year = overrideFilters?.year || selectedYear;
+      const output_scope = overrideFilters?.output_scope || selectedOutputScope;
+
       const res = await api.post('/reports/generate', {
         report_type: reportType,
-        filters: filters
+        department: department,
+        year: year,
+        output_scope: output_scope,
+        filters: overrideFilters || {}
       });
       setActiveUniversalPreviewId(res.data.reportId);
     } catch (err: any) {
@@ -266,53 +286,114 @@ export const ReportsPage: React.FC = () => {
 
       {/* Universal Institutional Reports Section */}
       <div className="glass-card p-6 md:p-8 rounded-3xl border border-blue-500/30 dark:border-blue-500/20 shadow-xl space-y-6 bg-gradient-to-r from-blue-500/5 via-cyan-500/5 to-transparent">
-        <div className="flex items-center space-x-3 border-b border-gray-100 dark:border-gray-800 pb-4">
-          <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
-            <Layers className="w-6 h-6" />
+        <div className="flex items-center justify-between flex-wrap gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+              <Layers className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-gray-900 dark:text-white">📊 Universal Reports & Analytics</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-bold">
+                Central Report Engine: Generate standardized datasets viewable via <b>Preview</b>, <b>Excel (.xlsx)</b>, <b>PDF (.pdf)</b>, <b>Word (.docx)</b>, and <b>CSV (.csv)</b>.
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-black text-gray-900 dark:text-white">Universal Reports & Analytics</h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-bold">
-              Generate consistent datasets viewable via Preview, Excel, PDF, and Word.
-            </p>
+          <div className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-mono font-bold">
+            PREVIEW == EXCEL == PDF == WORD == CSV
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <button 
-            onClick={() => handleGenerateUniversalReport("COLLEGE_EXECUTIVE")}
-            disabled={isGeneratingUniversal}
-            className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 hover:border-blue-500 hover:shadow-lg transition-all text-left flex flex-col justify-between h-32 group"
-          >
-            <div className="font-bold text-gray-900 dark:text-white group-hover:text-blue-500">College Executive Overview</div>
-            <div className="text-xs text-gray-500">Full college performance stats & top 10.</div>
-          </button>
-
-          <button 
-            onClick={() => handleGenerateUniversalReport("DEPARTMENT_REPORT", { department: "CSE(CS)" })}
-            disabled={isGeneratingUniversal}
-            className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 hover:border-blue-500 hover:shadow-lg transition-all text-left flex flex-col justify-between h-32 group"
-          >
-            <div className="font-bold text-gray-900 dark:text-white group-hover:text-blue-500">CSE(CS) Department Report</div>
-            <div className="text-xs text-gray-500">Cyber Security department analytics.</div>
-          </button>
-
-          <button 
-            onClick={() => handleGenerateUniversalReport("ALL_STUDENTS_MASTER")}
-            disabled={isGeneratingUniversal}
-            className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 hover:border-blue-500 hover:shadow-lg transition-all text-left flex flex-col justify-between h-32 group"
-          >
-            <div className="font-bold text-gray-900 dark:text-white group-hover:text-blue-500">All Students Master</div>
-            <div className="text-xs text-gray-500">Complete 273 student roster & status.</div>
-          </button>
+        {/* Unified Report Builder Form Controls */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 p-5 bg-white/70 dark:bg-navy-900/70 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-inner">
           
-          <button 
-            onClick={() => handleGenerateUniversalReport("OFFICIAL_CONTEST")}
+          {/* 1. Report Type */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-black uppercase text-gray-600 dark:text-gray-400 tracking-wider">
+              Report Type
+            </label>
+            <select
+              value={selectedReportType}
+              onChange={(e) => setSelectedReportType(e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border border-gray-300 dark:border-gray-700 text-xs font-bold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="STUDENT_PERFORMANCE">Student Performance Detail</option>
+              <option value="COLLEGE_EXECUTIVE">College Executive Overview</option>
+              <option value="DEPARTMENT_PERFORMANCE">Department Performance</option>
+              <option value="BATCH_PERFORMANCE">Batch Performance</option>
+              <option value="CONTEST_PERFORMANCE">Contest Performance</option>
+              <option value="STUDENT_MASTER">Student Master (All Roster)</option>
+              <option value="LEADERBOARD">Leaderboard</option>
+              <option value="CUSTOM">Custom Report</option>
+            </select>
+          </div>
+
+          {/* 2. Department */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-black uppercase text-gray-600 dark:text-gray-400 tracking-wider">
+              Department
+            </label>
+            <select
+              value={selectedDept}
+              onChange={(e) => setSelectedDept(e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border border-gray-300 dark:border-gray-700 text-xs font-bold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="ALL">All Departments</option>
+              <option value="CSE(CS)">CSE(CS) - Cyber Security</option>
+              <option value="CSE(IOT)">CSE(IoT) - Internet of Things</option>
+            </select>
+          </div>
+
+          {/* 3. Year */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-black uppercase text-gray-600 dark:text-gray-400 tracking-wider">
+              Year / Batch
+            </label>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border border-gray-300 dark:border-gray-700 text-xs font-bold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="ALL">All Years (II, III, IV)</option>
+              <option value="II">II Year</option>
+              <option value="III">III Year</option>
+              <option value="IV">IV Year</option>
+            </select>
+          </div>
+
+          {/* 4. Output Scope */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-black uppercase text-gray-600 dark:text-gray-400 tracking-wider">
+              Output Scope
+            </label>
+            <select
+              value={selectedOutputScope}
+              onChange={(e) => setSelectedOutputScope(e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border border-gray-300 dark:border-gray-700 text-xs font-bold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="COLLEGE">College-wide</option>
+              <option value="DEPARTMENT">Department-wide</option>
+              <option value="YEAR">Year-wise</option>
+              <option value="DEPT_YEAR">Department + Year</option>
+              <option value="CUSTOM">Custom Filters</option>
+            </select>
+          </div>
+
+        </div>
+
+        {/* Action Button Bar */}
+        <div className="flex items-center justify-between flex-wrap gap-4 pt-2">
+          <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400 font-bold">
+            <Sparkles className="w-4 h-4 text-amber-500" />
+            <span>Workflow: <b>1. Select Parameters</b> → <b>2. Generate Preview</b> → <b>3. Review & Export</b></span>
+          </div>
+
+          <button
+            onClick={() => handleGenerateUniversalReport()}
             disabled={isGeneratingUniversal}
-            className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 hover:border-blue-500 hover:shadow-lg transition-all text-left flex flex-col justify-between h-32 group"
+            className="flex items-center space-x-2.5 px-8 py-3.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 text-white font-black text-sm rounded-2xl shadow-xl shadow-blue-500/25 transition-all transform hover:scale-105"
           >
-            <div className="font-bold text-gray-900 dark:text-white group-hover:text-blue-500">Official Contest Report</div>
-            <div className="text-xs text-gray-500">Strictly official participation stats.</div>
+            <Sparkles className={`w-4 h-4 ${isGeneratingUniversal ? 'animate-spin' : ''}`} />
+            <span>{isGeneratingUniversal ? 'Building Dataset...' : '⚡ Generate Preview'}</span>
           </button>
         </div>
       </div>
@@ -615,26 +696,52 @@ export const ReportsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Department Breakdown */}
-              <div className="space-y-3">
-                <h3 className="font-bold text-sm text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-800 pb-2">Department Breakdown</h3>
+              {/* Department Breakdown & Student List */}
+              <div className="space-y-4">
+                <h3 className="font-bold text-sm text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-800 pb-2">Department & Roster Breakdown</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {Object.entries(selectedSnapshotPreview.metrics?.department_summary || {}).map(([dept, data]: [string, any]) => (
-                    <div key={dept} className="flex justify-between items-center p-3 rounded-xl bg-gray-50 dark:bg-navy-900/30">
-                      <span className="font-bold text-xs text-gray-700 dark:text-gray-300">{dept}</span>
-                      <div className="text-right text-xs">
-                        <div className="font-black text-gray-900 dark:text-white">{data.total_solved} Solved</div>
-                        <div className="text-[10px] text-gray-500">{data.synced_students} / {data.total_students} Verified</div>
+                    <div key={dept} className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-900/50 border border-gray-200 dark:border-gray-800 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="font-black text-xs text-brand-600 dark:text-brand-400">{dept}</span>
+                        <span className="text-[10px] font-bold text-gray-500">{data.synced_students} / {data.total_students} Verified</span>
                       </div>
+                      <div className="text-xl font-black text-gray-900 dark:text-white">{data.total_solved} Problems Solved</div>
+                      
+                      {/* Embedded Student Preview Table */}
+                      {data.students && data.students.length > 0 && (
+                        <div className="max-h-40 overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-800 mt-2">
+                          <table className="w-full text-left text-[11px]">
+                            <thead className="bg-navy-950 text-white font-bold sticky top-0">
+                              <tr>
+                                <th className="px-2 py-1">Reg No</th>
+                                <th className="px-2 py-1">Name</th>
+                                <th className="px-2 py-1 text-right">Solved</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                              {data.students.slice(0, 10).map((st: any, idx: number) => (
+                                <tr key={idx} className="hover:bg-white dark:hover:bg-navy-800">
+                                  <td className="px-2 py-1 font-mono text-gray-600 dark:text-gray-400">{st.reg_no}</td>
+                                  <td className="px-2 py-1 font-semibold">{st.name}</td>
+                                  <td className="px-2 py-1 text-right font-black text-brand-600">{st.total_solved !== null ? st.total_solved : '—'}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
               </div>
               
               {/* Note about downloads */}
-              <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/30 text-xs font-medium text-amber-800 dark:text-amber-400">
-                <span className="font-bold block mb-1">💡 Full Roster Embedded</span>
-                This snapshot contains the fully frozen student roster. Download it in PDF, Excel, or Word format to view the detailed leaderboard.
+              <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/30 text-xs font-medium text-amber-800 dark:text-amber-400 flex items-center justify-between">
+                <div>
+                  <span className="font-bold block mb-0.5">💡 Frozen Point-in-Time Snapshot</span>
+                  Contains frozen student statistics. Download as PDF, Excel, or Word for institutional presentation.
+                </div>
               </div>
             </div>
 

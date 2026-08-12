@@ -1538,54 +1538,117 @@ def generate_universal_excel(report_data: dict) -> bytes:
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Report Data"
+    ws.sheet_view.showGridLines = True
     
-    font_bold = Font(name="Times New Roman", size=12, bold=True)
-    font_normal = Font(name="Times New Roman", size=11)
+    font_bold = Font(name="Times New Roman", size=11, bold=True)
+    font_header = Font(name="Times New Roman", size=10, bold=True, color="FFFFFF")
+    font_normal = Font(name="Times New Roman", size=10)
+    navy_fill = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
     
-    ws["A1"] = "NANDHA ENGINEERING COLLEGE"
-    ws["A1"].font = font_bold
-    ws.merge_cells("A1:E1")
+    thin_border = Border(
+        left=Side(style='thin', color='CBD5E1'),
+        right=Side(style='thin', color='CBD5E1'),
+        top=Side(style='thin', color='CBD5E1'),
+        bottom=Side(style='thin', color='CBD5E1')
+    )
+    
+    ws["A1"] = "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)"
+    ws["A1"].font = Font(name="Times New Roman", size=14, bold=True)
     
     ws["A2"] = f"Report: {report_data.get('title', 'Universal Report')}"
-    ws["A2"].font = font_bold
-    ws.merge_cells("A2:E2")
+    ws["A2"].font = Font(name="Times New Roman", size=12, bold=True, color="0284C7")
     
-    ws["A3"] = f"Generated: {report_data.get('generatedAt', '')}"
-    ws["A4"] = f"Status: {report_data.get('dataStatus', 'UNKNOWN')}"
+    dt_str = report_data.get('generatedAt', '')
+    ws["A3"] = f"Generated: {dt_str}   |   Status: {report_data.get('dataStatus', 'READY')}"
+    ws["A3"].font = font_normal
     
-    row = 6
+    row = 5
     metrics = report_data.get("metrics", {})
     if metrics:
-        ws[f"A{row}"] = "Executive Summary Metrics"
-        ws[f"A{row}"].font = font_bold
+        ws.cell(row=row, column=1, value="Executive Summary Metrics").font = font_bold
         row += 1
         for k, v in metrics.items():
-            ws[f"A{row}"] = str(k)
-            ws[f"B{row}"] = str(v)
+            c1 = ws.cell(row=row, column=1, value=str(k))
+            c2 = ws.cell(row=row, column=2, value=v)
+            c1.font = font_bold; c2.font = font_normal
+            c1.border = thin_border; c2.border = thin_border
             row += 1
-            
-    row += 2
-    if "allStudents" in report_data:
-        ws[f"A{row}"] = "Student Data"
-        ws[f"A{row}"].font = font_bold
         row += 1
-        
-        headers = ["Reg No", "Name", "Dept", "Year", "Solved", "Status"]
-        for i, h in enumerate(headers, start=1):
-            cell = ws.cell(row=row, column=i, value=h)
-            cell.font = font_bold
+
+    distribution = report_data.get("distribution")
+    if distribution:
+        ws.cell(row=row, column=1, value="Problem Solving Category Summary").font = font_bold
         row += 1
-        
-        for s in report_data["allStudents"]:
-            ws.cell(row=row, column=1, value=s.get("reg_no", ""))
-            ws.cell(row=row, column=2, value=s.get("name", ""))
-            ws.cell(row=row, column=3, value=s.get("dept", ""))
-            ws.cell(row=row, column=4, value=s.get("year", ""))
-            ws.cell(row=row, column=5, value=s.get("total_solved", ""))
-            ws.cell(row=row, column=6, value=s.get("status", ""))
+        c_cat = ws.cell(row=row, column=1, value="Category Range")
+        c_cnt = ws.cell(row=row, column=2, value="Student Count")
+        c_cat.font = font_header; c_cat.fill = navy_fill; c_cat.border = thin_border
+        c_cnt.font = font_header; c_cnt.fill = navy_fill; c_cnt.border = thin_border
+        row += 1
+        for cat, cnt in distribution.items():
+            c1 = ws.cell(row=row, column=1, value=str(cat))
+            c2 = ws.cell(row=row, column=2, value=cnt)
+            c1.font = font_normal; c2.font = font_bold
+            c1.border = thin_border; c2.border = thin_border
             row += 1
+        row += 1
+
+    top_students = report_data.get("topStudents")
+    if top_students:
+        ws.cell(row=row, column=1, value="Top Performers Leaderboard").font = font_bold
+        row += 1
+        headers = ["Rank", "Reg No", "Student Name", "Dept", "Year", "Solved", "Rating"]
+        for col_idx, h in enumerate(headers, start=1):
+            c = ws.cell(row=row, column=col_idx, value=h)
+            c.font = font_header; c.fill = navy_fill; c.border = thin_border
+        row += 1
+        for idx, s in enumerate(top_students, start=1):
+            vals = [idx, s.get("reg_no", ""), s.get("name", ""), s.get("dept", ""), s.get("year", ""), s.get("total_solved", 0), s.get("rating", "—")]
+            for col_idx, val in enumerate(vals, start=1):
+                c = ws.cell(row=row, column=col_idx, value=val)
+                c.font = font_normal; c.border = thin_border
+            row += 1
+        row += 1
+
+    all_students = report_data.get("allStudents")
+    if all_students:
+        ws.cell(row=row, column=1, value="Student Performance Master Roster").font = font_bold
+        row += 1
+        headers = ["S.No", "Reg No", "Student Name", "Dept", "Year", "Easy", "Medium", "Hard", "Total Solved", "Status"]
+        for col_idx, h in enumerate(headers, start=1):
+            c = ws.cell(row=row, column=col_idx, value=h)
+            c.font = font_header; c.fill = navy_fill; c.border = thin_border
+        row += 1
+        for idx, s in enumerate(all_students, start=1):
+            vals = [idx, s.get("reg_no", ""), s.get("name", ""), s.get("dept", ""), s.get("year", ""), s.get("easy", "—"), s.get("medium", "—"), s.get("hard", "—"), s.get("total_solved", "—"), s.get("status", "UNVERIFIED")]
+            for col_idx, val in enumerate(vals, start=1):
+                c = ws.cell(row=row, column=col_idx, value=val)
+                c.font = font_normal; c.border = thin_border
+            row += 1
+        row += 1
+
+    participations = report_data.get("participations")
+    if participations:
+        ws.cell(row=row, column=1, value="Official Contest Participation Log").font = font_bold
+        row += 1
+        headers = ["S.No", "Contest Name", "Date", "Reg No", "Student Name", "Dept", "Problems Solved", "Total Problems", "Contest Rank"]
+        for col_idx, h in enumerate(headers, start=1):
+            c = ws.cell(row=row, column=col_idx, value=h)
+            c.font = font_header; c.fill = navy_fill; c.border = thin_border
+        row += 1
+        for idx, p in enumerate(participations, start=1):
+            vals = [idx, p.get("contest_name", ""), p.get("date", ""), p.get("reg_no", ""), p.get("student_name", ""), p.get("dept", ""), p.get("problems_solved", 0), p.get("total_problems", 4), p.get("rank", "-")]
+            for col_idx, val in enumerate(vals, start=1):
+                c = ws.cell(row=row, column=col_idx, value=val)
+                c.font = font_normal; c.border = thin_border
+            row += 1
+
+    for col in ws.columns:
+        max_len = max(len(str(cell.value or '')) for cell in col)
+        col_letter = get_column_letter(col[0].column)
+        ws.column_dimensions[col_letter].width = max(max_len + 3, 12)
 
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
     return output.getvalue()
+

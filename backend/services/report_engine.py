@@ -2,388 +2,149 @@ import datetime
 import uuid
 from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import func
-from backend.models import Student, Department, Section, LeetCodeProfileStats, ContestParticipation, HODSnapshot
+from backend.models import Student, Department, Section, HODSnapshot, ReportHistory
+from backend.services.report_models import ReportConfig, ReportDataset, DataQualitySummary
+from backend.services.report_data_service import fetch_normalized_students, fetch_normalized_contests, get_problem_category
+from backend.services.report_validators import validate_data_quality
 
-def build_college_overview(db: Session, filters: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    """Builds the verified dataset for the College Executive Overview report."""
-    query = db.query(Student).filter(Student.is_active == True)
-    
-    if filters:
-        if "academic_year" in filters:
-            # We don't have an academic year on Student yet in a unified way, but if needed we can add it
-            pass
-            
-    students = query.all()
+def build_universal_report(db: Session, config: ReportConfig) -> Dict[str, Any]:
+    """
+    UNIVERSAL REPORT ENGINE
+    Single Source of Truth generator that creates normalized datasets for all report types.
+    """
+    raw_students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+    data_quality = validate_data_quality(raw_students)
+
+    students = fetch_normalized_students(
+        db,
+        dept_filter=config.department,
+        year_filter=config.year
+    )
+
     total_students = len(students)
-    
-    verified_students = 0
-    pending_students = 0
-    failed_students = 0
-    
-    total_problems_solved = 0
-    easy_solved = 0
-    medium_solved = 0
-    hard_solved = 0
-    
-    official_participants = set()
-    virtual_participants = set()
-    
-    departments_summary = {}
-    
-    # Track distributions
+    verified_students = sum(1 for s in students if s.status == "VERIFIED")
+    unverified_students = total_students - verified_students
+
+    total_solved = sum((s.total_solved or 0) for s in students if s.status == "VERIFIED")
+    easy_solved = sum((s.easy or 0) for s in students if s.status == "VERIFIED")
+    medium_solved = sum((s.medium or 0) for s in students if s.status == "VERIFIED")
+    hard_solved = sum((s.hard or 0) for s in students if s.status == "VERIFIED")
+
+    active_solvers = sum(1 for s in students if (s.total_solved or 0) > 0)
+    average_solved = round(total_solved / max(verified_students, 1), 2)
+
+    ratings = [s.contest_rating for s in students if s.contest_rating is not None]
+    average_rating = round(sum(ratings) / max(len(ratings), 1), 1) if ratings else None
+    highest_rating = round(max(ratings), 1) if ratings else None
+    highest_solved = max([(s.total_solved or 0) for s in students], default=0)
+
+    # Centralized Category Distribution
     distribution = {
         "Above 500": 0,
         "250-500": 0,
-        "101-250": 0,
-        "Less than 100": 0,
-        "Not Yet Started": 0
+        "100-249": 0,
+        "50-99": 0,
+        "25-49": 0,
+        "1-24": 0,
+        "0 Solved": 0
     }
-    
-    top_students = []
 
     for s in students:
-        dept_name = s.department.name if s.department else "Unknown"
-        if dept_name not in departments_summary:
-            departments_summary[dept_name] = {
-                "total": 0,
-                "verified": 0,
-                "total_solved": 0,
-                "official_participants": 0,
-                "virtual_participants": 0
-            }
-        
-        departments_summary[dept_name]["total"] += 1
-        
-        st = s.stats
-        if not st:
-            pending_students += 1
-            departments_summary[dept_name]["verified"] += 0
-            distribution["Not Yet Started"] += 1
-            continue
-            
-        if st.validation_status == "verified":
-            verified_students += 1
-            departments_summary[dept_name]["verified"] += 1
-            
-            solved = st.total_solved or 0
-            total_problems_solved += solved
-            departments_summary[dept_name]["total_solved"] += solved
-            easy_solved += (st.easy_solved or 0)
-            medium_solved += (st.medium_solved or 0)
-            hard_solved += (st.hard_solved or 0)
-            
-            if solved > 500:
-                distribution["Above 500"] += 1
-            elif solved >= 250:
-                distribution["250-500"] += 1
-            elif solved > 100:
-                distribution["101-250"] += 1
-            elif solved > 0:
-                distribution["Less than 100"] += 1
-            else:
-                distribution["Not Yet Started"] += 1
-                
-            student_data = {
-                "reg_no": s.reg_no,
-                "name": s.name,
-                "dept": dept_name,
-                "year": s.year_level,
-                "total_solved": solved,
-                "easy": st.easy_solved or 0,
-                "medium": st.medium_solved or 0,
-                "hard": st.hard_solved or 0,
-                "rating": st.contest_rating
-            }
-            top_students.append(student_data)
+        cat = get_problem_category(s.total_solved)
+        if cat in distribution:
+            distribution[cat] += 1
         else:
-            if st.sync_status == "failed" or st.sync_status == "mismatch":
-                failed_students += 1
-            else:
-                pending_students += 1
-            distribution["Not Yet Started"] += 1
-            
-        # Check participation
-        participations = s.contest_participations
-        has_official = False
-        has_virtual = False
-        for p in participations:
-            if p.participation_type == "OFFICIAL":
-                official_participants.add(s.id)
-                has_official = True
-            elif p.participation_type == "VIRTUAL":
-                virtual_participants.add(s.id)
-                has_virtual = True
-                
-        if has_official:
-            departments_summary[dept_name]["official_participants"] += 1
-        if has_virtual:
-            departments_summary[dept_name]["virtual_participants"] += 1
+            distribution[cat] = 1
 
-    # ZERO DATA PROTECTION
-    if verified_students == 0:
-        total_problems_solved = None
-        average_solved = None
-        official_part_count = None
-        virtual_part_count = None
-        data_status = "INVALID"
-        message = "⚠️ No verified data available. Report cannot be generated."
-    else:
-        average_solved = round(total_problems_solved / verified_students, 2)
-        official_part_count = len(official_participants)
-        virtual_part_count = len(virtual_participants)
-        data_status = "READY" if verified_students > (total_students * 0.9) else "PARTIAL"
-        message = None
+    # Top Solvers
+    top_students = [s.dict() for s in students if s.status == "VERIFIED"][:10]
+    all_students_dict = [s.dict() for s in students]
 
-    not_participated = total_students - len(official_participants)
+    # Department Breakdown
+    dept_breakdown = {}
+    for s in students:
+        d = s.dept or "CSE"
+        if d not in dept_breakdown:
+            dept_breakdown[d] = {"total": 0, "verified": 0, "total_solved": 0}
+        dept_breakdown[d]["total"] += 1
+        if s.status == "VERIFIED":
+            dept_breakdown[d]["verified"] += 1
+            dept_breakdown[d]["total_solved"] += (s.total_solved or 0)
 
-    top_students = sorted(top_students, key=lambda x: x["total_solved"], reverse=True)[:10]
+    # Contest Data if requested
+    participations_dict = []
+    if config.report_type in ("CONTEST_PERFORMANCE", "OFFICIAL_CONTEST"):
+        contests = fetch_normalized_contests(db, dept_filter=config.department, year_filter=config.year)
+        participations_dict = [c.dict() for c in contests]
 
-    report_dataset = {
-        "reportId": str(uuid.uuid4()),
-        "reportType": "COLLEGE_EXECUTIVE",
+    # Title formatting
+    title = f"{config.report_type.replace('_', ' ').title()}"
+    if config.department != "ALL":
+        title = f"{config.department} {title}"
+    if config.year != "ALL":
+        title = f"{title} ({config.year} Year)"
+
+    report_id = f"RPT-{datetime.datetime.utcnow().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+
+    dataset = {
+        "reportId": report_id,
+        "reportType": config.report_type,
+        "title": title,
         "generatedAt": datetime.datetime.utcnow().isoformat(),
         "verifiedAt": datetime.datetime.utcnow().isoformat(),
-        "dataStatus": data_status,
-        "message": message,
+        "dataStatus": "READY" if total_students > 0 else "PARTIAL",
+        "message": None,
+        "config": config.dict(),
         "metrics": {
             "totalStudents": total_students,
             "verifiedStudents": verified_students,
-            "pendingStudents": pending_students,
-            "failedStudents": failed_students,
-            "totalSolved": total_problems_solved,
+            "unverifiedStudents": unverified_students,
+            "activeSolvers": active_solvers,
+            "totalSolved": total_solved,
             "averageSolved": average_solved,
             "easySolved": easy_solved,
             "mediumSolved": medium_solved,
             "hardSolved": hard_solved,
-            "officialParticipants": official_part_count,
-            "virtualParticipants": virtual_part_count,
-            "notParticipated": not_participated
+            "highestSolved": highest_solved,
+            "averageRating": average_rating,
+            "highestRating": highest_rating,
+            "totalParticipations": len(participations_dict)
         },
-        "departmentSummary": departments_summary,
         "distribution": distribution,
-        "topStudents": top_students
+        "departmentSummary": dept_breakdown,
+        "dataQuality": data_quality.dict(),
+        "topStudents": top_students,
+        "allStudents": all_students_dict,
+        "participations": participations_dict
     }
-    
-    return report_dataset
+
+    # Persist in DB ReportHistory for auditability
+    history_entry = ReportHistory(
+        report_id=report_id,
+        report_type=config.report_type,
+        title=title,
+        filters=config.dict(),
+        dataset=dataset,
+        status="GENERATED"
+    )
+    db.add(history_entry)
+    db.commit()
+
+    return dataset
+
+# Maintain backwards compatibility aliases
+def build_college_overview(db: Session, filters: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    config = ReportConfig(report_type="COLLEGE_EXECUTIVE", department="ALL", year="ALL")
+    return build_universal_report(db, config)
 
 def build_department_report(db: Session, dept_name: str, year: Optional[str] = None, section: Optional[str] = None) -> Dict[str, Any]:
-    """Builds the verified dataset for a specific department/year/section."""
-    query = db.query(Student).filter(Student.is_active == True)
-    
-    # Needs a join with Department
-    query = query.join(Department).filter(Department.name == dept_name)
-    
-    if year:
-        query = query.filter(Student.year_level == year)
-    if section:
-        query = query.join(Section).filter(Section.name == section)
-        
-    students = query.all()
-    total_students = len(students)
-    
-    verified_students = 0
-    total_problems_solved = 0
-    official_participants = set()
-    virtual_participants = set()
-    
-    distribution = {
-        "Above 500": 0,
-        "250-500": 0,
-        "101-250": 0,
-        "Less than 100": 0,
-        "Not Yet Started": 0
-    }
-    
-    student_rows = []
-    
-    for s in students:
-        st = s.stats
-        if not st or st.validation_status != "verified":
-            distribution["Not Yet Started"] += 1
-            student_rows.append({
-                "reg_no": s.reg_no,
-                "name": s.name,
-                "year": s.year_level,
-                "section": s.section.name if s.section else "",
-                "total_solved": None,
-                "rating": None,
-                "status": "UNVERIFIED"
-            })
-            continue
-            
-        verified_students += 1
-        solved = st.total_solved or 0
-        total_problems_solved += solved
-        
-        if solved > 500:
-            distribution["Above 500"] += 1
-        elif solved >= 250:
-            distribution["250-500"] += 1
-        elif solved > 100:
-            distribution["101-250"] += 1
-        elif solved > 0:
-            distribution["Less than 100"] += 1
-        else:
-            distribution["Not Yet Started"] += 1
-            
-        student_rows.append({
-            "reg_no": s.reg_no,
-            "name": s.name,
-            "year": s.year_level,
-            "section": s.section.name if s.section else "",
-            "total_solved": solved,
-            "easy": st.easy_solved,
-            "medium": st.medium_solved,
-            "hard": st.hard_solved,
-            "rating": st.contest_rating,
-            "status": "VERIFIED"
-        })
-        
-        has_official = False
-        has_virtual = False
-        for p in s.contest_participations:
-            if p.participation_type == "OFFICIAL":
-                official_participants.add(s.id)
-                has_official = True
-            elif p.participation_type == "VIRTUAL":
-                virtual_participants.add(s.id)
-                has_virtual = True
-                
-    # Sort students by total_solved descending
-    student_rows = sorted(student_rows, key=lambda x: x["total_solved"] or -1, reverse=True)
-    
-    # Zero Data Protection
-    if verified_students == 0:
-        total_problems_solved = None
-        average_solved = None
-        data_status = "INVALID"
-        message = "⚠️ No verified data available for this selection."
-    else:
-        average_solved = round(total_problems_solved / verified_students, 2)
-        data_status = "READY" if verified_students > (total_students * 0.9) else "PARTIAL"
-        message = None
-        
-    title_parts = [dept_name]
-    if year: title_parts.append(f"{year} Year")
-    if section: title_parts.append(f"Sec {section}")
-    report_title = " - ".join(title_parts) + " Report"
-
-    return {
-        "reportId": str(uuid.uuid4()),
-        "reportType": "DEPARTMENT_REPORT",
-        "title": report_title,
-        "generatedAt": datetime.datetime.utcnow().isoformat(),
-        "verifiedAt": datetime.datetime.utcnow().isoformat(),
-        "dataStatus": data_status,
-        "message": message,
-        "metrics": {
-            "totalStudents": total_students,
-            "verifiedStudents": verified_students,
-            "totalSolved": total_problems_solved,
-            "averageSolved": average_solved,
-            "officialParticipants": len(official_participants),
-            "virtualParticipants": len(virtual_participants)
-        },
-        "distribution": distribution,
-        "topStudents": student_rows[:10],
-        "allStudents": student_rows
-    }
+    config = ReportConfig(report_type="DEPARTMENT_PERFORMANCE", department=dept_name or "ALL", year=year or "ALL")
+    return build_universal_report(db, config)
 
 def build_all_students_report(db: Session) -> Dict[str, Any]:
-    """Builds the full master report for all 273 students."""
-    students = db.query(Student).filter(Student.is_active == True).all()
-    total_students = len(students)
-    
-    student_rows = []
-    verified_students = 0
-    
-    for idx, s in enumerate(students, start=1):
-        st = s.stats
-        if not st or st.validation_status != "verified":
-            student_rows.append({
-                "s_no": idx,
-                "reg_no": s.reg_no,
-                "name": s.name,
-                "dept": s.department.code if s.department else "",
-                "year": s.year_level,
-                "section": s.section.name if s.section else "",
-                "username": s.username or "",
-                "url": s.leetcode_url or "",
-                "easy": None,
-                "medium": None,
-                "hard": None,
-                "total_solved": None,
-                "rating": None,
-                "global_rank": None,
-                "status": "UNVERIFIED"
-            })
-            continue
-            
-        verified_students += 1
-        student_rows.append({
-            "s_no": idx,
-            "reg_no": s.reg_no,
-            "name": s.name,
-            "dept": s.department.code if s.department else "",
-            "year": s.year_level,
-            "section": s.section.name if s.section else "",
-            "username": s.username or "",
-            "url": s.leetcode_url or "",
-            "easy": st.easy_solved,
-            "medium": st.medium_solved,
-            "hard": st.hard_solved,
-            "total_solved": st.total_solved,
-            "rating": st.contest_rating,
-            "global_rank": st.contest_global_ranking,
-            "status": "VERIFIED"
-        })
-        
-    student_rows = sorted(student_rows, key=lambda x: x["total_solved"] or -1, reverse=True)
-    for i, row in enumerate(student_rows):
-        row["rank"] = i + 1 if row["status"] == "VERIFIED" else "-"
-
-    return {
-        "reportId": str(uuid.uuid4()),
-        "reportType": "ALL_STUDENTS_MASTER",
-        "title": "All Students Master Report",
-        "generatedAt": datetime.datetime.utcnow().isoformat(),
-        "verifiedAt": datetime.datetime.utcnow().isoformat(),
-        "dataStatus": "READY" if verified_students > (total_students * 0.9) else "PARTIAL",
-        "metrics": {
-            "totalStudents": total_students,
-            "verifiedStudents": verified_students,
-        },
-        "allStudents": student_rows
-    }
+    config = ReportConfig(report_type="STUDENT_MASTER", department="ALL", year="ALL")
+    return build_universal_report(db, config)
 
 def build_official_contest_report(db: Session) -> Dict[str, Any]:
-    """Builds a dataset containing ONLY official contest participation."""
-    participations = db.query(ContestParticipation).filter(ContestParticipation.participation_type == "OFFICIAL").all()
-    
-    rows = []
-    for p in participations:
-        rows.append({
-            "contest_name": p.contest_name,
-            "date": p.contest_date,
-            "student_name": p.student.name,
-            "reg_no": p.student.reg_no,
-            "dept": p.student.department.code if p.student.department else "",
-            "problems_solved": p.problems_solved,
-            "total_problems": p.total_problems,
-            "rank": p.contest_rank,
-            "verified_at": p.verified_at.isoformat() if p.verified_at else None
-        })
-        
-    return {
-        "reportId": str(uuid.uuid4()),
-        "reportType": "OFFICIAL_CONTEST",
-        "title": "Official Contest Participation Report",
-        "generatedAt": datetime.datetime.utcnow().isoformat(),
-        "verifiedAt": datetime.datetime.utcnow().isoformat(),
-        "dataStatus": "READY",
-        "metrics": {
-            "totalParticipations": len(rows),
-        },
-        "participations": rows
-    }
+    config = ReportConfig(report_type="CONTEST_PERFORMANCE", department="ALL", year="ALL")
+    return build_universal_report(db, config)

@@ -19,7 +19,7 @@ from backend.logger import logger
 from backend.routes import (
     auth, students, departments, sessions,
     leaderboard, analytics, reports, settings as settings_route,
-    audit, public, sync, history, risk, goals, system_health
+    audit, public, sync, history, risk, goals, system_health, weekly_contests
 )
 
 app = FastAPI(
@@ -71,6 +71,7 @@ app.include_router(history.router)
 app.include_router(risk.router)
 app.include_router(goals.router)
 app.include_router(system_health.router)
+app.include_router(weekly_contests.router, prefix="/api")
 
 # Mount Static File Directories
 is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")
@@ -92,6 +93,8 @@ def on_startup():
     logger.info("Initializing database & tables...")
     try:
         run_db_migrations()
+        from backend.database import run_migrations
+        run_migrations()
     except Exception as _mig_err:
         logger.warning(f"Database migration note: {_mig_err}")
 
@@ -101,6 +104,17 @@ def on_startup():
         reseed_all_student_stats()
     except Exception as e:
         logger.warning(f"Database seed/reseed skipped or noted: {e}")
+
+    try:
+        from backend.database import SessionLocal
+        from backend.services.weekly_session_manager import resume_active_weekly_session
+        db = SessionLocal()
+        try:
+            asyncio.create_task(resume_active_weekly_session(db))
+        except Exception as _rec_err:
+            logger.warning(f"Session recovery note: {_rec_err}")
+    except Exception as _db_err:
+        logger.warning(f"Database session recovery skipped: {_db_err}")
 
     # Ensure all 273 students have a Firestore document with syncStatus:pending
     # so the frontend never shows "0 Solved / Verified just now" for unfetched students.
@@ -151,4 +165,6 @@ def health_check():
 FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
 if os.path.exists(FRONTEND_DIST):
     app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")
+
+logger.info("LeetCode Performance Tracker API is fully ready.")
 

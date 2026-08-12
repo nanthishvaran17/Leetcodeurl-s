@@ -46,7 +46,7 @@ def get_student_history(
 
 @router.get("/growth/improvers", response_model=List[ImproverOut])
 def get_top_improvers(
-    period: str = Query("7d", regex="^(today|7d|30d|all)$"),
+    period: str = Query("7d", pattern="^(today|7d|30d|all)$"),
     dept_id: Optional[int] = None,
     year_level: Optional[str] = None,
     limit: int = Query(20, ge=1, le=100),
@@ -118,7 +118,7 @@ def get_top_improvers(
 
 @router.get("/growth/college-delta")
 def get_college_delta(
-    period: str = Query("7d", regex="^(today|7d|30d|all)$"),
+    period: str = Query("7d", pattern="^(today|7d|30d|all)$"),
     db: Session = Depends(get_db)
 ):
     """

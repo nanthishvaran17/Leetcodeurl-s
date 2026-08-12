@@ -521,44 +521,227 @@ def generate_universal_pdf(report_data: dict) -> bytes:
         'DocTitle',
         parent=styles['Heading1'],
         fontName='Times-Bold',
-        fontSize=16,
-        leading=20,
+        fontSize=15,
+        leading=18,
         textColor=colors.HexColor('#0F172A'),
         alignment=1
     )
     
-    normal_style = ParagraphStyle(
-        'DocNormal',
+    sub_style = ParagraphStyle(
+        'DocSub',
         parent=styles['Normal'],
-        fontName='Times-Roman',
-        fontSize=10,
-        leading=14
+        fontName='Times-Bold',
+        fontSize=11,
+        leading=14,
+        textColor=colors.HexColor('#0284C7'),
+        alignment=1
     )
 
-    story.append(Paragraph("NANDHA ENGINEERING COLLEGE", title_style))
-    story.append(Paragraph(f"Report: {report_data.get('title', 'Report')}", title_style))
-    story.append(Spacer(1, 10))
-    story.append(Paragraph(f"Generated: {report_data.get('generatedAt', '')}", normal_style))
-    story.append(Paragraph(f"Status: {report_data.get('dataStatus', 'UNKNOWN')}", normal_style))
-    
+    meta_style = ParagraphStyle(
+        'DocMeta',
+        parent=styles['Normal'],
+        fontName='Times-Roman',
+        fontSize=8.5,
+        textColor=colors.HexColor('#64748B'),
+        alignment=1
+    )
+
+    header_cell_style = ParagraphStyle(
+        'HCell', fontName='Times-Bold', fontSize=8.5, textColor=colors.white, alignment=1
+    )
+    cell_style = ParagraphStyle(
+        'NCell', fontName='Times-Roman', fontSize=8, leading=10, textColor=colors.HexColor('#334155')
+    )
+    cell_bold_style = ParagraphStyle(
+        'BCell', fontName='Times-Bold', fontSize=8, leading=10, textColor=colors.HexColor('#0F172A'), alignment=1
+    )
+
+    # Header
+    logo_path = get_college_logo_path()
+    header_els = [
+        Paragraph("NANDHA ENGINEERING COLLEGE (AUTONOMOUS)", title_style),
+        Spacer(1, 3),
+        Paragraph(report_data.get('title', 'Universal Performance Report'), sub_style),
+        Spacer(1, 2),
+        Paragraph(f"Generated: {report_data.get('generatedAt', '')} | Status: {report_data.get('dataStatus', 'READY')}", meta_style)
+    ]
+
+    if logo_path and os.path.exists(logo_path):
+        try:
+            img = Image(logo_path, width=1.2*inch, height=0.8*inch)
+            t_hdr = Table([[img, header_els]], colWidths=[1.3*inch, 5.7*inch])
+            t_hdr.setStyle(TableStyle([
+                ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+                ('ALIGN', (0,0), (0,0), 'LEFT'),
+                ('ALIGN', (1,0), (1,0), 'CENTER'),
+            ]))
+            story.append(t_hdr)
+        except Exception:
+            for el in header_els: story.append(el)
+    else:
+        for el in header_els: story.append(el)
+
+    story.append(Spacer(1, 8))
+    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#0284C7'), spaceAfter=10))
+
+    # Metrics
     metrics = report_data.get("metrics", {})
     if metrics:
-        story.append(Spacer(1, 10))
-        story.append(Paragraph("<b>Executive Summary</b>", normal_style))
-        data = [["Metric", "Value"]]
-        for k, v in metrics.items():
-            data.append([str(k), str(v)])
-            
-        t = Table(data, colWidths=[200, 100])
-        t.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (1,0), colors.HexColor('#F1F5F9')),
-            ('TEXTCOLOR', (0,0), (-1,-1), colors.black),
-            ('FONTNAME', (0,0), (-1,-1), 'Times-Roman'),
-            ('GRID', (0,0), (-1,-1), 1, colors.HexColor('#CBD5E1')),
+        story.append(Paragraph("<b>Executive Summary Metrics</b>", ParagraphStyle('H2', fontName='Times-Bold', fontSize=10, textColor=colors.HexColor('#0F172A'))))
+        story.append(Spacer(1, 4))
+        
+        m_items = list(metrics.items())
+        m_rows = []
+        for i in range(0, len(m_items), 2):
+            k1, v1 = m_items[i]
+            val1 = f"{v1:,}" if isinstance(v1, (int, float)) and v1 > 999 else str(v1 if v1 is not None else "—")
+            row = [Paragraph(str(k1), cell_bold_style), Paragraph(val1, cell_style)]
+            if i + 1 < len(m_items):
+                k2, v2 = m_items[i+1]
+                val2 = f"{v2:,}" if isinstance(v2, (int, float)) and v2 > 999 else str(v2 if v2 is not None else "—")
+                row.extend([Paragraph(str(k2), cell_bold_style), Paragraph(val2, cell_style)])
+            else:
+                row.extend([Paragraph("", cell_style), Paragraph("", cell_style)])
+            m_rows.append(row)
+
+        t_m = Table(m_rows, colWidths=[1.8*inch, 1.7*inch, 1.8*inch, 1.7*inch])
+        t_m.setStyle(TableStyle([
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#CBD5E1')),
+            ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#F8FAFC')),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('TOPPADDING', (0,0), (-1,-1), 4),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 4),
         ]))
-        story.append(t)
+        story.append(t_m)
+        story.append(Spacer(1, 10))
+
+    # Category Distribution
+    distribution = report_data.get("distribution")
+    if distribution:
+        story.append(Paragraph("<b>Problem Solving Distribution</b>", ParagraphStyle('H2', fontName='Times-Bold', fontSize=10, textColor=colors.HexColor('#0F172A'))))
+        story.append(Spacer(1, 4))
+        d_rows = [[Paragraph("Category Range", header_cell_style), Paragraph("Student Count", header_cell_style)]]
+        for cat, count in distribution.items():
+            d_rows.append([Paragraph(str(cat), cell_style), Paragraph(str(count), cell_bold_style)])
+        t_d = Table(d_rows, colWidths=[4.0*inch, 3.0*inch])
+        t_d.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#0F172A')),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#CBD5E1')),
+            ('TOPPADDING', (0,0), (-1,-1), 3),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 3),
+            ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor('#F8FAFC')])
+        ]))
+        story.append(t_d)
+        story.append(Spacer(1, 10))
+
+    # Top Students
+    top_students = report_data.get("topStudents")
+    if top_students:
+        story.append(Paragraph("<b>Top Performers Leaderboard</b>", ParagraphStyle('H2', fontName='Times-Bold', fontSize=10, textColor=colors.HexColor('#0F172A'))))
+        story.append(Spacer(1, 4))
+        top_rows = [[
+            Paragraph("Rank", header_cell_style),
+            Paragraph("Reg No", header_cell_style),
+            Paragraph("Name", header_cell_style),
+            Paragraph("Dept", header_cell_style),
+            Paragraph("Year", header_cell_style),
+            Paragraph("Solved", header_cell_style),
+            Paragraph("Rating", header_cell_style)
+        ]]
+        for idx, s in enumerate(top_students, 1):
+            top_rows.append([
+                Paragraph(f"#{idx}", cell_bold_style),
+                Paragraph(s.get("reg_no", ""), cell_style),
+                Paragraph(s.get("name", ""), cell_style),
+                Paragraph(s.get("dept", ""), cell_style),
+                Paragraph(s.get("year", ""), cell_style),
+                Paragraph(str(s.get("total_solved", 0)), cell_bold_style),
+                Paragraph(str(round(s["rating"], 1)) if s.get("rating") else "—", cell_style)
+            ])
+        t_top = Table(top_rows, colWidths=[0.5*inch, 1.2*inch, 2.3*inch, 0.9*inch, 0.6*inch, 0.7*inch, 0.8*inch])
+        t_top.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#0F172A')),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#CBD5E1')),
+            ('TOPPADDING', (0,0), (-1,-1), 3),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 3),
+            ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor('#F8FAFC')])
+        ]))
+        story.append(t_top)
+        story.append(Spacer(1, 10))
+
+    # All Students
+    all_students = report_data.get("allStudents")
+    if all_students:
+        story.append(Paragraph("<b>Student Performance Roster</b>", ParagraphStyle('H2', fontName='Times-Bold', fontSize=10, textColor=colors.HexColor('#0F172A'))))
+        story.append(Spacer(1, 4))
+        all_rows = [[
+            Paragraph("S.No", header_cell_style),
+            Paragraph("Reg No", header_cell_style),
+            Paragraph("Name", header_cell_style),
+            Paragraph("Dept", header_cell_style),
+            Paragraph("Year", header_cell_style),
+            Paragraph("Solved", header_cell_style),
+            Paragraph("Status", header_cell_style)
+        ]]
+        for idx, s in enumerate(all_students[:100], 1):
+            all_rows.append([
+                Paragraph(str(idx), cell_style),
+                Paragraph(s.get("reg_no", ""), cell_style),
+                Paragraph(s.get("name", ""), cell_style),
+                Paragraph(s.get("dept", ""), cell_style),
+                Paragraph(s.get("year", ""), cell_style),
+                Paragraph(str(s.get("total_solved") if s.get("total_solved") is not None else "—"), cell_bold_style),
+                Paragraph(s.get("status", "UNVERIFIED"), cell_style)
+            ])
+        t_all = Table(all_rows, colWidths=[0.5*inch, 1.3*inch, 2.3*inch, 0.8*inch, 0.6*inch, 0.7*inch, 0.8*inch])
+        t_all.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#0F172A')),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#CBD5E1')),
+            ('TOPPADDING', (0,0), (-1,-1), 2.5),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 2.5),
+            ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor('#F8FAFC')])
+        ]))
+        story.append(t_all)
+        story.append(Spacer(1, 10))
+
+    # Participations
+    participations = report_data.get("participations")
+    if participations:
+        story.append(Paragraph("<b>Official Contest Participation Log</b>", ParagraphStyle('H2', fontName='Times-Bold', fontSize=10, textColor=colors.HexColor('#0F172A'))))
+        story.append(Spacer(1, 4))
+        p_rows = [[
+            Paragraph("S.No", header_cell_style),
+            Paragraph("Contest", header_cell_style),
+            Paragraph("Date", header_cell_style),
+            Paragraph("Reg No", header_cell_style),
+            Paragraph("Name", header_cell_style),
+            Paragraph("Dept", header_cell_style),
+            Paragraph("Solved", header_cell_style),
+            Paragraph("Rank", header_cell_style)
+        ]]
+        for idx, p in enumerate(participations, 1):
+            p_rows.append([
+                Paragraph(str(idx), cell_style),
+                Paragraph(p.get("contest_name", ""), cell_style),
+                Paragraph(p.get("date", ""), cell_style),
+                Paragraph(p.get("reg_no", ""), cell_style),
+                Paragraph(p.get("student_name", ""), cell_style),
+                Paragraph(p.get("dept", ""), cell_style),
+                Paragraph(f"{p.get('problems_solved', 0)} / {p.get('total_problems', 4)}", cell_bold_style),
+                Paragraph(str(p.get("rank", "-")), cell_style)
+            ])
+        t_p = Table(p_rows, colWidths=[0.4*inch, 1.5*inch, 0.8*inch, 1.1*inch, 1.5*inch, 0.6*inch, 0.6*inch, 0.5*inch])
+        t_p.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#0F172A')),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#CBD5E1')),
+            ('TOPPADDING', (0,0), (-1,-1), 3),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 3),
+            ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor('#F8FAFC')])
+        ]))
+        story.append(t_p)
 
     doc.build(story)
     pdf_bytes = buffer.getvalue()
     buffer.close()
     return pdf_bytes
+

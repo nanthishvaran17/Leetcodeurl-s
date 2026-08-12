@@ -33,6 +33,14 @@ from backend.email_service import send_weekly_report_email
 from backend.sync_engine import run_batch_sync
 from backend.logger import logger
 
+from backend.services.weekly_session_manager import (
+    get_or_create_current_weekly_session,
+    trigger_start_snapshot_0800,
+    trigger_final_snapshot_0930,
+    run_live_polling_cycle,
+    resume_active_weekly_session
+)
+
 tz = get_tz(settings.TIMEZONE)
 scheduler = AsyncIOScheduler(timezone=tz)
 
@@ -43,8 +51,8 @@ async def sunday_start_job():
     logger.info("Executing Scheduled Job: Sunday 8:00 AM Start Snapshot...")
     db = SessionLocal()
     try:
-        session = get_or_create_current_session(db)
-        await trigger_start_snapshot(db, session.id)
+        session = get_or_create_current_weekly_session(db)
+        await trigger_start_snapshot_0800(db, session.id)
     except Exception as e:
         logger.error(f"Error in sunday_start_job: {e}")
     finally:
@@ -52,29 +60,23 @@ async def sunday_start_job():
 
 async def sunday_end_job():
     """
-    Scheduled for Sunday 9:30 AM IST: End snapshot, ranking calculation, report generation & email dispatch.
+    Scheduled for Sunday 9:30 AM IST: Final snapshot, snapshot lock, report generation & email dispatch.
     """
     logger.info("Executing Scheduled Job: Sunday 9:30 AM End Snapshot...")
     db = SessionLocal()
     try:
-        session = get_or_create_current_session(db)
-        await trigger_end_snapshot(db, session.id)
+        session = get_or_create_current_weekly_session(db)
+        snapshot = await trigger_final_snapshot_0930(db, session.id)
 
-        from backend.services.report_engine import build_college_overview
-        dataset = build_college_overview(db)
-        verified = dataset.get("metrics", {}).get("verifiedStudents", 0)
+        dataset = snapshot.dataset
+        verified = dataset.get("metrics", {}).get("officialAttended", 0)
         total = dataset.get("metrics", {}).get("totalStudents", 0)
         
-        # Block email dispatch if < 10% verified data
-        if total > 0 and (verified / total) < 0.1:
-            logger.warning(f"Aborting Sunday email dispatch: Verified data ({verified}/{total}) is below 10% threshold. Halting.")
-            return
-
-        from backend.excel_handler import generate_universal_excel
-        from backend.pdf_generator import generate_universal_pdf
+        from backend.exporters.excel_exporter import export_excel_from_dataset
+        from backend.exporters.pdf_exporter import export_pdf_from_dataset
         
-        excel_bytes = generate_universal_excel(dataset)
-        pdf_bytes = generate_universal_pdf(dataset)
+        excel_bytes = export_excel_from_dataset(dataset)
+        pdf_bytes = export_pdf_from_dataset(dataset)
 
         # Email list
         recipients = [e.strip() for e in settings.REPORT_RECIPIENT_EMAILS.split(",") if e.strip()]

@@ -49,10 +49,10 @@ def get_db():
 def run_migrations():
     """Apply any missing column migrations to the existing SQLite database."""
     if "sqlite" not in db_url:
-        return  # Only needed for local SQLite; production uses Render Postgres which auto-migrates via Base.metadata.create_all
+        return  # Only needed for local SQLite
     try:
         with engine.connect() as conn:
-            # Get existing columns
+            # Check leetcode_profile_stats columns
             result = conn.execute(
                 __import__('sqlalchemy').text("PRAGMA table_info(leetcode_profile_stats)")
             )
@@ -68,5 +68,57 @@ def run_migrations():
                     conn.execute(__import__('sqlalchemy').text(sql))
                     conn.commit()
                     print(f"[DB Migration] Added column: {col_name}")
+
+            # Check hod_snapshots columns
+            result_hod = conn.execute(
+                __import__('sqlalchemy').text("PRAGMA table_info(hod_snapshots)")
+            )
+            hod_cols = {row[1] for row in result_hod}
+            if hod_cols:
+                hod_migrations = [
+                    ("academic_year", "ALTER TABLE hod_snapshots ADD COLUMN academic_year VARCHAR DEFAULT '2026-27'"),
+                    ("status",        "ALTER TABLE hod_snapshots ADD COLUMN status VARCHAR DEFAULT 'READY'"),
+                    ("created_by",    "ALTER TABLE hod_snapshots ADD COLUMN created_by VARCHAR DEFAULT 'HOD / System'"),
+                    ("verified_at",   "ALTER TABLE hod_snapshots ADD COLUMN verified_at DATETIME"),
+                ]
+                for col_name, sql in hod_migrations:
+                    if col_name not in hod_cols:
+                        conn.execute(__import__('sqlalchemy').text(sql))
+                        conn.commit()
+                        print(f"[DB Migration] Added hod_snapshots column: {col_name}")
+
+            # Check weekly_sessions columns
+            result_sess = conn.execute(
+                __import__('sqlalchemy').text("PRAGMA table_info(weekly_sessions)")
+            )
+            sess_cols = {row[1] for row in result_sess}
+            if sess_cols:
+                sess_migrations = [
+                    ("academic_year",        "ALTER TABLE weekly_sessions ADD COLUMN academic_year VARCHAR DEFAULT '2026-27'"),
+                    ("week_number",          "ALTER TABLE weekly_sessions ADD COLUMN week_number INTEGER"),
+                    ("session_code",         "ALTER TABLE weekly_sessions ADD COLUMN session_code VARCHAR"),
+                    ("session_date",         "ALTER TABLE weekly_sessions ADD COLUMN session_date VARCHAR"),
+                    ("contest_id",           "ALTER TABLE weekly_sessions ADD COLUMN contest_id VARCHAR"),
+                    ("contest_name",         "ALTER TABLE weekly_sessions ADD COLUMN contest_name VARCHAR"),
+                    ("start_time",           "ALTER TABLE weekly_sessions ADD COLUMN start_time VARCHAR DEFAULT '08:00'"),
+                    ("end_time",             "ALTER TABLE weekly_sessions ADD COLUMN end_time VARCHAR DEFAULT '09:30'"),
+                    ("status",               "ALTER TABLE weekly_sessions ADD COLUMN status VARCHAR DEFAULT 'SCHEDULED'"),
+                    ("baseline_snapshot_id",  "ALTER TABLE weekly_sessions ADD COLUMN baseline_snapshot_id VARCHAR"),
+                    ("final_snapshot_id",     "ALTER TABLE weekly_sessions ADD COLUMN final_snapshot_id VARCHAR"),
+                    ("total_students",        "ALTER TABLE weekly_sessions ADD COLUMN total_students INTEGER DEFAULT 273"),
+                    ("official_participants", "ALTER TABLE weekly_sessions ADD COLUMN official_participants INTEGER DEFAULT 0"),
+                    ("virtual_participants",  "ALTER TABLE weekly_sessions ADD COLUMN virtual_participants INTEGER DEFAULT 0"),
+                    ("not_participated",      "ALTER TABLE weekly_sessions ADD COLUMN not_participated INTEGER DEFAULT 0"),
+                    ("failed_verification",   "ALTER TABLE weekly_sessions ADD COLUMN failed_verification INTEGER DEFAULT 0"),
+                    ("dataset_hash",          "ALTER TABLE weekly_sessions ADD COLUMN dataset_hash VARCHAR"),
+                    ("created_at",            "ALTER TABLE weekly_sessions ADD COLUMN created_at DATETIME"),
+                    ("completed_at",          "ALTER TABLE weekly_sessions ADD COLUMN completed_at DATETIME"),
+                    ("finalized_at",          "ALTER TABLE weekly_sessions ADD COLUMN finalized_at DATETIME"),
+                ]
+                for col_name, sql in sess_migrations:
+                    if col_name not in sess_cols:
+                        conn.execute(__import__('sqlalchemy').text(sql))
+                        conn.commit()
+                        print(f"[DB Migration] Added weekly_sessions column: {col_name}")
     except Exception as e:
         print(f"[DB Migration] Warning: {e}")
