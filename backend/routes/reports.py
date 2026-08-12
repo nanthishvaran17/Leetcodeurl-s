@@ -221,7 +221,7 @@ def _get_dataset_for_id(report_id: str, db: Session):
         if ws:
             # Fallback dataset construction if not finalized yet
             from backend.routes.weekly_contests import get_session_matrix
-            mat = get_session_matrix(session_id, db)
+            mat = get_session_matrix(session_id=session_id, dept='ALL', year='ALL', db=db)
             dataset = {
                 "report_id": f"Session_{session_id}",
                 "report_type": "Weekly_Contest",
