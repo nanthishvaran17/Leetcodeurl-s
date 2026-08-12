@@ -245,50 +245,57 @@ async def fetch_leetcode_profile(
             if attempt < retries and matched_user is None and "matchedUser is null" not in last_error_detail:
                 await asyncio.sleep(0.3 * attempt)
 
-        # Fallback API if GraphQL failed
+        # Fallback APIs if GraphQL failed
         if not matched_user and "matchedUser is null" not in last_error_detail:
-            try:
-                fb_res = await client.get(f"https://alfa-leetcode-api.onrender.com/userProfile/{username}", timeout=8.0)
-                if fb_res.status_code == 200:
-                    fb_data = fb_res.json()
-                    if "totalSolved" in fb_data or fb_data.get("username"):
-                        duration = round(time.time() - start_time, 3)
-                        tot_s = fb_data.get("totalSolved", 0)
-                        ez_s = fb_data.get("easySolved", 0)
-                        med_s = fb_data.get("mediumSolved", 0)
-                        hd_s = fb_data.get("hardSolved", 0)
-                        p_rank = fb_data.get("ranking")
-                        
-                        result = {
-                            "username": username,
-                            "profile_url": profile_url,
-                            "total_solved": tot_s,
-                            "easy_solved": ez_s,
-                            "medium_solved": med_s,
-                            "hard_solved": hd_s,
-                            "contest_rating": None,
-                            "contest_global_rank": None,
-                            "contest_global_ranking": None,
-                            "leetcode_global_rank": p_rank,
-                            "public_profile_ranking": p_rank,
-                            "active_days": None,
-                            "max_streak": None,
-                            "recent_accepted": None,
-                            "recent_contest_name": None,
-                            "recent_contest_score": None,
-                            "recent_contest_type": "UNKNOWN",
-                            "contest_participations": [],
-                            "status": "success",
-                            "sync_status": "success",
-                            "validation_status": "verified",
-                            "error": None,
-                            "error_message": None,
-                            "fetch_duration": duration
-                        }
-                        _profile_cache[username] = {"timestamp": now, "data": result}
-                        return result
-            except Exception as fb_err:
-                logger.info(f"Fallback API note for '{username}': {fb_err}")
+            fallback_urls = [
+                f"https://leetcode-api-faisalshohag.vercel.app/{username}",
+                f"https://alfa-leetcode-api.onrender.com/userProfile/{username}",
+                f"https://alfa-leetcode-api.onrender.com/{username}/solved"
+            ]
+
+            for fb_url in fallback_urls:
+                try:
+                    fb_res = await client.get(fb_url, timeout=6.0)
+                    if fb_res.status_code == 200:
+                        fb_data = fb_res.json()
+                        tot_s = fb_data.get("totalSolved") if fb_data.get("totalSolved") is not None else fb_data.get("solvedProblem")
+                        if tot_s is not None:
+                            duration = round(time.time() - start_time, 3)
+                            ez_s = fb_data.get("easySolved") if fb_data.get("easySolved") is not None else fb_data.get("easySolvedCount", 0)
+                            med_s = fb_data.get("mediumSolved") if fb_data.get("mediumSolved") is not None else fb_data.get("mediumSolvedCount", 0)
+                            hd_s = fb_data.get("hardSolved") if fb_data.get("hardSolved") is not None else fb_data.get("hardSolvedCount", 0)
+                            p_rank = fb_data.get("ranking")
+                            
+                            result = {
+                                "username": username,
+                                "profile_url": profile_url,
+                                "total_solved": tot_s,
+                                "easy_solved": ez_s,
+                                "medium_solved": med_s,
+                                "hard_solved": hd_s,
+                                "contest_rating": None,
+                                "contest_global_rank": None,
+                                "contest_global_ranking": None,
+                                "leetcode_global_rank": p_rank,
+                                "public_profile_ranking": p_rank,
+                                "active_days": None,
+                                "max_streak": None,
+                                "recent_accepted": None,
+                                "recent_contest_name": None,
+                                "recent_contest_score": None,
+                                "recent_contest_type": "UNKNOWN",
+                                "contest_participations": [],
+                                "status": "success",
+                                "sync_status": "success",
+                                "validation_status": "verified",
+                                "error": None,
+                                "error_message": None,
+                                "fetch_duration": duration
+                            }
+                            _profile_cache[username] = {"timestamp": now, "data": result}
+                            return result
+                except Exception as fb_err:
+                    logger.info(f"Fallback API ({fb_url}) note for '{username}': {fb_err}")
 
         # If user is not found or failed completely
         if not matched_user:
