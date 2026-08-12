@@ -13,6 +13,16 @@ interface StudentFlipCardProps {
 // CRITICAL: null/undefined NEVER means "0 solved". It means "not yet fetched".
 type SyncState = 'pending' | 'syncing' | 'verified' | 'failed' | 'stale' | 'mismatch' | 'invalid_profile';
 
+function parseUtcTime(ts?: string): number {
+  if (!ts) return Date.now();
+  let str = ts.trim();
+  if (!str.endsWith('Z') && !str.includes('+')) {
+    str += 'Z';
+  }
+  const time = new Date(str).getTime();
+  return isNaN(time) ? Date.now() : time;
+}
+
 function getSyncState(syncStatus?: string, lastVerifiedAt?: string): SyncState {
   if (syncStatus === 'invalid_profile' || syncStatus === 'INVALID_LINK' || syncStatus === 'MISSING_LINK') return 'invalid_profile';
   if (syncStatus === 'syncing') return 'syncing';
@@ -20,7 +30,7 @@ function getSyncState(syncStatus?: string, lastVerifiedAt?: string): SyncState {
   if (syncStatus === 'success' || syncStatus === 'OK' || syncStatus === 'verified' || syncStatus === 'stale') {
     // "Stale" = verified more than 24 hours ago
     if (lastVerifiedAt) {
-      const age = Date.now() - new Date(lastVerifiedAt).getTime();
+      const age = Date.now() - parseUtcTime(lastVerifiedAt);
       if (age > 24 * 60 * 60 * 1000) return 'stale';
     }
     return 'verified';
@@ -31,7 +41,8 @@ function getSyncState(syncStatus?: string, lastVerifiedAt?: string): SyncState {
 
 function formatVerifiedAgo(lastVerifiedAt?: string): string {
   if (!lastVerifiedAt) return 'just now';
-  const diffMs = Date.now() - new Date(lastVerifiedAt).getTime();
+  const diffMs = Date.now() - parseUtcTime(lastVerifiedAt);
+  if (diffMs <= 0) return 'just now';
   const diffSec = Math.floor(diffMs / 1000);
   if (diffSec < 60) return 'just now';
   const diffMin = Math.floor(diffSec / 60);

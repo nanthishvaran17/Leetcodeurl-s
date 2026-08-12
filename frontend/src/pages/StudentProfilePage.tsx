@@ -36,12 +36,29 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
     }
   };
 
+  const [downloadingCert, setDownloadingCert] = useState(false);
+
   const handleGenerateCert = async () => {
+    if (!student?.id) return;
+    setDownloadingCert(true);
     try {
       const res = await api.post(`/reports/generate-certificate/${student.id}?cert_type=Top Performer`);
-      alert(`Certificate Generated! Code: ${res.data.certificate_code}`);
+      const certCode = res.data.certificate_code;
+
+      const pdfRes = await api.get(`/reports/certificate/${certCode}/pdf`, { responseType: 'blob' });
+      const blob = new Blob([pdfRes.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Certificate_${student.reg_no || certCode}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch (err: any) {
-      alert("Failed to generate certificate");
+      alert("Failed to generate and download certificate.");
+    } finally {
+      setDownloadingCert(false);
     }
   };
 
@@ -98,10 +115,11 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
 
             <button
               onClick={handleGenerateCert}
-              className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md shadow-amber-600/30 transition-all hover:scale-105"
+              disabled={downloadingCert}
+              className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md shadow-amber-600/30 transition-all hover:scale-105 disabled:opacity-50"
             >
               <Award className="w-3.5 h-3.5" />
-              <span>Issue Certificate</span>
+              <span>{downloadingCert ? 'Downloading PDF...' : 'Issue Certificate'}</span>
             </button>
           </div>
 

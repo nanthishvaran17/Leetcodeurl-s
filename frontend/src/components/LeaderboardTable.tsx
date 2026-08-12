@@ -2,6 +2,16 @@ import React from 'react';
 import { ExternalLink, Trophy, Flame, Award, CheckCircle2, AlertTriangle, XCircle, RefreshCw, Wifi, Trash2, Clock, AlertCircle } from 'lucide-react';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 
+function parseUtcTime(ts?: string): number {
+  if (!ts) return Date.now();
+  let str = ts.trim();
+  if (!str.endsWith('Z') && !str.includes('+')) {
+    str += 'Z';
+  }
+  const time = new Date(str).getTime();
+  return isNaN(time) ? Date.now() : time;
+}
+
 // Sync state helpers — mirrors StudentFlipCard logic
 function getSyncState(syncStatus?: string, lastVerifiedAt?: string): 'pending'|'syncing'|'verified'|'failed'|'mismatch'|'stale'|'invalid_profile' {
   if (syncStatus === 'invalid_profile' || syncStatus === 'INVALID_LINK' || syncStatus === 'MISSING_LINK') return 'invalid_profile';
@@ -9,7 +19,7 @@ function getSyncState(syncStatus?: string, lastVerifiedAt?: string): 'pending'|'
   if (!syncStatus || syncStatus === 'pending' || syncStatus === 'not_started') return 'pending';
   if (syncStatus === 'success' || syncStatus === 'OK' || syncStatus === 'verified' || syncStatus === 'stale') {
     if (lastVerifiedAt) {
-      const age = Date.now() - new Date(lastVerifiedAt).getTime();
+      const age = Date.now() - parseUtcTime(lastVerifiedAt);
       if (age > 24 * 60 * 60 * 1000) return 'stale';
     }
     return 'verified';
@@ -19,7 +29,9 @@ function getSyncState(syncStatus?: string, lastVerifiedAt?: string): 'pending'|'
 }
 function formatAgo(ts?: string): string {
   if (!ts) return 'just now';
-  const s = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+  const diffMs = Date.now() - parseUtcTime(ts);
+  if (diffMs <= 0) return 'just now';
+  const s = Math.floor(diffMs / 1000);
   if (s < 60) return 'just now';
   if (s < 3600) return `${Math.floor(s/60)}m ago`;
   if (s < 86400) return `${Math.floor(s/3600)}h ago`;

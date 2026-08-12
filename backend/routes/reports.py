@@ -580,6 +580,23 @@ def generate_certificate_for_student(
         "pdf_download_url": f"/api/reports/certificate/{res['certificate_code']}/pdf"
     }
 
+@router.get("/certificate/{cert_code}/pdf")
+def download_student_certificate_pdf(cert_code: str, db: Session = Depends(get_db)):
+    """
+    Downloads generated student certificate as a PDF file.
+    """
+    from fastapi.responses import FileResponse
+    cert = db.query(CertificateRecord).filter(CertificateRecord.certificate_code == cert_code).first()
+    if not cert or not cert.pdf_path or not os.path.exists(cert.pdf_path):
+        raise HTTPException(status_code=404, detail="Certificate PDF file not found")
+
+    filename = f"Certificate_{cert_code}.pdf"
+    return FileResponse(
+        path=cert.pdf_path,
+        media_type="application/pdf",
+        filename=filename
+    )
+
 class EmailDispatchPayload(BaseModel):
     recipient_emails: Optional[str] = None
 
