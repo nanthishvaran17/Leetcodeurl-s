@@ -68,16 +68,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const startSyncPolling = () => {
     if (pollTimerRef.current) clearInterval(pollTimerRef.current);
 
+    let pollCount = 0;
     pollTimerRef.current = setInterval(async () => {
       try {
+        pollCount += 1;
         const statusData = await getSyncStatus();
+        const rawComp = statusData.completed ?? statusData.processed ?? 0;
+        const currentProcessed = Math.max(1, rawComp);
+
         setSyncProgress({
           total: statusData.total || 273,
-          processed: statusData.completed || 0,
+          processed: currentProcessed,
           successful: statusData.success || 0,
           failed: statusData.failed || 0,
           is_running: statusData.is_running
         });
+
+        // Re-fetch student roster every 2 seconds during polling so cards update LIVE on screen
+        if (pollCount % 2 === 0) {
+          fetchFilteredStudents();
+        }
 
         if (!statusData.is_running) {
           if (pollTimerRef.current) clearInterval(pollTimerRef.current);
@@ -96,12 +106,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const handleRefreshAll = async () => {
     if (refreshing || syncProgress?.is_running) return;
     setRefreshing(true);
+    setSyncProgress({
+      total: 273,
+      processed: 1,
+      successful: 0,
+      failed: 0,
+      is_running: true
+    });
     try {
       await triggerFullSync('admin');
       startSyncPolling();
     } catch (err) {
       console.error(err);
       setRefreshing(false);
+      setSyncProgress(null);
     }
   };
 
