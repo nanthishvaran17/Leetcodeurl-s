@@ -101,6 +101,100 @@ from backend.logger import logger
 
 MAX_ATTACHMENT_MB = int(os.environ.get("MAX_EMAIL_ATTACHMENT_SIZE_MB", "15"))
 
+import json
+import base64
+import urllib.request
+import urllib.error
+
+def send_email_via_resend(
+    api_key: str,
+    from_email: str,
+    recipient: str,
+    subject: str,
+    html_body: str,
+    attachments: Optional[List[Tuple[str, bytes]]] = None
+) -> Tuple[bool, Optional[str]]:
+    sender = from_email if (from_email and "@" in from_email and "nandha" not in from_email) else "onboarding@resend.dev"
+    payload: Dict[str, Any] = {
+        "from": f"Nandha LeetCode Tracker <{sender}>",
+        "to": [recipient],
+        "subject": subject,
+        "html": html_body
+    }
+    if attachments:
+        resend_attachments = []
+        for name, content in attachments:
+            resend_attachments.append({
+                "filename": name,
+                "content": base64.b64encode(content).decode("utf-8")
+            })
+        payload["attachments"] = resend_attachments
+
+    req = urllib.request.Request(
+        "https://api.resend.com/emails",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        },
+        method="POST"
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            if resp.status in (200, 201):
+                logger.info(f"Successfully delivered email to '{recipient}' via Resend HTTPS API")
+                return True, None
+            return False, f"Resend API HTTP status {resp.status}"
+    except urllib.error.HTTPError as he:
+        body = he.read().decode('utf-8', errors='ignore')
+        return False, f"Resend API HTTP {he.code}: {body}"
+    except Exception as exc:
+        return False, f"Resend API error: {exc}"
+
+def send_email_via_brevo(
+    api_key: str,
+    from_email: str,
+    recipient: str,
+    subject: str,
+    html_body: str,
+    attachments: Optional[List[Tuple[str, bytes]]] = None
+) -> Tuple[bool, Optional[str]]:
+    payload: Dict[str, Any] = {
+        "sender": {"name": "Nandha LeetCode Tracker", "email": from_email or "reports@nandha.edu.in"},
+        "to": [{"email": recipient}],
+        "subject": subject,
+        "htmlContent": html_body
+    }
+    if attachments:
+        brevo_attachments = []
+        for name, content in attachments:
+            brevo_attachments.append({
+                "name": name,
+                "content": base64.b64encode(content).decode("utf-8")
+            })
+        payload["attachment"] = brevo_attachments
+
+    req = urllib.request.Request(
+        "https://api.brevo.com/v3/smtp/email",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "api-key": api_key,
+            "Content-Type": "application/json"
+        },
+        method="POST"
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            if resp.status in (200, 201):
+                logger.info(f"Successfully delivered email to '{recipient}' via Brevo HTTPS API")
+                return True, None
+            return False, f"Brevo API HTTP status {resp.status}"
+    except urllib.error.HTTPError as he:
+        body = he.read().decode('utf-8', errors='ignore')
+        return False, f"Brevo API HTTP {he.code}: {body}"
+    except Exception as exc:
+        return False, f"Brevo API error: {exc}"
+
 def send_email(
     recipient: str,
     subject: str,
@@ -108,19 +202,25 @@ def send_email(
     attachments: Optional[List[Tuple[str, bytes]]] = None
 ) -> Tuple[bool, Optional[str]]:
     """
-    Core Gmail SMTP sender function.
-    Connects to smtp.gmail.com on port 587 via STARTTLS using Gmail App Password.
-    Returns (success_boolean, error_message_or_none).
+    Core Email Sender function with HTTPS API (Resend/Brevo) & Gmail SMTP support.
     """
     smtp_host = os.environ.get("SMTP_HOST") or getattr(settings, "SMTP_HOST", "smtp.gmail.com")
     smtp_port = int(os.environ.get("SMTP_PORT") or getattr(settings, "SMTP_PORT", 587))
     smtp_user = (os.environ.get("SMTP_USERNAME") or getattr(settings, "SMTP_USERNAME", "")).strip()
-    # Gmail App Passwords are displayed with spaces (e.g. 'xxxx xxxx xxxx xxxx') but must be used without spaces
     smtp_pass = (os.environ.get("SMTP_PASSWORD") or getattr(settings, "SMTP_PASSWORD", "")).replace(" ", "")
     from_email = (os.environ.get("REPORT_FROM_EMAIL") or smtp_user or "reports@nandha.edu.in").strip()
 
+    # Check for HTTPS API keys (bypasses Render SMTP port block)
+    resend_key = os.environ.get("RESEND_API_KEY", "").strip()
+    brevo_key = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
+
+    if resend_key:
+        return send_email_via_resend(resend_key, from_email, recipient, subject, html_body, attachments)
+    if brevo_key:
+        return send_email_via_brevo(brevo_key, from_email, recipient, subject, html_body, attachments)
+
     if not smtp_user or not smtp_pass:
-        return False, "SMTP credentials not configured. Please set SMTP_USERNAME and SMTP_PASSWORD (Gmail App Password) in .env file."
+        return False, "SMTP credentials not configured. Set SMTP_USERNAME & SMTP_PASSWORD or RESEND_API_KEY / BREVO_API_KEY."
 
     msg = MIMEMultipart()
     msg['From'] = from_email
@@ -147,6 +247,8 @@ def send_email(
         return True, None
     except Exception as exc:
         err_msg = str(exc)
+        if "timed out" in err_msg.lower():
+            err_msg += " | Render Free Tier blocks outbound SMTP ports 587/465. Set RESEND_API_KEY or BREVO_API_KEY in Render env vars for instant HTTPS delivery."
         logger.error(f"Failed to send email to '{recipient}': {err_msg}")
         return False, err_msg
 
@@ -395,7 +497,23 @@ def _process_email_queue_worker():
             excel_part['Content-Disposition'] = 'attachment; filename="Nandha_Weekly_Report.xlsx"'
             msg.attach(excel_part)
 
-            if smtp_user and smtp_pass:
+            resend_key = os.environ.get("RESEND_API_KEY", "").strip()
+            brevo_key = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
+
+            delivered = False
+            err_details = None
+
+            if resend_key:
+                delivered, err_details = send_email_via_resend(
+                    resend_key, from_email, log.recipient, log.subject, body_html,
+                    [("Nandha_Weekly_Report.pdf", report_files['pdf']), ("Nandha_Weekly_Report.xlsx", report_files['excel'])]
+                )
+            elif brevo_key:
+                delivered, err_details = send_email_via_brevo(
+                    brevo_key, from_email, log.recipient, log.subject, body_html,
+                    [("Nandha_Weekly_Report.pdf", report_files['pdf']), ("Nandha_Weekly_Report.xlsx", report_files['excel'])]
+                )
+            elif smtp_user and smtp_pass:
                 try:
                     server = connect_and_login_smtp(smtp_host, smtp_port, smtp_user, smtp_pass, timeout=15)
                     try:
@@ -405,27 +523,32 @@ def _process_email_queue_worker():
                             server.quit()
                         except Exception:
                             pass
-
-                    log.status = "SENT"
-                    log.sent_at = datetime.datetime.utcnow()
-                    log.error_message = None
-                    db.commit()
-                    logger.info(f"Successfully delivered email report to {log.recipient}")
+                    delivered = True
                 except Exception as exc:
-                    log.retry_count += 1
-                    err_msg = str(exc)
-                    if log.retry_count >= 3:
-                        log.status = "FAILED"
-                        log.error_message = f"Failed after 3 attempts: {err_msg}"
-                    else:
-                        log.status = "RETRYING"
-                        log.error_message = err_msg
-                    db.commit()
+                    err_details = str(exc)
+                    if "timed out" in err_details.lower():
+                        err_details += " | Render Free Tier blocks outbound SMTP ports 587/465. Set RESEND_API_KEY or BREVO_API_KEY in Render env vars."
+
+            if delivered:
+                log.status = "SENT"
+                log.sent_at = datetime.datetime.utcnow()
+                log.error_message = None
+                db.commit()
+                logger.info(f"Successfully delivered email report to {log.recipient}")
+            elif err_details:
+                log.retry_count += 1
+                if log.retry_count >= 3:
+                    log.status = "FAILED"
+                    log.error_message = f"Failed after 3 attempts: {err_details}"
+                else:
+                    log.status = "RETRYING"
+                    log.error_message = err_details
+                db.commit()
             else:
                 # Local development fallback — mark as SENT for demo
                 log.status = "SENT"
                 log.sent_at = datetime.datetime.utcnow()
-                log.error_message = "SMTP credentials missing — logged in local simulation mode."
+                log.error_message = "SMTP / API credentials missing — logged in local simulation mode."
                 db.commit()
 
     except Exception as exc:
