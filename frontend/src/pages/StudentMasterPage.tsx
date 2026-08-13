@@ -3,6 +3,8 @@ import { Search, Plus, UploadCloud, RefreshCw, UserPlus, List, LayoutGrid } from
 import api from '../services/api';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { StudentFlipCard } from '../components/StudentFlipCard';
+import { collection, getDocs } from 'firebase/firestore';
+import { getOrInitDb } from '../services/firebase';
 
 interface StudentMasterPageProps {
   onSelectStudent: (student: StudentData) => void;
@@ -35,11 +37,89 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   }, [search]);
 
   const fetchStudents = async () => {
+    let loadedFromApi = false;
     try {
       const res = await api.get(`/students?search=${search}`);
-      setStudents(res.data);
+      if (res.data && res.data.length > 0) {
+        const hasVerifiedStats = res.data.some((s: any) => s.stats && (s.stats.total_solved !== null && s.stats.total_solved > 0));
+        if (hasVerifiedStats || search) {
+          setStudents(res.data);
+          loadedFromApi = true;
+        }
+      }
     } catch (err) {
-      console.error(err);
+      console.warn("REST API request delayed or offline, falling back to Cloud Firestore direct read...", err);
+    }
+
+    if (!loadedFromApi) {
+      try {
+        const firestoreDb = getOrInitDb();
+        const studSnap = await getDocs(collection(firestoreDb, "students"));
+        const statsSnap = await getDocs(collection(firestoreDb, "leetcodeStats"));
+
+        const statsMap = new Map();
+        statsSnap.forEach(docSnap => {
+          statsMap.set(docSnap.id, docSnap.data());
+        });
+
+        const list: StudentData[] = [];
+        studSnap.forEach(docSnap => {
+          const sData = docSnap.data();
+          const sStats = statsMap.get(docSnap.id) || {};
+          const syncStatus = sStats.syncStatus || 'pending';
+          const isVerified = syncStatus === 'success' || syncStatus === 'OK';
+          const totSolved = isVerified ? (sStats.totalSolved ?? 0) : null;
+
+          list.push({
+            id: sData.id || Number(docSnap.id),
+            reg_no: sData.registerNo || '',
+            name: sData.name || '',
+            email: sData.email || '',
+            department: { name: sData.departmentName || sData.department || 'GEN', code: sData.department || 'GEN' },
+            year_level: sData.year || 'III',
+            section: { name: sData.section || 'A' },
+            leetcode_url: sData.leetcodeProfileUrl || '',
+            username: sData.leetcodeUsername || '',
+            college_rank: sStats.collegeRank ?? undefined,
+            weekly_progress: sStats.weeklySolved ?? 0,
+            streak_count: sStats.streakCount ?? 0,
+            consistency_score: sStats.consistencyScore ?? 0,
+            stats: {
+              total_solved: totSolved,
+              easy_solved: isVerified ? (sStats.easySolved ?? 0) : null,
+              medium_solved: isVerified ? (sStats.mediumSolved ?? 0) : null,
+              hard_solved: isVerified ? (sStats.hardSolved ?? 0) : null,
+              contest_rating: sStats.contestRating ?? null,
+              contest_global_ranking: sStats.globalRanking ?? null,
+              public_profile_ranking: sStats.profileRanking ?? sStats.globalRanking ?? null,
+              recent_contest_name: sStats.recentContestName || 'Weekly Contest',
+              recent_contest_score: sStats.recentContestScore || (isVerified ? 'Not Attended' : '—'),
+              status: sStats.status || (isVerified ? 'OK' : 'pending'),
+              sync_status: syncStatus,
+              last_verified_at: sStats.lastVerifiedAt ?? null
+            }
+          });
+        });
+
+        let filtered = list;
+        if (search) {
+          const q = search.toLowerCase();
+          filtered = list.filter(s =>
+            s.name.toLowerCase().includes(q) ||
+            s.reg_no.toLowerCase().includes(q) ||
+            (s.username && s.username.toLowerCase().includes(q))
+          );
+        }
+
+        filtered.sort((a, b) => {
+          if (a.college_rank && b.college_rank) return a.college_rank - b.college_rank;
+          return (b.stats?.total_solved ?? 0) - (a.stats?.total_solved ?? 0);
+        });
+
+        setStudents(filtered);
+      } catch (fsErr) {
+        console.error("Firestore student fetch error:", fsErr);
+      }
     }
   };
 

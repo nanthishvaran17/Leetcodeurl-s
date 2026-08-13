@@ -74,6 +74,33 @@ export interface StudentData {
   streak_count?: number;
   consistency_score?: number;
   badge_list?: string[];
+  public_contest_result?: {
+    contest_name?: string;
+    contest_number?: number;
+    contest_date?: string;
+    questions_solved?: number;
+    questions_total?: number;
+    score_display?: string;
+    contest_rank?: number | null;
+    contest_rating?: number | null;
+    top_percentage?: number | null;
+    status?: string;
+    fetched_at?: string | null;
+  };
+  virtual_contest_result?: {
+    contest_name?: string;
+    contest_number?: number;
+    contest_date?: string;
+    questions_solved?: number;
+    questions_total?: number;
+    score_display?: string;
+    contest_rank?: number | null;
+    contest_rating?: number | null;
+    top_percentage?: number | null;
+    status?: string;
+    fetched_at?: string | null;
+  };
+  overall_participation_mode?: string;
 }
 
 interface LeaderboardTableProps {
@@ -236,7 +263,8 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
             <th className="py-3 px-4">Dept / Year</th>
             <th className="py-3 px-4">LeetCode Handle</th>
             <th className="py-3 px-4 text-center">Total Solved</th>
-            <th className="py-3 px-4 text-center">Recent Contest Performance</th>
+            <th className="py-3 px-4 text-center">PUBLIC CONTEST</th>
+            <th className="py-3 px-4 text-center">VIRTUAL CONTEST</th>
             <th className="py-3 px-4 text-center">Contest Rating</th>
             <th className="py-3 px-4 text-center">Contest Rank</th>
             <th className="py-3 px-4 text-center">Profile Rank</th>
@@ -247,7 +275,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
           {students.length === 0 ? (
             <tr>
-              <td colSpan={13} className="py-8 text-center text-gray-500 dark:text-gray-400">
+              <td colSpan={14} className="py-8 text-center text-gray-500 dark:text-gray-400">
                 No student records found.
               </td>
             </tr>
@@ -260,8 +288,9 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
               const totalSolved = isVerified ? (student.stats?.total_solved ?? 0) : null;
               const isSolver = isVerified && (totalSolved ?? 0) > 0;
 
-              const contestSolvedRatio = student.stats?.recent_contest_score || (isVerified ? 'Not Attended' : '—');
-              const recentContestName = student.stats?.recent_contest_name || 'Weekly Contest';
+              const publicScore = student.public_contest_result?.score_display || student.stats?.recent_contest_score || (isVerified ? 'Not Attended' : '—');
+              const virtualScore = student.virtual_contest_result?.score_display || (isVerified ? 'Not Attended' : '—');
+              const recentContestName = student.public_contest_result?.contest_name || student.stats?.recent_contest_name || 'Weekly Contest';
 
               const contestRating = (isVerified && student.stats?.contest_rating)
                 ? student.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
@@ -276,26 +305,38 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                 : (isVerified ? 'Unranked' : '—');
 
               const effectiveCollegeRank = isSolver ? (student.college_rank || idx + 1) : undefined;
-              const verifiedAgo = formatAgo(student.stats?.last_verified_at);
               const username = student.username || student.leetcode_url?.split('/u/')[1]?.replace('/', '') || `${student.name.replace(/\s+/g, '_')}`;
 
-              // Determine Participation Mode (Public Live vs Not Started)
+              // Determine Participation Mode Badge per specification
+              const ovMode = student.overall_participation_mode || 'NONE';
               let modeBadge = (
-                <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-400/30">
-                  <span>🟢 Public Live (08:00–09:30 AM)</span>
+                <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-300 dark:border-gray-700">
+                  <span>⚪ None</span>
                 </span>
               );
 
-              if (totalSolved === 0 || student.stats?.status === "NOT STARTED") {
+              if (ovMode === 'PUBLIC_ONLY') {
                 modeBadge = (
-                  <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-400/30">
-                    <span>🔴 Not Yet Started</span>
+                  <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-400/30">
+                    <span>🟢 Public Only</span>
                   </span>
                 );
-              } else if (student.stats?.status === "MISSING LINK" || student.stats?.status === "INVALID LINK") {
+              } else if (ovMode === 'VIRTUAL_ONLY') {
                 modeBadge = (
-                  <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-400/30">
-                    <span>⚠️ Link Issue</span>
+                  <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border border-purple-400/30">
+                    <span>⚡ Virtual Only</span>
+                  </span>
+                );
+              } else if (ovMode === 'BOTH') {
+                modeBadge = (
+                  <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-400/30">
+                    <span>⭐ Both Participated</span>
+                  </span>
+                );
+              } else if (ovMode === 'FETCH_ERROR') {
+                modeBadge = (
+                  <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-400/30">
+                    <span>⚠️ Fetch Failed</span>
                   </span>
                 );
               }
@@ -356,7 +397,14 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   <td className="py-3 px-4 text-center bg-brand-50/40 dark:bg-brand-950/20">
                     <div className="flex flex-col items-center justify-center">
                       <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">{recentContestName}</span>
-                      <span className="font-black text-brand-600 dark:text-brand-400 text-sm">{contestSolvedRatio}</span>
+                      <span className="font-black text-brand-600 dark:text-brand-400 text-sm">{publicScore}</span>
+                    </div>
+                  </td>
+
+                  <td className="py-3 px-4 text-center bg-purple-50/40 dark:bg-purple-950/20">
+                    <div className="flex flex-col items-center justify-center">
+                      <span className="text-[10px] font-bold text-purple-500 uppercase tracking-wider mb-0.5">Virtual</span>
+                      <span className="font-black text-purple-600 dark:text-purple-400 text-sm">{virtualScore}</span>
                     </div>
                   </td>
 
@@ -370,10 +418,6 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
 
                   <td className="py-3 px-4 text-center font-mono text-gray-500 font-bold">
                     {profileRank}
-                  </td>
-
-                  <td className="py-3 px-4 text-center">
-                    {modeBadge}
                   </td>
 
                   <td className="py-3 px-4 text-right">

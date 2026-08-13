@@ -63,6 +63,19 @@ def get_students(
         if p.student_id not in prog_map or p.id > prog_map[p.student_id].id:
             prog_map[p.student_id] = p
 
+    # Batch fetch contest participations
+    from backend.models import StudentContestParticipation
+    from backend.services.contest_service import calculate_overall_mode
+    participations = db.query(StudentContestParticipation).filter(
+        StudentContestParticipation.student_id.in_(student_ids)
+    ).all()
+
+    part_map = {}
+    for pt in participations:
+        if pt.student_id not in part_map:
+            part_map[pt.student_id] = {}
+        part_map[pt.student_id][pt.participation_mode] = pt
+
     results = []
     for st in students:
         st_out = StudentOut.from_orm(st)
@@ -76,7 +89,76 @@ def get_students(
             st_out.streak_count = latest_prog.streak_count
             st_out.consistency_score = latest_prog.consistency_score
             st_out.badge_list = latest_prog.badge_list or []
+
+        s_parts = part_map.get(st.id, {})
+        pub_pt = s_parts.get("PUBLIC")
+        vir_pt = s_parts.get("VIRTUAL")
+
+        pub_status = pub_pt.status if pub_pt else "NOT_ATTENDED"
+        vir_status = vir_pt.status if vir_pt else "NOT_ATTENDED"
+
+        st_out.overall_participation_mode = calculate_overall_mode(pub_status, vir_status)
+
+        if pub_pt:
+            st_out.public_contest_result = {
+                "contest_name": pub_pt.contest_name,
+                "contest_number": pub_pt.contest_number,
+                "contest_date": pub_pt.contest_date,
+                "questions_solved": pub_pt.questions_solved,
+                "questions_total": pub_pt.questions_total,
+                "score_display": pub_pt.score_display,
+                "contest_rank": pub_pt.contest_rank,
+                "contest_rating": pub_pt.contest_rating,
+                "top_percentage": pub_pt.top_percentage,
+                "status": pub_pt.status,
+                "fetched_at": pub_pt.fetched_at.isoformat() if pub_pt.fetched_at else None
+            }
+        else:
+            st_out.public_contest_result = {
+                "contest_name": "Weekly Contest",
+                "contest_number": None,
+                "contest_date": None,
+                "questions_solved": 0,
+                "questions_total": 4,
+                "score_display": "Not Attended",
+                "contest_rank": None,
+                "contest_rating": None,
+                "top_percentage": None,
+                "status": "NOT_ATTENDED",
+                "fetched_at": None
+            }
+
+        if vir_pt:
+            st_out.virtual_contest_result = {
+                "contest_name": vir_pt.contest_name,
+                "contest_number": vir_pt.contest_number,
+                "contest_date": vir_pt.contest_date,
+                "questions_solved": vir_pt.questions_solved,
+                "questions_total": vir_pt.questions_total,
+                "score_display": vir_pt.score_display,
+                "contest_rank": vir_pt.contest_rank,
+                "contest_rating": vir_pt.contest_rating,
+                "top_percentage": vir_pt.top_percentage,
+                "status": vir_pt.status,
+                "fetched_at": vir_pt.fetched_at.isoformat() if vir_pt.fetched_at else None
+            }
+        else:
+            st_out.virtual_contest_result = {
+                "contest_name": "Weekly Contest",
+                "contest_number": None,
+                "contest_date": None,
+                "questions_solved": 0,
+                "questions_total": 4,
+                "score_display": "Not Attended",
+                "contest_rank": None,
+                "contest_rating": None,
+                "top_percentage": None,
+                "status": "NOT_ATTENDED",
+                "fetched_at": None
+            }
+
         results.append(st_out)
+    return results
 
     return results
 

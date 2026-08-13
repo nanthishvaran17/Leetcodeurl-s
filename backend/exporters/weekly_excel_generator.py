@@ -291,3 +291,358 @@ def build_weekly_performance_excel(data: Dict[str, Any], filepath: str) -> str:
         print(f"\n⚠️ NOTICE: Destination file '{os.path.basename(filepath)}' is open in Microsoft Excel.")
         print(f"   Saved output workbook to fallback file: {fallback_path}")
         return fallback_path
+
+
+def build_public_contest_excel(data: Dict[str, Any], filepath: str) -> str:
+    """Generates standalone Public_Contest.xlsx containing ONLY Public contest results."""
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Public_Contest"
+
+    report_date = data.get("report_date", "13-08-2026")
+    contest_name = data.get("contest_name", "Weekly Contest")
+    contest_number = data.get("contest_number", "")
+    contest_date = data.get("contest_date", "")
+
+    navy_header_fill = PatternFill(start_color="1F2937", end_color="1F2937", fill_type="solid")
+    brand_fill = PatternFill(start_color="4F46E5", end_color="4F46E5", fill_type="solid")
+    zebra_fill = PatternFill(start_color="F9FAFB", end_color="F9FAFB", fill_type="solid")
+
+    font_title = Font(name="Arial", size=14, bold=True, color="FFFFFF")
+    font_sub = Font(name="Arial", size=10, italic=True, color="E5E7EB")
+    font_header = Font(name="Arial", size=10, bold=True, color="FFFFFF")
+    font_bold = Font(name="Arial", size=10, bold=True)
+    font_regular = Font(name="Arial", size=10)
+
+    thin_border_side = Side(style='thin', color='D1D5DB')
+    grid_border = Border(left=thin_border_side, right=thin_border_side, top=thin_border_side, bottom=thin_border_side)
+
+    align_center = Alignment(horizontal='center', vertical='center')
+    align_left = Alignment(horizontal='left', vertical='center')
+
+    # Banner
+    ws.merge_cells('A1:S1')
+    ws.merge_cells('A2:S2')
+    cell_t = ws['A1']
+    cell_t.value = f"NANDHA ENGINEERING COLLEGE (AUTONOMOUS) — Public Contest Performance Report"
+    cell_t.font = font_title
+    cell_t.fill = navy_header_fill
+    cell_t.alignment = align_center
+
+    cell_s = ws['A2']
+    cell_s.value = f"Contest: {contest_name} (#{contest_number}) | Contest Date: {contest_date} | Report Date: {report_date} | Total Students: {len(data.get('rows', []))}"
+    cell_s.font = font_sub
+    cell_s.fill = brand_fill
+    cell_s.alignment = align_center
+
+    ws.row_dimensions[1].height = 28
+    ws.row_dimensions[2].height = 20
+
+    # Summary Row
+    sum_data = data.get("public_summary", {})
+    ws.merge_cells('A4:S4')
+    ws['A4'] = f"PUBLIC CONTEST SUMMARY: 4Q Solved: {sum_data.get('q4', 0)} | 3Q Solved: {sum_data.get('q3', 0)} | 2Q Solved: {sum_data.get('q2', 0)} | 1Q Solved: {sum_data.get('q1', 0)} | Not Attended: {sum_data.get('not_attended', 0)} | Fetch Failed: {sum_data.get('fetch_failed', 0)} | Mode Uncertain: {sum_data.get('mode_uncertain', 0)}"
+    ws['A4'].font = font_bold
+    ws['A4'].alignment = align_center
+
+    headers = [
+        "S.No", "Register No", "Student Name", "Department", "Year", "Batch",
+        "LeetCode Username", "Contest Name", "Contest Number", "Contest Date",
+        "Public Attendance", "Questions Solved", "Questions Total", "Score",
+        "Contest Rank", "Contest Rating", "Top %", "Status", "Fetched At"
+    ]
+
+    ws.row_dimensions[6].height = 24
+    for col_idx, h in enumerate(headers, start=1):
+        c = ws.cell(row=6, column=col_idx, value=h)
+        c.font = font_header
+        c.fill = navy_header_fill
+        c.alignment = align_center
+        c.border = grid_border
+
+    current_row = 7
+    for row_data in data.get("rows", []):
+        ws.row_dimensions[current_row].height = 20
+        fill = zebra_fill if current_row % 2 == 0 else PatternFill(fill_type=None)
+
+        ws.cell(row=current_row, column=1, value=row_data.get("s_no")).alignment = align_center
+        ws.cell(row=current_row, column=2, value=row_data.get("reg_no")).alignment = align_center
+        ws.cell(row=current_row, column=3, value=row_data.get("student_name")).alignment = align_left
+        ws.cell(row=current_row, column=4, value=row_data.get("department")).alignment = align_center
+        ws.cell(row=current_row, column=5, value=row_data.get("year")).alignment = align_center
+        ws.cell(row=current_row, column=6, value=row_data.get("batch")).alignment = align_center
+        ws.cell(row=current_row, column=7, value=row_data.get("username")).alignment = align_left
+        ws.cell(row=current_row, column=8, value=row_data.get("contest_name", contest_name)).alignment = align_left
+        ws.cell(row=current_row, column=9, value=row_data.get("contest_number", contest_number)).alignment = align_center
+        ws.cell(row=current_row, column=10, value=row_data.get("contest_date", contest_date)).alignment = align_center
+        ws.cell(row=current_row, column=11, value="ATTENDED" if row_data.get("attended") else "NOT ATTENDED").alignment = align_center
+        ws.cell(row=current_row, column=12, value=row_data.get("questions_solved", 0)).alignment = align_center
+        ws.cell(row=current_row, column=13, value=row_data.get("questions_total", 4)).alignment = align_center
+        ws.cell(row=current_row, column=14, value=row_data.get("score_display", "Not Attended")).alignment = align_center
+        ws.cell(row=current_row, column=15, value=row_data.get("contest_rank") or "—").alignment = align_center
+        ws.cell(row=current_row, column=16, value=row_data.get("contest_rating") or "—").alignment = align_center
+        ws.cell(row=current_row, column=17, value=row_data.get("top_percentage") or "—").alignment = align_center
+        ws.cell(row=current_row, column=18, value=row_data.get("status", "NOT_ATTENDED")).alignment = align_center
+        ws.cell(row=current_row, column=19, value=row_data.get("fetched_at") or "—").alignment = align_center
+
+        for col_idx in range(1, 20):
+            c = ws.cell(row=current_row, column=col_idx)
+            c.font = font_regular
+            c.border = grid_border
+            if fill.fill_type:
+                c.fill = fill
+        current_row += 1
+
+    for col in ws.columns:
+        col_letter = get_column_letter(col[0].column)
+        max_len = max(len(str(cell.value or '')) for cell in col if cell.row > 2)
+        ws.column_dimensions[col_letter].width = max(max_len + 4, 12)
+
+    wb.save(filepath)
+    return filepath
+
+
+def build_virtual_contest_excel(data: Dict[str, Any], filepath: str) -> str:
+    """Generates standalone Virtual_Contest.xlsx containing ONLY Virtual contest results."""
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Virtual_Contest"
+
+    report_date = data.get("report_date", "13-08-2026")
+    contest_name = data.get("contest_name", "Weekly Contest")
+    contest_number = data.get("contest_number", "")
+    contest_date = data.get("contest_date", "")
+
+    navy_header_fill = PatternFill(start_color="1F2937", end_color="1F2937", fill_type="solid")
+    brand_fill = PatternFill(start_color="4F46E5", end_color="4F46E5", fill_type="solid")
+    zebra_fill = PatternFill(start_color="F9FAFB", end_color="F9FAFB", fill_type="solid")
+
+    font_title = Font(name="Arial", size=14, bold=True, color="FFFFFF")
+    font_sub = Font(name="Arial", size=10, italic=True, color="E5E7EB")
+    font_header = Font(name="Arial", size=10, bold=True, color="FFFFFF")
+    font_bold = Font(name="Arial", size=10, bold=True)
+    font_regular = Font(name="Arial", size=10)
+
+    thin_border_side = Side(style='thin', color='D1D5DB')
+    grid_border = Border(left=thin_border_side, right=thin_border_side, top=thin_border_side, bottom=thin_border_side)
+
+    align_center = Alignment(horizontal='center', vertical='center')
+    align_left = Alignment(horizontal='left', vertical='center')
+
+    # Banner
+    ws.merge_cells('A1:S1')
+    ws.merge_cells('A2:S2')
+    cell_t = ws['A1']
+    cell_t.value = f"NANDHA ENGINEERING COLLEGE (AUTONOMOUS) — Virtual Contest Performance Report"
+    cell_t.font = font_title
+    cell_t.fill = navy_header_fill
+    cell_t.alignment = align_center
+
+    cell_s = ws['A2']
+    cell_s.value = f"Contest: {contest_name} (#{contest_number}) | Contest Date: {contest_date} | Report Date: {report_date} | Total Students: {len(data.get('rows', []))}"
+    cell_s.font = font_sub
+    cell_s.fill = brand_fill
+    cell_s.alignment = align_center
+
+    ws.row_dimensions[1].height = 28
+    ws.row_dimensions[2].height = 20
+
+    # Summary Row
+    sum_data = data.get("virtual_summary", {})
+    ws.merge_cells('A4:S4')
+    ws['A4'] = f"VIRTUAL CONTEST SUMMARY: 4Q Solved: {sum_data.get('q4', 0)} | 3Q Solved: {sum_data.get('q3', 0)} | 2Q Solved: {sum_data.get('q2', 0)} | 1Q Solved: {sum_data.get('q1', 0)} | Not Attended: {sum_data.get('not_attended', 0)} | Fetch Failed: {sum_data.get('fetch_failed', 0)} | Mode Uncertain: {sum_data.get('mode_uncertain', 0)}"
+    ws['A4'].font = font_bold
+    ws['A4'].alignment = align_center
+
+    headers = [
+        "S.No", "Register No", "Student Name", "Department", "Year", "Batch",
+        "LeetCode Username", "Contest Name", "Contest Number", "Contest Date",
+        "Virtual Attendance", "Questions Solved", "Questions Total", "Score",
+        "Contest Rank", "Contest Rating", "Top %", "Status", "Fetched At"
+    ]
+
+    ws.row_dimensions[6].height = 24
+    for col_idx, h in enumerate(headers, start=1):
+        c = ws.cell(row=6, column=col_idx, value=h)
+        c.font = font_header
+        c.fill = navy_header_fill
+        c.alignment = align_center
+        c.border = grid_border
+
+    current_row = 7
+    for row_data in data.get("rows", []):
+        ws.row_dimensions[current_row].height = 20
+        fill = zebra_fill if current_row % 2 == 0 else PatternFill(fill_type=None)
+
+        ws.cell(row=current_row, column=1, value=row_data.get("s_no")).alignment = align_center
+        ws.cell(row=current_row, column=2, value=row_data.get("reg_no")).alignment = align_center
+        ws.cell(row=current_row, column=3, value=row_data.get("student_name")).alignment = align_left
+        ws.cell(row=current_row, column=4, value=row_data.get("department")).alignment = align_center
+        ws.cell(row=current_row, column=5, value=row_data.get("year")).alignment = align_center
+        ws.cell(row=current_row, column=6, value=row_data.get("batch")).alignment = align_center
+        ws.cell(row=current_row, column=7, value=row_data.get("username")).alignment = align_left
+        ws.cell(row=current_row, column=8, value=row_data.get("contest_name", contest_name)).alignment = align_left
+        ws.cell(row=current_row, column=9, value=row_data.get("contest_number", contest_number)).alignment = align_center
+        ws.cell(row=current_row, column=10, value=row_data.get("contest_date", contest_date)).alignment = align_center
+        ws.cell(row=current_row, column=11, value="ATTENDED" if row_data.get("attended") else "NOT ATTENDED").alignment = align_center
+        ws.cell(row=current_row, column=12, value=row_data.get("questions_solved", 0)).alignment = align_center
+        ws.cell(row=current_row, column=13, value=row_data.get("questions_total", 4)).alignment = align_center
+        ws.cell(row=current_row, column=14, value=row_data.get("score_display", "Not Attended")).alignment = align_center
+        ws.cell(row=current_row, column=15, value=row_data.get("contest_rank") or "—").alignment = align_center
+        ws.cell(row=current_row, column=16, value=row_data.get("contest_rating") or "—").alignment = align_center
+        ws.cell(row=current_row, column=17, value=row_data.get("top_percentage") or "—").alignment = align_center
+        ws.cell(row=current_row, column=18, value=row_data.get("status", "NOT_ATTENDED")).alignment = align_center
+        ws.cell(row=current_row, column=19, value=row_data.get("fetched_at") or "—").alignment = align_center
+
+        for col_idx in range(1, 20):
+            c = ws.cell(row=current_row, column=col_idx)
+            c.font = font_regular
+            c.border = grid_border
+            if fill.fill_type:
+                c.fill = fill
+        current_row += 1
+
+    for col in ws.columns:
+        col_letter = get_column_letter(col[0].column)
+        max_len = max(len(str(cell.value or '')) for cell in col if cell.row > 2)
+        ws.column_dimensions[col_letter].width = max(max_len + 4, 12)
+
+    wb.save(filepath)
+    return filepath
+
+
+def build_contest_combined_excel(data: Dict[str, Any], filepath: str) -> str:
+    """Generates Contest_Combined.xlsx containing side-by-side Public and Virtual contest comparison + Data Validation sheet."""
+    wb = openpyxl.Workbook()
+    ws1 = wb.active
+    ws1.title = "Contest_Combined"
+
+    report_date = data.get("report_date", "13-08-2026")
+    contest_name = data.get("contest_name", "Weekly Contest")
+    contest_number = data.get("contest_number", "")
+    contest_date = data.get("contest_date", "")
+
+    navy_header_fill = PatternFill(start_color="1F2937", end_color="1F2937", fill_type="solid")
+    brand_fill = PatternFill(start_color="4F46E5", end_color="4F46E5", fill_type="solid")
+    zebra_fill = PatternFill(start_color="F9FAFB", end_color="F9FAFB", fill_type="solid")
+
+    font_title = Font(name="Arial", size=14, bold=True, color="FFFFFF")
+    font_sub = Font(name="Arial", size=10, italic=True, color="E5E7EB")
+    font_header = Font(name="Arial", size=10, bold=True, color="FFFFFF")
+    font_regular = Font(name="Arial", size=10)
+
+    thin_border_side = Side(style='thin', color='D1D5DB')
+    grid_border = Border(left=thin_border_side, right=thin_border_side, top=thin_border_side, bottom=thin_border_side)
+
+    align_center = Alignment(horizontal='center', vertical='center')
+    align_left = Alignment(horizontal='left', vertical='center')
+
+    # Banner
+    ws1.merge_cells('A1:V1')
+    ws1.merge_cells('A2:V2')
+    ws1['A1'] = "NANDHA ENGINEERING COLLEGE (AUTONOMOUS) — Public & Virtual Contest Combined Final Report"
+    ws1['A1'].font = font_title
+    ws1['A1'].fill = navy_header_fill
+    ws1['A1'].alignment = align_center
+
+    ws1['A2'] = f"Contest: {contest_name} (#{contest_number}) | Contest Date: {contest_date} | Report Date: {report_date} | Total Students: {len(data.get('rows', []))}"
+    ws1['A2'].font = font_sub
+    ws1['A2'].fill = brand_fill
+    ws1['A2'].alignment = align_center
+
+    headers = [
+        "Register No", "Student Name", "Department", "Year", "Batch", "Username",
+        "Public Contest", "Public Score", "Public Questions Solved", "Public Questions Total", "Public Rank", "Public Rating",
+        "Virtual Contest", "Virtual Score", "Virtual Questions Solved", "Virtual Questions Total", "Virtual Rank", "Virtual Rating",
+        "Overall Participation Mode", "Public Status", "Virtual Status", "Last Fetched"
+    ]
+
+    ws1.row_dimensions[4].height = 24
+    for col_idx, h in enumerate(headers, start=1):
+        c = ws1.cell(row=4, column=col_idx, value=h)
+        c.font = font_header
+        c.fill = navy_header_fill
+        c.alignment = align_center
+        c.border = grid_border
+
+    current_row = 5
+    for r in data.get("rows", []):
+        ws1.row_dimensions[current_row].height = 20
+        fill = zebra_fill if current_row % 2 == 0 else PatternFill(fill_type=None)
+
+        pub = r.get("public_contest_result", {})
+        vir = r.get("virtual_contest_result", {})
+
+        ws1.cell(row=current_row, column=1, value=r.get("reg_no")).alignment = align_center
+        ws1.cell(row=current_row, column=2, value=r.get("student_name")).alignment = align_left
+        ws1.cell(row=current_row, column=3, value=r.get("department")).alignment = align_center
+        ws1.cell(row=current_row, column=4, value=r.get("year")).alignment = align_center
+        ws1.cell(row=current_row, column=5, value=r.get("batch")).alignment = align_center
+        ws1.cell(row=current_row, column=6, value=r.get("username")).alignment = align_left
+
+        ws1.cell(row=current_row, column=7, value=pub.get("contest_name", contest_name)).alignment = align_left
+        ws1.cell(row=current_row, column=8, value=pub.get("score_display", "Not Attended")).alignment = align_center
+        ws1.cell(row=current_row, column=9, value=pub.get("questions_solved", 0)).alignment = align_center
+        ws1.cell(row=current_row, column=10, value=pub.get("questions_total", 4)).alignment = align_center
+        ws1.cell(row=current_row, column=11, value=pub.get("contest_rank") or "—").alignment = align_center
+        ws1.cell(row=current_row, column=12, value=pub.get("contest_rating") or "—").alignment = align_center
+
+        ws1.cell(row=current_row, column=13, value=vir.get("contest_name", contest_name)).alignment = align_left
+        ws1.cell(row=current_row, column=14, value=vir.get("score_display", "Not Attended")).alignment = align_center
+        ws1.cell(row=current_row, column=15, value=vir.get("questions_solved", 0)).alignment = align_center
+        ws1.cell(row=current_row, column=16, value=vir.get("questions_total", 4)).alignment = align_center
+        ws1.cell(row=current_row, column=17, value=vir.get("contest_rank") or "—").alignment = align_center
+        ws1.cell(row=current_row, column=18, value=vir.get("contest_rating") or "—").alignment = align_center
+
+        ws1.cell(row=current_row, column=19, value=r.get("overall_participation_mode", "NONE")).alignment = align_center
+        ws1.cell(row=current_row, column=20, value=pub.get("status", "NOT_ATTENDED")).alignment = align_center
+        ws1.cell(row=current_row, column=21, value=vir.get("status", "NOT_ATTENDED")).alignment = align_center
+        ws1.cell(row=current_row, column=22, value=r.get("fetched_at") or "—").alignment = align_center
+
+        for col_idx in range(1, 23):
+            c = ws1.cell(row=current_row, column=col_idx)
+            c.font = font_regular
+            c.border = grid_border
+            if fill.fill_type:
+                c.fill = fill
+        current_row += 1
+
+    for col in ws1.columns:
+        col_letter = get_column_letter(col[0].column)
+        max_len = max(len(str(cell.value or '')) for cell in col if cell.row > 2)
+        ws1.column_dimensions[col_letter].width = max(max_len + 4, 12)
+
+    # Add Contest_Data_Validation sheet per Section 19
+    ws2 = wb.create_sheet(title="Contest_Data_Validation")
+    v_headers = [
+        "Register No", "Student Name", "Username", "Contest", "Contest Number",
+        "Participation Mode", "Questions Solved", "Questions Total", "Contest Rank",
+        "Contest Rating", "Status", "Error Message", "Fetched At"
+    ]
+    ws2.row_dimensions[1].height = 24
+    for col_idx, h in enumerate(v_headers, start=1):
+        c = ws2.cell(row=1, column=col_idx, value=h)
+        c.font = font_header
+        c.fill = navy_header_fill
+        c.alignment = align_center
+
+    c_row = 2
+    for err_item in data.get("validation_logs", []):
+        ws2.cell(row=c_row, column=1, value=err_item.get("reg_no")).alignment = align_center
+        ws2.cell(row=c_row, column=2, value=err_item.get("student_name")).alignment = align_left
+        ws2.cell(row=c_row, column=3, value=err_item.get("username")).alignment = align_left
+        ws2.cell(row=c_row, column=4, value=err_item.get("contest_name", contest_name)).alignment = align_left
+        ws2.cell(row=c_row, column=5, value=err_item.get("contest_number", contest_number)).alignment = align_center
+        ws2.cell(row=c_row, column=6, value=err_item.get("participation_mode", "UNKNOWN")).alignment = align_center
+        ws2.cell(row=c_row, column=7, value=err_item.get("questions_solved", 0)).alignment = align_center
+        ws2.cell(row=c_row, column=8, value=err_item.get("questions_total", 4)).alignment = align_center
+        ws2.cell(row=c_row, column=9, value=err_item.get("contest_rank") or "—").alignment = align_center
+        ws2.cell(row=c_row, column=10, value=err_item.get("contest_rating") or "—").alignment = align_center
+        ws2.cell(row=c_row, column=11, value=err_item.get("status", "VERIFIED")).alignment = align_center
+        ws2.cell(row=c_row, column=12, value=err_item.get("error_message") or "—").alignment = align_left
+        ws2.cell(row=c_row, column=13, value=err_item.get("fetched_at") or "—").alignment = align_center
+        c_row += 1
+
+    wb.save(filepath)
+    return filepath
+

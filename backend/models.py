@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey, Text, JSON
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey, Text, JSON, UniqueConstraint
 from sqlalchemy.orm import relationship
 from backend.database import Base
 
@@ -62,6 +62,7 @@ class Student(Base):
     stat_snapshots = relationship("StudentStatSnapshot", back_populates="student", cascade="all, delete-orphan")
     contest_participations = relationship("ContestParticipation", back_populates="student", cascade="all, delete-orphan")
     contest_snapshots = relationship("StudentContestSnapshot", back_populates="student", cascade="all, delete-orphan")
+    contest_participation_records = relationship("StudentContestParticipation", back_populates="student", cascade="all, delete-orphan")
 
 class LeetCodeProfileStats(Base):
     __tablename__ = "leetcode_profile_stats"
@@ -507,6 +508,9 @@ class ReportEmailRecipient(Base):
     receive_error_reports = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+# Alias for backward compatibility & specification match
+ReportRecipient = ReportEmailRecipient
+
 
 class EmailDispatchLog(Base):
     __tablename__ = "email_dispatch_logs"
@@ -526,6 +530,129 @@ class EmailDispatchLog(Base):
     retry_count = Column(Integer, default=0)
     sent_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class StudentContestParticipation(Base):
+    __tablename__ = "student_contest_participations"
+    __table_args__ = (
+        UniqueConstraint("student_id", "contest_id", "participation_mode", name="uix_student_contest_mode"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+
+    contest_id = Column(String(100), nullable=False, index=True) # e.g. weekly-contest-470
+    contest_name = Column(String(150), nullable=False) # e.g. Weekly Contest 470
+    contest_number = Column(Integer, nullable=True) # e.g. 470
+    contest_date = Column(String(20), nullable=True, index=True) # YYYY-MM-DD
+
+    participation_mode = Column(String(20), nullable=False, index=True) # PUBLIC or VIRTUAL
+
+    questions_solved = Column(Integer, default=0)
+    questions_total = Column(Integer, default=4)
+    score_display = Column(String(20), nullable=True) # e.g. "3 / 4" or "Not Attended"
+
+    contest_rank = Column(Integer, nullable=True)
+    contest_rating = Column(Float, nullable=True)
+    top_percentage = Column(Float, nullable=True)
+
+    attended = Column(Boolean, default=False)
+    status = Column(String(30), default="NOT_ATTENDED", index=True) # ATTENDED, NOT_ATTENDED, FETCH_FAILED, PARSER_ERROR, DATA_MISMATCH, MODE_UNCERTAIN, PROFILE_NOT_FOUND
+
+    started_at = Column(DateTime, nullable=True)
+    submitted_at = Column(DateTime, nullable=True)
+    fetched_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    error_message = Column(Text, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    student = relationship("Student", back_populates="contest_participation_records")
+
+
+class AdminAuditLog(Base):
+    __tablename__ = "admin_audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    audit_id = Column(String(100), unique=True, index=True, nullable=False) # AUD-2026-XXXXX
+    
+    admin_user_id = Column(Integer, nullable=True, index=True)
+    admin_name = Column(String(150), nullable=True)
+    admin_email = Column(String(150), nullable=True)
+    admin_role = Column(String(50), default="ADMIN")
+
+    action = Column(String(100), nullable=False, index=True)
+    action_type = Column(String(50), default="GENERAL", index=True) # SECURITY, DATA_SYNC, REPORT, EMAIL, RECIPIENT, SETTINGS
+    
+    target_type = Column(String(50), nullable=True)
+    target_id = Column(String(100), nullable=True)
+    
+    description = Column(Text, nullable=True)
+    ip_address = Column(String(50), nullable=True)
+    user_agent = Column(String(255), nullable=True)
+    
+    status = Column(String(30), default="SUCCESS", index=True) # SUCCESS, FAILED, WARNING
+    metadata_json = Column(JSON, nullable=True)
+    
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
+
+
+class EmailDelivery(Base):
+    __tablename__ = "email_deliveries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    message_id = Column(String(100), unique=True, index=True, nullable=False) # MSG-MANUAL-XXXXX or MSG-AUTO-XXXXX
+    
+    recipient_id = Column(Integer, ForeignKey("report_email_recipients.id"), nullable=True)
+    recipient_email = Column(String(150), nullable=False, index=True)
+    recipient_name = Column(String(150), nullable=True)
+    recipient_role = Column(String(50), default="MANAGEMENT")
+    department = Column(String(50), default="ALL")
+    
+    report_type = Column(String(100), default="WEEKLY_LEETCODE", index=True)
+    report_date = Column(String(20), nullable=True)
+    
+    subject = Column(String(255), nullable=False)
+    status = Column(String(30), default="QUEUED", index=True) # QUEUED, SENDING, SENT, DELIVERED, FAILED, RETRYING
+    
+    attachments_count = Column(Integer, default=0)
+    attachment_metadata_json = Column(JSON, nullable=True)
+    
+    provider_message_id = Column(String(100), nullable=True)
+    sent_at = Column(DateTime, nullable=True)
+    delivered_at = Column(DateTime, nullable=True)
+    failed_at = Column(DateTime, nullable=True)
+    
+    retry_count = Column(Integer, default=0)
+    error_message = Column(Text, nullable=True)
+    
+    trigger_type = Column(String(30), default="AUTOMATED", index=True) # MANUAL or AUTOMATED
+    triggered_by_user_id = Column(Integer, nullable=True)
+    triggered_by_email = Column(String(150), nullable=True)
+    
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    attachments = relationship("EmailAttachment", back_populates="delivery", cascade="all, delete-orphan")
+
+
+class EmailAttachment(Base):
+    __tablename__ = "email_attachments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email_delivery_id = Column(Integer, ForeignKey("email_deliveries.id"), nullable=False, index=True)
+    
+    filename = Column(String(255), nullable=False)
+    file_type = Column(String(100), nullable=True)
+    file_size = Column(Integer, default=0)
+    storage_path = Column(String(255), nullable=True)
+    checksum = Column(String(100), nullable=True)
+    
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    delivery = relationship("EmailDelivery", back_populates="attachments")
+
+
 
 
 

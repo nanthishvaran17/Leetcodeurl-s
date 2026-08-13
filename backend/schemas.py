@@ -86,6 +86,19 @@ class LeetCodeStatsOut(BaseModel):
     class Config:
         from_attributes = True
 
+class ContestResultOut(BaseModel):
+    contest_name: Optional[str] = "Weekly Contest"
+    contest_number: Optional[int] = None
+    contest_date: Optional[str] = None
+    questions_solved: int = 0
+    questions_total: int = 4
+    score_display: str = "Not Attended"
+    contest_rank: Optional[int] = None
+    contest_rating: Optional[float] = None
+    top_percentage: Optional[float] = None
+    status: str = "NOT_ATTENDED"
+    fetched_at: Optional[str] = None
+
 class StudentOut(StudentBase):
     id: int
     username: Optional[str] = None
@@ -102,6 +115,10 @@ class StudentOut(StudentBase):
     streak_count: Optional[int] = 0
     consistency_score: Optional[float] = 0.0
     badge_list: List[str] = []
+
+    public_contest_result: Optional[ContestResultOut] = None
+    virtual_contest_result: Optional[ContestResultOut] = None
+    overall_participation_mode: Optional[str] = "NONE"
 
     class Config:
         from_attributes = True

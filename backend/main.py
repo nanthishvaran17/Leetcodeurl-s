@@ -21,7 +21,7 @@ from backend.routes import (
     leaderboard, analytics, reports, settings as settings_route,
     audit, public, sync, history, risk, goals, system_health, weekly_contests
 )
-from backend.routes import email_reports
+from backend.routes import admin, email_reports
 
 app = FastAPI(
     title="College LeetCode Weekly Tracker API",
@@ -56,8 +56,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount Routers
 app.include_router(auth.router)
+app.include_router(admin.router)
 app.include_router(students.router)
 app.include_router(sync.router)
 app.include_router(departments.router)

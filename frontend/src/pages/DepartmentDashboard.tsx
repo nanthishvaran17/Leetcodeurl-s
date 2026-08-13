@@ -13,7 +13,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   const [selectedDept, setSelectedDept] = useState<any>(null);
   const [yearLevel, setYearLevel] = useState<string>('ALL');
   const [sortBy, setSortBy] = useState<string>('top_solved');
-  const [viewMode, setViewMode] = useState<'table' | 'cards' | 'contest'>('table');
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [contestMode, setContestMode] = useState<string>('ALL');
   const [students, setStudents] = useState<StudentData[]>([]);
   const [displayCount, setDisplayCount] = useState<number>(32);
@@ -178,18 +178,6 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                 <List className="w-4 h-4" />
                 <span>📋 Table View</span>
               </button>
-
-              <button
-                onClick={() => setViewMode('contest')}
-                className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-black transition-all ${
-                  viewMode === 'contest'
-                    ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/40'
-                    : 'text-gray-300 hover:text-white'
-                }`}
-              >
-                <Trophy className="w-4 h-4" />
-                <span>🏆 Weekly Contest Matrix</span>
-              </button>
             </div>
             <button
               onClick={handleRefreshAllStats}
@@ -262,33 +250,6 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           </div>
         </div>
 
-        {/* Contest Mode selector (Only shown when Weekly Contest Matrix view is selected) */}
-        {viewMode === 'contest' && (
-          <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
-            <label className="block text-xs font-bold text-amber-500 dark:text-amber-400 uppercase tracking-wider mb-2">🏆 Select Contest Participation Mode (Public Live vs Virtual)</label>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { id: 'ALL', label: '🏢 All Contest Modes' },
-                { id: 'PUBLIC', label: '🟢 Public Live (08:00 AM – 09:30 AM IST)' },
-                { id: 'VIRTUAL', label: '🔵 Virtual Contest (Post 09:30 AM)' },
-                { id: 'NOT_STARTED', label: '🔴 Not Yet Started' }
-              ].map((mode) => (
-                <button
-                  key={mode.id}
-                  onClick={() => setContestMode(mode.id)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                    contestMode === mode.id
-                      ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
-                  }`}
-                >
-                  {mode.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Number of Problems Solved filter */}
         <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
           <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Number of Problems Solved</label>
@@ -353,7 +314,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           </h3>
         </div>
 
-        {viewMode === 'table' || viewMode === 'contest' ? (
+        {viewMode === 'table' ? (
           <LeaderboardTable
             students={sortedList}
             onSelectStudent={onSelectStudent}

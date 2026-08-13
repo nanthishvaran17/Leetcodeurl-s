@@ -17,6 +17,20 @@ from backend.email_service import send_weekly_report_email
 
 router = APIRouter(prefix="/api/reports", tags=["Reports"])
 
+@router.post("/trigger-public-contest-workflow")
+def trigger_public_contest_workflow_endpoint(db: Session = Depends(get_db)):
+    """Triggers Sunday 9:45 AM Public Contest fetch, Excel generation, and Email workflow."""
+    from backend.services.weekly_report_service import run_sunday_0945_public_contest_workflow
+    result = run_sunday_0945_public_contest_workflow(db)
+    return result
+
+@router.post("/trigger-virtual-contest-workflow")
+def trigger_virtual_contest_workflow_endpoint(db: Session = Depends(get_db)):
+    """Triggers Sunday 10:00 PM Virtual Contest fetch, Combined Excel generation, and Email workflow."""
+    from backend.services.weekly_report_service import run_sunday_2200_virtual_contest_workflow
+    result = run_sunday_2200_virtual_contest_workflow(db)
+    return result
+
 @router.get("/export-excel")
 @router.get("/export-official-college-summary")
 def download_official_college_summary_excel(db: Session = Depends(get_db)):

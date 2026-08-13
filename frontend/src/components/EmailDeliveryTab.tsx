@@ -107,16 +107,51 @@ export const EmailDeliveryTab: React.FC = () => {
     }
   };
 
+  const handleSendAdminTestReportEmail = async () => {
+    setIsTestingSmtp(true);
+    setSmtpTestResult(null);
+    try {
+      const res = await api.post('/admin/test-report-email');
+      setSmtpTestResult({
+        success: res.data.status === 'success',
+        message: res.data.message || 'Pre-flight test email dispatched!',
+        error: res.data.status !== 'success' ? 'Email delivery failed' : undefined
+      });
+      await fetchAll();
+    } catch (err: any) {
+      setSmtpTestResult({
+        success: false,
+        message: '🔴 PRE-FLIGHT TEST FAILED',
+        error: err.response?.data?.detail || err.message || 'Pre-flight test failed'
+      });
+    } finally {
+      setIsTestingSmtp(false);
+    }
+  };
+
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
       const [rRes, lRes, sRes] = await Promise.all([
-        api.get('/email/recipients'),
-        api.get('/email/logs?limit=50'),
+        api.get('/admin/recipients'),
+        api.get('/admin/email-deliveries?limit=100'),
         api.get('/contests/sessions').catch(() => ({ data: [] })),
       ]);
       setRecipients(rRes.data || []);
-      setLogs(lRes.data || []);
+      setLogs((lRes.data || []).map((d: any) => ({
+        id: d.id,
+        email_id: d.message_id,
+        session_id: null,
+        recipient: d.recipient_email,
+        role: d.recipient_role || d.trigger_type || 'MANAGEMENT',
+        subject: d.subject,
+        status: d.status,
+        attachment_count: d.attachments_count,
+        error_message: d.error_message,
+        retry_count: d.retry_count,
+        sent_at: d.sent_at || d.created_at,
+        created_at: d.created_at
+      })));
       const allSessions: any[] = sRes.data || [];
       setSessions(allSessions
         .filter((s: any) => s.status === 'FINALIZED' || s.status === 'COMPLETED')
@@ -143,7 +178,7 @@ export const EmailDeliveryTab: React.FC = () => {
 
   const handleRetry = async (logId: number) => {
     try {
-      await api.post(`/email/retry/${logId}`);
+      await api.post(`/admin/email-deliveries/retry/${logId}`);
       await fetchAll();
     } catch (err) {
       console.error('Retry error:', err);
@@ -154,14 +189,15 @@ export const EmailDeliveryTab: React.FC = () => {
     if (!newName.trim() || !newEmail.trim()) return;
     setAddingRecipient(true);
     try {
-      await api.post('/email/recipients', {
+      await api.post('/admin/recipients', {
         name: newName,
         email: newEmail,
         role: newRole,
         department: newDept,
-        receive_weekly_reports: true,
-        receive_hod_reports: true,
-        receive_error_reports: true
+        weekly_enabled: true,
+        hod_enabled: true,
+        error_enabled: true,
+        active: true
       });
       setShowAddRecipient(false);
       setNewName(''); setNewEmail(''); setNewRole('HOD'); setNewDept('ALL');
@@ -176,23 +212,18 @@ export const EmailDeliveryTab: React.FC = () => {
   const handleDeleteRecipient = async (id: number, email: string) => {
     if (!window.confirm(`Remove ${email} from recipient list?`)) return;
     try {
-      await api.delete(`/email/recipients/${id}`);
+      await api.delete(`/admin/recipients/${id}`);
       await fetchAll();
     } catch (err) {
       console.error('Delete error:', err);
     }
   };
 
-  const handleToggleRecipient = async (r: EmailRecipient) => {
+  const handleToggleRecipient = async (r: any) => {
     try {
-      await api.put(`/email/recipients/${r.id}`, {
-        name: r.name, email: r.email, role: r.role,
-        department: r.department,
-        receive_weekly_reports: r.receive_weekly_reports,
-        receive_hod_reports: r.receive_hod_reports,
-        receive_error_reports: r.receive_error_reports
-      });
-      setRecipients(prev => prev.map(x => x.id === r.id ? { ...x, is_active: !x.is_active } : x));
+      const newStatus = !(r.is_active ?? r.active);
+      await api.patch(`/admin/recipients/${r.id}/status`, { active: newStatus });
+      setRecipients(prev => prev.map(x => x.id === r.id ? { ...x, is_active: newStatus, active: newStatus } : x));
     } catch (err) { console.error('Toggle error:', err); }
   };
 
@@ -276,7 +307,7 @@ export const EmailDeliveryTab: React.FC = () => {
           <button
             onClick={handleSendSmtpTest}
             disabled={isTestingSmtp || !testRecipient.trim()}
-            className="sm:self-end px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center space-x-2"
+            className="sm:self-end px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center space-x-2"
           >
             {isTestingSmtp ? (
               <>
@@ -286,9 +317,17 @@ export const EmailDeliveryTab: React.FC = () => {
             ) : (
               <>
                 <Send className="w-3.5 h-3.5" />
-                <span>Send Test Email</span>
+                <span>Send Quick SMTP Test</span>
               </>
             )}
+          </button>
+          <button
+            onClick={handleSendAdminTestReportEmail}
+            disabled={isTestingSmtp}
+            className="sm:self-end px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center space-x-2"
+          >
+            <Mail className="w-3.5 h-3.5" />
+            <span>🧪 Send Test Report to Admin Email</span>
           </button>
         </div>
 

@@ -103,13 +103,17 @@ def login(login_data: UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Account is deactivated")
 
     user.last_login = datetime.datetime.utcnow()
-    
-    # Audit log
-    audit = AuditLog(user_id=user.id, user_name=user.username, action="USER_LOGIN", details=f"Logged in as {user.role}")
-    db.add(audit)
     db.commit()
 
-    access_token = create_access_token(data={"sub": user.username, "role": user.role})
+    # Log ADMIN_LOGIN Audit Entry
+    from backend.services.audit_service import log_admin_action
+    log_admin_action(
+        db, action="ADMIN_LOGIN", action_type="SECURITY",
+        description=f"Admin {user.username} ({user.email}) logged in successfully with role {user.role}",
+        current_user=user, target_type="User", target_id=str(user.id)
+    )
+
+    access_token = create_access_token(data={"sub": user.username, "role": user.role, "email": user.email, "user_id": user.id})
     
     return {
         "access_token": access_token,
@@ -123,6 +127,17 @@ def login(login_data: UserLogin, db: Session = Depends(get_db)):
             "section_id": user.section_id
         }
     }
+
+@router.post("/logout")
+def logout(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Logs out admin user and records ADMIN_LOGOUT audit entry."""
+    from backend.services.audit_service import log_admin_action
+    log_admin_action(
+        db, action="ADMIN_LOGOUT", action_type="SECURITY",
+        description=f"Admin {current_user.username} ({current_user.email}) logged out",
+        current_user=current_user, target_type="User", target_id=str(current_user.id)
+    )
+    return {"status": "success", "message": "Logged out successfully"}
 
 @router.get("/me", response_model=UserOut)
 def read_users_me(current_user: User = Depends(get_current_user)):

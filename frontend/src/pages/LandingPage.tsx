@@ -6,6 +6,27 @@ import { StudentFlipCard } from '../components/StudentFlipCard';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import api, { triggerFullSync, getSyncStatus } from '../services/api';
 
+function parseUtcTime(ts?: string): number {
+  if (!ts) return Date.now();
+  let str = ts.trim();
+  if (!str.endsWith('Z') && !str.includes('+')) {
+    str += 'Z';
+  }
+  const time = new Date(str).getTime();
+  return isNaN(time) ? Date.now() : time;
+}
+
+function formatAgo(ts?: string): string {
+  if (!ts) return 'Not synced yet';
+  const diffMs = Date.now() - parseUtcTime(ts);
+  if (diffMs <= 0) return 'just now';
+  const s = Math.floor(diffMs / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  return `${Math.floor(s / 86400)}d ago`;
+}
+
 interface LandingPageProps {
   summaryData: any;
   onViewDashboard: () => void;
@@ -173,8 +194,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       const res = await api.get(url);
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-        setStudents(res.data);
-        loadedFromApi = true;
+        const hasVerified = res.data.some((s: any) => s.stats && (s.stats.sync_status === 'success' || s.stats.sync_status === 'OK' || (s.stats.total_solved !== null && s.stats.total_solved > 0)));
+        if (hasVerified) {
+          setStudents(res.data);
+          loadedFromApi = true;
+        }
       }
     } catch (err) {
       console.warn("REST API request delayed, reading directly from Cloud Firestore...", err);
@@ -204,6 +228,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           if (selectedDept && selectedDept.code && deptCode !== selectedDept.code) return;
           if (yearLevel !== 'ALL' && yr !== yearLevel) return;
 
+          const syncStatus = sStats.syncStatus || 'pending';
+          const isVerified = syncStatus === 'success' || syncStatus === 'OK';
+          const totSolved = isVerified ? (sStats.totalSolved ?? 0) : null;
+
           list.push({
             id: sData.id || Number(docSnap.id),
             reg_no: sData.registerNo || '',
@@ -219,17 +247,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             streak_count: sStats.streakCount ?? 0,
             consistency_score: sStats.consistencyScore ?? 0,
             stats: {
-              // RULE: null means "not yet fetched" — never convert to 0
-              total_solved: sStats.totalSolved ?? null,
-              easy_solved: sStats.easySolved ?? null,
-              medium_solved: sStats.mediumSolved ?? null,
-              hard_solved: sStats.hardSolved ?? null,
+              total_solved: totSolved,
+              easy_solved: isVerified ? (sStats.easySolved ?? 0) : null,
+              medium_solved: isVerified ? (sStats.mediumSolved ?? 0) : null,
+              hard_solved: isVerified ? (sStats.hardSolved ?? 0) : null,
               contest_rating: sStats.contestRating ?? null,
-              contest_global_ranking: sStats.globalRanking,
-              status: sStats.status || 'pending',
-              sync_status: sStats.syncStatus || 'pending',
+              contest_global_ranking: sStats.globalRanking ?? null,
+              public_profile_ranking: sStats.profileRanking ?? sStats.globalRanking ?? null,
+              recent_contest_name: sStats.recentContestName || 'Weekly Contest',
+              recent_contest_score: sStats.recentContestScore || (isVerified ? 'Not Attended' : '—'),
+              status: sStats.status || (isVerified ? 'OK' : 'pending'),
+              sync_status: syncStatus,
               source: sStats.source || null,
-              last_verified_at: sStats.lastVerifiedAt
+              last_verified_at: sStats.lastVerifiedAt ?? null
             }
           });
         });
@@ -325,10 +355,29 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <span>{refreshing || syncProgress?.is_running ? `⏳ FETCHING ${syncProgress?.processed || 0} / 273` : '🔄 FETCH LIVE DATA'}</span>
             </button>
 
-            <div className="hidden sm:flex items-center space-x-2 px-4 py-3 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 font-extrabold text-xs backdrop-blur-md">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>🟢 273/273 Verified • Just now</span>
-            </div>
+            {(() => {
+              const verifiedCount = students.filter(s =>
+                s.stats?.sync_status === 'success' || s.stats?.sync_status === 'OK' || (s.stats?.total_solved !== null && (s.stats?.total_solved ?? 0) > 0)
+              ).length;
+              const totalCount = summaryData?.total_students || students.length || 273;
+              const lastVerifiedTs = students
+                .map(s => s.stats?.last_verified_at)
+                .filter(Boolean)
+                .sort()
+                .pop();
+              const formattedLastFetched = lastVerifiedTs ? formatAgo(lastVerifiedTs) : 'Just now';
+
+              return (
+                <div className={`hidden sm:flex items-center space-x-2 px-4 py-3 rounded-2xl ${
+                  verifiedCount > 0
+                    ? 'bg-emerald-500/20 border-emerald-400/30 text-emerald-300'
+                    : 'bg-amber-500/20 border-amber-400/30 text-amber-300'
+                } border font-extrabold text-xs backdrop-blur-md`}>
+                  <CheckCircle2 className={`w-4 h-4 ${verifiedCount > 0 ? 'text-emerald-400' : 'text-amber-400'}`} />
+                  <span>{verifiedCount > 0 ? `🟢 ${verifiedCount}/${totalCount} Verified • ${formattedLastFetched}` : `⏳ ${verifiedCount}/${totalCount} Verified • Pending Sync`}</span>
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>

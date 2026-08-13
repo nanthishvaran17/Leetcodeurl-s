@@ -294,26 +294,28 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
     old_total = st.total_solved
     now = datetime.datetime.utcnow()
 
-    # Case A: Exception or Network Error
+    # Case A: Exception or Network Error - PRESERVE PREVIOUS VALID SNAPSHOT
     if isinstance(res, Exception) or not isinstance(res, dict):
         err_msg = str(res) if isinstance(res, Exception) else "Unknown fetch error"
         st.error_message = err_msg
         st.error_code = "NETWORK_ERROR"
-        st.sync_status = "failed" if old_total is None else "stale"
+        has_prev_data = (old_total is not None and old_total > 0)
+        st.sync_status = "stale" if has_prev_data else "failed"
+        st.validation_status = "verified" if has_prev_data else "failed"
         st.last_attempt_at = now
 
         item = SyncJobItem(
             job_id=job_id,
             student_id=student.id,
             field="total_solved",
-            status="LAST_VERIFIED" if old_total is not None else "FETCH_ERROR",
+            status="LAST_VERIFIED" if has_prev_data else "FETCH_ERROR",
             old_value=str(old_total) if old_total is not None else None,
             new_value=str(old_total) if old_total is not None else None,
             error_code="NETWORK_ERROR"
         )
         db.add(item)
         db.commit()
-        return (False, old_total is not None, old_total is None)
+        return (False, has_prev_data, not has_prev_data)
 
     # Case B: Standard API Response Parse
     status_str = res.get("status", "pending")

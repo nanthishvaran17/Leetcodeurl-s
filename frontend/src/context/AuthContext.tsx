@@ -203,6 +203,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     setLoading(true);
     try {
+      await api.post('/auth/logout');
+    } catch (_err) {
+      // Ignore API logout error
+    }
+    try {
       await firebaseSignOut(auth);
     } catch (_err) {
       // Ignore firebase sign out error

@@ -108,8 +108,15 @@ async def sunday_auto_email_job():
     Scheduled for Sunday 9:45 AM IST: Automatically dispatches weekly contest report emails
     to all active DB recipients, 15 minutes after the 9:30 AM final snapshot completes.
     """
-    logger.info("Executing Scheduled Job: Sunday 9:45 AM Auto Email Dispatch...")
+    logger.info("Executing Scheduled Job: Sunday 9:45 AM Public Contest & Auto Email Dispatch...")
     db = SessionLocal()
+    try:
+        from backend.services.weekly_report_service import run_sunday_0945_public_contest_workflow
+        res = run_sunday_0945_public_contest_workflow(db)
+        logger.info(f"Sunday 9:45 AM Public Contest Workflow Completed: {res}")
+    except Exception as e:
+        logger.error(f"Error in sunday_0945_public_contest_workflow execution: {e}")
+
     try:
         import datetime
         from backend.models import WeeklySession
@@ -170,6 +177,22 @@ async def sunday_auto_email_job():
         db.close()
 
 
+async def sunday_2200_virtual_contest_job():
+    """
+    Scheduled for Sunday 10:00 PM IST: End-of-Day Virtual contest fetch, combined report generation & final email.
+    """
+    logger.info("Executing Scheduled Job: Sunday 10:00 PM Virtual Contest Final Workflow...")
+    db = SessionLocal()
+    try:
+        from backend.services.weekly_report_service import run_sunday_2200_virtual_contest_workflow
+        res = run_sunday_2200_virtual_contest_workflow(db)
+        logger.info(f"Sunday 10:00 PM Virtual Contest Workflow Completed: {res}")
+    except Exception as e:
+        logger.error(f"Error in sunday_2200_virtual_contest_job: {e}")
+    finally:
+        db.close()
+
+
 async def daily_auto_refresh_job():
     """
     Scheduled daily: Auto-syncs live LeetCode stats for all active students.
@@ -181,11 +204,37 @@ async def daily_auto_refresh_job():
     except Exception as e:
         logger.error(f"Error in daily_auto_refresh_job: {e}")
 
+last_public_run_time = None
+last_virtual_run_time = None
+
+def get_scheduler_health():
+    """Returns Asia/Kolkata timezone scheduler health status and next/last run timestamps."""
+    next_pub, next_vir = None, None
+    if scheduler.running:
+        for j in scheduler.get_jobs():
+            if j.id == 'sunday_auto_email_945' and j.next_run_time:
+                next_pub = j.next_run_time.strftime("%Y-%m-%d %H:%M:%S IST")
+            elif j.id == 'sunday_virtual_contest_2200' and j.next_run_time:
+                next_vir = j.next_run_time.strftime("%Y-%m-%d %H:%M:%S IST")
+
+    return {
+        "timezone": "Asia/Kolkata",
+        "scheduler_status": "RUNNING" if scheduler.running else "SCHEDULED",
+        "next_public_run": next_pub or "Sunday 09:45:00 IST",
+        "next_virtual_run": next_vir or "Sunday 22:00:00 IST",
+        "last_public_run": last_public_run_time.strftime("%Y-%m-%d %H:%M:%S IST") if last_public_run_time else None,
+        "last_virtual_run": last_virtual_run_time.strftime("%Y-%m-%d %H:%M:%S IST") if last_virtual_run_time else None
+    }
+
 def start_scheduler():
     """
-    Starts the APScheduler cron jobs.
+    Starts the APScheduler cron jobs under Asia/Kolkata IST timezone.
     """
-    # Cron for Sunday 8:00 AM IST (day_of_week=6 is Sunday)
+    if scheduler.running:
+        logger.info("APScheduler is already running. Skipping redundant start.")
+        return
+
+    # Cron for Sunday 8:00 AM IST
     scheduler.add_job(
         sunday_start_job,
         CronTrigger(day_of_week='sun', hour=8, minute=0, timezone=tz),
@@ -201,7 +250,7 @@ def start_scheduler():
         replace_existing=True
     )
 
-    # Cron for Sunday 9:45 AM IST — Auto Email Dispatch (15 min after final snapshot)
+    # Cron for Sunday 9:45 AM IST — Public Contest Fetch + Email Dispatch
     scheduler.add_job(
         sunday_auto_email_job,
         CronTrigger(day_of_week='sun', hour=9, minute=45, timezone=tz),
@@ -209,6 +258,15 @@ def start_scheduler():
         replace_existing=True
     )
 
+    # Cron for Sunday 10:00 PM IST — Virtual Contest Fetch + Combined Final Email Dispatch
+    scheduler.add_job(
+        sunday_2200_virtual_contest_job,
+        CronTrigger(day_of_week='sun', hour=22, minute=0, timezone=tz),
+        id='sunday_virtual_contest_2200',
+        replace_existing=True
+    )
+
     scheduler.start()
-    logger.info("APScheduler started: Sunday session baseline & email dispatch registered. Continuous background auto-scraping is disabled per explicit fetch policy.")
+    logger.info("APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.")
+
 

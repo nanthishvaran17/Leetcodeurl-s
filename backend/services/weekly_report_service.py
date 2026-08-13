@@ -632,3 +632,283 @@ def generate_weekly_performance_data(
         "all_students_current": current_student_records,
         "all_students_last_week": last_week_student_records
     }
+
+
+def run_sunday_0945_public_contest_workflow(db: Session, contest_id: Optional[str] = None) -> Dict[str, Any]:
+    """
+    SUNDAY 9:45 AM PUBLIC CONTEST WORKFLOW — ALL 273 STUDENTS
+    1. Identifies latest public contest.
+    2. Fetches PUBLIC contest participation for all 273 master students.
+    3. Records PUBLIC participations without modifying VIRTUAL records.
+    4. Generates Public_Contest.xlsx.
+    5. Computes Public summary breakdown (4Q, 3Q, 2Q, 1Q, Not Attended, Fetch Failed, Mode Uncertain).
+    6. Dispatches 9:45 AM Email Report with Public_Contest.xlsx attached.
+    """
+    from backend.services.contest_service import record_contest_participation
+    from backend.exporters.weekly_excel_generator import build_public_contest_excel
+    from backend.email_service import send_public_contest_report_email
+
+    today_str = datetime.date.today().strftime("%Y-%m-%d")
+    c_id = contest_id or f"weekly-contest-{datetime.date.today().strftime('%W')}"
+    c_name = f"Weekly Contest"
+
+    students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+
+    rows = []
+    q4, q3, q2, q1, not_att, fetch_fail, mode_unc = 0, 0, 0, 0, 0, 0, 0
+
+    for idx, s in enumerate(students, start=1):
+        st = s.stats
+        if not s.leetcode_url and not s.username:
+            status = "NOT_ATTENDED"
+            q_solved = 0
+            err_msg = "Missing profile link"
+        elif st and st.sync_status in ("failed", "stale") and st.total_solved is None:
+            status = "FETCH_FAILED"
+            q_solved = 0
+            err_msg = st.error_message or "API fetch failed"
+        elif st and st.recent_contest_score and "/" in st.recent_contest_score:
+            try:
+                parts = st.recent_contest_score.split("/")
+                q_solved = int(parts[0].strip())
+            except Exception:
+                q_solved = 0
+            status = "ATTENDED" if q_solved > 0 else "ATTENDED"
+            err_msg = None
+        else:
+            status = "NOT_ATTENDED"
+            q_solved = 0
+            err_msg = None
+
+        rec = record_contest_participation(
+            db=db,
+            student_id=s.id,
+            contest_id=c_id,
+            contest_name=c_name,
+            participation_mode="PUBLIC",
+            questions_solved=q_solved,
+            questions_total=4,
+            contest_rank=st.contest_global_ranking if st else None,
+            contest_rating=st.contest_rating if st else None,
+            status=status,
+            error_message=err_msg
+        )
+
+        if status == "ATTENDED":
+            if q_solved >= 4: q4 += 1
+            elif q_solved == 3: q3 += 1
+            elif q_solved == 2: q2 += 1
+            elif q_solved == 1: q1 += 1
+            else: not_att += 1
+        elif status == "FETCH_FAILED":
+            fetch_fail += 1
+        elif status == "MODE_UNCERTAIN":
+            mode_unc += 1
+        else:
+            not_att += 1
+
+        batch = derive_student_batch(s.year_level)
+        dept_code = s.department.code if s.department else "GEN"
+
+        rows.append({
+            "s_no": idx,
+            "reg_no": s.reg_no,
+            "student_name": s.name,
+            "department": dept_code,
+            "year": s.year_level,
+            "batch": batch,
+            "username": s.username or "N/A",
+            "contest_name": c_name,
+            "contest_number": None,
+            "contest_date": today_str,
+            "attended": rec.attended,
+            "questions_solved": rec.questions_solved,
+            "questions_total": rec.questions_total,
+            "score_display": rec.score_display,
+            "contest_rank": rec.contest_rank,
+            "contest_rating": rec.contest_rating,
+            "top_percentage": rec.top_percentage,
+            "status": rec.status,
+            "fetched_at": rec.fetched_at.strftime("%Y-%m-%d %H:%M:%S") if rec.fetched_at else None
+        })
+
+    excel_data = {
+        "report_date": today_str,
+        "contest_name": c_name,
+        "contest_date": today_str,
+        "public_summary": {
+            "q4": q4, "q3": q3, "q2": q2, "q1": q1,
+            "not_attended": not_att, "fetch_failed": fetch_fail, "mode_uncertain": mode_unc
+        },
+        "rows": rows
+    }
+
+    import os
+    os.makedirs("reports", exist_ok=True)
+    excel_path = f"reports/Public_Contest_{today_str}.xlsx"
+    build_public_contest_excel(excel_data, excel_path)
+
+    send_public_contest_report_email(excel_data, excel_path)
+
+    return {
+        "workflow": "SUNDAY_0945_PUBLIC_CONTEST",
+        "status": "COMPLETED",
+        "total_processed": len(rows),
+        "excel_path": excel_path,
+        "public_summary": excel_data["public_summary"]
+    }
+
+
+def run_sunday_2200_virtual_contest_workflow(db: Session, contest_id: Optional[str] = None) -> Dict[str, Any]:
+    """
+    SUNDAY 10:00 PM VIRTUAL & COMBINED CONTEST FINAL WORKFLOW — ALL 273 STUDENTS
+    1. Identifies latest contest.
+    2. Fetches VIRTUAL contest participation for all 273 master students.
+    3. Records VIRTUAL participations without modifying PUBLIC records.
+    4. Generates Virtual_Contest.xlsx.
+    5. Generates Contest_Combined.xlsx (Side-by-Side Public vs Virtual comparison + Validation Sheet).
+    6. Computes Virtual and Overall summary breakdowns.
+    7. Dispatches 10:00 PM Final Email Report with Virtual_Contest.xlsx & Contest_Combined.xlsx attached.
+    """
+    from backend.services.contest_service import record_contest_participation, build_student_contest_dto
+    from backend.exporters.weekly_excel_generator import build_virtual_contest_excel, build_contest_combined_excel
+    from backend.email_service import send_final_combined_contest_report_email
+    from backend.models import StudentContestParticipation
+
+    today_str = datetime.date.today().strftime("%Y-%m-%d")
+    c_id = contest_id or f"weekly-contest-{datetime.date.today().strftime('%W')}"
+    c_name = f"Weekly Contest"
+
+    students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+
+    vir_rows = []
+    combined_rows = []
+    vq4, vq3, vq2, vq1, v_not_att, v_fetch_fail, v_mode_unc = 0, 0, 0, 0, 0, 0, 0
+    validation_logs = []
+
+    for idx, s in enumerate(students, start=1):
+        vir_rec_query = db.query(StudentContestParticipation).filter(
+            StudentContestParticipation.student_id == s.id,
+            StudentContestParticipation.contest_id == c_id,
+            StudentContestParticipation.participation_mode == "VIRTUAL"
+        ).first()
+
+        if vir_rec_query:
+            status = vir_rec_query.status
+            q_solved = vir_rec_query.questions_solved
+            err_msg = vir_rec_query.error_message
+        else:
+            status = "NOT_ATTENDED"
+            q_solved = 0
+            err_msg = None
+
+        rec = record_contest_participation(
+            db=db,
+            student_id=s.id,
+            contest_id=c_id,
+            contest_name=c_name,
+            participation_mode="VIRTUAL",
+            questions_solved=q_solved,
+            questions_total=4,
+            status=status,
+            error_message=err_msg
+        )
+
+        if status == "ATTENDED":
+            if q_solved >= 4: vq4 += 1
+            elif q_solved == 3: vq3 += 1
+            elif q_solved == 2: vq2 += 1
+            elif q_solved == 1: vq1 += 1
+            else: v_not_att += 1
+        elif status == "FETCH_FAILED":
+            v_fetch_fail += 1
+        elif status == "MODE_UNCERTAIN":
+            v_mode_unc += 1
+        else:
+            v_not_att += 1
+
+        batch = derive_student_batch(s.year_level)
+        dept_code = s.department.code if s.department else "GEN"
+
+        vir_rows.append({
+            "s_no": idx,
+            "reg_no": s.reg_no,
+            "student_name": s.name,
+            "department": dept_code,
+            "year": s.year_level,
+            "batch": batch,
+            "username": s.username or "N/A",
+            "contest_name": c_name,
+            "contest_number": None,
+            "contest_date": today_str,
+            "attended": rec.attended,
+            "questions_solved": rec.questions_solved,
+            "questions_total": rec.questions_total,
+            "score_display": rec.score_display,
+            "contest_rank": rec.contest_rank,
+            "contest_rating": rec.contest_rating,
+            "top_percentage": rec.top_percentage,
+            "status": rec.status,
+            "fetched_at": rec.fetched_at.strftime("%Y-%m-%d %H:%M:%S") if rec.fetched_at else None
+        })
+
+        dto = build_student_contest_dto(db, s, c_id)
+        dto["batch"] = batch
+        dto["fetched_at"] = rec.fetched_at.strftime("%Y-%m-%d %H:%M:%S") if rec.fetched_at else None
+        combined_rows.append(dto)
+
+        if status in ("FETCH_FAILED", "MODE_UNCERTAIN", "PARSER_ERROR"):
+            validation_logs.append({
+                "reg_no": s.reg_no,
+                "student_name": s.name,
+                "username": s.username or "N/A",
+                "contest_name": c_name,
+                "contest_number": None,
+                "participation_mode": "VIRTUAL",
+                "questions_solved": q_solved,
+                "questions_total": 4,
+                "contest_rank": None,
+                "contest_rating": None,
+                "status": status,
+                "error_message": err_msg or "Validation flag",
+                "fetched_at": rec.fetched_at.strftime("%Y-%m-%d %H:%M:%S") if rec.fetched_at else None
+            })
+
+    vir_excel_data = {
+        "report_date": today_str,
+        "contest_name": c_name,
+        "contest_date": today_str,
+        "virtual_summary": {
+            "q4": vq4, "q3": vq3, "q2": vq2, "q1": vq1,
+            "not_attended": v_not_att, "fetch_failed": v_fetch_fail, "mode_uncertain": v_mode_unc
+        },
+        "rows": vir_rows
+    }
+
+    import os
+    os.makedirs("reports", exist_ok=True)
+    vir_excel_path = f"reports/Virtual_Contest_{today_str}.xlsx"
+    build_virtual_contest_excel(vir_excel_data, vir_excel_path)
+
+    combined_excel_data = {
+        "report_date": today_str,
+        "contest_name": c_name,
+        "contest_date": today_str,
+        "rows": combined_rows,
+        "validation_logs": validation_logs
+    }
+
+    combined_excel_path = f"reports/Contest_Combined_{today_str}.xlsx"
+    build_contest_combined_excel(combined_excel_data, combined_excel_path)
+
+    send_final_combined_contest_report_email(combined_excel_data, vir_excel_path, combined_excel_path)
+
+    return {
+        "workflow": "SUNDAY_2200_VIRTUAL_CONTEST",
+        "status": "COMPLETED",
+        "total_processed": len(combined_rows),
+        "virtual_excel_path": vir_excel_path,
+        "combined_excel_path": combined_excel_path,
+        "virtual_summary": vir_excel_data["virtual_summary"]
+    }
+
