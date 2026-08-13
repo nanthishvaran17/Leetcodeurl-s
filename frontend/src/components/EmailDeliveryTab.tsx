@@ -503,8 +503,9 @@ export const EmailDeliveryTab: React.FC = () => {
                     </td>
                     <td className="px-4 py-3">
                       <button onClick={() => handleDeleteRecipient(r.id, r.email)}
-                        className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all">
+                        className="flex items-center gap-1 p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all font-bold text-[10px]">
                         <Trash2 className="w-3.5 h-3.5" />
+                        Delete
                       </button>
                     </td>
                   </tr>

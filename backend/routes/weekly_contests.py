@@ -285,9 +285,9 @@ def get_session_matrix(
     for r in db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session_id).all():
         res_map[r.student_id] = r
         
-    # 2. Add virtual results (only if they aren't somehow already marked as public)
+    # 2. Add virtual results (override if public result is just NOT_ATTENDED or PENDING)
     for v in db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == session_id).all():
-        if v.student_id not in res_map:
+        if v.student_id not in res_map or res_map[v.student_id].participation_status in ("PUBLIC_NOT_ATTENDED", "PENDING", "NOT_ATTENDED"):
             res_map[v.student_id] = v
 
     # Construct LEFT JOIN matrix starting from 273 institutional roster students

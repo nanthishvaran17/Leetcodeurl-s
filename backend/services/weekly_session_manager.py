@@ -488,14 +488,25 @@ def sync_single_historical_session(db: Session, session_id: int):
     students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
 
     AUTHENTIC_COUNTS = {510: 12, 511: 15, 512: 18, 513: 22, 514: 25, 515: 0}
+    VIRTUAL_COUNTS = {510: 2, 511: 3, 512: 4, 513: 5, 514: 7, 515: 0}
     target_cnt = AUTHENTIC_COUNTS.get(c_num, 0)
-    
+    target_virt_cnt = VIRTUAL_COUNTS.get(c_num, 0)
+
     existing_results = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session.id).all()
     curr_pub_cnt = sum(1 for r in existing_results if r.participation_status in ("PUBLIC_ATTENDED", "ATTENDED"))
 
-    logger.info(f"[SINGLE SYNC] Contest: {c_num}, Target: {target_cnt}, DB Roster: {len(students)}, Existing Res: {len(existing_results)}")
+    existing_virtual = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == session.id).all()
+    curr_virt_cnt = len(existing_virtual)
 
-    if curr_pub_cnt != target_cnt or len(existing_results) != len(students):
+    logger.info(f"[SINGLE SYNC] Contest: {c_num}, Target pub: {target_cnt}, Target virt: {target_virt_cnt}, DB Roster: {len(students)}, Existing Pub: {len(existing_results)}, Existing Virt: {curr_virt_cnt}")
+
+    needs_reseed = (
+        curr_pub_cnt != target_cnt
+        or len(existing_results) != len(students)
+        or (target_virt_cnt > 0 and curr_virt_cnt == 0)
+    )
+
+    if needs_reseed:
         db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session.id).delete(synchronize_session=False)
         db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == session.id).delete(synchronize_session=False)
 
@@ -515,8 +526,6 @@ def sync_single_historical_session(db: Session, session_id: int):
                     participant_reg_nos.add(vs.reg_no)
 
         # Seed Virtual Counts
-        VIRTUAL_COUNTS = {510: 2, 511: 3, 512: 4, 513: 5, 514: 7, 515: 0}
-        target_virt_cnt = VIRTUAL_COUNTS.get(c_num, 0)
         virtual_reg_nos = set()
         
         if target_virt_cnt > 0:
