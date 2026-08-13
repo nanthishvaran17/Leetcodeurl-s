@@ -10,10 +10,32 @@ def export_csv_from_dataset(dataset: dict) -> bytes:
     output = io.StringIO()
     writer = csv.writer(output)
 
+    contest_rows = dataset.get("rows") or []
     all_students = dataset.get("allStudents") or dataset.get("topStudents") or []
     participations = dataset.get("participations") or []
 
-    if participations and not all_students:
+    if contest_rows:
+        writer.writerow([
+            "S.No", "Register No", "Student Name", "Dept", "Year",
+            "Status", "Contest Name", "Q1", "Q2", "Q3", "Q4", "Contest Solved", "Rank"
+        ])
+        for idx, r in enumerate(contest_rows, start=1):
+            writer.writerow([
+                idx,
+                r.get("reg_no", ""),
+                r.get("name", ""),
+                r.get("dept", ""),
+                r.get("year", ""),
+                r.get("status", "NOT ATTENDED"),
+                r.get("contest_name", dataset.get("contestName", "")),
+                r.get("q1", "—"),
+                r.get("q2", "—"),
+                r.get("q3", "—"),
+                r.get("q4", "—"),
+                r.get("total_solved", "—"),
+                r.get("rank", "—")
+            ])
+    elif participations and not all_students:
         writer.writerow([
             "S.No", "Contest Name", "Date", "Register No", "Student Name",
             "Department", "Year", "Problems Solved", "Total Problems", "Contest Rank"

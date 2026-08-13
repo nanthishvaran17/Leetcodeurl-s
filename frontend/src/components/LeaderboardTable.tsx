@@ -257,25 +257,23 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                 className="rounded border-gray-300 text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
               />
             </th>
-            <th className="py-3 px-4">College Rank</th>
-            <th className="py-3 px-4">Register No</th>
-            <th className="py-3 px-4">Student Name</th>
-            <th className="py-3 px-4">Dept / Year</th>
-            <th className="py-3 px-4">LeetCode Handle</th>
-            <th className="py-3 px-4 text-center">Total Solved</th>
-            <th className="py-3 px-4 text-center">PUBLIC CONTEST</th>
-            <th className="py-3 px-4 text-center">VIRTUAL CONTEST</th>
-            <th className="py-3 px-4 text-center">Contest Rating</th>
-            <th className="py-3 px-4 text-center">Contest Rank</th>
-            <th className="py-3 px-4 text-center">Profile Rank</th>
-            <th className="py-3 px-4 text-center">Participation Mode</th>
-            <th className="py-3 px-4 text-right">Actions</th>
+            <th className="py-3 px-3 text-left whitespace-nowrap">College Rank</th>
+            <th className="py-3 px-3 text-left whitespace-nowrap">Register No</th>
+            <th className="py-3 px-3 text-left whitespace-nowrap">Student Name</th>
+            <th className="py-3 px-3 text-left whitespace-nowrap">Dept / Year</th>
+            <th className="py-3 px-3 text-left whitespace-nowrap">LeetCode Handle</th>
+            <th className="py-3 px-3 text-center whitespace-nowrap">Total Solved</th>
+            <th className="py-3 px-3 text-center whitespace-nowrap">CONTEST</th>
+            <th className="py-3 px-3 text-center whitespace-nowrap">Contest Rating</th>
+            <th className="py-3 px-3 text-center whitespace-nowrap">Contest Rank</th>
+            <th className="py-3 px-3 text-center whitespace-nowrap">Profile Rank</th>
+            <th className="py-3 px-3 text-right whitespace-nowrap">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
           {students.length === 0 ? (
             <tr>
-              <td colSpan={14} className="py-8 text-center text-gray-500 dark:text-gray-400">
+              <td colSpan={12} className="py-8 text-center text-gray-500 dark:text-gray-400">
                 No student records found.
               </td>
             </tr>
@@ -289,57 +287,80 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
               const isSolver = isVerified && (totalSolved ?? 0) > 0;
 
               const publicScore = student.public_contest_result?.score_display || student.stats?.recent_contest_score || (isVerified ? 'Not Attended' : '—');
-              const virtualScore = student.virtual_contest_result?.score_display || (isVerified ? 'Not Attended' : '—');
               const recentContestName = student.public_contest_result?.contest_name || student.stats?.recent_contest_name || 'Weekly Contest';
 
-              const contestRating = (isVerified && student.stats?.contest_rating)
-                ? student.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-                : (isVerified ? 'Unrated' : '—');
+              const contestRating = (isVerified && student.public_contest_result?.contest_rating)
+                ? student.public_contest_result.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+                : (isVerified && student.stats?.contest_rating)
+                  ? student.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+                  : (isVerified ? 'Unrated' : '—');
 
-              const contestRank = (isVerified && student.stats?.contest_global_ranking)
-                ? `#${student.stats.contest_global_ranking.toLocaleString('en-US')}`
-                : (isVerified ? 'Unranked' : '—');
+              const isPublicAttended = student.public_contest_result?.status === 'PUBLIC_ATTENDED' || student.public_contest_result?.status === 'ATTENDED' || (student.public_contest_result?.score_display && !student.public_contest_result.score_display.includes('Not Attended'));
+              const isVirtualAttended = student.virtual_contest_result?.status === 'VIRTUAL_ATTENDED' || student.virtual_contest_result?.status === 'ATTENDED';
+              const isDataError = student.public_contest_result?.status === 'DATA_ERROR' || student.virtual_contest_result?.status === 'DATA_ERROR';
 
-              const profileRank = (isVerified && student.stats?.public_profile_ranking)
-                ? `#${student.stats.public_profile_ranking.toLocaleString('en-US')}`
-                : (isVerified ? 'Unranked' : '—');
+              // Status Badge Config per Specification
+              const contestStatusBadge = isPublicAttended
+                ? { cls: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-400/30', label: '🟢 Public Attended' }
+                : isVirtualAttended
+                  ? { cls: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-400/30', label: '🔵 Virtual Attended' }
+                  : isDataError
+                    ? { cls: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-400/30', label: '⚠️ Data Error' }
+                    : { cls: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-400/30', label: '🔴 Not Attended' };
+
+              const rawContestRank = student.public_contest_result?.contest_rank;
+
+              const contestRank = isPublicAttended
+                ? (rawContestRank !== null && rawContestRank !== undefined && rawContestRank > 0
+                    ? `#${rawContestRank.toLocaleString('en-US')}`
+                    : 'Unranked')
+                : '—';
+
+              const profileRank = (syncState === 'failed' || syncState === 'invalid_profile')
+                ? 'Profile data unavailable'
+                : (isVerified && student.stats?.public_profile_ranking !== null && student.stats?.public_profile_ranking !== undefined && student.stats?.public_profile_ranking > 0)
+                  ? `#${student.stats.public_profile_ranking.toLocaleString('en-US')}`
+                  : (isVerified ? 'Unranked' : '—');
 
               const effectiveCollegeRank = isSolver ? (student.college_rank || idx + 1) : undefined;
               const username = student.username || student.leetcode_url?.split('/u/')[1]?.replace('/', '') || `${student.name.replace(/\s+/g, '_')}`;
 
               // Determine Participation Mode Badge per specification
+              // Determine Participation Mode Badge per specification
               const ovMode = student.overall_participation_mode || 'NONE';
               let modeBadge = (
                 <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-300 dark:border-gray-700">
-                  <span>⚪ None</span>
+                  <span>⚪ NOT ATTENDED</span>
                 </span>
               );
 
-              if (ovMode === 'PUBLIC_ONLY') {
+              if (ovMode === 'PUBLIC_ONLY' || ovMode === 'PUBLIC') {
                 modeBadge = (
                   <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-400/30">
-                    <span>🟢 Public Only</span>
+                    <span>🟢 PUBLIC CONTEST</span>
                   </span>
                 );
-              } else if (ovMode === 'VIRTUAL_ONLY') {
+              } else if (ovMode === 'VIRTUAL_ONLY' || ovMode === 'VIRTUAL') {
                 modeBadge = (
-                  <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border border-purple-400/30">
-                    <span>⚡ Virtual Only</span>
+                  <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-400/30">
+                    <span>🔵 VIRTUAL CONTEST</span>
                   </span>
                 );
               } else if (ovMode === 'BOTH') {
                 modeBadge = (
-                  <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-400/30">
-                    <span>⭐ Both Participated</span>
+                  <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-400/30">
+                    <span>🟢 PUBLIC CONTEST</span>
                   </span>
                 );
               } else if (ovMode === 'FETCH_ERROR') {
                 modeBadge = (
-                  <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-400/30">
-                    <span>⚠️ Fetch Failed</span>
+                  <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-400/30">
+                    <span>⚠️ DATA ERROR</span>
                   </span>
                 );
               }
+
+              const isSyncing = syncState === 'syncing';
 
               return (
                 <tr
@@ -355,7 +376,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                     />
                   </td>
 
-                  <td className="py-3 px-4 font-bold">
+                  <td className="py-3 px-3 whitespace-nowrap font-bold">
                     {isSolver
                       ? getRankBadge(effectiveCollegeRank)
                       : syncState === 'pending'
@@ -366,11 +387,11 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                     }
                   </td>
 
-                  <td className="py-3 px-4 font-mono text-gray-500 font-bold">
+                  <td className="py-3 px-3 whitespace-nowrap font-mono text-gray-500 font-bold">
                     {student.reg_no}
                   </td>
 
-                  <td className="py-3 px-4">
+                  <td className="py-3 px-3 whitespace-nowrap">
                     <p 
                       onClick={() => onSelectStudent && onSelectStudent(student)}
                       className="font-bold text-gray-900 dark:text-white hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer"
@@ -379,48 +400,45 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                     </p>
                   </td>
 
-                  <td className="py-3 px-4 text-gray-600 dark:text-gray-300 font-medium">
+                  <td className="py-3 px-3 whitespace-nowrap text-gray-600 dark:text-gray-300 font-medium">
                     <span className="font-bold text-gray-900 dark:text-white">{student.department?.code}</span> • {student.year_level}
                   </td>
 
-                  <td className="py-3 px-4 font-mono font-bold text-brand-600 dark:text-brand-400">
+                  <td className="py-3 px-3 whitespace-nowrap font-mono font-bold text-brand-600 dark:text-brand-400">
                     {username}
                   </td>
 
-                  <td className="py-3 px-4 text-center font-bold text-gray-900 dark:text-white text-sm">
+                  <td className="py-3 px-3 whitespace-nowrap text-center font-bold text-gray-900 dark:text-white text-sm">
                     {!isVerified
                       ? <span className="text-gray-400 dark:text-gray-600 text-xs">{syncState === 'pending' ? '⏳ Pending' : syncState === 'failed' ? '🔴 Failed' : '—'}</span>
                       : totalSolved
                     }
                   </td>
 
-                  <td className="py-3 px-4 text-center bg-brand-50/40 dark:bg-brand-950/20">
-                    <div className="flex flex-col items-center justify-center">
-                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">{recentContestName}</span>
-                      <span className="font-black text-brand-600 dark:text-brand-400 text-sm">{publicScore}</span>
+                  <td className="py-3 px-3 whitespace-nowrap text-center bg-brand-50/40 dark:bg-brand-950/20">
+                    <div className="flex flex-col items-center justify-center space-y-1">
+                      <span className="text-[11px] font-extrabold text-gray-700 dark:text-gray-200">
+                        {student.public_contest_result?.contest_name || recentContestName}
+                      </span>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black border ${contestStatusBadge.cls}`}>
+                        {contestStatusBadge.label}
+                      </span>
                     </div>
                   </td>
 
-                  <td className="py-3 px-4 text-center bg-purple-50/40 dark:bg-purple-950/20">
-                    <div className="flex flex-col items-center justify-center">
-                      <span className="text-[10px] font-bold text-purple-500 uppercase tracking-wider mb-0.5">Virtual</span>
-                      <span className="font-black text-purple-600 dark:text-purple-400 text-sm">{virtualScore}</span>
-                    </div>
-                  </td>
-
-                  <td className="py-3 px-4 text-center font-mono font-bold text-amber-500">
+                  <td className="py-3 px-3 whitespace-nowrap text-center font-mono font-bold text-amber-500">
                     {contestRating}
                   </td>
 
-                  <td className="py-3 px-4 text-center font-mono font-bold text-indigo-500">
+                  <td className="py-3 px-3 whitespace-nowrap text-center font-mono font-bold text-indigo-500">
                     {contestRank}
                   </td>
 
-                  <td className="py-3 px-4 text-center font-mono text-gray-500 font-bold">
+                  <td className="py-3 px-3 whitespace-nowrap text-center font-mono text-gray-500 font-bold">
                     {profileRank}
                   </td>
 
-                  <td className="py-3 px-4 text-right">
+                  <td className="py-3 px-3 text-right whitespace-nowrap">
                     <div className="flex items-center justify-end space-x-2">
                       {student.leetcode_url && (
                         <a
@@ -429,6 +447,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                           rel="noreferrer"
                           className="p-1.5 rounded-lg text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                           title="View LeetCode Profile"
+                          aria-label="View LeetCode Profile"
                         >
                           <ExternalLink className="w-4 h-4" />
                         </a>
@@ -436,16 +455,19 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                       {onRefreshStudent && (
                         <button
                           onClick={() => onRefreshStudent(student.id)}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"
-                          title="Refresh Stats"
+                          disabled={isSyncing}
+                          className={`p-1.5 rounded-lg transition-colors ${isSyncing ? 'text-blue-500 animate-spin' : 'text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'}`}
+                          title="Sync LeetCode Profile"
+                          aria-label="Sync LeetCode Profile"
                         >
-                          <RefreshCw className="w-4 h-4" />
+                          <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
                         </button>
                       )}
                       <button
                         onClick={() => handleSingleDelete(student)}
                         className="p-1.5 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                         title="Delete Student Record"
+                        aria-label="Delete Student Record"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

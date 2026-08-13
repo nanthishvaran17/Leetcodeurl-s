@@ -25,6 +25,7 @@ def get_students(
     year_level: Optional[str] = None,
     section_id: Optional[int] = None,
     search: Optional[str] = None,
+    session_id: Optional[int] = None,
     db: Session = Depends(get_db)
 ):
     query = db.query(Student).options(
@@ -52,7 +53,7 @@ def get_students(
     if not students:
         return []
 
-    # Batch fetch all student progress in 1 single query (Eliminates N+1 query slowdown!)
+    # Batch fetch all student progress in 1 single query
     student_ids = [st.id for st in students]
     progs = db.query(WeeklyStudentProgress).filter(
         WeeklyStudentProgress.student_id.in_(student_ids)
@@ -63,18 +64,31 @@ def get_students(
         if p.student_id not in prog_map or p.id > prog_map[p.student_id].id:
             prog_map[p.student_id] = p
 
-    # Batch fetch contest participations
-    from backend.models import StudentContestParticipation
-    from backend.services.contest_service import calculate_overall_mode
-    participations = db.query(StudentContestParticipation).filter(
-        StudentContestParticipation.student_id.in_(student_ids)
-    ).all()
+    # Determine target session ID
+    from backend.models import WeeklyPublicResult, WeeklyVirtualResult, WeeklySession
+    from backend.services.weekly_session_manager import get_or_create_current_weekly_session
+    
+    target_session_id = session_id
+    if not target_session_id:
+        curr_sess = get_or_create_current_weekly_session(db)
+        target_session_id = curr_sess.id if curr_sess else None
 
-    part_map = {}
-    for pt in participations:
-        if pt.student_id not in part_map:
-            part_map[pt.student_id] = {}
-        part_map[pt.student_id][pt.participation_mode] = pt
+    pub_map = {}
+    vir_map = {}
+    if target_session_id:
+        pub_results = db.query(WeeklyPublicResult).filter(
+            WeeklyPublicResult.session_id == target_session_id,
+            WeeklyPublicResult.student_id.in_(student_ids)
+        ).all()
+        for pr in pub_results:
+            pub_map[pr.student_id] = pr
+
+        vir_results = db.query(WeeklyVirtualResult).filter(
+            WeeklyVirtualResult.session_id == target_session_id,
+            WeeklyVirtualResult.student_id.in_(student_ids)
+        ).all()
+        for vr in vir_results:
+            vir_map[vr.student_id] = vr
 
     results = []
     for st in students:
@@ -90,57 +104,65 @@ def get_students(
             st_out.consistency_score = latest_prog.consistency_score
             st_out.badge_list = latest_prog.badge_list or []
 
-        s_parts = part_map.get(st.id, {})
-        pub_pt = s_parts.get("PUBLIC")
-        vir_pt = s_parts.get("VIRTUAL")
+        pub_res = pub_map.get(st.id)
+        vir_res = vir_map.get(st.id)
 
-        pub_status = pub_pt.status if pub_pt else "NOT_ATTENDED"
-        vir_status = vir_pt.status if vir_pt else "NOT_ATTENDED"
+        pub_status = pub_res.participation_status if pub_res else "PUBLIC_NOT_ATTENDED"
+        vir_status = vir_res.participation_status if vir_res else "NO_VIRTUAL_RECORD"
 
-        st_out.overall_participation_mode = calculate_overall_mode(pub_status, vir_status)
+        if pub_status in ("PUBLIC_ATTENDED", "ATTENDED"):
+            st_out.overall_participation_mode = "PUBLIC"
+        elif vir_status in ("VIRTUAL_ATTENDED", "VIRTUAL"):
+            st_out.overall_participation_mode = "VIRTUAL"
+        else:
+            st_out.overall_participation_mode = "NONE"
 
-        if pub_pt:
+        if pub_res:
+            tot_solved = pub_res.total_contest_solved or (pub_res.q1 + pub_res.q2 + pub_res.q3 + pub_res.q4)
             st_out.public_contest_result = {
-                "contest_name": pub_pt.contest_name,
-                "contest_number": pub_pt.contest_number,
-                "contest_date": pub_pt.contest_date,
-                "questions_solved": pub_pt.questions_solved,
-                "questions_total": pub_pt.questions_total,
-                "score_display": pub_pt.score_display,
-                "contest_rank": pub_pt.contest_rank,
-                "contest_rating": pub_pt.contest_rating,
-                "top_percentage": pub_pt.top_percentage,
-                "status": pub_pt.status,
-                "fetched_at": pub_pt.fetched_at.isoformat() if pub_pt.fetched_at else None
+                "contest_name": pub_res.session.contest_name if pub_res.session else "Weekly Contest",
+                "contest_number": None,
+                "contest_date": pub_res.session.session_date if pub_res.session else None,
+                "questions_solved": tot_solved,
+                "questions_total": 4,
+                "score_display": f"{tot_solved} / 4" if pub_res.participation_status in ("PUBLIC_ATTENDED", "ATTENDED") else "Not Attended",
+                "contest_rank": pub_res.contest_rank,
+                "contest_rating": pub_res.contest_rating,
+                "top_percentage": None,
+                "status": pub_res.participation_status,
+                "fetched_at": pub_res.last_fetched_at.isoformat() if pub_res.last_fetched_at else None
             }
         else:
+            target_sess = db.query(WeeklySession).filter(WeeklySession.id == target_session_id).first() if target_session_id else None
+            c_name = target_sess.contest_name if target_sess else "Weekly Contest"
             st_out.public_contest_result = {
-                "contest_name": "Weekly Contest",
+                "contest_name": c_name,
                 "contest_number": None,
-                "contest_date": None,
+                "contest_date": target_sess.session_date if target_sess else None,
                 "questions_solved": 0,
                 "questions_total": 4,
                 "score_display": "Not Attended",
                 "contest_rank": None,
                 "contest_rating": None,
                 "top_percentage": None,
-                "status": "NOT_ATTENDED",
+                "status": "PUBLIC_NOT_ATTENDED",
                 "fetched_at": None
             }
 
-        if vir_pt:
+        if vir_res:
+            tot_solved_v = vir_res.total_contest_solved or (vir_res.q1 + vir_res.q2 + vir_res.q3 + vir_res.q4)
             st_out.virtual_contest_result = {
-                "contest_name": vir_pt.contest_name,
-                "contest_number": vir_pt.contest_number,
-                "contest_date": vir_pt.contest_date,
-                "questions_solved": vir_pt.questions_solved,
-                "questions_total": vir_pt.questions_total,
-                "score_display": vir_pt.score_display,
-                "contest_rank": vir_pt.contest_rank,
-                "contest_rating": vir_pt.contest_rating,
-                "top_percentage": vir_pt.top_percentage,
-                "status": vir_pt.status,
-                "fetched_at": vir_pt.fetched_at.isoformat() if vir_pt.fetched_at else None
+                "contest_name": vir_res.session.contest_name if vir_res.session else "Weekly Contest",
+                "contest_number": None,
+                "contest_date": vir_res.session.session_date if vir_res.session else None,
+                "questions_solved": tot_solved_v,
+                "questions_total": 4,
+                "score_display": f"{tot_solved_v} / 4" if vir_res.participation_status in ("VIRTUAL_ATTENDED", "VIRTUAL") else "Not Attended",
+                "contest_rank": vir_res.contest_rank,
+                "contest_rating": vir_res.contest_rating,
+                "top_percentage": None,
+                "status": vir_res.participation_status,
+                "fetched_at": vir_res.last_fetched_at.isoformat() if vir_res.last_fetched_at else None
             }
         else:
             st_out.virtual_contest_result = {
@@ -153,14 +175,81 @@ def get_students(
                 "contest_rank": None,
                 "contest_rating": None,
                 "top_percentage": None,
-                "status": "NOT_ATTENDED",
+                "status": "NO_VIRTUAL_RECORD",
                 "fetched_at": None
             }
 
         results.append(st_out)
     return results
 
-    return results
+@router.get("/sample-excel")
+def download_sample_student_excel():
+    """
+    Generates and returns Student_Import_Sample.xlsx with exact required columns:
+    REG NO | NAME | DEPT | YEAR | LEETCODE PROFILE LINK
+    """
+    import io
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Students"
+    ws.sheet_view.showGridLines = True
+
+    headers = ["REG NO", "NAME", "DEPT", "YEAR", "LEETCODE PROFILE LINK"]
+    col_widths = [18, 28, 14, 10, 45]
+
+    navy_fill = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
+    font_header = Font(name="Times New Roman", size=11, bold=True, color="FFFFFF")
+    center = Alignment(horizontal="center", vertical="center")
+    left = Alignment(horizontal="left", vertical="center")
+
+    thin_border = Border(
+        left=Side(style='thin', color='CBD5E1'),
+        right=Side(style='thin', color='CBD5E1'),
+        top=Side(style='thin', color='CBD5E1'),
+        bottom=Side(style='thin', color='CBD5E1')
+    )
+
+    for col_idx, (h_text, w) in enumerate(zip(headers, col_widths), start=1):
+        cell = ws.cell(row=1, column=col_idx, value=h_text)
+        cell.fill = navy_fill
+        cell.font = font_header
+        cell.alignment = center
+        col_letter = get_column_letter(col_idx)
+        ws.column_dimensions[col_letter].width = w
+
+    ws.row_dimensions[1].height = 26
+
+    sample_rows = [
+        ["732224CC001", "AJAY A", "CSE(CS)", "III", "https://leetcode.com/u/example_student/"],
+        ["732224CC002", "AMRUTHA M", "CSE(CS)", "III", "https://leetcode.com/u/example_student2/"],
+        ["732224CI001", "BHARATH K", "CSE(IOT)", "III", "https://leetcode.com/u/example_student3/"],
+    ]
+
+    for row_idx, r_data in enumerate(sample_rows, start=2):
+        ws.row_dimensions[row_idx].height = 20
+        for col_idx, val in enumerate(r_data, start=1):
+            c = ws.cell(row=row_idx, column=col_idx, value=val)
+            c.font = Font(name="Times New Roman", size=10)
+            c.alignment = center if col_idx in (1, 3, 4) else left
+            c.border = thin_border
+
+    ws.freeze_panes = "A2"
+    ws.auto_filter.ref = f"A1:E{len(sample_rows)+1}"
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    from fastapi.responses import Response
+    return Response(
+        content=output.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="Student_Import_Sample.xlsx"'}
+    )
 
 @router.get("/{student_id}", response_model=StudentOut)
 def get_student_detail(student_id: int, db: Session = Depends(get_db)):

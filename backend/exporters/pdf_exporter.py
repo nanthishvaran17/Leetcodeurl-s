@@ -211,6 +211,7 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
             Paragraph("Dept",           header_cell_style),
             Paragraph("Yr",             header_cell_style),
             Paragraph("Status",         header_cell_style),
+            Paragraph("Contest Name",   header_cell_style),
             Paragraph("Q1",             header_cell_style),
             Paragraph("Q2",             header_cell_style),
             Paragraph("Q3",             header_cell_style),
@@ -224,7 +225,7 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
             ('GRID', (0,0), (-1,-1), 0.4, colors.HexColor('#CBD5E1')),
             ('TOPPADDING', (0,0), (-1,-1), 2),
             ('BOTTOMPADDING', (0,0), (-1,-1), 2),
-            ('FONTSIZE', (0,0), (-1,-1), 7.5),
+            ('FONTSIZE', (0,0), (-1,-1), 7),
         ]
 
         for idx, r in enumerate(contest_rows, 1):
@@ -232,11 +233,19 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
             attended  = p_status in ("PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL_ATTENDED")
             is_virtual = p_status == "VIRTUAL_ATTENDED"
             status_label = STATUS_LABEL.get(p_status, p_status)
+            c_name_val = r.get("contest_name") or dataset.get("contestName") or "Weekly Contest"
 
-            v_q1 = 1 if (r.get("q1") or 0) > 0 else 0
-            v_q2 = 1 if (r.get("q2") or 0) > 0 else 0
-            v_q3 = 1 if (r.get("q3") or 0) > 0 else 0
-            v_q4 = 1 if (r.get("q4") or 0) > 0 else 0
+            def _is_solved(val):
+                if isinstance(val, (int, float)):
+                    return val > 0
+                if isinstance(val, str) and val.isdigit():
+                    return int(val) > 0
+                return False
+
+            v_q1 = 1 if _is_solved(r.get("q1")) else 0
+            v_q2 = 1 if _is_solved(r.get("q2")) else 0
+            v_q3 = 1 if _is_solved(r.get("q3")) else 0
+            v_q4 = 1 if _is_solved(r.get("q4")) else 0
             solved_cnt = v_q1 + v_q2 + v_q3 + v_q4
 
             q1_p = Paragraph(str(v_q1) if attended else "—", cell_bold_style if attended else cell_style)
@@ -247,8 +256,9 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
             status_color = '#065F46' if (attended and not is_virtual) else ('#1E40AF' if is_virtual else '#991B1B')
             status_para = Paragraph(
                 f"<font color='{status_color}'><b>{status_label}</b></font>",
-                ParagraphStyle('sc', fontName='Times-Bold', fontSize=7, alignment=1)
+                ParagraphStyle('sc', fontName='Times-Bold', fontSize=6.5, alignment=1)
             )
+            c_name_para = Paragraph(c_name_val, ParagraphStyle('cn', fontName='Times-Roman', fontSize=6.5, alignment=0))
 
             c_rows.append([
                 Paragraph(str(idx), cell_style),
@@ -257,6 +267,7 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
                 Paragraph(r.get("dept", ""), cell_style),
                 Paragraph(str(r.get("year", "")), cell_style),
                 status_para,
+                c_name_para,
                 q1_p, q2_p, q3_p, q4_p,
                 Paragraph(str(solved_cnt) if attended else "—", cell_bold_style),
                 Paragraph(str(r.get("rank") or r.get("contest_rank") or "—") if attended else "—", cell_style),
@@ -266,8 +277,8 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
             row_bg = colors.HexColor('#ECFDF5') if attended else colors.HexColor('#FFF1F2')
             table_style_cmds.append(('BACKGROUND', (0, idx), (-1, idx), row_bg))
 
-        t_c = Table(c_rows, colWidths=[0.35*inch, 1.0*inch, 1.6*inch, 0.6*inch, 0.35*inch,
-                                        0.8*inch, 0.3*inch, 0.3*inch, 0.3*inch, 0.3*inch, 0.65*inch, 0.55*inch])
+        t_c = Table(c_rows, colWidths=[0.35*inch, 0.9*inch, 1.3*inch, 0.55*inch, 0.3*inch,
+                                        0.65*inch, 0.95*inch, 0.25*inch, 0.25*inch, 0.25*inch, 0.25*inch, 0.55*inch, 0.5*inch])
 
         t_c.setStyle(TableStyle(table_style_cmds))
         story.append(t_c)

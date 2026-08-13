@@ -21,6 +21,48 @@ def get_most_recent_sunday_date(target_dt: datetime.datetime = None) -> datetime
     sunday_dt = target_dt - datetime.timedelta(days=days_since_sunday)
     return sunday_dt.date()
 
+def calculate_contest_number(contest_date: datetime.date) -> int:
+    """
+    Calculates Weekly Contest number dynamically based on contest date in IST.
+    Authoritative reference: Contest 514 on 2026-08-09.
+    """
+    ref_date = datetime.date(2026, 8, 9)
+    ref_contest = 514
+    weeks_diff = (contest_date - ref_date).days // 7
+    return ref_contest + weeks_diff
+
+def calculate_contest_status(contest_date: datetime.date, current_dt: datetime.datetime = None) -> str:
+    """
+    Determines contest status dynamically using Asia/Kolkata timezone.
+    Contest window: 08:00 AM IST – 09:30 AM IST.
+    Rules:
+    - Before 08:00 AM IST on contest date -> SCHEDULED
+    - 08:00 AM – 09:30 AM IST on contest date -> LIVE
+    - After 09:30 AM IST on contest date -> FINALIZED
+    """
+    if current_dt is None:
+        current_dt = get_current_ist_datetime()
+    
+    # Ensure current_dt is localized in IST
+    if current_dt.tzinfo is None:
+        current_dt = current_dt.replace(tzinfo=IST_TZ)
+    else:
+        current_dt = current_dt.astimezone(IST_TZ)
+
+    start_dt = datetime.datetime.combine(
+        contest_date, datetime.time(8, 0, 0), tzinfo=IST_TZ
+    )
+    end_dt = datetime.datetime.combine(
+        contest_date, datetime.time(9, 30, 0), tzinfo=IST_TZ
+    )
+
+    if current_dt < start_dt:
+        return "SCHEDULED"
+    elif start_dt <= current_dt <= end_dt:
+        return "LIVE"
+    else:
+        return "FINALIZED"
+
 def discover_contest_metadata(target_date: datetime.date = None) -> Dict[str, Any]:
     """
     Dynamic LeetCode Weekly Contest Discovery Engine.
@@ -30,15 +72,13 @@ def discover_contest_metadata(target_date: datetime.date = None) -> Dict[str, An
         target_date = get_most_recent_sunday_date()
 
     date_str = target_date.strftime("%Y-%m-%d")
+    formatted_date = target_date.strftime("%d.%m.%Y")
     session_code = f"WEEK-{date_str}"
 
-    # Approximate contest number calculation based on reference Sunday (e.g. Contest 462 on 2026-06-21)
-    ref_date = datetime.date(2026, 6, 21)
-    ref_contest = 462
-    weeks_diff = (target_date - ref_date).days // 7
-    contest_num = ref_contest + weeks_diff
+    contest_num = calculate_contest_number(target_date)
     contest_id = f"weekly-contest-{contest_num}"
     contest_name = f"Weekly Contest {contest_num}"
+    status = calculate_contest_status(target_date)
 
     problems = [
         {"problem_index": 1, "title": "Q1 (Easy)", "difficulty": "Easy", "max_score": 3},
@@ -51,8 +91,12 @@ def discover_contest_metadata(target_date: datetime.date = None) -> Dict[str, An
         "session_code": session_code,
         "contest_id": contest_id,
         "contest_name": contest_name,
-        "session_date": date_str,
+        "contest_number": contest_num,
+        "session_date": formatted_date,
+        "raw_date": date_str,
+        "status": status,
         "start_time_ist": "08:00 AM IST",
         "end_time_ist": "09:30 AM IST",
         "problems": problems
     }
+

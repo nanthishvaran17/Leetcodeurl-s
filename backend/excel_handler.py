@@ -18,6 +18,14 @@ from backend.leetcode_client import extract_leetcode_username
 from backend.config import settings
 from backend.logger import logger
 
+STUDENT_IMPORT_COLUMNS = [
+    "REG NO",
+    "NAME",
+    "DEPT",
+    "YEAR",
+    "LEETCODE PROFILE LINK"
+]
+
 def validate_excel_import(db: Session, file_bytes: bytes) -> Dict[str, Any]:
     try:
         df = pd.read_excel(io.BytesIO(file_bytes))
@@ -27,7 +35,7 @@ def validate_excel_import(db: Session, file_bytes: bytes) -> Dict[str, Any]:
     col_mapping = {col: str(col).strip().upper() for col in df.columns}
     df = df.rename(columns=col_mapping)
 
-    required_cols = ["REG NO", "NAME", "DEPT", "YEAR", "LEETCODE PROFILE LINK"]
+    required_cols = STUDENT_IMPORT_COLUMNS
     missing_req = [c for c in required_cols if c not in df.columns]
     if missing_req:
         return {"error": f"Missing required columns in Excel: {', '.join(missing_req)}"}

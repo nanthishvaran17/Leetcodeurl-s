@@ -40,21 +40,42 @@ def _write_header_row(ws, row_num, headers, col_widths, navy_fill, font_tnr, cen
     ws.row_dimensions[row_num].height = 22
 
 def _write_college_header(ws, title: str, cols: int, font_tnr, navy_fill, header_fill, center):
-    """Write the 2-row college header banner across all columns."""
+    """Write neat, professional college header banner across all columns with logo image."""
     last_col = get_column_letter(cols)
+    
+    # Row 1: College Name Banner
     ws.merge_cells(f"A1:{last_col}1")
     ws["A1"] = "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)"
     ws["A1"].font = Font(name=font_tnr, size=13, bold=True, color="FFFFFF")
     ws["A1"].alignment = center
     ws["A1"].fill = navy_fill
-    ws.row_dimensions[1].height = 24
+    ws.row_dimensions[1].height = 30
 
+    # Clean title text to prevent duplicate "NANDHA ENGINEERING COLLEGE" lines and text overlapping
+    clean_title = title.replace("NANDHA ENGINEERING COLLEGE\n", "").replace("NANDHA ENGINEERING COLLEGE", "").strip()
+    clean_title = re.sub(r'\n+', ' — ', clean_title).strip()
+    if not clean_title:
+        clean_title = "WEEKLY CONTEST STUDENT PERFORMANCE REPORT"
+
+    # Row 2: Subtitle Banner
     ws.merge_cells(f"A2:{last_col}2")
-    ws["A2"] = title.upper()
-    ws["A2"].font = Font(name=font_tnr, size=10, bold=True, color="FFFFFF")
+    ws["A2"] = clean_title.upper()
+    ws["A2"].font = Font(name=font_tnr, size=10.5, bold=True, color="FFFFFF")
     ws["A2"].alignment = center
     ws["A2"].fill = header_fill
-    ws.row_dimensions[2].height = 18
+    ws.row_dimensions[2].height = 24
+
+    # Insert College Emblem Logo at top left cell A1
+    logo_path = os.path.join(os.path.dirname(__file__), "..", "assets", "nandha_emblem.png")
+    if os.path.exists(logo_path):
+        try:
+            from openpyxl.drawing.image import Image as OpenPyxlImage
+            img = OpenPyxlImage(logo_path)
+            img.width = 52
+            img.height = 42
+            ws.add_image(img, "A1")
+        except Exception:
+            pass
 
 def export_excel_from_dataset(dataset: dict) -> bytes:
     """
@@ -126,30 +147,43 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     ws_cover["A7"].font = Font(name=font_tnr, size=10, bold=True, color="0284C7")
     ws_cover["A7"].alignment = center
 
-    # Executive Summary Metrics Block
+    # Executive Summary Metrics Block (Section 10 Spec)
     metrics = dataset.get("metrics", {})
     r_idx = 10
-    if metrics:
-        ws_cover.merge_cells(f"B{r_idx}:K{r_idx}")
-        ws_cover[f"B{r_idx}"] = "EXECUTIVE SUMMARY METRICS"
-        ws_cover[f"B{r_idx}"].font = Font(name=font_tnr, size=11, bold=True, color="FFFFFF")
-        ws_cover[f"B{r_idx}"].fill = navy_fill
-        ws_cover[f"B{r_idx}"].alignment = center
-        ws_cover.row_dimensions[r_idx].height = 22
-        r_idx += 1
+    ws_cover.merge_cells(f"B{r_idx}:K{r_idx}")
+    ws_cover[f"B{r_idx}"] = "WEEKLY CONTEST EXECUTIVE SUMMARY"
+    ws_cover[f"B{r_idx}"].font = Font(name=font_tnr, size=11, bold=True, color="FFFFFF")
+    ws_cover[f"B{r_idx}"].fill = navy_fill
+    ws_cover[f"B{r_idx}"].alignment = center
+    ws_cover.row_dimensions[r_idx].height = 24
+    r_idx += 1
 
-        for k, v in metrics.items():
-            label_text = re.sub(r'([A-Z])', r' \1', str(k)).strip().title()
-            ws_cover.cell(row=r_idx, column=2, value=label_text).font = Font(name=font_tnr, size=10, bold=True)
-            val_cell = ws_cover.cell(row=r_idx, column=6, value=f"{v:,}" if isinstance(v, (int, float)) and v > 999 else (v if v is not None else "—"))
-            val_cell.font = Font(name=font_tnr, size=10, bold=True, color="0284C7")
-            val_cell.alignment = right
-            ws_cover.merge_cells(f"B{r_idx}:E{r_idx}")
-            ws_cover.merge_cells(f"F{r_idx}:K{r_idx}")
-            _apply_thin_border(ws_cover.cell(row=r_idx, column=2))
-            _apply_thin_border(ws_cover.cell(row=r_idx, column=6))
-            ws_cover.row_dimensions[r_idx].height = 19
-            r_idx += 1
+    summary_items = [
+        ("Weekly Contest Name", dataset.get("contestName") or metrics.get("contestName") or "Weekly Contest"),
+        ("Contest Date", dataset.get("contestDate") or metrics.get("sessionDate") or "Sunday Session"),
+        ("Status", dataset.get("dataStatus") or dataset.get("data_status") or "FINALIZED"),
+        ("IST Window", "08:00 AM – 09:30 AM IST"),
+        ("Department Filter", dataset.get("deptFilter") or "ALL"),
+        ("Academic Year Filter", dataset.get("yearFilter") or "ALL"),
+        ("Attendance Filter", dataset.get("attendanceFilter") or "ALL"),
+        ("Total Roster Students", metrics.get("totalStudents", len(rows))),
+        ("Public Attended", metrics.get("officialAttended", 0)),
+        ("Public Not Attended", metrics.get("notAttended", 0)),
+        ("Virtual Attended", metrics.get("virtualAttended", 0)),
+        ("Data Errors", metrics.get("dataErrors", 0)),
+    ]
+
+    for label_text, val_text in summary_items:
+        ws_cover.cell(row=r_idx, column=2, value=label_text).font = Font(name=font_tnr, size=10, bold=True)
+        val_cell = ws_cover.cell(row=r_idx, column=6, value=f"{val_text:,}" if isinstance(val_text, (int, float)) and val_text > 999 else (val_text if val_text is not None else "—"))
+        val_cell.font = Font(name=font_tnr, size=10, bold=True, color="0284C7")
+        val_cell.alignment = right if isinstance(val_text, (int, float)) else left
+        ws_cover.merge_cells(f"B{r_idx}:E{r_idx}")
+        ws_cover.merge_cells(f"F{r_idx}:K{r_idx}")
+        _apply_thin_border(ws_cover.cell(row=r_idx, column=2))
+        _apply_thin_border(ws_cover.cell(row=r_idx, column=6))
+        ws_cover.row_dimensions[r_idx].height = 19
+        r_idx += 1
 
     r_idx += 2
 
@@ -241,24 +275,23 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         "PENDING":            "PENDING",
     }
 
-    if is_weekly and rows:
-        ws_m = wb.create_sheet(title="Contest Matrix")
-        ws_m.sheet_view.showGridLines = True
+    def _write_matrix_tab(ws_tab, tab_header_title, student_row_list):
+        ws_tab.sheet_view.showGridLines = True
         _write_college_header(
-            ws_m,
-            title=dataset.get("title", "Weekly Contest Participation Matrix"),
-            cols=12,
+            ws_tab,
+            title=tab_header_title,
+            cols=13,
             font_tnr=font_tnr,
             navy_fill=navy_fill,
             header_fill=header_fill,
             center=center
         )
 
-        m_headers   = ["S.No", "Register No", "Student Name", "Dept", "Year", "Status", "Q1", "Q2", "Q3", "Q4", "Contest Solved", "Rank"]
-        m_col_widths = [6,       16,            28,             12,     8,      18,       6,    6,    6,    6,    14,               10]
-        _write_header_row(ws_m, 3, m_headers, m_col_widths, navy_fill, font_tnr, center)
+        m_headers   = ["S.No", "Reg No", "Student Name", "Dept", "Year", "Status", "Contest Name", "Q1", "Q2", "Q3", "Q4", "Contest Solved", "Rank"]
+        m_col_widths = [8,       18,            30,             14,     10,     20,       24,            8,    8,    8,    8,    16,               12]
+        _write_header_row(ws_tab, 3, m_headers, m_col_widths, navy_fill, font_tnr, center)
 
-        for idx, r in enumerate(rows, start=1):
+        for idx, r in enumerate(student_row_list, start=1):
             row_num   = 3 + idx
             p_status  = r.get("participation_status") or "PENDING"
             attended  = p_status in ("PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL_ATTENDED")
@@ -269,11 +302,22 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
             )
 
             status_label = STATUS_LABEL.get(p_status, p_status)
-            q1 = 1 if _to_int(r.get("q1")) > 0 else 0
-            q2 = 1 if _to_int(r.get("q2")) > 0 else 0
-            q3 = 1 if _to_int(r.get("q3")) > 0 else 0
-            q4 = 1 if _to_int(r.get("q4")) > 0 else 0
-            solved_cnt = q1 + q2 + q3 + q4
+            c_name_val = r.get("contest_name") or dataset.get("contestName") or "Weekly Contest"
+            
+            v_q1 = r.get("q1")
+            v_q2 = r.get("q2")
+            v_q3 = r.get("q3")
+            v_q4 = r.get("q4")
+
+            q1_disp = v_q1 if (attended and v_q1 != "—") else "—"
+            q2_disp = v_q2 if (attended and v_q2 != "—") else "—"
+            q3_disp = v_q3 if (attended and v_q3 != "—") else "—"
+            q4_disp = v_q4 if (attended and v_q4 != "—") else "—"
+
+            solved_cnt = r.get("total_solved") if (attended and r.get("total_solved") != "—") else "—"
+            rank_disp = r.get("rank") or r.get("contest_rank") or "—"
+            if not attended:
+                rank_disp = "—"
 
             row_data = [
                 idx,
@@ -282,28 +326,52 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
                 r.get("dept", ""),
                 r.get("year", ""),
                 status_label,
-                q1 if attended else "—",
-                q2 if attended else "—",
-                q3 if attended else "—",
-                q4 if attended else "—",
-                solved_cnt if attended else "—",
-                r.get("rank") or r.get("contest_rank") or "—" if attended else "—",
+                c_name_val,
+                q1_disp,
+                q2_disp,
+                q3_disp,
+                q4_disp,
+                solved_cnt,
+                rank_disp,
             ]
 
             for col_idx, val in enumerate(row_data, start=1):
-                c = ws_m.cell(row=row_num, column=col_idx, value=val)
+                c = ws_tab.cell(row=row_num, column=col_idx, value=val)
                 c.fill = row_fill
                 c.font = Font(
-                    name=font_tnr, size=9,
-                    bold=(col_idx in (1, 6, 11)),
+                    name=font_tnr, size=9.5,
+                    bold=(col_idx in (1, 6, 12)),
                     color=("006400" if (attended and not is_virtual) else ("0051A8" if is_virtual else "8B0000"))
                     if col_idx == 6 else "1E293B"
                 )
-                c.alignment = center if col_idx not in (3,) else left
+                c.alignment = center if col_idx not in (3, 7) else left
                 _apply_thin_border(c)
-            ws_m.row_dimensions[row_num].height = 18
+            ws_tab.row_dimensions[row_num].height = 20
 
-        ws_m.freeze_panes = "A4"
+        ws_tab.freeze_panes = "A4"
+
+    if is_weekly and rows:
+        # Sheet 2: All Students
+        ws_all = wb.create_sheet(title="All Students")
+        _write_matrix_tab(ws_all, dataset.get("title", "Weekly Contest — All Students Roster"), rows)
+
+        # Sheet 3: Public Attended
+        pub_attended_rows = [r for r in rows if r.get("participation_status") in ("PUBLIC_ATTENDED", "ATTENDED") or r.get("status") == "PUBLIC"]
+        if pub_attended_rows:
+            ws_pub = wb.create_sheet(title="Public Attended")
+            _write_matrix_tab(ws_pub, f"{dataset.get('contestName', 'Weekly Contest')} — Public Attended Roster", pub_attended_rows)
+
+        # Sheet 4: Public Not Attended
+        pub_not_rows = [r for r in rows if r.get("participation_status") in ("PUBLIC_NOT_ATTENDED", "NOT_ATTENDED", "PENDING") or r.get("status") == "NOT ATTENDED"]
+        if pub_not_rows:
+            ws_not = wb.create_sheet(title="Public Not Attended")
+            _write_matrix_tab(ws_not, f"{dataset.get('contestName', 'Weekly Contest')} — Public Not Attended Roster", pub_not_rows)
+
+        # Sheet 5: Virtual Attended
+        virt_rows = [r for r in rows if r.get("participation_status") == "VIRTUAL_ATTENDED" or r.get("status") == "VIRTUAL"]
+        if virt_rows:
+            ws_virt = wb.create_sheet(title="Virtual Attended")
+            _write_matrix_tab(ws_virt, f"{dataset.get('contestName', 'Weekly Contest')} — Virtual Attended Roster", virt_rows)
 
     # ── SHEET 3+: PER-DEPARTMENT & YEAR SHEET TABS ────────────────────────────
     # Group students by Department & Year for dedicated class/dept tabs

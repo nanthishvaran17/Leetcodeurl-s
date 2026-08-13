@@ -153,7 +153,7 @@ def export_word_from_dataset(dataset: dict) -> bytes:
             "PENDING":            "PENDING",
         }
 
-        w_headers = ["S.No", "Reg No", "Student Name", "Dept", "Yr", "Status", "Q1", "Q2", "Q3", "Q4", "Contest Solved", "Rank"]
+        w_headers = ["S.No", "Reg No", "Student Name", "Dept", "Yr", "Status", "Contest Name", "Q1", "Q2", "Q3", "Q4", "Contest Solved", "Rank"]
         table_w = doc.add_table(rows=1 + len(contest_rows), cols=len(w_headers))
         table_w.alignment = WD_TABLE_ALIGNMENT.CENTER
 
@@ -173,6 +173,7 @@ def export_word_from_dataset(dataset: dict) -> bytes:
             p_status = r.get("participation_status", "PENDING")
             attended = p_status in ("PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL_ATTENDED")
             status_str = STATUS_LABEL.get(p_status, p_status)
+            c_name_val = r.get("contest_name") or dataset.get("contestName") or "Weekly Contest"
 
             q1 = 1 if (r.get("q1") or 0) > 0 else 0
             q2 = 1 if (r.get("q2") or 0) > 0 else 0
@@ -187,6 +188,7 @@ def export_word_from_dataset(dataset: dict) -> bytes:
                 r.get("dept", ""),
                 str(r.get("year", "")),
                 status_str,
+                c_name_val,
                 str(q1) if attended else "—",
                 str(q2) if attended else "—",
                 str(q3) if attended else "—",
@@ -199,11 +201,11 @@ def export_word_from_dataset(dataset: dict) -> bytes:
             for i, val in enumerate(r_vals):
                 set_cell_background(row_cells[i], bg_hex)
                 p = row_cells[i].paragraphs[0]
-                p.alignment = WD_ALIGN_PARAGRAPH.CENTER if i != 2 else WD_ALIGN_PARAGRAPH.LEFT
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER if i not in (2, 6) else WD_ALIGN_PARAGRAPH.LEFT
                 run = p.add_run(val)
                 run.font.name = "Times New Roman"
                 run.font.size = Pt(8)
-                if i in (0, 5, 10):
+                if i in (0, 5, 11):
                     run.font.bold = True
                 if i == 5:
                     run.font.color.rgb = RGBColor(6, 95, 70) if attended else RGBColor(153, 27, 27)

@@ -9,28 +9,11 @@ from backend.logger import logger
 
 def get_or_create_current_session(db: Session) -> WeeklySession:
     """
-    Retrieves or creates the active/upcoming session for the current date.
+    Retrieves or creates the canonical active/upcoming Sunday weekly contest session.
+    Delegates to backend.services.weekly_session_manager for authoritative resolution.
     """
-    today_str = datetime.date.today().isoformat()
-    session = db.query(WeeklySession).filter(WeeklySession.session_date == today_str).first()
-    
-    if not session:
-        # Determine week number of year
-        week_num = datetime.date.today().isocalendar()[1]
-        session = WeeklySession(
-            academic_year="2026-27",
-            week_number=week_num,
-            session_date=today_str,
-            start_time=settings.SESSION_START,
-            end_time=settings.SESSION_END,
-            status="UPCOMING"
-        )
-        db.add(session)
-        db.commit()
-        db.refresh(session)
-        logger.info(f"Created new WeeklySession ID={session.id} for date {today_str}")
-        
-    return session
+    from backend.services.weekly_session_manager import get_or_create_current_weekly_session
+    return get_or_create_current_weekly_session(db)
 
 async def trigger_start_snapshot(db: Session, session_id: int):
     """

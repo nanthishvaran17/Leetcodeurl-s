@@ -25,18 +25,32 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
     fetchReport();
   }, [reportId]);
 
-  const downloadFile = (format: string) => {
-    const url = `/reports/${reportId}/${format}`;
-    api.get(url, { responseType: 'blob' }).then(res => {
+  const downloadFile = async (format: string) => {
+    try {
+      const url = `/reports/${reportId}/${format}`;
+      const res = await api.get(url, { responseType: 'blob' });
       const blobUrl = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement('a');
       link.href = blobUrl;
       const ext = format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : format === 'zip' ? 'zip' : format;
-      link.setAttribute('download', `${report?.reportType || 'REPORT'}_${reportId}.${ext}`);
+      
+      const contentDisposition = res.headers['content-disposition'];
+      let filename = `${report?.reportType || 'REPORT'}_${reportId}.${ext}`;
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename="?([^"]+)"?/);
+        if (match && match[1]) {
+          filename = match[1];
+        }
+      }
+
+      link.setAttribute('download', filename);
       document.body.appendChild(link);
       link.click();
       link.remove();
-    });
+    } catch (err: any) {
+      console.error(`Failed to download ${format} report:`, err);
+      alert(`Failed to download ${format.toUpperCase()} report. Please try again.`);
+    }
   };
 
   if (loading) {

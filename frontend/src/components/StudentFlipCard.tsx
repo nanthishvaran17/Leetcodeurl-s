@@ -169,20 +169,20 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
 
   return (
     <div
-      className="w-full h-[340px] perspective-1000 cursor-pointer group"
+      className="w-full min-h-[420px] flex flex-col perspective-1000 cursor-pointer group min-w-0"
       onClick={() => setIsFlipped(!isFlipped)}
     >
       <div
-        className={`relative w-full h-full duration-500 transform-style-3d transition-transform ${
+        className={`relative w-full h-full min-h-[420px] flex flex-col duration-500 transform-style-3d transition-transform ${
           isFlipped ? 'rotate-y-180' : ''
         }`}
       >
         {/* FRONT SIDE */}
-        <div className="absolute inset-0 w-full h-full glass-card p-6 rounded-3xl border border-gray-200/90 dark:border-gray-800 shadow-xl hover:shadow-2xl dark:hover:border-brand-500/40 backface-hidden flex flex-col justify-between transition-all duration-300 bg-white/95 dark:bg-navy-900/90">
+        <div className="absolute inset-0 w-full h-full min-h-[420px] glass-card p-5 sm:p-6 rounded-3xl border border-gray-200/90 dark:border-gray-800 shadow-xl hover:shadow-2xl dark:hover:border-brand-500/40 backface-hidden flex flex-col justify-between transition-all duration-300 bg-white/95 dark:bg-navy-900/90">
           
           {/* Card Top: Rank & Department Pill */}
-          <div className="flex items-center justify-between">
-            <span className={`px-3 py-1 rounded-full text-xs border uppercase tracking-wider flex items-center space-x-1 ${getRankBadgeStyle(effectiveRank)}`}>
+          <div className="flex items-center justify-between gap-2">
+            <span className={`px-3 py-1 rounded-full text-xs border uppercase tracking-wider flex items-center space-x-1 whitespace-nowrap ${getRankBadgeStyle(effectiveRank)}`}>
               {!isSolver || !effectiveRank ? (
                 <span>Unranked</span>
               ) : effectiveRank === 1 ? (
@@ -197,33 +197,33 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
                 <span>#{effectiveRank}</span>
               )}
             </span>
-            <span className="px-3 py-1 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 font-extrabold text-[11px] font-mono">
+            <span className="px-3 py-1 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 font-extrabold text-[11px] font-mono whitespace-nowrap">
               {student.department?.code || 'CSE'}
             </span>
           </div>
 
           {/* Card Center: Avatar & Student Details */}
-          <div className="text-center space-y-2.5 py-1">
-            <div className="relative w-16 h-16 mx-auto group-hover:scale-105 transition-transform duration-300">
+          <div className="text-center space-y-2 py-2 flex-1 flex flex-col justify-center min-w-0">
+            <div className="relative w-16 h-16 mx-auto group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
               <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-600 via-indigo-600 to-navy-800 text-white font-black text-xl flex items-center justify-center shadow-md">
                 {student.name ? student.name.split(' ').map(n => n[0]).join('').slice(0, 2) : <User className="w-8 h-8" />}
               </div>
             </div>
-            <div>
-              <h3 className="font-extrabold text-base text-gray-900 dark:text-white truncate max-w-[210px] mx-auto tracking-tight">
+            <div className="min-w-0 px-1">
+              <h3 className="font-extrabold text-base text-gray-900 dark:text-white truncate max-w-full tracking-tight" title={student.name}>
                 {student.name}
               </h3>
-              <p className="text-xs text-brand-600 dark:text-brand-400 font-mono font-bold mt-0.5 tracking-wider">
+              <p className="text-xs text-brand-600 dark:text-brand-400 font-mono font-bold mt-0.5 tracking-wider truncate">
                 {student.reg_no}
               </p>
-              <p className="text-[11px] text-gray-500 font-medium mt-1">
+              <p className="text-[11px] text-gray-500 font-medium mt-1 truncate">
                 {student.department?.name} • <span className="font-bold text-gray-700 dark:text-gray-300">{student.year_level} Year</span>
               </p>
             </div>
           </div>
 
           {/* Card Bottom: Quick Stats & Sync Badge */}
-          <div className="pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-xs">
+          <div className="pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-xs mt-auto">
             <FrontStatsPill />
             <SyncBadge />
           </div>
@@ -231,21 +231,21 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
         </div>
 
         {/* BACK SIDE */}
-        <div className="absolute inset-0 w-full h-full p-6 rounded-3xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-950 text-gray-900 dark:text-white shadow-2xl backface-hidden rotate-y-180 flex flex-col justify-between">
+        <div className="absolute inset-0 w-full h-full min-h-[420px] p-5 sm:p-6 rounded-3xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-950 text-gray-900 dark:text-white shadow-2xl backface-hidden rotate-y-180 flex flex-col justify-between">
           
           {/* Top Header */}
-          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-            <div className="flex items-center space-x-1.5">
-              <ShieldCheck className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-              <span className="font-extrabold text-sm text-gray-900 dark:text-white truncate max-w-[140px] tracking-tight">{student.name}</span>
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5 gap-2">
+            <div className="flex items-center space-x-1.5 min-w-0">
+              <ShieldCheck className="w-4 h-4 text-brand-600 dark:text-brand-400 flex-shrink-0" />
+              <span className="font-extrabold text-sm text-gray-900 dark:text-white truncate tracking-tight" title={student.name}>{student.name}</span>
             </div>
-            <span className="text-[11px] text-brand-700 dark:text-brand-300 font-mono font-bold bg-brand-50 dark:bg-brand-950 px-2.5 py-1 rounded-xl border border-brand-200 dark:border-brand-800">
+            <span className="text-[11px] text-brand-700 dark:text-brand-300 font-mono font-bold bg-brand-50 dark:bg-brand-950 px-2.5 py-1 rounded-xl border border-brand-200 dark:border-brand-800 flex-shrink-0">
               {student.reg_no}
             </span>
           </div>
 
           {/* Stats Breakdown or Status Placeholder */}
-          <div className="space-y-3.5 flex-1 flex flex-col justify-center">
+          <div className="space-y-3 flex-1 flex flex-col justify-center py-2 min-w-0">
             
             {!isVerified ? (
               /* ── PENDING / FAILED state placeholder ── */
@@ -265,7 +265,7 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
                   {state === 'failed' && (lastVerifiedAt ? `Last verified: ${verifiedAgo}` : 'Never successfully synced')}
                   {state === 'mismatch' && 'Easy + Medium + Hard ≠ Total'}
                 </p>
-                <p className="text-[11px] font-mono text-brand-600 dark:text-brand-400">
+                <p className="text-[11px] font-mono text-brand-600 dark:text-brand-400 truncate">
                   {student.username || '—'}
                 </p>
               </div>
@@ -273,54 +273,54 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
               /* ── VERIFIED / STALE state with real stats ── */
               <>
                 {/* Total Solved Banner */}
-                <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-brand-500/10 to-indigo-500/10 border border-emerald-500/20 dark:border-emerald-500/30 flex items-center justify-between">
+                <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-brand-500/10 to-indigo-500/10 border border-emerald-500/20 dark:border-emerald-500/30 flex items-center justify-between">
                   <span className="text-xs text-gray-600 dark:text-gray-400 font-bold uppercase tracking-wider">Total Problems Solved</span>
-                  <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                  <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
                     {totalSolved}
                   </span>
                 </div>
 
                 {/* Difficulty Breakdown */}
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="p-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 flex flex-col items-center">
+                <div className="grid grid-cols-3 gap-2 text-center min-w-0">
+                  <div className="p-2 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 flex flex-col items-center min-w-0">
                     <span className="text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">Easy</span>
-                    <span className="text-base font-extrabold text-emerald-700 dark:text-emerald-300 mt-0.5">{easy}</span>
+                    <span className="text-base font-extrabold text-emerald-700 dark:text-emerald-300 font-mono mt-0.5">{easy}</span>
                   </div>
-                  <div className="p-2.5 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 flex flex-col items-center">
+                  <div className="p-2 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 flex flex-col items-center min-w-0">
                     <span className="text-[10px] font-bold uppercase text-amber-600 dark:text-amber-400 tracking-wider">Med</span>
-                    <span className="text-base font-extrabold text-amber-700 dark:text-amber-300 mt-0.5">{medium}</span>
+                    <span className="text-base font-extrabold text-amber-700 dark:text-amber-300 font-mono mt-0.5">{medium}</span>
                   </div>
-                  <div className="p-2.5 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/60 flex flex-col items-center">
+                  <div className="p-2 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/60 flex flex-col items-center min-w-0">
                     <span className="text-[10px] font-bold uppercase text-rose-600 dark:text-rose-400 tracking-wider">Hard</span>
-                    <span className="text-base font-extrabold text-rose-700 dark:text-rose-300 mt-0.5">{hard}</span>
+                    <span className="text-base font-extrabold text-rose-700 dark:text-rose-300 font-mono mt-0.5">{hard}</span>
                   </div>
                 </div>
 
                 {/* Recent Contest Performance Badge */}
                 {student.stats?.recent_contest_name && (
-                  <div className="p-2.5 rounded-2xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800 flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{student.stats.recent_contest_name}</span>
-                    <span className="text-xs font-black text-brand-600 dark:text-brand-400 font-mono">{student.stats.recent_contest_score || '3 / 4'}</span>
+                  <div className="p-2 rounded-2xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800 flex items-center justify-between min-w-0">
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider truncate">{student.stats.recent_contest_name}</span>
+                    <span className="text-xs font-black text-brand-600 dark:text-brand-400 font-mono flex-shrink-0 ml-1">{student.stats.recent_contest_score || '3 / 4'}</span>
                   </div>
                 )}
 
                 {/* Contest Rating / Contest Rank / Profile Rank */}
-                <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
-                  <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800">
-                    <span className="text-gray-400 font-bold block uppercase">Rating</span>
-                    <span className="font-mono font-black text-amber-600 dark:text-amber-400 text-xs">
+                <div className="grid grid-cols-3 gap-1.5 text-center text-[10px] min-w-0">
+                  <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 min-w-0">
+                    <span className="text-gray-400 font-bold block uppercase tracking-tight">Rating</span>
+                    <span className="font-mono font-black text-amber-600 dark:text-amber-400 text-[11px] truncate block">
                       {isSolver && student.stats?.contest_rating ? student.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1 }) : 'Unrated'}
                     </span>
                   </div>
-                  <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800">
-                    <span className="text-gray-400 font-bold block uppercase">Contest Rank</span>
-                    <span className="font-mono font-black text-indigo-600 dark:text-indigo-400 text-xs">
+                  <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 min-w-0">
+                    <span className="text-gray-400 font-bold block uppercase tracking-tight">Contest Rank</span>
+                    <span className="font-mono font-black text-indigo-600 dark:text-indigo-400 text-[11px] truncate block">
                       {isSolver && student.stats?.contest_global_ranking ? `#${student.stats.contest_global_ranking.toLocaleString('en-US')}` : 'Unranked'}
                     </span>
                   </div>
-                  <div className="p-2 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
-                    <span className="text-gray-400 font-bold block uppercase">Profile Rank</span>
-                    <span className="font-mono font-black text-gray-700 dark:text-gray-300 text-xs">
+                  <div className="p-2 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 min-w-0">
+                    <span className="text-gray-400 font-bold block uppercase tracking-tight">Profile Rank</span>
+                    <span className="font-mono font-black text-gray-700 dark:text-gray-300 text-[11px] truncate block">
                       {isSolver && student.stats?.public_profile_ranking ? `#${student.stats.public_profile_ranking.toLocaleString('en-US')}` : 'Unranked'}
                     </span>
                   </div>
@@ -328,28 +328,29 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
               </>
             )}
 
-            {/* Verification Footer — only shown for verified/stale */}
+            {/* Verification Footer Row */}
             {isVerified && (
-              <div className="flex items-center justify-between text-[11px] font-semibold text-gray-500 dark:text-gray-400 px-1 pt-1 border-t border-gray-100 dark:border-gray-800">
-                <span className="flex items-center space-x-1">
-                  <span className={`w-2 h-2 rounded-full ${state === 'stale' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-                  <span>Source: LeetCode Public Profile</span>
+              <div className="flex flex-wrap items-center justify-between text-[11px] font-semibold text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-100 dark:border-gray-800 gap-2">
+                <span className="flex items-center space-x-1 whitespace-nowrap">
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${state === 'stale' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                  <span className="text-[10.5px] font-medium">Source: LeetCode Public Profile</span>
                 </span>
-                <span className="text-[10px] text-gray-400">
+                <span className="text-[10.5px] font-mono font-bold whitespace-nowrap text-emerald-600 dark:text-emerald-400">
                   {state === 'stale' ? `🟡 Stale • ${verifiedAgo}` : lastVerifiedAt ? `🟢 Verified ${verifiedAgo}` : '—'}
                 </span>
               </div>
             )}
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center space-x-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+          {/* Action Footer: View Full Profile Button */}
+          <div className="flex items-center space-x-2 pt-2.5 border-t border-gray-100 dark:border-gray-800 mt-auto">
             <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 if (onSelectStudent) onSelectStudent(student);
               }}
-              className="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-md shadow-brand-600/30 transition-all flex items-center justify-center space-x-1.5"
+              className="flex-1 min-h-[42px] py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-md shadow-brand-600/30 transition-all flex items-center justify-center space-x-1.5"
             >
               <span>View Full Profile</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -357,11 +358,12 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
 
             {onDeleteStudent && (
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   onDeleteStudent(student);
                 }}
-                className="p-2.5 rounded-xl text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 border border-gray-200 dark:border-gray-800 transition-colors"
+                className="p-2.5 min-h-[42px] min-w-[42px] flex items-center justify-center rounded-xl text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 border border-gray-200 dark:border-gray-800 transition-colors"
                 title="Delete Student Record"
               >
                 <Trash2 className="w-4 h-4" />

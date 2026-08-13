@@ -184,6 +184,16 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     }
   };
 
+  const handleSyncSingleStudent = async (studentId: number) => {
+    try {
+      const res = await api.post(`/students/${studentId}/refresh`);
+      alert(`✓ ${res.data?.message || 'Student profile synced successfully!'}`);
+      fetchStudents();
+    } catch (err: any) {
+      alert(`❌ Sync Failed: ${err.response?.data?.detail || err.message || 'Unable to fetch LeetCode profile statistics.'}`);
+    }
+  };
+
   return (
     <div className="space-y-6">
       
@@ -195,7 +205,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
           <div className="space-y-3 max-w-2xl">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
               <UserPlus className="w-3.5 h-3.5 text-amber-400" />
-              <span>STUDENT REPOSITORY • 270+ ENROLLED SOLVERS</span>
+              <span>STUDENT REPOSITORY • {students.length} ENROLLED STUDENTS</span>
             </div>
 
             <h1 className="text-3xl md:text-4xl font-black tracking-tight">
@@ -278,12 +288,12 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
         <LeaderboardTable
           students={students}
           onSelectStudent={onSelectStudent}
-          onRefreshStudent={() => fetchStudents()}
+          onRefreshStudent={handleSyncSingleStudent}
           onDeleteStudent={handleDeleteStudent}
           onBulkDeleteStudents={handleBulkDeleteStudents}
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {students.map((st) => (
             <StudentFlipCard
               key={st.id}

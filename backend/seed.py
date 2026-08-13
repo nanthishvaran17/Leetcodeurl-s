@@ -511,20 +511,12 @@ def seed_database():
         except Exception as _rank_err:
             print(f"Ranking update during seed note: {_rank_err}")
 
-        # 6. Seed Current Weekly Session
-        today_str = datetime.date.today().isoformat()
-        sess = db.query(WeeklySession).filter(WeeklySession.session_date == today_str).first()
-        if not sess:
-            sess = WeeklySession(
-                academic_year="2026-27",
-                week_number=datetime.date.today().isocalendar()[1],
-                session_date=today_str,
-                start_time="08:00",
-                end_time="09:30",
-                status="ACTIVE"
-            )
-            db.add(sess)
-            db.commit()
+        # 6. Seed Institutional Historical Weekly Sessions
+        try:
+            from backend.services.weekly_session_manager import seed_institutional_historical_sessions
+            seed_institutional_historical_sessions(db)
+        except Exception as _sess_err:
+            print(f"Session seed warning: {_sess_err}")
 
         print(f"Successfully seeded database with {len(all_students)} real student records (II, III & IV Year)! ")
 

@@ -53,6 +53,24 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
     }
   };
 
+  const handleDownloadSample = async () => {
+    try {
+      const response = await api.get('/students/sample-excel', {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'Student_Import_Sample.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      alert("Unable to download sample Excel template. Please try again.");
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className="w-full max-w-3xl glass-card rounded-3xl p-6 border border-gray-200 dark:border-gray-800 space-y-6 max-h-[90vh] overflow-y-auto">
@@ -75,16 +93,33 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
 
         {/* Dropzone */}
         {!preview && (
-          <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-8 text-center hover:border-brand-500 transition-colors">
-            <UploadCloud className="w-12 h-12 text-brand-500 mx-auto mb-3" />
-            <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">Click to upload or drag & drop Excel file</p>
-            <p className="text-xs text-gray-500 mt-1">Columns: REG NO, NAME, DEPT, YEAR, SECTION, EMAIL, LEETCODE PROFILE LINK</p>
-            <input
-              type="file"
-              accept=".xlsx, .xls"
-              onChange={handleFileChange}
-              className="mt-4 block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer mx-auto max-w-xs"
-            />
+          <div className="space-y-4">
+            <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-8 text-center hover:border-brand-500 transition-colors">
+              <UploadCloud className="w-12 h-12 text-brand-500 mx-auto mb-3" />
+              <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">Click to upload or drag & drop Excel file</p>
+              <p className="text-xs text-gray-500 mt-1">Required columns: REG NO, NAME, DEPT, YEAR, LEETCODE PROFILE LINK</p>
+              <input
+                type="file"
+                accept=".xlsx, .xls"
+                onChange={handleFileChange}
+                className="mt-4 block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer mx-auto max-w-xs"
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 text-xs">
+              <div>
+                <p className="font-extrabold text-gray-900 dark:text-white">Need standard import template?</p>
+                <p className="text-gray-500">Download formatted Excel sample with exact required headers</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleDownloadSample}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl shadow-md transition-all flex items-center space-x-1.5 cursor-pointer text-xs"
+              >
+                <span>📥</span>
+                <span>Download Sample Excel</span>
+              </button>
+            </div>
           </div>
         )}
 
