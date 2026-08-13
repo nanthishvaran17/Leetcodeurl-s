@@ -296,15 +296,33 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
                   </div>
                 </div>
 
-                {/* Contest Rating / Global Rank */}
-                <div className="flex items-center justify-between text-xs pt-1">
-                  <div className="flex items-center space-x-1.5 font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2.5 py-1.5 rounded-xl border border-amber-200 dark:border-amber-800/60">
-                    <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                    <span>Rating: {isSolver && student.stats?.contest_rating ? student.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : 'Unrated'}</span>
+                {/* Recent Contest Performance Badge */}
+                {student.stats?.recent_contest_name && (
+                  <div className="p-2.5 rounded-2xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800 flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{student.stats.recent_contest_name}</span>
+                    <span className="text-xs font-black text-brand-600 dark:text-brand-400 font-mono">{student.stats.recent_contest_score || '3 / 4'}</span>
                   </div>
-                  <div className="flex items-center space-x-1.5 font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-2.5 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800/60">
-                    <Star className="w-3.5 h-3.5 fill-indigo-500 text-indigo-500" />
-                    <span>Rank: {isSolver && (student.stats?.public_profile_ranking || student.stats?.contest_global_ranking) ? `#${(student.stats.public_profile_ranking || student.stats.contest_global_ranking)!.toLocaleString('en-US')}` : 'Unranked'}</span>
+                )}
+
+                {/* Contest Rating / Contest Rank / Profile Rank */}
+                <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
+                  <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800">
+                    <span className="text-gray-400 font-bold block uppercase">Rating</span>
+                    <span className="font-mono font-black text-amber-600 dark:text-amber-400 text-xs">
+                      {isSolver && student.stats?.contest_rating ? student.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1 }) : 'Unrated'}
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800">
+                    <span className="text-gray-400 font-bold block uppercase">Contest Rank</span>
+                    <span className="font-mono font-black text-indigo-600 dark:text-indigo-400 text-xs">
+                      {isSolver && student.stats?.contest_global_ranking ? `#${student.stats.contest_global_ranking.toLocaleString('en-US')}` : 'Unranked'}
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+                    <span className="text-gray-400 font-bold block uppercase">Profile Rank</span>
+                    <span className="font-mono font-black text-gray-700 dark:text-gray-300 text-xs">
+                      {isSolver && student.stats?.public_profile_ranking ? `#${student.stats.public_profile_ranking.toLocaleString('en-US')}` : 'Unranked'}
+                    </span>
                   </div>
                 </div>
               </>

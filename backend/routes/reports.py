@@ -1,3 +1,4 @@
+import os
 import csv
 import io
 import datetime
@@ -561,24 +562,28 @@ def generate_certificate_for_student(
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
 
-    res = generate_student_certificate(student, cert_type=cert_type)
+    try:
+        res = generate_student_certificate(student, cert_type=cert_type)
 
-    record = CertificateRecord(
-        student_id=student.id,
-        certificate_type=cert_type,
-        certificate_code=res["certificate_code"],
-        issue_date=res["issue_date"],
-        qr_code_path=res["qr_path"],
-        pdf_path=res["pdf_path"]
-    )
-    db.add(record)
-    db.commit()
+        record = CertificateRecord(
+            student_id=student.id,
+            certificate_type=cert_type,
+            certificate_code=res["certificate_code"],
+            issue_date=res["issue_date"],
+            qr_code_path=res["qr_path"],
+            pdf_path=res["pdf_path"]
+        )
+        db.add(record)
+        db.commit()
 
-    return {
-        "message": f"Certificate generated for {student.name}",
-        "certificate_code": res["certificate_code"],
-        "pdf_download_url": f"/api/reports/certificate/{res['certificate_code']}/pdf"
-    }
+        return {
+            "message": f"Certificate generated for {student.name}",
+            "certificate_code": res["certificate_code"],
+            "pdf_download_url": f"/api/reports/certificate/{res['certificate_code']}/pdf"
+        }
+    except Exception as e:
+        logger.error(f"Failed to generate certificate for student {student_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Certificate generation error: {str(e)}")
 
 @router.get("/certificate/{cert_code}/pdf")
 def download_student_certificate_pdf(cert_code: str, db: Session = Depends(get_db)):
@@ -660,3 +665,48 @@ def trigger_weekly_email_dispatch(
 def get_email_logs(db: Session = Depends(get_db)):
     logs = db.query(EmailLog).order_by(EmailLog.id.desc()).limit(100).all()
     return logs
+
+
+@router.get("/weekly-performance")
+def get_weekly_performance_report_json(
+    report_date: Optional[str] = Query(None),
+    save_snapshot: bool = Query(False),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns weekly performance dataset including Last vs Current Week metrics,
+    movement tracking, category student lists, and data validation issues.
+    """
+    from backend.services.weekly_report_service import generate_weekly_performance_data
+    return generate_weekly_performance_data(db, report_date=report_date, save_snapshot=save_snapshot)
+
+
+@router.get("/weekly-performance/download")
+def download_weekly_performance_19_sheet_excel(
+    report_date: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
+    """
+    Generates and downloads the official 19-sheet institutional Excel workbook.
+    """
+    import os
+    import tempfile
+    from backend.services.weekly_report_service import generate_weekly_performance_data
+    from backend.exporters.weekly_excel_generator import build_weekly_performance_excel
+
+    date_str = report_date or datetime.date.today().strftime("%d-%m-%Y")
+    data = generate_weekly_performance_data(db, report_date=date_str, save_snapshot=False)
+
+    temp_dir = tempfile.gettempdir()
+    file_path = os.path.join(temp_dir, f"LeetCode_Weekly_Report_{date_str}.xlsx")
+    build_weekly_performance_excel(data, file_path)
+
+    with open(file_path, "rb") as f:
+        file_bytes = f.read()
+
+    return Response(
+        content=file_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=LeetCode_Weekly_Report_{date_str}.xlsx"}
+    )
+

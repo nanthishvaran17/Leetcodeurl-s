@@ -265,6 +265,11 @@ async def fetch_leetcode_profile(
                             med_s = fb_data.get("mediumSolved") if fb_data.get("mediumSolved") is not None else fb_data.get("mediumSolvedCount", 0)
                             hd_s = fb_data.get("hardSolved") if fb_data.get("hardSolved") is not None else fb_data.get("hardSolvedCount", 0)
                             p_rank = fb_data.get("ranking")
+
+                            is_valid_sum = (ez_s + med_s + hd_s == tot_s)
+                            sync_status = "success" if is_valid_sum else "mismatch"
+                            validation_status = "verified" if is_valid_sum else "mismatch"
+                            error_detail = None if is_valid_sum else f"Difficulty sum mismatch in fallback: {ez_s} + {med_s} + {hd_s} != {tot_s}"
                             
                             result = {
                                 "username": username,
@@ -285,11 +290,11 @@ async def fetch_leetcode_profile(
                                 "recent_contest_score": None,
                                 "recent_contest_type": "UNKNOWN",
                                 "contest_participations": [],
-                                "status": "success",
-                                "sync_status": "success",
-                                "validation_status": "verified",
-                                "error": None,
-                                "error_message": None,
+                                "status": "success" if is_valid_sum else "MISMATCH",
+                                "sync_status": sync_status,
+                                "validation_status": validation_status,
+                                "error": error_detail,
+                                "error_message": error_detail,
                                 "fetch_duration": duration
                             }
                             _profile_cache[username] = {"timestamp": now, "data": result}
@@ -420,6 +425,10 @@ async def fetch_leetcode_profile(
                         total = latest.get("totalProblems", 4)
                         recent_contest_score = f"{solved} / {total}"
                         recent_contest_type = "OFFICIAL" if latest.get("attended") else "VIRTUAL"
+                        if latest.get("ranking") and latest.get("attended"):
+                            contest_global_ranking = latest.get("ranking")
+                        if latest.get("rating") and latest.get("attended"):
+                            contest_rating = round(float(latest.get("rating")), 1)
         except Exception as e:
             logger.info(f"Contest stats skipped for '{username}': {e}")
 

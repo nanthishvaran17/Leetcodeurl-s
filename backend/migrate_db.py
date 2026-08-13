@@ -103,6 +103,40 @@ def run_db_migrations():
         """)
 
         cursor.execute("""
+            CREATE TABLE IF NOT EXISTS certificate_records (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_id INTEGER NOT NULL,
+                certificate_type VARCHAR(100) NOT NULL,
+                certificate_code VARCHAR(50) UNIQUE NOT NULL,
+                issue_date VARCHAR(20) NOT NULL,
+                qr_code_path VARCHAR(255),
+                pdf_path VARCHAR(255),
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (student_id) REFERENCES students (id)
+            );
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS student_contest_snapshots (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_id INTEGER NOT NULL,
+                contest_name VARCHAR(100),
+                contest_number INTEGER,
+                contest_date VARCHAR(30),
+                questions_solved INTEGER DEFAULT 0,
+                questions_total INTEGER DEFAULT 4,
+                contest_rank INTEGER,
+                contest_rating REAL,
+                top_percentage REAL,
+                attended BOOLEAN DEFAULT 1,
+                status VARCHAR(30) DEFAULT 'VERIFIED',
+                error_message TEXT,
+                captured_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (student_id) REFERENCES students (id)
+            );
+        """)
+
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS email_dispatch_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 email_id VARCHAR(100) UNIQUE NOT NULL,

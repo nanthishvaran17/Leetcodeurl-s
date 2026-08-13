@@ -60,9 +60,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   const pollSyncStatus = () => {
+    let consecutiveErrors = 0;
     const timer = setInterval(async () => {
       try {
         const statusData = await getSyncStatus();
+        consecutiveErrors = 0;
         setSyncStatus(statusData);
         if (!statusData.is_running) {
           clearInterval(timer);
@@ -70,8 +72,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           loadFreshness();
         }
       } catch (err) {
-        clearInterval(timer);
-        setIsSyncing(false);
+        consecutiveErrors += 1;
+        if (consecutiveErrors >= 5) {
+          clearInterval(timer);
+          setIsSyncing(false);
+        }
       }
     }, 1500);
   };

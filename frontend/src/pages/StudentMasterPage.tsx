@@ -91,6 +91,19 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     }
   };
 
+  const handleBulkDeleteStudents = async (studentIds: number[]) => {
+    if (!confirm(`Are you sure you want to delete ${studentIds.length} selected student records? This action cannot be undone.`)) {
+      return;
+    }
+    try {
+      const res = await api.post('/students/bulk-delete', { student_ids: studentIds });
+      alert(`✅ Successfully deleted ${res.data.count || studentIds.length} student records!`);
+      fetchStudents();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || "Failed to bulk delete student records.");
+    }
+  };
+
   return (
     <div className="space-y-6">
       
@@ -187,6 +200,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
           onSelectStudent={onSelectStudent}
           onRefreshStudent={() => fetchStudents()}
           onDeleteStudent={handleDeleteStudent}
+          onBulkDeleteStudents={handleBulkDeleteStudents}
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

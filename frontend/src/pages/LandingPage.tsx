@@ -69,15 +69,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     if (pollTimerRef.current) clearInterval(pollTimerRef.current);
 
     let pollCount = 0;
+    let consecutiveErrors = 0;
+
     pollTimerRef.current = setInterval(async () => {
       try {
         pollCount += 1;
         const statusData = await getSyncStatus();
+        consecutiveErrors = 0;
+
         const rawComp = statusData.completed ?? statusData.processed ?? 0;
-        const currentProcessed = Math.max(1, rawComp);
+        const totalCount = statusData.total || 273;
+        const currentProcessed = Math.min(totalCount, Math.max(0, rawComp));
 
         setSyncProgress({
-          total: statusData.total || 273,
+          total: totalCount,
           processed: currentProcessed,
           successful: statusData.success || 0,
           failed: statusData.failed || 0,
@@ -94,11 +99,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           pollTimerRef.current = null;
           setRefreshing(false);
           await fetchFilteredStudents();
+          setTimeout(() => {
+            setSyncProgress(prev => prev ? { ...prev, is_running: false, processed: prev.total } : null);
+          }, 5000);
         }
       } catch (err) {
-        if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-        pollTimerRef.current = null;
-        setRefreshing(false);
+        consecutiveErrors += 1;
+        console.warn(`Sync status poll warning (${consecutiveErrors}/5):`, err);
+        if (consecutiveErrors >= 5) {
+          if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+          pollTimerRef.current = null;
+          setRefreshing(false);
+        }
       }
     }, 1000);
   };
@@ -108,7 +120,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     setRefreshing(true);
     setSyncProgress({
       total: 273,
-      processed: 1,
+      processed: 0,
       successful: 0,
       failed: 0,
       is_running: true

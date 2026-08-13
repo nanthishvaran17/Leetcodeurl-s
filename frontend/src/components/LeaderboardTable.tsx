@@ -79,15 +79,45 @@ interface LeaderboardTableProps {
   onSelectStudent?: (student: StudentData) => void;
   onRefreshStudent?: (studentId: number) => void;
   onDeleteStudent?: (student: StudentData) => void;
+  onBulkDeleteStudents?: (studentIds: number[]) => void;
 }
 
 export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
   students,
   onSelectStudent,
   onRefreshStudent,
-  onDeleteStudent
+  onDeleteStudent,
+  onBulkDeleteStudents
 }) => {
   const { isConnected } = useLiveLeaderboard();
+  const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
+
+  const toggleStudent = (id: number) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const toggleAll = () => {
+    if (selectedIds.length === students.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(students.map(s => s.id));
+    }
+  };
+
+  const handleTriggerBulkDelete = () => {
+    if (onBulkDeleteStudents) {
+      onBulkDeleteStudents(selectedIds);
+      setSelectedIds([]);
+    } else if (onDeleteStudent) {
+      if (confirm(`Are you sure you want to delete ${selectedIds.length} selected students?`)) {
+        selectedIds.forEach(id => {
+          const st = students.find(s => s.id === id);
+          if (st) onDeleteStudent(st);
+        });
+        setSelectedIds([]);
+      }
+    }
+  };
 
   const getRankBadge = (rank?: number) => {
     if (!rank) return null;
@@ -124,6 +154,33 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
 
   return (
     <div className="w-full space-y-2">
+      {/* Bulk Delete Bar */}
+      {selectedIds.length > 0 && (
+        <div className="flex items-center justify-between p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-2xl mb-3 text-rose-600 dark:text-rose-300">
+          <div className="flex items-center space-x-2">
+            <Trash2 className="w-4 h-4 text-rose-500 animate-bounce" />
+            <span className="font-black text-xs md:text-sm">
+              {selectedIds.length} Student{selectedIds.length > 1 ? 's' : ''} Selected
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setSelectedIds([])}
+              className="px-3 py-1.5 rounded-xl bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-bold hover:bg-gray-300 transition-colors"
+            >
+              Clear Selection
+            </button>
+            <button
+              onClick={handleTriggerBulkDelete}
+              className="px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black flex items-center space-x-1.5 shadow-lg transition-transform transform hover:scale-105"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete Selected ({selectedIds.length})</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-end px-2">
         <div className="flex items-center space-x-2 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 shadow-sm">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
@@ -135,6 +192,14 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
       <table className="w-full text-left border-collapse text-xs">
         <thead>
           <tr className="bg-gray-100/80 dark:bg-navy-900/80 text-gray-600 dark:text-gray-300 font-bold border-b border-gray-200 dark:border-gray-800 uppercase tracking-wider">
+            <th className="py-3 px-3 text-center w-10">
+              <input
+                type="checkbox"
+                checked={students.length > 0 && selectedIds.length === students.length}
+                onChange={toggleAll}
+                className="rounded border-gray-300 text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+              />
+            </th>
             <th className="py-3 px-4">College Rank</th>
             <th className="py-3 px-4">Register No</th>
             <th className="py-3 px-4">Student Name</th>
@@ -143,7 +208,8 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
             <th className="py-3 px-4 text-center">Total Solved</th>
             <th className="py-3 px-4 text-center">Recent Contest Performance</th>
             <th className="py-3 px-4 text-center">Contest Rating</th>
-            <th className="py-3 px-4 text-center">Global Rank</th>
+            <th className="py-3 px-4 text-center">Contest Rank</th>
+            <th className="py-3 px-4 text-center">Profile Rank</th>
             <th className="py-3 px-4 text-center">Participation Mode</th>
             <th className="py-3 px-4 text-right">Actions</th>
           </tr>
@@ -151,7 +217,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
           {students.length === 0 ? (
             <tr>
-              <td colSpan={11} className="py-8 text-center text-gray-500 dark:text-gray-400">
+              <td colSpan={13} className="py-8 text-center text-gray-500 dark:text-gray-400">
                 No student records found.
               </td>
             </tr>
@@ -164,17 +230,21 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
               const totalSolved = isVerified ? (student.stats?.total_solved ?? 0) : null;
               const isSolver = isVerified && (totalSolved ?? 0) > 0;
 
-              const contestSolvedRatio = student.stats?.recent_contest_score || (
-                !isVerified ? '— / 4' :
-                (totalSolved ?? 0) > 400 ? '4 / 4' : (totalSolved ?? 0) > 250 ? '3 / 4' :
-                (totalSolved ?? 0) > 100 ? '2 / 4' : (totalSolved ?? 0) > 0 ? '1 / 4' : '0 / 4'
-              );
+              const contestSolvedRatio = student.stats?.recent_contest_score || (isVerified ? 'Not Attended' : '—');
               const recentContestName = student.stats?.recent_contest_name || 'Weekly Contest';
-              const contestRating = (isSolver && student.stats?.contest_rating)
+
+              const contestRating = (isVerified && student.stats?.contest_rating)
                 ? student.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
                 : (isVerified ? 'Unrated' : '—');
-              const rawRank = isSolver ? (student.stats?.public_profile_ranking || student.stats?.contest_global_ranking) : null;
-              const globalRanking = rawRank ? `#${rawRank.toLocaleString('en-US')}` : (isVerified ? 'Unranked' : '—');
+
+              const contestRank = (isVerified && student.stats?.contest_global_ranking)
+                ? `#${student.stats.contest_global_ranking.toLocaleString('en-US')}`
+                : (isVerified ? 'Unranked' : '—');
+
+              const profileRank = (isVerified && student.stats?.public_profile_ranking)
+                ? `#${student.stats.public_profile_ranking.toLocaleString('en-US')}`
+                : (isVerified ? 'Unranked' : '—');
+
               const effectiveCollegeRank = isSolver ? (student.college_rank || idx + 1) : undefined;
               const verifiedAgo = formatAgo(student.stats?.last_verified_at);
               const username = student.username || student.leetcode_url?.split('/u/')[1]?.replace('/', '') || `${student.name.replace(/\s+/g, '_')}`;
@@ -205,6 +275,15 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   key={student.id}
                   className="hover:bg-brand-50/40 dark:hover:bg-brand-900/20 transition-colors font-medium text-xs"
                 >
+                  <td className="py-3 px-3 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(student.id)}
+                      onChange={() => toggleStudent(student.id)}
+                      className="rounded border-gray-300 text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+                    />
+                  </td>
+
                   <td className="py-3 px-4 font-bold">
                     {isSolver
                       ? getRankBadge(effectiveCollegeRank)
@@ -255,8 +334,12 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                     {contestRating}
                   </td>
 
+                  <td className="py-3 px-4 text-center font-mono font-bold text-indigo-500">
+                    {contestRank}
+                  </td>
+
                   <td className="py-3 px-4 text-center font-mono text-gray-500 font-bold">
-                    {globalRanking}
+                    {profileRank}
                   </td>
 
                   <td className="py-3 px-4 text-center">
@@ -265,22 +348,6 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
 
                   <td className="py-3 px-4 text-right">
                     <div className="flex items-center justify-end space-x-2">
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          try {
-                            const { triggerSingleStudentSync } = await import('../services/api');
-                            const res = await triggerSingleStudentSync(student.id);
-                            alert(`✅ Live sync complete for ${res.name}: ${res.total_solved ?? 0} problems solved.`);
-                          } catch (err) {
-                            alert("Failed to refresh student profile.");
-                          }
-                        }}
-                        className="p-1.5 rounded-lg text-gray-500 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors"
-                        title="🔄 Trigger live refresh for this student"
-                      >
-                        <RefreshCw className="w-3.5 h-3.5" />
-                      </button>
                       {student.leetcode_url && (
                         <a
                           href={student.leetcode_url}

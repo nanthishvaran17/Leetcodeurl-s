@@ -45,18 +45,43 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       const res = await api.post(`/reports/generate-certificate/${student.id}?cert_type=Top Performer`);
       const certCode = res.data.certificate_code;
 
-      const pdfRes = await api.get(`/reports/certificate/${certCode}/pdf`, { responseType: 'blob' });
-      const blob = new Blob([pdfRes.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `Certificate_${student.reg_no || certCode}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      if (!certCode) {
+        throw new Error("No certificate code generated");
+      }
+
+      const relPath = `/reports/certificate/${certCode}/pdf`;
+      const fullUrl = `/api/reports/certificate/${certCode}/pdf`;
+
+      try {
+        const pdfRes = await api.get(relPath, { responseType: 'blob', timeout: 15000 });
+        const blob = new Blob([pdfRes.data], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `Certificate_${student.reg_no || certCode}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } catch (blobErr: any) {
+        console.warn("Blob download fallback to direct window:", blobErr);
+        window.open(fullUrl, '_blank');
+      }
     } catch (err: any) {
-      alert("Failed to generate and download certificate.");
+      console.error("Certificate error:", err);
+      let detailMsg = err.message || "Failed to generate and download certificate.";
+      if (err.response?.data instanceof Blob) {
+        try {
+          const text = await err.response.data.text();
+          const json = JSON.parse(text);
+          detailMsg = json.detail || text;
+        } catch {
+          // ignore
+        }
+      } else if (err.response?.data?.detail) {
+        detailMsg = err.response.data.detail;
+      }
+      alert(`Certificate Error: ${detailMsg}`);
     } finally {
       setDownloadingCert(false);
     }

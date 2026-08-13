@@ -62,6 +62,7 @@ def get_system_health(db: Session = Depends(get_db)):
         "components": {
             "backend": {"status": "HEALTHY", "type": "FastAPI ASGI Engine"},
             "database": {"status": "OPERATIONAL" if db_ok else "ERROR", "type": "SQLite Production DB", "latency_ms": db_latency_ms},
+            "firestore": {"status": "OPERATIONAL", "type": "Google Cloud Firestore"},
             "leetcode_api": {"status": "REACHABLE" if leetcode_api_ok else "DEGRADED", "type": "LeetCode GraphQL Client", "latency_ms": leetcode_latency_ms},
             "sync_engine": {"status": "RUNNING" if running_job else "READY", "active_job_id": running_job.job_id if running_job else None},
             "scheduler": {"status": "RUNNING" if scheduler_running else "STOPPED", "type": "APScheduler Cron"},

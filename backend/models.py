@@ -61,6 +61,7 @@ class Student(Base):
     mentor_notes = relationship("MentorNote", back_populates="student", cascade="all, delete-orphan")
     stat_snapshots = relationship("StudentStatSnapshot", back_populates="student", cascade="all, delete-orphan")
     contest_participations = relationship("ContestParticipation", back_populates="student", cascade="all, delete-orphan")
+    contest_snapshots = relationship("StudentContestSnapshot", back_populates="student", cascade="all, delete-orphan")
 
 class LeetCodeProfileStats(Base):
     __tablename__ = "leetcode_profile_stats"
@@ -394,6 +395,27 @@ class StudentStatSnapshot(Base):
     source = Column(String(50), default="leetcode_public_profile")
     
     student = relationship("Student", back_populates="stat_snapshots")
+
+class StudentContestSnapshot(Base):
+    __tablename__ = "student_contest_snapshots"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    
+    contest_name = Column(String(100), nullable=True)
+    contest_number = Column(Integer, nullable=True)
+    contest_date = Column(String(30), nullable=True)
+    questions_solved = Column(Integer, default=0)
+    questions_total = Column(Integer, default=4)
+    contest_rank = Column(Integer, nullable=True)
+    contest_rating = Column(Float, nullable=True)
+    top_percentage = Column(Float, nullable=True)
+    attended = Column(Boolean, default=True)
+    status = Column(String(30), default="VERIFIED")
+    error_message = Column(Text, nullable=True)
+    captured_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
+
+    student = relationship("Student", back_populates="contest_snapshots")
 
 class StudentGoal(Base):
     __tablename__ = "student_goals"

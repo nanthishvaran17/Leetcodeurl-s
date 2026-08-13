@@ -22,7 +22,7 @@ def generate_student_certificate(student: Student, cert_type: str = "Top Perform
     Generates a high-resolution PDF certificate with embedded QR verification code.
     """
     cert_id = f"CERT-{uuid.uuid4().hex[:8].upper()}"
-    filename = f"{student.reg_no}_{cert_type.replace(' ', '_')}.pdf"
+    filename = f"{student.reg_no}_{cert_id}.pdf"
     pdf_path = os.path.join(CERT_DIR, filename)
 
     # 1. Generate QR Code containing verification URL
@@ -86,19 +86,26 @@ def generate_student_certificate(student: Student, cert_type: str = "Top Perform
         alignment=1
     )
 
+    import html
+    clean_college = html.escape(settings.COLLEGE_NAME or "").upper()
+    clean_name = html.escape(student.name or "").upper()
+    clean_reg = html.escape(student.reg_no or "")
+    clean_dept = html.escape(student.department.name if student.department else "")
+    clean_cert_type = html.escape(cert_type)
+
     # Header
     story.append(Spacer(1, 20))
-    story.append(Paragraph(settings.COLLEGE_NAME.upper(), title_style))
+    story.append(Paragraph(clean_college, title_style))
     story.append(Spacer(1, 10))
     story.append(Paragraph("CERTIFICATE OF EXCELLENCE", ParagraphStyle('SubHead', parent=title_style, fontSize=20, textColor=colors.HexColor('#D97706'))))
     story.append(Spacer(1, 15))
     story.append(Paragraph("PROUDLY PRESENTED TO", subtitle_style))
     story.append(Spacer(1, 10))
-    story.append(Paragraph(student.name.upper(), name_style))
-    story.append(Paragraph(f"Register No: {student.reg_no} | Department of {student.department.name if student.department else ''}", subtitle_style))
+    story.append(Paragraph(clean_name, name_style))
+    story.append(Paragraph(f"Register No: {clean_reg} | Department of {clean_dept}", subtitle_style))
     story.append(Spacer(1, 20))
 
-    cert_msg = f"For outstanding algorithmic problem-solving performance, consistency, and securing <b>{cert_type}</b> recognition in the Weekly LeetCode Tracking Program during the academic session."
+    cert_msg = f"For outstanding algorithmic problem-solving performance, consistency, and securing <b>{clean_cert_type}</b> recognition in the Weekly LeetCode Tracking Program during the academic session."
     story.append(Paragraph(cert_msg, body_style))
     story.append(Spacer(1, 30))
 

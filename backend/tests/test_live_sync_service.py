@@ -114,7 +114,7 @@ class TestLiveSyncService(unittest.TestCase):
         freshness = get_system_freshness(self.db)
         self.assertEqual(freshness["total_students"], 2)
         self.assertEqual(freshness["verified_count"], 2)
-        self.assertIn("Freshness Badge", freshness.get("freshness_badge", ""))
+        self.assertIn("Verified", freshness.get("freshness_badge", ""))
 
 if __name__ == "__main__":
     unittest.main()

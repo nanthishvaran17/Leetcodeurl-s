@@ -14,7 +14,7 @@ from backend.services.live_sync_service import (
 router = APIRouter(tags=["Live Sync Engine"])
 
 @router.post("/api/sync/full")
-def trigger_full_sync(triggered_by: str = Query("admin"), db: Session = Depends(get_db)):
+async def trigger_full_sync(triggered_by: str = Query("admin"), db: Session = Depends(get_db)):
     """
     Triggers institutional full roster live sync.
     Enforces DB-level single-job lock and returns job_id immediately without blocking.
@@ -28,17 +28,26 @@ def get_current_sync_status(db: Session = Depends(get_db)):
     """
     Returns real-time sync progress status and tracker state.
     """
+    running_job = db.query(SyncJob).filter(SyncJob.status == "RUNNING").first()
     comp = sync_tracker.completed
+    if running_job and comp == 0:
+        comp = (running_job.success_count or 0) + (running_job.partial_count or 0) + (running_job.error_count or 0)
+
     tot = sync_tracker.total or (running_job.total_records if running_job else 273)
+    succ = sync_tracker.success or (running_job.success_count if running_job else 0)
+    part = sync_tracker.partial or (running_job.partial_count if running_job else 0)
+    fail = sync_tracker.failed or (running_job.error_count if running_job else 0)
+
     return {
         "is_running": sync_tracker.is_running or (running_job is not None),
         "job_id": running_job.job_id if running_job else sync_tracker.current_job_id,
         "total": tot,
         "completed": comp,
         "processed": comp,
-        "success": sync_tracker.success,
-        "partial": sync_tracker.partial,
-        "failed": sync_tracker.failed,
+        "success": succ,
+        "partial": part,
+        "failed": fail,
+        "percentage": round((comp / max(1, tot)) * 100.0, 1),
         "recent_logs": sync_tracker.recent_logs[-10:] if sync_tracker.recent_logs else []
     }
 

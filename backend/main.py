@@ -109,9 +109,16 @@ def on_startup():
 
     try:
         from backend.database import SessionLocal
+        from backend.models import SyncJob
         from backend.services.weekly_session_manager import resume_active_weekly_session
         db = SessionLocal()
         try:
+            # Clean up any zombie sync locks from previous server restarts
+            stale_jobs = db.query(SyncJob).filter(SyncJob.status == "RUNNING").all()
+            if stale_jobs:
+                for sj in stale_jobs:
+                    sj.status = "INTERRUPTED"
+                db.commit()
             asyncio.create_task(resume_active_weekly_session(db))
         except Exception as _rec_err:
             logger.warning(f"Session recovery note: {_rec_err}")

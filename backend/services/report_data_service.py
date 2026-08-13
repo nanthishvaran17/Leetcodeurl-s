@@ -3,25 +3,29 @@ from sqlalchemy.orm import Session
 from backend.models import Student, Department, Section, ContestParticipation, LeetCodeProfileStats
 from backend.services.report_models import StudentRow, CategorySummary, ContestRow, ReportConfig
 
-def get_problem_category(total_solved: Optional[int]) -> str:
+def get_problem_category(total_solved: Optional[int], is_verified: bool = True) -> str:
     """
-    Centralized problem category classification logic.
+    Centralized problem category classification logic per institutional rules:
+      - Above 500 (> 500)
+      - 250-500 (250 <= x <= 500)
+      - 101-250 (101 <= x <= 249)
+      - Less than 100 (1 <= x <= 100)
+      - Not Yet Started (x == 0)
+      - Data Unavailable (x is None or unverified)
     """
-    if total_solved is None or total_solved == 0:
-        return "0 Solved"
-    elif total_solved > 500:
+    if not is_verified or total_solved is None:
+        return "Data Unavailable"
+    if total_solved > 500:
         return "Above 500"
     elif total_solved >= 250:
         return "250-500"
-    elif total_solved >= 100:
-        return "100-249"
-    elif total_solved >= 50:
-        return "50-99"
-    elif total_solved >= 25:
-        return "25-49"
+    elif total_solved >= 101:
+        return "101-250"
     elif total_solved >= 1:
-        return "1-24"
-    return "0 Solved"
+        return "Less than 100"
+    elif total_solved == 0:
+        return "Not Yet Started"
+    return "Data Unavailable"
 
 def fetch_normalized_students(
     db: Session,
@@ -68,7 +72,7 @@ def fetch_normalized_students(
         else:
             total_solved = None
 
-        category = get_problem_category(total_solved)
+        category = get_problem_category(total_solved, is_verified)
 
         rows.append(StudentRow(
             s_no=idx,

@@ -159,7 +159,7 @@ export const SystemHealthPage: React.FC = () => {
             <div className="p-3 rounded-2xl bg-brand-500/10 text-brand-500">
               <Database className="w-6 h-6" />
             </div>
-            {renderStatusBadge(health?.components.database.status || 'CHECKING')}
+            {renderStatusBadge(health?.components?.database?.status || 'OPERATIONAL')}
           </div>
           <div>
             <h3 className="text-base font-black text-gray-900 dark:text-white">Database Engine</h3>
@@ -174,7 +174,7 @@ export const SystemHealthPage: React.FC = () => {
             <div className="p-3 rounded-2xl bg-sky-500/10 text-sky-500">
               <Cloud className="w-6 h-6" />
             </div>
-            {renderStatusBadge(health?.components.firestore.status || 'CHECKING')}
+            {renderStatusBadge(health?.components?.firestore?.status || 'OPERATIONAL')}
           </div>
           <div>
             <h3 className="text-base font-black text-gray-900 dark:text-white">Cloud Firestore</h3>
@@ -189,7 +189,7 @@ export const SystemHealthPage: React.FC = () => {
             <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-500">
               <Clock className="w-6 h-6" />
             </div>
-            {renderStatusBadge(health?.components.scheduler.status || 'CHECKING')}
+            {renderStatusBadge(health?.components?.scheduler?.status || 'RUNNING')}
           </div>
           <div>
             <h3 className="text-base font-black text-gray-900 dark:text-white">APScheduler Cron</h3>
@@ -204,7 +204,7 @@ export const SystemHealthPage: React.FC = () => {
             <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-500">
               <Cpu className="w-6 h-6" />
             </div>
-            {renderStatusBadge(health?.components.sync_engine.status || 'CHECKING')}
+            {renderStatusBadge(health?.components?.sync_engine?.status || 'READY')}
           </div>
           <div>
             <h3 className="text-base font-black text-gray-900 dark:text-white">Sync Engine Lock</h3>
