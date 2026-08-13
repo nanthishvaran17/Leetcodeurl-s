@@ -19611,3 +19611,20 @@ WHERE ? = leetcode_profile_stats.student_id]
 [2026-08-13 08:20:46,178] [INFO] [leetcode_tracker]: Backend Application ready and listening!
 [2026-08-13 08:20:46,187] [INFO] [leetcode_tracker]: Checking WeeklySession ID 4 (WEEK-2026-08-09) status: 'FINALIZED' at IST 08:20
 [2026-08-13 08:20:46,187] [INFO] [leetcode_tracker]: Session WEEK-2026-08-09 is locked (FINALIZED). No recovery action needed.
+[2026-08-13 17:17:53,098] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-13 17:17:53,103] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-13 17:17:55,233] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-13 17:17:56,369] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-13 17:17:56,389] [WARNING] [leetcode_tracker]: Database seed/reseed skipped or noted: name 'datetime' is not defined
+[2026-08-13 17:17:57,345] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-13 17:17:57,348] [INFO] [leetcode_tracker]: APScheduler started: Sunday session baseline & email dispatch registered. Continuous background auto-scraping is disabled per explicit fetch policy.
+[2026-08-13 17:17:57,349] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-13 17:17:57,380] [INFO] [leetcode_tracker]: Checking WeeklySession ID 4 (WEEK-2026-08-09) status: 'FINALIZED' at IST 17:17
+[2026-08-13 17:17:57,381] [INFO] [leetcode_tracker]: Session WEEK-2026-08-09 is locked (FINALIZED). No recovery action needed.
+[2026-08-13 17:18:20,781] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-13 17:18:20,802] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-13 17:18:21,338] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-13 17:18:21,341] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-13 17:18:24,161] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-13 17:27:43,061] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-13 17:27:43,400] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!

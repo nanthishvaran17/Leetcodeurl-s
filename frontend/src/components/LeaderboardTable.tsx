@@ -38,6 +38,8 @@ function formatAgo(ts?: string): string {
   return `${Math.floor(s/86400)}d ago`;
 }
 
+import api from '../services/api';
+
 export interface StudentData {
   id: number;
   reg_no: string;
@@ -104,7 +106,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
     }
   };
 
-  const handleTriggerBulkDelete = () => {
+  const handleTriggerBulkDelete = async () => {
     if (onBulkDeleteStudents) {
       onBulkDeleteStudents(selectedIds);
       setSelectedIds([]);
@@ -115,6 +117,34 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
           if (st) onDeleteStudent(st);
         });
         setSelectedIds([]);
+      }
+    } else {
+      if (confirm(`Are you sure you want to delete ${selectedIds.length} selected student records? This action cannot be undone.`)) {
+        try {
+          await api.post('/students/bulk-delete', { student_ids: selectedIds });
+          alert(`✅ Successfully deleted ${selectedIds.length} student records!`);
+          setSelectedIds([]);
+          if (onRefreshStudent) onRefreshStudent(0);
+        } catch (err: any) {
+          alert(err.response?.data?.detail || "Failed to bulk delete student records.");
+        }
+      }
+    }
+  };
+
+  const handleSingleDelete = async (student: StudentData) => {
+    if (onDeleteStudent) {
+      onDeleteStudent(student);
+    } else {
+      if (!confirm(`Are you sure you want to delete student "${student.name}" (${student.reg_no})? This action cannot be undone.`)) {
+        return;
+      }
+      try {
+        await api.delete(`/students/${student.id}`);
+        alert(`Student "${student.name}" deleted successfully!`);
+        if (onRefreshStudent) onRefreshStudent(student.id);
+      } catch (err: any) {
+        alert(err.response?.data?.detail || "Failed to delete student record.");
       }
     }
   };
@@ -368,15 +398,13 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                           <RefreshCw className="w-4 h-4" />
                         </button>
                       )}
-                      {onDeleteStudent && (
-                        <button
-                          onClick={() => onDeleteStudent(student)}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                          title="Delete Student Record"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleSingleDelete(student)}
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                        title="Delete Student Record"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </td>
                 </tr>
