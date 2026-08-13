@@ -496,7 +496,7 @@ export const EmailDeliveryTab: React.FC = () => {
                       <span className={`text-base font-bold ${r.receive_error_reports ? 'text-emerald-500' : 'text-gray-300 dark:text-gray-600'}`}>{r.receive_error_reports ? '✓' : '✗'}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <button onClick={() => handleToggleRecipient({ ...r, is_active: !r.is_active })}
+                      <button onClick={() => handleToggleRecipient(r)}
                         className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${r.is_active ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
                         <span className={`inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform ${r.is_active ? 'translate-x-5' : 'translate-x-1'}`} />
                       </button>

@@ -23632,3 +23632,133 @@ WHERE ? = leetcode_profile_stats.student_id]
 [2026-08-14 01:20:35,335] [INFO] [leetcode_tracker]: Backend Application ready and listening!
 [2026-08-14 01:20:35,486] [INFO] [leetcode_tracker]: Checking WeeklySession ID 16 (WEEK-2026-08-09) status: 'FINALIZED' at IST 01:20
 [2026-08-14 01:20:35,486] [INFO] [leetcode_tracker]: Session WEEK-2026-08-09 is locked (FINALIZED). No recovery action needed.
+[2026-08-14 01:20:49,027] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-14 01:20:49,028] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-14 01:20:49,727] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-14 01:20:50,042] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-14 01:20:50,213] [WARNING] [leetcode_tracker]: Database seed/reseed skipped or noted: 'profile_rank' is an invalid keyword argument for StudentStatSnapshot
+[2026-08-14 01:20:50,420] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-14 01:20:50,422] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-14 01:20:50,422] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-14 01:20:50,586] [INFO] [leetcode_tracker]: Checking WeeklySession ID 16 (WEEK-2026-08-09) status: 'FINALIZED' at IST 01:20
+[2026-08-14 01:20:50,586] [INFO] [leetcode_tracker]: Session WEEK-2026-08-09 is locked (FINALIZED). No recovery action needed.
+[2026-08-14 01:24:02,344] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-14 01:24:02,373] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-14 01:24:05,106] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-14 01:24:05,112] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 01:25:15,206] [INFO] [leetcode_tracker]: [MATRIX DIAGNOSTICS]
+[2026-08-14 01:25:15,209] [INFO] [leetcode_tracker]: session_id=20
+[2026-08-14 01:25:15,210] [INFO] [leetcode_tracker]: contest=512
+[2026-08-14 01:25:15,214] [INFO] [leetcode_tracker]: date=26.07.2026
+[2026-08-14 01:25:15,218] [INFO] [leetcode_tracker]: roster=273
+[2026-08-14 01:25:15,221] [INFO] [leetcode_tracker]: results=273
+[2026-08-14 01:25:15,223] [INFO] [leetcode_tracker]: joined=273
+[2026-08-14 01:25:15,225] [INFO] [leetcode_tracker]: dept=ALL
+[2026-08-14 01:25:15,231] [INFO] [leetcode_tracker]: year=ALL
+[2026-08-14 01:25:15,233] [INFO] [leetcode_tracker]: attendance=ALL
+[2026-08-14 01:25:15,239] [INFO] [leetcode_tracker]: final_rows=273
+[2026-08-14 01:25:18,342] [INFO] [leetcode_tracker]: [MATRIX DIAGNOSTICS]
+[2026-08-14 01:25:18,343] [INFO] [leetcode_tracker]: session_id=20
+[2026-08-14 01:25:18,344] [INFO] [leetcode_tracker]: contest=512
+[2026-08-14 01:25:18,345] [INFO] [leetcode_tracker]: date=26.07.2026
+[2026-08-14 01:25:18,346] [INFO] [leetcode_tracker]: roster=273
+[2026-08-14 01:25:18,347] [INFO] [leetcode_tracker]: results=273
+[2026-08-14 01:25:18,347] [INFO] [leetcode_tracker]: joined=273
+[2026-08-14 01:25:18,348] [INFO] [leetcode_tracker]: dept=ALL
+[2026-08-14 01:25:18,349] [INFO] [leetcode_tracker]: year=ALL
+[2026-08-14 01:25:18,350] [INFO] [leetcode_tracker]: attendance=VIRTUAL_ATTENDED
+[2026-08-14 01:25:18,351] [INFO] [leetcode_tracker]: final_rows=0
+[2026-08-14 01:25:21,214] [INFO] [leetcode_tracker]: [MATRIX DIAGNOSTICS]
+[2026-08-14 01:25:21,217] [INFO] [leetcode_tracker]: session_id=20
+[2026-08-14 01:25:21,219] [INFO] [leetcode_tracker]: contest=512
+[2026-08-14 01:25:21,221] [INFO] [leetcode_tracker]: date=26.07.2026
+[2026-08-14 01:25:21,223] [INFO] [leetcode_tracker]: roster=273
+[2026-08-14 01:25:21,224] [INFO] [leetcode_tracker]: results=273
+[2026-08-14 01:25:21,225] [INFO] [leetcode_tracker]: joined=273
+[2026-08-14 01:25:21,226] [INFO] [leetcode_tracker]: dept=ALL
+[2026-08-14 01:25:21,228] [INFO] [leetcode_tracker]: year=ALL
+[2026-08-14 01:25:21,233] [INFO] [leetcode_tracker]: attendance=PUBLIC_ATTENDED
+[2026-08-14 01:25:21,236] [INFO] [leetcode_tracker]: final_rows=18
+[2026-08-14 01:25:32,657] [INFO] [leetcode_tracker]: [MATRIX DIAGNOSTICS]
+[2026-08-14 01:25:32,658] [INFO] [leetcode_tracker]: session_id=20
+[2026-08-14 01:25:32,659] [INFO] [leetcode_tracker]: contest=512
+[2026-08-14 01:25:32,660] [INFO] [leetcode_tracker]: date=26.07.2026
+[2026-08-14 01:25:32,660] [INFO] [leetcode_tracker]: roster=273
+[2026-08-14 01:25:32,661] [INFO] [leetcode_tracker]: results=273
+[2026-08-14 01:25:32,662] [INFO] [leetcode_tracker]: joined=273
+[2026-08-14 01:25:32,663] [INFO] [leetcode_tracker]: dept=ALL
+[2026-08-14 01:25:32,665] [INFO] [leetcode_tracker]: year=III
+[2026-08-14 01:25:32,666] [INFO] [leetcode_tracker]: attendance=PUBLIC_ATTENDED
+[2026-08-14 01:25:32,667] [INFO] [leetcode_tracker]: final_rows=6
+[2026-08-14 01:25:33,975] [INFO] [leetcode_tracker]: [MATRIX DIAGNOSTICS]
+[2026-08-14 01:25:33,976] [INFO] [leetcode_tracker]: session_id=20
+[2026-08-14 01:25:33,977] [INFO] [leetcode_tracker]: contest=512
+[2026-08-14 01:25:33,978] [INFO] [leetcode_tracker]: date=26.07.2026
+[2026-08-14 01:25:33,979] [INFO] [leetcode_tracker]: roster=273
+[2026-08-14 01:25:33,979] [INFO] [leetcode_tracker]: results=273
+[2026-08-14 01:25:33,980] [INFO] [leetcode_tracker]: joined=273
+[2026-08-14 01:25:33,982] [INFO] [leetcode_tracker]: dept=CSE(CS)
+[2026-08-14 01:25:33,983] [INFO] [leetcode_tracker]: year=III
+[2026-08-14 01:25:33,984] [INFO] [leetcode_tracker]: attendance=PUBLIC_ATTENDED
+[2026-08-14 01:25:33,984] [INFO] [leetcode_tracker]: final_rows=1
+[2026-08-14 01:25:42,495] [INFO] [leetcode_tracker]: [MATRIX DIAGNOSTICS]
+[2026-08-14 01:25:42,496] [INFO] [leetcode_tracker]: session_id=16
+[2026-08-14 01:25:42,497] [INFO] [leetcode_tracker]: contest=514
+[2026-08-14 01:25:42,498] [INFO] [leetcode_tracker]: date=09.08.2026
+[2026-08-14 01:25:42,498] [INFO] [leetcode_tracker]: roster=273
+[2026-08-14 01:25:42,499] [INFO] [leetcode_tracker]: results=273
+[2026-08-14 01:25:42,499] [INFO] [leetcode_tracker]: joined=273
+[2026-08-14 01:25:42,500] [INFO] [leetcode_tracker]: dept=ALL
+[2026-08-14 01:25:42,501] [INFO] [leetcode_tracker]: year=ALL
+[2026-08-14 01:25:42,501] [INFO] [leetcode_tracker]: attendance=ALL
+[2026-08-14 01:25:42,502] [INFO] [leetcode_tracker]: final_rows=273
+[2026-08-14 01:25:45,244] [INFO] [leetcode_tracker]: [MATRIX DIAGNOSTICS]
+[2026-08-14 01:25:45,254] [INFO] [leetcode_tracker]: session_id=16
+[2026-08-14 01:25:45,257] [INFO] [leetcode_tracker]: contest=514
+[2026-08-14 01:25:45,259] [INFO] [leetcode_tracker]: date=09.08.2026
+[2026-08-14 01:25:45,260] [INFO] [leetcode_tracker]: roster=273
+[2026-08-14 01:25:45,261] [INFO] [leetcode_tracker]: results=273
+[2026-08-14 01:25:45,262] [INFO] [leetcode_tracker]: joined=273
+[2026-08-14 01:25:45,263] [INFO] [leetcode_tracker]: dept=CSE(CS)
+[2026-08-14 01:25:45,264] [INFO] [leetcode_tracker]: year=ALL
+[2026-08-14 01:25:45,266] [INFO] [leetcode_tracker]: attendance=ALL
+[2026-08-14 01:25:45,267] [INFO] [leetcode_tracker]: final_rows=159
+[2026-08-14 01:25:47,443] [INFO] [leetcode_tracker]: [MATRIX DIAGNOSTICS]
+[2026-08-14 01:25:47,445] [INFO] [leetcode_tracker]: session_id=16
+[2026-08-14 01:25:47,445] [INFO] [leetcode_tracker]: contest=514
+[2026-08-14 01:25:47,446] [INFO] [leetcode_tracker]: date=09.08.2026
+[2026-08-14 01:25:47,447] [INFO] [leetcode_tracker]: roster=273
+[2026-08-14 01:25:47,449] [INFO] [leetcode_tracker]: results=273
+[2026-08-14 01:25:47,451] [INFO] [leetcode_tracker]: joined=273
+[2026-08-14 01:25:47,453] [INFO] [leetcode_tracker]: dept=CSE(CS)
+[2026-08-14 01:25:47,453] [INFO] [leetcode_tracker]: year=III
+[2026-08-14 01:25:47,454] [INFO] [leetcode_tracker]: attendance=ALL
+[2026-08-14 01:25:47,455] [INFO] [leetcode_tracker]: final_rows=63
+[2026-08-14 01:25:55,535] [INFO] [leetcode_tracker]: [MATRIX DIAGNOSTICS]
+[2026-08-14 01:25:55,536] [INFO] [leetcode_tracker]: session_id=16
+[2026-08-14 01:25:55,537] [INFO] [leetcode_tracker]: contest=514
+[2026-08-14 01:25:55,538] [INFO] [leetcode_tracker]: date=09.08.2026
+[2026-08-14 01:25:55,539] [INFO] [leetcode_tracker]: roster=273
+[2026-08-14 01:25:55,540] [INFO] [leetcode_tracker]: results=273
+[2026-08-14 01:25:55,540] [INFO] [leetcode_tracker]: joined=273
+[2026-08-14 01:25:55,541] [INFO] [leetcode_tracker]: dept=CSE(CS)
+[2026-08-14 01:25:55,542] [INFO] [leetcode_tracker]: year=III
+[2026-08-14 01:25:55,543] [INFO] [leetcode_tracker]: attendance=PUBLIC_ATTENDED
+[2026-08-14 01:25:55,544] [INFO] [leetcode_tracker]: final_rows=6
+[2026-08-14 01:26:25,401] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-23077] DELETE_RECIPIENT by admin (admin@college.edu)
+[2026-08-14 01:26:30,739] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-34115] DELETE_RECIPIENT by admin (admin@college.edu)
+[2026-08-14 01:26:35,464] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-51963] DELETE_RECIPIENT by admin (admin@college.edu)
+[2026-08-14 01:26:39,303] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-18118] DELETE_RECIPIENT by admin (admin@college.edu)
+[2026-08-14 01:26:42,772] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-16378] DELETE_RECIPIENT by admin (admin@college.edu)
+[2026-08-14 01:27:00,609] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-32174] ADD_RECIPIENT by admin (admin@college.edu)
+[2026-08-14 01:27:27,955] [INFO] [leetcode_tracker]: [MATRIX DIAGNOSTICS]
+[2026-08-14 01:27:27,961] [INFO] [leetcode_tracker]: session_id=20
+[2026-08-14 01:27:27,963] [INFO] [leetcode_tracker]: contest=512
+[2026-08-14 01:27:27,966] [INFO] [leetcode_tracker]: date=26.07.2026
+[2026-08-14 01:27:27,970] [INFO] [leetcode_tracker]: roster=273
+[2026-08-14 01:27:27,992] [INFO] [leetcode_tracker]: results=273
+[2026-08-14 01:27:27,994] [INFO] [leetcode_tracker]: joined=273
+[2026-08-14 01:27:27,999] [INFO] [leetcode_tracker]: dept=ALL
+[2026-08-14 01:27:28,004] [INFO] [leetcode_tracker]: year=ALL
+[2026-08-14 01:27:28,006] [INFO] [leetcode_tracker]: attendance=ALL
+[2026-08-14 01:27:28,009] [INFO] [leetcode_tracker]: final_rows=273
