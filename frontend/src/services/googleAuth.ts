@@ -1,4 +1,4 @@
-import { signInWithPopup, GoogleAuthProvider, UserCredential } from 'firebase/auth';
+import { signInWithPopup, UserCredential } from 'firebase/auth';
 import { getOrInitAuth, googleProvider } from './firebase';
 import api from './api';
 
@@ -15,6 +15,8 @@ export interface GoogleAuthResult {
 }
 
 export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
+  console.log('[GOOGLE_AUTH_STARTED] Initiating Google Sign-In popup...');
+
   try {
     const auth = getOrInitAuth();
     
@@ -27,6 +29,7 @@ export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
     let cred: UserCredential;
     try {
       cred = await signInWithPopup(auth, googleProvider);
+      console.log('[GOOGLE_POPUP_SUCCESS] Firebase Google popup authenticated successfully.');
     } catch (popupErr: any) {
       if (popupErr.code === 'auth/popup-closed-by-user') {
         throw new Error('Google sign-in was cancelled.');
@@ -46,9 +49,11 @@ export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
 
     // Step 2: Retrieve Firebase ID Token
     const idToken = await firebaseUser.getIdToken(true);
+    console.log('[GOOGLE_TOKEN_RECEIVED] Firebase ID token retrieved successfully.');
 
-    // Step 3: Backend Verification & Admin Authorization Check
-    const response = await api.post('/auth/google', { id_token: idToken }, { timeout: 15000 });
+    // Step 3: Backend Verification & Admin Authorization Check (35s timeout for Render cold-starts)
+    console.log('[GOOGLE_BACKEND_REQUEST] Posting ID token to backend /api/auth/google...');
+    const response = await api.post('/auth/google', { id_token: idToken }, { timeout: 35000 });
 
     if (!response.data || !response.data.authenticated) {
       throw new Error('Please sign in using your authorized institutional Google account.');

@@ -339,25 +339,48 @@ def google_auth(payload: dict, request: Request, response: Response, db: Session
     validate_csrf_origin(request)
     id_token = payload.get("id_token")
     if not id_token:
+        logger.warning("[GOOGLE_TOKEN_VERIFICATION_FAILURE] Missing Google ID token in request payload.")
         raise HTTPException(status_code=400, detail="Google authentication token is required.")
 
-    # Step 1: Verify Firebase ID Token via Firebase Admin SDK
+    logger.info("[GOOGLE_BACKEND_REQUEST] Processing Google ID token verification request...")
+
+    # Step 1: Verify Firebase ID Token via Firebase Admin SDK with Google Public Cert Fallback
+    decoded_token = None
     try:
         from backend.services.firestore_service import initialize_firestore
         initialize_firestore()
         from firebase_admin import auth as firebase_auth
         decoded_token = firebase_auth.verify_id_token(id_token)
-    except Exception as token_err:
-        logger.warning(f"[GOOGLE_AUTH_TOKEN_ERROR] Firebase ID Token verification failed: {token_err}")
+    except Exception as _fa_err:
+        logger.warning(f"[GOOGLE_TOKEN_VERIFICATION_RETRY] Firebase Admin SDK verify_id_token note: {_fa_err}. Attempting Google OAuth2 public cert verification...")
+        try:
+            from google.oauth2 import id_token as google_id_token
+            from google.auth.transport import requests as google_requests
+            request_adapter = google_requests.Request()
+            decoded_token = google_id_token.verify_firebase_token(
+                id_token,
+                request_adapter,
+                audience="leetcode-student-data"
+            )
+        except Exception as _goog_err:
+            logger.error(f"[GOOGLE_TOKEN_VERIFICATION_FAILURE] Token verification failed: {_goog_err}")
+            raise HTTPException(status_code=401, detail="Unable to verify your Google account. Please try again.")
+
+    if not decoded_token:
+        logger.error("[GOOGLE_TOKEN_VERIFICATION_FAILURE] Empty token payload after verification.")
         raise HTTPException(status_code=401, detail="Unable to verify your Google account. Please try again.")
+
+    logger.info("[GOOGLE_TOKEN_VERIFICATION_SUCCESS] Google ID token verified successfully.")
 
     verified_email = (decoded_token.get("email") or "").strip().lower()
     email_verified = decoded_token.get("email_verified", False)
 
     if not verified_email:
+        logger.warning("[GOOGLE_ADMIN_REJECTED] Verified token missing email claim.")
         raise HTTPException(status_code=400, detail="Google account must have a valid email address.")
 
     if not email_verified:
+        logger.warning(f"[GOOGLE_ADMIN_REJECTED] Email {verified_email} is not marked as verified by Google.")
         raise HTTPException(status_code=400, detail="Your Google account email must be verified.")
 
     # Step 2: Authorize Admin Account
@@ -381,12 +404,14 @@ def google_auth(payload: dict, request: Request, response: Response, db: Session
         db.refresh(user)
 
     if not user:
-        logger.warning(f"[GOOGLE_AUTH_UNAUTHORIZED] Google account {verified_email} is not an authorized administrator.")
-        raise HTTPException(status_code=401, detail="Please sign in using your authorized institutional Google account.")
+        logger.warning(f"[GOOGLE_ADMIN_REJECTED] Google account {verified_email} is not in authorized admin roster.")
+        raise HTTPException(status_code=403, detail="Please sign in using your authorized institutional Google account.")
 
     if not user.is_active:
-        logger.warning(f"[GOOGLE_AUTH_DEACTIVATED] Account deactivated for Google email: {verified_email}")
-        raise HTTPException(status_code=400, detail="Your account is currently deactivated.")
+        logger.warning(f"[GOOGLE_ADMIN_REJECTED] Account {verified_email} is currently deactivated.")
+        raise HTTPException(status_code=403, detail="Your account is currently deactivated.")
+
+    logger.info(f"[GOOGLE_ADMIN_AUTHORIZED] Administrator {user.username} ({user.email}) authorized with role {user.role}.")
 
     try:
         user.last_login = datetime.datetime.utcnow()
@@ -395,9 +420,12 @@ def google_auth(payload: dict, request: Request, response: Response, db: Session
         db.rollback()
 
     # Step 3: Create Server Session & Set HttpOnly Cookie
-    create_server_admin_session(db, user, request, response)
-
-    logger.info(f"[GOOGLE_AUTH_SUCCESS] Administrator {user.username} ({user.email}) authenticated via Google.")
+    try:
+        create_server_admin_session(db, user, request, response)
+        logger.info("[GOOGLE_SESSION_CREATED] AdminSession created and HttpOnly session cookie set successfully.")
+    except Exception as _sess_err:
+        logger.error(f"[GOOGLE_SESSION_FAILURE] AdminSession creation failed: {_sess_err}")
+        raise HTTPException(status_code=500, detail="Authentication service is temporarily unavailable. Please try again.")
 
     from backend.services.audit_service import log_admin_action
     log_admin_action(
@@ -422,6 +450,7 @@ def google_auth(payload: dict, request: Request, response: Response, db: Session
             "section_id": user.section_id
         }
     }
+
 
 
 
