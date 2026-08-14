@@ -63,16 +63,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         const statusData = await getSyncStatus();
         if (statusData.is_running) {
           setSyncProgress({
-            total: statusData.total || 273,
+            total: statusData.total || (students.length > 0 ? students.length : 300),
             processed: statusData.completed || 0,
             successful: statusData.success || 0,
             failed: statusData.failed || 0,
             is_running: true
           });
-          startSyncPolling();
+          startPollingProgress();
         }
       } catch (err) {
-        console.warn("Sync status check note:", err);
+        console.warn("Initial sync status check error:", err);
       }
     };
     checkInitialSync();
@@ -86,11 +86,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     fetchFilteredStudents();
   }, [selectedDept, yearLevel]);
 
-  const startSyncPolling = () => {
+  const startPollingProgress = () => {
     if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-
-    let pollCount = 0;
     let consecutiveErrors = 0;
+    let pollCount = 0;
 
     pollTimerRef.current = setInterval(async () => {
       try {
@@ -99,7 +98,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         consecutiveErrors = 0;
 
         const rawComp = statusData.completed ?? statusData.processed ?? 0;
-        const totalCount = statusData.total || 273;
+        const totalCount = statusData.total || (students.length > 0 ? students.length : 300);
         const currentProcessed = Math.min(totalCount, Math.max(0, rawComp));
 
         setSyncProgress({
@@ -136,11 +135,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     }, 1000);
   };
 
+  const startSyncPolling = startPollingProgress;
+
   const handleRefreshAll = async () => {
     if (refreshing || syncProgress?.is_running) return;
     setRefreshing(true);
+    const initialTotal = students.length > 0 ? students.length : 300;
     setSyncProgress({
-      total: 273,
+      total: initialTotal,
       processed: 0,
       successful: 0,
       failed: 0,

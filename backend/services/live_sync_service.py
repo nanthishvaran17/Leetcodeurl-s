@@ -437,7 +437,30 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
         )
         db.commit()
 
-        # Update persistent stats in Firebase Realtime Database
+        # Update persistent stats in Cloud Firestore & Firebase Realtime Database
+        try:
+            from backend.services.firestore_service import update_firestore_doc
+            fs_data = {
+                "student_id": student.id,
+                "register_no": student.reg_no,
+                "username": student.username,
+                "total_solved": st.total_solved,
+                "easy_solved": st.easy_solved,
+                "medium_solved": st.medium_solved,
+                "hard_solved": st.hard_solved,
+                "contest_rating": st.contest_rating,
+                "contest_global_ranking": st.contest_global_ranking,
+                "public_profile_ranking": st.public_profile_ranking,
+                "sync_status": "verified",
+                "status": "verified",
+                "source": "leetcode_live_sync",
+                "last_verified_at": now.isoformat() + "Z"
+            }
+            update_firestore_doc("leetcode_stats", student.reg_no, fs_data)
+            logger.info(f"[SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for {student.reg_no}")
+        except Exception as fs_err:
+            logger.warning(f"[SYNC] Cloud Firestore stats update note for {student.reg_no}: {fs_err}")
+
         try:
             from backend.services.firebase_rtdb_service import get_rtdb_reference
             reg_key = str(student.reg_no).replace('.', '_').replace('#', '_').replace('$', '_').replace('[', '_').replace(']', '_')
@@ -463,6 +486,7 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
             logger.warning(f"[SYNC] RTDB stats update note for {student.reg_no}: {rtdb_err}")
 
         return (True, False, False)
+
 
 
     else:

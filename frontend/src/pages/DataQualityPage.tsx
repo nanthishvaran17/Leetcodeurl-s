@@ -154,7 +154,8 @@ export const DataQualityPage: React.FC = () => {
             <Sparkles className="w-8 h-8 text-emerald-500 mx-auto" />
             <h4 className="text-base font-black text-emerald-700 dark:text-emerald-300">100% Clean Data Quality!</h4>
             <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-              🎉 Zero data quality anomalies detected. All 273 student profiles are verified OK with clean links.
+              🎉 Zero data quality anomalies detected. All enrolled student profiles are verified OK with clean links.
+
             </p>
           </div>
         )}

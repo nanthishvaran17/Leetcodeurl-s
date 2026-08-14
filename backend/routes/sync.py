@@ -3,13 +3,14 @@ from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
 
 from backend.database import get_db
-from backend.models import SyncJob, SyncJobItem, Student
+from backend.models import SyncJob, SyncJobItem, Student, LeetCodeProfileStats
 from backend.services.live_sync_service import (
     start_full_sync_job,
     sync_single_student,
     get_system_freshness,
     sync_tracker
 )
+from backend.logger import logger
 
 router = APIRouter(tags=["Live Sync Engine"])
 
@@ -19,8 +20,11 @@ async def trigger_full_sync(triggered_by: str = Query("admin"), db: Session = De
     Triggers institutional full roster live sync.
     Enforces DB-level single-job lock and returns job_id immediately without blocking.
     """
+    logger.info(f"[SYNC_REQUEST_RECEIVED] Triggered full sync request from: {triggered_by}")
     result = start_full_sync_job(db, triggered_by=triggered_by)
+    logger.info(f"[SYNC_JOB_CREATED] Sync job status: {result.get('status')} | job_id: {result.get('job_id')}")
     return result
+
 
 
 @router.get("/api/sync/status")

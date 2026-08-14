@@ -70,7 +70,8 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
     setIsRefreshing(true);
     try {
       const res = await api.post('/students/refresh-all');
-      alert(res.data?.message || "Live stats refresh started in background for all 273 students!");
+      alert(res.data?.message || "Live stats refresh started in background for all students!");
+
       setTimeout(() => {
         fetchFilteredStudents();
       }, 1500);

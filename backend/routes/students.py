@@ -457,10 +457,19 @@ async def refresh_all_students(
     # Pre-generate a deterministic runId so the frontend can subscribe to Firestore immediately
     run_id = f"sync_{datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
     background_tasks.add_task(run_batch_sync, limit=limit, pre_run_id=run_id)
+    db = SessionLocal()
+    try:
+        active_count = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count()
+    except Exception:
+        active_count = 300
+    finally:
+        db.close()
+
     return {
         "runId": run_id,
         "status": "started",
-        "total": 273,
-        "message": "Live stats batch sync started in background! Subscribe to Firestore syncRuns/" + run_id,
+        "total": active_count,
+        "message": f"Live stats batch sync started in background for {active_count} active students!",
         "sync_status_url": f"/api/students/admin/sync/status/{run_id}"
     }
+
