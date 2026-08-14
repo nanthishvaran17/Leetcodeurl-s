@@ -6,6 +6,8 @@ import { StudentFlipCard } from '../components/StudentFlipCard';
 import { collection, getDocs } from 'firebase/firestore';
 import { getOrInitDb } from '../services/firebase';
 
+import { CANONICAL_ROSTER } from '../data/canonicalRoster';
+
 interface StudentMasterPageProps {
   onSelectStudent: (student: StudentData) => void;
   onOpenImport: () => void;
@@ -15,11 +17,12 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   onSelectStudent,
   onOpenImport
 }) => {
-  const [students, setStudents] = useState<StudentData[]>([]);
+  const [students, setStudents] = useState<StudentData[]>(CANONICAL_ROSTER);
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(false);
+
 
   // New Student Form State
   const [regNo, setRegNo] = useState('');

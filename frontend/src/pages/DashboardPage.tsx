@@ -12,6 +12,8 @@ import { getOrInitDb } from '../services/firebase';
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import api from '../services/api';
 
+import { CANONICAL_ROSTER, getCanonicalSummary } from '../data/canonicalRoster';
+
 interface DashboardPageProps {
   onSelectStudent: (student: StudentData) => void;
   onOpenImport: () => void;
@@ -23,11 +25,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   onOpenImport,
   onNavigateTab
 }) => {
-  const [summary, setSummary] = useState<any>(null);
-  const [students, setStudents] = useState<StudentData[]>([]);
+  const [summary, setSummary] = useState<any>(getCanonicalSummary());
+  const [students, setStudents] = useState<StudentData[]>(CANONICAL_ROSTER);
   const [departments, setDepartments] = useState<any[]>([]);
   const [dataQuality, setDataQuality] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+
   const [triggering, setTriggering] = useState(false);
   const [generatingReport, setGeneratingReport] = useState(false);
 

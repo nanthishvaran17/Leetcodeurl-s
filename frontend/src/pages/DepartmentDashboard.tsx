@@ -4,6 +4,8 @@ import api from '../services/api';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { StudentFlipCard } from '../components/StudentFlipCard';
 
+import { CANONICAL_ROSTER } from '../data/canonicalRoster';
+
 interface DepartmentDashboardProps {
   onSelectStudent: (student: StudentData) => void;
 }
@@ -15,10 +17,11 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   const [sortBy, setSortBy] = useState<string>('top_solved');
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [contestMode, setContestMode] = useState<string>('ALL');
-  const [students, setStudents] = useState<StudentData[]>([]);
+  const [students, setStudents] = useState<StudentData[]>(CANONICAL_ROSTER);
   const [displayCount, setDisplayCount] = useState<number>(32);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [solvedFilter, setSolvedFilter] = useState<string>('ALL');
+
 
   useEffect(() => {
     fetchDepartments();
