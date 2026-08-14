@@ -169,20 +169,20 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
 
   return (
     <div
-      className="w-full min-h-[420px] flex flex-col perspective-1000 cursor-pointer group min-w-0"
+      className="w-full min-h-[310px] flex flex-col perspective-1000 cursor-pointer group min-w-0"
       onClick={() => setIsFlipped(!isFlipped)}
     >
       <div
-        className={`relative w-full h-full min-h-[420px] flex flex-col duration-500 transform-style-3d transition-transform ${
+        className={`relative w-full h-full min-h-[310px] flex flex-col duration-500 transform-style-3d transition-transform ${
           isFlipped ? 'rotate-y-180' : ''
         }`}
       >
         {/* FRONT SIDE */}
-        <div className="absolute inset-0 w-full h-full min-h-[420px] glass-card p-5 sm:p-6 rounded-3xl border border-gray-200/90 dark:border-gray-800 shadow-xl hover:shadow-2xl dark:hover:border-brand-500/40 backface-hidden flex flex-col justify-between transition-all duration-300 bg-white/95 dark:bg-navy-900/90">
+        <div className="absolute inset-0 w-full h-full min-h-[310px] glass-card p-4 sm:p-5 rounded-3xl border border-gray-200/90 dark:border-gray-800 shadow-xl hover:shadow-2xl dark:hover:border-brand-500/40 backface-hidden flex flex-col justify-between transition-all duration-300 bg-white/95 dark:bg-navy-900/90">
           
           {/* Card Top: Rank & Department Pill */}
           <div className="flex items-center justify-between gap-2">
-            <span className={`px-3 py-1 rounded-full text-xs border uppercase tracking-wider flex items-center space-x-1 whitespace-nowrap ${getRankBadgeStyle(effectiveRank)}`}>
+            <span className={`px-3 py-0.5 rounded-full text-xs border uppercase tracking-wider flex items-center space-x-1 whitespace-nowrap ${getRankBadgeStyle(effectiveRank)}`}>
               {!isSolver || !effectiveRank ? (
                 <span>Unranked</span>
               ) : effectiveRank === 1 ? (
@@ -197,33 +197,33 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
                 <span>#{effectiveRank}</span>
               )}
             </span>
-            <span className="px-3 py-1 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 font-extrabold text-[11px] font-mono whitespace-nowrap">
+            <span className="px-2.5 py-0.5 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 font-extrabold text-[10px] font-mono whitespace-nowrap">
               {student.department?.code || 'CSE'}
             </span>
           </div>
 
           {/* Card Center: Avatar & Student Details */}
-          <div className="text-center space-y-2 py-2 flex-1 flex flex-col justify-center min-w-0">
-            <div className="relative w-16 h-16 mx-auto group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
-              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-600 via-indigo-600 to-navy-800 text-white font-black text-xl flex items-center justify-center shadow-md">
-                {student.name ? student.name.split(' ').map(n => n[0]).join('').slice(0, 2) : <User className="w-8 h-8" />}
+          <div className="text-center space-y-1 py-1 flex-1 flex flex-col justify-center min-w-0">
+            <div className="relative w-14 h-14 mx-auto group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
+              <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-600 via-indigo-600 to-navy-800 text-white font-black text-lg flex items-center justify-center shadow-md">
+                {student.name ? student.name.split(' ').map(n => n[0]).join('').slice(0, 2) : <User className="w-7 h-7" />}
               </div>
             </div>
             <div className="min-w-0 px-1">
-              <h3 className="font-extrabold text-base text-gray-900 dark:text-white truncate max-w-full tracking-tight" title={student.name}>
+              <h3 className="font-extrabold text-sm text-gray-900 dark:text-white truncate max-w-full tracking-tight" title={student.name}>
                 {student.name}
               </h3>
-              <p className="text-xs text-brand-600 dark:text-brand-400 font-mono font-bold mt-0.5 tracking-wider truncate">
+              <p className="text-[11px] text-brand-600 dark:text-brand-400 font-mono font-bold mt-0.5 tracking-wider truncate">
                 {student.reg_no}
               </p>
-              <p className="text-[11px] text-gray-500 font-medium mt-1 truncate">
+              <p className="text-[10px] text-gray-500 font-medium mt-0.5 truncate">
                 {student.department?.name} • <span className="font-bold text-gray-700 dark:text-gray-300">{student.year_level} Year</span>
               </p>
             </div>
           </div>
 
           {/* Card Bottom: Quick Stats & Sync Badge */}
-          <div className="pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-xs mt-auto">
+          <div className="pt-2 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-xs mt-auto">
             <FrontStatsPill />
             <SyncBadge />
           </div>
@@ -231,7 +231,8 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
         </div>
 
         {/* BACK SIDE */}
-        <div className="absolute inset-0 w-full h-full min-h-[420px] p-5 sm:p-6 rounded-3xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-950 text-gray-900 dark:text-white shadow-2xl backface-hidden rotate-y-180 flex flex-col justify-between">
+        <div className="absolute inset-0 w-full h-full min-h-[310px] p-4 sm:p-5 rounded-3xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-950 text-gray-900 dark:text-white shadow-2xl backface-hidden rotate-y-180 flex flex-col justify-between overflow-y-auto">
+
           
           {/* Top Header */}
           <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5 gap-2">
