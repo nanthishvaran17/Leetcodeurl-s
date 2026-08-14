@@ -24,11 +24,13 @@ const API_BASE = getApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE,
+  timeout: 35000, // 35s timeout to handle Render free-tier cold starts
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');

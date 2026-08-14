@@ -187,13 +187,23 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           failed_count: failedCount,
           health_score_percentage: list.length > 0 ? round((verifiedCount / list.length) * 100, 1) : 0
         });
+        if (list.length === 0) {
+          // Automatic retry in 4 seconds to catch Render free-tier cold-start response
+          setTimeout(() => {
+            fetchDashboardData();
+          }, 4000);
+        }
       } catch (fErr) {
         console.error("Firestore direct read error", fErr);
+        setTimeout(() => {
+          fetchDashboardData();
+        }, 4000);
       }
     }
 
     setLoading(false);
   };
+
 
   const round = (val: number, dec: number) => Math.round(val * Math.pow(10, dec)) / Math.pow(10, dec);
 
