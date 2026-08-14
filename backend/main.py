@@ -19,7 +19,8 @@ from backend.logger import logger
 from backend.routes import (
     auth, students, departments, sessions,
     leaderboard, analytics, reports, settings as settings_route,
-    audit, public, sync, history, risk, goals, system_health, weekly_contests
+    audit, public, sync, history, risk, goals, system_health, weekly_contests,
+    scheduled_reports
 )
 from backend.routes import admin, email_reports, ai_assistant
 
@@ -95,6 +96,8 @@ app.include_router(weekly_contests.router, prefix="/api")
 app.include_router(weekly_contests.router)
 app.include_router(email_reports.router, prefix="/api")
 app.include_router(email_reports.router)
+app.include_router(scheduled_reports.router, prefix="/api")
+app.include_router(scheduled_reports.router)
 app.include_router(ai_assistant.router, prefix="/api")
 app.include_router(ai_assistant.router)
 
@@ -216,10 +219,14 @@ def on_startup():
         logger.info("Starting background scheduler...")
         try:
             start_scheduler()
-            # NOTE: Intentionally NOT running run_batch_sync() on startup.
-            # Starting a 273-student crawl on every Render restart would cause
-            # duplicate concurrent syncs and unnecessary LeetCode API load.
-            # Sync is triggered explicitly via POST /students/refresh-all.
+            # Register administrator-configured report schedule with APScheduler
+            from backend.services.schedule_service import get_or_create_default_schedule, register_apscheduler_job
+            _sched_db = SessionLocal()
+            try:
+                _cfg = get_or_create_default_schedule(_sched_db)
+                register_apscheduler_job(_cfg)
+            finally:
+                _sched_db.close()
         except Exception as e:
             logger.warning(f"Scheduler initialization note: {e}")
     elif not SCHEDULER_AVAILABLE:

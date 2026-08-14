@@ -224,9 +224,16 @@ def send_email(
     brevo_key = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
 
     if resend_key:
-        return send_email_via_resend(resend_key, from_email, recipient, subject, html_body, attachments, text_body)
+        ok, err = send_email_via_resend(resend_key, from_email, recipient, subject, html_body, attachments, text_body)
+        if ok:
+            return True, None
+        logger.warning(f"Resend API failed ({err}), falling back...")
+
     if brevo_key:
-        return send_email_via_brevo(brevo_key, from_email, recipient, subject, html_body, attachments, text_body)
+        ok, err = send_email_via_brevo(brevo_key, from_email, recipient, subject, html_body, attachments, text_body)
+        if ok:
+            return True, None
+        logger.warning(f"Brevo API failed ({err}), falling back to Gmail SMTP...")
 
     if not smtp_user or not smtp_pass:
         return False, "SMTP credentials not configured. Set SMTP_USERNAME & SMTP_PASSWORD or RESEND_API_KEY / BREVO_API_KEY."

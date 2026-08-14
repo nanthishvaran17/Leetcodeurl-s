@@ -687,6 +687,64 @@ class AdminSession(Base):
     user = relationship("User")
 
 
+class ScheduledReportConfig(Base):
+    __tablename__ = "scheduled_report_configs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    report_type = Column(String(100), default="weekly_public_leetcode", unique=True, index=True, nullable=False)
+    report_name = Column(String(150), default="Weekly Public LeetCode Report", nullable=False)
+    
+    day_of_week = Column(String(20), default="sunday", nullable=False) # sunday, monday, etc.
+    hour = Column(Integer, default=9, nullable=False) # 0-23
+    minute = Column(Integer, default=45, nullable=False) # 0-59
+    timezone = Column(String(50), default="Asia/Kolkata", nullable=False)
+    
+    is_enabled = Column(Boolean, default=True, index=True)
+    recipients = Column(JSON, nullable=True) # list of email addresses
+    job_id = Column(String(100), default="sunday_auto_email_945", nullable=False)
+    
+    last_run = Column(DateTime, nullable=True)
+    last_status = Column(String(50), default="NOT_RUN_YET") # SUCCESS, FAILED, EMAIL_BLOCKED, NOT_RUN_YET
+    last_report_filename = Column(String(255), nullable=True)
+    last_email_status = Column(String(50), default="PENDING") # DISPATCHED, FAILED, SKIPPED, PENDING
+    
+    updated_by = Column(String(150), nullable=True)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class ReportExecutionHistory(Base):
+    __tablename__ = "report_execution_histories"
+
+    id = Column(Integer, primary_key=True, index=True)
+    execution_id = Column(String(100), unique=True, index=True, nullable=False) # EXEC-YYYYMMDD-XXXX
+    schedule_id = Column(Integer, nullable=True)
+    
+    report_type = Column(String(100), default="weekly_public_leetcode", index=True)
+    scheduled_time = Column(String(50), default="09:45 IST")
+    scheduled_date = Column(String(20), nullable=True, index=True) # YYYY-MM-DD
+    
+    actual_start = Column(DateTime, default=datetime.datetime.utcnow)
+    actual_end = Column(DateTime, nullable=True)
+    
+    contest_name = Column(String(150), default="Weekly Contest")
+    students_processed = Column(Integer, default=0)
+    
+    excel_generated = Column(Boolean, default=False)
+    excel_filename = Column(String(255), nullable=True)
+    
+    email_sent = Column(Boolean, default=False)
+    recipients_count = Column(Integer, default=0)
+    
+    status = Column(String(50), default="STARTED", index=True) # SCHEDULED, STARTED, DATA_PROCESSING, REPORT_GENERATED, ATTACHMENT_READY, EMAIL_SENDING, COMPLETED, FAILED, EMAIL_BLOCKED
+    error_message = Column(Text, nullable=True)
+    idempotency_key = Column(String(255), index=True, nullable=False)
+    
+    is_test_run = Column(Boolean, default=False, index=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+
 
 
 

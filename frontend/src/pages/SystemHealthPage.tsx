@@ -132,11 +132,115 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
   const [pingLoading, setPingLoading] = useState<boolean>(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
+  // Schedule Automation State
+  const [scheduleData, setScheduleData] = useState<any>(null);
+  const [scheduleHistory, setScheduleHistory] = useState<any[]>([]);
+  const [schedDay, setSchedDay] = useState<string>('sunday');
+  const [schedHour, setSchedHour] = useState<number>(9);
+  const [schedMinute, setSchedMinute] = useState<number>(45);
+  const [schedRecipients, setSchedRecipients] = useState<string>('nanthishvaran17@gmail.com, msanthoshkumar@nandhaengg.org');
+  const [isSavingSched, setIsSavingSched] = useState<boolean>(false);
+  const [isTogglingSched, setIsTogglingSched] = useState<boolean>(false);
+  const [isTestingSched, setIsTestingSched] = useState<boolean>(false);
+  const [schedSuccessMsg, setSchedSuccessMsg] = useState<string | null>(null);
+  const [testModalOpen, setTestModalOpen] = useState<boolean>(false);
+  const [testEmailInput, setTestEmailInput] = useState<string>('nanthishvaran17@gmail.com');
+  const [testResult, setTestResult] = useState<any>(null);
+
   useEffect(() => {
     fetchControlCenterData();
-    const interval = setInterval(fetchControlCenterData, 15000);
+    fetchScheduleData();
+    fetchScheduleHistory();
+    const interval = setInterval(() => {
+      fetchControlCenterData();
+      fetchScheduleData();
+    }, 15000);
     return () => clearInterval(interval);
   }, []);
+
+  const fetchScheduleData = async () => {
+    try {
+      const res = await api.get('/system/schedule');
+      setScheduleData(res.data);
+      if (res.data?.schedule) {
+        setSchedDay(res.data.schedule.day_of_week?.toLowerCase() || 'sunday');
+        setSchedHour(res.data.schedule.hour ?? 9);
+        setSchedMinute(res.data.schedule.minute ?? 45);
+        if (Array.isArray(res.data.schedule.recipients)) {
+          setSchedRecipients(res.data.schedule.recipients.join(', '));
+        }
+      }
+    } catch (err) {
+      console.error("Schedule fetch error:", err);
+    }
+  };
+
+  const fetchScheduleHistory = async () => {
+    try {
+      const res = await api.get('/system/schedule/history');
+      setScheduleHistory(res.data || []);
+    } catch (err) {
+      console.error("Schedule history fetch error:", err);
+    }
+  };
+
+  const handleSaveSchedule = async () => {
+    setIsSavingSched(true);
+    setSchedSuccessMsg(null);
+    try {
+      const recipientList = schedRecipients
+        .split(',')
+        .map((e) => e.trim())
+        .filter((e) => e.length > 0);
+
+      const res = await api.post('/system/schedule', {
+        report_name: "Weekly Public LeetCode Report",
+        day_of_week: schedDay,
+        hour: Number(schedHour),
+        minute: Number(schedMinute),
+        timezone: "Asia/Kolkata",
+        recipients: recipientList,
+        is_enabled: scheduleData?.schedule?.is_enabled ?? true
+      });
+
+      setSchedSuccessMsg(res.data.message || "Schedule updated successfully!");
+      await fetchScheduleData();
+      await fetchScheduleHistory();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || "Failed to save schedule.");
+    } finally {
+      setIsSavingSched(false);
+    }
+  };
+
+  const handleToggleSchedule = async (enable: boolean) => {
+    setIsTogglingSched(true);
+    try {
+      const res = await api.post('/system/schedule/toggle', { is_enabled: enable });
+      setSchedSuccessMsg(res.data.message);
+      await fetchScheduleData();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || "Failed to toggle schedule.");
+    } finally {
+      setIsTogglingSched(false);
+    }
+  };
+
+  const handleRunSafeTest = async () => {
+    setIsTestingSched(true);
+    try {
+      const res = await api.post('/system/schedule/test-run', {
+        test_recipient: testEmailInput.trim() || undefined
+      });
+      setTestResult(res.data);
+      await fetchScheduleHistory();
+      await fetchScheduleData();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || "Test execution failed.");
+    } finally {
+      setIsTestingSched(false);
+    }
+  };
 
   const fetchControlCenterData = async () => {
     try {
@@ -733,6 +837,334 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             </div>
 
           </div>
+
+          {/* ─── SCHEDULED REPORT AUTOMATION & CRON DAEMON CONTROL CENTER ─── */}
+          <div className="p-6 md:p-8 rounded-3xl bg-white dark:bg-navy-900 border border-emerald-500/30 dark:border-emerald-500/20 shadow-2xl space-y-6">
+            
+            <div className="flex items-center justify-between flex-wrap gap-4 border-b border-gray-200 dark:border-gray-800 pb-4">
+              <div>
+                <div className="inline-flex items-center space-x-2 px-3 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider border border-emerald-500/20 mb-1">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>SECURE BACKEND TIME-BASED AUTOMATION</span>
+                </div>
+                <h4 className="text-lg font-black text-gray-900 dark:text-white flex items-center space-x-2">
+                  <span>Scheduled Report Automation</span>
+                </h4>
+                <p className="text-xs text-gray-500 font-medium">
+                  Administrator-configured weekly report timing. Executes securely on the backend server regardless of browser state.
+                </p>
+              </div>
+
+              {/* Status Badges */}
+              <div className="flex items-center space-x-2 flex-wrap gap-2">
+                <span className={`px-3 py-1 rounded-full text-xs font-black border flex items-center space-x-1.5 ${
+                  scheduleData?.schedule?.is_enabled
+                    ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                    : 'bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-500/30'
+                }`}>
+                  <span className={`w-2 h-2 rounded-full ${scheduleData?.schedule?.is_enabled ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></span>
+                  <span>{scheduleData?.schedule?.is_enabled ? '🟢 ENABLED (Asia/Kolkata)' : '🔴 DISABLED'}</span>
+                </span>
+
+                <span className="px-3 py-1 rounded-full text-xs font-black bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30">
+                  Scheduler: {scheduleData?.scheduler_status || 'RUNNING'}
+                </span>
+
+                <span className="px-3 py-1 rounded-full text-xs font-black bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30">
+                  Email: {scheduleData?.email_service || 'READY'}
+                </span>
+              </div>
+            </div>
+
+            {schedSuccessMsg && (
+              <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center justify-between">
+                <span>{schedSuccessMsg}</span>
+                <button onClick={() => setSchedSuccessMsg(null)} className="text-gray-400 hover:text-white">✕</button>
+              </div>
+            )}
+
+            {/* Form Fields Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+              
+              {/* Report Name */}
+              <div className="space-y-1.5">
+                <label className="font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">Report Name</label>
+                <input
+                  type="text"
+                  readOnly
+                  value="Weekly Public LeetCode Report"
+                  className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl font-bold text-gray-900 dark:text-white cursor-not-allowed opacity-90"
+                />
+              </div>
+
+              {/* Day of Week */}
+              <div className="space-y-1.5">
+                <label className="font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">Schedule Day</label>
+                <select
+                  value={schedDay}
+                  onChange={(e) => setSchedDay(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value="sunday">Sunday (Official Contest Day)</option>
+                  <option value="monday">Monday</option>
+                  <option value="tuesday">Tuesday</option>
+                  <option value="wednesday">Wednesday</option>
+                  <option value="thursday">Thursday</option>
+                  <option value="friday">Friday</option>
+                  <option value="saturday">Saturday</option>
+                </select>
+              </div>
+
+              {/* Schedule Time */}
+              <div className="space-y-1.5">
+                <label className="font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">Scheduled Time</label>
+                <div className="flex items-center space-x-2">
+                  <select
+                    value={schedHour}
+                    onChange={(e) => setSchedHour(Number(e.target.value))}
+                    className="w-1/2 px-3 py-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl font-bold text-gray-900 dark:text-white"
+                  >
+                    {Array.from({ length: 24 }).map((_, i) => (
+                      <option key={i} value={i}>
+                        {i.toString().padStart(2, '0')} ({i < 12 ? `${i === 0 ? 12 : i} AM` : `${i === 12 ? 12 : i - 12} PM`})
+                      </option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={schedMinute}
+                    onChange={(e) => setSchedMinute(Number(e.target.value))}
+                    className="w-1/2 px-3 py-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl font-bold text-gray-900 dark:text-white"
+                  >
+                    {['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'].map((m) => (
+                      <option key={m} value={Number(m)}>{m} mins</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Timezone */}
+              <div className="space-y-1.5">
+                <label className="font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">Timezone (Locked)</label>
+                <input
+                  type="text"
+                  readOnly
+                  value="Asia/Kolkata (IST)"
+                  className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl font-mono font-bold text-emerald-600 dark:text-emerald-400 cursor-not-allowed opacity-90"
+                />
+              </div>
+            </div>
+
+            {/* Recipients Textarea */}
+            <div className="space-y-1.5 text-xs">
+              <div className="flex items-center justify-between">
+                <label className="font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  Distribution Recipients ({schedRecipients.split(',').filter(e => e.trim()).length} configured)
+                </label>
+                <span className="text-[10px] text-gray-400">Comma-separated email addresses</span>
+              </div>
+              <textarea
+                rows={2}
+                value={schedRecipients}
+                onChange={(e) => setSchedRecipients(e.target.value)}
+                placeholder="nanthishvaran17@gmail.com, msanthoshkumar@nandhaengg.org, principal@nandhaengg.org"
+                className="w-full p-3 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl font-mono text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+
+            {/* Telemetry Summary Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs bg-gray-50 dark:bg-navy-950 p-4 rounded-2xl border border-gray-200 dark:border-gray-800">
+              <div>
+                <span className="text-gray-400 font-bold block mb-0.5">Next Execution</span>
+                <strong className="text-brand-500 font-mono text-[11px]">{scheduleData?.schedule?.next_run || 'Calculating...'}</strong>
+              </div>
+              <div>
+                <span className="text-gray-400 font-bold block mb-0.5">Last Run</span>
+                <strong className="text-gray-700 dark:text-gray-300 font-mono text-[11px]">{scheduleData?.schedule?.last_run}</strong>
+              </div>
+              <div>
+                <span className="text-gray-400 font-bold block mb-0.5">Last Status</span>
+                <strong className={scheduleData?.schedule?.last_status === 'SUCCESS' ? 'text-emerald-500' : 'text-amber-500'}>
+                  {scheduleData?.schedule?.last_status}
+                </strong>
+              </div>
+              <div>
+                <span className="text-gray-400 font-bold block mb-0.5">Last Generated Report</span>
+                <strong className="text-gray-700 dark:text-gray-300 font-mono text-[11px] truncate block" title={scheduleData?.schedule?.last_report}>
+                  {scheduleData?.schedule?.last_report}
+                </strong>
+              </div>
+            </div>
+
+            {/* Action Buttons Bar */}
+            <div className="flex items-center justify-between flex-wrap gap-3 pt-2">
+              <div className="flex items-center space-x-2">
+                {scheduleData?.schedule?.is_enabled ? (
+                  <button
+                    onClick={() => handleToggleSchedule(false)}
+                    disabled={isTogglingSched}
+                    className="px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-black rounded-xl border border-rose-500/30 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    <span>{isTogglingSched ? 'Disabling...' : '🔴 DISABLE AUTOMATION'}</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleToggleSchedule(true)}
+                    disabled={isTogglingSched}
+                    className="px-4 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-black rounded-xl border border-emerald-500/30 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    <span>{isTogglingSched ? 'Enabling...' : '🟢 ENABLE AUTOMATION'}</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => setTestModalOpen(true)}
+                  className="px-4 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-black rounded-xl border border-amber-500/30 transition-all cursor-pointer flex items-center space-x-1.5"
+                >
+                  <Zap className="w-3.5 h-3.5" />
+                  <span>RUN SAFE TEST</span>
+                </button>
+              </div>
+
+              <button
+                onClick={handleSaveSchedule}
+                disabled={isSavingSched}
+                className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-black rounded-xl shadow-lg shadow-emerald-500/30 transition-all transform hover:scale-105 cursor-pointer disabled:opacity-50 flex items-center space-x-2"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{isSavingSched ? 'Saving to Backend...' : '💾 SAVE SCHEDULE'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* ─── REPORT EXECUTION HISTORY TABLE ─── */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="text-base font-black text-gray-900 dark:text-white flex items-center space-x-2">
+                <FileText className="w-4 h-4 text-emerald-500" />
+                <span>Report Execution History & Audit Logs</span>
+              </h4>
+              <button
+                onClick={fetchScheduleHistory}
+                className="text-xs font-bold text-brand-500 hover:underline flex items-center space-x-1 cursor-pointer"
+              >
+                <RefreshCw className="w-3 h-3" />
+                <span>Refresh History</span>
+              </button>
+            </div>
+
+            <div className="overflow-x-auto rounded-3xl border border-gray-200 dark:border-gray-800 shadow-xl bg-white dark:bg-navy-900">
+              {scheduleHistory.length === 0 ? (
+                <div className="p-8 text-center text-xs font-bold text-gray-400">
+                  No automated execution records logged yet. Safe tests or scheduled runs will populate here with verified evidence.
+                </div>
+              ) : (
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 dark:bg-navy-950 text-gray-500 uppercase tracking-wider border-b border-gray-200 dark:border-gray-800 font-bold text-[11px]">
+                      <th className="py-3.5 px-4">Date & Time</th>
+                      <th className="py-3.5 px-4">Execution ID</th>
+                      <th className="py-3.5 px-4">Contest Target</th>
+                      <th className="py-3.5 px-4 text-center">Students</th>
+                      <th className="py-3.5 px-4">Excel Report</th>
+                      <th className="py-3.5 px-4 text-center">Recipients</th>
+                      <th className="py-3.5 px-4 text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-medium">
+                    {scheduleHistory.map((item) => (
+                      <tr key={item.id} className="hover:bg-gray-50/50 dark:hover:bg-navy-800/30">
+                        <td className="py-3 px-4 font-mono">
+                          <div>{item.date}</div>
+                          <span className="text-[10px] text-gray-400">{item.scheduled_time} ({item.actual_start})</span>
+                        </td>
+                        <td className="py-3 px-4 font-mono font-bold text-brand-600 dark:text-brand-400 text-[11px]">
+                          {item.execution_id}
+                          {item.is_test_run && (
+                            <span className="ml-1.5 px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 text-[9px] font-black">TEST</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 font-bold text-gray-900 dark:text-white">{item.contest}</td>
+                        <td className="py-3 px-4 text-center font-bold text-emerald-500">{item.students_processed}</td>
+                        <td className="py-3 px-4 font-mono text-[11px] text-gray-700 dark:text-gray-300 truncate max-w-[200px]" title={item.excel_filename}>
+                          {item.excel_filename || 'Pending'}
+                        </td>
+                        <td className="py-3 px-4 text-center font-bold">{item.recipients_count}</td>
+                        <td className="py-3 px-4 text-center">
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black ${
+                            item.status === 'COMPLETED'
+                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                              : item.status === 'STARTED' || item.status === 'DATA_PROCESSING'
+                              ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 animate-pulse'
+                              : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                          }`}>
+                            {item.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+
+          {/* Safe Test Modal */}
+          {testModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+              <div className="bg-white dark:bg-navy-900 rounded-3xl border border-amber-500/30 shadow-2xl max-w-lg w-full p-6 space-y-4">
+                <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-3">
+                  <div className="flex items-center space-x-2">
+                    <Zap className="w-5 h-5 text-amber-500" />
+                    <h4 className="font-black text-sm text-gray-900 dark:text-white">Execute Safe Automation Test (Dry Run)</h4>
+                  </div>
+                  <button onClick={() => { setTestModalOpen(false); setTestResult(null); }} className="text-gray-400 hover:text-white">✕</button>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-300 font-medium">
+                  <strong>Safe Test Mode:</strong> Executes the complete pipeline (Session loading, 300 active students data extraction, 19-sheet Excel generation) without consuming the real Sunday production idempotency key.
+                </div>
+
+                <div className="space-y-1.5 text-xs">
+                  <label className="font-black uppercase text-gray-400">Test Recipient Email</label>
+                  <input
+                    type="email"
+                    value={testEmailInput}
+                    onChange={(e) => setTestEmailInput(e.target.value)}
+                    placeholder="admin-test@example.com"
+                    className="w-full p-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl font-bold text-xs text-gray-900 dark:text-white"
+                  />
+                </div>
+
+                {testResult && (
+                  <div className="p-3 rounded-xl bg-black/40 border border-emerald-500/30 text-xs font-mono space-y-1 text-emerald-300">
+                    <div><strong>Status:</strong> {testResult.status}</div>
+                    <div><strong>Message:</strong> {testResult.message}</div>
+                    <div><strong>Execution ID:</strong> {testResult.execution_id}</div>
+                    <div><strong>Report File:</strong> {testResult.excel_filename}</div>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-end space-x-2 pt-2">
+                  <button
+                    onClick={() => { setTestModalOpen(false); setTestResult(null); }}
+                    className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-bold rounded-xl"
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={handleRunSafeTest}
+                    disabled={isTestingSched}
+                    className="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-black text-xs font-black rounded-xl shadow-lg transition-transform transform hover:scale-105 disabled:opacity-50 cursor-pointer flex items-center space-x-1.5"
+                  >
+                    <Zap className={`w-3.5 h-3.5 ${isTestingSched ? 'animate-spin' : ''}`} />
+                    <span>{isTestingSched ? 'Running Pipeline...' : 'Execute Test Run'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       )}
 
