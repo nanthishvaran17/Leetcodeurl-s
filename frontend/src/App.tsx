@@ -38,6 +38,18 @@ export const App: React.FC = () => {
     fetchSummary();
   }, []);
 
+  useEffect(() => {
+    if (showLoginModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showLoginModal]);
+
+
   const fetchSummary = async () => {
     try {
       const res = await api.get('/sessions/dashboard-summary');
@@ -213,18 +225,23 @@ export const App: React.FC = () => {
 
       {/* Login Modal */}
       {showLoginModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="relative w-full max-w-md">
-            <button
-              onClick={() => setShowLoginModal(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white"
-            >
-              ✕
-            </button>
-            <LoginPage onSuccess={() => { setShowLoginModal(false); setActiveTab('dashboard'); }} />
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto animate-fadeIn"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowLoginModal(false);
+            }
+          }}
+        >
+          <div className="w-full max-w-md my-auto">
+            <LoginPage
+              onClose={() => setShowLoginModal(false)}
+              onSuccess={() => { setShowLoginModal(false); setActiveTab('dashboard'); }}
+            />
           </div>
         </div>
       )}
+
 
       {/* Import Modal */}
       <ImportModal

@@ -6,9 +6,10 @@ import api from '../services/api';
 
 interface LoginPageProps {
   onSuccess: () => void;
+  onClose?: () => void;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
   const [authMode, setAuthMode] = useState<'otp' | 'admin'>('otp');
   const [step, setStep] = useState<'email' | 'otp_verify' | 'success'>('email');
 
@@ -36,6 +37,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
   ];
 
   const { login } = useAuth();
+
+  // Keyboard ESC Key listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && onClose) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
 
   // 5-minute OTP Expiration Timer
   useEffect(() => {
@@ -224,10 +237,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
   };
 
   return (
-    <div className="max-w-md mx-auto my-4 glass-card p-7 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-2xl space-y-5">
+    <div className="relative max-w-md mx-auto my-4 glass-card p-7 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-2xl space-y-5">
+      {onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close admin login"
+          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-navy-800 rounded-xl transition-all z-10"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      )}
       
       {/* Header */}
       <div className="text-center space-y-1.5">
+
         <div className="w-12 h-12 rounded-2xl bg-brand-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-brand-600/30">
           <Shield className="w-6 h-6" />
         </div>
