@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Sparkles, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers, Inbox } from 'lucide-react';
+import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Sparkles, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers, Inbox, Trash2 } from 'lucide-react';
 import api from '../services/api';
 import { ReportPreview } from '../components/ReportPreview';
 import { EmailDeliveryTab } from '../components/EmailDeliveryTab';
@@ -59,6 +59,21 @@ export const ReportsPage: React.FC = () => {
       alert(err.response?.data?.detail || "Failed to generate HOD snapshot.");
     } finally {
       setIsGeneratingSnapshot(false);
+    }
+  };
+
+  const handleDeleteHodSnapshot = async (snapshotId: string) => {
+    if (!window.confirm(`Are you sure you want to delete HOD snapshot '${snapshotId}'? This cannot be undone.`)) {
+      return;
+    }
+    try {
+      await api.delete(`/reports/hod-snapshots/${snapshotId}`);
+      setHodSnapshots(prev => prev.filter(s => s.snapshot_id !== snapshotId));
+      if (selectedSnapshotPreview?.snapshot_id === snapshotId) {
+        setSelectedSnapshotPreview(null);
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.detail || "Failed to delete snapshot.");
     }
   };
   const downloadReportFile = async (endpoint: string, filename: string) => {
@@ -517,9 +532,16 @@ export const ReportsPage: React.FC = () => {
                       <button 
                         onClick={() => downloadReportFile(`/reports/hod-snapshots/${snap.snapshot_id}/word`, `HOD_Snapshot_${snap.snapshot_id}.docx`)}
                         title="Download Word"
-                        className="p-1.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 rounded-lg transition-colors"
+                        className="p-1.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 rounded-lg transition-colors cursor-pointer"
                       >
                         <FileText className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteHodSnapshot(snap.snapshot_id)}
+                        title="Delete Snapshot"
+                        className="p-1.5 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>

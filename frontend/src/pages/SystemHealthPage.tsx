@@ -360,14 +360,20 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {data?.system_health && Object.entries(data.system_health).map(([key, item]) => (
-              <div key={key} className="p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-xl space-y-3 hover:border-brand-500/40 transition-all">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase text-gray-400">{item.name}</span>
-                  <span className="text-xs font-bold text-emerald-500">{item.badge}</span>
+              <div key={key} className="p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-xl space-y-3 hover:border-brand-500/40 transition-all flex flex-col justify-between">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 leading-tight">
+                    {item.name}
+                  </span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black shrink-0 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-xs">
+                    {item.badge}
+                  </span>
                 </div>
-                <div className="text-base font-black text-gray-900 dark:text-white">{item.type}</div>
-                <div className="text-[11px] text-gray-500 font-mono">
-                  {item.latency_ms !== undefined ? `Latency: ${item.latency_ms}ms` : item.connections !== undefined ? `Active: ${item.connections}` : 'Status: Nominal'}
+                <div>
+                  <div className="text-sm font-black text-gray-900 dark:text-white">{item.type}</div>
+                  <div className="text-[11px] text-gray-500 font-mono mt-1">
+                    {item.latency_ms !== undefined ? `Latency: ${item.latency_ms}ms` : item.connections !== undefined ? `Active: ${item.connections}` : 'Status: Nominal'}
+                  </div>
                 </div>
               </div>
             ))}
@@ -587,14 +593,20 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {data?.security && Object.entries(data.security).map(([k, s]) => (
-              <div key={k} className="p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-xl space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-gray-400 uppercase">{s.name}</span>
-                  <span className="text-xs font-bold">{s.badge}</span>
+              <div key={k} className="p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-xl space-y-3 flex flex-col justify-between">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 leading-tight">
+                    {s.name}
+                  </span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black shrink-0 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-xs">
+                    {s.badge}
+                  </span>
                 </div>
-                <div className="text-base font-black text-gray-900 dark:text-white">{s.status}</div>
-                <div className="text-[11px] text-gray-500 font-mono">
-                  {s.records_count !== undefined ? `${s.records_count} Audit Logs Recorded` : 'Access: Restricted to Verified Admins'}
+                <div>
+                  <div className="text-sm font-black text-gray-900 dark:text-white">{s.status}</div>
+                  <div className="text-[11px] text-gray-500 font-mono mt-1">
+                    {s.records_count !== undefined ? `${s.records_count} Audit Logs Recorded` : 'Access: Restricted to Verified Admins'}
+                  </div>
                 </div>
               </div>
             ))}
@@ -605,30 +617,121 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
       {/* ─── TAB 6: SUNDAY AUTOMATION CENTER ─── */}
       {activeSubTab === 'automation' && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center space-x-2">
-              <Calendar className="w-5 h-5 text-purple-500" />
-              <span>Sunday Automation & Contest Daemon Jobs</span>
-            </h3>
-            <span className="text-xs font-mono text-gray-400">Timezone: Asia/Kolkata (IST)</span>
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="space-y-1">
+              <div className="inline-flex items-center space-x-2 text-[10px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400 bg-purple-500/10 px-3 py-0.5 rounded-full border border-purple-500/20">
+                <Calendar className="w-3.5 h-3.5 animate-pulse" />
+                <span>ACTIVE DAEMON • TIMEZONE: ASIA/KOLKATA (IST)</span>
+              </div>
+              <h3 className="text-xl font-black text-gray-900 dark:text-white flex items-center space-x-2">
+                <span>Sunday Automation & Contest Daemon Lifecycle</span>
+              </h3>
+            </div>
+            <span className="px-3.5 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center space-x-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+              <span>4 Cron Triggers Registered & Active</span>
+            </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {data?.sunday_automation.map((job) => (
-              <div key={job.id} className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-xl space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-black text-gray-900 dark:text-white">{job.name}</h4>
-                  <span className="px-3 py-0.5 rounded-full text-[10px] font-black bg-purple-500/20 text-purple-400 border border-purple-500/30 uppercase">
-                    {job.status}
-                  </span>
+          {/* 4 Phase Sequential Architecture Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            
+            {/* Phase 1: 08:00 IST */}
+            <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-amber-500/30 shadow-xl space-y-4 relative overflow-hidden group hover:border-amber-500 transition-all">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center space-x-3">
+                  <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-500 font-black text-sm">
+                    🌅 PHASE 1
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black text-gray-900 dark:text-white">08:00 IST Baseline Snapshot</h4>
+                    <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider">Pre-Contest Roster State</span>
+                  </div>
                 </div>
-                <div className="space-y-1.5 text-xs text-gray-600 dark:text-gray-300 font-medium">
-                  <p><span className="text-gray-400 font-bold">Schedule:</span> {job.schedule}</p>
-                  <p><span className="text-gray-400 font-bold">Next Run:</span> <strong className="text-brand-500">{job.next_run}</strong></p>
-                  <p><span className="text-gray-400 font-bold">Last Run Evidence:</span> {job.evidence}</p>
-                </div>
+                <span className="px-3 py-1 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30 uppercase shrink-0">
+                  CONFIGURED
+                </span>
               </div>
-            ))}
+              <div className="space-y-2 text-xs text-gray-600 dark:text-gray-300 font-medium bg-gray-50 dark:bg-navy-950 p-4 rounded-2xl border border-gray-200 dark:border-gray-800">
+                <p><span className="text-gray-400 font-bold">Schedule Rule:</span> Every Sunday at 08:00:00 IST</p>
+                <p><span className="text-gray-400 font-bold">Execution Target:</span> Captures 300-student pre-contest solved counts to calculate weekly deltas without zero-faking.</p>
+                <p><span className="text-gray-400 font-bold">Next Run:</span> <strong className="text-amber-500">{data?.sunday_automation[0]?.next_run || 'Sunday 08:00 IST'}</strong></p>
+              </div>
+            </div>
+
+            {/* Phase 2: 09:30 IST */}
+            <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-indigo-500/30 shadow-xl space-y-4 relative overflow-hidden group hover:border-indigo-500 transition-all">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center space-x-3">
+                  <div className="p-3 rounded-2xl bg-indigo-500/10 text-indigo-500 font-black text-sm">
+                    ⏱️ PHASE 2
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black text-gray-900 dark:text-white">09:30 IST Contest Window Lockdown</h4>
+                    <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wider">Post-Contest Delta Capture</span>
+                  </div>
+                </div>
+                <span className="px-3 py-1 rounded-full text-[10px] font-black bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-500/30 uppercase shrink-0">
+                  CONFIGURED
+                </span>
+              </div>
+              <div className="space-y-2 text-xs text-gray-600 dark:text-gray-300 font-medium bg-gray-50 dark:bg-navy-950 p-4 rounded-2xl border border-gray-200 dark:border-gray-800">
+                <p><span className="text-gray-400 font-bold">Schedule Rule:</span> Every Sunday at 09:30:00 IST</p>
+                <p><span className="text-gray-400 font-bold">Execution Target:</span> Immediately queries LeetCode GraphQL for official rank, rating, and questions solved ratio (e.g. 3/4).</p>
+                <p><span className="text-gray-400 font-bold">Next Run:</span> <strong className="text-indigo-500">{data?.sunday_automation[1]?.next_run || 'Sunday 09:30 IST'}</strong></p>
+              </div>
+            </div>
+
+            {/* Phase 3: 09:45 IST */}
+            <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-emerald-500/30 shadow-xl space-y-4 relative overflow-hidden group hover:border-emerald-500 transition-all">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center space-x-3">
+                  <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-500 font-black text-sm">
+                    📧 PHASE 3
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black text-gray-900 dark:text-white">09:45 IST Automated Master Report Dispatch</h4>
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">Email Broadcast to Principal & HODs</span>
+                  </div>
+                </div>
+                <span className="px-3 py-1 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 uppercase shrink-0">
+                  CONFIGURED
+                </span>
+              </div>
+              <div className="space-y-2 text-xs text-gray-600 dark:text-gray-300 font-medium bg-gray-50 dark:bg-navy-950 p-4 rounded-2xl border border-gray-200 dark:border-gray-800">
+                <p><span className="text-gray-400 font-bold">Schedule Rule:</span> Every Sunday at 09:45:00 IST</p>
+                <p><span className="text-gray-400 font-bold">Execution Target:</span> Compiles 19-sheet Master Excel (`19_Contest_Validation`) and dispatches formatted email report.</p>
+                <p><span className="text-gray-400 font-bold">Next Run:</span> <strong className="text-emerald-500">{data?.sunday_automation[2]?.next_run || 'Sunday 09:45 IST'}</strong></p>
+              </div>
+            </div>
+
+            {/* Phase 4: 22:00 IST */}
+            <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-purple-500/30 shadow-xl space-y-4 relative overflow-hidden group hover:border-purple-500 transition-all">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl pointer-events-none"></div>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center space-x-3">
+                  <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-500 font-black text-sm">
+                    🌙 PHASE 4
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black text-gray-900 dark:text-white">22:00 IST Virtual & Late Settlement</h4>
+                    <span className="text-[10px] text-purple-600 dark:text-purple-400 font-bold uppercase tracking-wider">Virtual Participants Reconciliation</span>
+                  </div>
+                </div>
+                <span className="px-3 py-1 rounded-full text-[10px] font-black bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-500/30 uppercase shrink-0">
+                  CONFIGURED
+                </span>
+              </div>
+              <div className="space-y-2 text-xs text-gray-600 dark:text-gray-300 font-medium bg-gray-50 dark:bg-navy-950 p-4 rounded-2xl border border-gray-200 dark:border-gray-800">
+                <p><span className="text-gray-400 font-bold">Schedule Rule:</span> Every Sunday at 22:00:00 IST</p>
+                <p><span className="text-gray-400 font-bold">Execution Target:</span> Scans for virtual contest submissions completed later in the day and synchronizes final weekly snapshot.</p>
+                <p><span className="text-gray-400 font-bold">Next Run:</span> <strong className="text-purple-500">{data?.sunday_automation[3]?.next_run || 'Sunday 22:00 IST'}</strong></p>
+              </div>
+            </div>
+
           </div>
         </div>
       )}

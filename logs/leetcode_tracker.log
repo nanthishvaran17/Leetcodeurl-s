@@ -27855,3 +27855,68 @@ Action: Request blocked
 [2026-08-14 23:04:06,256] [INFO] [leetcode_tracker]: Backend Application ready and listening!
 [2026-08-14 23:04:06,523] [INFO] [leetcode_tracker]: Checking WeeklySession ID 20 (WEEK-2026-07-26) status: 'FINALIZED' at IST 23:04
 [2026-08-14 23:04:06,523] [INFO] [leetcode_tracker]: Session WEEK-2026-07-26 is locked (FINALIZED). No recovery action needed.
+[2026-08-14 23:04:34,949] [INFO] [leetcode_tracker]: [SYNC_ROSTER_LOADING] Loading active institutional student roster from database...
+[2026-08-14 23:04:34,955] [INFO] [leetcode_tracker]: [SYNC_ROSTER_COUNT] Loaded 300 active institutional students.
+[2026-08-14 23:05:26,560] [INFO] [leetcode_tracker]: [SYNC_ROSTER_LOADING] Loading active institutional student roster from database...
+[2026-08-14 23:05:26,567] [INFO] [leetcode_tracker]: [SYNC_ROSTER_COUNT] Loaded 300 active institutional students.
+[2026-08-14 23:06:47,634] [INFO] [leetcode_tracker]: [SYNC_ROSTER_LOADING] Loading active institutional student roster from database...
+[2026-08-14 23:06:47,807] [INFO] [leetcode_tracker]: [SYNC_ROSTER_COUNT] Loaded 300 active institutional students.
+[2026-08-14 23:06:49,005] [INFO] [leetcode_tracker]: [SYNC_ROSTER_LOADING] Loading active institutional student roster from database...
+[2026-08-14 23:06:49,027] [INFO] [leetcode_tracker]: [SYNC_ROSTER_COUNT] Loaded 300 active institutional students.
+[2026-08-14 23:07:17,886] [INFO] [leetcode_tracker]: [SYNC_ROSTER_LOADING] Loading active institutional student roster from database...
+[2026-08-14 23:07:17,900] [INFO] [leetcode_tracker]: [SYNC_ROSTER_COUNT] Loaded 300 active institutional students.
+[2026-08-14 23:07:22,659] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-14 23:07:24,591] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 23:07:34,641] [INFO] [leetcode_tracker]: Database backup created: E:\Leetcode Web\data\backups\backup_leetcode_tracker_20260814_230734.db (checksum=e3f4d3f4e8cf714d)
+[2026-08-14 23:07:47,527] [INFO] [leetcode_tracker]: [SYNC_ROSTER_LOADING] Loading active institutional student roster from database...
+[2026-08-14 23:07:47,539] [INFO] [leetcode_tracker]: [SYNC_ROSTER_COUNT] Loaded 300 active institutional students.
+[2026-08-14 23:08:17,522] [INFO] [leetcode_tracker]: [SYNC_ROSTER_LOADING] Loading active institutional student roster from database...
+[2026-08-14 23:08:17,534] [INFO] [leetcode_tracker]: [SYNC_ROSTER_COUNT] Loaded 300 active institutional students.
+[2026-08-14 23:08:27,077] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-51294] DELETE_RECIPIENT by admin (admin@college.edu)
+[2026-08-14 23:08:32,701] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-84405] DELETE_RECIPIENT by admin (admin@college.edu)
+[2026-08-14 23:08:47,526] [INFO] [leetcode_tracker]: [SYNC_ROSTER_LOADING] Loading active institutional student roster from database...
+[2026-08-14 23:08:47,540] [INFO] [leetcode_tracker]: [SYNC_ROSTER_COUNT] Loaded 300 active institutional students.
+[2026-08-14 23:09:17,515] [INFO] [leetcode_tracker]: [SYNC_ROSTER_LOADING] Loading active institutional student roster from database...
+[2026-08-14 23:09:17,524] [INFO] [leetcode_tracker]: [SYNC_ROSTER_COUNT] Loaded 300 active institutional students.
+[2026-08-14 23:09:47,516] [INFO] [leetcode_tracker]: [SYNC_ROSTER_LOADING] Loading active institutional student roster from database...
+[2026-08-14 23:09:47,523] [INFO] [leetcode_tracker]: [SYNC_ROSTER_COUNT] Loaded 300 active institutional students.
+[2026-08-14 23:10:17,526] [INFO] [leetcode_tracker]: [SYNC_ROSTER_LOADING] Loading active institutional student roster from database...
+[2026-08-14 23:10:17,529] [INFO] [leetcode_tracker]: [SYNC_ROSTER_COUNT] Loaded 300 active institutional students.
+[2026-08-14 23:10:47,511] [INFO] [leetcode_tracker]: [SYNC_ROSTER_LOADING] Loading active institutional student roster from database...
+[2026-08-14 23:10:47,514] [INFO] [leetcode_tracker]: [SYNC_ROSTER_COUNT] Loaded 300 active institutional students.
+[2026-08-14 23:11:17,893] [INFO] [leetcode_tracker]: [SYNC_ROSTER_LOADING] Loading active institutional student roster from database...
+[2026-08-14 23:11:17,900] [INFO] [leetcode_tracker]: [SYNC_ROSTER_COUNT] Loaded 300 active institutional students.
+[2026-08-14 23:11:47,527] [INFO] [leetcode_tracker]: [SYNC_ROSTER_LOADING] Loading active institutional student roster from database...
+[2026-08-14 23:11:47,542] [INFO] [leetcode_tracker]: [SYNC_ROSTER_COUNT] Loaded 300 active institutional students.
+[2026-08-14 23:12:17,895] [INFO] [leetcode_tracker]: [SYNC_ROSTER_LOADING] Loading active institutional student roster from database...
+[2026-08-14 23:12:17,901] [INFO] [leetcode_tracker]: [SYNC_ROSTER_COUNT] Loaded 300 active institutional students.
+[2026-08-14 23:12:47,528] [INFO] [leetcode_tracker]: [SYNC_ROSTER_LOADING] Loading active institutional student roster from database...
+[2026-08-14 23:12:47,570] [INFO] [leetcode_tracker]: [SYNC_ROSTER_COUNT] Loaded 300 active institutional students.
+[2026-08-14 23:13:17,514] [INFO] [leetcode_tracker]: [SYNC_ROSTER_LOADING] Loading active institutional student roster from database...
+[2026-08-14 23:13:17,528] [INFO] [leetcode_tracker]: [SYNC_ROSTER_COUNT] Loaded 300 active institutional students.
+[2026-08-14 23:13:27,673] [INFO] [leetcode_tracker]: [MATRIX DIAGNOSTICS]
+[2026-08-14 23:13:27,675] [INFO] [leetcode_tracker]: session_id=20
+[2026-08-14 23:13:27,677] [INFO] [leetcode_tracker]: contest=512
+[2026-08-14 23:13:27,680] [INFO] [leetcode_tracker]: date=26.07.2026
+[2026-08-14 23:13:27,683] [INFO] [leetcode_tracker]: roster=300
+[2026-08-14 23:13:27,697] [INFO] [leetcode_tracker]: results=300
+[2026-08-14 23:13:27,698] [INFO] [leetcode_tracker]: joined=300
+[2026-08-14 23:13:27,703] [INFO] [leetcode_tracker]: dept=ALL
+[2026-08-14 23:13:27,709] [INFO] [leetcode_tracker]: year=ALL
+[2026-08-14 23:13:27,712] [INFO] [leetcode_tracker]: attendance=ALL
+[2026-08-14 23:13:27,714] [INFO] [leetcode_tracker]: final_rows=300
+[2026-08-14 23:13:32,029] [INFO] [leetcode_tracker]: [MATRIX DIAGNOSTICS]
+[2026-08-14 23:13:32,030] [INFO] [leetcode_tracker]: session_id=20
+[2026-08-14 23:13:32,031] [INFO] [leetcode_tracker]: contest=512
+[2026-08-14 23:13:32,032] [INFO] [leetcode_tracker]: date=26.07.2026
+[2026-08-14 23:13:32,032] [INFO] [leetcode_tracker]: roster=300
+[2026-08-14 23:13:32,034] [INFO] [leetcode_tracker]: results=300
+[2026-08-14 23:13:32,035] [INFO] [leetcode_tracker]: joined=300
+[2026-08-14 23:13:32,036] [INFO] [leetcode_tracker]: dept=ALL
+[2026-08-14 23:13:32,037] [INFO] [leetcode_tracker]: year=ALL
+[2026-08-14 23:13:32,038] [INFO] [leetcode_tracker]: attendance=PUBLIC_ATTENDED
+[2026-08-14 23:13:32,039] [INFO] [leetcode_tracker]: final_rows=18
+[2026-08-14 23:13:47,896] [INFO] [leetcode_tracker]: [SYNC_ROSTER_LOADING] Loading active institutional student roster from database...
+[2026-08-14 23:13:47,904] [INFO] [leetcode_tracker]: [SYNC_ROSTER_COUNT] Loaded 300 active institutional students.
+[2026-08-14 23:14:17,890] [INFO] [leetcode_tracker]: [SYNC_ROSTER_LOADING] Loading active institutional student roster from database...
+[2026-08-14 23:14:17,896] [INFO] [leetcode_tracker]: [SYNC_ROSTER_COUNT] Loaded 300 active institutional students.

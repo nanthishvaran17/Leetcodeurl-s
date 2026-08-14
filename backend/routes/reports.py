@@ -579,17 +579,16 @@ def download_snapshot_excel(snapshot_id: str, db: Session = Depends(get_db)):
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-@router.get("/hod-snapshots/{snapshot_id}/word")
-def download_snapshot_word(snapshot_id: str, db: Session = Depends(get_db)):
-    try:
-        word_bytes = generate_snapshot_word_report(db, snapshot_id)
-        return Response(
-            content=word_bytes,
-            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            headers={"Content-Disposition": f"attachment; filename=HOD_Snapshot_{snapshot_id}.docx"}
-        )
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+@router.delete("/hod-snapshots/{snapshot_id}")
+def delete_hod_snapshot(snapshot_id: str, db: Session = Depends(get_db)):
+    """Deletes an executive HOD snapshot by ID."""
+    snap = db.query(HODSnapshot).filter(HODSnapshot.snapshot_id == snapshot_id).first()
+    if not snap:
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+    db.delete(snap)
+    db.commit()
+    return {"message": f"Snapshot {snapshot_id} deleted successfully", "snapshot_id": snapshot_id}
+
 
 
 @router.post("/generate-certificate/{student_id}")
