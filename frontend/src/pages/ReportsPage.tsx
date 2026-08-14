@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Sparkles, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers, Inbox, Trash2 } from 'lucide-react';
+import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Sparkles, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers, Inbox, Trash2, Award } from 'lucide-react';
 import api from '../services/api';
 import { ReportPreview } from '../components/ReportPreview';
 import { EmailDeliveryTab } from '../components/EmailDeliveryTab';
+import { CertificateManagementModal } from '../components/CertificateManagementModal';
 
 export const ReportsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'reports' | 'email'>('reports');
+  const [showCertModal, setShowCertModal] = useState<boolean>(false);
   const [emailLogs, setEmailLogs] = useState<any[]>([]);
   const [hodSnapshots, setHodSnapshots] = useState<any[]>([]);
   const [isSendingEmail, setIsSendingEmail] = useState<boolean>(false);
@@ -290,13 +292,23 @@ export const ReportsPage: React.FC = () => {
             </p>
           </div>
 
+          <div className="flex items-center space-x-3">
             <button
-            onClick={() => setActiveTab('email')}
-            className="flex items-center space-x-2.5 px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-2xl text-xs font-black shadow-xl shadow-emerald-500/30 transition-all transform hover:scale-105"
-          >
-            <Mail className="w-4 h-4" />
-            <span>📧 Open Email Delivery Center</span>
-          </button>
+              onClick={() => setShowCertModal(true)}
+              className="flex items-center space-x-2 px-5 py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-2xl text-xs font-black shadow-xl shadow-amber-500/30 transition-all transform hover:scale-105 cursor-pointer"
+            >
+              <Award className="w-4 h-4" />
+              <span>🎓 Certificate of Excellence Hub</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('email')}
+              className="flex items-center space-x-2.5 px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-2xl text-xs font-black shadow-xl shadow-emerald-500/30 transition-all transform hover:scale-105 cursor-pointer"
+            >
+              <Mail className="w-4 h-4" />
+              <span>📧 Open Email Delivery Center</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -893,6 +905,14 @@ export const ReportsPage: React.FC = () => {
         <ReportPreview 
           reportId={activeUniversalPreviewId} 
           onClose={() => setActiveUniversalPreviewId(null)} 
+        />
+      )}
+
+      {/* Certificate Management Modal */}
+      {showCertModal && (
+        <CertificateManagementModal
+          isOpen={showCertModal}
+          onClose={() => setShowCertModal(false)}
         />
       )}
         </>

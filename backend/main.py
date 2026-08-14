@@ -20,7 +20,7 @@ from backend.routes import (
     auth, students, departments, sessions,
     leaderboard, analytics, reports, settings as settings_route,
     audit, public, sync, history, risk, goals, system_health, weekly_contests,
-    scheduled_reports
+    scheduled_reports, certificates
 )
 from backend.routes import admin, email_reports, ai_assistant
 
@@ -98,6 +98,8 @@ app.include_router(email_reports.router, prefix="/api")
 app.include_router(email_reports.router)
 app.include_router(scheduled_reports.router, prefix="/api")
 app.include_router(scheduled_reports.router)
+app.include_router(certificates.router, prefix="/api")
+app.include_router(certificates.router)
 app.include_router(ai_assistant.router, prefix="/api")
 app.include_router(ai_assistant.router)
 

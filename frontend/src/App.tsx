@@ -18,6 +18,7 @@ import { StudentDashboardView } from './pages/StudentDashboardView';
 import { StaffDashboardView } from './pages/StaffDashboardView';
 import { GrowthIntelligencePage } from './pages/GrowthIntelligencePage';
 import { SystemHealthPage } from './pages/SystemHealthPage';
+import { CertificateVerificationPage } from './pages/CertificateVerificationPage';
 import { ImportModal } from './components/ImportModal';
 import { AccessRestrictedView } from './components/AccessRestrictedView';
 import { AIAssistantWidget } from './components/AIAssistantWidget';
@@ -27,6 +28,13 @@ import api from './services/api';
 import { useAuth } from './context/AuthContext';
 
 export const App: React.FC = () => {
+  // Direct Public Certificate Verification Route Interceptor
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+  if (pathname.startsWith('/verify/')) {
+    const certId = pathname.replace('/verify/', '').split('/')[0].trim();
+    return <CertificateVerificationPage verificationId={certId} />;
+  }
+
   const { user, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState('landing');
   const [selectedStudent, setSelectedStudent] = useState<StudentData | null>(null);

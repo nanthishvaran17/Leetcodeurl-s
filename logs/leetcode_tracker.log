@@ -28052,3 +28052,6 @@ Action: Request blocked
 [2026-08-14 23:50:54,422] [ERROR] [leetcode_tracker]: Pipeline failure in execute_scheduled_report_pipeline: generate_8_sheet_excel_report() got an unexpected keyword argument 'session_id'
 [2026-08-15 00:03:13,584] [ERROR] [leetcode_tracker]: Pipeline failure in execute_scheduled_report_pipeline: cannot import name 'send_email_with_attachments' from 'backend.services.email_service' (E:\Leetcode Web\backend\services\email_service.py)
 [2026-08-15 00:08:26,989] [INFO] [leetcode_tracker]: Successfully delivered email to 'nanthishvaran17@gmail.com' via Brevo HTTPS API
+[2026-08-15 00:28:28,026] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-2533FCED for Student: JEEVITHA S (732225CC022)
+[2026-08-15 00:29:07,650] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-5D69C32A for Student: JEEVITHA S (732225CC022)
+[2026-08-15 00:34:54,724] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-87FA8DFA for Student: JEEVITHA S (732225CC022)

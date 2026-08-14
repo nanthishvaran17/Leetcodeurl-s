@@ -353,17 +353,37 @@ class EmailLog(Base):
 
 class CertificateRecord(Base):
     __tablename__ = "certificate_records"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    student_id = Column(Integer, ForeignKey("students.id"), nullable=False)
-    certificate_type = Column(String(100), nullable=False) # e.g. Top Performer
-    certificate_code = Column(String(50), unique=True, index=True, nullable=False)
-    issue_date = Column(String(20), nullable=False)
-    qr_code_path = Column(String(255), nullable=True)
-    pdf_path = Column(String(255), nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
-    student = relationship("Student")
+    id = Column(Integer, primary_key=True, index=True)
+    verification_id = Column(String(64), unique=True, index=True, nullable=False) # e.g. CERT-AA4933CE
+    certificate_code = Column(String(64), nullable=True) # Backwards compatibility
+    certificate_type = Column(String(64), default="Top Performer", nullable=False)
+    
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=True)
+    student_name = Column(String(255), nullable=False)
+    register_no = Column(String(64), index=True, nullable=False)
+    department = Column(String(64), nullable=False) # e.g. CSE(CS) or CSE(IOT)
+    department_name = Column(String(255), nullable=False) # Full expanded official name
+    
+    program = Column(String(255), default="Institutional LeetCode Continuous Performance Tracking System", nullable=False)
+    recognition = Column(String(128), default="Top Performer", nullable=False)
+    issue_date = Column(String(64), nullable=False) # e.g. "Aug 14, 2026"
+    status = Column(String(32), default="VALID", index=True, nullable=False) # DRAFT, ISSUED, VALID, REVOKED
+    
+    principal_signature_version = Column(String(32), default="v1", nullable=False)
+    hod_signature_version = Column(String(32), default="v1", nullable=False)
+    verification_url = Column(String(512), nullable=False)
+    
+    pdf_path = Column(String(512), nullable=True)
+    qr_path = Column(String(512), nullable=True)
+    qr_code_path = Column(String(512), nullable=True)
+    
+    created_by = Column(String(128), default="Admin")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    revoked_at = Column(DateTime, nullable=True)
+    revocation_reason = Column(String(255), nullable=True)
+
+    student = relationship("Student", backref="certificates", foreign_keys=[student_id])
 
 class AdminSettingsModel(Base):
     __tablename__ = "admin_settings"
@@ -742,6 +762,30 @@ class ReportExecutionHistory(Base):
     
     is_test_run = Column(Boolean, default=False, index=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+
+
+
+class AuthorizedSignature(Base):
+    __tablename__ = "authorized_signatures"
+    __table_args__ = {'extend_existing': True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    signature_type = Column(String(64), index=True, nullable=False) # PRINCIPAL, HOD_CSE_CS, HOD_CSE_IOT
+    department = Column(String(64), nullable=True) # CSE(CS), CSE(IOT), ALL
+    signatory_title = Column(String(128), nullable=False) # "Principal", "HOD / Coordinator"
+    signatory_name = Column(String(128), nullable=True)
+    
+    version = Column(String(32), default="v1", nullable=False)
+    image_path = Column(String(512), nullable=True)
+    image_data = Column(Text, nullable=True) # base64 data url for high availability & canvas preview
+    mime_type = Column(String(64), default="image/png")
+    
+    is_active = Column(Boolean, default=True, index=True)
+    uploaded_at = Column(DateTime, default=datetime.datetime.utcnow)
+    uploaded_by = Column(String(128), default="Admin")
+
 
 
 
