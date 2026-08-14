@@ -66,6 +66,23 @@ def test_otp_hmac_hashing():
     assert digest1 == digest2
 
 
+def test_institutional_otp_email_template():
+    """Test institutional OTP email template rendering."""
+    from backend.services.email_service import build_otp_email_template
+    otp = "120526"
+    subject, html, text = build_otp_email_template(otp)
+    assert "NEC LeetCode Tracker" in subject
+    assert "NANDHA ENGINEERING COLLEGE" in html
+    assert "(AUTONOMOUS)" in html
+    assert "LeetCode Weekly Performance Tracker" in html
+    assert "OFFICIAL ADMINISTRATOR PORTAL" in html
+    assert otp in html
+    assert otp in text
+    assert "5 minutes" in html
+    assert "Security Notice" in html
+
+
+
 def test_otp_transaction_creation_and_single_use():
     """Test OTP transaction creation, single-use invalidation, and expiration."""
     db = SessionLocal()

@@ -112,15 +112,19 @@ def send_email_via_resend(
     recipient: str,
     subject: str,
     html_body: str,
-    attachments: Optional[List[Tuple[str, bytes]]] = None
+    attachments: Optional[List[Tuple[str, bytes]]] = None,
+    text_body: Optional[str] = None
 ) -> Tuple[bool, Optional[str]]:
     sender = from_email if (from_email and "@" in from_email and "nandha" not in from_email) else "onboarding@resend.dev"
     payload: Dict[str, Any] = {
-        "from": f"Nandha LeetCode Tracker <{sender}>",
+        "from": f"Nandha Engineering College — LeetCode Tracker <{sender}>",
         "to": [recipient],
         "subject": subject,
         "html": html_body
     }
+    if text_body:
+        payload["text"] = text_body
+
     if attachments:
         resend_attachments = []
         for name, content in attachments:
@@ -157,14 +161,18 @@ def send_email_via_brevo(
     recipient: str,
     subject: str,
     html_body: str,
-    attachments: Optional[List[Tuple[str, bytes]]] = None
+    attachments: Optional[List[Tuple[str, bytes]]] = None,
+    text_body: Optional[str] = None
 ) -> Tuple[bool, Optional[str]]:
     payload: Dict[str, Any] = {
-        "sender": {"name": "Nandha LeetCode Tracker", "email": from_email or "reports@nandha.edu.in"},
+        "sender": {"name": "Nandha Engineering College — LeetCode Tracker", "email": from_email or "reports@nandha.edu.in"},
         "to": [{"email": recipient}],
         "subject": subject,
         "htmlContent": html_body
     }
+    if text_body:
+        payload["textContent"] = text_body
+
     if attachments:
         brevo_attachments = []
         for name, content in attachments:
@@ -199,7 +207,8 @@ def send_email(
     recipient: str,
     subject: str,
     html_body: str,
-    attachments: Optional[List[Tuple[str, bytes]]] = None
+    attachments: Optional[List[Tuple[str, bytes]]] = None,
+    text_body: Optional[str] = None
 ) -> Tuple[bool, Optional[str]]:
     """
     Core Email Sender function with HTTPS API (Resend/Brevo) & Gmail SMTP support.
@@ -215,17 +224,20 @@ def send_email(
     brevo_key = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
 
     if resend_key:
-        return send_email_via_resend(resend_key, from_email, recipient, subject, html_body, attachments)
+        return send_email_via_resend(resend_key, from_email, recipient, subject, html_body, attachments, text_body)
     if brevo_key:
-        return send_email_via_brevo(brevo_key, from_email, recipient, subject, html_body, attachments)
+        return send_email_via_brevo(brevo_key, from_email, recipient, subject, html_body, attachments, text_body)
 
     if not smtp_user or not smtp_pass:
         return False, "SMTP credentials not configured. Set SMTP_USERNAME & SMTP_PASSWORD or RESEND_API_KEY / BREVO_API_KEY."
 
-    msg = MIMEMultipart()
-    msg['From'] = from_email
+    msg = MIMEMultipart('alternative')
+    msg['From'] = f"Nandha Engineering College — LeetCode Tracker <{from_email}>"
     msg['To'] = recipient
     msg['Subject'] = subject
+
+    if text_body:
+        msg.attach(MIMEText(text_body, 'plain'))
     msg.attach(MIMEText(html_body, 'html'))
 
     if attachments:
@@ -251,6 +263,174 @@ def send_email(
             err_msg += " | Render Free Tier blocks outbound SMTP ports 587/465. Set RESEND_API_KEY or BREVO_API_KEY in Render env vars for instant HTTPS delivery."
         logger.error(f"Failed to send email to '{recipient}': {err_msg}")
         return False, err_msg
+
+
+def build_otp_email_template(otp: str) -> Tuple[str, str, str]:
+    """
+    Generates professional institutional HTML and plain-text OTP emails
+    for NANDHA ENGINEERING COLLEGE (AUTONOMOUS) LeetCode Tracker Admin Auth.
+    """
+    subject = "NEC LeetCode Tracker — Secure Administrator Verification Code"
+
+    html_body = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{subject}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #1e293b;">
+  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9; padding: 30px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; background-color: #ffffff; border-radius: 20px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
+          
+          <!-- Header Banner -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); padding: 32px 24px; text-align: center; color: #ffffff;">
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="center">
+                    <div style="display: inline-block; padding: 6px 14px; background-color: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; color: #38bdf8; text-transform: uppercase; margin-bottom: 12px;">
+                      OFFICIAL ADMINISTRATOR PORTAL
+                    </div>
+                    <h1 style="margin: 0 0 4px 0; font-size: 20px; font-weight: 900; letter-spacing: -0.5px; color: #ffffff; line-height: 1.3;">
+                      NANDHA ENGINEERING COLLEGE
+                    </h1>
+                    <div style="font-size: 12px; font-weight: 800; color: #fbbf24; letter-spacing: 1px; margin-bottom: 8px;">
+                      (AUTONOMOUS)
+                    </div>
+                    <div style="font-size: 13px; font-weight: 700; color: #cbd5e1;">
+                      LeetCode Weekly Performance Tracker
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Body Content -->
+          <tr>
+            <td style="padding: 32px 28px;">
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
+                
+                <!-- Verification Title -->
+                <tr>
+                  <td style="padding-bottom: 20px;">
+                    <div style="font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">
+                      🔐 Secure Administrator Verification
+                    </div>
+                    <p style="margin: 0; font-size: 14px; color: #475569; line-height: 1.6;">
+                      Hello Administrator,
+                    </p>
+                    <p style="margin: 8px 0 0 0; font-size: 14px; color: #475569; line-height: 1.6;">
+                      We received a request to verify administrator access to the <strong>Nandha Engineering College LeetCode Weekly Performance Tracker</strong>. Use the verification code below to continue.
+                    </p>
+                  </td>
+                </tr>
+
+                <!-- OTP Display Box -->
+                <tr>
+                  <td align="center" style="padding: 12px 0 24px 0;">
+                    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td align="center" style="background-color: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 24px 16px;">
+                          <div style="font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #64748b; text-transform: uppercase; margin-bottom: 10px;">
+                            YOUR VERIFICATION CODE
+                          </div>
+                          <div style="font-size: 34px; font-weight: 900; letter-spacing: 8px; color: #0f172a; font-family: 'Courier New', Courier, monospace; margin: 4px 0 12px 0;">
+                            {otp}
+                          </div>
+                          <div style="font-size: 13px; font-weight: 700; color: #dc2626; margin-bottom: 4px;">
+                            ⏱ This verification code expires in 5 minutes.
+                          </div>
+                          <div style="font-size: 12px; color: #64748b;">
+                            For your security, this code can only be used once.
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Security Notice Box -->
+                <tr>
+                  <td style="padding-bottom: 24px;">
+                    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td style="background-color: #fffbe5; border: 1px solid #fef3c7; border-left: 4px solid #f59e0b; border-radius: 12px; padding: 14px 18px;">
+                          <div style="font-size: 13px; font-weight: 800; color: #92400e; margin-bottom: 4px;">
+                            🛡 Security Notice
+                          </div>
+                          <div style="font-size: 13px; color: #b45309; line-height: 1.5;">
+                            If you did not request this verification code, please ignore this email. Never share your verification code with anyone.
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 24px 28px; text-align: center;">
+              <div style="font-size: 12px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">
+                NANDHA ENGINEERING COLLEGE (AUTONOMOUS)
+              </div>
+              <div style="font-size: 12px; font-weight: 700; color: #2563eb; margin-bottom: 8px;">
+                LeetCode Weekly Performance Tracker
+              </div>
+              <div style="font-size: 11px; color: #64748b; margin-bottom: 12px;">
+                Official Administrator Authentication System
+              </div>
+              <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">
+                This is an automated security message. Please do not reply directly to this email.
+              </div>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""
+
+    plain_text_body = f"""NANDHA ENGINEERING COLLEGE (AUTONOMOUS)
+LeetCode Weekly Performance Tracker
+OFFICIAL ADMINISTRATOR PORTAL
+
+SECURE ADMINISTRATOR VERIFICATION
+
+Hello Administrator,
+
+We received a request to verify administrator access to the Nandha Engineering College LeetCode Weekly Performance Tracker.
+
+YOUR VERIFICATION CODE:
+
+{otp}
+
+This verification code expires in 5 minutes.
+For your security, this code can only be used once.
+
+--------------------------------------------------
+SECURITY NOTICE
+If you did not request this verification code, please ignore this email.
+Never share your verification code with anyone.
+--------------------------------------------------
+
+NANDHA ENGINEERING COLLEGE (AUTONOMOUS)
+LeetCode Weekly Performance Tracker
+Official Administrator Authentication System
+This is an automated security message. Please do not reply to this email.
+"""
+
+    return subject, html_body, plain_text_body
+
 
 
 def generate_canonical_report_files(db: Session) -> Dict[str, bytes]:

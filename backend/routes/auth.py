@@ -198,26 +198,13 @@ def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(get_db
         raise HTTPException(status_code=400, detail=str(ve))
 
     # Official Institutional Email Template
-    subject = "NEC LeetCode Tracker — Admin Verification Code"
-    body_html = f"""
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
-      <h2 style="color: #1e3a8a; margin-bottom: 4px; font-weight: 800;">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</h2>
-      <p style="color: #64748b; font-size: 13px; font-weight: bold; margin-top: 0;">LeetCode Weekly Performance Tracker</p>
-      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 16px 0;" />
-      <p style="color: #334155; font-size: 14px;">Your administrator verification code is:</p>
-      <div style="background-color: #f1f5f9; padding: 20px; border-radius: 12px; text-align: center; margin: 20px 0; border: 1px border #cbd5e1;">
-        <span style="font-size: 36px; font-weight: 900; letter-spacing: 10px; color: #1e293b; font-family: monospace;">{plain_otp}</span>
-      </div>
-      <p style="font-size: 13px; color: #64748b;">This code expires in <b>5 minutes</b>.</p>
-      <p style="font-size: 12px; color: #94a3b8; margin-top: 24px;">If you did not request this verification code, please ignore this email.</p>
-      <p style="font-size: 12px; color: #64748b;">This is an automated security message.</p>
-    </div>
-    """
+    from backend.services.email_service import build_otp_email_template, send_email
+    subject, body_html, body_text = build_otp_email_template(plain_otp)
 
-    from backend.services.email_service import send_email
     logger.info(f"[EMAIL_PROVIDER] Dispatching OTP email via configured service to recipient: {clean_email}")
 
-    email_sent, err_msg = send_email(clean_email, subject, body_html)
+    email_sent, err_msg = send_email(clean_email, subject, body_html, text_body=body_text)
+
 
     if not email_sent:
         logger.error(f"[EMAIL_SEND_FAILURE] Delivery failed for {clean_email}: {err_msg}")
