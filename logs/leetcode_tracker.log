@@ -27407,3 +27407,47 @@ Action: Request blocked
 [2026-08-14 17:46:50,087] [INFO] [leetcode_tracker]: Backend Application ready and listening!
 [2026-08-14 17:46:50,313] [INFO] [leetcode_tracker]: Checking WeeklySession ID 20 (WEEK-2026-07-26) status: 'FINALIZED' at IST 17:46
 [2026-08-14 17:46:50,315] [INFO] [leetcode_tracker]: Session WEEK-2026-07-26 is locked (FINALIZED). No recovery action needed.
+[2026-08-14 17:51:49,387] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-14 17:51:49,389] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-14 17:51:49,665] [WARNING] [leetcode_tracker]: Database seed/reseed skipped or noted: name 'LeetCodeProfileStats' is not defined
+[2026-08-14 17:51:49,669] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-14 17:51:49,670] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-14 17:51:49,671] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-14 17:51:49,846] [INFO] [leetcode_tracker]: Checking WeeklySession ID 20 (WEEK-2026-07-26) status: 'FINALIZED' at IST 17:51
+[2026-08-14 17:51:49,856] [INFO] [leetcode_tracker]: Session WEEK-2026-07-26 is locked (FINALIZED). No recovery action needed.
+[2026-08-14 18:03:29,388] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-14 18:03:29,719] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 18:03:31,158] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-14 18:03:56,899] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 18:03:59,288] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-14 18:03:59,290] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-14 18:03:59,591] [WARNING] [leetcode_tracker]: Database seed/reseed skipped or noted: name 'LeetCodeProfileStats' is not defined
+[2026-08-14 18:03:59,594] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-14 18:03:59,596] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-14 18:03:59,596] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-14 18:03:59,813] [INFO] [leetcode_tracker]: Checking WeeklySession ID 20 (WEEK-2026-07-26) status: 'FINALIZED' at IST 18:03
+[2026-08-14 18:03:59,814] [INFO] [leetcode_tracker]: Session WEEK-2026-07-26 is locked (FINALIZED). No recovery action needed.
+[2026-08-14 18:04:03,352] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-14 18:04:40,655] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 18:04:43,078] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-14 18:04:43,079] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-14 18:04:43,378] [WARNING] [leetcode_tracker]: Database seed/reseed skipped or noted: name 'LeetCodeProfileStats' is not defined
+[2026-08-14 18:04:43,382] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-14 18:04:43,383] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-14 18:04:43,384] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-14 18:04:43,622] [INFO] [leetcode_tracker]: Checking WeeklySession ID 20 (WEEK-2026-07-26) status: 'FINALIZED' at IST 18:04
+[2026-08-14 18:04:43,623] [INFO] [leetcode_tracker]: Session WEEK-2026-07-26 is locked (FINALIZED). No recovery action needed.
+[2026-08-14 18:04:46,310] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-14 18:04:56,294] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 18:05:01,076] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-14 18:05:01,740] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-14 18:05:01,808] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-14 18:05:01,816] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-14 18:05:02,034] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-14 18:05:02,178] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-14 18:05:04,570] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-14 18:05:05,760] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-14 18:05:05,936] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-14 18:05:06,048] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-14 18:05:06,243] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-14 18:05:06,668] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!

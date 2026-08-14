@@ -29,11 +29,19 @@ def get_students(
     session_id: Optional[int] = None,
     db: Session = Depends(get_db)
 ):
+    if db.query(Student).count() < 300:
+        try:
+            from backend.seed import seed_database
+            seed_database()
+        except Exception:
+            pass
+
     query = db.query(Student).options(
         joinedload(Student.department),
         joinedload(Student.section),
         joinedload(Student.stats)
     ).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+
 
     if dept_id:
         query = query.filter(Student.department_id == dept_id)
