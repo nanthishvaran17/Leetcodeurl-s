@@ -1,8 +1,10 @@
 # Dependencies
 node_modules/
 frontend/node_modules/
+serviceAccountKey.json
 .pnp
 .pnp.js
+
 
 # Python Byte-code / Environment
 __pycache__/

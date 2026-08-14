@@ -49,16 +49,15 @@ def get_database_health_endpoint(db: Session = Depends(get_db)):
         db_url_str = str(db.bind.url) if db.bind else ""
         db_type = "postgresql" if ("postgres" in db_url_str or "postgresql" in db_url_str) else "sqlite"
 
-        # Check Firebase Realtime Database status if configured
-        rtdb_student_count = None
+        fs_student_count = None
         try:
-            from backend.services.firebase_rtdb_service import get_rtdb_reference
-            rtdb_ref = get_rtdb_reference("students")
-            if rtdb_ref:
-                snap = rtdb_ref.get()
-                if snap:
-                    rtdb_student_count = len(snap)
-                    db_type = "firebase_realtime_database"
+            from backend.services.firestore_service import get_firestore_db
+            fs_db = get_firestore_db()
+            if fs_db:
+                students_docs = list(fs_db.collection("students").stream())
+                if students_docs:
+                    fs_student_count = len(students_docs)
+                    db_type = "cloud_firestore"
         except Exception:
             pass
 
@@ -66,7 +65,7 @@ def get_database_health_endpoint(db: Session = Depends(get_db)):
             "status": "healthy",
             "database_type": db_type,
             "connection_status": "connected",
-            "student_count": rtdb_student_count if rtdb_student_count is not None else student_count,
+            "student_count": fs_student_count if fs_student_count is not None else student_count,
             "stats_count": stats_count,
             "verified_count": verified_count,
             "pending_count": pending_count,
@@ -74,6 +73,7 @@ def get_database_health_endpoint(db: Session = Depends(get_db)):
             "latency_ms": latency_ms,
             "last_updated": datetime.datetime.utcnow().isoformat() + "Z"
         }
+
 
     except Exception as exc:
         return {

@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, Lock, User, Mail, KeyRound, AlertCircle, CheckCircle2, Loader2, ArrowLeft, RefreshCw, X, Eye, EyeOff } from 'lucide-react';
+import { Shield, Lock, User, Mail, AlertCircle, CheckCircle2, Loader2, ArrowLeft, RefreshCw, X, Eye, EyeOff } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
-import { GoogleSignInButton } from '../components/GoogleSignInButton';
 import api from '../services/api';
 
 interface LoginPageProps {
@@ -21,7 +20,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-
 
   // UI & Timer States
   const [error, setError] = useState('');
@@ -51,7 +49,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
-
 
   // 5-minute OTP Expiration Timer
   useEffect(() => {
@@ -89,14 +86,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
 
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail || !cleanEmail.includes('@')) {
-      setError('Please enter a valid official email address.');
+      setError('Please enter your registered administrator email.');
       return;
     }
 
     setLoading(true);
     try {
       const res = await api.post('/auth/send-otp', { email: cleanEmail });
-      setSuccessMsg(res.data.message || 'OTP sent to your registered email address.');
+      setSuccessMsg(res.data.message || 'Verification code sent to your registered email address.');
       setRequestId(res.data.request_id || '');
       setStep('otp_verify');
       setOtpDigits(['', '', '', '', '', '']);
@@ -106,7 +103,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
         digitRefs[0].current?.focus();
       }, 100);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Unable to send the verification code. Please check the email service configuration or try again later.');
+      if (err.response?.status === 400 || err.response?.status === 404) {
+        setError(err.response?.data?.detail || 'Please enter your registered administrator email.');
+      } else if (err.response?.status === 503 || err.response?.status === 500) {
+        setError('Unable to send the verification code. Please try again.');
+      } else {
+        setError('Authentication service is temporarily unavailable. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -130,7 +133,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
         digitRefs[0].current?.focus();
       }, 100);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Unable to send the verification code. Please check the email service configuration or try again later.');
+      setError('Unable to send the verification code. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -150,7 +153,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
     newDigits[index] = digit;
     setOtpDigits(newDigits);
 
-    // Auto-advance focus
     if (index < 5) {
       digitRefs[index + 1].current?.focus();
     }
@@ -225,25 +227,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       login(res.data.access_token, res.data.user);
       onSuccess();
     } catch (err: any) {
-      if (
-        (cleanUser.toLowerCase() === 'admin' || cleanUser.toLowerCase() === 'nanthishvaran17@gmail.com') &&
-        (cleanPass === 'admin123' || cleanPass.length > 0)
-      ) {
-        const fallbackUser = {
-          id: 1,
-          username: "admin",
-          email: "nanthishvaran17@gmail.com",
-          role: "Admin",
-          is_active: true
-        };
-        const fallbackToken = "sess_admin_" + Date.now();
-        login(fallbackToken, fallbackUser);
-        onSuccess();
-        return;
-      }
-
       if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
-        setError('Login request timed out. Please check backend server.');
+        setError('Authentication service is temporarily unavailable. Please try again.');
       } else {
         setError(err.response?.data?.detail || 'Invalid username or password.');
       }
@@ -251,8 +236,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       setLoading(false);
     }
   };
-
-
 
   const formatTimer = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -275,14 +258,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       
       {/* Header */}
       <div className="text-center space-y-1.5">
-
         <div className="w-12 h-12 rounded-2xl bg-brand-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-brand-600/30">
           <Shield className="w-6 h-6" />
         </div>
         <h2 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">
           NANDHA ENGINEERING COLLEGE
         </h2>
-        <p className="text-xs font-bold text-brand-600 dark:text-brand-400">
+        <p className="text-[11px] font-extrabold uppercase tracking-widest text-brand-600 dark:text-brand-400">
+          (AUTONOMOUS)
+        </p>
+        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
           LeetCode Performance Tracker • Official Portal
         </p>
       </div>
@@ -361,7 +346,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
               <form onSubmit={handleSendOtp} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-                    Official Email Address
+                    Official Administrator Email
                   </label>
                   <div className="relative">
                     <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-3.5" />
@@ -369,7 +354,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="student@nandhaengg.org or admin@nandha.edu.in"
+                      placeholder="Enter your official administrator email"
                       required
                       className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-navy-900 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
                     />
@@ -391,17 +376,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                   )}
                 </button>
               </form>
-
-              {/* Google Sign In Option */}
-              <div className="space-y-2 pt-1">
-                <div className="relative flex items-center justify-center">
-                  <div className="border-t border-gray-200 dark:border-gray-800 w-full"></div>
-                  <span className="bg-white dark:bg-navy-950 px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest absolute">
-                    OR GOOGLE SIGN IN
-                  </span>
-                </div>
-                <GoogleSignInButton onSuccess={onSuccess} />
-              </div>
             </div>
           )}
 
@@ -425,10 +399,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                    6-Digit Verification Code
+                    Verification Code
                   </label>
                   <span className="text-xs font-extrabold font-mono text-brand-600 dark:text-brand-400">
-                    Expires: {formatTimer(timerSeconds)}
+                    OTP expires in {formatTimer(timerSeconds)}
                   </span>
                 </div>
 
@@ -495,7 +469,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="admin"
+                placeholder="Enter admin username"
                 required
                 className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-navy-900 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
               />
@@ -527,7 +501,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
             </div>
           </div>
 
-
           <button
             type="submit"
             disabled={loading}
@@ -539,7 +512,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                 <span>Authenticating...</span>
               </>
             ) : (
-              <span>Sign In to Admin Dashboard</span>
+              <span>SIGN IN TO ADMIN DASHBOARD</span>
             )}
           </button>
         </form>
