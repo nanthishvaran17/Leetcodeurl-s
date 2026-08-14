@@ -369,8 +369,9 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
               return (
                 <tr
                   key={student.id}
-                  className="hover:bg-brand-50/40 dark:hover:bg-brand-900/20 transition-colors font-medium text-xs"
+                  className="hover:bg-brand-50/60 dark:hover:bg-navy-800/50 transition-all duration-200 group font-medium text-xs border-b border-gray-100 dark:border-navy-800/60 cursor-pointer"
                 >
+
                   <td className="py-3 px-3 text-center">
                     <input
                       type="checkbox"

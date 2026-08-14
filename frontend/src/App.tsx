@@ -135,7 +135,8 @@ export const App: React.FC = () => {
         )}
 
         {/* Main Content View Container */}
-        <main className="flex-1 w-full overflow-hidden">
+        <main key={activeTab} className="flex-1 w-full overflow-hidden animate-fadeIn">
+
           
           {activeTab === 'landing' && (
             <LandingPage

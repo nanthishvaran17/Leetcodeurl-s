@@ -108,7 +108,8 @@ export const GrowthIntelligencePage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 py-2 pb-16">
+    <div className="space-y-8 py-2 pb-16 animate-slideUp">
+
       
       {/* Executive Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-2xl border border-brand-500/30">

@@ -25629,3 +25629,24 @@ Action: Request blocked
 [2026-08-14 10:46:01,315] [INFO] [leetcode_tracker]: Backend Application ready and listening!
 [2026-08-14 10:46:01,536] [INFO] [leetcode_tracker]: Checking WeeklySession ID 16 (WEEK-2026-08-09) status: 'FINALIZED' at IST 10:46
 [2026-08-14 10:46:01,536] [INFO] [leetcode_tracker]: Session WEEK-2026-08-09 is locked (FINALIZED). No recovery action needed.
+[2026-08-14 10:48:40,953] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-14 10:48:40,955] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-14 10:48:41,026] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-14 10:48:41,027] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-14 10:48:41,028] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-14 10:48:41,227] [INFO] [leetcode_tracker]: Checking WeeklySession ID 16 (WEEK-2026-08-09) status: 'FINALIZED' at IST 10:48
+[2026-08-14 10:48:41,227] [INFO] [leetcode_tracker]: Session WEEK-2026-08-09 is locked (FINALIZED). No recovery action needed.
+[2026-08-14 10:48:50,315] [WARNING] [leetcode_tracker]: SECURITY ALERT: 5 blocked protected-resource attempts detected.
+Time: 14-08-2026 10:48 IST
+Source: ip_05d870d977dcf987
+User/Role: UNKNOWN
+Resource: Student Comparison
+Contest: Session 20
+Attempts: 5 blocked attempts in 10 minutes
+Reason: NOT_AUTHENTICATED
+Action: Request blocked
+[2026-08-14 10:48:51,073] [INFO] [leetcode_tracker]: Successfully delivered email to 'admin@nandha.edu.in' via Brevo HTTPS API
+[2026-08-14 10:51:42,209] [INFO] [leetcode_tracker]: [ADMIN_LOGIN_SUCCESS] Administrator admin logged in successfully.
+[2026-08-14 10:51:42,232] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-63675] ADMIN_LOGIN by admin (admin@college.edu)
+[2026-08-14 10:51:42,705] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-14 10:51:42,736] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2

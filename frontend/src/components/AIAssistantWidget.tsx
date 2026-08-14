@@ -112,7 +112,8 @@ export const AIAssistantWidget: React.FC = () => {
 
       {/* Slide-Up Chat Panel */}
       {isOpen && (
-        <div className="w-96 max-w-[calc(100vw-2rem)] h-[540px] glass-card rounded-3xl border border-gray-200 dark:border-navy-800 shadow-2xl flex flex-col overflow-hidden animate-fadeIn">
+        <div className="w-96 max-w-[calc(100vw-2rem)] h-[540px] glass-card rounded-3xl border border-gray-200 dark:border-navy-800 shadow-2xl flex flex-col overflow-hidden animate-popIn">
+
           
           {/* Header */}
           <div className="p-4 bg-gradient-to-r from-brand-600 to-indigo-600 text-white flex items-center justify-between shrink-0 shadow-md">
