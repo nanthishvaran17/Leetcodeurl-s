@@ -196,7 +196,7 @@ export const App: React.FC = () => {
 
           {activeTab === 'system-health' && (
             isTabAuthorized(['admin', 'super admin'])
-              ? <SystemHealthPage />
+              ? <SystemHealthPage onNavigateTab={setActiveTab} />
               : renderAccessRestricted('System Operations')
           )}
 

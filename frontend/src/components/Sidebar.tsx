@@ -29,7 +29,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
     { id: 'students', label: 'Student Leaderboard', icon: Users },
     { id: 'compare', label: 'Student Comparison', icon: BarChart3 },
     { id: 'quality', label: 'Data Quality Board', icon: CheckCircle2 },
-    { id: 'system-health', label: 'System Operations & Health', icon: Activity },
+    { id: 'system-health', label: 'Admin System Control Center', icon: Activity, badge: 'PROD' },
     { id: 'reports', label: 'Reports & Export', icon: FileSpreadsheet },
     { id: 'public', label: 'Public Shareable View', icon: Globe },
     { id: 'settings', label: 'Admin Settings', icon: Settings },
