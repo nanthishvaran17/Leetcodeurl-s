@@ -25666,3 +25666,14 @@ Action: Request blocked
 [2026-08-14 10:55:55,818] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
 [2026-08-14 10:56:01,959] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
 [2026-08-14 10:56:04,148] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 10:59:42,918] [INFO] [leetcode_tracker]: [ADMIN_LOGIN_SUCCESS] Administrator admin logged in successfully.
+[2026-08-14 10:59:42,943] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-67843] ADMIN_LOGIN by admin (admin@college.edu)
+[2026-08-14 10:59:43,355] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-14 10:59:43,394] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-14 10:59:53,427] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-14 10:59:53,429] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 11:01:04,135] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-14 11:01:04,164] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-14 11:01:15,786] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-14 11:01:15,789] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 11:01:17,353] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
