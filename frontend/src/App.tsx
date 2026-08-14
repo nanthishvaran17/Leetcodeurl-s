@@ -19,6 +19,8 @@ import { StaffDashboardView } from './pages/StaffDashboardView';
 import { GrowthIntelligencePage } from './pages/GrowthIntelligencePage';
 import { SystemHealthPage } from './pages/SystemHealthPage';
 import { ImportModal } from './components/ImportModal';
+import { AccessRestrictedView } from './components/AccessRestrictedView';
+import { AIAssistantWidget } from './components/AIAssistantWidget';
 import { StudentData } from './components/LeaderboardTable';
 import api from './services/api';
 
@@ -34,7 +36,6 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     fetchSummary();
-    triggerCloudSync();
   }, []);
 
   const fetchSummary = async () => {
@@ -88,6 +89,21 @@ export const App: React.FC = () => {
     );
   };
 
+  const isTabAuthorized = (allowedRoles: string[]) => {
+    if (!isAuthenticated) return false;
+    const roleClean = (user?.role || '').trim().toLowerCase();
+    if (roleClean === 'admin' || roleClean === 'super admin' || roleClean === 'super_admin') return true;
+    return allowedRoles.some(r => r.toLowerCase() === roleClean);
+  };
+
+  const renderAccessRestricted = (resourceTitle: string) => (
+    <AccessRestrictedView
+      resourceName={resourceTitle}
+      onGoBack={() => handleTabChange('dashboard')}
+      onOpenLogin={() => setShowLoginModal(true)}
+    />
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-navy-950 text-gray-900 dark:text-gray-100 flex flex-col font-sans transition-colors duration-200">
       
@@ -127,18 +143,21 @@ export const App: React.FC = () => {
           {activeTab === 'staff-dashboard' && <StaffDashboardView />}
 
           {activeTab === 'departments' && (
-            <DepartmentDashboard onSelectStudent={handleSelectStudent} />
+            isTabAuthorized(['admin', 'super admin', 'hod', 'faculty', 'staff', 'professor'])
+              ? <DepartmentDashboard onSelectStudent={handleSelectStudent} />
+              : renderAccessRestricted('Department Analytics')
           )}
 
           {activeTab === 'weekly-contest' && (
-            <WeeklyContestPage />
+            isTabAuthorized(['admin', 'super admin', 'hod', 'faculty', 'staff', 'professor'])
+              ? <WeeklyContestPage />
+              : renderAccessRestricted('Weekly Contest Tracker')
           )}
 
           {activeTab === 'students' && (
-            <StudentMasterPage
-              onSelectStudent={handleSelectStudent}
-              onOpenImport={() => setShowImportModal(true)}
-            />
+            isTabAuthorized(['admin', 'super admin', 'hod', 'faculty', 'staff', 'professor'])
+              ? <StudentMasterPage onSelectStudent={handleSelectStudent} onOpenImport={() => setShowImportModal(true)} />
+              : renderAccessRestricted('Student Leaderboard')
           )}
 
           {activeTab === 'profile' && selectedStudent && (
@@ -149,19 +168,27 @@ export const App: React.FC = () => {
           )}
 
           {activeTab === 'compare' && (
-            <ComparePage />
+            isTabAuthorized(['admin', 'super admin', 'hod', 'faculty', 'staff', 'professor'])
+              ? <ComparePage />
+              : renderAccessRestricted('Student Comparison')
           )}
 
           {activeTab === 'quality' && (
-            <DataQualityPage />
+            isTabAuthorized(['admin', 'super admin', 'hod', 'faculty', 'staff', 'professor'])
+              ? <DataQualityPage />
+              : renderAccessRestricted('Data Quality Board')
           )}
 
           {activeTab === 'system-health' && (
-            <SystemHealthPage />
+            isTabAuthorized(['admin', 'super admin'])
+              ? <SystemHealthPage />
+              : renderAccessRestricted('System Operations')
           )}
 
           {activeTab === 'reports' && (
-            <ReportsPage />
+            isTabAuthorized(['admin', 'super admin', 'hod', 'faculty', 'staff', 'professor'])
+              ? <ReportsPage />
+              : renderAccessRestricted('Reports & Exports')
           )}
 
           {activeTab === 'public' && (
@@ -169,11 +196,15 @@ export const App: React.FC = () => {
           )}
 
           {activeTab === 'settings' && (
-            <SettingsPage />
+            isTabAuthorized(['admin', 'super admin'])
+              ? <SettingsPage />
+              : renderAccessRestricted('Admin Settings')
           )}
 
           {activeTab === 'audit' && (
-            <AuditLogPage />
+            isTabAuthorized(['admin', 'super admin'])
+              ? <AuditLogPage />
+              : renderAccessRestricted('Audit Logs')
           )}
 
         </main>
@@ -201,6 +232,9 @@ export const App: React.FC = () => {
         onClose={() => setShowImportModal(false)}
         onSuccess={() => { fetchSummary(); setActiveTab('students'); }}
       />
+
+      {/* Floating Institutional AI Assistant */}
+      <AIAssistantWidget />
 
     </div>
   );

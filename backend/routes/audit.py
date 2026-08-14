@@ -6,12 +6,16 @@ from collections import defaultdict
 
 from backend.database import get_db
 from backend.models import Student, LeetCodeProfileStats, WeeklyStudentProgress
+from backend.security import require_security_access
 
 router = APIRouter(prefix="/api/audit", tags=["Audit"])
 
 
 @router.get("/data-quality")
-def get_full_data_quality_audit(db: Session = Depends(get_db)) -> Dict[str, Any]:
+def get_full_data_quality_audit(
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Data Quality Board"))
+) -> Dict[str, Any]:
     """
     Complete pipeline health report.
     Returns per-student breakdown, duplicate-pattern detection,
@@ -177,7 +181,11 @@ def get_full_data_quality_audit(db: Session = Depends(get_db)) -> Dict[str, Any]
 
 
 @router.get("/student/{student_id}/pipeline")
-def get_student_pipeline_audit(student_id: int, db: Session = Depends(get_db)) -> Dict[str, Any]:
+def get_student_pipeline_audit(
+    student_id: int, 
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Data Quality Board"))
+) -> Dict[str, Any]:
     """
     Per-student pipeline verification report.
     Shows every field at every layer.

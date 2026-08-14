@@ -45,6 +45,10 @@ export interface StudentData {
   reg_no: string;
   name: string;
   email?: string;
+  total_solved?: number | null;
+  easy_solved?: number | null;
+  medium_solved?: number | null;
+  hard_solved?: number | null;
   department_id?: number;
   department?: { id?: number; name: string; code: string };
   year_level: string;

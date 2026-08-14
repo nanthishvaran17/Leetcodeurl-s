@@ -21,7 +21,7 @@ from backend.routes import (
     leaderboard, analytics, reports, settings as settings_route,
     audit, public, sync, history, risk, goals, system_health, weekly_contests
 )
-from backend.routes import admin, email_reports
+from backend.routes import admin, email_reports, ai_assistant
 
 app = FastAPI(
     title="College LeetCode Weekly Tracker API",
@@ -29,8 +29,9 @@ app = FastAPI(
     version="2.0.0"
 )
 
-# Health Endpoint for Render / Cloud Monitors
+# Health Endpoint for Render / Cloud Monitors & API Diagnostics
 @app.get("/health")
+@app.get("/api/health")
 def health_check():
     return {
         "status": "healthy",
@@ -44,36 +45,58 @@ origins = [
     "http://localhost:3000",
     "http://localhost:5173",
     "http://127.0.0.1:3000",
+    "https://leetcodeurls.netlify.app",
     "https://leetcode-student-data.web.app",
     "https://leetcode-student-data.firebaseapp.com"
 ]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origin_regex=r"https://.*\.web\.app|https://.*\.firebaseapp\.com",
+    allow_origin_regex=r"https://.*\.netlify\.app|https://.*\.web\.app|https://.*\.firebaseapp\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Mount All API Routers (both with /api prefix and root for full compatibility)
+app.include_router(auth.router, prefix="/api")
 app.include_router(auth.router)
+app.include_router(admin.router, prefix="/api")
 app.include_router(admin.router)
+app.include_router(students.router, prefix="/api")
 app.include_router(students.router)
+app.include_router(sync.router, prefix="/api")
 app.include_router(sync.router)
+app.include_router(departments.router, prefix="/api")
 app.include_router(departments.router)
+app.include_router(sessions.router, prefix="/api")
 app.include_router(sessions.router)
+app.include_router(leaderboard.router, prefix="/api")
 app.include_router(leaderboard.router)
+app.include_router(analytics.router, prefix="/api")
 app.include_router(analytics.router)
+app.include_router(reports.router, prefix="/api")
 app.include_router(reports.router)
+app.include_router(settings_route.router, prefix="/api")
 app.include_router(settings_route.router)
+app.include_router(audit.router, prefix="/api")
 app.include_router(audit.router)
+app.include_router(public.router, prefix="/api")
 app.include_router(public.router)
+app.include_router(history.router, prefix="/api")
 app.include_router(history.router)
+app.include_router(risk.router, prefix="/api")
 app.include_router(risk.router)
+app.include_router(goals.router, prefix="/api")
 app.include_router(goals.router)
+app.include_router(system_health.router, prefix="/api")
 app.include_router(system_health.router)
 app.include_router(weekly_contests.router, prefix="/api")
+app.include_router(weekly_contests.router)
+app.include_router(email_reports.router, prefix="/api")
 app.include_router(email_reports.router)
+app.include_router(ai_assistant.router, prefix="/api")
+app.include_router(ai_assistant.router)
 
 # Mount Static File Directories
 is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")
@@ -101,9 +124,17 @@ def on_startup():
         logger.warning(f"Database migration note: {_mig_err}")
 
     try:
-        seed_database()
-        from backend.assets.reseed_all_stats import reseed_all_student_stats
-        reseed_all_student_stats()
+        from backend.database import SessionLocal
+        from backend.models import Student
+        db_init = SessionLocal()
+        student_cnt = db_init.query(Student).count()
+        db_init.close()
+
+        if student_cnt == 0:
+            logger.info("Empty database detected. Seeding initial student roster & profile stats...")
+            seed_database()
+            from backend.assets.reseed_all_stats import reseed_all_student_stats
+            reseed_all_student_stats()
     except Exception as e:
         logger.warning(f"Database seed/reseed skipped or noted: {e}")
 
@@ -129,7 +160,7 @@ def on_startup():
     # so the frontend never shows "0 Solved / Verified just now" for unfetched students.
     try:
         from backend.assets.sync_firestore import initialize_pending_records
-        initialize_pending_records()
+        asyncio.create_task(asyncio.to_thread(initialize_pending_records))
     except Exception as _init_err:
         logger.warning(f"Firestore pending init note: {_init_err}")
 

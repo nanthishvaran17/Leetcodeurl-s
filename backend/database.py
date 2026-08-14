@@ -32,7 +32,7 @@ elif db_url.startswith("sqlite:///./"):
 
 engine = create_engine(
     db_url,
-    connect_args={"check_same_thread": False} if "sqlite" in db_url else {},
+    connect_args={"check_same_thread": False, "timeout": 30} if "sqlite" in db_url else {},
     echo=False
 )
 
@@ -120,5 +120,27 @@ def run_migrations():
                         conn.execute(__import__('sqlalchemy').text(sql))
                         conn.commit()
                         print(f"[DB Migration] Added weekly_sessions column: {col_name}")
+
+            # Promote nanthishvaran17@gmail.com to Admin role
+            admin_check = conn.execute(
+                __import__('sqlalchemy').text("SELECT id, role FROM users WHERE email = 'nanthishvaran17@gmail.com'")
+            ).fetchone()
+
+            if admin_check:
+                if admin_check[1] != "Admin" and admin_check[1] != "admin":
+                    conn.execute(
+                        __import__('sqlalchemy').text("UPDATE users SET role = 'Admin', is_active = 1 WHERE email = 'nanthishvaran17@gmail.com'")
+                    )
+                    conn.commit()
+                    print("[DB Migration] Promoted nanthishvaran17@gmail.com to Admin role.")
+            else:
+                conn.execute(
+                    __import__('sqlalchemy').text(
+                        "INSERT INTO users (username, email, hashed_password, role, is_active) "
+                        "VALUES ('nanthishvaran17', 'nanthishvaran17@gmail.com', 'N/A_OTP_USER', 'Admin', 1)"
+                    )
+                )
+                conn.commit()
+                print("[DB Migration] Created Admin User account for nanthishvaran17@gmail.com.")
     except Exception as e:
         print(f"[DB Migration] Warning: {e}")

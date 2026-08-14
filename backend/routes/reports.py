@@ -15,17 +15,25 @@ from backend.pdf_generator import generate_pdf_summary_report
 from backend.certificate_generator import generate_student_certificate
 from backend.email_service import send_weekly_report_email
 
+from backend.security import require_security_access
+
 router = APIRouter(prefix="/api/reports", tags=["Reports"])
 
 @router.post("/trigger-public-contest-workflow")
-def trigger_public_contest_workflow_endpoint(db: Session = Depends(get_db)):
+def trigger_public_contest_workflow_endpoint(
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Trigger Public Contest Workflow", required_roles=["admin", "super admin"]))
+):
     """Triggers Sunday 9:45 AM Public Contest fetch, Excel generation, and Email workflow."""
     from backend.services.weekly_report_service import run_sunday_0945_public_contest_workflow
     result = run_sunday_0945_public_contest_workflow(db)
     return result
 
 @router.post("/trigger-virtual-contest-workflow")
-def trigger_virtual_contest_workflow_endpoint(db: Session = Depends(get_db)):
+def trigger_virtual_contest_workflow_endpoint(
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Trigger Virtual Contest Workflow", required_roles=["admin", "super admin"]))
+):
     """Triggers Sunday 10:00 PM Virtual Contest fetch, Combined Excel generation, and Email workflow."""
     from backend.services.weekly_report_service import run_sunday_2200_virtual_contest_workflow
     result = run_sunday_2200_virtual_contest_workflow(db)
@@ -33,7 +41,10 @@ def trigger_virtual_contest_workflow_endpoint(db: Session = Depends(get_db)):
 
 @router.get("/export-excel")
 @router.get("/export-official-college-summary")
-def download_official_college_summary_excel(db: Session = Depends(get_db)):
+def download_official_college_summary_excel(
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Export Excel Summary Report", dept_scoped=True))
+):
     excel_bytes = generate_8_sheet_excel_report(db)
     return Response(
         content=excel_bytes,
@@ -42,7 +53,10 @@ def download_official_college_summary_excel(db: Session = Depends(get_db)):
     )
 
 @router.get("/export-master-tracker")
-def download_master_tracker_excel(db: Session = Depends(get_db)):
+def download_master_tracker_excel(
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Export Master Tracker Excel", dept_scoped=True))
+):
     excel_bytes = generate_8_sheet_excel_report(db)
     return Response(
         content=excel_bytes,
@@ -54,7 +68,8 @@ def download_master_tracker_excel(db: Session = Depends(get_db)):
 def download_weekly_contest_matrix_excel(
     batch: str = Query("2028"),
     dept_id: Optional[int] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Export Contest Matrix Excel", dept_scoped=True))
 ):
     excel_bytes = generate_weekly_contest_matrix_excel(db, batch_label=batch, dept_id=dept_id)
     return Response(
@@ -67,7 +82,8 @@ def download_weekly_contest_matrix_excel(
 def download_current_week_matrix(
     batch: str = Query("2028"),
     dept_id: Optional[int] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Export Current Week Matrix Excel", dept_scoped=True))
 ):
     excel_bytes = generate_single_week_matrix_excel(db, week_offset=0, batch_label=batch, dept_id=dept_id)
     return Response(
@@ -80,7 +96,8 @@ def download_current_week_matrix(
 def download_last_week_matrix(
     batch: str = Query("2028"),
     dept_id: Optional[int] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Export Last Week Matrix Excel", dept_scoped=True))
 ):
     excel_bytes = generate_single_week_matrix_excel(db, week_offset=1, batch_label=batch, dept_id=dept_id)
     return Response(
@@ -90,7 +107,11 @@ def download_last_week_matrix(
     )
 
 @router.get("/export-pdf")
-def download_pdf_report(dept_id: Optional[int] = None, db: Session = Depends(get_db)):
+def download_pdf_report(
+    dept_id: Optional[int] = None, 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Export PDF Report", dept_scoped=True))
+):
     pdf_bytes = generate_pdf_summary_report(db, dept_id=dept_id)
     return Response(
         content=pdf_bytes,
@@ -101,7 +122,11 @@ def download_pdf_report(dept_id: Optional[int] = None, db: Session = Depends(get
 from backend.word_generator import generate_word_report
 
 @router.get("/export-word")
-def download_word_report(dept_id: Optional[int] = None, db: Session = Depends(get_db)):
+def download_word_report(
+    dept_id: Optional[int] = None, 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Export Word Report", dept_scoped=True))
+):
     word_bytes = generate_word_report(db, dept_id=dept_id)
     return Response(
         content=word_bytes,
@@ -110,7 +135,12 @@ def download_word_report(dept_id: Optional[int] = None, db: Session = Depends(ge
     )
 
 @router.get("/export-csv")
-def download_csv_report(dept_id: Optional[int] = None, year_level: Optional[str] = None, db: Session = Depends(get_db)):
+def download_csv_report(
+    dept_id: Optional[int] = None, 
+    year_level: Optional[str] = None, 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Export CSV Report", dept_scoped=True))
+):
     query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
     if dept_id:
         query = query.filter(Student.department_id == dept_id)

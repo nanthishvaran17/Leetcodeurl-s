@@ -6,18 +6,22 @@ from backend.database import get_db
 from backend.models import Department, Section, Student
 from backend.schemas import DepartmentOut, DepartmentCreate, SectionOut, SectionCreate
 from backend.routes.auth import get_current_user
+from backend.security import require_security_access
 
 router = APIRouter(prefix="/api/departments", tags=["Departments"])
 
 @router.get("", response_model=List[DepartmentOut])
-def get_departments(db: Session = Depends(get_db)):
+def get_departments(
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Department Analytics", dept_scoped=True))
+):
     return db.query(Department).order_by(Department.name).all()
 
 @router.post("", response_model=DepartmentOut)
 def create_department(
     dept_in: DepartmentCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user=Depends(require_security_access(resource_name="Create Department", required_roles=["admin", "super admin"]))
 ):
     existing = db.query(Department).filter(
         (Department.name.ilike(dept_in.name)) | (Department.code.ilike(dept_in.code))
@@ -43,7 +47,7 @@ def create_section(
     dept_id: int,
     sec_in: SectionCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user=Depends(require_security_access(resource_name="Create Section", required_roles=["admin", "super admin"]))
 ):
     dept = db.query(Department).filter(Department.id == dept_id).first()
     if not dept:

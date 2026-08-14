@@ -8,7 +8,7 @@ const getApiBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_URL;
   
   if (isLocal) {
-    return envUrl ? `${envUrl}/api` : '/api';
+    return 'http://127.0.0.1:8000/api';
   }
   
   // Production Cloud Hosting (Firebase Hosting -> Render FastAPI Backend)

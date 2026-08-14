@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException, Body, Query
 from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional
 import os
@@ -6,8 +6,9 @@ import datetime
 
 from backend.database import get_db
 from backend.config import settings
-from backend.models import AdminSettingsModel, AuditLog, WeeklySession, SyncJob, Student
+from backend.models import AdminSettingsModel, AuditLog, AdminAuditLog, WeeklySession, SyncJob, Student
 from backend.routes.auth import get_current_user
+from backend.security import require_security_access
 from backend.backup_manager import (
     create_db_backup,
     list_backups_detail,
@@ -247,7 +248,10 @@ def get_system_health(db: Session = Depends(get_db)):
 
 
 @router.get("/audit-logs")
-def get_audit_logs(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def get_audit_logs(
+    db: Session = Depends(get_db), 
+    current_user=Depends(require_security_access(resource_name="Audit Logs", required_roles=["admin", "super admin"]))
+):
     logs = db.query(AuditLog).order_by(AuditLog.timestamp.desc()).limit(50).all()
     return [
         {
@@ -260,8 +264,62 @@ def get_audit_logs(db: Session = Depends(get_db), current_user=Depends(get_curre
     ]
 
 
+@router.get("/security-activity")
+def get_security_activity(
+    filter_type: Optional[str] = Query("ALL"),
+    limit: int = Query(50),
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Security Activity", required_roles=["admin", "super admin"]))
+):
+    """
+    Fetches recent Security Activity logs & Security Alerts for Admin Security View.
+    Supported filters: ALL, SUCCESS, BLOCKED, ALERTS
+    """
+    query = db.query(AdminAuditLog)
+    
+    clean_filter = (filter_type or "ALL").upper()
+    if clean_filter == "SUCCESS":
+        query = query.filter(AdminAuditLog.status == "SUCCESS")
+    elif clean_filter == "BLOCKED":
+        query = query.filter(AdminAuditLog.status == "BLOCKED")
+    elif clean_filter == "ALERTS":
+        query = query.filter((AdminAuditLog.status == "ALERT") | (AdminAuditLog.action == "SECURITY_ALERT"))
+    else:
+        query = query.filter(AdminAuditLog.action_type.in_(["SECURITY_ACCESS", "SECURITY"]))
+
+    logs = query.order_by(AdminAuditLog.id.desc()).limit(limit).all()
+    
+    results = []
+    for l in logs:
+        meta = l.metadata_json or {}
+        results.append({
+            "id": l.id,
+            "audit_id": l.audit_id,
+            "timestamp": l.created_at.isoformat() if l.created_at else datetime.datetime.utcnow().isoformat(),
+            "user": l.admin_name or "UNKNOWN",
+            "role": l.admin_role or "UNKNOWN",
+            "action": l.action,
+            "resource": l.target_id or meta.get("resource") or l.description,
+            "contest": meta.get("contest") or meta.get("session_id") or "N/A",
+            "result": l.status,
+            "denial_reason": meta.get("denial_reason") or l.description,
+            "ip_hash": l.ip_address,
+            "user_agent_category": l.user_agent or meta.get("user_agent_category")
+        })
+        
+    return {
+        "status": "success",
+        "filter": clean_filter,
+        "total": len(results),
+        "activities": results
+    }
+
+
 @router.post("/backup")
-def trigger_backup(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def trigger_backup(
+    db: Session = Depends(get_db), 
+    current_user=Depends(require_security_access(resource_name="System Backup", required_roles=["admin", "super admin"]))
+):
     res = create_db_backup(prefix="backup_leetcode_tracker")
     if res.get("status") == "SUCCESS":
         audit = AuditLog(
@@ -276,17 +334,26 @@ def trigger_backup(db: Session = Depends(get_db), current_user=Depends(get_curre
 
 
 @router.get("/backups")
-def get_backups_list(current_user=Depends(get_current_user)):
+def get_backups_list(
+    current_user=Depends(require_security_access(resource_name="Backups List", required_roles=["admin", "super admin"]))
+):
     return list_backups_detail()
 
 
 @router.post("/backups/{filename}/verify")
-def verify_backup_api(filename: str, current_user=Depends(get_current_user)):
+def verify_backup_api(
+    filename: str, 
+    current_user=Depends(require_security_access(resource_name="Verify Backup", required_roles=["admin", "super admin"]))
+):
     return verify_backup(filename)
 
 
 @router.post("/backups/{filename}/restore")
-def restore_backup_api(filename: str, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def restore_backup_api(
+    filename: str, 
+    db: Session = Depends(get_db), 
+    current_user=Depends(require_security_access(resource_name="Restore Backup", required_roles=["admin", "super admin"]))
+):
     res = restore_backup(filename)
     if res.get("status") == "SUCCESS":
         audit = AuditLog(
@@ -301,7 +368,11 @@ def restore_backup_api(filename: str, db: Session = Depends(get_db), current_use
 
 
 @router.delete("/backups/{filename}")
-def delete_backup_api(filename: str, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def delete_backup_api(
+    filename: str, 
+    db: Session = Depends(get_db), 
+    current_user=Depends(require_security_access(resource_name="Delete Backup", required_roles=["admin", "super admin"]))
+):
     res = delete_backup(filename)
     if res.get("status") == "SUCCESS":
         audit = AuditLog(
@@ -319,7 +390,7 @@ def delete_backup_api(filename: str, db: Session = Depends(get_db), current_user
 def trigger_advanced_operation(
     operation: str,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user=Depends(require_security_access(resource_name="Advanced Operations", required_roles=["admin", "super admin"]))
 ):
     valid_ops = ["clear-cache", "rebuild-index", "reconcile-sessions", "refetch-selected", "rebuild-reports"]
     if operation not in valid_ops:

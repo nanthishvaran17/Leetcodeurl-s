@@ -23762,3 +23762,102 @@ WHERE ? = leetcode_profile_stats.student_id]
 [2026-08-14 01:27:28,004] [INFO] [leetcode_tracker]: year=ALL
 [2026-08-14 01:27:28,006] [INFO] [leetcode_tracker]: attendance=ALL
 [2026-08-14 01:27:28,009] [INFO] [leetcode_tracker]: final_rows=273
+[2026-08-14 07:01:38,371] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-14 07:01:38,372] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-14 07:01:39,457] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-14 07:01:39,916] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-14 07:01:40,213] [WARNING] [leetcode_tracker]: Database seed/reseed skipped or noted: 'profile_rank' is an invalid keyword argument for StudentStatSnapshot
+[2026-08-14 07:01:40,758] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-14 07:01:40,782] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-14 07:01:40,787] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-14 07:01:41,787] [INFO] [leetcode_tracker]: Checking WeeklySession ID 16 (WEEK-2026-08-09) status: 'FINALIZED' at IST 07:01
+[2026-08-14 07:01:41,787] [INFO] [leetcode_tracker]: Session WEEK-2026-08-09 is locked (FINALIZED). No recovery action needed.
+[2026-08-14 07:09:29,077] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-14 07:09:29,079] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-14 07:09:30,564] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-14 07:09:31,530] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-14 07:09:31,965] [WARNING] [leetcode_tracker]: Database seed/reseed skipped or noted: 'profile_rank' is an invalid keyword argument for StudentStatSnapshot
+[2026-08-14 07:09:32,751] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-14 07:09:32,754] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-14 07:09:32,755] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-14 07:09:33,092] [INFO] [leetcode_tracker]: Checking WeeklySession ID 16 (WEEK-2026-08-09) status: 'FINALIZED' at IST 07:09
+[2026-08-14 07:09:33,092] [INFO] [leetcode_tracker]: Session WEEK-2026-08-09 is locked (FINALIZED). No recovery action needed.
+[2026-08-14 07:09:41,752] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-14 07:09:41,753] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-14 07:09:42,975] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-14 07:09:43,832] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-14 07:09:44,294] [WARNING] [leetcode_tracker]: Database seed/reseed skipped or noted: 'profile_rank' is an invalid keyword argument for StudentStatSnapshot
+[2026-08-14 07:09:44,783] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-14 07:09:44,786] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-14 07:09:44,786] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-14 07:09:45,207] [INFO] [leetcode_tracker]: Checking WeeklySession ID 16 (WEEK-2026-08-09) status: 'FINALIZED' at IST 07:09
+[2026-08-14 07:09:45,208] [INFO] [leetcode_tracker]: Session WEEK-2026-08-09 is locked (FINALIZED). No recovery action needed.
+[2026-08-14 07:09:54,745] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-14 07:09:54,746] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-14 07:09:55,662] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-14 07:09:56,411] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-14 07:09:56,938] [WARNING] [leetcode_tracker]: Database seed/reseed skipped or noted: 'profile_rank' is an invalid keyword argument for StudentStatSnapshot
+[2026-08-14 07:09:57,404] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-14 07:09:57,407] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-14 07:09:57,407] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-14 07:09:57,823] [INFO] [leetcode_tracker]: Checking WeeklySession ID 16 (WEEK-2026-08-09) status: 'FINALIZED' at IST 07:09
+[2026-08-14 07:09:57,832] [INFO] [leetcode_tracker]: Session WEEK-2026-08-09 is locked (FINALIZED). No recovery action needed.
+[2026-08-14 07:10:01,272] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-14 07:10:01,273] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-14 07:10:02,075] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-14 07:10:02,843] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-14 07:10:03,228] [WARNING] [leetcode_tracker]: Database seed/reseed skipped or noted: 'profile_rank' is an invalid keyword argument for StudentStatSnapshot
+[2026-08-14 07:10:03,704] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-14 07:10:03,708] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-14 07:10:03,708] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-14 07:10:04,217] [INFO] [leetcode_tracker]: Checking WeeklySession ID 16 (WEEK-2026-08-09) status: 'FINALIZED' at IST 07:10
+[2026-08-14 07:10:04,217] [INFO] [leetcode_tracker]: Session WEEK-2026-08-09 is locked (FINALIZED). No recovery action needed.
+[2026-08-14 07:10:06,735] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-14 07:10:06,738] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-14 07:10:07,602] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-14 07:10:08,233] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-14 07:10:08,687] [WARNING] [leetcode_tracker]: Database seed/reseed skipped or noted: 'profile_rank' is an invalid keyword argument for StudentStatSnapshot
+[2026-08-14 07:10:09,209] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-14 07:10:09,213] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-14 07:10:09,213] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-14 07:10:09,670] [INFO] [leetcode_tracker]: Checking WeeklySession ID 16 (WEEK-2026-08-09) status: 'FINALIZED' at IST 07:10
+[2026-08-14 07:10:09,671] [INFO] [leetcode_tracker]: Session WEEK-2026-08-09 is locked (FINALIZED). No recovery action needed.
+[2026-08-14 07:10:15,545] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-14 07:10:15,547] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-14 07:10:16,367] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-14 07:10:16,888] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-14 07:10:17,321] [WARNING] [leetcode_tracker]: Database seed/reseed skipped or noted: 'profile_rank' is an invalid keyword argument for StudentStatSnapshot
+[2026-08-14 07:10:17,772] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-14 07:10:17,774] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-14 07:10:17,774] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-14 07:10:18,144] [INFO] [leetcode_tracker]: Checking WeeklySession ID 16 (WEEK-2026-08-09) status: 'FINALIZED' at IST 07:10
+[2026-08-14 07:10:18,144] [INFO] [leetcode_tracker]: Session WEEK-2026-08-09 is locked (FINALIZED). No recovery action needed.
+[2026-08-14 08:18:36,694] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-14 08:18:36,704] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-14 08:18:36,870] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-14 08:18:36,873] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-14 08:18:36,874] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-14 08:18:37,199] [INFO] [leetcode_tracker]: Checking WeeklySession ID 16 (WEEK-2026-08-09) status: 'FINALIZED' at IST 08:18
+[2026-08-14 08:18:37,200] [INFO] [leetcode_tracker]: Session WEEK-2026-08-09 is locked (FINALIZED). No recovery action needed.
+[2026-08-14 08:18:37,694] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-14 08:18:37,742] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-14 08:18:37,782] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 3
+[2026-08-14 08:18:37,790] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 4
+[2026-08-14 08:18:37,818] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 5
+[2026-08-14 08:18:37,986] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 4
+[2026-08-14 08:18:37,988] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 3
+[2026-08-14 08:18:37,989] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 2
+[2026-08-14 08:18:37,993] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-14 08:18:37,995] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 08:18:38,119] [WARNING] [leetcode_tracker]: SECURITY ALERT: 5 blocked protected-resource attempts detected.
+Time: 14-08-2026 08:18 IST
+Source: ip_05d870d977dcf987
+User/Role: UNKNOWN
+Resource: Department Analytics
+Contest: N/A
+Attempts: 5 blocked attempts in 10 minutes
+Reason: NOT_AUTHENTICATED
+Action: Request blocked
+[2026-08-14 08:19:14,002] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-46506] ADMIN_LOGIN by admin (admin@college.edu)
+[2026-08-14 08:19:43,904] [ERROR] [leetcode_tracker]: Failed to record security audit log: QueuePool limit of size 5 overflow 10 reached, connection timed out, timeout 30.00 (Background on this error at: https://sqlalche.me/e/20/3o7r)
+[2026-08-14 08:19:45,100] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-92535] ADMIN_LOGIN by admin (admin@college.edu)

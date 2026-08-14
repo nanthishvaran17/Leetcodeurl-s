@@ -409,13 +409,11 @@ def seed_database():
         if not admin_user:
             admin_user = User(
                 username="admin",
-                email="admin@college.edu",
-                hashed_password=get_password_hash("admin123"),
+                email="admin@nandha.edu.in",
+                hashed_password=get_password_hash("SECURE_RANDOM_HASH_KEY"),
                 role="Super Admin"
             )
             db.add(admin_user)
-        else:
-            admin_user.hashed_password = get_password_hash("admin123")
         db.commit()
 
         # Combine all 5 datasets (Total 273 real students)

@@ -232,3 +232,29 @@ class ImproverOut(BaseModel):
     delta_rating: float
     current_contest_rating: Optional[float] = None
 
+class SendOtpRequest(BaseModel):
+    email: str
+
+class VerifyOtpRequest(BaseModel):
+    email: str
+    otp: str
+    request_id: Optional[str] = None
+
+class AIAssistantContext(BaseModel):
+    page: Optional[str] = None
+    section: Optional[str] = None
+
+class AIAssistantRequest(BaseModel):
+    message: str
+    context: Optional[AIAssistantContext] = None
+
+class AIAssistantResponse(BaseModel):
+    success: bool
+    answer: str
+    source: str
+    dataStatus: str # VERIFIED, DATA_UNAVAILABLE
+    requestId: str
+
+
+
+

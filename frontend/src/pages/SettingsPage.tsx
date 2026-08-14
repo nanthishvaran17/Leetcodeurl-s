@@ -6,6 +6,7 @@ import {
   Send
 } from 'lucide-react';
 import api from '../services/api';
+import { SecurityActivitySection } from '../components/SecurityActivitySection';
 
 export const SettingsPage: React.FC = () => {
   const [initialSettings, setInitialSettings] = useState<any>({});
@@ -1009,6 +1010,11 @@ export const SettingsPage: React.FC = () => {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Security Activity View */}
+      <div className="mt-8">
+        <SecurityActivitySection />
       </div>
 
       {/* Confirmation Modal */}

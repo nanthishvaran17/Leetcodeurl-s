@@ -38,6 +38,8 @@ interface AuthContextType {
   authError: string | null;
   login: (token: string, user: any) => void;
   signInWithGoogle: () => Promise<void>;
+  sendOtp: (email: string) => Promise<any>;
+  verifyOtp: (email: string, otp: string) => Promise<any>;
   logout: () => Promise<void>;
   clearAuthError: () => void;
   isAuthenticated: boolean;
@@ -68,19 +70,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChanged(auth, async (fbUser: FirebaseUser | null) => {
       if (fbUser) {
         try {
-          const userDocRef = doc(db, 'users', fbUser.uid);
+          const activeDb = db || getOrInitDb();
+          const userDocRef = doc(activeDb, 'users', fbUser.uid);
           const userDocSnap = await getDoc(userDocRef);
 
           let userData: AuthUser;
 
           if (userDocSnap.exists()) {
             const data = userDocSnap.data();
+            const isAdminAccount = fbUser.email?.toLowerCase() === 'nanthishvaran17@gmail.com' || fbUser.uid === 'SATDrDpJAcP07WdyyHbPjCb6u5F3';
+            const effectiveRole = isAdminAccount ? 'admin' : (data.role || 'student');
+
             userData = {
               uid: fbUser.uid,
-              name: data.name || fbUser.displayName || 'Student User',
+              name: data.name || fbUser.displayName || 'Nanthishvaran',
               email: fbUser.email || data.email || '',
               photoURL: fbUser.photoURL || data.photoURL || '',
-              role: data.role || 'student',
+              role: effectiveRole,
               registerNo: data.registerNo || null,
               department: data.department || null,
               year: data.year || null,
@@ -89,8 +95,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               isProfileLinked: data.isProfileLinked !== undefined ? data.isProfileLinked : false,
             };
 
-            // Update last login timestamp
+            // Update last login timestamp and promote role to admin in Firestore
             await updateDoc(userDocRef, {
+              role: effectiveRole,
               lastLoginAt: serverTimestamp()
             }).catch(() => {});
           } else {
@@ -200,22 +207,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const sendOtp = async (emailToUse: string) => {
+    setAuthError(null);
+    const res = await api.post('/auth/send-otp', { email: emailToUse });
+    return res.data;
+  };
+
+  const verifyOtp = async (emailToUse: string, otpCode: string) => {
+    setAuthError(null);
+    const res = await api.post('/auth/verify-otp', { email: emailToUse, otp: otpCode });
+    login(res.data.access_token, res.data.user);
+    return res.data;
+  };
+
   const logout = async () => {
     setLoading(true);
+    // Clear local auth state & storage FIRST to prevent race condition in onAuthStateChanged
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+
     try {
       await api.post('/auth/logout');
     } catch (_err) {
       // Ignore API logout error
     }
     try {
-      await firebaseSignOut(auth);
+      if (auth) {
+        await firebaseSignOut(auth);
+      }
     } catch (_err) {
       // Ignore firebase sign out error
     }
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
     setLoading(false);
   };
 
@@ -230,6 +254,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         authError,
         login,
         signInWithGoogle,
+        sendOtp,
+        verifyOtp,
         logout,
         clearAuthError,
         isAuthenticated: !!user || !!token

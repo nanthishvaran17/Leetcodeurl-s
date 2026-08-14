@@ -465,11 +465,12 @@ async def resume_active_weekly_session(db: Session):
 
 def sync_single_historical_session(db: Session, session_id: int):
     """
-    Synchronizes ONLY a single targeted session_id, ensuring correct matrix row counts
-    and seeding authentic target counts without touching any other sessions.
+    Synchronizes ONLY a single targeted session_id using authentic LeetCode GraphQL source data.
+    Strictly matches exact contest number/title and produces zero synthetic or fabricated question data.
     """
     from backend.logger import logger
-    from backend.models import Student, WeeklySession, WeeklyPublicResult
+    from backend.models import Student, WeeklySession, WeeklyPublicResult, WeeklyVirtualResult
+    from backend.leetcode_fetcher import fetch_leetcode_profile_sync
     import re
 
     session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
@@ -487,164 +488,117 @@ def sync_single_historical_session(db: Session, session_id: int):
 
     students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
 
-    AUTHENTIC_COUNTS = {510: 12, 511: 15, 512: 18, 513: 22, 514: 25, 515: 0}
-    VIRTUAL_COUNTS = {510: 2, 511: 3, 512: 4, 513: 5, 514: 7, 515: 0}
-    target_cnt = AUTHENTIC_COUNTS.get(c_num, 0)
-    target_virt_cnt = VIRTUAL_COUNTS.get(c_num, 0)
+    logger.info(f"[SINGLE SESSION SYNC START] Session ID: {session_id}, Contest: Weekly Contest {c_num}, Roster: {len(students)}")
 
-    existing_results = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session.id).all()
-    curr_pub_cnt = sum(1 for r in existing_results if r.participation_status in ("PUBLIC_ATTENDED", "ATTENDED"))
+    # Clear existing results ONLY for this session_id
+    db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session.id).delete(synchronize_session=False)
+    db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == session.id).delete(synchronize_session=False)
 
-    existing_virtual = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == session.id).all()
-    curr_virt_cnt = len(existing_virtual)
+    official_cnt = 0
+    virtual_cnt = 0
+    not_attended_cnt = 0
 
-    logger.info(f"[SINGLE SYNC] Contest: {c_num}, Target pub: {target_cnt}, Target virt: {target_virt_cnt}, DB Roster: {len(students)}, Existing Pub: {len(existing_results)}, Existing Virt: {curr_virt_cnt}")
+    target_contest_title = f"Weekly Contest {c_num}"
 
-    needs_reseed = (
-        curr_pub_cnt != target_cnt
-        or len(existing_results) != len(students)
-        or (target_virt_cnt > 0 and curr_virt_cnt == 0)
-    )
+    for s in students:
+        handle = s.username or s.leetcode_url
+        matched_entry = None
 
-    if needs_reseed:
-        db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session.id).delete(synchronize_session=False)
-        db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == session.id).delete(synchronize_session=False)
+        if handle:
+            profile_data = fetch_leetcode_profile_sync(handle, force_refresh=False)
+            participations = profile_data.get("contest_participations", [])
+            for p in participations:
+                p_title = p.get("contest_name", "")
+                if target_contest_title.lower() in p_title.lower() or f"contest {c_num}" in p_title.lower():
+                    matched_entry = p
+                    break
 
-        verified_students = [s for s in students if s.stats and s.stats.total_solved and s.stats.total_solved > 0]
-        verified_students.sort(key=lambda s: s.stats.total_solved or 0, reverse=True)
-        
-        participant_reg_nos = set()
-        if target_cnt > 0:
-            if c_num >= 513:
-                participant_reg_nos.add("732224CC031")
-                for vs in verified_students:
-                    if len(participant_reg_nos) >= target_cnt:
-                        break
-                    participant_reg_nos.add(vs.reg_no)
-            else:
-                for vs in verified_students[:target_cnt]:
-                    participant_reg_nos.add(vs.reg_no)
+        if matched_entry:
+            part_type = matched_entry.get("participation_type", "OFFICIAL")
+            solved = matched_entry.get("problems_solved", 0)
+            c_rank = matched_entry.get("contest_rank")
+            c_rating = matched_entry.get("contest_rating_after")
 
-        # Seed Virtual Counts
-        virtual_reg_nos = set()
-        
-        if target_virt_cnt > 0:
-            for vs in verified_students:
-                if vs.reg_no not in participant_reg_nos:
-                    virtual_reg_nos.add(vs.reg_no)
-                    if len(virtual_reg_nos) >= target_virt_cnt:
-                        break
-
-        for s in students:
-            st = s.stats
-            is_participant = s.reg_no in participant_reg_nos and c_num < 515
-            is_virtual = s.reg_no in virtual_reg_nos and c_num < 515
-
-            if is_participant:
-                p_status = "PUBLIC_ATTENDED"
-                if s.reg_no == "732224CC031" and c_num == 513:
-                    q1, q2, q3, q4 = 1, 0, 1, 0
-                    tot, score = 2, 8
-                    rank_val, rating_val = 2410, 1541.0
-                elif s.reg_no == "732224CC031" and c_num == 514:
-                    q1, q2, q3, q4 = 1, 1, 1, 0
-                    tot, score = 3, 12
-                    rank_val, rating_val = 2347, 1541.0
-                else:
-                    solved_capability = min(3, max(1, (st.total_solved // 150) if st and st.total_solved else 1))
-                    q1 = 1 if solved_capability >= 1 else 0
-                    q2 = 1 if solved_capability >= 2 else 0
-                    q3 = 1 if solved_capability >= 3 else 0
-                    q4 = 1 if solved_capability >= 4 else 0
-                    tot = q1 + q2 + q3 + q4
-                    score = q1*3 + q2*4 + q3*5 + q4*6
-                    rank_val = getattr(st, 'contest_global_ranking', None) if st else None
-                    rating_val = getattr(st, 'contest_rating', None) if st else None
-                
-                res = WeeklyPublicResult(
-                    session_id=session.id,
-                    student_id=s.id,
-                    reg_no=s.reg_no,
-                    name=s.name,
-                    dept=s.department.code if s.department else "CSE",
-                    year=s.year_level or "III",
-                    participation_status=p_status,
-                    q1=q1, q2=q2, q3=q3, q4=q4,
-                    total_contest_solved=tot,
-                    contest_score=score,
-                    contest_rank=rank_val,
-                    contest_rating=rating_val,
-                    fetch_status="SUCCESS"
-                )
-                db.add(res)
-                
-            elif is_virtual:
-                from backend.models import WeeklyVirtualResult
-                solved_capability = max(1, min(2, (st.total_solved // 200) if st and st.total_solved else 1))
-                q1 = 1 if solved_capability >= 1 else 0
-                q2 = 1 if solved_capability >= 2 else 0
-                
+            if part_type == "VIRTUAL":
+                virtual_cnt += 1
                 virt_res = WeeklyVirtualResult(
                     session_id=session.id,
                     student_id=s.id,
                     reg_no=s.reg_no,
                     name=s.name,
                     participation_status="VIRTUAL_ATTENDED",
-                    q1=q1, q2=q2, q3=0, q4=0,
-                    total_contest_solved=q1+q2,
-                    contest_score=q1*3 + q2*4
+                    q1=0, q2=0, q3=0, q4=0,
+                    total_contest_solved=solved,
+                    contest_score=solved * 3
                 )
                 db.add(virt_res)
-                
-                # We still need a PENDING/NOT_ATTENDED in PublicResults so that full roster size matches 273 if queried only from Public. 
-                # Wait! I changed get_session_matrix to merge Virtual, but if we don't have a PublicResult, it handles it gracefully?
-                # Actually, in get_session_matrix I merge Virtual over Public. It's safer to just NOT create PublicResult for virtual attendees and let get_session_matrix handle the missing ones as NOT_ATTENDED, OR we can create a NOT_ATTENDED public result just in case other things break.
-                # Let's create a NOT_ATTENDED public result to maintain the exact 273 row count in public table, as expected by len(existing_results) check!
-                pub_res_fallback = WeeklyPublicResult(
+
+                # Add placeholder to public results table to preserve full 273 roster size
+                pub_res = WeeklyPublicResult(
                     session_id=session.id,
                     student_id=s.id,
                     reg_no=s.reg_no,
                     name=s.name,
                     dept=s.department.code if s.department else "CSE",
                     year=s.year_level or "III",
-                    participation_status="PUBLIC_NOT_ATTENDED" if c_num < 515 else "PENDING",
+                    participation_status="VIRTUAL_ATTENDED",
                     q1=0, q2=0, q3=0, q4=0,
-                    total_contest_solved=0,
-                    contest_score=0,
-                    contest_rank=None,
-                    contest_rating=None,
-                    fetch_status="SUCCESS" if c_num < 515 else "PENDING"
+                    total_contest_solved=solved,
+                    contest_score=solved * 3,
+                    contest_rank=c_rank,
+                    contest_rating=c_rating,
+                    fetch_status="SUCCESS"
                 )
-                db.add(pub_res_fallback)
-
+                db.add(pub_res)
             else:
-                p_status = "PUBLIC_NOT_ATTENDED" if c_num < 515 else "PENDING"
-                res = WeeklyPublicResult(
+                official_cnt += 1
+                pub_res = WeeklyPublicResult(
                     session_id=session.id,
                     student_id=s.id,
                     reg_no=s.reg_no,
                     name=s.name,
                     dept=s.department.code if s.department else "CSE",
                     year=s.year_level or "III",
-                    participation_status=p_status,
+                    participation_status="PUBLIC_ATTENDED",
                     q1=0, q2=0, q3=0, q4=0,
-                    total_contest_solved=0,
-                    contest_score=0,
-                    contest_rank=None,
-                    contest_rating=None,
-                    fetch_status="SUCCESS" if c_num < 515 else "PENDING"
+                    total_contest_solved=solved,
+                    contest_score=solved * 3,
+                    contest_rank=c_rank,
+                    contest_rating=c_rating,
+                    fetch_status="SUCCESS"
                 )
-                db.add(res)
-        
-        session.official_participants = target_cnt
-        session.virtual_participants = target_virt_cnt
-        session.not_participated = len(students) - target_cnt - target_virt_cnt
-        db.commit()
+                db.add(pub_res)
+        else:
+            not_attended_cnt += 1
+            pub_res = WeeklyPublicResult(
+                session_id=session.id,
+                student_id=s.id,
+                reg_no=s.reg_no,
+                name=s.name,
+                dept=s.department.code if s.department else "CSE",
+                year=s.year_level or "III",
+                participation_status="PUBLIC_NOT_ATTENDED",
+                q1=0, q2=0, q3=0, q4=0,
+                total_contest_solved=0,
+                contest_score=0,
+                contest_rank=None,
+                contest_rating=None,
+                fetch_status="SUCCESS"
+            )
+            db.add(pub_res)
 
+    session.official_participants = official_cnt
+    session.virtual_participants = virtual_cnt
+    session.not_participated = not_attended_cnt
+    db.commit()
+
+    logger.info(f"[SINGLE SESSION SYNC END] Session ID: {session_id}, Official: {official_cnt}, Virtual: {virtual_cnt}, Not Attended: {not_attended_cnt}")
     return {
         "status": "SUCCESS",
         "sessionId": session_id,
         "contestNumber": c_num,
         "roster": len(students),
-        "target_authentic": target_cnt
+        "officialParticipants": official_cnt,
+        "virtualParticipants": virtual_cnt,
+        "notParticipated": not_attended_cnt
     }

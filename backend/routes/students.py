@@ -8,6 +8,7 @@ from backend.database import get_db
 from backend.models import Student, LeetCodeProfileStats, Department, Section, AuditLog, WeeklyStudentProgress
 from backend.schemas import StudentOut, StudentCreate, StudentUpdate
 from backend.routes.auth import get_current_user
+from backend.security import require_security_access
 from backend.leetcode_client import fetch_leetcode_profile, extract_leetcode_username
 from backend.excel_handler import validate_excel_import, commit_excel_import
 from backend.ranking import update_all_rankings_and_badges
@@ -275,7 +276,7 @@ def get_student_detail(student_id: int, db: Session = Depends(get_db)):
 def create_student(
     student_in: StudentCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user=Depends(require_security_access(resource_name="Create Student", required_roles=["admin", "super admin", "hod"]))
 ):
     existing = db.query(Student).filter(Student.reg_no == student_in.reg_no.upper()).first()
     if existing:
@@ -318,7 +319,7 @@ class BulkDeleteRequest(BaseModel):
 def bulk_delete_students(
     req: BulkDeleteRequest,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user=Depends(require_security_access(resource_name="Bulk Delete Students", required_roles=["admin", "super admin"]))
 ):
     if not req.student_ids:
         raise HTTPException(status_code=400, detail="No student IDs provided for deletion.")
@@ -345,7 +346,7 @@ def bulk_delete_students(
 def delete_student(
     student_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user=Depends(require_security_access(resource_name="Delete Student", required_roles=["admin", "super admin"]))
 ):
     student = db.query(Student).filter(Student.id == student_id).first()
     if not student:
@@ -372,7 +373,11 @@ def delete_student(
     return {"message": f"Successfully deleted student record {reg_no} ({name})"}
 
 @router.post("/import-preview")
-async def import_preview(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def import_preview(
+    file: UploadFile = File(...), 
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Import Preview", required_roles=["admin", "super admin", "hod"]))
+):
     content = await file.read()
     report = validate_excel_import(db, content)
     return report
@@ -381,7 +386,7 @@ async def import_preview(file: UploadFile = File(...), db: Session = Depends(get
 def import_commit(
     valid_rows: List[dict],
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user=Depends(require_security_access(resource_name="Import Commit", required_roles=["admin", "super admin", "hod"]))
 ):
     imported_count = commit_excel_import(db, valid_rows)
     audit = AuditLog(user_id=current_user.id, user_name=current_user.username, action="EXCEL_IMPORT", details=f"Imported {imported_count} students from Excel.")

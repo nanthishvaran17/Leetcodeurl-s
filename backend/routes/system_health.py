@@ -7,6 +7,7 @@ import os
 from backend.database import get_db, SessionLocal
 from backend.models import Student, LeetCodeProfileStats, AuditLog, WeeklySession
 from backend.sync_engine import sync_tracker
+from backend.security import require_security_access
 
 router = APIRouter(prefix="/api/system", tags=["System Operations & Health"])
 
@@ -72,7 +73,10 @@ def get_system_health(db: Session = Depends(get_db)):
     }
 
 @router.get("/metrics")
-def get_system_metrics(db: Session = Depends(get_db)):
+def get_system_metrics(
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="System Operations", required_roles=["admin", "super admin"]))
+):
     """
     Returns system performance and data sync operational metrics with dynamic student counts.
     """

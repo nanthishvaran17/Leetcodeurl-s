@@ -22,6 +22,8 @@ from backend.exporters.word_exporter import export_word_from_dataset
 from backend.exporters.csv_exporter import export_csv_from_dataset
 from backend.exporters.zip_exporter import export_zip_bundle_from_dataset
 
+from backend.security import require_security_access
+
 router = APIRouter(prefix="/contests", tags=["Weekly Contests"])
 
 def parse_session_date(date_str: str) -> Optional[datetime.date]:
@@ -248,7 +250,8 @@ def get_session_matrix(
     dept: Optional[str] = Query(None), 
     year: Optional[str] = Query(None), 
     attendance: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Weekly Contest Matrix", dept_scoped=True))
 ):
     """
     Fetches official student question-wise contest matrix for a session with optional dept, year, and attendance filtering.
@@ -415,6 +418,8 @@ def get_session_matrix(
         "session_date": session.session_date,
         "sessionDate": session.session_date,
         "status": session.status,
+        "questionDataSource": "UNAVAILABLE",
+        "cacheKey": f"weekly_matrix:session_{session.id}:{session.contest_id}",
         "metrics": {
             "totalStudents": tot_students,
             "officialAttended": pub_attended_cnt,
@@ -430,7 +435,11 @@ def get_session_matrix(
     }
 
 @router.get("/sessions/{session_id}/data-quality")
-def get_session_data_quality_board(session_id: int, db: Session = Depends(get_db)):
+def get_session_data_quality_board(
+    session_id: int, 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Data Quality Board"))
+):
     """
     Fetches Data Quality Error Board table tracking failed fetches.
     """
@@ -449,7 +458,11 @@ def get_session_data_quality_board(session_id: int, db: Session = Depends(get_db
     } for l in logs]
 
 @router.get("/sessions/{session_id}/comparison")
-def get_week_comparison(session_id: int, db: Session = Depends(get_db)):
+def get_week_comparison(
+    session_id: int, 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Student Comparison"))
+):
     """
     Calculates dynamic Week-to-Week comparison metrics comparing the selected Weekly Contest
     against the immediately previous Weekly Contest by actual contest date.
@@ -555,7 +568,10 @@ def get_week_comparison(session_id: int, db: Session = Depends(get_db)):
     }
 
 @router.get("/diagnostics")
-def get_contest_diagnostics(db: Session = Depends(get_db)):
+def get_contest_diagnostics(
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="System Operations", required_roles=["admin", "super admin"]))
+):
     """
     Mandatory Database Diagnostic Endpoint (Section 35 Spec)
     Returns complete breakdown table for Weekly Contests 510 through 515+.
@@ -600,7 +616,11 @@ def get_contest_diagnostics(db: Session = Depends(get_db)):
     return diagnostics
 
 @router.get("/diagnostics/{session_id}")
-def get_session_diagnostics_detail(session_id: int, db: Session = Depends(get_db)):
+def get_session_diagnostics_detail(
+    session_id: int, 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="System Operations", required_roles=["admin", "super admin"]))
+):
     """
     Session Diagnostic Endpoint
     Returns detailed isolation audit for a session ID.
@@ -652,7 +672,11 @@ def get_session_diagnostics_detail(session_id: int, db: Session = Depends(get_db
     }
 
 @router.post("/sessions/{session_id}/sync")
-def sync_single_weekly_contest(session_id: int, db: Session = Depends(get_db)):
+def sync_single_weekly_contest(
+    session_id: int, 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Weekly Contest Sync", required_roles=["admin", "super admin", "hod"]))
+):
     """
     Sync ONLY the selected contest session.
     """
@@ -666,7 +690,10 @@ def sync_single_weekly_contest(session_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/sync-all")
-async def sync_all_weekly_contests(db: Session = Depends(get_db)):
+async def sync_all_weekly_contests(
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Global Contest Sync", required_roles=["admin", "super admin"]))
+):
     """
     Global Weekly Contest Archive Synchronization Engine.
     Discovers, validates, ingests, and reconciles ALL canonical historical (510+), current, and upcoming Weekly Contests.
@@ -736,7 +763,11 @@ async def sync_all_weekly_contests(db: Session = Depends(get_db)):
     }
 
 @router.post("/sessions/{session_id}/retry")
-async def trigger_session_retry(session_id: int, db: Session = Depends(get_db)):
+async def trigger_session_retry(
+    session_id: int, 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Contest Retry Engine", required_roles=["admin", "super admin"]))
+):
     """
     Triggers retry engine for failed student fetches in active/current session.
     """
@@ -744,7 +775,11 @@ async def trigger_session_retry(session_id: int, db: Session = Depends(get_db)):
     return res
 
 @router.post("/sessions/{session_id}/finalize")
-async def trigger_session_finalize(session_id: int, db: Session = Depends(get_db)):
+async def trigger_session_finalize(
+    session_id: int, 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Contest Finalization", required_roles=["admin", "super admin"]))
+):
     """
     Manually triggers 09:30 AM finalization lock.
     After the official snapshot is FINALIZED, automatically queues
@@ -768,7 +803,11 @@ async def trigger_session_finalize(session_id: int, db: Session = Depends(get_db
 
 
 @router.delete("/sessions/{session_id}")
-def delete_weekly_session(session_id: int, db: Session = Depends(get_db)):
+def delete_weekly_session(
+    session_id: int, 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Delete Contest Session", required_roles=["admin", "super admin"]))
+):
     """
     Permanently deletes a weekly session and all its associated data.
     Cascade-deletes: WeeklyPublicResult, WeeklyVirtualResult,

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Loader2, LogOut, ShieldCheck, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -9,10 +9,16 @@ interface GoogleSignInButtonProps {
 
 export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSuccess, className = '' }) => {
   const { user, signInWithGoogle, logout, loading, authError, clearAuthError } = useAuth();
+  const [isSigningIn, setIsSigningIn] = useState(false);
 
   const handleSignIn = async () => {
-    await signInWithGoogle();
-    if (onSuccess) onSuccess();
+    setIsSigningIn(true);
+    try {
+      await signInWithGoogle();
+      if (onSuccess) onSuccess();
+    } finally {
+      setIsSigningIn(false);
+    }
   };
 
   if (user) {
@@ -72,10 +78,10 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
 
       <button
         onClick={handleSignIn}
-        disabled={loading}
+        disabled={isSigningIn}
         className={`w-full py-3.5 px-5 rounded-2xl bg-white dark:bg-navy-900 hover:bg-gray-50 dark:hover:bg-navy-800 text-gray-800 dark:text-white font-extrabold text-xs border border-gray-300 dark:border-gray-700 shadow-lg hover:shadow-xl flex items-center justify-center space-x-3 transition-all duration-200 ${className}`}
       >
-        {loading ? (
+        {isSigningIn ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin text-brand-500" />
             <span>Connecting to Google...</span>

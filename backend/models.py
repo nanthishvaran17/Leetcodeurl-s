@@ -653,6 +653,23 @@ class EmailAttachment(Base):
     delivery = relationship("EmailDelivery", back_populates="attachments")
 
 
+class EmailOTPRecord(Base):
+    __tablename__ = "email_otp_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), index=True, nullable=False)
+    email_hash = Column(String(128), index=True, nullable=False)
+    otp_hash = Column(String(128), nullable=False)
+    request_id = Column(String(100), unique=True, index=True, nullable=False)
+    attempt_count = Column(Integer, default=0)
+    used = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    expires_at = Column(DateTime, nullable=False, index=True)
+    used_at = Column(DateTime, nullable=True)
+    ip_address = Column(String(50), nullable=True)
+
+
+
 
 
 
