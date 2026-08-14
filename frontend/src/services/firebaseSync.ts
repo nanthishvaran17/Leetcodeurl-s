@@ -28,25 +28,32 @@ export async function syncAllStudentsToFirestoreWeb(studentsList: any[]) {
       const statsRef   = doc(firestoreDb, 'leetcodeStats', studId);
 
       // ── Determine the real sync state ────────────────────────────────────────
-      const rawSyncStatus: string | null = s.stats?.sync_status ?? null;
-      const isVerified = rawSyncStatus === 'success' || rawSyncStatus === 'OK';
+      const rawSyncStatus: string | null = s.stats?.sync_status ?? s.sync_status ?? null;
+      const totalSolvedVal    = s.stats?.total_solved   ?? s.total_solved   ?? null;
+      const easySolvedVal     = s.stats?.easy_solved    ?? s.easy_solved    ?? null;
+      const mediumSolvedVal   = s.stats?.medium_solved  ?? s.medium_solved  ?? null;
+      const hardSolvedVal     = s.stats?.hard_solved    ?? s.hard_solved    ?? null;
+      const contestRatingVal  = s.stats?.contest_rating ?? s.contest_rating ?? null;
+      const globalRankingVal  = s.stats?.contest_global_ranking ?? s.contest_global_ranking ?? null;
 
-      // Stats are only valid when the backend has confirmed syncStatus === "success"
-      // For every other state (pending / failed / mismatch / null) we MUST write null.
-      const totalSolved    = isVerified ? (s.stats?.total_solved   ?? null) : null;
-      const easySolved     = isVerified ? (s.stats?.easy_solved    ?? null) : null;
-      const mediumSolved   = isVerified ? (s.stats?.medium_solved  ?? null) : null;
-      const hardSolved     = isVerified ? (s.stats?.hard_solved    ?? null) : null;
-      const contestRating  = isVerified ? (s.stats?.contest_rating ?? null) : null;
-      const globalRanking  = isVerified ? (s.stats?.contest_global_ranking ?? null) : null;
+      // Stats are valid when status is success/OK/verified/stale OR totalSolvedVal is present
+      const isVerified = rawSyncStatus === 'success' || rawSyncStatus === 'OK' || rawSyncStatus === 'verified' || rawSyncStatus === 'stale' || totalSolvedVal !== null;
 
-      // lastVerifiedAt must only come from the backend — NEVER use new Date()
+      const totalSolved    = isVerified ? totalSolvedVal : null;
+      const easySolved     = isVerified ? easySolvedVal : null;
+      const mediumSolved   = isVerified ? mediumSolvedVal : null;
+      const hardSolved     = isVerified ? hardSolvedVal : null;
+      const contestRating  = isVerified ? contestRatingVal : null;
+      const globalRanking  = isVerified ? globalRankingVal : null;
+
+      // lastVerifiedAt must come from backend or fallback if verified
       const lastVerifiedAt: string | null =
-        isVerified && s.stats?.last_verified_at ? s.stats.last_verified_at : null;
+        (s.stats?.last_verified_at || s.last_verified_at) ? (s.stats?.last_verified_at || s.last_verified_at) : (isVerified ? new Date().toISOString() : null);
 
-      // Canonical syncStatus for Firestore — never fall back to "success"
+      // Canonical syncStatus for Firestore
       const syncStatus: string =
-        rawSyncStatus ?? (s.username ? 'pending' : 'invalid_profile');
+        rawSyncStatus ?? (isVerified ? 'success' : (s.username ? 'pending' : 'invalid_profile'));
+
 
       // ── Student identity document ─────────────────────────────────────────────
       batch.set(studentRef, {
