@@ -213,22 +213,10 @@ def log_security_access_event(
         logger.error(f"Failed to record security audit log: {ex}")
 
 def extract_current_user_optional(request: Request, db: Session) -> Optional[User]:
-    """Extracts authenticated user from Bearer token if present, returns None if unauthenticated."""
-    auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
-        return None
-    token = auth_header.split(" ")[1].strip()
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        username: str = payload.get("sub")
-        if not username:
-            return None
-        user = db.query(User).filter(User.username == username).first()
-        if user and user.is_active:
-            return user
-    except Exception:
-        return None
-    return None
+    """Extracts authenticated user from HttpOnly Cookie or Bearer token if present."""
+    from backend.routes.auth import get_current_user_from_request
+    return get_current_user_from_request(request, db)
+
 
 def require_security_access(
     required_roles: Optional[List[str]] = None,
@@ -335,19 +323,7 @@ def require_security_access(
     return dependency
 
 def get_current_user_optional(request: Request, db: Session = Depends(get_db)) -> Optional[User]:
-    """
-    Safely resolves current authenticated user from Bearer Authorization token if present,
-    returning None if unauthenticated without raising HTTP 401 exceptions.
-    """
-    auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
-        return None
-    token = auth_header.split(" ")[1].strip()
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        username = payload.get("sub")
-        if not username:
-            return None
-        return db.query(User).filter(User.username == username).first()
-    except Exception:
-        return None
+    """Safely resolves current authenticated user from HttpOnly cookie or Bearer header."""
+    from backend.routes.auth import get_current_user_from_request
+    return get_current_user_from_request(request, db)
+

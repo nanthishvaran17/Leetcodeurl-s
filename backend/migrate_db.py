@@ -17,6 +17,12 @@ def run_db_migrations():
             continue
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
+
+        try:
+            cursor.execute("ALTER TABLE email_otp_records ADD COLUMN request_ip_hash VARCHAR(128);")
+        except Exception:
+            pass  # Already exists
+
         columns_to_add = [
             ("recent_contest_name",  "VARCHAR(150)"),
             ("recent_contest_score", "VARCHAR(20)"),

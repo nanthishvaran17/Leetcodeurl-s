@@ -404,17 +404,34 @@ def seed_database():
         db.refresh(sec_iot_iii)
         db.refresh(sec_iot_ii)
 
-        # 4. Super Admin User
-        admin_user = db.query(User).filter(User.username == "admin").first()
+        # 4. Super Admin User Initialization
+        admin_username = getattr(settings, "ADMIN_USERNAME", "admin").strip()
+        admin_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
+        admin_pass = getattr(settings, "ADMIN_PASSWORD", "admin123").strip()
+
+        admin_user = db.query(User).filter(
+            (User.username.ilike(admin_username)) | (User.email.ilike(admin_email))
+        ).first()
+
         if not admin_user:
+            if not admin_pass:
+                raise RuntimeError("ADMIN_PASSWORD configuration required for first-time administrator account creation.")
             admin_user = User(
-                username="admin",
-                email="admin@nandha.edu.in",
-                hashed_password=get_password_hash("SECURE_RANDOM_HASH_KEY"),
-                role="Super Admin"
+                username=admin_username,
+                email=admin_email,
+                hashed_password=get_password_hash(admin_pass),
+                role="Admin",
+                is_active=True
             )
             db.add(admin_user)
-        db.commit()
+            db.commit()
+        else:
+            if admin_user.role not in ["Admin", "Super Admin", "super admin"]:
+                admin_user.role = "Admin"
+            if not admin_user.is_active:
+                admin_user.is_active = True
+            db.commit()
+
 
         # Combine all 5 datasets (Total 273 real students)
         all_students = []

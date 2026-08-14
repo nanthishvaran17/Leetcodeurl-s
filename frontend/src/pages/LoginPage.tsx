@@ -90,7 +90,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         digitRefs[0].current?.focus();
       }, 100);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to send verification code.');
+      setError(err.response?.data?.detail || 'Unable to send the verification code. Please check the email service configuration or try again later.');
     } finally {
       setLoading(false);
     }
@@ -104,7 +104,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
 
     try {
       const res = await api.post('/auth/send-otp', { email: email.trim().toLowerCase() });
-      setSuccessMsg(res.data.message || 'New OTP sent to your registered email address.');
+      setSuccessMsg(res.data.message || 'Verification code sent to your registered email address.');
       setRequestId(res.data.request_id || '');
       setStep('otp_verify');
       setOtpDigits(['', '', '', '', '', '']);
@@ -114,7 +114,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         digitRefs[0].current?.focus();
       }, 100);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to resend verification code.');
+      setError(err.response?.data?.detail || 'Unable to send the verification code. Please check the email service configuration or try again later.');
     } finally {
       setLoading(false);
     }
@@ -190,7 +190,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         onSuccess();
       }, 1200);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Invalid verification code.');
+      setError(err.response?.data?.detail || 'Invalid verification code. Please check the code and try again.');
     } finally {
       setLoading(false);
     }
@@ -209,12 +209,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
       if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
         setError('Login request timed out. Please verify backend server on port 8000.');
       } else {
-        setError(err.response?.data?.detail || 'Invalid credentials or login failed.');
+        setError(err.response?.data?.detail || 'Invalid username or password.');
       }
     } finally {
       setLoading(false);
     }
   };
+
 
   const formatTimer = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

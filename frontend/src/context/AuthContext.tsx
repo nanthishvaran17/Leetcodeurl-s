@@ -60,10 +60,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState<boolean>(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
+  // Check HttpOnly Cookie Backend Session on initial load
+  useEffect(() => {
+    let isMounted = true;
+    const checkBackendSession = async () => {
+      try {
+        const res = await api.get('/auth/session');
+        if (res.data && res.data.authenticated && res.data.user && isMounted) {
+          const u = res.data.user;
+          const formattedUser: AuthUser = {
+            uid: `admin_${u.id}`,
+            name: u.username || 'Admin User',
+            email: u.email || '',
+            role: u.role || 'Admin',
+            isProfileLinked: true,
+            id: u.id,
+            username: u.username
+          };
+          setUser(formattedUser);
+        }
+      } catch (_err) {
+        // Unauthenticated session - safe ignore
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    checkBackendSession();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Sync Google Auth state changes
   useEffect(() => {
     if (!auth) {
-      setLoading(false);
       return;
     }
 
@@ -95,21 +127,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               isProfileLinked: data.isProfileLinked !== undefined ? data.isProfileLinked : false,
             };
 
-            // Update last login timestamp and promote role to admin in Firestore
             await updateDoc(userDocRef, {
               role: effectiveRole,
               lastLoginAt: serverTimestamp()
             }).catch(() => {});
           } else {
-            // New Google Sign-In user: Check matching student record from backend
             let matchedStudent: any = null;
             if (fbUser.email) {
               try {
                 const res = await api.get('/students');
                 matchedStudent = res.data.find((s: any) => s.email && s.email.toLowerCase() === fbUser.email?.toLowerCase());
-              } catch (_err) {
-                // Ignore match fetch failure
-              }
+              } catch (_err) {}
             }
 
             userData = {
@@ -117,7 +145,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               name: fbUser.displayName || 'Student User',
               email: fbUser.email || '',
               photoURL: fbUser.photoURL || '',
-              role: 'student', // Default role MUST be student
+              role: 'student',
               registerNo: matchedStudent ? matchedStudent.reg_no : null,
               department: matchedStudent ? matchedStudent.department?.code : null,
               year: matchedStudent ? matchedStudent.year_level : null,
@@ -126,7 +154,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               isProfileLinked: !!matchedStudent,
             };
 
-            // Save new user profile to Firestore
             await setDoc(userDocRef, {
               ...userData,
               createdAt: serverTimestamp(),
@@ -137,10 +164,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
 
           setUser(userData);
-          localStorage.setItem('user', JSON.stringify(userData));
         } catch (err: any) {
           console.error("Firestore user sync error:", err);
-          // Fallback user object if Firestore read fails
           const fallbackUser: AuthUser = {
             uid: fbUser.uid,
             name: fbUser.displayName || 'User',
@@ -151,34 +176,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           };
           setUser(fallbackUser);
         }
-      } else {
-        // If not logged in via Firebase, keep local admin token user if present
-        const savedToken = localStorage.getItem('token');
-        const savedUser = localStorage.getItem('user');
-        if (!savedToken && !savedUser) {
-          setUser(null);
-        }
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
   const login = (newToken: string, newUser: any) => {
-    setToken(newToken);
+    if (newToken) setToken(newToken);
     const formattedUser: AuthUser = {
       uid: `admin_${newUser.id || '1'}`,
       name: newUser.username || 'Admin User',
       email: newUser.email || 'admin@college.edu',
-      role: newUser.role || 'Super Admin',
+      role: newUser.role || 'Admin',
       isProfileLinked: true,
       id: newUser.id,
       username: newUser.username
     };
     setUser(formattedUser);
-    localStorage.setItem('token', newToken);
-    localStorage.setItem('user', JSON.stringify(formattedUser));
   };
 
   const signInWithGoogle = async () => {
@@ -222,7 +237,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     setLoading(true);
-    // Clear local auth state & storage FIRST to prevent race condition in onAuthStateChanged
     setToken(null);
     setUser(null);
     localStorage.removeItem('token');
@@ -258,13 +272,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         verifyOtp,
         logout,
         clearAuthError,
-        isAuthenticated: !!user || !!token
+        isAuthenticated: !!user
       }}
     >
       {children}
     </AuthContext.Provider>
   );
 };
+
 
 export const useAuth = () => {
   const context = useContext(AuthContext);

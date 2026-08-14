@@ -23,6 +23,7 @@ const API_BASE = getApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -35,6 +36,7 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
 
 export const triggerFullSync = async (triggeredBy = 'admin') => {
   const res = await api.post(`/sync/full?triggered_by=${triggeredBy}`);

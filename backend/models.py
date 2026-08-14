@@ -667,6 +667,25 @@ class EmailOTPRecord(Base):
     expires_at = Column(DateTime, nullable=False, index=True)
     used_at = Column(DateTime, nullable=True)
     ip_address = Column(String(50), nullable=True)
+    request_ip_hash = Column(String(128), nullable=True, index=True)
+
+
+class AdminSession(Base):
+    __tablename__ = "admin_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String(100), unique=True, index=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    token_hash = Column(String(128), unique=True, index=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    expires_at = Column(DateTime, nullable=False, index=True)
+    last_used_at = Column(DateTime, default=datetime.datetime.utcnow)
+    revoked_at = Column(DateTime, nullable=True)
+    ip_hash = Column(String(128), nullable=True)
+    user_agent_hash = Column(String(128), nullable=True)
+
+    user = relationship("User")
+
 
 
 

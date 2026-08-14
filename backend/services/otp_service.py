@@ -16,9 +16,8 @@ RESEND_COOLDOWN_SECONDS = 60
 
 
 def generate_secure_otp() -> str:
-    """Generates a 6-digit numeric OTP using Python's secrets module."""
-    number = secrets.randbelow(900000) + 100000
-    return str(number)
+    """Generates a cryptographically secure 6-digit numeric OTP."""
+    return f"{secrets.randbelow(1000000):06d}"
 
 
 def hash_email(email: str) -> str:
@@ -27,10 +26,17 @@ def hash_email(email: str) -> str:
     return hashlib.sha256(clean_email.encode('utf-8')).hexdigest()
 
 
+def hash_ip(ip_address: Optional[str]) -> str:
+    """Returns SHA-256 digest of request IP address."""
+    clean_ip = (ip_address or "127.0.0.1").strip()
+    return hashlib.sha256(clean_ip.encode('utf-8')).hexdigest()[:32]
+
+
 def hash_otp(email: str, otp: str, request_id: str = "") -> str:
-    """Returns HMAC-SHA256 digest of OTP bound to normalized email, request_id and server secret."""
+    """Returns HMAC-SHA256 digest of OTP bound to email, request_id and OTP_HMAC_SECRET."""
     clean_email = email.lower().strip()
-    secret = settings.SECRET_KEY.encode('utf-8')
+    secret_str = getattr(settings, "OTP_HMAC_SECRET", "") or getattr(settings, "SECRET_KEY", "fallback-secret-key")
+    secret = secret_str.encode('utf-8')
     payload = f"{clean_email}:{otp}:{request_id}".encode('utf-8')
     return hmac.new(secret, payload, hashlib.sha256).hexdigest()
 
@@ -41,24 +47,34 @@ def create_otp_transaction(
     ip_address: Optional[str] = None
 ) -> Tuple[str, EmailOTPRecord]:
     """
-    Creates a new persistent OTP record with rate limiting & resend cooldown checks.
+    Creates a new persistent OTP record with email & IP rate limiting and resend cooldown checks.
     Returns (plaintext_otp, otp_record).
     """
     clean_email = email.lower().strip()
     e_hash = hash_email(clean_email)
+    ip_h = hash_ip(ip_address)
     now = datetime.datetime.utcnow()
 
-    # Rate limiting: Max 3 send requests per 5 minutes per email/IP
+    # 1. Email Rate Limiting: Max 3 send requests per 5 minutes
     five_mins_ago = now - datetime.timedelta(minutes=5)
-    recent_count = db.query(EmailOTPRecord).filter(
+    email_recent_count = db.query(EmailOTPRecord).filter(
         EmailOTPRecord.email_hash == e_hash,
         EmailOTPRecord.created_at >= five_mins_ago
     ).count()
 
-    if recent_count >= MAX_SEND_REQUESTS_5MIN:
-        raise ValueError("Too many OTP requests. Please wait 5 minutes before trying again.")
+    if email_recent_count >= MAX_SEND_REQUESTS_5MIN:
+        raise ValueError("Too many OTP requests for this email address. Please wait 5 minutes before trying again.")
 
-    # Resend Cooldown: Check if last active OTP was sent < 60s ago
+    # 2. IP Rate Limiting: Max 3 send requests per 5 minutes
+    ip_recent_count = db.query(EmailOTPRecord).filter(
+        EmailOTPRecord.request_ip_hash == ip_h,
+        EmailOTPRecord.created_at >= five_mins_ago
+    ).count()
+
+    if ip_recent_count >= MAX_SEND_REQUESTS_5MIN:
+        raise ValueError("Too many OTP requests from your IP address. Please wait 5 minutes before trying again.")
+
+    # 3. Resend Cooldown: Check if last active OTP was sent < 60s ago
     one_min_ago = now - datetime.timedelta(seconds=RESEND_COOLDOWN_SECONDS)
     last_record = db.query(EmailOTPRecord).filter(
         EmailOTPRecord.email_hash == e_hash
@@ -66,15 +82,15 @@ def create_otp_transaction(
 
     if last_record and last_record.created_at >= one_min_ago and not last_record.used:
         cooldown_remaining = int((last_record.created_at + datetime.timedelta(seconds=RESEND_COOLDOWN_SECONDS) - now).total_seconds())
-        raise ValueError(f"Please wait {max(1, cooldown_remaining)} seconds before requesting a new verification code.")
+        raise ValueError(f"Please wait {max(1, cooldown_remaining)} seconds before requesting another verification code.")
 
-    # Invalidate older active OTP records for this email
+    # 4. Invalidate older active OTP records for this email
     db.query(EmailOTPRecord).filter(
         EmailOTPRecord.email_hash == e_hash,
         EmailOTPRecord.used == False
     ).update({"used": True}, synchronize_session=False)
 
-    # Generate new OTP & Request ID
+    # 5. Generate new OTP & Request ID
     plain_otp = generate_secure_otp()
     req_id = f"req_{uuid.uuid4().hex[:16]}"
     o_hash = hash_otp(clean_email, plain_otp, req_id)
@@ -89,7 +105,8 @@ def create_otp_transaction(
         used=False,
         created_at=now,
         expires_at=expires,
-        ip_address=ip_address
+        ip_address=ip_address,
+        request_ip_hash=ip_h
     )
 
     db.add(otp_record)
@@ -128,17 +145,17 @@ def verify_otp_transaction(
     if not record:
         return False, "No active verification code found for this email. Please request a new code.", None
 
-    # Check Expiration
+    # Check Expiration (5 minutes)
     if record.expires_at < now:
         record.used = True
         db.commit()
         return False, "This verification code has expired. Please request a new code.", record
 
-    # Check Attempt Count
+    # Check Attempt Count (Max 5 attempts)
     if record.attempt_count >= MAX_ATTEMPTS_PER_OTP:
         record.used = True
         db.commit()
-        return False, "Too many failed verification attempts. Please request a new verification code.", record
+        return False, "Too many verification attempts. Please request a new verification code.", record
 
     # Verify Hash with HMAC-SHA256
     expected_hash = hash_otp(clean_email, clean_otp, record.request_id)
@@ -155,3 +172,4 @@ def verify_otp_transaction(
     db.commit()
 
     return True, "OTP verified successfully", record
+
