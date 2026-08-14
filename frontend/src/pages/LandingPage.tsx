@@ -193,84 +193,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       }
 
       const res = await api.get(url);
-      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+      if (res.data && Array.isArray(res.data)) {
         setStudents(res.data);
-        loadedFromApi = true;
       }
     } catch (err) {
-      console.warn("REST API request delayed, reading directly from Cloud Firestore...", err);
-    }
-
-    if (!loadedFromApi) {
-      try {
-        const { getOrInitDb } = await import('../services/firebase');
-        const { collection, getDocs } = await import('firebase/firestore');
-        const firestoreDb = getOrInitDb();
-        const studSnap = await getDocs(collection(firestoreDb, "students"));
-        const statsSnap = await getDocs(collection(firestoreDb, "leetcodeStats"));
-
-        const statsMap = new Map();
-        statsSnap.forEach(docSnap => {
-          statsMap.set(docSnap.id, docSnap.data());
-        });
-
-        const list: StudentData[] = [];
-        studSnap.forEach(docSnap => {
-          const sData = docSnap.data();
-          const sStats = statsMap.get(docSnap.id) || {};
-          const deptCode = sData.department || 'GEN';
-          const yr = sData.year || 'III';
-
-          // Filter by dept and year if selected
-          if (selectedDept && selectedDept.code && deptCode !== selectedDept.code) return;
-          if (yearLevel !== 'ALL' && yr !== yearLevel) return;
-
-          const syncStatus = sStats.syncStatus || sStats.sync_status || 'pending';
-          const totSolvedVal = sStats.totalSolved ?? sStats.total_solved ?? null;
-          const isVerified = syncStatus === 'success' || syncStatus === 'OK' || syncStatus === 'verified' || syncStatus === 'stale' || totSolvedVal !== null;
-          const totSolved = isVerified ? (totSolvedVal ?? 0) : null;
-
-          list.push({
-            id: sData.id || Number(docSnap.id),
-            reg_no: sData.registerNo || '',
-            name: sData.name || '',
-            email: sData.email || '',
-            department: deptCode,
-            year_level: yr,
-            section: sData.section || 'A',
-            leetcode_url: sData.leetcodeProfileUrl || '',
-            username: sData.leetcodeUsername || '',
-            college_rank: sStats.collegeRank ?? null,
-            weekly_progress: sStats.weeklySolved ?? 0,
-            streak_count: sStats.streakCount ?? 0,
-            consistency_score: sStats.consistencyScore ?? 0,
-            stats: {
-              total_solved: totSolved,
-              easy_solved: isVerified ? (sStats.easySolved ?? sStats.easy_solved ?? 0) : null,
-              medium_solved: isVerified ? (sStats.mediumSolved ?? sStats.medium_solved ?? 0) : null,
-              hard_solved: isVerified ? (sStats.hardSolved ?? sStats.hard_solved ?? 0) : null,
-              contest_rating: sStats.contestRating ?? sStats.contest_rating ?? null,
-              contest_global_ranking: sStats.globalRanking ?? sStats.contest_global_ranking ?? null,
-              public_profile_ranking: sStats.profileRanking ?? sStats.globalRanking ?? null,
-              recent_contest_name: sStats.recentContestName || 'Weekly Contest',
-              recent_contest_score: sStats.recentContestScore || (isVerified ? 'Not Attended' : '—'),
-              status: sStats.status || (isVerified ? 'OK' : 'pending'),
-              sync_status: syncStatus,
-              source: sStats.source || null,
-              last_verified_at: sStats.lastVerifiedAt ?? sStats.last_verified_at ?? null
-            }
-          });
-
-        });
-
-        if (list.length > 0) {
-          setStudents(list);
-        }
-      } catch (fErr) {
-        console.error("Firestore direct read error in LandingPage", fErr);
-      }
+      console.warn("Landing REST API request delayed or offline", err);
     }
   };
+
 
   const getSortedStudents = () => {
     const sorted = [...students];

@@ -23,9 +23,57 @@ def sanitize_error_message(msg: str) -> str:
     cleaned = re.sub(r'private_key\s*:\s*[\'"][^\'"]+[\'"]', 'private_key=[REDACTED]', cleaned, flags=re.IGNORECASE)
     return cleaned[:300]
 
+@router.get("/database-health")
+def get_database_health_endpoint(db: Session = Depends(get_db)):
+    """
+    Returns strict, dynamic database health metrics directly from PostgreSQL database model queries.
+    Never hardcodes student or statistics counts.
+    """
+    try:
+        t0 = datetime.datetime.utcnow()
+        db.execute(__import__('sqlalchemy').text("SELECT 1")).first()
+        latency_ms = round((datetime.datetime.utcnow() - t0).total_seconds() * 1000, 1)
+
+        student_count = db.query(Student).count()
+        stats_count = db.query(LeetCodeProfileStats).count()
+        verified_count = db.query(LeetCodeProfileStats).filter(
+            LeetCodeProfileStats.sync_status.in_(["success", "OK", "verified"]) & (LeetCodeProfileStats.total_solved != None)
+        ).count()
+        pending_count = db.query(LeetCodeProfileStats).filter(
+            LeetCodeProfileStats.sync_status.in_(["pending", "not_started"]) | (LeetCodeProfileStats.total_solved == None)
+        ).count()
+        failed_count = db.query(LeetCodeProfileStats).filter(
+            LeetCodeProfileStats.sync_status.in_(["failed", "mismatch"])
+        ).count()
+
+        db_url_str = str(db.bind.url) if db.bind else ""
+        db_type = "postgresql" if ("postgres" in db_url_str or "postgresql" in db_url_str) else "sqlite"
+
+        return {
+            "status": "healthy",
+            "database_type": db_type,
+            "connection_status": "connected",
+            "student_count": student_count,
+            "stats_count": stats_count,
+            "verified_count": verified_count,
+            "pending_count": pending_count,
+            "failed_count": failed_count,
+            "latency_ms": latency_ms,
+            "last_updated": datetime.datetime.utcnow().isoformat() + "Z"
+        }
+    except Exception as exc:
+        return {
+            "status": "unhealthy",
+            "database_type": "unknown",
+            "connection_status": "disconnected",
+            "error_message": sanitize_error_message(str(exc)),
+            "last_updated": datetime.datetime.utcnow().isoformat() + "Z"
+        }
+
 @router.get("/health")
 @router.get("/status")
 def get_system_health(db: Session = Depends(get_db)):
+
     """
     Returns real-time health diagnostic metrics for all core application services
     with transparent, secret-sanitized error diagnostics.

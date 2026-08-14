@@ -30,11 +30,25 @@ elif db_url.startswith("sqlite:///./"):
         pass
     db_url = f"sqlite:///{db_path}"
 
+engine_kwargs = {}
+if "postgresql" in db_url or "postgres" in db_url:
+    engine_kwargs.update({
+        "pool_size": 10,
+        "max_overflow": 20,
+        "pool_pre_ping": True,
+        "pool_recycle": 300,
+    })
+else:
+    engine_kwargs.update({
+        "connect_args": {"check_same_thread": False, "timeout": 30}
+    })
+
 engine = create_engine(
     db_url,
-    connect_args={"check_same_thread": False, "timeout": 30} if "sqlite" in db_url else {},
-    echo=False
+    echo=False,
+    **engine_kwargs
 )
+
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()

@@ -41,9 +41,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
   const fetchDashboardData = async () => {
     setLoading(true);
-    let loadedFromApi = false;
 
-    // 1. Try fetching via REST API
     try {
       const [sumRes, deptRes, qualRes, studRes] = await Promise.allSettled([
         api.get('/sessions/dashboard-summary'),
@@ -52,166 +50,27 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         api.get('/students')
       ]);
 
-      let hasApiData = false;
-
-      if (sumRes.status === 'fulfilled' && sumRes.value.data && sumRes.value.data.total_students > 0) {
+      if (sumRes.status === 'fulfilled' && sumRes.value.data) {
         setSummary(sumRes.value.data);
-        hasApiData = true;
       }
-      if (deptRes.status === 'fulfilled' && deptRes.value.data && Array.isArray(deptRes.value.data) && deptRes.value.data.length > 0) {
+      if (deptRes.status === 'fulfilled' && deptRes.value.data && Array.isArray(deptRes.value.data)) {
         setDepartments(deptRes.value.data);
       }
       if (qualRes.status === 'fulfilled' && qualRes.value.data) {
         setDataQuality(qualRes.value.data);
       }
-      if (studRes.status === 'fulfilled' && studRes.value.data && studRes.value.data.length > 0) {
+      if (studRes.status === 'fulfilled' && studRes.value.data && Array.isArray(studRes.value.data)) {
         setStudents(studRes.value.data.slice(0, 10));
-        hasApiData = true;
       }
-
-      if (hasApiData) {
-        loadedFromApi = true;
-        setLoading(false);
-        return;
-      }
-
+      setLoading(false);
     } catch (err) {
-      console.warn("REST API request delayed or offline, falling back to Cloud Firestore direct read...", err);
-    }
-
-
-    // 2. Fallback to Cloud Firestore direct read if REST API fails/delays
-    if (!loadedFromApi) {
-      try {
-        const firestoreDb = getOrInitDb();
-        const studSnap = await getDocs(collection(firestoreDb, "students"));
-        const statsSnap = await getDocs(collection(firestoreDb, "leetcodeStats"));
-
-        const statsMap = new Map();
-        statsSnap.forEach(docSnap => {
-          statsMap.set(docSnap.id, docSnap.data());
-        });
-
-        const list: StudentData[] = [];
-        let totalSolvedAll = 0;
-        let activeCount = 0;
-        const deptMap = new Map();
-
-        studSnap.forEach(docSnap => {
-          const sData = docSnap.data();
-          const sStats = statsMap.get(docSnap.id) || {};
-          // RULE: null/undefined means "not yet fetched" — never convert to 0
-          const syncStatus = sStats.syncStatus || 'pending';
-          const isVerified = syncStatus === 'success' || syncStatus === 'OK';
-          const totSolved = isVerified ? (sStats.totalSolved ?? 0) : null;
-          if (totSolved !== null) totalSolvedAll += totSolved;
-          if (totSolved !== null && totSolved > 0) activeCount++;
-
-          const dept = sData.department || 'GEN';
-          if (!deptMap.has(dept)) {
-            deptMap.set(dept, {
-              department_code: dept,
-              department_name: sData.departmentName || dept,
-              total_students: 0,
-              active_students: 0,
-              total_solved: 0,
-              top_student_name: 'N/A',
-              top_solved: 0
-            });
-          }
-          const dInfo = deptMap.get(dept);
-          dInfo.total_students++;
-          dInfo.total_solved += totSolved;
-          if (totSolved > 0) dInfo.active_students++;
-          if (totSolved > dInfo.top_solved) {
-            dInfo.top_solved = totSolved;
-            dInfo.top_student_name = sData.name;
-          }
-
-          list.push({
-            id: sData.id || Number(docSnap.id),
-            reg_no: sData.registerNo || '',
-            name: sData.name || '',
-            email: sData.email || '',
-            department: dept,
-            year_level: sData.year || 'III',
-            section: sData.section || 'A',
-            leetcode_url: sData.leetcodeProfileUrl || '',
-            username: sData.leetcodeUsername || '',
-            college_rank: sStats.collegeRank ?? null,
-            weekly_progress: sStats.weeklySolved ?? 0,
-            streak_count: sStats.streakCount ?? 0,
-            consistency_score: sStats.consistencyScore ?? 0,
-            stats: {
-              total_solved: totSolved,  // null if not verified
-              easy_solved: isVerified ? (sStats.easySolved ?? 0) : null,
-              medium_solved: isVerified ? (sStats.mediumSolved ?? 0) : null,
-              hard_solved: isVerified ? (sStats.hardSolved ?? 0) : null,
-              contest_rating: sStats.contestRating ?? null,
-              contest_global_ranking: sStats.globalRanking ?? null,
-              status: sStats.status || (isVerified ? 'OK' : 'pending'),
-              sync_status: syncStatus,
-              last_verified_at: sStats.lastVerifiedAt ?? null
-            }
-          });
-        });
-
-        list.sort((a, b) => (b.stats?.total_solved ?? 0) - (a.stats?.total_solved ?? 0));
-        setStudents(list.slice(0, 10));
-
-        // Compute verified counts from real sync states — NO hardcoded fallbacks
-        const verifiedCount = list.filter(s => s.stats?.sync_status === 'success' || s.stats?.sync_status === 'OK').length;
-        const pendingCount = list.filter(s => !s.stats?.sync_status || s.stats.sync_status === 'pending' || s.stats.sync_status === 'not_started').length;
-        const failedCount = list.filter(s => s.stats?.sync_status === 'failed' || s.stats?.sync_status === 'mismatch').length;
-
-        setSummary({
-          total_students: list.length,
-          active_students: activeCount,
-          not_started_students: Math.max(0, list.length - activeCount),
-          total_problems_solved: totalSolvedAll,
-          average_weekly_progress: 0,  // Will be computed from real data when available
-          current_session: { status: 'UPCOMING' },
-          verified_count: verifiedCount,
-          pending_count: pendingCount,
-          failed_count: failedCount
-        });
-
-        const formattedDepts = Array.from(deptMap.values()).map(d => ({
-          ...d,
-          participation_rate: d.total_students > 0 ? round((d.active_students / d.total_students) * 100, 1) : 0,
-          avg_solved: d.total_students > 0 ? round(d.total_solved / d.total_students, 1) : 0,
-          avg_progress: 0
-        }));
-        setDepartments(formattedDepts);
-
-        setDataQuality({
-          total_students: list.length,
-          valid_profiles: verifiedCount,
-          missing_links: pendingCount,
-          failed_count: failedCount,
-          health_score_percentage: list.length > 0 ? round((verifiedCount / list.length) * 100, 1) : 0
-        });
-        if (list.length > 0) {
-          setLoading(false);
-          return;
-        } else {
-          // Automatic retry in 3 seconds to catch Render free-tier cold-start response
-          setTimeout(() => {
-            fetchDashboardData();
-          }, 3000);
-        }
-      } catch (fErr) {
-        console.error("Firestore direct read error", fErr);
-        setTimeout(() => {
-          fetchDashboardData();
-        }, 3000);
-      }
+      console.warn("REST API request delayed or offline", err);
+      setLoading(false);
     }
   };
 
-
-
   const round = (val: number, dec: number) => Math.round(val * Math.pow(10, dec)) / Math.pow(10, dec);
+
 
   useEffect(() => {
     fetchDashboardData();

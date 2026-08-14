@@ -29,8 +29,10 @@ def get_current_sync_status(db: Session = Depends(get_db)):
     Returns real-time sync progress status and tracker state from database metrics.
     """
     import datetime
-    tot = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count() or 273
-    verified_cnt = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.total_solved != None).count()
+    tot = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count()
+    verified_cnt = db.query(LeetCodeProfileStats).filter(
+        (LeetCodeProfileStats.total_solved != None) & (LeetCodeProfileStats.sync_status.in_(["success", "OK", "verified"]))
+    ).count()
     failed_cnt = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.sync_status == "failed").count()
 
     running_job = db.query(SyncJob).filter(SyncJob.status == "RUNNING").first()
