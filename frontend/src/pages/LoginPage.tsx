@@ -187,7 +187,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
     setSuccessMsg('');
 
     const fullOtp = otpDigits.join('');
-    if (fullOtp.length !== 6 || !/^\d+$/.test(fullOtp)) {
+    const cleanOtp = fullOtp.replace(/\D/g, '').slice(0, 6);
+    if (cleanOtp.length !== 6) {
       setError('Please enter a valid 6-digit numeric verification code.');
       return;
     }
@@ -201,9 +202,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
     try {
       const res = await api.post('/auth/verify-otp', {
         email: email.trim().toLowerCase(),
-        otp: fullOtp,
+        otp: cleanOtp,
         request_id: requestId
       });
+
       login(res.data.access_token, res.data.user);
       setStep('success');
       setTimeout(() => {

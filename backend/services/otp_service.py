@@ -113,6 +113,9 @@ def create_otp_transaction(
     db.commit()
     db.refresh(otp_record)
 
+    from backend.logger import logger
+    logger.info(f"[OTP_REQUEST_CREATED] Created OTP transaction record req_id={req_id} for email_hash={e_hash[:8]}")
+
     return plain_otp, otp_record
 
 
@@ -126,50 +129,68 @@ def verify_otp_transaction(
     Verifies a user-supplied OTP against persistent hashed record.
     Returns (is_valid, message, otp_record).
     """
+    from backend.logger import logger
+
     clean_email = email.lower().strip()
-    clean_otp = raw_otp.strip()
+    clean_otp = raw_otp.replace(" ", "").strip()
     e_hash = hash_email(clean_email)
     now = datetime.datetime.utcnow()
 
-    # Load latest non-used OTP record for this email
-    query = db.query(EmailOTPRecord).filter(
-        EmailOTPRecord.email_hash == e_hash,
-        EmailOTPRecord.used == False
-    )
+    logger.info(f"[OTP_VERIFICATION_REQUESTED] Verifying OTP for email_hash={e_hash[:8]} request_id={request_id or 'latest'}")
 
-    if request_id:
-        query = query.filter(EmailOTPRecord.request_id == request_id)
-
-    record = query.order_by(EmailOTPRecord.id.desc()).first()
+    # Query OTP record: First by explicit request_id, otherwise by latest record for email
+    record = None
+    if request_id and request_id.strip():
+        record = db.query(EmailOTPRecord).filter(EmailOTPRecord.request_id == request_id.strip()).first()
 
     if not record:
+        record = db.query(EmailOTPRecord).filter(
+            EmailOTPRecord.email_hash == e_hash
+        ).order_by(EmailOTPRecord.id.desc()).first()
+
+    if not record:
+        logger.warning(f"[OTP_RECORD_NOT_FOUND] No verification code record found for email_hash={e_hash[:8]}")
         return False, "No active verification code found for this email. Please request a new code.", None
 
-    # Check Expiration (5 minutes)
+    logger.info(f"[OTP_RECORD_FOUND] Found OTP record req_id={record.request_id} used={record.used} attempts={record.attempt_count}")
+
+    # 1. Check Single-Use Status
+    if record.used:
+        logger.warning(f"[OTP_ALREADY_USED] OTP record req_id={record.request_id} has already been consumed.")
+        return False, "This verification code has already been used. Please request a new code.", record
+
+    # 2. Check Expiration (5 minutes)
     if record.expires_at < now:
+        logger.warning(f"[OTP_EXPIRED] OTP record req_id={record.request_id} expired at {record.expires_at}")
         record.used = True
         db.commit()
         return False, "This verification code has expired. Please request a new code.", record
 
-    # Check Attempt Count (Max 5 attempts)
+    # 3. Check Attempt Count Limit (Max 5 attempts)
     if record.attempt_count >= MAX_ATTEMPTS_PER_OTP:
+        logger.warning(f"[OTP_ATTEMPT_LIMIT] OTP record req_id={record.request_id} exceeded max attempts ({record.attempt_count})")
         record.used = True
         db.commit()
         return False, "Too many verification attempts. Please request a new verification code.", record
 
-    # Verify Hash with HMAC-SHA256
+    # 4. Verify HMAC-SHA256 Hash
     expected_hash = hash_otp(clean_email, clean_otp, record.request_id)
+
     if not secrets.compare_digest(record.otp_hash, expected_hash):
         record.attempt_count += 1
         if record.attempt_count >= MAX_ATTEMPTS_PER_OTP:
             record.used = True
         db.commit()
+        logger.warning(f"[OTP_HASH_MISMATCH] OTP hash mismatch for req_id={record.request_id} attempt={record.attempt_count}")
         return False, "Invalid verification code. Please try again.", record
 
-    # Mark OTP as used immediately (single-use)
+    # 5. Verification Success: Mark as used immediately
+    logger.info(f"[OTP_HASH_MATCH] OTP hash match confirmed for req_id={record.request_id}")
     record.used = True
     record.used_at = now
     db.commit()
 
+    logger.info(f"[OTP_VERIFICATION_SUCCESS] OTP transaction completed successfully for req_id={record.request_id}")
     return True, "OTP verified successfully", record
+
 
