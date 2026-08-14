@@ -257,21 +257,30 @@ def generate_weekly_performance_data(
 
 def run_sunday_0945_public_contest_workflow(db: Session, contest_id: Optional[str] = None) -> Dict[str, Any]:
     """
-    SUNDAY 9:45 AM PUBLIC CONTEST WORKFLOW — ALL 273 STUDENTS
+    SUNDAY 9:45 AM PUBLIC CONTEST WORKFLOW — ALL ACTIVE STUDENTS
     1. Identifies latest public contest.
-    2. Fetches PUBLIC contest participation for all 273 master students.
+    2. Fetches PUBLIC contest participation for all active students.
     3. Records PUBLIC participations without modifying VIRTUAL records.
     4. Generates Public_Contest.xlsx.
-    5. Computes Public summary breakdown (4Q, 3Q, 2Q, 1Q, Not Attended, Fetch Failed, Mode Uncertain).
+    5. Computes Public summary breakdown.
     6. Dispatches 9:45 AM Email Report with Public_Contest.xlsx attached.
     """
     from backend.services.contest_service import record_contest_participation
     from backend.exporters.weekly_excel_generator import build_public_contest_excel
     from backend.email_service import send_public_contest_report_email
+    from backend.services.firestore_service import get_firestore_doc, update_firestore_doc
 
     today_str = datetime.date.today().strftime("%Y-%m-%d")
     c_id = contest_id or f"weekly-contest-{datetime.date.today().strftime('%W')}"
     c_name = f"Weekly Contest"
+
+    # Idempotency Duplicate Protection Check
+    idempotency_key = f"CONTEST_PUBLIC_{c_id}_{today_str}"
+    existing_job = get_firestore_doc("sync_jobs", idempotency_key)
+    if existing_job and existing_job.get("status") == "COMPLETED":
+        logger.info(f"[SUNDAY_0945_SKIPPED] Sunday 9:45 AM workflow already executed for key {idempotency_key}.")
+        return {"status": "SKIPPED", "message": f"Sunday 9:45 AM workflow already completed for {c_id}"}
+
 
     students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
 
@@ -382,23 +391,30 @@ def run_sunday_0945_public_contest_workflow(db: Session, contest_id: Optional[st
 
 def run_sunday_2200_virtual_contest_workflow(db: Session, contest_id: Optional[str] = None) -> Dict[str, Any]:
     """
-    SUNDAY 10:00 PM VIRTUAL & COMBINED CONTEST FINAL WORKFLOW — ALL 273 STUDENTS
+    SUNDAY 10:00 PM VIRTUAL & COMBINED CONTEST FINAL WORKFLOW — ALL ACTIVE STUDENTS
     1. Identifies latest contest.
-    2. Fetches VIRTUAL contest participation for all 273 master students.
+    2. Fetches VIRTUAL contest participation for all active students.
     3. Records VIRTUAL participations without modifying PUBLIC records.
-    4. Generates Virtual_Contest.xlsx.
-    5. Generates Contest_Combined.xlsx (Side-by-Side Public vs Virtual comparison + Validation Sheet).
-    6. Computes Virtual and Overall summary breakdowns.
-    7. Dispatches 10:00 PM Final Email Report with Virtual_Contest.xlsx & Contest_Combined.xlsx attached.
+    4. Generates Virtual_Contest.xlsx & Contest_Combined.xlsx.
+    5. Dispatches 10:00 PM Final Email Report.
     """
     from backend.services.contest_service import record_contest_participation, build_student_contest_dto
     from backend.exporters.weekly_excel_generator import build_virtual_contest_excel, build_contest_combined_excel
     from backend.email_service import send_final_combined_contest_report_email
     from backend.models import StudentContestParticipation
+    from backend.services.firestore_service import get_firestore_doc, update_firestore_doc
 
     today_str = datetime.date.today().strftime("%Y-%m-%d")
     c_id = contest_id or f"weekly-contest-{datetime.date.today().strftime('%W')}"
     c_name = f"Weekly Contest"
+
+    # Idempotency Duplicate Protection Check
+    idempotency_key = f"CONTEST_FINAL_{c_id}_{today_str}"
+    existing_job = get_firestore_doc("sync_jobs", idempotency_key)
+    if existing_job and existing_job.get("status") == "COMPLETED":
+        logger.info(f"[SUNDAY_2200_SKIPPED] Sunday 10:00 PM workflow already executed for key {idempotency_key}.")
+        return {"status": "SKIPPED", "message": f"Sunday 10:00 PM workflow already completed for {c_id}"}
+
 
     students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
 
