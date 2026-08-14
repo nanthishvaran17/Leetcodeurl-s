@@ -29,7 +29,9 @@ interface HealthData {
 
 interface MetricsData {
   total_active_students: number;
+  student_count?: number;
   verified_profiles_count: number;
+
   failed_sync_count: number;
   identity_mismatch_count: number;
   pending_sync_count: number;
@@ -283,8 +285,9 @@ export const SystemHealthPage: React.FC = () => {
         <div className="p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-lg">
           <div className="text-xs font-black uppercase text-gray-400 tracking-wider mb-1">Verified Roster Profiles</div>
           <div className="text-3xl font-black text-gray-900 dark:text-white">
-            {metrics?.verified_profiles_count ?? 0} / {metrics?.total_active_students ?? 273}
+            {metrics?.verified_profiles_count ?? 0} / {metrics?.total_active_students ?? metrics?.student_count ?? 300}
           </div>
+
           <div className="text-[11px] text-gray-500 font-bold mt-1">Strict identity mapped</div>
         </div>
 

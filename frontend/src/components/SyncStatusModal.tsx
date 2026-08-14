@@ -89,11 +89,12 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
   const isRunning = syncStatus?.is_running ?? false;
   const systemStatus = syncStatus?.system_status || 'Operational';
   const lastSyncTime = syncStatus?.last_sync_timestamp || freshness?.last_sync_timestamp || '14 Aug 2026 • 08:30 AM IST';
-  const totalStudents = syncStatus?.total || freshness?.total_students || 273;
-  const completed = syncStatus?.completed ?? 273;
-  const successful = syncStatus?.success ?? 273;
+  const totalStudents = syncStatus?.total || freshness?.total_students || 300;
+  const completed = syncStatus?.completed ?? (isRunning ? 0 : totalStudents);
+  const successful = syncStatus?.success ?? (isRunning ? 0 : totalStudents);
   const failed = syncStatus?.failed ?? 0;
   const currentOperation = syncStatus?.operation || (isRunning ? 'Processing students' : 'Idle');
+
 
   const getWorkerStatusBadge = () => {
     if (isRunning) {

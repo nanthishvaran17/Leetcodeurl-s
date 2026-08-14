@@ -283,7 +283,8 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
               <td colSpan={12} className="py-12 text-center text-brand-600 dark:text-brand-400 font-bold">
                 <div className="flex flex-col items-center justify-center space-y-2">
                   <RefreshCw className="w-6 h-6 animate-spin text-brand-500" />
-                  <span className="text-xs">Loading 273 real institutional student records...</span>
+                  <span className="text-xs">Loading real institutional student records...</span>
+
                 </div>
               </td>
             </tr>

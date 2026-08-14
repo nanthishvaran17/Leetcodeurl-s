@@ -56,7 +56,8 @@ export const DataQualityPage: React.FC = () => {
             </h1>
 
             <p className="text-xs md:text-sm text-gray-300 font-bold tracking-wide">
-              Monitor missing links, invalid profile URLs, profile not found errors, and network anomalies across all 273 student records.
+              Monitor missing links, invalid profile URLs, profile not found errors, and network anomalies across all institutional student records.
+
             </p>
           </div>
 

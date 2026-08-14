@@ -281,14 +281,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               title="Perform full live synchronization for active student roster"
             >
               <RefreshCw className={`w-4 h-4 ${refreshing || syncProgress?.is_running ? 'animate-spin' : ''}`} />
-              <span>{refreshing || syncProgress?.is_running ? `⏳ FETCHING ${syncProgress?.processed || 0} / 273` : '🔄 FETCH LIVE DATA'}</span>
+              <span>{refreshing || syncProgress?.is_running ? `⏳ FETCHING ${syncProgress?.processed || 0} / ${syncProgress?.total || students.length || 300}` : '🔄 FETCH LIVE DATA'}</span>
             </button>
 
             {(() => {
               const verifiedCount = students.filter(s =>
                 s.stats?.sync_status === 'success' || s.stats?.sync_status === 'OK' || (s.stats?.total_solved !== null && (s.stats?.total_solved ?? 0) > 0)
               ).length;
-              const totalCount = summaryData?.total_students || students.length || 273;
+              const totalCount = summaryData?.total_students || students.length || 300;
               const lastVerifiedTs = students
                 .map(s => s.stats?.last_verified_at)
                 .filter(Boolean)
@@ -343,11 +343,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <div className="p-3 w-fit rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
                   <Users className="w-6 h-6" />
                 </div>
-                <h4 className="text-2xl font-black text-gray-900 dark:text-white">{summaryData?.total_students || students.length || 273}</h4>
+                <h4 className="text-2xl font-black text-gray-900 dark:text-white">{summaryData?.total_students || students.length || 300}</h4>
                 <p className="text-xs font-semibold text-gray-500">Total Enrolled Students</p>
               </div>
 
               <div className="glass-card p-6 rounded-2xl space-y-2 border shadow-md">
+
                 <div className="p-3 w-fit rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
