@@ -5,19 +5,20 @@ const getApiBaseUrl = () => {
   const isLocal = typeof window !== 'undefined' && 
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
   
-  const envUrl = import.meta.env.VITE_API_URL;
-  
   if (isLocal) {
     return 'http://127.0.0.1:8000/api';
   }
   
   // Production Cloud Hosting (Firebase Hosting -> Render FastAPI Backend)
+  const envUrl = import.meta.env.VITE_API_URL;
   if (envUrl && !envUrl.includes('localhost')) {
-    return `${envUrl}/api`;
+    const cleanUrl = envUrl.replace(/\/+$/, '');
+    return cleanUrl.endsWith('/api') ? cleanUrl : `${cleanUrl}/api`;
   }
   
   return 'https://leetcodeurl-s-1.onrender.com/api';
 };
+
 
 const API_BASE = getApiBaseUrl();
 

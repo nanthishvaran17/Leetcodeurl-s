@@ -21,10 +21,11 @@ export function useLiveLeaderboard(onUpdate?: (data: any) => void) {
 
     if (!isLocal || (envUrl && !envUrl.includes('localhost'))) {
       const targetHost = (envUrl && !envUrl.includes('localhost'))
-        ? envUrl.replace(/^https?:\/\//, '')
-        : 'leetcodeurl-s.onrender.com';
+        ? envUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '')
+        : 'leetcodeurl-s-1.onrender.com';
       wsUrl = `wss://${targetHost}/ws/leaderboard`;
     } else {
+
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsHost = envUrl ? envUrl.replace(/^https?:\/\//, '') : window.location.host;
       wsUrl = `${protocol}//${wsHost}/ws/leaderboard`;
