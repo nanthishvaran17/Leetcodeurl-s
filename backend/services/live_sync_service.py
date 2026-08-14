@@ -58,7 +58,10 @@ async def broadcast_sync_event(event_data: Dict[str, Any]):
 
 def get_active_students(db: Session) -> List[Student]:
     """Returns active student roster from database dynamically."""
-    return db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+    logger.info("[SYNC_ROSTER_LOADING] Loading active institutional student roster from database...")
+    students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+    logger.info(f"[SYNC_ROSTER_COUNT] Loaded {len(students)} active institutional students.")
+    return students
 
 
 def dispatch_background_task(coro):
@@ -68,7 +71,6 @@ def dispatch_background_task(coro):
         loop.create_task(coro)
     except RuntimeError:
         try:
-            # Fallback to main thread loop if running
             loop = asyncio.get_event_loop()
             if loop.is_running():
                 loop.create_task(coro)
@@ -121,9 +123,27 @@ def start_full_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, A
     db.commit()
     db.refresh(new_job)
 
+    # 3. Create persistent Cloud Firestore sync_job document
+    try:
+        from backend.services.firestore_service import save_firestore_sync_job
+        save_firestore_sync_job(job_id, {
+            "job_id": job_id,
+            "status": "RUNNING",
+            "total": total_count,
+            "processed": 0,
+            "successful": 0,
+            "failed": 0,
+            "pending": total_count,
+            "started_at": datetime.datetime.utcnow().isoformat() + "Z",
+            "triggered_by": triggered_by
+        })
+        logger.info(f"[SYNC_JOB_CREATED] Persistent Cloud Firestore sync_job record created for job_id={job_id}")
+    except Exception as fs_job_err:
+        logger.warning(f"[SYNC] Cloud Firestore sync_job creation note: {fs_job_err}")
+
     sync_tracker.start(job_id, total_count)
 
-    # 3. Launch background worker task reliably
+    # 4. Launch background worker task reliably
     dispatch_background_task(_run_full_sync_worker(job_id))
 
     return {
@@ -138,9 +158,8 @@ async def _run_full_sync_worker(job_id: str):
     """
     Asynchronous background worker that executes full roster LeetCode profile refresh,
     field-level merging, audit logging, dynamic contest updates, and rank recalculations.
-    Guarantees every student completes (success or fail) within 25s timeout and updates DB progress live.
     """
-    logger.info(f"[SYNC] Starting background live sync worker for job_id: {job_id}")
+    logger.info(f"[SYNC_WORKER_STARTED] Starting live background sync worker for job_id: {job_id}")
     db = SessionLocal()
 
     try:
@@ -151,23 +170,29 @@ async def _run_full_sync_worker(job_id: str):
         error_count = 0
 
         sync_tracker.start(job_id, total_students)
-        logger.info(f"[SYNC] Job started: {job_id} | Total students: {total_students}")
+        logger.info(f"[SYNC_WORKER_STARTED] Worker active for job_id={job_id} | Total students: {total_students}")
 
-        semaphore = asyncio.Semaphore(12)
+        semaphore = asyncio.Semaphore(8)
 
         async def _process_student_task(student: Student, idx: int):
             nonlocal success_count, partial_count, error_count
             async with semaphore:
-                logger.info(f"[SYNC] Starting student {idx}/{total_students}: {student.reg_no} ({student.name})")
+                logger.info(f"[SYNC_STUDENT_STARTED] Processing student {idx}/{total_students}: {student.reg_no} ({student.name})")
                 res = None
                 try:
+                    logger.info(f"[SYNC_LEETCODE_REQUEST] Sending GraphQL request to LeetCode for username: {student.username}")
                     res = await asyncio.wait_for(
                         fetch_leetcode_profile(student.leetcode_url or student.username),
                         timeout=25.0
                     )
+                    if isinstance(res, dict) and res.get("total_solved") is not None:
+                        logger.info(f"[SYNC_LEETCODE_SUCCESS] Live LeetCode data received for {student.reg_no}: total_solved={res.get('total_solved')}")
+                    else:
+                        logger.warning(f"[SYNC_LEETCODE_FAILURE] LeetCode profile fetch returned non-verified status for {student.reg_no}")
                 except Exception as exc:
-                    logger.warning(f"[SYNC] Fetch timeout/exception for {student.reg_no} ({student.name}): {exc}")
+                    logger.warning(f"[SYNC_LEETCODE_FAILURE] Fetch exception for {student.reg_no} ({student.name}): {exc}")
                     res = exc
+
 
                 # Dedicated DB session per student task to prevent lock collisions
                 student_db = SessionLocal()

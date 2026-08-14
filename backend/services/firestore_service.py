@@ -61,3 +61,57 @@ def initialize_firestore():
 def get_firestore_db():
     """Returns Cloud Firestore database client instance."""
     return initialize_firestore()
+
+
+def get_firestore_students() -> list:
+    """Reads all active student records dynamically from Cloud Firestore collection 'students'."""
+    db = get_firestore_db()
+    if not db:
+        return []
+    try:
+        docs = db.collection("students").stream()
+        students = []
+        for doc in docs:
+            data = doc.to_dict()
+            if data and data.get("is_active", True) is not False:
+                students.append(data)
+        return students
+    except Exception as err:
+        print(f"[FIRESTORE ERROR] Failed to fetch students collection: {err}")
+        return []
+
+
+def update_firestore_doc(collection_name: str, doc_id: str, data: dict) -> bool:
+    """Writes or merges a document in Cloud Firestore."""
+    db = get_firestore_db()
+    if not db:
+        return False
+    try:
+        clean_id = str(doc_id).strip()
+        doc_ref = db.collection(collection_name).document(clean_id)
+        doc_ref.set(data, merge=True)
+        return True
+    except Exception as err:
+        print(f"[FIRESTORE ERROR] Failed to update document {collection_name}/{doc_id}: {err}")
+        return False
+
+
+def get_firestore_doc(collection_name: str, doc_id: str) -> dict:
+    """Reads a single document from Cloud Firestore."""
+    db = get_firestore_db()
+    if not db:
+        return {}
+    try:
+        clean_id = str(doc_id).strip()
+        doc_ref = db.collection(collection_name).document(clean_id)
+        doc = doc_ref.get()
+        return doc.to_dict() if doc.exists else {}
+    except Exception as err:
+        print(f"[FIRESTORE ERROR] Failed to get document {collection_name}/{doc_id}: {err}")
+        return {}
+
+
+def save_firestore_sync_job(job_id: str, job_data: dict) -> bool:
+    """Saves or updates a persistent sync job document in Cloud Firestore collection 'sync_jobs'."""
+    return update_firestore_doc("sync_jobs", job_id, job_data)
+
