@@ -109,6 +109,7 @@ export async function syncAllStudentsToFirestoreWeb(studentsList: any[]) {
     await batch.commit();
     console.log('[Firestore] Successfully committed all student records & stats to Cloud Firestore!');
   } catch (err) {
-    console.error('[Firestore] Cloud Firestore Web SDK sync error:', err);
+    console.debug('[Firestore] Web SDK client sync note (Backend is authoritative):', err);
   }
 }
+
