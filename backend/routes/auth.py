@@ -334,6 +334,97 @@ def verify_otp(req: VerifyOtpRequest, request: Request, response: Response, db: 
     }
 
 
+@router.post("/google")
+def google_auth(payload: dict, request: Request, response: Response, db: Session = Depends(get_db)):
+    validate_csrf_origin(request)
+    id_token = payload.get("id_token")
+    if not id_token:
+        raise HTTPException(status_code=400, detail="Google authentication token is required.")
+
+    # Step 1: Verify Firebase ID Token via Firebase Admin SDK
+    try:
+        from backend.services.firestore_service import initialize_firestore
+        initialize_firestore()
+        from firebase_admin import auth as firebase_auth
+        decoded_token = firebase_auth.verify_id_token(id_token)
+    except Exception as token_err:
+        logger.warning(f"[GOOGLE_AUTH_TOKEN_ERROR] Firebase ID Token verification failed: {token_err}")
+        raise HTTPException(status_code=401, detail="Unable to verify your Google account. Please try again.")
+
+    verified_email = (decoded_token.get("email") or "").strip().lower()
+    email_verified = decoded_token.get("email_verified", False)
+
+    if not verified_email:
+        raise HTTPException(status_code=400, detail="Google account must have a valid email address.")
+
+    if not email_verified:
+        raise HTTPException(status_code=400, detail="Your Google account email must be verified.")
+
+    # Step 2: Authorize Admin Account
+    configured_admin_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
+    is_config_admin = (verified_email == configured_admin_email)
+
+    user = db.query(User).filter(User.email.ilike(verified_email)).first()
+
+    if not user and is_config_admin:
+        admin_username = getattr(settings, "ADMIN_USERNAME", "admin").strip()
+        admin_pass = getattr(settings, "ADMIN_PASSWORD", "admin123").strip()
+        user = User(
+            username=admin_username,
+            email=configured_admin_email,
+            hashed_password=get_password_hash(admin_pass),
+            role="Admin",
+            is_active=True
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    if not user:
+        logger.warning(f"[GOOGLE_AUTH_UNAUTHORIZED] Google account {verified_email} is not an authorized administrator.")
+        raise HTTPException(status_code=401, detail="Please sign in using your authorized institutional Google account.")
+
+    if not user.is_active:
+        logger.warning(f"[GOOGLE_AUTH_DEACTIVATED] Account deactivated for Google email: {verified_email}")
+        raise HTTPException(status_code=400, detail="Your account is currently deactivated.")
+
+    try:
+        user.last_login = datetime.datetime.utcnow()
+        db.commit()
+    except Exception:
+        db.rollback()
+
+    # Step 3: Create Server Session & Set HttpOnly Cookie
+    create_server_admin_session(db, user, request, response)
+
+    logger.info(f"[GOOGLE_AUTH_SUCCESS] Administrator {user.username} ({user.email}) authenticated via Google.")
+
+    from backend.services.audit_service import log_admin_action
+    log_admin_action(
+        db, action="GOOGLE_LOGIN_SUCCESS", action_type="SECURITY",
+        description=f"Admin {user.username} ({user.email}) logged in successfully via Google Sign-In",
+        current_user=user, target_type="User", target_id=str(user.id)
+    )
+
+    access_token = create_access_token(data={"sub": user.username, "role": user.role, "email": user.email, "user_id": user.id})
+
+    return {
+        "authenticated": True,
+        "success": True,
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "role": user.role,
+            "department_id": user.department_id,
+            "section_id": user.section_id
+        }
+    }
+
+
+
 @router.post("/login")
 def login(login_data: UserLogin, request: Request, response: Response, db: Session = Depends(get_db)):
     validate_csrf_origin(request)

@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Shield, Lock, User, Mail, AlertCircle, CheckCircle2, Loader2, ArrowLeft, RefreshCw, X, Eye, EyeOff } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
+import { GoogleSignInButton } from '../components/GoogleSignInButton';
 import api from '../services/api';
+
 
 interface LoginPageProps {
   onSuccess: () => void;
@@ -376,8 +378,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                   )}
                 </button>
               </form>
+
+              <div className="space-y-3 pt-2">
+                <div className="relative flex items-center justify-center">
+                  <div className="border-t border-gray-200 dark:border-gray-800 w-full"></div>
+                  <span className="bg-white dark:bg-navy-950 px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest absolute">
+                    OR
+                  </span>
+                </div>
+                <GoogleSignInButton onSuccess={onSuccess} />
+              </div>
             </div>
           )}
+
 
           {step === 'otp_verify' && (
             <form onSubmit={handleVerifyOtp} className="space-y-4 animate-fadeIn">
