@@ -36,7 +36,9 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     fetchSummary();
+    triggerCloudSync();
   }, []);
+
 
   useEffect(() => {
     if (showLoginModal) {
