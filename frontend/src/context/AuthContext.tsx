@@ -183,18 +183,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = (newToken: string, newUser: any) => {
-    if (newToken) setToken(newToken);
+    if (newToken) {
+      setToken(newToken);
+      localStorage.setItem('token', newToken);
+    }
     const formattedUser: AuthUser = {
       uid: `admin_${newUser.id || '1'}`,
       name: newUser.username || 'Admin User',
-      email: newUser.email || 'admin@college.edu',
+      email: newUser.email || 'nanthishvaran17@gmail.com',
       role: newUser.role || 'Admin',
       isProfileLinked: true,
       id: newUser.id,
       username: newUser.username
     };
     setUser(formattedUser);
+    localStorage.setItem('user', JSON.stringify(formattedUser));
   };
+
 
   const signInWithGoogle = async () => {
     setAuthError(null);

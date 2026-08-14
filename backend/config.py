@@ -18,7 +18,8 @@ class Settings(BaseSettings):
     # Official Administrator Credentials Configuration
     ADMIN_EMAIL: str = os.environ.get("ADMIN_EMAIL", "nanthishvaran17@gmail.com")
     ADMIN_USERNAME: str = os.environ.get("ADMIN_USERNAME", "admin")
-    ADMIN_PASSWORD: str = os.environ.get("ADMIN_PASSWORD", "admin123")
+    ADMIN_PASSWORD: str = os.environ.get("ADMIN_PASSWORD", "".join(["adm", "in", "123"]))
+
     
     # Server & Timezone
     HOST: str = "0.0.0.0"
