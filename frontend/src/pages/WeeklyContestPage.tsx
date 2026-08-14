@@ -724,11 +724,33 @@ export const WeeklyContestPage: React.FC = () => {
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                 {matrixRows.length === 0 ? (
                   <tr>
-                    <td colSpan={13} className="p-8 text-center text-gray-500 font-bold">
-                      No contest participation records found for the selected Weekly Contest.
+                    <td colSpan={13} className="p-12 text-center text-gray-500 font-bold">
+                      {activeSessionObj?.status === 'SCHEDULED' ? (
+                        <div className="py-8 space-y-3 text-center">
+                          <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto mb-2">
+                            <Calendar className="w-6 h-6" />
+                          </div>
+                          <h4 className="text-base font-black text-amber-600 dark:text-amber-400 uppercase tracking-wide">
+                            📅 SCHEDULED WEEKLY CONTEST
+                          </h4>
+                          <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 max-w-md mx-auto leading-relaxed">
+                            This weekly contest has not occurred yet. Participation and performance data will become available after the official session is finalized.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="py-6 space-y-2">
+                          <p className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                            No contest participation records found for the selected Weekly Contest.
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            Click <span className="font-extrabold text-indigo-500">↻ Fetch Selected Contest</span> above to retrieve or reconcile contest results.
+                          </p>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ) : (
+
                   matrixRows.map((r, idx) => {
                     const isPublicAttended = r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'ATTENDED' || r.status === 'PUBLIC';
                     const isVirtualAttended = r.participation_status === 'VIRTUAL_ATTENDED' || r.status === 'VIRTUAL';

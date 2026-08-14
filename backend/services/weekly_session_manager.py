@@ -369,16 +369,19 @@ def seed_institutional_historical_sessions(db: Session):
             # Determine designated participant reg_nos for this contest
             participant_reg_nos = set()
             if target_cnt > 0:
+                pool = verified_students if len(verified_students) >= target_cnt else students
                 if c_num in (513, 514) and nanthish_student:
                     participant_reg_nos.add("732224CC031")
-                    needed = target_cnt - 1
-                    for vs in verified_students:
+                    for s_candidate in pool:
                         if len(participant_reg_nos) >= target_cnt:
                             break
-                        participant_reg_nos.add(vs.reg_no)
+                        participant_reg_nos.add(s_candidate.reg_no)
                 else:
-                    for vs in verified_students[:target_cnt]:
-                        participant_reg_nos.add(vs.reg_no)
+                    for s_candidate in pool:
+                        if len(participant_reg_nos) >= target_cnt:
+                            break
+                        participant_reg_nos.add(s_candidate.reg_no)
+
 
             for idx, s in enumerate(students, start=1):
                 st = s.stats
