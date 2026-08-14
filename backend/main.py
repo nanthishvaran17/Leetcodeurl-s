@@ -164,13 +164,13 @@ def on_startup():
         verified_stats_cnt = db_init.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.total_solved != None).count()
         db_init.close()
 
-        if student_cnt == 0:
-            logger.info("Empty database detected. Seeding initial student roster...")
-            try:
-                seed_database()
-                logger.info("Database seeding completed successfully for student roster.")
-            except Exception as _seed_err:
-                logger.error(f"Error seeding database: {_seed_err}")
+        logger.info("Syncing & seeding student roster definitions...")
+        try:
+            seed_database()
+            logger.info("Database seeding / roster sync completed successfully.")
+        except Exception as _seed_err:
+            logger.error(f"Error seeding database: {_seed_err}")
+
 
         if verified_stats_cnt == 0:
             logger.info("Unseeded or pending profile stats detected. Initializing student profile statistics roster...")
