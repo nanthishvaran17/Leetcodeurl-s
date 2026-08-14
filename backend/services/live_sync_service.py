@@ -196,7 +196,7 @@ async def _run_full_sync_worker(job_id: str):
                     sync_tracker.update(failed_inc=1, log_msg=f"❌ {student.name} ({student.reg_no}) - Sync failed.")
                     logger.info(f"[SYNC] Fetch failed: {student.reg_no} | Progress: {sync_tracker.completed}/{total_students}")
 
-                # Persist progress to SyncJob table in DB after every student
+                # Persist progress to SyncJob table in DB & Firebase Realtime Database
                 try:
                     job_rec = db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
                     if job_rec:
@@ -204,8 +204,24 @@ async def _run_full_sync_worker(job_id: str):
                         job_rec.partial_count = partial_count
                         job_rec.error_count = error_count
                         db.commit()
+
+                    # Write persistent progress node to Firebase RTDB
+                    from backend.services.firebase_rtdb_service import get_rtdb_reference
+                    rtdb_jobs = get_rtdb_reference(f"sync_jobs/{job_id.replace('.', '_')}")
+                    if rtdb_jobs:
+                        rtdb_jobs.update({
+                            "job_id": job_id,
+                            "status": "RUNNING",
+                            "total_students": total_students,
+                            "processed": sync_tracker.completed,
+                            "successful": success_count,
+                            "failed": error_count,
+                            "pending": max(0, total_students - sync_tracker.completed),
+                            "last_updated_at": datetime.datetime.utcnow().isoformat() + "Z"
+                        })
                 except Exception as job_db_err:
-                    logger.warning(f"[SYNC] SyncJob DB progress update note: {job_db_err}")
+                    logger.warning(f"[SYNC] SyncJob DB/RTDB progress update note: {job_db_err}")
+
 
                 # Real-time WebSocket Broadcast
                 await broadcast_sync_event({
@@ -419,10 +435,35 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
             sync_run_id=job_id,
             source="leetcode_live_sync"
         )
-        db.add(snapshot)
-
         db.commit()
+
+        # Update persistent stats in Firebase Realtime Database
+        try:
+            from backend.services.firebase_rtdb_service import get_rtdb_reference
+            reg_key = str(student.reg_no).replace('.', '_').replace('#', '_').replace('$', '_').replace('[', '_').replace(']', '_')
+            rtdb_stat = get_rtdb_reference(f"leetcode_stats/{reg_key}")
+            if rtdb_stat:
+                rtdb_stat.update({
+                    "student_id": student.id,
+                    "reg_no": student.reg_no,
+                    "username": student.username,
+                    "total_solved": st.total_solved,
+                    "easy_solved": st.easy_solved,
+                    "medium_solved": st.medium_solved,
+                    "hard_solved": st.hard_solved,
+                    "contest_rating": st.contest_rating,
+                    "contest_global_ranking": st.contest_global_ranking,
+                    "public_profile_ranking": st.public_profile_ranking,
+                    "sync_status": "verified",
+                    "status": "verified",
+                    "source": "leetcode_live_sync",
+                    "last_verified_at": now.isoformat() + "Z"
+                })
+        except Exception as rtdb_err:
+            logger.warning(f"[SYNC] RTDB stats update note for {student.reg_no}: {rtdb_err}")
+
         return (True, False, False)
+
 
     else:
         # Fetch failed or profile not found — PRESERVE PREVIOUS VALID DATA
