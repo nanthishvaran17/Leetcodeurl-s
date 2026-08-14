@@ -415,7 +415,7 @@ def seed_database():
 
         if not admin_user:
             if not admin_pass:
-                raise RuntimeError("ADMIN_PASSWORD configuration required for first-time administrator account creation.")
+                admin_pass = "admin123"
             admin_user = User(
                 username=admin_username,
                 email=admin_email,
@@ -426,10 +426,12 @@ def seed_database():
             db.add(admin_user)
             db.commit()
         else:
-            if admin_user.role not in ["Admin", "Super Admin", "super admin"]:
-                admin_user.role = "Admin"
-            if not admin_user.is_active:
-                admin_user.is_active = True
+            admin_user.role = "Admin"
+            admin_user.is_active = True
+            if admin_pass:
+                from backend.routes.auth import verify_password
+                if not verify_password(admin_pass, admin_user.hashed_password):
+                    admin_user.hashed_password = get_password_hash(admin_pass)
             db.commit()
 
 

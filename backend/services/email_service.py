@@ -267,10 +267,10 @@ def send_email(
 
 def build_otp_email_template(otp: str) -> Tuple[str, str, str]:
     """
-    Generates professional institutional HTML and plain-text OTP emails
-    for NANDHA ENGINEERING COLLEGE (AUTONOMOUS) LeetCode Tracker Admin Auth.
+    Generates a premium, modern corporate-grade institutional HTML & plain-text email
+    for NANDHA ENGINEERING COLLEGE (AUTONOMOUS) LeetCode Tracker Admin Verification.
     """
-    subject = "NEC LeetCode Tracker — Secure Administrator Verification Code"
+    subject = "NEC LeetCode Tracker — Secure Administrator Verification"
 
     html_body = f"""<!DOCTYPE html>
 <html lang="en">
@@ -279,116 +279,101 @@ def build_otp_email_template(otp: str) -> Tuple[str, str, str]:
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{subject}</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #1e293b;">
-  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9; padding: 30px 12px;">
+<body style="margin: 0; padding: 0; background-color: #f4f7fb; font-family: Arial, Helvetica, sans-serif; -webkit-font-smoothing: antialiased; color: #1e293b;">
+  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f4f7fb; padding: 40px 12px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; background-color: #ffffff; border-radius: 20px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
+        <!-- Main Card -->
+        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; border-collapse: separate;">
           
-          <!-- Header Banner -->
+          <!-- Header Branding -->
           <tr>
-            <td style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); padding: 32px 24px; text-align: center; color: #ffffff;">
-              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
-                <tr>
-                  <td align="center">
-                    <div style="display: inline-block; padding: 6px 14px; background-color: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; color: #38bdf8; text-transform: uppercase; margin-bottom: 12px;">
-                      OFFICIAL ADMINISTRATOR PORTAL
-                    </div>
-                    <h1 style="margin: 0 0 4px 0; font-size: 20px; font-weight: 900; letter-spacing: -0.5px; color: #ffffff; line-height: 1.3;">
-                      NANDHA ENGINEERING COLLEGE
-                    </h1>
-                    <div style="font-size: 12px; font-weight: 800; color: #fbbf24; letter-spacing: 1px; margin-bottom: 8px;">
-                      (AUTONOMOUS)
-                    </div>
-                    <div style="font-size: 13px; font-weight: 700; color: #cbd5e1;">
-                      LeetCode Weekly Performance Tracker
-                    </div>
-                  </td>
-                </tr>
-              </table>
+            <td style="padding: 36px 36px 24px 36px; text-align: left;">
+              <div style="font-size: 18px; font-weight: 800; color: #0f172a; letter-spacing: -0.3px; line-height: 1.2;">
+                NANDHA ENGINEERING COLLEGE
+              </div>
+              <div style="font-size: 11px; font-weight: 800; color: #2563eb; letter-spacing: 1.2px; text-transform: uppercase; margin-top: 3px;">
+                (AUTONOMOUS)
+              </div>
+              <div style="font-size: 13px; font-weight: 600; color: #475569; margin-top: 6px;">
+                LeetCode Weekly Performance Tracker
+              </div>
+              <div style="display: inline-block; padding: 4px 12px; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: 1.2px; color: #1d4ed8; text-transform: uppercase; margin-top: 14px;">
+                OFFICIAL ADMINISTRATOR PORTAL
+              </div>
+              <div style="border-top: 1px solid #e2e8f0; margin-top: 24px;"></div>
             </td>
           </tr>
 
-          <!-- Body Content -->
+          <!-- Security Verification Body -->
           <tr>
-            <td style="padding: 32px 28px;">
-              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
-                
-                <!-- Verification Title -->
-                <tr>
-                  <td style="padding-bottom: 20px;">
-                    <div style="font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">
-                      🔐 Secure Administrator Verification
-                    </div>
-                    <p style="margin: 0; font-size: 14px; color: #475569; line-height: 1.6;">
-                      Hello Administrator,
-                    </p>
-                    <p style="margin: 8px 0 0 0; font-size: 14px; color: #475569; line-height: 1.6;">
-                      We received a request to verify administrator access to the <strong>Nandha Engineering College LeetCode Weekly Performance Tracker</strong>. Use the verification code below to continue.
-                    </p>
-                  </td>
-                </tr>
+            <td style="padding: 0 36px 28px 36px;">
+              <div style="font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 14px;">
+                Secure Administrator Verification
+              </div>
+              <div style="font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 8px;">
+                Hello Administrator,
+              </div>
+              <div style="font-size: 14px; color: #475569; line-height: 1.6; margin-bottom: 8px;">
+                We received a request to verify administrator access to the Nandha Engineering College LeetCode Weekly Performance Tracker.
+              </div>
+              <div style="font-size: 14px; color: #475569; line-height: 1.6;">
+                Use the verification code below to continue.
+              </div>
+            </td>
+          </tr>
 
-                <!-- OTP Display Box -->
-                <tr>
-                  <td align="center" style="padding: 12px 0 24px 0;">
-                    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
-                      <tr>
-                        <td align="center" style="background-color: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 24px 16px;">
-                          <div style="font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #64748b; text-transform: uppercase; margin-bottom: 10px;">
-                            YOUR VERIFICATION CODE
-                          </div>
-                          <div style="font-size: 34px; font-weight: 900; letter-spacing: 8px; color: #0f172a; font-family: 'Courier New', Courier, monospace; margin: 4px 0 12px 0;">
-                            {otp}
-                          </div>
-                          <div style="font-size: 13px; font-weight: 700; color: #dc2626; margin-bottom: 4px;">
-                            ⏱ This verification code expires in 5 minutes.
-                          </div>
-                          <div style="font-size: 12px; color: #64748b;">
-                            For your security, this code can only be used once.
-                          </div>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
+          <!-- OTP Card Section -->
+          <tr>
+            <td style="padding: 0 36px 28px 36px;">
+              <div style="font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #64748b; text-transform: uppercase; text-align: center; margin-bottom: 12px;">
+                YOUR VERIFICATION CODE
+              </div>
+              <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 20px 16px; text-align: center;">
+                <div style="font-size: 34px; font-weight: 900; letter-spacing: 10px; color: #0f172a; font-family: Arial, Helvetica, sans-serif; line-height: 1.2;">
+                  {otp}
+                </div>
+              </div>
+              <div style="font-size: 13px; font-weight: 700; color: #dc2626; text-align: center; margin-top: 12px;">
+                This verification code expires in 5 minutes.
+              </div>
+              <div style="font-size: 12px; color: #64748b; text-align: center; margin-top: 4px;">
+                This code can only be used once.
+              </div>
+            </td>
+          </tr>
 
-                <!-- Security Notice Box -->
-                <tr>
-                  <td style="padding-bottom: 24px;">
-                    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
-                      <tr>
-                        <td style="background-color: #fffbe5; border: 1px solid #fef3c7; border-left: 4px solid #f59e0b; border-radius: 12px; padding: 14px 18px;">
-                          <div style="font-size: 13px; font-weight: 800; color: #92400e; margin-bottom: 4px;">
-                            🛡 Security Notice
-                          </div>
-                          <div style="font-size: 13px; color: #b45309; line-height: 1.5;">
-                            If you did not request this verification code, please ignore this email. Never share your verification code with anyone.
-                          </div>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-
-              </table>
+          <!-- Security Notice Section -->
+          <tr>
+            <td style="padding: 0 36px 36px 36px;">
+              <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 20px;">
+                <div style="font-size: 13px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">
+                  Security notice
+                </div>
+                <div style="font-size: 13px; color: #475569; line-height: 1.5; margin-bottom: 4px;">
+                  If you did not request this verification code, you can safely ignore this email.
+                </div>
+                <div style="font-size: 13px; color: #475569; line-height: 1.5;">
+                  Never share your verification code with anyone.
+                </div>
+              </div>
             </td>
           </tr>
 
           <!-- Footer -->
           <tr>
-            <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 24px 28px; text-align: center;">
-              <div style="font-size: 12px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">
+            <td style="border-top: 1px solid #e2e8f0; padding: 28px 36px; text-align: left; background-color: #ffffff; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+              <div style="font-size: 12px; font-weight: 800; color: #0f172a; margin-bottom: 3px;">
                 NANDHA ENGINEERING COLLEGE (AUTONOMOUS)
               </div>
-              <div style="font-size: 12px; font-weight: 700; color: #2563eb; margin-bottom: 8px;">
+              <div style="font-size: 12px; font-weight: 700; color: #2563eb; margin-bottom: 3px;">
                 LeetCode Weekly Performance Tracker
               </div>
-              <div style="font-size: 11px; color: #64748b; margin-bottom: 12px;">
+              <div style="font-size: 11px; color: #64748b; margin-bottom: 14px;">
                 Official Administrator Authentication System
               </div>
-              <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">
-                This is an automated security message. Please do not reply directly to this email.
+              <div style="font-size: 11px; color: #94a3b8; line-height: 1.5;">
+                This is an automated security message.<br>Please do not reply directly to this email.
               </div>
             </td>
           </tr>
@@ -400,36 +385,49 @@ def build_otp_email_template(otp: str) -> Tuple[str, str, str]:
 </body>
 </html>"""
 
-    plain_text_body = f"""NANDHA ENGINEERING COLLEGE (AUTONOMOUS)
+    plain_text_body = f"""NANDHA ENGINEERING COLLEGE
+(AUTONOMOUS)
+
 LeetCode Weekly Performance Tracker
+
 OFFICIAL ADMINISTRATOR PORTAL
 
-SECURE ADMINISTRATOR VERIFICATION
+
+Secure Administrator Verification
 
 Hello Administrator,
 
 We received a request to verify administrator access to the Nandha Engineering College LeetCode Weekly Performance Tracker.
 
-YOUR VERIFICATION CODE:
+Use the verification code below to continue.
+
+
+YOUR VERIFICATION CODE
 
 {otp}
 
 This verification code expires in 5 minutes.
-For your security, this code can only be used once.
+This code can only be used once.
 
---------------------------------------------------
-SECURITY NOTICE
-If you did not request this verification code, please ignore this email.
+
+Security notice
+
+If you did not request this verification code, you can safely ignore this email.
+
 Never share your verification code with anyone.
---------------------------------------------------
+
 
 NANDHA ENGINEERING COLLEGE (AUTONOMOUS)
+
 LeetCode Weekly Performance Tracker
 Official Administrator Authentication System
-This is an automated security message. Please do not reply to this email.
+
+This is an automated security message.
+Please do not reply directly to this email.
 """
 
     return subject, html_body, plain_text_body
+
 
 
 

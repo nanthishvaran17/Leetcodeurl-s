@@ -225,9 +225,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           if (selectedDept && selectedDept.code && deptCode !== selectedDept.code) return;
           if (yearLevel !== 'ALL' && yr !== yearLevel) return;
 
-          const syncStatus = sStats.syncStatus || 'pending';
-          const isVerified = syncStatus === 'success' || syncStatus === 'OK';
-          const totSolved = isVerified ? (sStats.totalSolved ?? 0) : null;
+          const syncStatus = sStats.syncStatus || sStats.sync_status || 'pending';
+          const totSolvedVal = sStats.totalSolved ?? sStats.total_solved ?? null;
+          const isVerified = syncStatus === 'success' || syncStatus === 'OK' || syncStatus === 'verified' || syncStatus === 'stale' || totSolvedVal !== null;
+          const totSolved = isVerified ? (totSolvedVal ?? 0) : null;
 
           list.push({
             id: sData.id || Number(docSnap.id),
@@ -245,20 +246,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             consistency_score: sStats.consistencyScore ?? 0,
             stats: {
               total_solved: totSolved,
-              easy_solved: isVerified ? (sStats.easySolved ?? 0) : null,
-              medium_solved: isVerified ? (sStats.mediumSolved ?? 0) : null,
-              hard_solved: isVerified ? (sStats.hardSolved ?? 0) : null,
-              contest_rating: sStats.contestRating ?? null,
-              contest_global_ranking: sStats.globalRanking ?? null,
+              easy_solved: isVerified ? (sStats.easySolved ?? sStats.easy_solved ?? 0) : null,
+              medium_solved: isVerified ? (sStats.mediumSolved ?? sStats.medium_solved ?? 0) : null,
+              hard_solved: isVerified ? (sStats.hardSolved ?? sStats.hard_solved ?? 0) : null,
+              contest_rating: sStats.contestRating ?? sStats.contest_rating ?? null,
+              contest_global_ranking: sStats.globalRanking ?? sStats.contest_global_ranking ?? null,
               public_profile_ranking: sStats.profileRanking ?? sStats.globalRanking ?? null,
               recent_contest_name: sStats.recentContestName || 'Weekly Contest',
               recent_contest_score: sStats.recentContestScore || (isVerified ? 'Not Attended' : '—'),
               status: sStats.status || (isVerified ? 'OK' : 'pending'),
               sync_status: syncStatus,
               source: sStats.source || null,
-              last_verified_at: sStats.lastVerifiedAt ?? null
+              last_verified_at: sStats.lastVerifiedAt ?? sStats.last_verified_at ?? null
             }
           });
+
         });
 
         if (list.length > 0) {
@@ -392,13 +394,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
         {(() => {
           // Compute verified/pending/failed from loaded students
-          const verified = students.filter(s => s.stats?.sync_status === 'success').length;
+          const isVerifiedSt = (s: StudentData) => {
+            const st = s.stats?.sync_status;
+            const tot = s.stats?.total_solved ?? s.total_solved;
+            return st === 'success' || st === 'OK' || st === 'verified' || st === 'stale' || (tot !== null && tot !== undefined);
+          };
+          const verified = students.filter(isVerifiedSt).length;
           const pending  = students.filter(s => !s.stats?.sync_status || s.stats.sync_status === 'pending' || s.stats.sync_status === 'not_started').length;
           const failed   = students.filter(s => s.stats?.sync_status === 'failed' || s.stats?.sync_status === 'mismatch').length;
-          const activeSolvers = students.filter(s => s.stats?.sync_status === 'success' && (s.stats?.total_solved ?? 0) > 0).length;
-          const verifiedProblems = students
-            .filter(s => s.stats?.sync_status === 'success')
-            .reduce((sum, s) => sum + (s.stats?.total_solved ?? 0), 0);
+          const activeSolvers = students.filter(s => (s.stats?.total_solved ?? s.total_solved ?? 0) > 0).length;
+          const verifiedProblems = students.reduce((sum, s) => sum + (s.stats?.total_solved ?? s.total_solved ?? 0), 0);
+
+
 
           return (
             <>
