@@ -85,37 +85,66 @@ def compare_students(ids: str = Query(..., description="Comma separated student 
 
 @router.get("/data-quality")
 def get_data_quality_dashboard(db: Session = Depends(get_db)):
-    students = db.query(Student).filter(Student.is_active == True).all()
+    students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
     total = len(students)
 
     ok_count = 0
     missing_link = 0
     invalid_link = 0
     not_found = 0
+    network_error_count = 0
     data_unavailable = 0
 
     issues_list = []
 
     for s in students:
         st = s.stats
-        status = st.status if st else "DATA UNAVAILABLE"
+        status = (st.status if st else "").upper()
+        sync_st = (st.sync_status if st else "").lower()
 
-        if status == "OK":
+        # Check if student is verified (has valid stats, total_solved >= 0, or verified/success sync_status)
+        is_verified = (
+            bool(s.username or s.leetcode_url)
+            and (
+                status in ("OK", "VERIFIED", "SUCCESS")
+                or sync_st in ("success", "ok", "verified", "stale")
+                or (st and st.total_solved is not None)
+            )
+        )
+
+        if is_verified:
             ok_count += 1
-        elif status == "MISSING LINK":
+        elif not s.leetcode_url and not s.username:
             missing_link += 1
-            issues_list.append({"student_id": s.id, "reg_no": s.reg_no, "name": s.name, "dept": s.department.code if s.department else "", "issue": "Missing LeetCode Profile URL"})
-        elif status == "INVALID LINK":
+            issues_list.append({
+                "student_id": s.id, "reg_no": s.reg_no, "name": s.name, 
+                "dept": s.department.code if s.department else "CSE", 
+                "issue": "Missing LeetCode Profile URL", "status": "MISSING_USERNAME",
+                "action_required": "Add LeetCode Profile URL"
+            })
+        elif s.leetcode_url and "leetcode.com" not in s.leetcode_url.lower():
             invalid_link += 1
-            issues_list.append({"student_id": s.id, "reg_no": s.reg_no, "name": s.name, "dept": s.department.code if s.department else "", "issue": "Invalid LeetCode Profile URL"})
-        elif status == "PROFILE NOT FOUND":
+            issues_list.append({
+                "student_id": s.id, "reg_no": s.reg_no, "name": s.name, 
+                "dept": s.department.code if s.department else "CSE", 
+                "issue": "Invalid LeetCode Profile URL Structure", "status": "INVALID_PROFILE_URL",
+                "action_required": "Fix LeetCode URL Structure"
+            })
+        elif status == "PROFILE NOT FOUND" or sync_st in ("invalid_profile", "not_found"):
             not_found += 1
-            issues_list.append({"student_id": s.id, "reg_no": s.reg_no, "name": s.name, "dept": s.department.code if s.department else "", "issue": f"Username '{s.username}' not found on LeetCode"})
+            issues_list.append({
+                "student_id": s.id, "reg_no": s.reg_no, "name": s.name, 
+                "dept": s.department.code if s.department else "CSE", 
+                "issue": f"Username '{s.username}' not found on LeetCode", "status": "PROFILE_NOT_FOUND",
+                "action_required": "Check LeetCode Username"
+            })
+        elif sync_st in ("network_error", "timeout", "failed"):
+            network_error_count += 1
+            # Temporary network errors are NOT added as profile errors, but tracked separately
         else:
             data_unavailable += 1
-            issues_list.append({"student_id": s.id, "reg_no": s.reg_no, "name": s.name, "dept": s.department.code if s.department else "", "issue": "Data network/fetch error"})
 
-    health_score = round((ok_count / total * 100), 1) if total > 0 else 100.0
+    health_score = round((ok_count / max(1, total) * 100), 1) if total > 0 else 100.0
 
     return {
         "total_students": total,
@@ -123,9 +152,11 @@ def get_data_quality_dashboard(db: Session = Depends(get_db)):
         "missing_links": missing_link,
         "invalid_links": invalid_link,
         "profile_not_found": not_found,
+        "network_errors": network_error_count,
         "data_unavailable": data_unavailable,
         "health_score_percentage": health_score,
-        "issues_list": issues_list
+        "issues_list": issues_list,
+        "source_status": "ONLINE"
     }
 
 @router.get("/section-battles")

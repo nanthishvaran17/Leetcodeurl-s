@@ -21,13 +21,10 @@ import api from '../services/api';
 interface HealthData {
   status: string;
   timestamp: string;
+  checked_at?: string;
+  request_id?: string;
   environment: string;
-  components: {
-    database: { status: string; type: string };
-    firestore: { status: string; type: string };
-    scheduler: { status: string; type: string };
-    sync_engine: { status: string; run_id: string | null };
-  };
+  components: any;
 }
 
 interface MetricsData {
@@ -85,8 +82,8 @@ export const SystemHealthPage: React.FC = () => {
   };
 
   const renderStatusBadge = (status: string) => {
-    const isOk = status === 'OPERATIONAL' || status === 'HEALTHY' || status === 'RUNNING';
-    const isWarn = status === 'BUSY' || status === 'DEGRADED';
+    const isOk = status === 'OPERATIONAL' || status === 'HEALTHY' || status === 'RUNNING' || status === 'READY' || status === 'IDLE';
+    const isWarn = status === 'DEGRADED' || status === 'SOURCE_UNAVAILABLE';
 
     return (
       <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider space-x-1.5 shadow-sm ${
@@ -100,6 +97,8 @@ export const SystemHealthPage: React.FC = () => {
     );
   };
 
+  const [selectedTechDetail, setSelectedTechDetail] = useState<any>(null);
+
   if (loading) {
     return (
       <div className="p-12 flex flex-col items-center justify-center space-y-4">
@@ -109,10 +108,14 @@ export const SystemHealthPage: React.FC = () => {
     );
   }
 
+  const overallStatus = health?.status || 'OPERATIONAL';
+  const componentsList = health?.components ? Object.entries(health.components) : [];
+  const failingComponents = componentsList.filter(([_, comp]: any) => comp?.error === true || comp?.status === 'DOWN' || comp?.status === 'SOURCE_UNAVAILABLE' || comp?.status === 'STOPPED');
+
   return (
     <div className="space-y-8 animate-fade-in pb-12">
       
-      {/* Hero Banner with Rich Styling */}
+      {/* Hero Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-2xl border border-brand-500/30">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -123,12 +126,21 @@ export const SystemHealthPage: React.FC = () => {
               <span>INSTITUTIONAL OPERATIONS & MONITORING • REALTIME HEALTH MATRIX</span>
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight">
-              System Health & <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-300">Data Truth Center</span>
-            </h1>
+            <div className="flex items-center space-x-4 flex-wrap gap-2">
+              <h1 className="text-3xl md:text-4xl font-black tracking-tight">
+                System Health & <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-300">Data Truth Center</span>
+              </h1>
+              <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider border flex items-center space-x-2 ${
+                overallStatus === 'OPERATIONAL' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' :
+                overallStatus === 'DEGRADED' ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 animate-pulse' :
+                'bg-rose-500/20 text-rose-400 border-rose-500/40 animate-pulse'
+              }`}>
+                {overallStatus === 'OPERATIONAL' ? '🟢 SYSTEM OPERATIONAL' : overallStatus === 'DEGRADED' ? '🟡 SYSTEM DEGRADED' : '🔴 SYSTEM HEALTH UNAVAILABLE'}
+              </span>
+            </div>
 
             <p className="text-xs md:text-sm text-gray-300 font-bold tracking-wide">
-              Live status monitoring for SQLite DB, Cloud Firestore, APScheduler cron workers, identity validation, and sync progress.
+              Request ID: <span className="font-mono text-amber-300">{health?.request_id || 'health_req_live'}</span> • Checked At: <span className="font-mono text-emerald-300">{health?.checked_at || 'Just Now'}</span>
             </p>
           </div>
 
@@ -154,66 +166,109 @@ export const SystemHealthPage: React.FC = () => {
 
       {/* Component Status Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-xl hover:border-brand-500/50 transition-all space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="p-3 rounded-2xl bg-brand-500/10 text-brand-500">
-              <Database className="w-6 h-6" />
+        {componentsList.map(([key, comp]: any) => (
+          <div key={key} className={`p-6 rounded-3xl bg-white dark:bg-navy-900 border shadow-xl transition-all space-y-4 ${
+            comp?.error || comp?.status === 'DOWN' || comp?.status === 'SOURCE_UNAVAILABLE' || comp?.status === 'STOPPED'
+              ? 'border-rose-500/50 dark:border-rose-500/30 bg-rose-500/5'
+              : 'border-gray-200 dark:border-gray-800'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className={`p-3 rounded-2xl ${
+                key === 'database' ? 'bg-brand-500/10 text-brand-500' :
+                key === 'firestore' ? 'bg-sky-500/10 text-sky-500' :
+                key === 'leetcode_source' ? 'bg-amber-500/10 text-amber-500' :
+                'bg-emerald-500/10 text-emerald-500'
+              }`}>
+                {key === 'database' ? <Database className="w-6 h-6" /> :
+                 key === 'firestore' ? <Cloud className="w-6 h-6" /> :
+                 key === 'leetcode_source' ? <Activity className="w-6 h-6" /> :
+                 key === 'scheduler' ? <Clock className="w-6 h-6" /> :
+                 <Cpu className="w-6 h-6" />}
+              </div>
+              {renderStatusBadge(comp?.status || 'OPERATIONAL')}
             </div>
-            {renderStatusBadge(health?.components?.database?.status || 'OPERATIONAL')}
-          </div>
-          <div>
-            <h3 className="text-base font-black text-gray-900 dark:text-white">Database Engine</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold mt-1">
-              SQLAlchemy SQLite / Postgres store holding 273 verified student profiles.
-            </p>
-          </div>
-        </div>
 
-        <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-xl hover:border-sky-500/50 transition-all space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="p-3 rounded-2xl bg-sky-500/10 text-sky-500">
-              <Cloud className="w-6 h-6" />
+            <div>
+              <h3 className="text-base font-black text-gray-900 dark:text-white">{comp?.name || key}</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold mt-1">
+                {comp?.message || `Status: ${comp?.status}`}
+              </p>
             </div>
-            {renderStatusBadge(health?.components?.firestore?.status || 'OPERATIONAL')}
-          </div>
-          <div>
-            <h3 className="text-base font-black text-gray-900 dark:text-white">Cloud Firestore</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold mt-1">
-              Google Cloud Firestore realtime stats & pre-calculated leaderboards.
-            </p>
-          </div>
-        </div>
 
-        <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-xl hover:border-amber-500/50 transition-all space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-500">
-              <Clock className="w-6 h-6" />
-            </div>
-            {renderStatusBadge(health?.components?.scheduler?.status || 'RUNNING')}
+            {(comp?.error_code || comp?.action) && (
+              <button
+                onClick={() => setSelectedTechDetail({ key, ...comp })}
+                className="w-full py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 rounded-xl font-bold text-xs border border-rose-500/20 flex items-center justify-center space-x-1 transition-colors"
+              >
+                <AlertTriangle className="w-3.5 h-3.5" />
+                <span>View Technical Error Details</span>
+              </button>
+            )}
           </div>
-          <div>
-            <h3 className="text-base font-black text-gray-900 dark:text-white">APScheduler Cron</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold mt-1">
-              Sunday session (08:00–09:30 AM IST) & 2-hour auto-sync triggers.
-            </p>
-          </div>
-        </div>
-
-        <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-xl hover:border-emerald-500/50 transition-all space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-500">
-              <Cpu className="w-6 h-6" />
-            </div>
-            {renderStatusBadge(health?.components?.sync_engine?.status || 'READY')}
-          </div>
-          <div>
-            <h3 className="text-base font-black text-gray-900 dark:text-white">Sync Engine Lock</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold mt-1">
-              Concurrency protection ensuring 1 active sync worker at a time.
-            </p>
-          </div>
-        </div>
+        ))}
       </div>
+
+      {/* Active Failures & Diagnostic Error Panels */}
+      {failingComponents.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-sm font-black uppercase text-rose-500 tracking-wider flex items-center space-x-2">
+            <AlertTriangle className="w-4 h-4" />
+            <span>Active Subsystem Anomalies ({failingComponents.length} Component Warnings)</span>
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {failingComponents.map(([key, comp]: any) => (
+              <div key={key} className="p-6 rounded-3xl bg-rose-500/10 border border-rose-500/30 text-rose-900 dark:text-rose-200 space-y-3 shadow-xl">
+                <div className="flex items-center justify-between">
+                  <span className="font-black text-sm uppercase text-rose-600 dark:text-rose-400 flex items-center space-x-2">
+                    <XCircle className="w-4 h-4" />
+                    <span>{comp?.name || key}</span>
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded font-mono text-[11px] bg-rose-950 text-rose-300 border border-rose-800">
+                    {comp?.error_code || 'DEGRADED_STATE'}
+                  </span>
+                </div>
+
+                <div className="text-xs space-y-1 font-semibold">
+                  <p><span className="font-black uppercase text-gray-500">Reason:</span> {comp?.message || 'Unresponsive'}</p>
+                  <p><span className="font-black uppercase text-gray-500">Last Checked:</span> {comp?.last_checked || 'Just Now'}</p>
+                  <p className="text-amber-600 dark:text-amber-300 font-bold"><span className="font-black uppercase text-gray-500">Recommended Action:</span> {comp?.action || 'Inspect server log file for correlation ID'}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Technical Details Modal */}
+      {selectedTechDetail && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl animate-fade-in">
+            <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-3">
+              <h3 className="text-base font-black text-gray-900 dark:text-white flex items-center space-x-2">
+                <AlertTriangle className="w-5 h-5 text-amber-500" />
+                <span>Technical Error Details ({selectedTechDetail.name})</span>
+              </h3>
+              <button onClick={() => setSelectedTechDetail(null)} className="text-gray-400 hover:text-gray-600 font-black text-lg">✕</button>
+            </div>
+
+            <div className="space-y-3 text-xs font-mono bg-navy-950 text-gray-200 p-4 rounded-2xl border border-gray-800">
+              <p><span className="text-brand-400">Request ID:</span> {health?.request_id}</p>
+              <p><span className="text-brand-400">Component:</span> {selectedTechDetail.name}</p>
+              <p><span className="text-rose-400">Error Code:</span> {selectedTechDetail.error_code || 'UNSPECIFIED_ERROR'}</p>
+              <p><span className="text-amber-400">Sanitized Message:</span> {selectedTechDetail.message}</p>
+              <p><span className="text-emerald-400">Last Checked:</span> {selectedTechDetail.last_checked}</p>
+              <p><span className="text-sky-400">Action:</span> {selectedTechDetail.action}</p>
+            </div>
+
+            <div className="flex justify-end">
+              <button onClick={() => setSelectedTechDetail(null)} className="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl">
+                Close Technical Details
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Operational Metrics Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-5">

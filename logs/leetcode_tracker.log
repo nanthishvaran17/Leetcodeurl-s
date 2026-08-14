@@ -23861,3 +23861,1519 @@ Action: Request blocked
 [2026-08-14 08:19:14,002] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-46506] ADMIN_LOGIN by admin (admin@college.edu)
 [2026-08-14 08:19:43,904] [ERROR] [leetcode_tracker]: Failed to record security audit log: QueuePool limit of size 5 overflow 10 reached, connection timed out, timeout 30.00 (Background on this error at: https://sqlalche.me/e/20/3o7r)
 [2026-08-14 08:19:45,100] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-92535] ADMIN_LOGIN by admin (admin@college.edu)
+[2026-08-14 08:19:48,643] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-14 08:19:48,648] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-14 08:19:48,714] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-14 08:19:48,716] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-14 08:19:48,716] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-14 08:19:48,913] [INFO] [leetcode_tracker]: Checking WeeklySession ID 16 (WEEK-2026-08-09) status: 'FINALIZED' at IST 08:19
+[2026-08-14 08:19:48,925] [INFO] [leetcode_tracker]: Session WEEK-2026-08-09 is locked (FINALIZED). No recovery action needed.
+[2026-08-14 08:20:29,017] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-92950] ADMIN_LOGIN by admin (admin@college.edu)
+[2026-08-14 08:20:29,768] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-14 08:20:29,793] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-14 08:20:45,383] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-14 08:20:45,385] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 08:20:46,622] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-14 08:20:50,587] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 08:20:52,107] [INFO] [leetcode_tracker]: [MATRIX DIAGNOSTICS]
+[2026-08-14 08:20:52,108] [INFO] [leetcode_tracker]: session_id=20
+[2026-08-14 08:20:52,110] [INFO] [leetcode_tracker]: contest=512
+[2026-08-14 08:20:52,115] [INFO] [leetcode_tracker]: date=26.07.2026
+[2026-08-14 08:20:52,117] [INFO] [leetcode_tracker]: roster=273
+[2026-08-14 08:20:52,119] [INFO] [leetcode_tracker]: results=273
+[2026-08-14 08:20:52,124] [INFO] [leetcode_tracker]: joined=273
+[2026-08-14 08:20:52,126] [INFO] [leetcode_tracker]: dept=ALL
+[2026-08-14 08:20:52,131] [INFO] [leetcode_tracker]: year=ALL
+[2026-08-14 08:20:52,134] [INFO] [leetcode_tracker]: attendance=ALL
+[2026-08-14 08:20:52,139] [INFO] [leetcode_tracker]: final_rows=273
+[2026-08-14 08:21:00,426] [INFO] [leetcode_tracker]: [MATRIX DIAGNOSTICS]
+[2026-08-14 08:21:00,427] [INFO] [leetcode_tracker]: session_id=20
+[2026-08-14 08:21:00,428] [INFO] [leetcode_tracker]: contest=512
+[2026-08-14 08:21:00,429] [INFO] [leetcode_tracker]: date=26.07.2026
+[2026-08-14 08:21:00,430] [INFO] [leetcode_tracker]: roster=273
+[2026-08-14 08:21:00,431] [INFO] [leetcode_tracker]: results=273
+[2026-08-14 08:21:00,432] [INFO] [leetcode_tracker]: joined=273
+[2026-08-14 08:21:00,433] [INFO] [leetcode_tracker]: dept=ALL
+[2026-08-14 08:21:00,434] [INFO] [leetcode_tracker]: year=ALL
+[2026-08-14 08:21:00,435] [INFO] [leetcode_tracker]: attendance=PUBLIC_ATTENDED
+[2026-08-14 08:21:00,436] [INFO] [leetcode_tracker]: final_rows=18
+[2026-08-14 08:21:05,022] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-14 08:21:06,262] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 08:21:22,314] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-47698] DELETE_RECIPIENT by admin (admin@college.edu)
+[2026-08-14 08:21:26,232] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-94195] DELETE_RECIPIENT by admin (admin@college.edu)
+[2026-08-14 08:21:30,531] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-14 08:21:33,342] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 08:21:40,076] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-14 08:21:40,336] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 08:22:15,691] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-14 08:22:15,745] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-14 08:22:16,419] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-14 08:22:16,422] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 08:22:16,670] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-14 08:22:17,171] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 08:22:38,076] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-14 08:22:38,112] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-14 08:24:56,816] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-81092] ADMIN_LOGIN by admin (admin@college.edu)
+[2026-08-14 08:24:57,207] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 3
+[2026-08-14 08:24:57,234] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 4
+[2026-08-14 08:25:01,288] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-42846] AI_COPILOT_QUERY by admin (admin@college.edu)
+[2026-08-14 08:25:03,886] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-91662] AI_COPILOT_QUERY by admin (admin@college.edu)
+[2026-08-14 08:25:06,753] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-82484] AI_COPILOT_QUERY by admin (admin@college.edu)
+[2026-08-14 08:25:07,588] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-82081] AI_COPILOT_QUERY by admin (admin@college.edu)
+[2026-08-14 08:25:14,359] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-45573] AI_COPILOT_QUERY by admin (admin@college.edu)
+[2026-08-14 08:25:16,865] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-29562] AI_COPILOT_QUERY by admin (admin@college.edu)
+[2026-08-14 08:25:23,026] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 3
+[2026-08-14 08:25:23,029] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 2
+[2026-08-14 08:25:25,814] [INFO] [leetcode_tracker]: [MATRIX DIAGNOSTICS]
+[2026-08-14 08:25:25,817] [INFO] [leetcode_tracker]: session_id=20
+[2026-08-14 08:25:25,820] [INFO] [leetcode_tracker]: contest=512
+[2026-08-14 08:25:25,823] [INFO] [leetcode_tracker]: date=26.07.2026
+[2026-08-14 08:25:25,825] [INFO] [leetcode_tracker]: roster=273
+[2026-08-14 08:25:25,828] [INFO] [leetcode_tracker]: results=273
+[2026-08-14 08:25:25,832] [INFO] [leetcode_tracker]: joined=273
+[2026-08-14 08:25:25,833] [INFO] [leetcode_tracker]: dept=ALL
+[2026-08-14 08:25:25,837] [INFO] [leetcode_tracker]: year=ALL
+[2026-08-14 08:25:25,839] [INFO] [leetcode_tracker]: attendance=ALL
+[2026-08-14 08:25:25,843] [INFO] [leetcode_tracker]: final_rows=273
+[2026-08-14 08:25:27,926] [INFO] [leetcode_tracker]: [MATRIX DIAGNOSTICS]
+[2026-08-14 08:25:27,927] [INFO] [leetcode_tracker]: session_id=18
+[2026-08-14 08:25:27,929] [INFO] [leetcode_tracker]: contest=510
+[2026-08-14 08:25:27,930] [INFO] [leetcode_tracker]: date=12.07.2026
+[2026-08-14 08:25:27,931] [INFO] [leetcode_tracker]: roster=273
+[2026-08-14 08:25:27,933] [INFO] [leetcode_tracker]: results=273
+[2026-08-14 08:25:27,936] [INFO] [leetcode_tracker]: joined=273
+[2026-08-14 08:25:27,937] [INFO] [leetcode_tracker]: dept=ALL
+[2026-08-14 08:25:27,938] [INFO] [leetcode_tracker]: year=ALL
+[2026-08-14 08:25:27,939] [INFO] [leetcode_tracker]: attendance=ALL
+[2026-08-14 08:25:27,940] [INFO] [leetcode_tracker]: final_rows=273
+[2026-08-14 08:28:18,688] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-14 08:28:18,688] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 08:28:22,358] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-14 08:28:22,362] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-14 08:28:22,445] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-14 08:28:22,446] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-14 08:28:22,447] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-14 08:28:22,674] [INFO] [leetcode_tracker]: Checking WeeklySession ID 16 (WEEK-2026-08-09) status: 'FINALIZED' at IST 08:28
+[2026-08-14 08:28:22,674] [INFO] [leetcode_tracker]: Session WEEK-2026-08-09 is locked (FINALIZED). No recovery action needed.
+[2026-08-14 08:28:24,511] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-14 08:28:24,533] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-14 08:28:54,243] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-14 08:28:54,245] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 08:28:57,110] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-14 08:28:57,150] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-14 08:28:57,534] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-14 08:28:57,540] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 08:28:58,737] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-14 08:29:00,056] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 08:29:03,083] [INFO] [leetcode_tracker]: [MATRIX DIAGNOSTICS]
+[2026-08-14 08:29:03,089] [INFO] [leetcode_tracker]: session_id=20
+[2026-08-14 08:29:03,096] [INFO] [leetcode_tracker]: contest=512
+[2026-08-14 08:29:03,099] [INFO] [leetcode_tracker]: date=26.07.2026
+[2026-08-14 08:29:03,107] [INFO] [leetcode_tracker]: roster=273
+[2026-08-14 08:29:03,114] [INFO] [leetcode_tracker]: results=273
+[2026-08-14 08:29:03,117] [INFO] [leetcode_tracker]: joined=273
+[2026-08-14 08:29:03,135] [INFO] [leetcode_tracker]: dept=ALL
+[2026-08-14 08:29:03,138] [INFO] [leetcode_tracker]: year=ALL
+[2026-08-14 08:29:03,143] [INFO] [leetcode_tracker]: attendance=ALL
+[2026-08-14 08:29:03,148] [INFO] [leetcode_tracker]: final_rows=273
+[2026-08-14 08:30:14,937] [INFO] [leetcode_tracker]: [INFO] Starting batch LeetCode sync for 273 students (Concurrency: 5, RunID: sync_20260814_030014)...
+[2026-08-14 08:30:14,952] [INFO] [leetcode_tracker]: [INFO] Fetching: 1/273 - Reg: 732224CC001 | Username: Ajay_A1277
+[2026-08-14 08:30:15,442] [INFO] [leetcode_tracker]: [INFO] Fetching: 1/273 - Reg: 732224CC002 | Username: Ammu1927
+[2026-08-14 08:30:15,498] [INFO] [leetcode_tracker]: [INFO] Fetching: 1/273 - Reg: 732224CC003 | Username: anushkumar_06
+[2026-08-14 08:30:15,552] [INFO] [leetcode_tracker]: [INFO] Fetching: 1/273 - Reg: 732224CC004 | Username: BHARATH1927
+[2026-08-14 08:30:15,609] [INFO] [leetcode_tracker]: [INFO] Fetching: 1/273 - Reg: 732224CC005 | Username: dhanu2006
+[2026-08-14 08:30:17,626] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ammu1927' (Attempt 1/3)
+[2026-08-14 08:30:17,685] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ajay_a1277' (Attempt 1/3)
+[2026-08-14 08:30:17,717] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dhanu2006' (Attempt 1/3)
+[2026-08-14 08:30:18,462] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'anushkumar_06' (Attempt 1/3)
+[2026-08-14 08:30:18,526] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'bharath1927' (Attempt 1/3)
+[2026-08-14 08:30:19,565] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ajay_a1277' (Attempt 2/3)
+[2026-08-14 08:30:19,987] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dhanu2006' (Attempt 2/3)
+[2026-08-14 08:30:19,990] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ammu1927' (Attempt 2/3)
+[2026-08-14 08:30:20,941] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'anushkumar_06' (Attempt 2/3)
+[2026-08-14 08:30:21,074] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'bharath1927' (Attempt 2/3)
+[2026-08-14 08:30:22,313] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ajay_a1277' (Attempt 3/3)
+[2026-08-14 08:30:22,339] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dhanu2006' (Attempt 3/3)
+[2026-08-14 08:30:22,354] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'bharath1927' (Attempt 3/3)
+[2026-08-14 08:30:22,887] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ammu1927' (Attempt 3/3)
+[2026-08-14 08:30:22,930] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'anushkumar_06' (Attempt 3/3)
+[2026-08-14 08:30:26,166] [INFO] [leetcode_tracker]: [INFO] Success - anushkumar_06 (Solved: 162, Rating: None, Time: 10.639s)
+[2026-08-14 08:30:26,471] [INFO] [leetcode_tracker]: [INFO] Fetching: 2/273 - Reg: 732224CC006 | Username: DHARSHINI_1605
+[2026-08-14 08:30:26,678] [INFO] [leetcode_tracker]: [INFO] Success - BHARATH1927 (Solved: 71, Rating: None, Time: 11.078s)
+[2026-08-14 08:30:26,714] [INFO] [leetcode_tracker]: [INFO] Success - dhanu2006 (Solved: 241, Rating: None, Time: 11.072s)
+[2026-08-14 08:30:26,796] [INFO] [leetcode_tracker]: [INFO] Success - Ammu1927 (Solved: 86, Rating: None, Time: 11.317s)
+[2026-08-14 08:30:26,987] [INFO] [leetcode_tracker]: [INFO] Fetching: 5/273 - Reg: 732224CC007 | Username: Dharshini90989
+[2026-08-14 08:30:27,016] [INFO] [leetcode_tracker]: [INFO] Fetching: 5/273 - Reg: 732224CC008 | Username: K_P_DHARUNRAJ
+[2026-08-14 08:30:27,110] [INFO] [leetcode_tracker]: [INFO] Fetching: 5/273 - Reg: 732224CC009 | Username: Giripathi_k
+[2026-08-14 08:30:27,250] [INFO] [leetcode_tracker]: [INFO] Success - Ajay_A1277 (Solved: 194, Rating: None, Time: 12.247s)
+[2026-08-14 08:30:27,562] [INFO] [leetcode_tracker]: [INFO] Fetching: 6/273 - Reg: 732224CC010 | Username: gokul_5405
+[2026-08-14 08:30:32,063] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dharshini90989' (Attempt 1/3)
+[2026-08-14 08:30:32,068] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'k_p_dharunraj' (Attempt 1/3)
+[2026-08-14 08:30:32,086] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'giripathi_k' (Attempt 1/3)
+[2026-08-14 08:30:32,370] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gokul_5405' (Attempt 1/3)
+[2026-08-14 08:30:32,669] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dharshini_1605' (Attempt 1/3)
+[2026-08-14 08:30:33,193] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'giripathi_k' (Attempt 2/3)
+[2026-08-14 08:30:33,206] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'k_p_dharunraj' (Attempt 2/3)
+[2026-08-14 08:30:33,265] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gokul_5405' (Attempt 2/3)
+[2026-08-14 08:30:33,722] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dharshini90989' (Attempt 2/3)
+[2026-08-14 08:30:34,522] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dharshini_1605' (Attempt 2/3)
+[2026-08-14 08:30:35,747] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gokul_5405' (Attempt 3/3)
+[2026-08-14 08:30:35,883] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'k_p_dharunraj' (Attempt 3/3)
+[2026-08-14 08:30:35,972] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dharshini90989' (Attempt 3/3)
+[2026-08-14 08:30:36,056] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'giripathi_k' (Attempt 3/3)
+[2026-08-14 08:30:37,156] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dharshini_1605' (Attempt 3/3)
+[2026-08-14 08:30:41,835] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/gokul_5405) note for 'gokul_5405': 
+[2026-08-14 08:30:41,945] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/k_p_dharunraj) note for 'k_p_dharunraj': 
+[2026-08-14 08:30:42,042] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/dharshini90989) note for 'dharshini90989': 
+[2026-08-14 08:30:42,128] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/giripathi_k) note for 'giripathi_k': 
+[2026-08-14 08:30:43,360] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/dharshini_1605) note for 'dharshini_1605': 
+[2026-08-14 08:30:47,848] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/userProfile/gokul_5405) note for 'gokul_5405': 
+[2026-08-14 08:30:47,964] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/userProfile/k_p_dharunraj) note for 'k_p_dharunraj': 
+[2026-08-14 08:30:48,056] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/userProfile/dharshini90989) note for 'dharshini90989': 
+[2026-08-14 08:30:48,139] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/userProfile/giripathi_k) note for 'giripathi_k': 
+[2026-08-14 08:30:51,492] [INFO] [leetcode_tracker]: [INFO] Success - DHARSHINI_1605 (Solved: 120, Rating: None, Time: 24.985s)
+[2026-08-14 08:30:51,553] [INFO] [leetcode_tracker]: [INFO] Success - Dharshini90989 (Solved: 172, Rating: None, Time: 24.521s)
+[2026-08-14 08:30:51,796] [INFO] [leetcode_tracker]: [INFO] Fetching: 8/273 - Reg: 732224CC011 | Username: hardi22011
+[2026-08-14 08:30:51,855] [INFO] [leetcode_tracker]: [INFO] Fetching: 8/273 - Reg: 732224CC012 | Username: x8ggzaR6Gx
+[2026-08-14 08:30:52,432] [INFO] [leetcode_tracker]: [INFO] Success - Giripathi_k (Solved: 146, Rating: None, Time: 25.274s)
+[2026-08-14 08:30:52,737] [INFO] [leetcode_tracker]: [INFO] Fetching: 9/273 - Reg: 732224CC013 | Username: Harish000007
+[2026-08-14 08:30:52,896] [INFO] [leetcode_tracker]: [INFO] Success - gokul_5405 (Solved: 128, Rating: None, Time: 25.285s)
+[2026-08-14 08:30:53,059] [INFO] [leetcode_tracker]: [INFO] Success - K_P_DHARUNRAJ (Solved: 203, Rating: None, Time: 25.963s)
+[2026-08-14 08:30:53,215] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'x8ggzar6gx' (Attempt 1/3)
+[2026-08-14 08:30:53,220] [INFO] [leetcode_tracker]: [INFO] Fetching: 11/273 - Reg: 732224CC014 | Username: HarishVichu
+[2026-08-14 08:30:53,332] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'hardi22011' (Attempt 1/3)
+[2026-08-14 08:30:53,378] [INFO] [leetcode_tracker]: [INFO] Fetching: 11/273 - Reg: 732224CC015 | Username: Har-ish23
+[2026-08-14 08:30:53,949] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'harish000007' (Attempt 1/3)
+[2026-08-14 08:30:54,487] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'x8ggzar6gx' (Attempt 2/3)
+[2026-08-14 08:30:54,612] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'har-ish23' (Attempt 1/3)
+[2026-08-14 08:30:54,626] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'harishvichu' (Attempt 1/3)
+[2026-08-14 08:30:54,838] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'hardi22011' (Attempt 2/3)
+[2026-08-14 08:30:55,114] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'harish000007' (Attempt 2/3)
+[2026-08-14 08:30:56,329] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'harishvichu' (Attempt 2/3)
+[2026-08-14 08:30:56,533] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'har-ish23' (Attempt 2/3)
+[2026-08-14 08:30:56,772] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'x8ggzar6gx' (Attempt 3/3)
+[2026-08-14 08:30:56,993] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'harish000007' (Attempt 3/3)
+[2026-08-14 08:30:57,232] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'hardi22011' (Attempt 3/3)
+[2026-08-14 08:30:58,376] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'harishvichu' (Attempt 3/3)
+[2026-08-14 08:30:58,774] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'har-ish23' (Attempt 3/3)
+[2026-08-14 08:31:00,120] [INFO] [leetcode_tracker]: [INFO] Success - x8ggzaR6Gx (Solved: 132, Rating: None, Time: 8.198s)
+[2026-08-14 08:31:00,425] [INFO] [leetcode_tracker]: [INFO] Fetching: 12/273 - Reg: 732224CC016 | Username: Iniya3126
+[2026-08-14 08:31:00,938] [INFO] [leetcode_tracker]: [INFO] Success - hardi22011 (Solved: 91, Rating: None, Time: 9.094s)
+[2026-08-14 08:31:00,964] [INFO] [leetcode_tracker]: [INFO] Success - Harish000007 (Solved: 13, Rating: None, Time: 8.156s)
+[2026-08-14 08:31:01,244] [INFO] [leetcode_tracker]: [INFO] Fetching: 14/273 - Reg: 732224CC017 | Username: _itz_pretty
+[2026-08-14 08:31:01,277] [INFO] [leetcode_tracker]: [INFO] Fetching: 14/273 - Reg: 732224CC018 | Username: jayaprakash2007
+[2026-08-14 08:31:06,340] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/harishvichu) note for 'harishvichu': 
+[2026-08-14 08:31:06,485] [WARNING] [leetcode_tracker]: Timeout fetching profile for '_itz_pretty' (Attempt 1/3)
+[2026-08-14 08:31:06,488] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'jayaprakash2007' (Attempt 1/3)
+[2026-08-14 08:31:06,944] [INFO] [leetcode_tracker]: [INFO] Success - Har-ish23 (Solved: 185, Rating: None, Time: 13.524s)
+[2026-08-14 08:31:07,265] [INFO] [leetcode_tracker]: [INFO] Fetching: 15/273 - Reg: 732224CC019 | Username: Surya1231172
+[2026-08-14 08:31:12,013] [WARNING] [leetcode_tracker]: Timeout fetching profile for '_itz_pretty' (Attempt 2/3)
+[2026-08-14 08:31:12,016] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'jayaprakash2007' (Attempt 2/3)
+[2026-08-14 08:31:12,101] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'iniya3126' (Attempt 1/3)
+[2026-08-14 08:31:13,473] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'surya1231172' (Attempt 1/3)
+[2026-08-14 08:31:17,316] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'iniya3126' (Attempt 2/3)
+[2026-08-14 08:31:17,671] [INFO] [leetcode_tracker]: [INFO] Success - HarishVichu (Solved: 116, Rating: None, Time: 24.413s)
+[2026-08-14 08:31:17,980] [INFO] [leetcode_tracker]: [INFO] Fetching: 16/273 - Reg: 732224CC020 | Username: karthi_2007
+[2026-08-14 08:31:23,038] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'karthi_2007' (Attempt 1/3)
+[2026-08-14 08:31:28,177] [WARNING] [leetcode_tracker]: Connection issue for '_itz_pretty' (Attempt 3/3): Network connection drop (RemoteProtocolError)
+[2026-08-14 08:31:28,185] [WARNING] [leetcode_tracker]: Connection issue for 'jayaprakash2007' (Attempt 3/3): Network connection drop (RemoteProtocolError)
+[2026-08-14 08:31:28,353] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'karthi_2007' (Attempt 2/3)
+[2026-08-14 08:31:28,941] [WARNING] [leetcode_tracker]: Connection issue for 'surya1231172' (Attempt 2/3): Network connection drop (RemoteProtocolError)
+[2026-08-14 08:31:32,684] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'iniya3126' (Attempt 3/3)
+[2026-08-14 08:31:34,289] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/_itz_pretty) note for '_itz_pretty': 
+[2026-08-14 08:31:34,293] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/jayaprakash2007) note for 'jayaprakash2007': 
+[2026-08-14 08:31:34,461] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'karthi_2007' (Attempt 3/3)
+[2026-08-14 08:31:38,725] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'surya1231172' (Attempt 3/3)
+[2026-08-14 08:31:39,486] [INFO] [leetcode_tracker]: [INFO] Success - karthi_2007 (Solved: 109, Rating: None, Time: 21.467s)
+[2026-08-14 08:31:39,530] [INFO] [leetcode_tracker]: [INFO] Success - _itz_pretty (Solved: 133, Rating: None, Time: 38.252s)
+[2026-08-14 08:31:39,571] [INFO] [leetcode_tracker]: [INFO] Success - Iniya3126 (Solved: 312, Rating: None, Time: 39.072s)
+[2026-08-14 08:31:39,793] [INFO] [leetcode_tracker]: [INFO] Fetching: 19/273 - Reg: 732224CC021 | Username: success_lover_01
+[2026-08-14 08:31:39,845] [INFO] [leetcode_tracker]: [INFO] Fetching: 19/273 - Reg: 732224CC022 | Username: KISHORE_CHAND
+[2026-08-14 08:31:39,929] [INFO] [leetcode_tracker]: [INFO] Success - jayaprakash2007 (Solved: 129, Rating: None, Time: 38.608s)
+[2026-08-14 08:31:39,931] [INFO] [leetcode_tracker]: [INFO] Fetching: 20/273 - Reg: 732224CC023 | Username: Laksana_Subramanian
+[2026-08-14 08:31:40,246] [INFO] [leetcode_tracker]: [INFO] Fetching: 20/273 - Reg: 732224CC024 | Username: MADAN__200
+[2026-08-14 08:31:40,520] [INFO] [leetcode_tracker]: [INFO] Success - Surya1231172 (Solved: 113, Rating: None, Time: 33.207s)
+[2026-08-14 08:31:40,669] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kishore_chand' (Attempt 1/3)
+[2026-08-14 08:31:40,672] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'success_lover_01' (Attempt 1/3)
+[2026-08-14 08:31:40,837] [INFO] [leetcode_tracker]: [INFO] Fetching: 21/273 - Reg: 732224CC025 | Username: XDb4OxGxp6
+[2026-08-14 08:31:40,989] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'laksana_subramanian' (Attempt 1/3)
+[2026-08-14 08:31:41,503] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kishore_chand' (Attempt 2/3)
+[2026-08-14 08:31:41,506] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'madan__200' (Attempt 1/3)
+[2026-08-14 08:31:41,858] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'success_lover_01' (Attempt 2/3)
+[2026-08-14 08:31:42,102] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'xdb4oxgxp6' (Attempt 1/3)
+[2026-08-14 08:31:42,312] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'laksana_subramanian' (Attempt 2/3)
+[2026-08-14 08:31:43,014] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kishore_chand' (Attempt 3/3)
+[2026-08-14 08:31:43,082] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'madan__200' (Attempt 2/3)
+[2026-08-14 08:31:43,262] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'xdb4oxgxp6' (Attempt 2/3)
+[2026-08-14 08:31:43,393] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'success_lover_01' (Attempt 3/3)
+[2026-08-14 08:31:43,546] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'laksana_subramanian' (Attempt 3/3)
+[2026-08-14 08:31:44,372] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'xdb4oxgxp6' (Attempt 3/3)
+[2026-08-14 08:31:44,636] [INFO] [leetcode_tracker]: [INFO] Success - success_lover_01 (Solved: 153, Rating: None, Time: 4.785s)
+[2026-08-14 08:31:44,641] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'madan__200' (Attempt 3/3)
+[2026-08-14 08:31:44,938] [INFO] [leetcode_tracker]: [INFO] Success - Laksana_Subramanian (Solved: 170, Rating: None, Time: 4.96s)
+[2026-08-14 08:31:44,940] [INFO] [leetcode_tracker]: [INFO] Fetching: 23/273 - Reg: 732224CC026 | Username: mahilnethra
+[2026-08-14 08:31:45,243] [INFO] [leetcode_tracker]: [INFO] Fetching: 23/273 - Reg: 732224CC027 | Username: M1c4D2Ur5h
+[2026-08-14 08:31:46,026] [WARNING] [leetcode_tracker]: [WARN] Failed - KISHORE_CHAND (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:31:46,334] [INFO] [leetcode_tracker]: [INFO] Fetching: 24/273 - Reg: 732224CC028 | Username: ManojKumar2315
+[2026-08-14 08:31:46,432] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'mahilnethra' (Attempt 1/3)
+[2026-08-14 08:31:46,759] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'm1c4d2ur5h' (Attempt 1/3)
+[2026-08-14 08:31:48,440] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'm1c4d2ur5h' (Attempt 2/3)
+[2026-08-14 08:31:48,519] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'manojkumar2315' (Attempt 1/3)
+[2026-08-14 08:31:48,520] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'mahilnethra' (Attempt 2/3)
+[2026-08-14 08:31:48,780] [WARNING] [leetcode_tracker]: [WARN] Failed - MADAN__200 (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:31:49,088] [INFO] [leetcode_tracker]: [INFO] Fetching: 25/273 - Reg: 732224CC029 | Username: Thariq2525
+[2026-08-14 08:31:51,322] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'mahilnethra' (Attempt 3/3)
+[2026-08-14 08:31:51,738] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'm1c4d2ur5h' (Attempt 3/3)
+[2026-08-14 08:31:52,060] [WARNING] [leetcode_tracker]: [WARN] Failed - XDb4OxGxp6 (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:31:52,378] [INFO] [leetcode_tracker]: [INFO] Fetching: 26/273 - Reg: 732224CC031 | Username: nanthishvaran_07
+[2026-08-14 08:31:55,737] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'thariq2525' (Attempt 1/3)
+[2026-08-14 08:32:01,826] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/mahilnethra) note for 'mahilnethra': 
+[2026-08-14 08:32:02,438] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/m1c4d2ur5h) note for 'm1c4d2ur5h': 
+[2026-08-14 08:32:03,846] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'manojkumar2315' (Attempt 2/3)
+[2026-08-14 08:32:07,599] [WARNING] [leetcode_tracker]: Connection issue for 'nanthishvaran_07' (Attempt 1/3): Network connection drop (RemoteProtocolError)
+[2026-08-14 08:32:07,944] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/userProfile/mahilnethra) note for 'mahilnethra': 
+[2026-08-14 08:32:08,592] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/userProfile/m1c4d2ur5h) note for 'm1c4d2ur5h': 
+[2026-08-14 08:32:09,740] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'manojkumar2315' (Attempt 3/3)
+[2026-08-14 08:32:09,750] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'thariq2525' (Attempt 2/3)
+[2026-08-14 08:32:13,116] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'nanthishvaran_07' (Attempt 2/3)
+[2026-08-14 08:32:14,011] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/mahilnethra/solved) note for 'mahilnethra': 
+[2026-08-14 08:32:14,023] [WARNING] [leetcode_tracker]: [WARN] Failed - mahilnethra (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:32:14,333] [INFO] [leetcode_tracker]: [INFO] Fetching: 27/273 - Reg: 732224CC032 | Username: Nishanthjs
+[2026-08-14 08:32:14,730] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/m1c4d2ur5h/solved) note for 'm1c4d2ur5h': 
+[2026-08-14 08:32:14,757] [WARNING] [leetcode_tracker]: [WARN] Failed - M1c4D2Ur5h (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:32:15,067] [INFO] [leetcode_tracker]: [INFO] Fetching: 28/273 - Reg: 732224CC033 | Username: nithin_31_
+[2026-08-14 08:32:15,833] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/manojkumar2315) note for 'manojkumar2315': 
+[2026-08-14 08:32:18,858] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'nanthishvaran_07' (Attempt 3/3)
+[2026-08-14 08:32:19,602] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'nishanthjs' (Attempt 1/3)
+[2026-08-14 08:32:20,218] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'nithin_31_' (Attempt 1/3)
+[2026-08-14 08:32:20,974] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'thariq2525' (Attempt 3/3)
+[2026-08-14 08:32:22,942] [INFO] [leetcode_tracker]: [INFO] Success - ManojKumar2315 (Solved: 93, Rating: None, Time: 36.576s)
+[2026-08-14 08:32:23,255] [INFO] [leetcode_tracker]: [INFO] Fetching: 29/273 - Reg: 732224CC034 | Username: Nivethytha0704
+[2026-08-14 08:32:27,047] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/thariq2525) note for 'thariq2525': 
+[2026-08-14 08:32:27,255] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/nanthishvaran_07) note for 'nanthishvaran_07': 
+[2026-08-14 08:32:28,520] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'nivethytha0704' (Attempt 1/3)
+[2026-08-14 08:32:30,201] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'nishanthjs' (Attempt 2/3)
+[2026-08-14 08:32:30,215] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'nithin_31_' (Attempt 2/3)
+[2026-08-14 08:32:33,178] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/userProfile/thariq2525) note for 'thariq2525': 
+[2026-08-14 08:32:33,327] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/userProfile/nanthishvaran_07) note for 'nanthishvaran_07': 
+[2026-08-14 08:32:33,838] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'nivethytha0704' (Attempt 2/3)
+[2026-08-14 08:32:38,081] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'nithin_31_' (Attempt 3/3)
+[2026-08-14 08:32:38,892] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'nishanthjs' (Attempt 3/3)
+[2026-08-14 08:32:39,459] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'nivethytha0704' (Attempt 3/3)
+[2026-08-14 08:32:43,836] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/thariq2525/solved) note for 'thariq2525': 
+[2026-08-14 08:32:43,859] [WARNING] [leetcode_tracker]: [WARN] Failed - Thariq2525 (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:32:43,862] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/nanthishvaran_07/solved) note for 'nanthishvaran_07': 
+[2026-08-14 08:32:43,874] [WARNING] [leetcode_tracker]: [WARN] Failed - nanthishvaran_07 (Profile load failed: Network timeout)
+[2026-08-14 08:32:44,165] [INFO] [leetcode_tracker]: [INFO] Fetching: 31/273 - Reg: 732224CC035 | Username: sahasri_04
+[2026-08-14 08:32:44,203] [INFO] [leetcode_tracker]: [INFO] Fetching: 31/273 - Reg: 732224CC036 | Username: prasath00156
+[2026-08-14 08:32:44,862] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/nithin_31_) note for 'nithin_31_': 
+[2026-08-14 08:32:49,513] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'sahasri_04' (Attempt 1/3)
+[2026-08-14 08:32:49,514] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'prasath00156' (Attempt 1/3)
+[2026-08-14 08:32:51,174] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/nishanthjs) note for 'nishanthjs': 
+[2026-08-14 08:32:51,176] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/nivethytha0704) note for 'nivethytha0704': 
+[2026-08-14 08:32:55,109] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'prasath00156' (Attempt 2/3)
+[2026-08-14 08:32:55,110] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'sahasri_04' (Attempt 2/3)
+[2026-08-14 08:32:56,055] [INFO] [leetcode_tracker]: [INFO] Success - nithin_31_ (Solved: 226, Rating: None, Time: 40.975s)
+[2026-08-14 08:32:56,370] [INFO] [leetcode_tracker]: [INFO] Fetching: 32/273 - Reg: 732224CC037 | Username: Pritss2206
+[2026-08-14 08:32:57,224] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/userProfile/nishanthjs) note for 'nishanthjs': 
+[2026-08-14 08:32:57,225] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/userProfile/nivethytha0704) note for 'nivethytha0704': 
+[2026-08-14 08:33:01,020] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'prasath00156' (Attempt 3/3)
+[2026-08-14 08:33:01,026] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'sahasri_04' (Attempt 3/3)
+[2026-08-14 08:33:02,094] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'pritss2206' (Attempt 1/3)
+[2026-08-14 08:33:02,716] [INFO] [leetcode_tracker]: [INFO] Success - sahasri_04 (Solved: 140, Rating: None, Time: 18.523s)
+[2026-08-14 08:33:03,027] [INFO] [leetcode_tracker]: [INFO] Fetching: 33/273 - Reg: 732224CC038 | Username: Radhisri28
+[2026-08-14 08:33:03,068] [INFO] [leetcode_tracker]: [INFO] Success - Nishanthjs (Solved: 178, Rating: None, Time: 48.724s)
+[2026-08-14 08:33:03,133] [INFO] [leetcode_tracker]: [INFO] Success - Nivethytha0704 (Solved: 257, Rating: None, Time: 39.865s)
+[2026-08-14 08:33:03,385] [INFO] [leetcode_tracker]: [INFO] Fetching: 35/273 - Reg: 732224CC039 | Username: Rajesh1328
+[2026-08-14 08:33:03,451] [INFO] [leetcode_tracker]: [INFO] Success - prasath00156 (Solved: 187, Rating: None, Time: 19.218s)
+[2026-08-14 08:33:03,456] [INFO] [leetcode_tracker]: [INFO] Fetching: 36/273 - Reg: 732224CC040 | Username: Rithanika_Venakatac
+[2026-08-14 08:33:03,762] [INFO] [leetcode_tracker]: [INFO] Fetching: 36/273 - Reg: 732224CC041 | Username: Rithu16122006
+[2026-08-14 08:33:03,784] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'pritss2206' (Attempt 2/3)
+[2026-08-14 08:33:04,022] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'radhisri28' (Attempt 1/3)
+[2026-08-14 08:33:08,696] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'rithanika_venakatac' (Attempt 1/3)
+[2026-08-14 08:33:09,034] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'rithu16122006' (Attempt 1/3)
+[2026-08-14 08:33:12,731] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rajesh1328' (Attempt 1/3)
+[2026-08-14 08:33:14,374] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'rithanika_venakatac' (Attempt 2/3)
+[2026-08-14 08:33:14,645] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'rithu16122006' (Attempt 2/3)
+[2026-08-14 08:33:19,353] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'radhisri28' (Attempt 2/3)
+[2026-08-14 08:33:19,413] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'pritss2206' (Attempt 3/3)
+[2026-08-14 08:33:20,105] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rajesh1328' (Attempt 2/3)
+[2026-08-14 08:33:20,191] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'rithanika_venakatac' (Attempt 3/3)
+[2026-08-14 08:33:20,646] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'rithu16122006' (Attempt 3/3)
+[2026-08-14 08:33:25,244] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'radhisri28' (Attempt 3/3)
+[2026-08-14 08:33:25,595] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/pritss2206) note for 'pritss2206': 
+[2026-08-14 08:33:26,312] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/rithanika_venakatac) note for 'rithanika_venakatac': 
+[2026-08-14 08:33:26,737] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/rithu16122006) note for 'rithu16122006': 
+[2026-08-14 08:33:30,242] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rajesh1328' (Attempt 3/3)
+[2026-08-14 08:33:31,843] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/radhisri28) note for 'radhisri28': 
+[2026-08-14 08:33:31,853] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/userProfile/pritss2206) note for 'pritss2206': 
+[2026-08-14 08:33:32,462] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/userProfile/rithanika_venakatac) note for 'rithanika_venakatac': 
+[2026-08-14 08:33:32,801] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/userProfile/rithu16122006) note for 'rithu16122006': 
+[2026-08-14 08:33:39,523] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/rithanika_venakatac/solved) note for 'rithanika_venakatac': 
+[2026-08-14 08:33:39,566] [WARNING] [leetcode_tracker]: [WARN] Failed - Rithanika_Venakatac (Profile load failed: Network timeout)
+[2026-08-14 08:33:39,572] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/rithu16122006/solved) note for 'rithu16122006': 
+[2026-08-14 08:33:39,601] [WARNING] [leetcode_tracker]: [WARN] Failed - Rithu16122006 (Profile load failed: Network timeout)
+[2026-08-14 08:33:39,876] [INFO] [leetcode_tracker]: [INFO] Fetching: 38/273 - Reg: 732224CC042 | Username: Rohith_2682006
+[2026-08-14 08:33:39,938] [INFO] [leetcode_tracker]: [INFO] Fetching: 38/273 - Reg: 732224CC043 | Username: sabari43
+[2026-08-14 08:33:41,369] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/rajesh1328) note for 'rajesh1328': 
+[2026-08-14 08:33:41,733] [INFO] [leetcode_tracker]: [INFO] Success - Radhisri28 (Solved: 263, Rating: None, Time: 38.653s)
+[2026-08-14 08:33:41,793] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/pritss2206/solved) note for 'pritss2206': 
+[2026-08-14 08:33:41,815] [WARNING] [leetcode_tracker]: [WARN] Failed - Pritss2206 (Profile load failed: Network timeout)
+[2026-08-14 08:33:42,041] [INFO] [leetcode_tracker]: [INFO] Fetching: 40/273 - Reg: 732224CC044 | Username: s8oyP1SH73
+[2026-08-14 08:33:42,126] [INFO] [leetcode_tracker]: [INFO] Fetching: 40/273 - Reg: 732224CC045 | Username: shandeeshrp
+[2026-08-14 08:33:50,813] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'shandeeshrp' (Attempt 1/3)
+[2026-08-14 08:33:50,920] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 's8oyp1sh73' (Attempt 1/3)
+[2026-08-14 08:33:50,970] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sabari43' (Attempt 1/3)
+[2026-08-14 08:33:51,114] [INFO] [leetcode_tracker]: [INFO] Success - Rajesh1328 (Solved: 245, Rating: None, Time: 47.712s)
+[2026-08-14 08:33:51,131] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rohith_2682006' (Attempt 1/3)
+[2026-08-14 08:33:51,416] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'shandeeshrp' (Attempt 2/3)
+[2026-08-14 08:33:51,418] [INFO] [leetcode_tracker]: [INFO] Fetching: 41/273 - Reg: 732224CC046 | Username: Priya_1410
+[2026-08-14 08:33:51,586] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sabari43' (Attempt 2/3)
+[2026-08-14 08:33:51,671] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 's8oyp1sh73' (Attempt 2/3)
+[2026-08-14 08:33:51,720] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rohith_2682006' (Attempt 2/3)
+[2026-08-14 08:33:52,334] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'shandeeshrp' (Attempt 3/3)
+[2026-08-14 08:33:52,490] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sabari43' (Attempt 3/3)
+[2026-08-14 08:33:52,786] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'priya_1410' (Attempt 1/3)
+[2026-08-14 08:33:53,048] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 's8oyp1sh73' (Attempt 3/3)
+[2026-08-14 08:33:53,073] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rohith_2682006' (Attempt 3/3)
+[2026-08-14 08:33:53,325] [INFO] [leetcode_tracker]: [INFO] Success - shandeeshrp (Solved: 91, Rating: None, Time: 11.141s)
+[2026-08-14 08:33:53,628] [INFO] [leetcode_tracker]: [INFO] Success - sabari43 (Solved: 186, Rating: None, Time: 13.62s)
+[2026-08-14 08:33:53,631] [INFO] [leetcode_tracker]: [INFO] Fetching: 43/273 - Reg: 732224CC047 | Username: rFIIQ4f2JS
+[2026-08-14 08:33:53,759] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'priya_1410' (Attempt 2/3)
+[2026-08-14 08:33:53,934] [INFO] [leetcode_tracker]: [INFO] Fetching: 43/273 - Reg: 732224CC048 | Username: DJyWNuZj4N
+[2026-08-14 08:33:54,052] [INFO] [leetcode_tracker]: [INFO] Success - s8oyP1SH73 (Solved: 178, Rating: None, Time: 11.964s)
+[2026-08-14 08:33:54,113] [INFO] [leetcode_tracker]: [INFO] Success - Rohith_2682006 (Solved: 0, Rating: None, Time: 14.178s)
+[2026-08-14 08:33:54,356] [INFO] [leetcode_tracker]: [INFO] Fetching: 45/273 - Reg: 732224CC049 | Username: SriselvanP
+[2026-08-14 08:33:54,420] [INFO] [leetcode_tracker]: [INFO] Fetching: 45/273 - Reg: 732224CC050 | Username: suba_sri10
+[2026-08-14 08:33:54,825] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'djywnuzj4n' (Attempt 1/3)
+[2026-08-14 08:33:54,919] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rfiiq4f2js' (Attempt 1/3)
+[2026-08-14 08:33:55,018] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'priya_1410' (Attempt 3/3)
+[2026-08-14 08:33:55,874] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'djywnuzj4n' (Attempt 2/3)
+[2026-08-14 08:33:55,969] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'suba_sri10' (Attempt 1/3)
+[2026-08-14 08:33:56,254] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sriselvanp' (Attempt 1/3)
+[2026-08-14 08:33:56,286] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rfiiq4f2js' (Attempt 2/3)
+[2026-08-14 08:33:56,996] [INFO] [leetcode_tracker]: [INFO] Success - Priya_1410 (Solved: 219, Rating: None, Time: 5.514s)
+[2026-08-14 08:33:57,304] [INFO] [leetcode_tracker]: [INFO] Fetching: 46/273 - Reg: 732224CC051 | Username: subashmurugan212
+[2026-08-14 08:34:00,910] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'suba_sri10' (Attempt 2/3)
+[2026-08-14 08:34:01,675] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'djywnuzj4n' (Attempt 3/3)
+[2026-08-14 08:34:01,746] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sriselvanp' (Attempt 2/3)
+[2026-08-14 08:34:02,067] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rfiiq4f2js' (Attempt 3/3)
+[2026-08-14 08:34:06,487] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'subashmurugan212' (Attempt 1/3)
+[2026-08-14 08:34:06,494] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'suba_sri10' (Attempt 3/3)
+[2026-08-14 08:34:06,896] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sriselvanp' (Attempt 3/3)
+[2026-08-14 08:34:07,257] [INFO] [leetcode_tracker]: [INFO] Success - DJyWNuZj4N (Solved: 141, Rating: None, Time: 13.275s)
+[2026-08-14 08:34:07,574] [INFO] [leetcode_tracker]: [INFO] Fetching: 47/273 - Reg: 732224CC052 | Username: SUPRIYA_2601
+[2026-08-14 08:34:07,855] [INFO] [leetcode_tracker]: [INFO] Success - suba_sri10 (Solved: 81, Rating: None, Time: 13.373s)
+[2026-08-14 08:34:07,878] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'subashmurugan212' (Attempt 2/3)
+[2026-08-14 08:34:08,161] [INFO] [leetcode_tracker]: [INFO] Fetching: 48/273 - Reg: 732224CC053 | Username: suresh11092006
+[2026-08-14 08:34:08,841] [INFO] [leetcode_tracker]: [INFO] Success - SriselvanP (Solved: 52, Rating: None, Time: 14.458s)
+[2026-08-14 08:34:09,156] [INFO] [leetcode_tracker]: [INFO] Fetching: 49/273 - Reg: 732224CC054 | Username: varshini_devi2006
+[2026-08-14 08:34:11,546] [WARNING] [leetcode_tracker]: [WARN] Failed - rFIIQ4f2JS (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:34:11,766] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'subashmurugan212' (Attempt 3/3)
+[2026-08-14 08:34:11,788] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'supriya_2601' (Attempt 1/3)
+[2026-08-14 08:34:11,848] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'suresh11092006' (Attempt 1/3)
+[2026-08-14 08:34:11,849] [INFO] [leetcode_tracker]: [INFO] Fetching: 50/273 - Reg: 732224CC055 | Username: vedhasree_2006
+[2026-08-14 08:34:11,881] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'varshini_devi2006' (Attempt 1/3)
+[2026-08-14 08:34:15,997] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'supriya_2601' (Attempt 2/3)
+[2026-08-14 08:34:16,167] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'suresh11092006' (Attempt 2/3)
+[2026-08-14 08:34:16,325] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'varshini_devi2006' (Attempt 2/3)
+[2026-08-14 08:34:17,269] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'vedhasree_2006' (Attempt 1/3)
+[2026-08-14 08:34:17,330] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'suresh11092006' (Attempt 3/3)
+[2026-08-14 08:34:17,450] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'varshini_devi2006' (Attempt 3/3)
+[2026-08-14 08:34:17,533] [INFO] [leetcode_tracker]: [INFO] Success - subashmurugan212 (Solved: 93, Rating: None, Time: 20.182s)
+[2026-08-14 08:34:17,848] [INFO] [leetcode_tracker]: [INFO] Fetching: 51/273 - Reg: 732224CC056 | Username: vignesh_1112
+[2026-08-14 08:34:18,043] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'supriya_2601' (Attempt 3/3)
+[2026-08-14 08:34:18,122] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'vedhasree_2006' (Attempt 2/3)
+[2026-08-14 08:34:18,598] [INFO] [leetcode_tracker]: [INFO] Success - varshini_devi2006 (Solved: 122, Rating: None, Time: 9.412s)
+[2026-08-14 08:34:18,714] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'vignesh_1112' (Attempt 1/3)
+[2026-08-14 08:34:18,917] [INFO] [leetcode_tracker]: [INFO] Fetching: 52/273 - Reg: 732224CC057 | Username: vishaanth0007
+[2026-08-14 08:34:18,985] [INFO] [leetcode_tracker]: [INFO] Success - suresh11092006 (Solved: 130, Rating: None, Time: 10.794s)
+[2026-08-14 08:34:19,292] [INFO] [leetcode_tracker]: [INFO] Fetching: 53/273 - Reg: 732224CC058 | Username: yazhu_shree
+[2026-08-14 08:34:19,375] [INFO] [leetcode_tracker]: [INFO] Success - SUPRIYA_2601 (Solved: 158, Rating: None, Time: 11.758s)
+[2026-08-14 08:34:19,489] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'vedhasree_2006' (Attempt 3/3)
+[2026-08-14 08:34:19,610] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'vishaanth0007' (Attempt 1/3)
+[2026-08-14 08:34:19,614] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'vignesh_1112' (Attempt 2/3)
+[2026-08-14 08:34:19,681] [INFO] [leetcode_tracker]: [INFO] Fetching: 54/273 - Reg: 732224CC059 | Username: Yurjeen26
+[2026-08-14 08:34:20,024] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'yazhu_shree' (Attempt 1/3)
+[2026-08-14 08:34:20,339] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'yurjeen26' (Attempt 1/3)
+[2026-08-14 08:34:20,685] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'vishaanth0007' (Attempt 2/3)
+[2026-08-14 08:34:20,824] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'yazhu_shree' (Attempt 2/3)
+[2026-08-14 08:34:20,926] [INFO] [leetcode_tracker]: [INFO] Success - vedhasree_2006 (Solved: 111, Rating: None, Time: 9.041s)
+[2026-08-14 08:34:20,974] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'vignesh_1112' (Attempt 3/3)
+[2026-08-14 08:34:21,248] [INFO] [leetcode_tracker]: [INFO] Fetching: 55/273 - Reg: 732224CC060 | Username: V0mg69rzpB
+[2026-08-14 08:34:21,289] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'yurjeen26' (Attempt 2/3)
+[2026-08-14 08:34:21,906] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'yazhu_shree' (Attempt 3/3)
+[2026-08-14 08:34:21,951] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'v0mg69rzpb' (Attempt 1/3)
+[2026-08-14 08:34:22,235] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'vishaanth0007' (Attempt 3/3)
+[2026-08-14 08:34:22,743] [INFO] [leetcode_tracker]: [INFO] Success - vignesh_1112 (Solved: 214, Rating: None, Time: 4.841s)
+[2026-08-14 08:34:22,748] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'v0mg69rzpb' (Attempt 2/3)
+[2026-08-14 08:34:23,051] [INFO] [leetcode_tracker]: [INFO] Fetching: 56/273 - Reg: 732224CCL01 | Username: Mohammed_Affan_J
+[2026-08-14 08:34:23,255] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'yurjeen26' (Attempt 3/3)
+[2026-08-14 08:34:23,524] [INFO] [leetcode_tracker]: [INFO] Success - yazhu_shree (Solved: 300, Rating: None, Time: 4.198s)
+[2026-08-14 08:34:23,829] [INFO] [leetcode_tracker]: [INFO] Fetching: 57/273 - Reg: 732224CCL02 | Username: Saranraj_2580
+[2026-08-14 08:34:23,863] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'v0mg69rzpb' (Attempt 3/3)
+[2026-08-14 08:34:23,911] [INFO] [leetcode_tracker]: [INFO] Success - vishaanth0007 (Solved: 106, Rating: None, Time: 4.949s)
+[2026-08-14 08:34:24,080] [INFO] [leetcode_tracker]: [INFO] Success - Yurjeen26 (Solved: 168, Rating: None, Time: 4.373s)
+[2026-08-14 08:34:24,216] [INFO] [leetcode_tracker]: [INFO] Fetching: 59/273 - Reg: 732224CCL03 | Username: shreesanjay
+[2026-08-14 08:34:24,257] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'mohammed_affan_j' (Attempt 1/3)
+[2026-08-14 08:34:24,383] [INFO] [leetcode_tracker]: [INFO] Fetching: 59/273 - Reg: 732224CCL04 | Username: sridhar320076
+[2026-08-14 08:34:28,638] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'mohammed_affan_j' (Attempt 2/3)
+[2026-08-14 08:34:31,646] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'shreesanjay' (Attempt 1/3)
+[2026-08-14 08:34:31,650] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'saranraj_2580' (Attempt 1/3)
+[2026-08-14 08:34:31,789] [INFO] [leetcode_tracker]: [INFO] Success - V0mg69rzpB (Solved: 103, Rating: None, Time: 10.52s)
+[2026-08-14 08:34:31,992] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sridhar320076' (Attempt 1/3)
+[2026-08-14 08:34:32,020] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'mohammed_affan_j' (Attempt 3/3)
+[2026-08-14 08:34:32,093] [INFO] [leetcode_tracker]: [INFO] Fetching: 60/273 - Reg: 732225CC001 | Username: LQatII0XhaQ
+[2026-08-14 08:34:32,596] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'saranraj_2580' (Attempt 2/3)
+[2026-08-14 08:34:32,608] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'shreesanjay' (Attempt 2/3)
+[2026-08-14 08:34:32,803] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'lqatii0xhaq' (Attempt 1/3)
+[2026-08-14 08:34:32,807] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sridhar320076' (Attempt 2/3)
+[2026-08-14 08:34:33,600] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'lqatii0xhaq' (Attempt 2/3)
+[2026-08-14 08:34:33,903] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'saranraj_2580' (Attempt 3/3)
+[2026-08-14 08:34:33,976] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'shreesanjay' (Attempt 3/3)
+[2026-08-14 08:34:34,287] [WARNING] [leetcode_tracker]: [WARN] Failed - Mohammed_Affan_J (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:34:34,595] [INFO] [leetcode_tracker]: [INFO] Fetching: 61/273 - Reg: 732225CC002 | Username: Aarsika_M
+[2026-08-14 08:34:34,650] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sridhar320076' (Attempt 3/3)
+[2026-08-14 08:34:39,427] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'lqatii0xhaq' (Attempt 3/3)
+[2026-08-14 08:34:39,762] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'aarsika_m' (Attempt 1/3)
+[2026-08-14 08:34:40,180] [INFO] [leetcode_tracker]: [INFO] Success - shreesanjay (Solved: 140, Rating: None, Time: 15.925s)
+[2026-08-14 08:34:40,205] [INFO] [leetcode_tracker]: [INFO] Success - Saranraj_2580 (Solved: 160, Rating: None, Time: 16.354s)
+[2026-08-14 08:34:40,497] [INFO] [leetcode_tracker]: [INFO] Fetching: 63/273 - Reg: 732225CC003 | Username: abhishek_cc003
+[2026-08-14 08:34:40,554] [INFO] [leetcode_tracker]: [INFO] Fetching: 63/273 - Reg: 732225CC004 | Username: Abi_CC004
+[2026-08-14 08:34:40,649] [INFO] [leetcode_tracker]: [INFO] Success - sridhar320076 (Solved: 229, Rating: None, Time: 16.212s)
+[2026-08-14 08:34:40,960] [INFO] [leetcode_tracker]: [INFO] Fetching: 64/273 - Reg: 732225CC005 | Username: ASHVIKAKILRAJAN
+[2026-08-14 08:34:44,081] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'aarsika_m' (Attempt 2/3)
+[2026-08-14 08:34:44,630] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'abi_cc004' (Attempt 1/3)
+[2026-08-14 08:34:44,763] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'abhishek_cc003' (Attempt 1/3)
+[2026-08-14 08:34:45,021] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ashvikakilrajan' (Attempt 1/3)
+[2026-08-14 08:34:50,764] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/userProfile/lqatii0xhaq) note for 'lqatii0xhaq': 
+[2026-08-14 08:34:52,322] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'aarsika_m' (Attempt 3/3)
+[2026-08-14 08:34:52,502] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'abhishek_cc003' (Attempt 2/3)
+[2026-08-14 08:34:52,531] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ashvikakilrajan' (Attempt 2/3)
+[2026-08-14 08:34:52,622] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'abi_cc004' (Attempt 2/3)
+[2026-08-14 08:34:56,813] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/lqatii0xhaq/solved) note for 'lqatii0xhaq': 
+[2026-08-14 08:34:56,837] [WARNING] [leetcode_tracker]: [WARN] Failed - LQatII0XhaQ (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:34:57,147] [INFO] [leetcode_tracker]: [INFO] Fetching: 65/273 - Reg: 732225CC006 | Username: 0MGVasBmsd
+[2026-08-14 08:34:58,380] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/aarsika_m) note for 'aarsika_m': 
+[2026-08-14 08:34:59,223] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'abi_cc004' (Attempt 3/3)
+[2026-08-14 08:34:59,301] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ashvikakilrajan' (Attempt 3/3)
+[2026-08-14 08:34:59,625] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'abhishek_cc003' (Attempt 3/3)
+[2026-08-14 08:35:04,483] [WARNING] [leetcode_tracker]: Timeout fetching profile for '0mgvasbmsd' (Attempt 1/3)
+[2026-08-14 08:35:04,647] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/userProfile/aarsika_m) note for 'aarsika_m': 
+[2026-08-14 08:35:10,363] [INFO] [leetcode_tracker]: [INFO] Success - abhishek_cc003 (Solved: 2, Rating: None, Time: 29.835s)
+[2026-08-14 08:35:10,477] [INFO] [leetcode_tracker]: [INFO] Success - Abi_CC004 (Solved: 45, Rating: None, Time: 29.902s)
+[2026-08-14 08:35:10,538] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '0mgvasbmsd' (Attempt 2/3)
+[2026-08-14 08:35:10,678] [INFO] [leetcode_tracker]: [INFO] Fetching: 67/273 - Reg: 732225CC007 | Username: iXZMxOzqMf
+[2026-08-14 08:35:10,727] [INFO] [leetcode_tracker]: [INFO] Success - Aarsika_M (Solved: 0, Rating: None, Time: 36.111s)
+[2026-08-14 08:35:10,780] [INFO] [leetcode_tracker]: [INFO] Fetching: 68/273 - Reg: 732225CC008 | Username: 8Fr8Zz0vdVq
+[2026-08-14 08:35:11,044] [INFO] [leetcode_tracker]: [INFO] Fetching: 68/273 - Reg: 732225CC009 | Username: dharshang2007
+[2026-08-14 08:35:14,179] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '0mgvasbmsd' (Attempt 3/3)
+[2026-08-14 08:35:14,565] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ixzmxozqmf' (Attempt 1/3)
+[2026-08-14 08:35:14,571] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '8fr8zz0vdvq' (Attempt 1/3)
+[2026-08-14 08:35:14,583] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dharshang2007' (Attempt 1/3)
+[2026-08-14 08:35:15,276] [WARNING] [leetcode_tracker]: [WARN] Failed - ASHVIKAKILRAJAN (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:35:15,580] [INFO] [leetcode_tracker]: [INFO] Fetching: 69/273 - Reg: 732225CC010 | Username: https://leetcode.com/problemset/
+[2026-08-14 08:35:15,612] [WARNING] [leetcode_tracker]: [WARN] Failed - 732225CC010 (Invalid or missing profile URL: INVALID LINK)
+[2026-08-14 08:35:15,692] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '8fr8zz0vdvq' (Attempt 2/3)
+[2026-08-14 08:35:15,762] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ixzmxozqmf' (Attempt 2/3)
+[2026-08-14 08:35:15,915] [INFO] [leetcode_tracker]: [INFO] Fetching: 70/273 - Reg: 732225CC011 | Username: 6oyrbP7Cn
+[2026-08-14 08:35:16,514] [WARNING] [leetcode_tracker]: [WARN] Failed - 0MGVasBmsd (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:35:16,739] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dharshang2007' (Attempt 2/3)
+[2026-08-14 08:35:16,828] [INFO] [leetcode_tracker]: [INFO] Fetching: 71/273 - Reg: 732225CC012 | Username: None
+[2026-08-14 08:35:16,854] [WARNING] [leetcode_tracker]: [WARN] Failed - 732225CC012 (Invalid or missing profile URL: MISSING LINK)
+[2026-08-14 08:35:16,901] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '6oyrbp7cn' (Attempt 1/3)
+[2026-08-14 08:35:17,077] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '8fr8zz0vdvq' (Attempt 3/3)
+[2026-08-14 08:35:17,155] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ixzmxozqmf' (Attempt 3/3)
+[2026-08-14 08:35:17,160] [INFO] [leetcode_tracker]: [INFO] Fetching: 72/273 - Reg: 732225CC013 | Username: n1J49Ovita
+[2026-08-14 08:35:17,837] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '6oyrbp7cn' (Attempt 2/3)
+[2026-08-14 08:35:18,374] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dharshang2007' (Attempt 3/3)
+[2026-08-14 08:35:18,735] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'n1j49ovita' (Attempt 1/3)
+[2026-08-14 08:35:19,144] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '6oyrbp7cn' (Attempt 3/3)
+[2026-08-14 08:35:19,612] [INFO] [leetcode_tracker]: [INFO] Success - dharshang2007 (Solved: 2, Rating: None, Time: 8.535s)
+[2026-08-14 08:35:19,627] [WARNING] [leetcode_tracker]: [WARN] Failed - 8Fr8Zz0vdVq (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:35:19,923] [INFO] [leetcode_tracker]: [INFO] Fetching: 74/273 - Reg: 732225CC014 | Username: Gokulraj14
+[2026-08-14 08:35:19,942] [INFO] [leetcode_tracker]: [INFO] Fetching: 74/273 - Reg: 732225CC015 | Username: 81JUyQRRqL
+[2026-08-14 08:35:19,971] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'n1j49ovita' (Attempt 2/3)
+[2026-08-14 08:35:20,069] [WARNING] [leetcode_tracker]: [WARN] Failed - iXZMxOzqMf (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:35:20,378] [INFO] [leetcode_tracker]: [INFO] Fetching: 75/273 - Reg: 732225CC016 | Username: 732225CC016
+[2026-08-14 08:35:25,080] [WARNING] [leetcode_tracker]: Timeout fetching profile for '81juyqrrql' (Attempt 1/3)
+[2026-08-14 08:35:25,081] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'gokulraj14' (Attempt 1/3)
+[2026-08-14 08:35:25,664] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'n1j49ovita' (Attempt 3/3)
+[2026-08-14 08:35:26,070] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gokulraj14' (Attempt 2/3)
+[2026-08-14 08:35:26,275] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '732225cc016' (Attempt 1/3)
+[2026-08-14 08:35:26,335] [WARNING] [leetcode_tracker]: [WARN] Failed - 6oyrbP7Cn (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:35:26,488] [INFO] [leetcode_tracker]: [INFO] Success - n1J49Ovita (Solved: 21, Rating: None, Time: 9.301s)
+[2026-08-14 08:35:26,490] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '81juyqrrql' (Attempt 2/3)
+[2026-08-14 08:35:26,646] [INFO] [leetcode_tracker]: [INFO] Fetching: 77/273 - Reg: 732225CC017 | Username: harishms2007
+[2026-08-14 08:35:26,797] [INFO] [leetcode_tracker]: [INFO] Fetching: 77/273 - Reg: 732225CC018 | Username: jana777
+[2026-08-14 08:35:32,033] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gokulraj14' (Attempt 3/3)
+[2026-08-14 08:35:32,107] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '732225cc016' (Attempt 2/3)
+[2026-08-14 08:35:32,150] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '81juyqrrql' (Attempt 3/3)
+[2026-08-14 08:35:37,323] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'harishms2007' (Attempt 1/3)
+[2026-08-14 08:35:37,392] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '732225cc016' (Attempt 3/3)
+[2026-08-14 08:35:37,458] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'jana777' (Attempt 1/3)
+[2026-08-14 08:35:37,856] [INFO] [leetcode_tracker]: [INFO] Success - 81JUyQRRqL (Solved: 0, Rating: None, Time: 17.881s)
+[2026-08-14 08:35:38,043] [INFO] [leetcode_tracker]: [INFO] Success - Gokulraj14 (Solved: 47, Rating: None, Time: 18.109s)
+[2026-08-14 08:35:38,161] [INFO] [leetcode_tracker]: [INFO] Fetching: 79/273 - Reg: 732225CC019 | Username: Jayasri3103
+[2026-08-14 08:35:38,368] [INFO] [leetcode_tracker]: [INFO] Fetching: 79/273 - Reg: 732225CC020 | Username: Jayel_18
+[2026-08-14 08:35:38,576] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'harishms2007' (Attempt 2/3)
+[2026-08-14 08:35:38,658] [INFO] [leetcode_tracker]: [INFO] Success - 732225CC016 (Solved: 49, Rating: None, Time: 18.269s)
+[2026-08-14 08:35:38,974] [INFO] [leetcode_tracker]: [INFO] Fetching: 80/273 - Reg: 732225CC021 | Username: 7RHM08kNyY
+[2026-08-14 08:35:38,998] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'jana777' (Attempt 2/3)
+[2026-08-14 08:35:39,187] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'jayasri3103' (Attempt 1/3)
+[2026-08-14 08:35:39,672] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'jayel_18' (Attempt 1/3)
+[2026-08-14 08:35:39,817] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'harishms2007' (Attempt 3/3)
+[2026-08-14 08:35:40,117] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'jayasri3103' (Attempt 2/3)
+[2026-08-14 08:35:40,381] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'jana777' (Attempt 3/3)
+[2026-08-14 08:35:40,605] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'jayel_18' (Attempt 2/3)
+[2026-08-14 08:35:40,646] [INFO] [leetcode_tracker]: [INFO] Success - harishms2007 (Solved: 0, Rating: None, Time: 13.968s)
+[2026-08-14 08:35:40,892] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '7rhm08knyy' (Attempt 1/3)
+[2026-08-14 08:35:40,963] [INFO] [leetcode_tracker]: [INFO] Fetching: 81/273 - Reg: 732225CC022 | Username: Jeevi_AlgoQueen
+[2026-08-14 08:35:42,074] [INFO] [leetcode_tracker]: [INFO] Success - jana777 (Solved: 90, Rating: None, Time: 15.265s)
+[2026-08-14 08:35:42,197] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'jayasri3103' (Attempt 3/3)
+[2026-08-14 08:35:42,322] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '7rhm08knyy' (Attempt 2/3)
+[2026-08-14 08:35:42,377] [INFO] [leetcode_tracker]: [INFO] Fetching: 82/273 - Reg: 732225CC023 | Username: p4J1zKdZXp
+[2026-08-14 08:35:42,395] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'jayel_18' (Attempt 3/3)
+[2026-08-14 08:35:48,128] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'p4j1zkdzxp' (Attempt 1/3)
+[2026-08-14 08:35:48,262] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/jayasri3103) note for 'jayasri3103': 
+[2026-08-14 08:35:48,475] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/jayel_18) note for 'jayel_18': 
+[2026-08-14 08:35:51,137] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '7rhm08knyy' (Attempt 3/3)
+[2026-08-14 08:35:51,143] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'jeevi_algoqueen' (Attempt 1/3)
+[2026-08-14 08:35:53,143] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'p4j1zkdzxp' (Attempt 2/3)
+[2026-08-14 08:35:53,144] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'jeevi_algoqueen' (Attempt 2/3)
+[2026-08-14 08:35:53,390] [INFO] [leetcode_tracker]: [INFO] Success - Jayasri3103 (Solved: 46, Rating: None, Time: 15.194s)
+[2026-08-14 08:35:53,696] [INFO] [leetcode_tracker]: [INFO] Fetching: 83/273 - Reg: 732225CC024 | Username: rBjc1qgtsB
+[2026-08-14 08:35:53,742] [INFO] [leetcode_tracker]: [INFO] Success - Jayel_18 (Solved: 58, Rating: None, Time: 15.343s)
+[2026-08-14 08:35:54,046] [INFO] [leetcode_tracker]: [INFO] Fetching: 84/273 - Reg: 732225CC025 | Username: 65lGBoRTZN
+[2026-08-14 08:35:54,262] [WARNING] [leetcode_tracker]: [WARN] Failed - 7RHM08kNyY (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:35:54,264] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'jeevi_algoqueen' (Attempt 3/3)
+[2026-08-14 08:35:54,315] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'p4j1zkdzxp' (Attempt 3/3)
+[2026-08-14 08:35:54,519] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rbjc1qgtsb' (Attempt 1/3)
+[2026-08-14 08:35:54,575] [INFO] [leetcode_tracker]: [INFO] Fetching: 85/273 - Reg: 732225CC026 | Username: keertheesh
+[2026-08-14 08:35:54,703] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '65lgbortzn' (Attempt 1/3)
+[2026-08-14 08:35:54,945] [INFO] [leetcode_tracker]: [INFO] Success - p4J1zKdZXp (Solved: 0, Rating: None, Time: 12.538s)
+[2026-08-14 08:35:55,262] [INFO] [leetcode_tracker]: [INFO] Fetching: 86/273 - Reg: 732225CC027 | Username: https://leetcode.com/profile/account/
+[2026-08-14 08:35:55,270] [WARNING] [leetcode_tracker]: [WARN] Failed - 732225CC027 (Invalid or missing profile URL: INVALID LINK)
+[2026-08-14 08:35:55,578] [INFO] [leetcode_tracker]: [INFO] Fetching: 87/273 - Reg: 732225CC028 | Username: LalithKumar19
+[2026-08-14 08:35:55,659] [INFO] [leetcode_tracker]: [INFO] Success - Jeevi_AlgoQueen (Solved: 47, Rating: None, Time: 14.66s)
+[2026-08-14 08:35:55,972] [INFO] [leetcode_tracker]: [INFO] Fetching: 88/273 - Reg: 732225CC029 | Username: cbZx47N2Af
+[2026-08-14 08:35:59,678] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'keertheesh' (Attempt 1/3)
+[2026-08-14 08:36:00,454] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rbjc1qgtsb' (Attempt 2/3)
+[2026-08-14 08:36:00,500] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '65lgbortzn' (Attempt 2/3)
+[2026-08-14 08:36:00,680] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'lalithkumar19' (Attempt 1/3)
+[2026-08-14 08:36:01,078] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'cbzx47n2af' (Attempt 1/3)
+[2026-08-14 08:36:05,525] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '65lgbortzn' (Attempt 3/3)
+[2026-08-14 08:36:05,714] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rbjc1qgtsb' (Attempt 3/3)
+[2026-08-14 08:36:05,996] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'keertheesh' (Attempt 2/3)
+[2026-08-14 08:36:06,013] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'lalithkumar19' (Attempt 2/3)
+[2026-08-14 08:36:06,030] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'cbzx47n2af' (Attempt 2/3)
+[2026-08-14 08:36:07,396] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'keertheesh' (Attempt 3/3)
+[2026-08-14 08:36:07,558] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'lalithkumar19' (Attempt 3/3)
+[2026-08-14 08:36:07,576] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'cbzx47n2af' (Attempt 3/3)
+[2026-08-14 08:36:08,903] [WARNING] [leetcode_tracker]: [WARN] Failed - 65lGBoRTZN (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:36:09,054] [WARNING] [leetcode_tracker]: [WARN] Failed - rBjc1qgtsB (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:36:09,208] [INFO] [leetcode_tracker]: [INFO] Fetching: 90/273 - Reg: 732225CC030 | Username: midesh_123
+[2026-08-14 08:36:09,364] [INFO] [leetcode_tracker]: [INFO] Fetching: 90/273 - Reg: 732225CC031 | Username: j01UT4oM0T
+[2026-08-14 08:36:09,403] [INFO] [leetcode_tracker]: [INFO] Success - LalithKumar19 (Solved: 33, Rating: None, Time: 13.797s)
+[2026-08-14 08:36:09,711] [INFO] [leetcode_tracker]: [INFO] Fetching: 91/273 - Reg: 732225CC032 | Username: Mukeshmukesh123
+[2026-08-14 08:36:10,028] [WARNING] [leetcode_tracker]: [WARN] Failed - cbZx47N2Af (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:36:10,293] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'midesh_123' (Attempt 1/3)
+[2026-08-14 08:36:10,343] [INFO] [leetcode_tracker]: [INFO] Fetching: 92/273 - Reg: 732225CC033 | Username: Nava_sakthi
+[2026-08-14 08:36:10,623] [WARNING] [leetcode_tracker]: [WARN] Failed - keertheesh (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:36:10,752] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'mukeshmukesh123' (Attempt 1/3)
+[2026-08-14 08:36:10,888] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'j01ut4om0t' (Attempt 1/3)
+[2026-08-14 08:36:10,928] [INFO] [leetcode_tracker]: [INFO] Fetching: 93/273 - Reg: 732225CC034 | Username: HR1IfJuaDf
+[2026-08-14 08:36:14,381] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'nava_sakthi' (Attempt 1/3)
+[2026-08-14 08:36:15,099] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'midesh_123' (Attempt 2/3)
+[2026-08-14 08:36:15,194] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'j01ut4om0t' (Attempt 2/3)
+[2026-08-14 08:36:15,406] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'mukeshmukesh123' (Attempt 2/3)
+[2026-08-14 08:36:15,608] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'hr1ifjuadf' (Attempt 1/3)
+[2026-08-14 08:36:15,609] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'nava_sakthi' (Attempt 2/3)
+[2026-08-14 08:36:16,646] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'j01ut4om0t' (Attempt 3/3)
+[2026-08-14 08:36:16,787] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'midesh_123' (Attempt 3/3)
+[2026-08-14 08:36:16,840] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'mukeshmukesh123' (Attempt 3/3)
+[2026-08-14 08:36:16,936] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'nava_sakthi' (Attempt 3/3)
+[2026-08-14 08:36:17,109] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'hr1ifjuadf' (Attempt 2/3)
+[2026-08-14 08:36:18,291] [INFO] [leetcode_tracker]: [INFO] Success - Nava_sakthi (Solved: 9, Rating: None, Time: 7.914s)
+[2026-08-14 08:36:18,304] [INFO] [leetcode_tracker]: [INFO] Success - Mukeshmukesh123 (Solved: 48, Rating: None, Time: 8.581s)
+[2026-08-14 08:36:18,488] [INFO] [leetcode_tracker]: [INFO] Success - midesh_123 (Solved: 69, Rating: None, Time: 9.263s)
+[2026-08-14 08:36:18,593] [INFO] [leetcode_tracker]: [INFO] Fetching: 96/273 - Reg: 732225CC035 | Username: nivethaa_baskaran
+[2026-08-14 08:36:18,609] [INFO] [leetcode_tracker]: [INFO] Fetching: 96/273 - Reg: 732225CC036 | Username: POOVARASU_
+[2026-08-14 08:36:18,748] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'hr1ifjuadf' (Attempt 3/3)
+[2026-08-14 08:36:18,795] [INFO] [leetcode_tracker]: [INFO] Fetching: 96/273 - Reg: 732225CC037 | Username: PradeepaM_
+[2026-08-14 08:36:20,107] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'nivethaa_baskaran' (Attempt 1/3)
+[2026-08-14 08:36:20,145] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'poovarasu_' (Attempt 1/3)
+[2026-08-14 08:36:20,456] [WARNING] [leetcode_tracker]: [WARN] Failed - j01UT4oM0T (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:36:20,468] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'pradeepam_' (Attempt 1/3)
+[2026-08-14 08:36:20,786] [INFO] [leetcode_tracker]: [INFO] Fetching: 97/273 - Reg: 732225CC038 | Username: Priyaa_27
+[2026-08-14 08:36:25,880] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'priyaa_27' (Attempt 1/3)
+[2026-08-14 08:36:26,023] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'poovarasu_' (Attempt 2/3)
+[2026-08-14 08:36:26,059] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'nivethaa_baskaran' (Attempt 2/3)
+[2026-08-14 08:36:26,490] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'pradeepam_' (Attempt 2/3)
+[2026-08-14 08:36:28,074] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'poovarasu_' (Attempt 3/3)
+[2026-08-14 08:36:28,104] [WARNING] [leetcode_tracker]: [WARN] Failed - HR1IfJuaDf (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:36:28,106] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'nivethaa_baskaran' (Attempt 3/3)
+[2026-08-14 08:36:28,390] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'pradeepam_' (Attempt 3/3)
+[2026-08-14 08:36:28,411] [INFO] [leetcode_tracker]: [INFO] Fetching: 98/273 - Reg: 732225CC039 | Username: f0Gm3IZrgv
+[2026-08-14 08:36:28,709] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'priyaa_27' (Attempt 2/3)
+[2026-08-14 08:36:29,597] [INFO] [leetcode_tracker]: [INFO] Success - nivethaa_baskaran (Solved: 2, Rating: None, Time: 10.974s)
+[2026-08-14 08:36:29,910] [INFO] [leetcode_tracker]: [INFO] Fetching: 99/273 - Reg: 732225CC040 | Username: mn6vcyWJAN
+[2026-08-14 08:36:30,007] [INFO] [leetcode_tracker]: [INFO] Success - PradeepaM_ (Solved: 10, Rating: None, Time: 11.178s)
+[2026-08-14 08:36:30,078] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'f0gm3izrgv' (Attempt 1/3)
+[2026-08-14 08:36:30,312] [INFO] [leetcode_tracker]: [INFO] Fetching: 100/273 - Reg: 732225CC041 | Username: RAJABALAN_B
+[2026-08-14 08:36:30,626] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'priyaa_27' (Attempt 3/3)
+[2026-08-14 08:36:31,218] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'f0gm3izrgv' (Attempt 2/3)
+[2026-08-14 08:36:31,321] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'mn6vcywjan' (Attempt 1/3)
+[2026-08-14 08:36:35,291] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'mn6vcywjan' (Attempt 2/3)
+[2026-08-14 08:36:35,332] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'f0gm3izrgv' (Attempt 3/3)
+[2026-08-14 08:36:35,694] [WARNING] [leetcode_tracker]: [WARN] Failed - POOVARASU_ (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:36:35,776] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rajabalan_b' (Attempt 1/3)
+[2026-08-14 08:36:36,011] [INFO] [leetcode_tracker]: [INFO] Fetching: 101/273 - Reg: 732225CC042 | Username: RaviBharathi1234
+[2026-08-14 08:36:36,047] [INFO] [leetcode_tracker]: [INFO] Success - Priyaa_27 (Solved: 59, Rating: None, Time: 15.235s)
+[2026-08-14 08:36:36,089] [INFO] [leetcode_tracker]: [INFO] Success - f0Gm3IZrgv (Solved: 47, Rating: None, Time: 7.665s)
+[2026-08-14 08:36:36,358] [INFO] [leetcode_tracker]: [INFO] Fetching: 103/273 - Reg: 732225CC043 | Username: ROKITHKISHOR
+[2026-08-14 08:36:36,370] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'mn6vcywjan' (Attempt 3/3)
+[2026-08-14 08:36:36,394] [INFO] [leetcode_tracker]: [INFO] Fetching: 103/273 - Reg: 732225CC044 | Username: sabari_044
+[2026-08-14 08:36:36,742] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rajabalan_b' (Attempt 2/3)
+[2026-08-14 08:36:37,145] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rokithkishor' (Attempt 1/3)
+[2026-08-14 08:36:37,188] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sabari_044' (Attempt 1/3)
+[2026-08-14 08:36:37,267] [INFO] [leetcode_tracker]: [INFO] Success - mn6vcyWJAN (Solved: 38, Rating: None, Time: 7.346s)
+[2026-08-14 08:36:37,302] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ravibharathi1234' (Attempt 1/3)
+[2026-08-14 08:36:37,580] [INFO] [leetcode_tracker]: [INFO] Fetching: 104/273 - Reg: 732225CC045 | Username: sahanajbanu
+[2026-08-14 08:36:37,898] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rajabalan_b' (Attempt 3/3)
+[2026-08-14 08:36:38,001] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rokithkishor' (Attempt 2/3)
+[2026-08-14 08:36:38,097] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sabari_044' (Attempt 2/3)
+[2026-08-14 08:36:38,311] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ravibharathi1234' (Attempt 2/3)
+[2026-08-14 08:36:38,438] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sahanajbanu' (Attempt 1/3)
+[2026-08-14 08:36:39,266] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rokithkishor' (Attempt 3/3)
+[2026-08-14 08:36:39,363] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sahanajbanu' (Attempt 2/3)
+[2026-08-14 08:36:39,384] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sabari_044' (Attempt 3/3)
+[2026-08-14 08:36:39,532] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ravibharathi1234' (Attempt 3/3)
+[2026-08-14 08:36:40,068] [INFO] [leetcode_tracker]: [INFO] Success - RAJABALAN_B (Solved: 52, Rating: None, Time: 9.722s)
+[2026-08-14 08:36:40,081] [INFO] [leetcode_tracker]: [INFO] Success - sabari_044 (Solved: 3, Rating: None, Time: 3.675s)
+[2026-08-14 08:36:40,133] [INFO] [leetcode_tracker]: [INFO] Success - ROKITHKISHOR (Solved: 76, Rating: None, Time: 3.763s)
+[2026-08-14 08:36:40,380] [INFO] [leetcode_tracker]: [INFO] Fetching: 107/273 - Reg: 732225CC046 | Username: https://leetcode.com/contest/weekly-contest
+[2026-08-14 08:36:40,388] [WARNING] [leetcode_tracker]: [WARN] Failed - 732225CC046 (Invalid or missing profile URL: INVALID LINK)
+[2026-08-14 08:36:40,390] [INFO] [leetcode_tracker]: [INFO] Fetching: 108/273 - Reg: 732225CC047 | Username: ZAWXjcjOUw
+[2026-08-14 08:36:40,445] [INFO] [leetcode_tracker]: [INFO] Fetching: 108/273 - Reg: 732225CC048 | Username: m2gQcjuz57
+[2026-08-14 08:36:40,695] [INFO] [leetcode_tracker]: [INFO] Fetching: 108/273 - Reg: 732225CC049 | Username: https://leetcode.com/problemset/
+[2026-08-14 08:36:40,700] [WARNING] [leetcode_tracker]: [WARN] Failed - 732225CC049 (Invalid or missing profile URL: INVALID LINK)
+[2026-08-14 08:36:41,007] [INFO] [leetcode_tracker]: [INFO] Fetching: 109/273 - Reg: 732225CC050 | Username: rMkHpSQTH6
+[2026-08-14 08:36:41,050] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sahanajbanu' (Attempt 3/3)
+[2026-08-14 08:36:41,215] [INFO] [leetcode_tracker]: [INFO] Success - RaviBharathi1234 (Solved: 52, Rating: None, Time: 5.193s)
+[2026-08-14 08:36:41,244] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'm2gqcjuz57' (Attempt 1/3)
+[2026-08-14 08:36:41,413] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'zawxjcjouw' (Attempt 1/3)
+[2026-08-14 08:36:41,526] [INFO] [leetcode_tracker]: [INFO] Fetching: 110/273 - Reg: 732225CC051 | Username: SIDDHDEV
+[2026-08-14 08:36:42,007] [INFO] [leetcode_tracker]: [INFO] Success - sahanajbanu (Solved: 61, Rating: None, Time: 4.414s)
+[2026-08-14 08:36:42,215] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'zawxjcjouw' (Attempt 2/3)
+[2026-08-14 08:36:42,237] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rmkhpsqth6' (Attempt 1/3)
+[2026-08-14 08:36:42,311] [INFO] [leetcode_tracker]: [INFO] Fetching: 111/273 - Reg: 732225CC052 | Username: https://leetcode.com/profile/account/
+[2026-08-14 08:36:42,317] [WARNING] [leetcode_tracker]: [WARN] Failed - 732225CC052 (Invalid or missing profile URL: INVALID LINK)
+[2026-08-14 08:36:42,324] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'm2gqcjuz57' (Attempt 2/3)
+[2026-08-14 08:36:42,338] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'siddhdev' (Attempt 1/3)
+[2026-08-14 08:36:42,629] [INFO] [leetcode_tracker]: [INFO] Fetching: 112/273 - Reg: 732225CC053 | Username: WbcKc8koB8
+[2026-08-14 08:36:42,924] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rmkhpsqth6' (Attempt 2/3)
+[2026-08-14 08:36:43,348] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'zawxjcjouw' (Attempt 3/3)
+[2026-08-14 08:36:43,375] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'siddhdev' (Attempt 2/3)
+[2026-08-14 08:36:43,440] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'm2gqcjuz57' (Attempt 3/3)
+[2026-08-14 08:36:43,548] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'wbckc8kob8' (Attempt 1/3)
+[2026-08-14 08:36:44,271] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'wbckc8kob8' (Attempt 2/3)
+[2026-08-14 08:36:44,455] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'siddhdev' (Attempt 3/3)
+[2026-08-14 08:36:44,508] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rmkhpsqth6' (Attempt 3/3)
+[2026-08-14 08:36:45,173] [INFO] [leetcode_tracker]: [INFO] Success - SIDDHDEV (Solved: 4, Rating: None, Time: 3.618s)
+[2026-08-14 08:36:45,263] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'wbckc8kob8' (Attempt 3/3)
+[2026-08-14 08:36:45,481] [INFO] [leetcode_tracker]: [INFO] Fetching: 113/273 - Reg: 732225CC054 | Username: Sujithnandha
+[2026-08-14 08:36:45,790] [WARNING] [leetcode_tracker]: [WARN] Failed - ZAWXjcjOUw (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:36:45,981] [WARNING] [leetcode_tracker]: [WARN] Failed - m2gQcjuz57 (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:36:46,097] [INFO] [leetcode_tracker]: [INFO] Fetching: 115/273 - Reg: 732225CC055 | Username: YI7QFq600
+[2026-08-14 08:36:46,271] [INFO] [leetcode_tracker]: [INFO] Success - WbcKc8koB8 (Solved: 44, Rating: None, Time: 3.613s)
+[2026-08-14 08:36:46,287] [INFO] [leetcode_tracker]: [INFO] Fetching: 116/273 - Reg: 732225CC056 | Username: XXqTDMCg8v
+[2026-08-14 08:36:46,404] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sujithnandha' (Attempt 1/3)
+[2026-08-14 08:36:46,583] [INFO] [leetcode_tracker]: [INFO] Fetching: 116/273 - Reg: 732225CC057 | Username: 00uzqPrwKt
+[2026-08-14 08:36:47,238] [WARNING] [leetcode_tracker]: [WARN] Failed - rMkHpSQTH6 (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:36:47,547] [INFO] [leetcode_tracker]: [INFO] Fetching: 117/273 - Reg: 732225CC058 | Username: aUkFZZq7AJ
+[2026-08-14 08:36:51,299] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'yi7qfq600' (Attempt 1/3)
+[2026-08-14 08:36:51,598] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'xxqtdmcg8v' (Attempt 1/3)
+[2026-08-14 08:36:51,813] [WARNING] [leetcode_tracker]: Timeout fetching profile for '00uzqprwkt' (Attempt 1/3)
+[2026-08-14 08:36:52,997] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'aukfzzq7aj' (Attempt 1/3)
+[2026-08-14 08:36:56,159] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sujithnandha' (Attempt 2/3)
+[2026-08-14 08:36:57,422] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'aukfzzq7aj' (Attempt 2/3)
+[2026-08-14 08:36:57,473] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sujithnandha' (Attempt 3/3)
+[2026-08-14 08:36:57,538] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'yi7qfq600' (Attempt 2/3)
+[2026-08-14 08:36:57,599] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '00uzqprwkt' (Attempt 2/3)
+[2026-08-14 08:36:57,731] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'xxqtdmcg8v' (Attempt 2/3)
+[2026-08-14 08:36:58,396] [INFO] [leetcode_tracker]: [INFO] Success - Sujithnandha (Solved: 11, Rating: None, Time: 12.884s)
+[2026-08-14 08:36:58,515] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'aukfzzq7aj' (Attempt 3/3)
+[2026-08-14 08:36:58,703] [INFO] [leetcode_tracker]: [INFO] Fetching: 118/273 - Reg: 732225CC059 | Username: https://leetcode.com/problemset/
+[2026-08-14 08:36:58,729] [WARNING] [leetcode_tracker]: [WARN] Failed - 732225CC059 (Invalid or missing profile URL: INVALID LINK)
+[2026-08-14 08:36:58,788] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'yi7qfq600' (Attempt 3/3)
+[2026-08-14 08:36:58,840] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '00uzqprwkt' (Attempt 3/3)
+[2026-08-14 08:36:59,035] [INFO] [leetcode_tracker]: [INFO] Fetching: 119/273 - Reg: 732225CC060 | Username: tharanya008
+[2026-08-14 08:36:59,062] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'xxqtdmcg8v' (Attempt 3/3)
+[2026-08-14 08:37:00,851] [INFO] [leetcode_tracker]: [INFO] Success - aUkFZZq7AJ (Solved: 98, Rating: None, Time: 13.289s)
+[2026-08-14 08:37:00,946] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'tharanya008' (Attempt 1/3)
+[2026-08-14 08:37:01,163] [INFO] [leetcode_tracker]: [INFO] Fetching: 120/273 - Reg: 732225CC061 | Username: 2M4WMu7ICq
+[2026-08-14 08:37:01,897] [WARNING] [leetcode_tracker]: [WARN] Failed - YI7QFq600 (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:37:02,169] [WARNING] [leetcode_tracker]: [WARN] Failed - XXqTDMCg8v (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:37:02,199] [INFO] [leetcode_tracker]: [INFO] Fetching: 122/273 - Reg: 732225CC062 | Username: YOGESH_062
+[2026-08-14 08:37:02,217] [WARNING] [leetcode_tracker]: [WARN] Failed - 00uzqPrwKt (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:37:02,353] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'tharanya008' (Attempt 2/3)
+[2026-08-14 08:37:02,478] [INFO] [leetcode_tracker]: [INFO] Fetching: 123/273 - Reg: 732225CCL01 | Username: AnvarAhamed1234
+[2026-08-14 08:37:02,528] [INFO] [leetcode_tracker]: [INFO] Fetching: 123/273 - Reg: 732225CCL02 | Username: Jeevadharsan12
+[2026-08-14 08:37:03,133] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '2m4wmu7icq' (Attempt 1/3)
+[2026-08-14 08:37:03,331] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'tharanya008' (Attempt 3/3)
+[2026-08-14 08:37:03,375] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'anvarahamed1234' (Attempt 1/3)
+[2026-08-14 08:37:03,405] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'jeevadharsan12' (Attempt 1/3)
+[2026-08-14 08:37:03,416] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'yogesh_062' (Attempt 1/3)
+[2026-08-14 08:37:03,860] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '2m4wmu7icq' (Attempt 2/3)
+[2026-08-14 08:37:04,297] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'anvarahamed1234' (Attempt 2/3)
+[2026-08-14 08:37:04,349] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'jeevadharsan12' (Attempt 2/3)
+[2026-08-14 08:37:04,355] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'yogesh_062' (Attempt 2/3)
+[2026-08-14 08:37:05,130] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '2m4wmu7icq' (Attempt 3/3)
+[2026-08-14 08:37:10,998] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/tharanya008/solved) note for 'tharanya008': 
+[2026-08-14 08:37:11,024] [WARNING] [leetcode_tracker]: [WARN] Failed - tharanya008 (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:37:11,244] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/2m4wmu7icq) note for '2m4wmu7icq': 
+[2026-08-14 08:37:11,329] [INFO] [leetcode_tracker]: [INFO] Fetching: 124/273 - Reg: 732225CCL03 | Username: Kathir260
+[2026-08-14 08:37:13,984] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'anvarahamed1234' (Attempt 3/3)
+[2026-08-14 08:37:13,986] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'yogesh_062' (Attempt 3/3)
+[2026-08-14 08:37:14,058] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'jeevadharsan12' (Attempt 3/3)
+[2026-08-14 08:37:16,560] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'kathir260' (Attempt 1/3)
+[2026-08-14 08:37:17,327] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/userProfile/2m4wmu7icq) note for '2m4wmu7icq': 
+[2026-08-14 08:37:20,130] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/anvarahamed1234) note for 'anvarahamed1234': 
+[2026-08-14 08:37:20,148] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/jeevadharsan12) note for 'jeevadharsan12': 
+[2026-08-14 08:37:20,150] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/yogesh_062) note for 'yogesh_062': 
+[2026-08-14 08:37:22,196] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'kathir260' (Attempt 2/3)
+[2026-08-14 08:37:26,170] [WARNING] [leetcode_tracker]: [WARN] Failed - 2M4WMu7ICq (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:37:26,475] [INFO] [leetcode_tracker]: [INFO] Success - Jeevadharsan12 (Solved: 2, Rating: None, Time: 23.935s)
+[2026-08-14 08:37:26,476] [INFO] [leetcode_tracker]: [INFO] Fetching: 126/273 - Reg: 732225CCL04 | Username: LINGESWARAN_6
+[2026-08-14 08:37:26,538] [INFO] [leetcode_tracker]: [INFO] Success - YOGESH_062 (Solved: 51, Rating: None, Time: 24.328s)
+[2026-08-14 08:37:26,778] [INFO] [leetcode_tracker]: [INFO] Fetching: 127/273 - Reg: 732225CCL05 | Username: None
+[2026-08-14 08:37:26,800] [WARNING] [leetcode_tracker]: [WARN] Failed - 732225CCL05 (Invalid or missing profile URL: MISSING LINK)
+[2026-08-14 08:37:26,844] [INFO] [leetcode_tracker]: [INFO] Fetching: 128/273 - Reg: 732225CCL06 | Username: ShynthAbraham
+[2026-08-14 08:37:27,113] [INFO] [leetcode_tracker]: [INFO] Fetching: 128/273 - Reg: 732225CI001 | Username: aarthi-rs
+[2026-08-14 08:37:28,215] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kathir260' (Attempt 3/3)
+[2026-08-14 08:37:28,605] [WARNING] [leetcode_tracker]: [WARN] Failed - AnvarAhamed1234 (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:37:28,913] [INFO] [leetcode_tracker]: [INFO] Fetching: 129/273 - Reg: 732225CI002 | Username: 732225ci002-bharanitharan-r
+[2026-08-14 08:37:34,180] [WARNING] [leetcode_tracker]: Timeout fetching profile for '732225ci002-bharanitharan-r' (Attempt 1/3)
+[2026-08-14 08:37:34,298] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/kathir260) note for 'kathir260': 
+[2026-08-14 08:37:36,711] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'lingeswaran_6' (Attempt 1/3)
+[2026-08-14 08:37:37,066] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'aarthi-rs' (Attempt 1/3)
+[2026-08-14 08:37:37,448] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'shynthabraham' (Attempt 1/3)
+[2026-08-14 08:37:37,784] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'aarthi-rs' (Attempt 2/3)
+[2026-08-14 08:37:37,818] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'lingeswaran_6' (Attempt 2/3)
+[2026-08-14 08:37:37,996] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '732225ci002-bharanitharan-r' (Attempt 2/3)
+[2026-08-14 08:37:38,150] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'shynthabraham' (Attempt 2/3)
+[2026-08-14 08:37:38,194] [INFO] [leetcode_tracker]: [INFO] Success - Kathir260 (Solved: 3, Rating: None, Time: 26.837s)
+[2026-08-14 08:37:38,512] [INFO] [leetcode_tracker]: [INFO] Fetching: 130/273 - Reg: 732225CI003 | Username: 732225ci003-bhupesh-s-a
+[2026-08-14 08:37:38,882] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'lingeswaran_6' (Attempt 3/3)
+[2026-08-14 08:37:38,930] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'aarthi-rs' (Attempt 3/3)
+[2026-08-14 08:37:39,215] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '732225ci002-bharanitharan-r' (Attempt 3/3)
+[2026-08-14 08:37:39,683] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'shynthabraham' (Attempt 3/3)
+[2026-08-14 08:37:40,275] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '732225ci003-bhupesh-s-a' (Attempt 1/3)
+[2026-08-14 08:37:41,226] [INFO] [leetcode_tracker]: [INFO] Success - aarthi-rs (Solved: 63, Rating: None, Time: 14.102s)
+[2026-08-14 08:37:41,301] [INFO] [leetcode_tracker]: [INFO] Success - ShynthAbraham (Solved: 2, Rating: None, Time: 14.444s)
+[2026-08-14 08:37:41,528] [INFO] [leetcode_tracker]: [INFO] Fetching: 132/273 - Reg: 732225CI004 | Username: devishree2026
+[2026-08-14 08:37:41,588] [INFO] [leetcode_tracker]: [INFO] Success - 732225ci002-bharanitharan-r (Solved: 0, Rating: None, Time: 12.665s)
+[2026-08-14 08:37:41,612] [INFO] [leetcode_tracker]: [INFO] Fetching: 133/273 - Reg: 732225CI005 | Username: https://leetcode.com/
+[2026-08-14 08:37:41,618] [WARNING] [leetcode_tracker]: [WARN] Failed - 732225CI005 (Invalid or missing profile URL: INVALID LINK)
+[2026-08-14 08:37:41,626] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '732225ci003-bhupesh-s-a' (Attempt 2/3)
+[2026-08-14 08:37:41,897] [INFO] [leetcode_tracker]: [INFO] Fetching: 134/273 - Reg: 732225CI006 | Username: Dharani_0404
+[2026-08-14 08:37:41,928] [INFO] [leetcode_tracker]: [INFO] Fetching: 134/273 - Reg: 732225CI007 | Username: DHARSHAN_X0
+[2026-08-14 08:37:42,464] [WARNING] [leetcode_tracker]: [WARN] Failed - LINGESWARAN_6 (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:37:42,776] [INFO] [leetcode_tracker]: [INFO] Fetching: 135/273 - Reg: 732225CI008 | Username: Dharshini_Ramya
+[2026-08-14 08:37:42,791] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '732225ci003-bhupesh-s-a' (Attempt 3/3)
+[2026-08-14 08:37:42,929] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dharani_0404' (Attempt 1/3)
+[2026-08-14 08:37:42,976] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dharshan_x0' (Attempt 1/3)
+[2026-08-14 08:37:43,025] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'devishree2026' (Attempt 1/3)
+[2026-08-14 08:37:43,422] [INFO] [leetcode_tracker]: [INFO] Success - 732225ci003-bhupesh-s-a (Solved: 0, Rating: None, Time: 4.872s)
+[2026-08-14 08:37:43,506] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dharshini_ramya' (Attempt 1/3)
+[2026-08-14 08:37:43,630] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dharani_0404' (Attempt 2/3)
+[2026-08-14 08:37:43,637] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dharshan_x0' (Attempt 2/3)
+[2026-08-14 08:37:43,726] [INFO] [leetcode_tracker]: [INFO] Fetching: 136/273 - Reg: 732225CI009 | Username: Gayathri_VP
+[2026-08-14 08:37:43,863] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'devishree2026' (Attempt 2/3)
+[2026-08-14 08:37:44,475] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dharshini_ramya' (Attempt 2/3)
+[2026-08-14 08:37:44,594] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dharani_0404' (Attempt 3/3)
+[2026-08-14 08:37:44,664] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gayathri_vp' (Attempt 1/3)
+[2026-08-14 08:37:44,863] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'devishree2026' (Attempt 3/3)
+[2026-08-14 08:37:44,985] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dharshan_x0' (Attempt 3/3)
+[2026-08-14 08:37:45,236] [INFO] [leetcode_tracker]: [INFO] Success - Dharani_0404 (Solved: 10, Rating: None, Time: 3.319s)
+[2026-08-14 08:37:45,538] [INFO] [leetcode_tracker]: [INFO] Fetching: 137/273 - Reg: 732225CI010 | Username: geerthanaas_2008
+[2026-08-14 08:37:50,758] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'geerthanaas_2008' (Attempt 1/3)
+[2026-08-14 08:37:51,045] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/dharshan_x0) note for 'dharshan_x0': 
+[2026-08-14 08:37:51,062] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/devishree2026) note for 'devishree2026': 
+[2026-08-14 08:37:52,277] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gayathri_vp' (Attempt 2/3)
+[2026-08-14 08:37:52,477] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dharshini_ramya' (Attempt 3/3)
+[2026-08-14 08:37:56,427] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'geerthanaas_2008' (Attempt 2/3)
+[2026-08-14 08:37:57,335] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/userProfile/dharshan_x0) note for 'dharshan_x0': 
+[2026-08-14 08:37:57,338] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/userProfile/devishree2026) note for 'devishree2026': 
+[2026-08-14 08:37:58,586] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/dharshini_ramya) note for 'dharshini_ramya': 
+[2026-08-14 08:38:00,466] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gayathri_vp' (Attempt 3/3)
+[2026-08-14 08:38:01,644] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'geerthanaas_2008' (Attempt 3/3)
+[2026-08-14 08:38:01,780] [INFO] [leetcode_tracker]: [INFO] Success - DHARSHAN_X0 (Solved: 19, Rating: None, Time: 19.824s)
+[2026-08-14 08:38:02,084] [INFO] [leetcode_tracker]: [INFO] Fetching: 138/273 - Reg: 732225CI011 | Username: Gobi_krishna
+[2026-08-14 08:38:02,197] [INFO] [leetcode_tracker]: [INFO] Success - devishree2026 (Solved: 10, Rating: None, Time: 20.657s)
+[2026-08-14 08:38:02,411] [INFO] [leetcode_tracker]: [INFO] Success - Dharshini_Ramya (Solved: 2, Rating: None, Time: 19.626s)
+[2026-08-14 08:38:02,509] [INFO] [leetcode_tracker]: [INFO] Fetching: 140/273 - Reg: 732225CI012 | Username: Gokulkrishna_26
+[2026-08-14 08:38:02,577] [INFO] [leetcode_tracker]: [INFO] Success - Gayathri_VP (Solved: 0, Rating: None, Time: 18.837s)
+[2026-08-14 08:38:02,604] [INFO] [leetcode_tracker]: [INFO] Success - geerthanaas_2008 (Solved: 17, Rating: None, Time: 17.054s)
+[2026-08-14 08:38:02,722] [INFO] [leetcode_tracker]: [INFO] Fetching: 142/273 - Reg: 732225CI013 | Username: gokulps
+[2026-08-14 08:38:02,879] [INFO] [leetcode_tracker]: [INFO] Fetching: 142/273 - Reg: 732225CI014 | Username: haripriya_14
+[2026-08-14 08:38:02,910] [INFO] [leetcode_tracker]: [INFO] Fetching: 142/273 - Reg: 732225CI015 | Username: Harshini_CN
+[2026-08-14 08:38:03,181] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gobi_krishna' (Attempt 1/3)
+[2026-08-14 08:38:03,754] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gokulkrishna_26' (Attempt 1/3)
+[2026-08-14 08:38:03,902] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gokulps' (Attempt 1/3)
+[2026-08-14 08:38:04,263] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'haripriya_14' (Attempt 1/3)
+[2026-08-14 08:38:04,286] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'harshini_cn' (Attempt 1/3)
+[2026-08-14 08:38:04,418] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gobi_krishna' (Attempt 2/3)
+[2026-08-14 08:38:05,037] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gokulkrishna_26' (Attempt 2/3)
+[2026-08-14 08:38:05,127] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gokulps' (Attempt 2/3)
+[2026-08-14 08:38:05,209] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'harshini_cn' (Attempt 2/3)
+[2026-08-14 08:38:05,481] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'haripriya_14' (Attempt 2/3)
+[2026-08-14 08:38:14,921] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gobi_krishna' (Attempt 3/3)
+[2026-08-14 08:38:15,080] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'harshini_cn' (Attempt 3/3)
+[2026-08-14 08:38:15,092] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gokulps' (Attempt 3/3)
+[2026-08-14 08:38:15,113] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'haripriya_14' (Attempt 3/3)
+[2026-08-14 08:38:15,122] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gokulkrishna_26' (Attempt 3/3)
+[2026-08-14 08:38:16,148] [INFO] [leetcode_tracker]: [INFO] Success - Gobi_krishna (Solved: 35, Rating: None, Time: 14.05s)
+[2026-08-14 08:38:16,168] [INFO] [leetcode_tracker]: [INFO] Success - gokulps (Solved: 7, Rating: None, Time: 13.435s)
+[2026-08-14 08:38:16,340] [INFO] [leetcode_tracker]: [INFO] Success - Harshini_CN (Solved: 0, Rating: None, Time: 13.415s)
+[2026-08-14 08:38:16,457] [INFO] [leetcode_tracker]: [INFO] Fetching: 145/273 - Reg: 732225CI016 | Username: ZDHinXS03z
+[2026-08-14 08:38:16,473] [INFO] [leetcode_tracker]: [INFO] Fetching: 145/273 - Reg: 732225CI017 | Username: Janannn_iiiiii
+[2026-08-14 08:38:16,645] [INFO] [leetcode_tracker]: [INFO] Fetching: 145/273 - Reg: 732225CI018 | Username: Jayasuriya_27
+[2026-08-14 08:38:16,947] [INFO] [leetcode_tracker]: [INFO] Success - haripriya_14 (Solved: 0, Rating: None, Time: 14.037s)
+[2026-08-14 08:38:17,031] [INFO] [leetcode_tracker]: [INFO] Success - Gokulkrishna_26 (Solved: 28, Rating: None, Time: 14.51s)
+[2026-08-14 08:38:17,259] [INFO] [leetcode_tracker]: [INFO] Fetching: 147/273 - Reg: 732225CI019 | Username: Deepak_2d
+[2026-08-14 08:38:17,343] [INFO] [leetcode_tracker]: [INFO] Fetching: 147/273 - Reg: 732225CI020 | Username: kaviya_Jaya_Chitra
+[2026-08-14 08:38:17,824] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'zdhinxs03z' (Attempt 1/3)
+[2026-08-14 08:38:17,940] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'janannn_iiiiii' (Attempt 1/3)
+[2026-08-14 08:38:18,125] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'jayasuriya_27' (Attempt 1/3)
+[2026-08-14 08:38:18,680] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'deepak_2d' (Attempt 1/3)
+[2026-08-14 08:38:18,726] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kaviya_jaya_chitra' (Attempt 1/3)
+[2026-08-14 08:38:18,797] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'zdhinxs03z' (Attempt 2/3)
+[2026-08-14 08:38:18,974] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'janannn_iiiiii' (Attempt 2/3)
+[2026-08-14 08:38:19,428] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'jayasuriya_27' (Attempt 2/3)
+[2026-08-14 08:38:19,967] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kaviya_jaya_chitra' (Attempt 2/3)
+[2026-08-14 08:38:20,005] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'deepak_2d' (Attempt 2/3)
+[2026-08-14 08:38:20,187] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'zdhinxs03z' (Attempt 3/3)
+[2026-08-14 08:38:20,615] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'janannn_iiiiii' (Attempt 3/3)
+[2026-08-14 08:38:20,973] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'jayasuriya_27' (Attempt 3/3)
+[2026-08-14 08:38:21,716] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kaviya_jaya_chitra' (Attempt 3/3)
+[2026-08-14 08:38:21,720] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'deepak_2d' (Attempt 3/3)
+[2026-08-14 08:38:21,959] [INFO] [leetcode_tracker]: [INFO] Success - ZDHinXS03z (Solved: 21, Rating: None, Time: 5.466s)
+[2026-08-14 08:38:21,985] [INFO] [leetcode_tracker]: [INFO] Success - Jayasuriya_27 (Solved: 0, Rating: None, Time: 5.33s)
+[2026-08-14 08:38:22,268] [INFO] [leetcode_tracker]: [INFO] Fetching: 149/273 - Reg: 732225CI021 | Username: Kiranchanth_21
+[2026-08-14 08:38:22,296] [INFO] [leetcode_tracker]: [INFO] Fetching: 149/273 - Reg: 732225CI022 | Username: Kishore_Kanna_S
+[2026-08-14 08:38:22,387] [INFO] [leetcode_tracker]: [INFO] Success - kaviya_Jaya_Chitra (Solved: 0, Rating: None, Time: 5.012s)
+[2026-08-14 08:38:22,432] [INFO] [leetcode_tracker]: [INFO] Success - Deepak_2d (Solved: 15, Rating: None, Time: 5.16s)
+[2026-08-14 08:38:22,692] [INFO] [leetcode_tracker]: [INFO] Fetching: 151/273 - Reg: 732225CI023 | Username: Madhubala_45
+[2026-08-14 08:38:22,740] [INFO] [leetcode_tracker]: [INFO] Fetching: 151/273 - Reg: 732225CI024 | Username: Malavika_24
+[2026-08-14 08:38:23,069] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kiranchanth_21' (Attempt 1/3)
+[2026-08-14 08:38:23,418] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kishore_kanna_s' (Attempt 1/3)
+[2026-08-14 08:38:23,436] [INFO] [leetcode_tracker]: [INFO] Success - Janannn_iiiiii (Solved: 10, Rating: None, Time: 6.948s)
+[2026-08-14 08:38:23,738] [INFO] [leetcode_tracker]: [INFO] Fetching: 152/273 - Reg: 732225CI025 | Username: Md_yunus025
+[2026-08-14 08:38:23,774] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'malavika_24' (Attempt 1/3)
+[2026-08-14 08:38:23,782] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'madhubala_45' (Attempt 1/3)
+[2026-08-14 08:38:24,150] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kishore_kanna_s' (Attempt 2/3)
+[2026-08-14 08:38:24,190] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kiranchanth_21' (Attempt 2/3)
+[2026-08-14 08:38:24,473] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'malavika_24' (Attempt 2/3)
+[2026-08-14 08:38:24,486] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'madhubala_45' (Attempt 2/3)
+[2026-08-14 08:38:24,530] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'md_yunus025' (Attempt 1/3)
+[2026-08-14 08:38:25,171] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kiranchanth_21' (Attempt 3/3)
+[2026-08-14 08:38:25,205] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'md_yunus025' (Attempt 2/3)
+[2026-08-14 08:38:25,207] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kishore_kanna_s' (Attempt 3/3)
+[2026-08-14 08:38:25,443] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'malavika_24' (Attempt 3/3)
+[2026-08-14 08:38:25,452] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'madhubala_45' (Attempt 3/3)
+[2026-08-14 08:38:25,914] [INFO] [leetcode_tracker]: [INFO] Success - Kiranchanth_21 (Solved: 37, Rating: None, Time: 3.61s)
+[2026-08-14 08:38:26,066] [INFO] [leetcode_tracker]: [INFO] Success - Kishore_Kanna_S (Solved: 18, Rating: None, Time: 3.758s)
+[2026-08-14 08:38:26,176] [INFO] [leetcode_tracker]: [INFO] Success - Madhubala_45 (Solved: 7, Rating: None, Time: 3.47s)
+[2026-08-14 08:38:26,197] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'md_yunus025' (Attempt 3/3)
+[2026-08-14 08:38:26,229] [INFO] [leetcode_tracker]: [INFO] Fetching: 155/273 - Reg: 732225CI026 | Username: Mw9qUJLaJo
+[2026-08-14 08:38:26,374] [INFO] [leetcode_tracker]: [INFO] Fetching: 155/273 - Reg: 732225CI027 | Username: NANTHEES_NS-14
+[2026-08-14 08:38:26,482] [INFO] [leetcode_tracker]: [INFO] Fetching: 155/273 - Reg: 732225CI028 | Username: Navin_IOT_28
+[2026-08-14 08:38:26,770] [INFO] [leetcode_tracker]: [INFO] Success - Malavika_24 (Solved: 0, Rating: None, Time: 4.012s)
+[2026-08-14 08:38:26,883] [INFO] [leetcode_tracker]: [INFO] Success - Md_yunus025 (Solved: 14, Rating: None, Time: 3.132s)
+[2026-08-14 08:38:27,006] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'mw9qujlajo' (Attempt 1/3)
+[2026-08-14 08:38:27,077] [INFO] [leetcode_tracker]: [INFO] Fetching: 157/273 - Reg: 732225CI029 | Username: NIRAI_NIKILAN
+[2026-08-14 08:38:27,158] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'nanthees_ns-14' (Attempt 1/3)
+[2026-08-14 08:38:27,194] [INFO] [leetcode_tracker]: [INFO] Fetching: 157/273 - Reg: 732225CI030 | Username: 732225ci030-nisha-c
+[2026-08-14 08:38:27,406] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'navin_iot_28' (Attempt 1/3)
+[2026-08-14 08:38:27,856] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'nirai_nikilan' (Attempt 1/3)
+[2026-08-14 08:38:27,998] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'nanthees_ns-14' (Attempt 2/3)
+[2026-08-14 08:38:28,138] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '732225ci030-nisha-c' (Attempt 1/3)
+[2026-08-14 08:38:28,294] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'mw9qujlajo' (Attempt 2/3)
+[2026-08-14 08:38:28,337] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'navin_iot_28' (Attempt 2/3)
+[2026-08-14 08:38:28,931] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'nirai_nikilan' (Attempt 2/3)
+[2026-08-14 08:38:29,002] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '732225ci030-nisha-c' (Attempt 2/3)
+[2026-08-14 08:38:29,053] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'nanthees_ns-14' (Attempt 3/3)
+[2026-08-14 08:38:29,498] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'navin_iot_28' (Attempt 3/3)
+[2026-08-14 08:38:30,137] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '732225ci030-nisha-c' (Attempt 3/3)
+[2026-08-14 08:38:30,140] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'mw9qujlajo' (Attempt 3/3)
+[2026-08-14 08:38:30,187] [INFO] [leetcode_tracker]: [INFO] Success - Navin_IOT_28 (Solved: 13, Rating: None, Time: 3.674s)
+[2026-08-14 08:38:30,217] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'nirai_nikilan' (Attempt 3/3)
+[2026-08-14 08:38:30,347] [INFO] [leetcode_tracker]: [INFO] Success - NANTHEES_NS-14 (Solved: 10, Rating: None, Time: 3.961s)
+[2026-08-14 08:38:30,493] [INFO] [leetcode_tracker]: [INFO] Fetching: 159/273 - Reg: 732225CI031 | Username: Nithishkumar_A_2602
+[2026-08-14 08:38:30,659] [INFO] [leetcode_tracker]: [INFO] Fetching: 159/273 - Reg: 732225CI032 | Username: qXuSu2Zg8M
+[2026-08-14 08:38:30,858] [INFO] [leetcode_tracker]: [INFO] Success - 732225ci030-nisha-c (Solved: 18, Rating: None, Time: 3.649s)
+[2026-08-14 08:38:30,872] [INFO] [leetcode_tracker]: [INFO] Success - Mw9qUJLaJo (Solved: 19, Rating: None, Time: 4.633s)
+[2026-08-14 08:38:31,172] [INFO] [leetcode_tracker]: [INFO] Fetching: 161/273 - Reg: 732225CI033 | Username: Pooja_AP
+[2026-08-14 08:38:31,183] [INFO] [leetcode_tracker]: [INFO] Fetching: 161/273 - Reg: 732225CI034 | Username: praveena_selvaraj
+[2026-08-14 08:38:31,480] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'nithishkumar_a_2602' (Attempt 1/3)
+[2026-08-14 08:38:31,534] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'qxusu2zg8m' (Attempt 1/3)
+[2026-08-14 08:38:31,969] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'pooja_ap' (Attempt 1/3)
+[2026-08-14 08:38:31,998] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'praveena_selvaraj' (Attempt 1/3)
+[2026-08-14 08:38:32,182] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'nithishkumar_a_2602' (Attempt 2/3)
+[2026-08-14 08:38:32,197] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'qxusu2zg8m' (Attempt 2/3)
+[2026-08-14 08:38:32,561] [WARNING] [leetcode_tracker]: [WARN] Failed - NIRAI_NIKILAN (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:38:32,699] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'praveena_selvaraj' (Attempt 2/3)
+[2026-08-14 08:38:32,872] [INFO] [leetcode_tracker]: [INFO] Fetching: 162/273 - Reg: 732225CI035 | Username: Priyadharshini_0506
+[2026-08-14 08:38:32,886] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'pooja_ap' (Attempt 2/3)
+[2026-08-14 08:38:33,336] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'nithishkumar_a_2602' (Attempt 3/3)
+[2026-08-14 08:38:33,478] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'qxusu2zg8m' (Attempt 3/3)
+[2026-08-14 08:38:33,746] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'priyadharshini_0506' (Attempt 1/3)
+[2026-08-14 08:38:33,848] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'pooja_ap' (Attempt 3/3)
+[2026-08-14 08:38:34,097] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'praveena_selvaraj' (Attempt 3/3)
+[2026-08-14 08:38:34,425] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'priyadharshini_0506' (Attempt 2/3)
+[2026-08-14 08:38:34,618] [INFO] [leetcode_tracker]: [INFO] Success - Pooja_AP (Solved: 0, Rating: None, Time: 3.411s)
+[2026-08-14 08:38:34,855] [INFO] [leetcode_tracker]: [INFO] Success - Nithishkumar_A_2602 (Solved: 3, Rating: None, Time: 4.285s)
+[2026-08-14 08:38:34,927] [INFO] [leetcode_tracker]: [INFO] Fetching: 164/273 - Reg: 732225CI036 | Username: pugazhenthi123
+[2026-08-14 08:38:35,012] [INFO] [leetcode_tracker]: [INFO] Success - praveena_selvaraj (Solved: 30, Rating: None, Time: 3.815s)
+[2026-08-14 08:38:35,158] [INFO] [leetcode_tracker]: [INFO] Fetching: 165/273 - Reg: 732225CI037 | Username: ragul_bruce
+[2026-08-14 08:38:35,324] [INFO] [leetcode_tracker]: [INFO] Fetching: 165/273 - Reg: 732225CI038 | Username: https
+[2026-08-14 08:38:35,687] [WARNING] [leetcode_tracker]: [WARN] Failed - qXuSu2Zg8M (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:38:35,724] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'pugazhenthi123' (Attempt 1/3)
+[2026-08-14 08:38:35,924] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'priyadharshini_0506' (Attempt 3/3)
+[2026-08-14 08:38:35,993] [INFO] [leetcode_tracker]: [INFO] Fetching: 166/273 - Reg: 732225CI039 | Username: Rohith_pannirselvam
+[2026-08-14 08:38:36,063] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ragul_bruce' (Attempt 1/3)
+[2026-08-14 08:38:36,249] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'https' (Attempt 1/3)
+[2026-08-14 08:38:36,717] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'pugazhenthi123' (Attempt 2/3)
+[2026-08-14 08:38:36,755] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ragul_bruce' (Attempt 2/3)
+[2026-08-14 08:38:36,864] [INFO] [leetcode_tracker]: [INFO] Success - Priyadharshini_0506 (Solved: 11, Rating: None, Time: 3.956s)
+[2026-08-14 08:38:36,912] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'https' (Attempt 2/3)
+[2026-08-14 08:38:37,170] [INFO] [leetcode_tracker]: [INFO] Fetching: 167/273 - Reg: 732225CI040 | Username: Roshan_v46
+[2026-08-14 08:38:37,333] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rohith_pannirselvam' (Attempt 1/3)
+[2026-08-14 08:38:37,708] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'pugazhenthi123' (Attempt 3/3)
+[2026-08-14 08:38:37,713] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ragul_bruce' (Attempt 3/3)
+[2026-08-14 08:38:37,913] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'https' (Attempt 3/3)
+[2026-08-14 08:38:37,953] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'roshan_v46' (Attempt 1/3)
+[2026-08-14 08:38:38,247] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rohith_pannirselvam' (Attempt 2/3)
+[2026-08-14 08:38:38,389] [INFO] [leetcode_tracker]: [INFO] Success - pugazhenthi123 (Solved: 0, Rating: None, Time: 3.426s)
+[2026-08-14 08:38:38,471] [INFO] [leetcode_tracker]: [INFO] Success - ragul_bruce (Solved: 7, Rating: None, Time: 3.299s)
+[2026-08-14 08:38:38,575] [INFO] [leetcode_tracker]: [INFO] Success - https (Solved: 0, Rating: None, Time: 3.235s)
+[2026-08-14 08:38:38,662] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'roshan_v46' (Attempt 2/3)
+[2026-08-14 08:38:38,710] [INFO] [leetcode_tracker]: [INFO] Fetching: 170/273 - Reg: 732225CI041 | Username: Saha_NC
+[2026-08-14 08:38:38,777] [INFO] [leetcode_tracker]: [INFO] Fetching: 170/273 - Reg: 732225CI042 | Username: salini-25
+[2026-08-14 08:38:38,881] [INFO] [leetcode_tracker]: [INFO] Fetching: 170/273 - Reg: 732225CI043 | Username: Sanjaaiiii_
+[2026-08-14 08:38:39,276] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rohith_pannirselvam' (Attempt 3/3)
+[2026-08-14 08:38:39,486] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'saha_nc' (Attempt 1/3)
+[2026-08-14 08:38:39,686] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'roshan_v46' (Attempt 3/3)
+[2026-08-14 08:38:39,691] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sanjaaiiii_' (Attempt 1/3)
+[2026-08-14 08:38:40,000] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'salini-25' (Attempt 1/3)
+[2026-08-14 08:38:40,479] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sanjaaiiii_' (Attempt 2/3)
+[2026-08-14 08:38:40,588] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'saha_nc' (Attempt 2/3)
+[2026-08-14 08:38:40,917] [INFO] [leetcode_tracker]: [INFO] Success - Rohith_pannirselvam (Solved: 36, Rating: None, Time: 4.908s)
+[2026-08-14 08:38:40,966] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'salini-25' (Attempt 2/3)
+[2026-08-14 08:38:41,218] [INFO] [leetcode_tracker]: [INFO] Success - Roshan_v46 (Solved: 18, Rating: None, Time: 4.017s)
+[2026-08-14 08:38:41,220] [INFO] [leetcode_tracker]: [INFO] Fetching: 172/273 - Reg: 732225CI044 | Username: sk21_sanjay
+[2026-08-14 08:38:41,530] [INFO] [leetcode_tracker]: [INFO] Fetching: 172/273 - Reg: 732225CI045 | Username: GAgrm4ykwn
+[2026-08-14 08:38:41,573] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sanjaaiiii_' (Attempt 3/3)
+[2026-08-14 08:38:41,622] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'saha_nc' (Attempt 3/3)
+[2026-08-14 08:38:41,955] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'salini-25' (Attempt 3/3)
+[2026-08-14 08:38:42,082] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sk21_sanjay' (Attempt 1/3)
+[2026-08-14 08:38:43,107] [INFO] [leetcode_tracker]: [INFO] Success - Saha_NC (Solved: 10, Rating: None, Time: 4.385s)
+[2026-08-14 08:38:43,117] [INFO] [leetcode_tracker]: [INFO] Success - salini-25 (Solved: 28, Rating: None, Time: 4.32s)
+[2026-08-14 08:38:43,420] [INFO] [leetcode_tracker]: [INFO] Fetching: 174/273 - Reg: 732225CI046 | Username: Santhosh_Mahi
+[2026-08-14 08:38:43,429] [INFO] [leetcode_tracker]: [INFO] Fetching: 174/273 - Reg: 732225CI047 | Username: Sathish_chml
+[2026-08-14 08:38:43,536] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sk21_sanjay' (Attempt 2/3)
+[2026-08-14 08:38:43,593] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gagrm4ykwn' (Attempt 1/3)
+[2026-08-14 08:38:44,131] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sathish_chml' (Attempt 1/3)
+[2026-08-14 08:38:44,174] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'santhosh_mahi' (Attempt 1/3)
+[2026-08-14 08:38:44,558] [WARNING] [leetcode_tracker]: [WARN] Failed - Sanjaaiiii_ (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:38:44,598] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gagrm4ykwn' (Attempt 2/3)
+[2026-08-14 08:38:44,873] [INFO] [leetcode_tracker]: [INFO] Fetching: 175/273 - Reg: 732225CI048 | Username: Sharmatha_K
+[2026-08-14 08:38:45,562] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sathish_chml' (Attempt 2/3)
+[2026-08-14 08:38:45,568] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'santhosh_mahi' (Attempt 2/3)
+[2026-08-14 08:38:45,570] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sharmatha_k' (Attempt 1/3)
+[2026-08-14 08:38:45,709] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gagrm4ykwn' (Attempt 3/3)
+[2026-08-14 08:38:45,775] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sk21_sanjay' (Attempt 3/3)
+[2026-08-14 08:38:46,362] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sharmatha_k' (Attempt 2/3)
+[2026-08-14 08:38:46,534] [INFO] [leetcode_tracker]: [INFO] Success - GAgrm4ykwn (Solved: 0, Rating: None, Time: 4.968s)
+[2026-08-14 08:38:46,687] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'santhosh_mahi' (Attempt 3/3)
+[2026-08-14 08:38:46,716] [INFO] [leetcode_tracker]: [INFO] Success - sk21_sanjay (Solved: 0, Rating: None, Time: 5.481s)
+[2026-08-14 08:38:46,717] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sathish_chml' (Attempt 3/3)
+[2026-08-14 08:38:46,836] [INFO] [leetcode_tracker]: [INFO] Fetching: 177/273 - Reg: 732225CI049 | Username: GAgrm4ykwn
+[2026-08-14 08:38:47,024] [INFO] [leetcode_tracker]: [INFO] Fetching: 177/273 - Reg: 732225CI050 | Username: Shreedharshan_s
+[2026-08-14 08:38:47,894] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sharmatha_k' (Attempt 3/3)
+[2026-08-14 08:38:48,041] [INFO] [leetcode_tracker]: [INFO] Success - Santhosh_Mahi (Solved: 5, Rating: None, Time: 4.583s)
+[2026-08-14 08:38:48,049] [INFO] [leetcode_tracker]: [INFO] Success - Sathish_chml (Solved: 16, Rating: None, Time: 4.576s)
+[2026-08-14 08:38:48,061] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'shreedharshan_s' (Attempt 1/3)
+[2026-08-14 08:38:48,355] [INFO] [leetcode_tracker]: [INFO] Fetching: 179/273 - Reg: 732225CI051 | Username: None
+[2026-08-14 08:38:48,380] [WARNING] [leetcode_tracker]: [WARN] Failed - 732225CI051 (Invalid or missing profile URL: MISSING LINK)
+[2026-08-14 08:38:48,382] [INFO] [leetcode_tracker]: [INFO] Fetching: 180/273 - Reg: 732225CI052 | Username: RIYAS18
+[2026-08-14 08:38:48,393] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gagrm4ykwn' (Attempt 1/3)
+[2026-08-14 08:38:48,695] [INFO] [leetcode_tracker]: [INFO] Fetching: 180/273 - Reg: 732225CI053 | Username: SUDHARSHAN_E-01
+[2026-08-14 08:38:49,068] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'riyas18' (Attempt 1/3)
+[2026-08-14 08:38:49,178] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'shreedharshan_s' (Attempt 2/3)
+[2026-08-14 08:38:49,467] [INFO] [leetcode_tracker]: [INFO] Success - Sharmatha_K (Solved: 29, Rating: None, Time: 4.56s)
+[2026-08-14 08:38:49,724] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gagrm4ykwn' (Attempt 2/3)
+[2026-08-14 08:38:49,780] [INFO] [leetcode_tracker]: [INFO] Fetching: 181/273 - Reg: 732225CI054 | Username: suryalic
+[2026-08-14 08:38:49,913] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sudharshan_e-01' (Attempt 1/3)
+[2026-08-14 08:38:50,266] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'shreedharshan_s' (Attempt 3/3)
+[2026-08-14 08:38:50,437] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'riyas18' (Attempt 2/3)
+[2026-08-14 08:38:50,847] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'suryalic' (Attempt 1/3)
+[2026-08-14 08:38:50,850] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gagrm4ykwn' (Attempt 3/3)
+[2026-08-14 08:38:51,491] [INFO] [leetcode_tracker]: [INFO] Success - Shreedharshan_s (Solved: 12, Rating: None, Time: 4.437s)
+[2026-08-14 08:38:51,682] [INFO] [leetcode_tracker]: [INFO] Success - GAgrm4ykwn (Solved: 0, Rating: None, Time: 4.831s)
+[2026-08-14 08:38:51,770] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'suryalic' (Attempt 2/3)
+[2026-08-14 08:38:51,807] [INFO] [leetcode_tracker]: [INFO] Fetching: 183/273 - Reg: 732225CI055 | Username: swedhan_s
+[2026-08-14 08:38:51,974] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'riyas18' (Attempt 3/3)
+[2026-08-14 08:38:51,990] [INFO] [leetcode_tracker]: [INFO] Fetching: 183/273 - Reg: 732225CI056 | Username: Thamaraikannan_mr_2007
+[2026-08-14 08:38:52,178] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sudharshan_e-01' (Attempt 2/3)
+[2026-08-14 08:38:52,795] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'swedhan_s' (Attempt 1/3)
+[2026-08-14 08:38:52,798] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'thamaraikannan_mr_2007' (Attempt 1/3)
+[2026-08-14 08:38:52,997] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'suryalic' (Attempt 3/3)
+[2026-08-14 08:38:53,719] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'swedhan_s' (Attempt 2/3)
+[2026-08-14 08:38:53,721] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sudharshan_e-01' (Attempt 3/3)
+[2026-08-14 08:38:53,722] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'thamaraikannan_mr_2007' (Attempt 2/3)
+[2026-08-14 08:38:53,749] [INFO] [leetcode_tracker]: [INFO] Success - RIYAS18 (Solved: 5, Rating: None, Time: 5.333s)
+[2026-08-14 08:38:54,052] [INFO] [leetcode_tracker]: [INFO] Fetching: 184/273 - Reg: 732225CI057 | Username: ThivyaSruthi_20
+[2026-08-14 08:38:54,262] [INFO] [leetcode_tracker]: [INFO] Success - suryalic (Solved: 9, Rating: None, Time: 4.449s)
+[2026-08-14 08:38:54,574] [INFO] [leetcode_tracker]: [INFO] Success - SUDHARSHAN_E-01 (Solved: 0, Rating: None, Time: 5.847s)
+[2026-08-14 08:38:54,575] [INFO] [leetcode_tracker]: [INFO] Fetching: 186/273 - Reg: 732225CI058 | Username: thiya2026
+[2026-08-14 08:38:54,893] [INFO] [leetcode_tracker]: [INFO] Fetching: 186/273 - Reg: 732225CI059 | Username: None
+[2026-08-14 08:38:54,898] [WARNING] [leetcode_tracker]: [WARN] Failed - 732225CI059 (Invalid or missing profile URL: MISSING LINK)
+[2026-08-14 08:38:54,912] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'thamaraikannan_mr_2007' (Attempt 3/3)
+[2026-08-14 08:38:55,074] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'swedhan_s' (Attempt 3/3)
+[2026-08-14 08:38:55,209] [INFO] [leetcode_tracker]: [INFO] Fetching: 187/273 - Reg: 732225CI060 | Username: Vanitha_07
+[2026-08-14 08:38:55,224] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'thivyasruthi_20' (Attempt 1/3)
+[2026-08-14 08:38:55,650] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'thiya2026' (Attempt 1/3)
+[2026-08-14 08:38:55,832] [INFO] [leetcode_tracker]: [INFO] Success - Thamaraikannan_mr_2007 (Solved: 35, Rating: None, Time: 3.802s)
+[2026-08-14 08:38:56,020] [INFO] [leetcode_tracker]: [INFO] Success - swedhan_s (Solved: 5, Rating: None, Time: 4.198s)
+[2026-08-14 08:38:56,126] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'thivyasruthi_20' (Attempt 2/3)
+[2026-08-14 08:38:56,141] [INFO] [leetcode_tracker]: [INFO] Fetching: 189/273 - Reg: 732225CI061 | Username: yaleneypoofsin
+[2026-08-14 08:38:56,150] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'vanitha_07' (Attempt 1/3)
+[2026-08-14 08:38:56,339] [INFO] [leetcode_tracker]: [INFO] Fetching: 189/273 - Reg: 732225CI062 | Username: Yazhini-0508
+[2026-08-14 08:38:56,462] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'thiya2026' (Attempt 2/3)
+[2026-08-14 08:38:56,896] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'yaleneypoofsin' (Attempt 1/3)
+[2026-08-14 08:38:57,019] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'vanitha_07' (Attempt 2/3)
+[2026-08-14 08:38:57,159] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'yazhini-0508' (Attempt 1/3)
+[2026-08-14 08:38:57,528] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'thivyasruthi_20' (Attempt 3/3)
+[2026-08-14 08:38:57,878] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'thiya2026' (Attempt 3/3)
+[2026-08-14 08:38:58,026] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'yaleneypoofsin' (Attempt 2/3)
+[2026-08-14 08:38:58,155] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'yazhini-0508' (Attempt 2/3)
+[2026-08-14 08:38:58,668] [INFO] [leetcode_tracker]: [INFO] Success - ThivyaSruthi_20 (Solved: 15, Rating: None, Time: 4.584s)
+[2026-08-14 08:38:58,702] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'vanitha_07' (Attempt 3/3)
+[2026-08-14 08:38:58,986] [INFO] [leetcode_tracker]: [INFO] Fetching: 190/273 - Reg: 23CC001 | Username: AathavanThiyakeswaran
+[2026-08-14 08:38:59,400] [INFO] [leetcode_tracker]: [INFO] Success - thiya2026 (Solved: 13, Rating: None, Time: 4.81s)
+[2026-08-14 08:38:59,401] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'yaleneypoofsin' (Attempt 3/3)
+[2026-08-14 08:38:59,420] [INFO] [leetcode_tracker]: [INFO] Success - Vanitha_07 (Solved: 16, Rating: None, Time: 4.2s)
+[2026-08-14 08:38:59,708] [INFO] [leetcode_tracker]: [INFO] Fetching: 192/273 - Reg: 23CC002 | Username: ShtLj6CNJL
+[2026-08-14 08:38:59,723] [INFO] [leetcode_tracker]: [INFO] Fetching: 192/273 - Reg: 23CC003 | Username: aswinkanin
+[2026-08-14 08:38:59,733] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'yazhini-0508' (Attempt 3/3)
+[2026-08-14 08:39:00,069] [INFO] [leetcode_tracker]: [INFO] Success - yaleneypoofsin (Solved: 0, Rating: None, Time: 3.901s)
+[2026-08-14 08:39:00,128] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'aathavanthiyakeswaran' (Attempt 1/3)
+[2026-08-14 08:39:00,373] [INFO] [leetcode_tracker]: [INFO] Fetching: 193/273 - Reg: 23CC005 | Username: Bharath_77
+[2026-08-14 08:39:00,591] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'shtlj6cnjl' (Attempt 1/3)
+[2026-08-14 08:39:00,645] [INFO] [leetcode_tracker]: [INFO] Success - Yazhini-0508 (Solved: 27, Rating: None, Time: 4.292s)
+[2026-08-14 08:39:00,702] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'aswinkanin' (Attempt 1/3)
+[2026-08-14 08:39:00,955] [INFO] [leetcode_tracker]: [INFO] Fetching: 194/273 - Reg: 23CC007 | Username: deepadharshini_10
+[2026-08-14 08:39:01,104] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'bharath_77' (Attempt 1/3)
+[2026-08-14 08:39:01,303] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'aathavanthiyakeswaran' (Attempt 2/3)
+[2026-08-14 08:39:01,809] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'aswinkanin' (Attempt 2/3)
+[2026-08-14 08:39:01,942] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'shtlj6cnjl' (Attempt 2/3)
+[2026-08-14 08:39:02,567] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'deepadharshini_10' (Attempt 1/3)
+[2026-08-14 08:39:02,713] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'bharath_77' (Attempt 2/3)
+[2026-08-14 08:39:03,389] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'deepadharshini_10' (Attempt 2/3)
+[2026-08-14 08:39:03,529] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'shtlj6cnjl' (Attempt 3/3)
+[2026-08-14 08:39:03,572] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'aswinkanin' (Attempt 3/3)
+[2026-08-14 08:39:04,149] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'bharath_77' (Attempt 3/3)
+[2026-08-14 08:39:04,774] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'aathavanthiyakeswaran' (Attempt 3/3)
+[2026-08-14 08:39:05,101] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'deepadharshini_10' (Attempt 3/3)
+[2026-08-14 08:39:05,521] [INFO] [leetcode_tracker]: [INFO] Success - ShtLj6CNJL (Solved: 497, Rating: None, Time: 5.783s)
+[2026-08-14 08:39:05,636] [INFO] [leetcode_tracker]: [INFO] Success - aswinkanin (Solved: 442, Rating: None, Time: 5.85s)
+[2026-08-14 08:39:05,837] [INFO] [leetcode_tracker]: [INFO] Fetching: 196/273 - Reg: 23CC009 | Username: Deepak1524
+[2026-08-14 08:39:05,946] [INFO] [leetcode_tracker]: [INFO] Fetching: 196/273 - Reg: 23CC010 | Username: Deepak2612
+[2026-08-14 08:39:06,326] [INFO] [leetcode_tracker]: [INFO] Success - Bharath_77 (Solved: 588, Rating: None, Time: 5.922s)
+[2026-08-14 08:39:06,642] [INFO] [leetcode_tracker]: [INFO] Fetching: 197/273 - Reg: 23CC013 | Username: Eniyavan_r
+[2026-08-14 08:39:06,947] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'deepak1524' (Attempt 1/3)
+[2026-08-14 08:39:07,404] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'eniyavan_r' (Attempt 1/3)
+[2026-08-14 08:39:07,441] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'deepak2612' (Attempt 1/3)
+[2026-08-14 08:39:07,502] [INFO] [leetcode_tracker]: [INFO] Success - deepadharshini_10 (Solved: 374, Rating: None, Time: 6.533s)
+[2026-08-14 08:39:07,518] [INFO] [leetcode_tracker]: [INFO] Success - AathavanThiyakeswaran (Solved: 366, Rating: None, Time: 8.522s)
+[2026-08-14 08:39:07,820] [INFO] [leetcode_tracker]: [INFO] Fetching: 199/273 - Reg: 23CC017 | Username: Janaranshini_17
+[2026-08-14 08:39:07,829] [INFO] [leetcode_tracker]: [INFO] Fetching: 199/273 - Reg: 23CC020 | Username: kani_shaa
+[2026-08-14 08:39:08,540] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'eniyavan_r' (Attempt 2/3)
+[2026-08-14 08:39:08,541] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'deepak2612' (Attempt 2/3)
+[2026-08-14 08:39:08,712] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'deepak1524' (Attempt 2/3)
+[2026-08-14 08:39:08,803] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kani_shaa' (Attempt 1/3)
+[2026-08-14 08:39:09,016] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'janaranshini_17' (Attempt 1/3)
+[2026-08-14 08:39:09,680] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kani_shaa' (Attempt 2/3)
+[2026-08-14 08:39:09,801] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'deepak1524' (Attempt 3/3)
+[2026-08-14 08:39:09,847] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'janaranshini_17' (Attempt 2/3)
+[2026-08-14 08:39:09,950] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'deepak2612' (Attempt 3/3)
+[2026-08-14 08:39:10,088] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'eniyavan_r' (Attempt 3/3)
+[2026-08-14 08:39:10,816] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kani_shaa' (Attempt 3/3)
+[2026-08-14 08:39:10,989] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'janaranshini_17' (Attempt 3/3)
+[2026-08-14 08:39:11,643] [INFO] [leetcode_tracker]: [INFO] Success - Deepak1524 (Solved: 638, Rating: None, Time: 5.796s)
+[2026-08-14 08:39:11,950] [INFO] [leetcode_tracker]: [INFO] Success - Deepak2612 (Solved: 432, Rating: None, Time: 5.993s)
+[2026-08-14 08:39:11,951] [INFO] [leetcode_tracker]: [INFO] Fetching: 201/273 - Reg: 23CC021 | Username: ka_nizzu29
+[2026-08-14 08:39:12,256] [INFO] [leetcode_tracker]: [INFO] Fetching: 201/273 - Reg: 23CC023 | Username: kavinrajan
+[2026-08-14 08:39:12,298] [INFO] [leetcode_tracker]: [INFO] Success - Eniyavan_r (Solved: 571, Rating: None, Time: 5.64s)
+[2026-08-14 08:39:12,597] [INFO] [leetcode_tracker]: [INFO] Success - Janaranshini_17 (Solved: 537, Rating: None, Time: 4.764s)
+[2026-08-14 08:39:12,615] [INFO] [leetcode_tracker]: [INFO] Fetching: 203/273 - Reg: 23CC025 | Username: Keerthu-2005
+[2026-08-14 08:39:12,772] [INFO] [leetcode_tracker]: [INFO] Success - kani_shaa (Solved: 412, Rating: None, Time: 4.928s)
+[2026-08-14 08:39:12,802] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ka_nizzu29' (Attempt 1/3)
+[2026-08-14 08:39:12,908] [INFO] [leetcode_tracker]: [INFO] Fetching: 204/273 - Reg: 23CC031 | Username: mowna_14
+[2026-08-14 08:39:13,089] [INFO] [leetcode_tracker]: [INFO] Fetching: 204/273 - Reg: 23CC038 | Username: PRAVEEN360
+[2026-08-14 08:39:13,111] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kavinrajan' (Attempt 1/3)
+[2026-08-14 08:39:13,476] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'keerthu-2005' (Attempt 1/3)
+[2026-08-14 08:39:13,872] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ka_nizzu29' (Attempt 2/3)
+[2026-08-14 08:39:13,939] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'mowna_14' (Attempt 1/3)
+[2026-08-14 08:39:13,993] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'praveen360' (Attempt 1/3)
+[2026-08-14 08:39:14,238] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kavinrajan' (Attempt 2/3)
+[2026-08-14 08:39:14,308] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'keerthu-2005' (Attempt 2/3)
+[2026-08-14 08:39:14,918] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'praveen360' (Attempt 2/3)
+[2026-08-14 08:39:14,995] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'mowna_14' (Attempt 2/3)
+[2026-08-14 08:39:15,509] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'keerthu-2005' (Attempt 3/3)
+[2026-08-14 08:39:15,588] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kavinrajan' (Attempt 3/3)
+[2026-08-14 08:39:16,007] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'praveen360' (Attempt 3/3)
+[2026-08-14 08:39:16,425] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ka_nizzu29' (Attempt 3/3)
+[2026-08-14 08:39:16,496] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'mowna_14' (Attempt 3/3)
+[2026-08-14 08:39:17,617] [INFO] [leetcode_tracker]: [INFO] Success - kavinrajan (Solved: 579, Rating: None, Time: 5.351s)
+[2026-08-14 08:39:17,911] [INFO] [leetcode_tracker]: [INFO] Success - Keerthu-2005 (Solved: 588, Rating: None, Time: 5.285s)
+[2026-08-14 08:39:17,932] [INFO] [leetcode_tracker]: [INFO] Fetching: 206/273 - Reg: 23CC039 | Username: pravexn
+[2026-08-14 08:39:18,224] [INFO] [leetcode_tracker]: [INFO] Fetching: 206/273 - Reg: 23CC042 | Username: dhars_02
+[2026-08-14 08:39:18,588] [INFO] [leetcode_tracker]: [INFO] Success - PRAVEEN360 (Solved: 548, Rating: None, Time: 5.489s)
+[2026-08-14 08:39:18,599] [INFO] [leetcode_tracker]: [INFO] Success - mowna_14 (Solved: 489, Rating: None, Time: 5.681s)
+[2026-08-14 08:39:18,673] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'pravexn' (Attempt 1/3)
+[2026-08-14 08:39:18,906] [INFO] [leetcode_tracker]: [INFO] Fetching: 208/273 - Reg: 23CC043 | Username: j123kcmcm
+[2026-08-14 08:39:18,916] [INFO] [leetcode_tracker]: [INFO] Fetching: 208/273 - Reg: 23CC044 | Username: Ramprakash5
+[2026-08-14 08:39:18,977] [INFO] [leetcode_tracker]: [INFO] Success - ka_nizzu29 (Solved: 635, Rating: None, Time: 6.998s)
+[2026-08-14 08:39:19,193] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dhars_02' (Attempt 1/3)
+[2026-08-14 08:39:19,292] [INFO] [leetcode_tracker]: [INFO] Fetching: 209/273 - Reg: 23CC045 | Username: ratheesh1226
+[2026-08-14 08:39:20,003] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dhars_02' (Attempt 2/3)
+[2026-08-14 08:39:20,069] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ramprakash5' (Attempt 1/3)
+[2026-08-14 08:39:20,160] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'pravexn' (Attempt 2/3)
+[2026-08-14 08:39:20,290] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'j123kcmcm' (Attempt 1/3)
+[2026-08-14 08:39:20,295] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ratheesh1226' (Attempt 1/3)
+[2026-08-14 08:39:21,350] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ratheesh1226' (Attempt 2/3)
+[2026-08-14 08:39:21,375] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ramprakash5' (Attempt 2/3)
+[2026-08-14 08:39:21,542] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'j123kcmcm' (Attempt 2/3)
+[2026-08-14 08:39:21,602] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'dhars_02' (Attempt 3/3)
+[2026-08-14 08:39:22,419] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'pravexn' (Attempt 3/3)
+[2026-08-14 08:39:22,501] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ramprakash5' (Attempt 3/3)
+[2026-08-14 08:39:23,048] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'j123kcmcm' (Attempt 3/3)
+[2026-08-14 08:39:23,132] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ratheesh1226' (Attempt 3/3)
+[2026-08-14 08:39:23,185] [INFO] [leetcode_tracker]: [INFO] Success - dhars_02 (Solved: 525, Rating: None, Time: 4.943s)
+[2026-08-14 08:39:23,491] [INFO] [leetcode_tracker]: [INFO] Fetching: 210/273 - Reg: 23CC046 | Username: rithikap13
+[2026-08-14 08:39:24,317] [INFO] [leetcode_tracker]: [INFO] Success - pravexn (Solved: 152, Rating: None, Time: 6.374s)
+[2026-08-14 08:39:24,621] [INFO] [leetcode_tracker]: [INFO] Fetching: 211/273 - Reg: 23CC047 | Username: SARAVANAN_ROLEX
+[2026-08-14 08:39:25,074] [INFO] [leetcode_tracker]: [INFO] Success - Ramprakash5 (Solved: 445, Rating: None, Time: 6.147s)
+[2026-08-14 08:39:25,382] [INFO] [leetcode_tracker]: [INFO] Fetching: 212/273 - Reg: 23CC050 | Username: SRIVIDHYA_25
+[2026-08-14 08:39:27,400] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rithikap13' (Attempt 1/3)
+[2026-08-14 08:39:27,919] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'srividhya_25' (Attempt 1/3)
+[2026-08-14 08:39:27,948] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'saravanan_rolex' (Attempt 1/3)
+[2026-08-14 08:39:28,532] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rithikap13' (Attempt 2/3)
+[2026-08-14 08:39:28,593] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'saravanan_rolex' (Attempt 2/3)
+[2026-08-14 08:39:29,031] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'srividhya_25' (Attempt 2/3)
+[2026-08-14 08:39:29,360] [INFO] [leetcode_tracker]: [INFO] Success - ratheesh1226 (Solved: 452, Rating: None, Time: 10.051s)
+[2026-08-14 08:39:29,385] [INFO] [leetcode_tracker]: [INFO] Success - j123kcmcm (Solved: 372, Rating: None, Time: 10.47s)
+[2026-08-14 08:39:29,669] [INFO] [leetcode_tracker]: [INFO] Fetching: 214/273 - Reg: 23CC051 | Username: Sriram6758
+[2026-08-14 08:39:29,687] [INFO] [leetcode_tracker]: [INFO] Fetching: 214/273 - Reg: 23CC052 | Username: Steffy_15
+[2026-08-14 08:39:29,931] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rithikap13' (Attempt 3/3)
+[2026-08-14 08:39:30,209] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'saravanan_rolex' (Attempt 3/3)
+[2026-08-14 08:39:31,907] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'srividhya_25' (Attempt 3/3)
+[2026-08-14 08:39:33,975] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sriram6758' (Attempt 1/3)
+[2026-08-14 08:39:33,984] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'steffy_15' (Attempt 1/3)
+[2026-08-14 08:39:35,138] [INFO] [leetcode_tracker]: [INFO] Success - rithikap13 (Solved: 363, Rating: None, Time: 11.612s)
+[2026-08-14 08:39:35,445] [INFO] [leetcode_tracker]: [INFO] Fetching: 215/273 - Reg: 23CC053 | Username: 23cc053
+[2026-08-14 08:39:35,950] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sriram6758' (Attempt 2/3)
+[2026-08-14 08:39:35,988] [INFO] [leetcode_tracker]: [INFO] Success - SARAVANAN_ROLEX (Solved: 264, Rating: None, Time: 11.34s)
+[2026-08-14 08:39:36,294] [INFO] [leetcode_tracker]: [INFO] Fetching: 216/273 - Reg: 23CC056 | Username: Vignesh_2639
+[2026-08-14 08:39:36,472] [INFO] [leetcode_tracker]: [INFO] Success - SRIVIDHYA_25 (Solved: 116, Rating: None, Time: 10.981s)
+[2026-08-14 08:39:36,474] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'steffy_15' (Attempt 2/3)
+[2026-08-14 08:39:36,788] [INFO] [leetcode_tracker]: [INFO] Fetching: 217/273 - Reg: 23CC059 | Username: Wasim_M
+[2026-08-14 08:39:36,856] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '23cc053' (Attempt 1/3)
+[2026-08-14 08:39:37,084] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'vignesh_2639' (Attempt 1/3)
+[2026-08-14 08:39:37,441] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sriram6758' (Attempt 3/3)
+[2026-08-14 08:39:37,621] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'wasim_m' (Attempt 1/3)
+[2026-08-14 08:39:37,623] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'steffy_15' (Attempt 3/3)
+[2026-08-14 08:39:37,658] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '23cc053' (Attempt 2/3)
+[2026-08-14 08:39:37,891] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'vignesh_2639' (Attempt 2/3)
+[2026-08-14 08:39:38,670] [INFO] [leetcode_tracker]: [INFO] Success - Sriram6758 (Solved: 402, Rating: None, Time: 8.99s)
+[2026-08-14 08:39:38,792] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '23cc053' (Attempt 3/3)
+[2026-08-14 08:39:38,827] [INFO] [leetcode_tracker]: [INFO] Success - Steffy_15 (Solved: 562, Rating: None, Time: 9.129s)
+[2026-08-14 08:39:38,881] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'wasim_m' (Attempt 2/3)
+[2026-08-14 08:39:38,974] [INFO] [leetcode_tracker]: [INFO] Fetching: 219/273 - Reg: 732224CI001 | Username: None
+[2026-08-14 08:39:38,979] [WARNING] [leetcode_tracker]: [WARN] Failed - 732224CI001 (Invalid or missing profile URL: MISSING LINK)
+[2026-08-14 08:39:39,007] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'vignesh_2639' (Attempt 3/3)
+[2026-08-14 08:39:39,144] [INFO] [leetcode_tracker]: [INFO] Fetching: 220/273 - Reg: 732224CI004 | Username: Abishek0007
+[2026-08-14 08:39:39,289] [INFO] [leetcode_tracker]: [INFO] Fetching: 220/273 - Reg: 732224CI005 | Username: aishueswaran
+[2026-08-14 08:39:39,962] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'abishek0007' (Attempt 1/3)
+[2026-08-14 08:39:40,178] [INFO] [leetcode_tracker]: [INFO] Success - Vignesh_2639 (Solved: 319, Rating: None, Time: 3.849s)
+[2026-08-14 08:39:40,244] [INFO] [leetcode_tracker]: [INFO] Success - 23cc053 (Solved: 428, Rating: None, Time: 4.788s)
+[2026-08-14 08:39:40,494] [INFO] [leetcode_tracker]: [INFO] Fetching: 222/273 - Reg: 732224CI006 | Username: AkkshayaaK
+[2026-08-14 08:39:40,563] [INFO] [leetcode_tracker]: [INFO] Fetching: 222/273 - Reg: 732224CI007 | Username: anu_07
+[2026-08-14 08:39:40,591] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'aishueswaran' (Attempt 1/3)
+[2026-08-14 08:39:40,645] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'wasim_m' (Attempt 3/3)
+[2026-08-14 08:39:41,310] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'aishueswaran' (Attempt 2/3)
+[2026-08-14 08:39:41,328] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'abishek0007' (Attempt 2/3)
+[2026-08-14 08:39:41,436] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'akkshayaak' (Attempt 1/3)
+[2026-08-14 08:39:42,071] [INFO] [leetcode_tracker]: [INFO] Success - Wasim_M (Solved: 578, Rating: None, Time: 5.268s)
+[2026-08-14 08:39:42,223] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'akkshayaak' (Attempt 2/3)
+[2026-08-14 08:39:42,325] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'abishek0007' (Attempt 3/3)
+[2026-08-14 08:39:42,373] [INFO] [leetcode_tracker]: [INFO] Fetching: 223/273 - Reg: 732224CI008 | Username: Spidy_42
+[2026-08-14 08:39:42,481] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'aishueswaran' (Attempt 3/3)
+[2026-08-14 08:39:42,802] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'anu_07' (Attempt 1/3)
+[2026-08-14 08:39:43,196] [INFO] [leetcode_tracker]: [INFO] Success - Abishek0007 (Solved: 47, Rating: None, Time: 4.021s)
+[2026-08-14 08:39:43,225] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'spidy_42' (Attempt 1/3)
+[2026-08-14 08:39:43,513] [INFO] [leetcode_tracker]: [INFO] Fetching: 224/273 - Reg: 732224CI010 | Username: divya_sd
+[2026-08-14 08:39:43,620] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'anu_07' (Attempt 2/3)
+[2026-08-14 08:39:43,969] [INFO] [leetcode_tracker]: [INFO] Success - aishueswaran (Solved: 62, Rating: None, Time: 4.664s)
+[2026-08-14 08:39:44,238] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'spidy_42' (Attempt 2/3)
+[2026-08-14 08:39:44,277] [INFO] [leetcode_tracker]: [INFO] Fetching: 225/273 - Reg: 732224CI011 | Username: prince__11
+[2026-08-14 08:39:44,375] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'divya_sd' (Attempt 1/3)
+[2026-08-14 08:39:44,835] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'akkshayaak' (Attempt 3/3)
+[2026-08-14 08:39:45,123] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'anu_07' (Attempt 3/3)
+[2026-08-14 08:39:45,292] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'spidy_42' (Attempt 3/3)
+[2026-08-14 08:39:45,366] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'prince__11' (Attempt 1/3)
+[2026-08-14 08:39:45,650] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'divya_sd' (Attempt 2/3)
+[2026-08-14 08:39:46,233] [INFO] [leetcode_tracker]: [INFO] Success - anu_07 (Solved: 71, Rating: None, Time: 5.642s)
+[2026-08-14 08:39:46,233] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'prince__11' (Attempt 2/3)
+[2026-08-14 08:39:46,272] [INFO] [leetcode_tracker]: [INFO] Success - AkkshayaaK (Solved: 62, Rating: None, Time: 5.767s)
+[2026-08-14 08:39:46,544] [INFO] [leetcode_tracker]: [INFO] Fetching: 227/273 - Reg: 732224CI012 | Username: Guhan_12_
+[2026-08-14 08:39:46,573] [INFO] [leetcode_tracker]: [INFO] Fetching: 227/273 - Reg: 732224CI013 | Username: Harish_48
+[2026-08-14 08:39:47,007] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'divya_sd' (Attempt 3/3)
+[2026-08-14 08:39:47,307] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'prince__11' (Attempt 3/3)
+[2026-08-14 08:39:47,386] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'harish_48' (Attempt 1/3)
+[2026-08-14 08:39:47,794] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'guhan_12_' (Attempt 1/3)
+[2026-08-14 08:39:48,061] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'harish_48' (Attempt 2/3)
+[2026-08-14 08:39:48,383] [INFO] [leetcode_tracker]: [INFO] Success - divya_sd (Solved: 59, Rating: None, Time: 4.855s)
+[2026-08-14 08:39:48,610] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'guhan_12_' (Attempt 2/3)
+[2026-08-14 08:39:48,693] [INFO] [leetcode_tracker]: [INFO] Fetching: 228/273 - Reg: 732224CI014 | Username: janani_08_
+[2026-08-14 08:39:48,933] [INFO] [leetcode_tracker]: [INFO] Success - Spidy_42 (Solved: 705, Rating: None, Time: 6.527s)
+[2026-08-14 08:39:49,052] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'harish_48' (Attempt 3/3)
+[2026-08-14 08:39:49,236] [INFO] [leetcode_tracker]: [INFO] Fetching: 229/273 - Reg: 732224CI015 | Username: jesra005
+[2026-08-14 08:39:49,332] [INFO] [leetcode_tracker]: [INFO] Success - prince__11 (Solved: 396, Rating: None, Time: 5.043s)
+[2026-08-14 08:39:49,441] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'janani_08_' (Attempt 1/3)
+[2026-08-14 08:39:49,611] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'guhan_12_' (Attempt 3/3)
+[2026-08-14 08:39:49,639] [INFO] [leetcode_tracker]: [INFO] Fetching: 230/273 - Reg: 732224CI016 | Username: kabilesh_7
+[2026-08-14 08:39:49,970] [INFO] [leetcode_tracker]: [INFO] Success - Harish_48 (Solved: 102, Rating: None, Time: 3.388s)
+[2026-08-14 08:39:50,051] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'jesra005' (Attempt 1/3)
+[2026-08-14 08:39:50,130] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'janani_08_' (Attempt 2/3)
+[2026-08-14 08:39:50,278] [INFO] [leetcode_tracker]: [INFO] Fetching: 231/273 - Reg: 732224CI017 | Username: KANNIGA_SB
+[2026-08-14 08:39:50,706] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kabilesh_7' (Attempt 1/3)
+[2026-08-14 08:39:50,956] [INFO] [leetcode_tracker]: [INFO] Success - Guhan_12_ (Solved: 27, Rating: None, Time: 4.397s)
+[2026-08-14 08:39:51,079] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'janani_08_' (Attempt 3/3)
+[2026-08-14 08:39:51,245] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'jesra005' (Attempt 2/3)
+[2026-08-14 08:39:51,270] [INFO] [leetcode_tracker]: [INFO] Fetching: 232/273 - Reg: 732224CI018 | Username: kartheeshwar
+[2026-08-14 08:39:51,391] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kanniga_sb' (Attempt 1/3)
+[2026-08-14 08:39:51,840] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kabilesh_7' (Attempt 2/3)
+[2026-08-14 08:39:52,236] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kanniga_sb' (Attempt 2/3)
+[2026-08-14 08:39:52,301] [INFO] [leetcode_tracker]: [INFO] Success - janani_08_ (Solved: 61, Rating: None, Time: 3.597s)
+[2026-08-14 08:39:52,519] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'jesra005' (Attempt 3/3)
+[2026-08-14 08:39:52,606] [INFO] [leetcode_tracker]: [INFO] Fetching: 233/273 - Reg: 732224CI019 | Username: kavin629
+[2026-08-14 08:39:52,830] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kartheeshwar' (Attempt 1/3)
+[2026-08-14 08:39:52,865] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kabilesh_7' (Attempt 3/3)
+[2026-08-14 08:39:54,001] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kartheeshwar' (Attempt 2/3)
+[2026-08-14 08:39:54,002] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kavin629' (Attempt 1/3)
+[2026-08-14 08:39:54,003] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kanniga_sb' (Attempt 3/3)
+[2026-08-14 08:39:54,472] [INFO] [leetcode_tracker]: [INFO] Success - kabilesh_7 (Solved: 173, Rating: None, Time: 4.824s)
+[2026-08-14 08:39:54,778] [INFO] [leetcode_tracker]: [INFO] Fetching: 234/273 - Reg: 732224CI021 | Username: Lash1686
+[2026-08-14 08:39:54,820] [INFO] [leetcode_tracker]: [INFO] Success - jesra005 (Solved: 220, Rating: None, Time: 5.574s)
+[2026-08-14 08:39:54,990] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kartheeshwar' (Attempt 3/3)
+[2026-08-14 08:39:55,081] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kavin629' (Attempt 2/3)
+[2026-08-14 08:39:55,127] [INFO] [leetcode_tracker]: [INFO] Fetching: 235/273 - Reg: 732224CI022 | Username: Logesh_1204_
+[2026-08-14 08:39:55,271] [INFO] [leetcode_tracker]: [INFO] Success - KANNIGA_SB (Solved: 39, Rating: None, Time: 4.983s)
+[2026-08-14 08:39:55,572] [INFO] [leetcode_tracker]: [INFO] Fetching: 236/273 - Reg: 732224CI023 | Username: _madan_km_
+[2026-08-14 08:39:55,800] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'lash1686' (Attempt 1/3)
+[2026-08-14 08:39:55,927] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'logesh_1204_' (Attempt 1/3)
+[2026-08-14 08:39:56,075] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'kavin629' (Attempt 3/3)
+[2026-08-14 08:39:56,430] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '_madan_km_' (Attempt 1/3)
+[2026-08-14 08:39:56,544] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'lash1686' (Attempt 2/3)
+[2026-08-14 08:39:56,889] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'logesh_1204_' (Attempt 2/3)
+[2026-08-14 08:39:57,073] [INFO] [leetcode_tracker]: [INFO] Success - kartheeshwar (Solved: 64, Rating: None, Time: 5.79s)
+[2026-08-14 08:39:57,250] [INFO] [leetcode_tracker]: [INFO] Success - kavin629 (Solved: 26, Rating: None, Time: 4.634s)
+[2026-08-14 08:39:57,374] [INFO] [leetcode_tracker]: [INFO] Fetching: 238/273 - Reg: 732224CI024 | Username: madhan_11_
+[2026-08-14 08:39:57,510] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'lash1686' (Attempt 3/3)
+[2026-08-14 08:39:57,560] [INFO] [leetcode_tracker]: [INFO] Fetching: 238/273 - Reg: 732224CI025 | Username: madhes_187142_
+[2026-08-14 08:39:57,781] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '_madan_km_' (Attempt 2/3)
+[2026-08-14 08:39:58,233] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'logesh_1204_' (Attempt 3/3)
+[2026-08-14 08:39:58,466] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'madhan_11_' (Attempt 1/3)
+[2026-08-14 08:39:58,591] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'madhes_187142_' (Attempt 1/3)
+[2026-08-14 08:39:58,771] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '_madan_km_' (Attempt 3/3)
+[2026-08-14 08:39:59,342] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'madhan_11_' (Attempt 2/3)
+[2026-08-14 08:39:59,594] [INFO] [leetcode_tracker]: [INFO] Success - Lash1686 (Solved: 321, Rating: None, Time: 4.804s)
+[2026-08-14 08:39:59,875] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'madhes_187142_' (Attempt 2/3)
+[2026-08-14 08:39:59,906] [INFO] [leetcode_tracker]: [INFO] Fetching: 239/273 - Reg: 732224CI026 | Username: MeenaElangovan
+[2026-08-14 08:40:00,169] [INFO] [leetcode_tracker]: [INFO] Success - Logesh_1204_ (Solved: 84, Rating: None, Time: 5.032s)
+[2026-08-14 08:40:00,403] [INFO] [leetcode_tracker]: [INFO] Success - _madan_km_ (Solved: 76, Rating: None, Time: 4.819s)
+[2026-08-14 08:40:00,477] [INFO] [leetcode_tracker]: [INFO] Fetching: 241/273 - Reg: 732224CI028 | Username: None
+[2026-08-14 08:40:00,482] [WARNING] [leetcode_tracker]: [WARN] Failed - 732224CI028 (Invalid or missing profile URL: MISSING LINK)
+[2026-08-14 08:40:00,578] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'madhan_11_' (Attempt 3/3)
+[2026-08-14 08:40:00,708] [INFO] [leetcode_tracker]: [INFO] Fetching: 242/273 - Reg: 732224CI029 | Username: Mythreyan_64
+[2026-08-14 08:40:00,792] [INFO] [leetcode_tracker]: [INFO] Fetching: 242/273 - Reg: 732224CI030 | Username: GNandhini_09
+[2026-08-14 08:40:00,853] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'madhes_187142_' (Attempt 3/3)
+[2026-08-14 08:40:01,335] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'meenaelangovan' (Attempt 1/3)
+[2026-08-14 08:40:01,651] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gnandhini_09' (Attempt 1/3)
+[2026-08-14 08:40:02,115] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'meenaelangovan' (Attempt 2/3)
+[2026-08-14 08:40:02,191] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'mythreyan_64' (Attempt 1/3)
+[2026-08-14 08:40:02,258] [INFO] [leetcode_tracker]: [INFO] Success - madhan_11_ (Solved: 99, Rating: None, Time: 4.851s)
+[2026-08-14 08:40:02,578] [INFO] [leetcode_tracker]: [INFO] Fetching: 243/273 - Reg: 732224CI031 | Username: NavanithSenthil
+[2026-08-14 08:40:02,591] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gnandhini_09' (Attempt 2/3)
+[2026-08-14 08:40:03,029] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'mythreyan_64' (Attempt 2/3)
+[2026-08-14 08:40:03,091] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'meenaelangovan' (Attempt 3/3)
+[2026-08-14 08:40:03,575] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'navanithsenthil' (Attempt 1/3)
+[2026-08-14 08:40:03,822] [INFO] [leetcode_tracker]: [INFO] Success - madhes_187142_ (Solved: 311, Rating: None, Time: 6.251s)
+[2026-08-14 08:40:03,865] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'gnandhini_09' (Attempt 3/3)
+[2026-08-14 08:40:04,027] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'mythreyan_64' (Attempt 3/3)
+[2026-08-14 08:40:04,127] [INFO] [leetcode_tracker]: [INFO] Fetching: 244/273 - Reg: 732224CI032 | Username: naveenkumar1713
+[2026-08-14 08:40:05,071] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'naveenkumar1713' (Attempt 1/3)
+[2026-08-14 08:40:05,121] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'navanithsenthil' (Attempt 2/3)
+[2026-08-14 08:40:05,261] [INFO] [leetcode_tracker]: [INFO] Success - MeenaElangovan (Solved: 30, Rating: None, Time: 5.344s)
+[2026-08-14 08:40:05,439] [INFO] [leetcode_tracker]: [INFO] Success - GNandhini_09 (Solved: 28, Rating: None, Time: 4.639s)
+[2026-08-14 08:40:05,576] [INFO] [leetcode_tracker]: [INFO] Fetching: 246/273 - Reg: 732224CI033 | Username: naveen2501
+[2026-08-14 08:40:05,754] [INFO] [leetcode_tracker]: [INFO] Fetching: 246/273 - Reg: 732224CI034 | Username: Nisha_Sivakumar
+[2026-08-14 08:40:07,796] [INFO] [leetcode_tracker]: [INFO] Success - Mythreyan_64 (Solved: 34, Rating: None, Time: 7.0s)
+[2026-08-14 08:40:07,888] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'navanithsenthil' (Attempt 3/3)
+[2026-08-14 08:40:08,007] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'naveenkumar1713' (Attempt 2/3)
+[2026-08-14 08:40:08,108] [INFO] [leetcode_tracker]: [INFO] Fetching: 247/273 - Reg: 732224CI035 | Username: sivanishanth2006
+[2026-08-14 08:40:11,805] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'nisha_sivakumar' (Attempt 1/3)
+[2026-08-14 08:40:11,806] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'naveen2501' (Attempt 1/3)
+[2026-08-14 08:40:12,923] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'naveenkumar1713' (Attempt 3/3)
+[2026-08-14 08:40:12,969] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sivanishanth2006' (Attempt 1/3)
+[2026-08-14 08:40:13,074] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'nisha_sivakumar' (Attempt 2/3)
+[2026-08-14 08:40:13,382] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'naveen2501' (Attempt 2/3)
+[2026-08-14 08:40:13,977] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sivanishanth2006' (Attempt 2/3)
+[2026-08-14 08:40:14,241] [INFO] [leetcode_tracker]: [INFO] Success - naveenkumar1713 (Solved: 119, Rating: None, Time: 10.096s)
+[2026-08-14 08:40:14,446] [INFO] [leetcode_tracker]: [INFO] Success - NavanithSenthil (Solved: 330, Rating: None, Time: 11.858s)
+[2026-08-14 08:40:14,455] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'naveen2501' (Attempt 3/3)
+[2026-08-14 08:40:14,510] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'nisha_sivakumar' (Attempt 3/3)
+[2026-08-14 08:40:14,543] [INFO] [leetcode_tracker]: [INFO] Fetching: 249/273 - Reg: 732224CI036 | Username: pavithraa_28
+[2026-08-14 08:40:14,754] [INFO] [leetcode_tracker]: [INFO] Fetching: 249/273 - Reg: 732224CI037 | Username: PrajinSankar
+[2026-08-14 08:40:16,112] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sivanishanth2006' (Attempt 3/3)
+[2026-08-14 08:40:16,507] [INFO] [leetcode_tracker]: [INFO] Success - naveen2501 (Solved: 173, Rating: None, Time: 10.918s)
+[2026-08-14 08:40:16,811] [INFO] [leetcode_tracker]: [INFO] Fetching: 250/273 - Reg: 732224CI038 | Username: praveen__13
+[2026-08-14 08:40:17,533] [INFO] [leetcode_tracker]: [INFO] Success - Nisha_Sivakumar (Solved: 118, Rating: None, Time: 11.767s)
+[2026-08-14 08:40:17,657] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'pavithraa_28' (Attempt 1/3)
+[2026-08-14 08:40:17,844] [INFO] [leetcode_tracker]: [INFO] Fetching: 251/273 - Reg: 732224CI039 | Username: Prem_kumar_karuna
+[2026-08-14 08:40:19,199] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'prajinsankar' (Attempt 1/3)
+[2026-08-14 08:40:23,043] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'prem_kumar_karuna' (Attempt 1/3)
+[2026-08-14 08:40:24,061] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/sivanishanth2006) note for 'sivanishanth2006': 
+[2026-08-14 08:40:27,437] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'pavithraa_28' (Attempt 2/3)
+[2026-08-14 08:40:28,022] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/userProfile/sivanishanth2006) note for 'sivanishanth2006': 
+[2026-08-14 08:40:28,024] [WARNING] [leetcode_tracker]: Connection issue for 'prem_kumar_karuna' (Attempt 2/3): Network connection drop (ConnectError)
+[2026-08-14 08:40:29,222] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'praveen__13' (Attempt 1/3)
+[2026-08-14 08:40:29,353] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'prajinsankar' (Attempt 2/3)
+[2026-08-14 08:40:33,961] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'pavithraa_28' (Attempt 3/3)
+[2026-08-14 08:40:34,562] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'praveen__13' (Attempt 2/3)
+[2026-08-14 08:40:35,426] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'prajinsankar' (Attempt 3/3)
+[2026-08-14 08:40:39,965] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/pavithraa_28) note for 'pavithraa_28': 
+[2026-08-14 08:40:40,260] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/sivanishanth2006/solved) note for 'sivanishanth2006': 
+[2026-08-14 08:40:40,266] [WARNING] [leetcode_tracker]: [WARN] Failed - sivanishanth2006 (Profile load failed: HTTP 400 response from LeetCode)
+[2026-08-14 08:40:40,578] [INFO] [leetcode_tracker]: [INFO] Fetching: 252/273 - Reg: 732224CI040 | Username: Raghavan_0116_
+[2026-08-14 08:40:41,641] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'praveen__13' (Attempt 3/3)
+[2026-08-14 08:40:41,671] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'prem_kumar_karuna' (Attempt 3/3)
+[2026-08-14 08:40:45,601] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'raghavan_0116_' (Attempt 1/3)
+[2026-08-14 08:40:45,979] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/prajinsankar) note for 'prajinsankar': 
+[2026-08-14 08:40:46,109] [INFO] [leetcode_tracker]: Fallback API (https://alfa-leetcode-api.onrender.com/userProfile/pavithraa_28) note for 'pavithraa_28': 
+[2026-08-14 08:40:51,270] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'raghavan_0116_' (Attempt 2/3)
+[2026-08-14 08:40:51,299] [INFO] [leetcode_tracker]: [INFO] Success - PrajinSankar (Solved: 95, Rating: None, Time: 36.517s)
+[2026-08-14 08:40:51,496] [INFO] [leetcode_tracker]: [INFO] Success - praveen__13 (Solved: 95, Rating: None, Time: 34.664s)
+[2026-08-14 08:40:51,608] [INFO] [leetcode_tracker]: [INFO] Fetching: 254/273 - Reg: 732224CI041 | Username: ragul_006
+[2026-08-14 08:40:51,719] [INFO] [leetcode_tracker]: [INFO] Success - pavithraa_28 (Solved: 110, Rating: None, Time: 37.148s)
+[2026-08-14 08:40:51,813] [INFO] [leetcode_tracker]: [INFO] Fetching: 255/273 - Reg: 732224CI042 | Username: None
+[2026-08-14 08:40:51,823] [WARNING] [leetcode_tracker]: [WARN] Failed - 732224CI042 (Invalid or missing profile URL: MISSING LINK)
+[2026-08-14 08:40:52,028] [INFO] [leetcode_tracker]: [INFO] Fetching: 256/273 - Reg: 732224CI043 | Username: ranjith_2006
+[2026-08-14 08:40:52,139] [INFO] [leetcode_tracker]: [INFO] Fetching: 256/273 - Reg: 732224CI044 | Username: RithanyaSivagami
+[2026-08-14 08:40:52,280] [INFO] [leetcode_tracker]: [INFO] Success - Prem_kumar_karuna (Solved: 70, Rating: None, Time: 34.405s)
+[2026-08-14 08:40:52,323] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'raghavan_0116_' (Attempt 3/3)
+[2026-08-14 08:40:52,473] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ragul_006' (Attempt 1/3)
+[2026-08-14 08:40:52,595] [INFO] [leetcode_tracker]: [INFO] Fetching: 257/273 - Reg: 732224CI045 | Username: Rohith_2006_S
+[2026-08-14 08:40:53,316] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ranjith_2006' (Attempt 1/3)
+[2026-08-14 08:40:53,656] [INFO] [leetcode_tracker]: [INFO] Success - Raghavan_0116_ (Solved: 11, Rating: None, Time: 13.047s)
+[2026-08-14 08:40:53,872] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rithanyasivagami' (Attempt 1/3)
+[2026-08-14 08:40:53,962] [INFO] [leetcode_tracker]: [INFO] Fetching: 258/273 - Reg: 732224CI046 | Username: Rojasri_007_
+[2026-08-14 08:40:54,229] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ragul_006' (Attempt 2/3)
+[2026-08-14 08:40:54,250] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rohith_2006_s' (Attempt 1/3)
+[2026-08-14 08:40:54,251] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ranjith_2006' (Attempt 2/3)
+[2026-08-14 08:40:54,803] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rithanyasivagami' (Attempt 2/3)
+[2026-08-14 08:40:55,598] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rohith_2006_s' (Attempt 2/3)
+[2026-08-14 08:40:55,744] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ranjith_2006' (Attempt 3/3)
+[2026-08-14 08:40:55,939] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rojasri_007_' (Attempt 1/3)
+[2026-08-14 08:40:56,110] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'ragul_006' (Attempt 3/3)
+[2026-08-14 08:40:57,021] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rithanyasivagami' (Attempt 3/3)
+[2026-08-14 08:40:58,534] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rojasri_007_' (Attempt 2/3)
+[2026-08-14 08:40:59,254] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rohith_2006_s' (Attempt 3/3)
+[2026-08-14 08:40:59,462] [INFO] [leetcode_tracker]: [INFO] Success - ranjith_2006 (Solved: 23, Rating: None, Time: 7.405s)
+[2026-08-14 08:40:59,775] [INFO] [leetcode_tracker]: [INFO] Fetching: 259/273 - Reg: 732224CI047 | Username: Rupesh_08nair_20
+[2026-08-14 08:40:59,827] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rojasri_007_' (Attempt 3/3)
+[2026-08-14 08:41:00,007] [INFO] [leetcode_tracker]: [INFO] Success - ragul_006 (Solved: 42, Rating: None, Time: 8.38s)
+[2026-08-14 08:41:00,324] [INFO] [leetcode_tracker]: [INFO] Fetching: 260/273 - Reg: 732224CI048 | Username: SaiSiddhardh_007
+[2026-08-14 08:41:00,946] [INFO] [leetcode_tracker]: [INFO] Success - Rohith_2006_S (Solved: 59, Rating: None, Time: 8.315s)
+[2026-08-14 08:41:01,261] [INFO] [leetcode_tracker]: [INFO] Fetching: 261/273 - Reg: 732224CI049 | Username: sanjay_gireesh
+[2026-08-14 08:41:01,274] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rupesh_08nair_20' (Attempt 1/3)
+[2026-08-14 08:41:01,278] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'saisiddhardh_007' (Attempt 1/3)
+[2026-08-14 08:41:01,458] [INFO] [leetcode_tracker]: [INFO] Success - Rojasri_007_ (Solved: 85, Rating: None, Time: 7.481s)
+[2026-08-14 08:41:01,760] [INFO] [leetcode_tracker]: [INFO] Fetching: 262/273 - Reg: 732224CI050 | Username: iiX42fQP6I
+[2026-08-14 08:41:01,983] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'rupesh_08nair_20' (Attempt 2/3)
+[2026-08-14 08:41:02,165] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sanjay_gireesh' (Attempt 1/3)
+[2026-08-14 08:41:02,343] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'saisiddhardh_007' (Attempt 2/3)
+[2026-08-14 08:41:03,343] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sanjay_gireesh' (Attempt 2/3)
+[2026-08-14 08:41:03,543] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'iix42fqp6i' (Attempt 1/3)
+[2026-08-14 08:41:04,287] [INFO] [leetcode_tracker]: [INFO] Success - RithanyaSivagami (Solved: 687, Rating: None, Time: 12.135s)
+[2026-08-14 08:41:04,592] [INFO] [leetcode_tracker]: [INFO] Fetching: 263/273 - Reg: 732224CI051 | Username: siddaesh_siddu
+[2026-08-14 08:41:09,968] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'siddaesh_siddu' (Attempt 1/3)
+[2026-08-14 08:41:15,561] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'siddaesh_siddu' (Attempt 2/3)
+[2026-08-14 08:41:17,610] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'rupesh_08nair_20' (Attempt 3/3)
+[2026-08-14 08:41:17,973] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'saisiddhardh_007' (Attempt 3/3)
+[2026-08-14 08:41:18,865] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'iix42fqp6i' (Attempt 2/3)
+[2026-08-14 08:41:18,960] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'sanjay_gireesh' (Attempt 3/3)
+[2026-08-14 08:41:21,452] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'siddaesh_siddu' (Attempt 3/3)
+[2026-08-14 08:41:24,080] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'iix42fqp6i' (Attempt 3/3)
+[2026-08-14 08:41:24,512] [INFO] [leetcode_tracker]: [INFO] Success - Rupesh_08nair_20 (Solved: 145, Rating: None, Time: 24.723s)
+[2026-08-14 08:41:24,585] [INFO] [leetcode_tracker]: [INFO] Success - sanjay_gireesh (Solved: 116, Rating: None, Time: 23.311s)
+[2026-08-14 08:41:24,637] [INFO] [leetcode_tracker]: [INFO] Success - SaiSiddhardh_007 (Solved: 79, Rating: None, Time: 24.297s)
+[2026-08-14 08:41:24,824] [INFO] [leetcode_tracker]: [INFO] Fetching: 266/273 - Reg: 732224CI052 | Username: sudharsanbalsubramaniyam
+[2026-08-14 08:41:24,895] [INFO] [leetcode_tracker]: [INFO] Fetching: 266/273 - Reg: 732224CI053 | Username: _sudharshan_J
+[2026-08-14 08:41:24,941] [INFO] [leetcode_tracker]: [INFO] Fetching: 266/273 - Reg: 732224CI054 | Username: susidharan_21
+[2026-08-14 08:41:24,999] [INFO] [leetcode_tracker]: [INFO] Success - siddaesh_siddu (Solved: 94, Rating: None, Time: 20.396s)
+[2026-08-14 08:41:25,306] [INFO] [leetcode_tracker]: [INFO] Fetching: 267/273 - Reg: 732224CI055 | Username: vel_muruga_
+[2026-08-14 08:41:25,366] [INFO] [leetcode_tracker]: [INFO] Success - iiX42fQP6I (Solved: 274, Rating: None, Time: 23.593s)
+[2026-08-14 08:41:25,641] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sudharsanbalsubramaniyam' (Attempt 1/3)
+[2026-08-14 08:41:25,674] [INFO] [leetcode_tracker]: [INFO] Fetching: 268/273 - Reg: 732224CI056 | Username: vijayprabhu56
+[2026-08-14 08:41:25,774] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'susidharan_21' (Attempt 1/3)
+[2026-08-14 08:41:25,859] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '_sudharshan_j' (Attempt 1/3)
+[2026-08-14 08:41:26,081] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'vel_muruga_' (Attempt 1/3)
+[2026-08-14 08:41:26,497] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sudharsanbalsubramaniyam' (Attempt 2/3)
+[2026-08-14 08:41:26,554] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'susidharan_21' (Attempt 2/3)
+[2026-08-14 08:41:26,768] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '_sudharshan_j' (Attempt 2/3)
+[2026-08-14 08:41:27,071] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'vijayprabhu56' (Attempt 1/3)
+[2026-08-14 08:41:27,378] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'vel_muruga_' (Attempt 2/3)
+[2026-08-14 08:41:27,569] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'susidharan_21' (Attempt 3/3)
+[2026-08-14 08:41:27,799] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user '_sudharshan_j' (Attempt 3/3)
+[2026-08-14 08:41:28,176] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sudharsanbalsubramaniyam' (Attempt 3/3)
+[2026-08-14 08:41:28,217] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'vijayprabhu56' (Attempt 2/3)
+[2026-08-14 08:41:28,890] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'vel_muruga_' (Attempt 3/3)
+[2026-08-14 08:41:28,962] [INFO] [leetcode_tracker]: [INFO] Success - susidharan_21 (Solved: 150, Rating: None, Time: 4.007s)
+[2026-08-14 08:41:29,167] [INFO] [leetcode_tracker]: [INFO] Success - _sudharshan_J (Solved: 101, Rating: None, Time: 4.259s)
+[2026-08-14 08:41:29,278] [INFO] [leetcode_tracker]: [INFO] Fetching: 270/273 - Reg: 732224CIR01 | Username: sowmiya4306
+[2026-08-14 08:41:29,401] [INFO] [leetcode_tracker]: [INFO] Success - sudharsanbalsubramaniyam (Solved: 94, Rating: None, Time: 4.567s)
+[2026-08-14 08:41:29,457] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'vijayprabhu56' (Attempt 3/3)
+[2026-08-14 08:41:30,166] [INFO] [leetcode_tracker]: [INFO] Success - vel_muruga_ (Solved: 89, Rating: None, Time: 4.828s)
+[2026-08-14 08:41:36,008] [INFO] [leetcode_tracker]: Fallback API (https://leetcode-api-faisalshohag.vercel.app/vijayprabhu56) note for 'vijayprabhu56': 
+[2026-08-14 08:41:40,625] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sowmiya4306' (Attempt 1/3)
+[2026-08-14 08:41:41,650] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sowmiya4306' (Attempt 2/3)
+[2026-08-14 08:41:42,187] [INFO] [leetcode_tracker]: [INFO] Success - vijayprabhu56 (Solved: 34, Rating: None, Time: 16.485s)
+[2026-08-14 08:41:42,878] [WARNING] [leetcode_tracker]: LeetCode returned HTTP 400 for user 'sowmiya4306' (Attempt 3/3)
+[2026-08-14 08:41:44,083] [INFO] [leetcode_tracker]: [INFO] Success - sowmiya4306 (Solved: 71, Rating: None, Time: 14.77s)
+[2026-08-14 08:41:44,399] [INFO] [leetcode_tracker]: [INFO] Recalculating rankings and badges...
+[2026-08-14 08:41:44,400] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-14 08:41:44,725] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-14 08:41:44,904] [INFO] [leetcode_tracker]: [INFO] Sync completed! Total: 273, Success: 219, Failed: 54
+[2026-08-14 08:41:46,913] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-14 08:41:46,914] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-14 08:41:46,962] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-14 08:41:46,963] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-14 08:41:46,964] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-14 08:41:47,115] [INFO] [leetcode_tracker]: Checking WeeklySession ID 16 (WEEK-2026-08-09) status: 'FINALIZED' at IST 08:41
+[2026-08-14 08:41:47,115] [INFO] [leetcode_tracker]: Session WEEK-2026-08-09 is locked (FINALIZED). No recovery action needed.

@@ -92,20 +92,25 @@ export const DataQualityPage: React.FC = () => {
           <p className="text-[11px] text-gray-500 font-bold">Action Required</p>
         </div>
 
-        <div className="p-6 rounded-3xl bg-gradient-to-br from-rose-500/10 via-rose-500/5 to-transparent border border-rose-500/20 shadow-xl text-center space-y-1">
-          <p className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400 tracking-wider">Not Found / Network Errors</p>
-          <p className="text-3xl font-black text-rose-700 dark:text-rose-300">{(data?.profile_not_found || 0) + (data?.data_unavailable || 0)}</p>
-          <p className="text-[11px] text-gray-500 font-bold">Retry Sweep Scheduled</p>
+        <div className="p-6 rounded-3xl bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent border border-blue-500/20 shadow-xl text-center space-y-1">
+          <p className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider">Network Anomalies</p>
+          <p className="text-3xl font-black text-blue-700 dark:text-blue-300">{data?.network_errors || 0}</p>
+          <p className="text-[11px] text-gray-500 font-bold">Temporary / Self-Healing</p>
         </div>
       </div>
 
       {/* Profile Attention & Quality Issues Board */}
       <div className="border border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden shadow-xl bg-white dark:bg-navy-900 p-6 space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <h3 className="text-sm font-black uppercase text-gray-900 dark:text-white flex items-center space-x-2">
             <AlertCircle className="w-4 h-4 text-amber-500" />
-            <span>Profile Attention & Data Quality Issues List ({issuesList.length} Flagged Entries)</span>
+            <span>Profile Attention & Data Quality Issues List ({issuesList.length} Action Items)</span>
           </h3>
+          {data?.source_status === 'UNAVAILABLE' && (
+            <span className="px-3 py-1 rounded-full text-xs font-black bg-rose-500/20 text-rose-600 border border-rose-500/30 animate-pulse">
+              🔴 LEETCODE SOURCE UNAVAILABLE
+            </span>
+          )}
         </div>
 
         {issuesList.length > 0 ? (
@@ -117,7 +122,7 @@ export const DataQualityPage: React.FC = () => {
                   <th className="px-4 py-3">Student Name</th>
                   <th className="px-4 py-3 text-center">Dept</th>
                   <th className="px-4 py-3">Issue Flag</th>
-                  <th className="px-4 py-3 text-right">Action</th>
+                  <th className="px-4 py-3 text-right">Action Required</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -127,12 +132,16 @@ export const DataQualityPage: React.FC = () => {
                     <td className="px-4 py-2.5 font-semibold text-gray-800 dark:text-gray-200">{item.name}</td>
                     <td className="px-4 py-2.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{item.dept}</td>
                     <td className="px-4 py-2.5">
-                      <span className="px-3 py-1 rounded-full font-black text-[10px] bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                      <span className={`px-3 py-1 rounded-full font-black text-[10px] ${
+                        item.status === 'MISSING_USERNAME' || item.status === 'INVALID_PROFILE_URL'
+                          ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                          : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                      }`}>
                         {item.issue}
                       </span>
                     </td>
-                    <td className="px-4 py-2.5 text-right font-mono text-gray-400">
-                      Verify LeetCode URL
+                    <td className="px-4 py-2.5 text-right font-bold text-gray-700 dark:text-gray-300">
+                      {item.action_required || (item.status === 'MISSING_USERNAME' || item.status === 'INVALID_PROFILE_URL' ? 'Verify LeetCode URL' : 'Audit Profile')}
                     </td>
                   </tr>
                 ))}
