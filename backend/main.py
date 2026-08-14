@@ -159,16 +159,21 @@ def on_startup():
                 db_init.commit()
                 logger.info(f"[STARTUP_RECONCILE] Reconciled admin user '{admin_username}' password hash.")
 
+        db_init = SessionLocal()
+        student_cnt = db_init.query(Student).count()
+        verified_stats_cnt = db_init.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.total_solved != None).count()
         db_init.close()
 
         if student_cnt == 0:
-            logger.info("Empty database detected. Seeding initial student roster & profile stats...")
+            logger.info("Empty database detected. Seeding initial student roster...")
             try:
                 seed_database()
                 logger.info("Database seeding completed successfully for student roster.")
             except Exception as _seed_err:
                 logger.error(f"Error seeding database: {_seed_err}")
 
+        if verified_stats_cnt == 0:
+            logger.info("Unseeded or pending profile stats detected. Initializing student profile statistics roster...")
             try:
                 from backend.assets.reseed_all_stats import reseed_all_student_stats
                 reseed_all_student_stats()
@@ -176,6 +181,7 @@ def on_startup():
                 logger.warning(f"Reseed all stats note: {_reseed_err}")
     except Exception as e:
         logger.warning(f"Database seed/reseed skipped or noted: {e}")
+
 
 
 
