@@ -170,14 +170,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     }
   };
 
+  const DEFAULT_DEPARTMENTS = [
+    { id: 1, name: 'Computer Science and Engineering (Cyber Security)', code: 'CSE(CS)' },
+    { id: 2, name: 'Computer Science and Engineering (IoT)', code: 'CSE(IOT)' }
+  ];
+
   const fetchDepartments = async () => {
     try {
       const res = await api.get('/departments');
-      setDepartments(res.data);
+      if (res.data && Array.isArray(res.data) && res.data.length >= 2) {
+        setDepartments(res.data);
+      } else {
+        setDepartments(DEFAULT_DEPARTMENTS);
+      }
     } catch (err) {
-      console.error(err);
+      console.warn("Using default department fallback list:", err);
+      setDepartments(DEFAULT_DEPARTMENTS);
     }
   };
+
 
   const fetchFilteredStudents = async () => {
     let loadedFromApi = false;
@@ -205,7 +216,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
 
   const getSortedStudents = () => {
-    const sorted = [...students];
+    let sorted = [...students];
+
+    // Client-side department filter guard
+    if (selectedDept) {
+      sorted = sorted.filter(s =>
+        s.department_id === selectedDept.id ||
+        (s.department?.code && s.department.code.toUpperCase() === selectedDept.code.toUpperCase()) ||
+        (s.department?.name && s.department.name.toLowerCase().includes(selectedDept.code.toLowerCase().includes('cs') ? 'cyber' : 'iot'))
+      );
+    }
+
+    // Client-side year level filter guard
+    if (yearLevel !== 'ALL') {
+      sorted = sorted.filter(s => s.year_level && s.year_level.toUpperCase() === yearLevel.toUpperCase());
+    }
+
     switch (sortBy) {
       case 'top_solved':
         return sorted.sort((a, b) => (b.stats?.total_solved || 0) - (a.stats?.total_solved || 0));

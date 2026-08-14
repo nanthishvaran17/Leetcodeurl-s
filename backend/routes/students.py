@@ -352,9 +352,87 @@ def bulk_delete_students(
 
     return {"message": f"Successfully deleted {count} student records.", "count": count}
 
+class StudentUpdateSchema(BaseModel):
+    name: Optional[str] = None
+    department_id: Optional[int] = None
+    year_level: Optional[str] = None
+    section_id: Optional[int] = None
+    email: Optional[str] = None
+    leetcode_url: Optional[str] = None
+    username: Optional[str] = None
+    is_active: Optional[bool] = True
+
+
+@router.patch("/{student_id}")
+@router.put("/{student_id}")
+def update_student(
+    student_id: int,
+    payload: StudentUpdateSchema,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Update Student", required_roles=["admin", "super admin", "hod"]))
+):
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student record not found.")
+
+    if payload.name and payload.name.strip():
+        student.name = payload.name.strip()
+    if payload.department_id is not None:
+        student.department_id = payload.department_id
+    if payload.year_level and payload.year_level.strip():
+        student.year_level = payload.year_level.strip().upper()
+    if payload.section_id is not None:
+        student.section_id = payload.section_id
+    if payload.email is not None:
+        student.email = payload.email.strip().lower() if payload.email else None
+    if payload.leetcode_url is not None:
+        student.leetcode_url = payload.leetcode_url.strip() if payload.leetcode_url else None
+        if student.leetcode_url and ("leetcode.com" in student.leetcode_url or "/u/" in student.leetcode_url):
+            from backend.leetcode_fetcher import extract_leetcode_username
+            parsed_u = extract_leetcode_username(student.leetcode_url)
+            if parsed_u:
+                student.username = parsed_u
+    if payload.username and payload.username.strip():
+        student.username = payload.username.strip()
+    if payload.is_active is not None:
+        student.is_active = payload.is_active
+
+    db.commit()
+    db.refresh(student)
+
+    # Sync update to Cloud Firestore
+    try:
+        from backend.services.firestore_service import update_firestore_doc
+        update_firestore_doc("students", student.reg_no, {
+            "reg_no": student.reg_no,
+            "name": student.name,
+            "username": student.username,
+            "leetcode_url": student.leetcode_url,
+            "year_level": student.year_level,
+            "is_active": student.is_active,
+            "updated_at": datetime.datetime.utcnow().isoformat() + "Z"
+        })
+    except Exception as fs_err:
+        logger.warning(f"[FIRESTORE UPDATE NOTE] {fs_err}")
+
+    audit = AuditLog(
+        user_id=current_user.id,
+        user_name=current_user.username,
+        action="UPDATE_STUDENT",
+        details=f"Updated student {student.reg_no} ({student.name})"
+    )
+    db.add(audit)
+    db.commit()
+
+    update_all_rankings_and_badges(db)
+
+    return StudentOut.from_orm(student)
+
+
 @router.delete("/{student_id}")
 def delete_student(
     student_id: int,
+    soft_delete: bool = Query(True),
     db: Session = Depends(get_db),
     current_user=Depends(require_security_access(resource_name="Delete Student", required_roles=["admin", "super admin"]))
 ):
@@ -365,22 +443,39 @@ def delete_student(
     reg_no = student.reg_no
     name = student.name
 
-    db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id == student_id).delete()
-    db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id == student_id).delete()
-    db.delete(student)
+    if soft_delete:
+        student.is_active = False
+        db.commit()
+        logger.info(f"[SOFT_DELETE_STUDENT] Soft-deleted student roster record {reg_no} ({name})")
+    else:
+        db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id == student_id).delete()
+        db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id == student_id).delete()
+        db.delete(student)
+        db.commit()
+
+    # Sync status to Cloud Firestore
+    try:
+        from backend.services.firestore_service import update_firestore_doc
+        update_firestore_doc("students", reg_no, {
+            "is_active": False,
+            "deactivated_at": datetime.datetime.utcnow().isoformat() + "Z"
+        })
+    except Exception as fs_err:
+        logger.warning(f"[FIRESTORE DELETE NOTE] {fs_err}")
 
     audit = AuditLog(
         user_id=current_user.id,
         user_name=current_user.username,
-        action="DELETE_STUDENT",
-        details=f"Deleted student record {reg_no} ({name})"
+        action="SOFT_DELETE_STUDENT" if soft_delete else "DELETE_STUDENT",
+        details=f"Deactivated student roster record {reg_no} ({name})"
     )
     db.add(audit)
     db.commit()
 
     update_all_rankings_and_badges(db)
 
-    return {"message": f"Successfully deleted student record {reg_no} ({name})"}
+    return {"message": f"Successfully deactivated student roster record {reg_no} ({name})", "reg_no": reg_no}
+
 
 @router.post("/import-preview")
 async def import_preview(

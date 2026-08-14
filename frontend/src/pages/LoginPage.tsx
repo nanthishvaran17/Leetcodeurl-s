@@ -227,19 +227,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
     const cleanPass = password.trim();
 
     try {
-      const res = await api.post('/auth/login', { username: cleanUser, password: cleanPass }, { timeout: 15000 });
+      const res = await api.post('/auth/login', { username: cleanUser, password: cleanPass }, { timeout: 45000 });
       login(res.data.access_token, res.data.user);
       onSuccess();
     } catch (err: any) {
-      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
-        setError('Authentication service is temporarily unavailable. Please try again.');
+      if (err.response?.data?.detail) {
+        setError(err.response.data.detail);
+      } else if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        setError('Server cold start in progress. Please wait a moment and click Sign In again.');
       } else {
-        setError(err.response?.data?.detail || 'Invalid username or password.');
+        setError('Invalid username or password.');
       }
     } finally {
       setLoading(false);
     }
   };
+
 
   const formatTimer = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

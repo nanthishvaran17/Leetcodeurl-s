@@ -1,6 +1,7 @@
-import React from 'react';
-import { ExternalLink, Trophy, Flame, Award, CheckCircle2, AlertTriangle, XCircle, RefreshCw, Wifi, Trash2, Clock, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { ExternalLink, Trophy, RefreshCw, Wifi, Trash2, AlertCircle, Eye, Edit3, ShieldAlert, X, Clock } from 'lucide-react';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
+import api from '../services/api';
 
 function parseUtcTime(ts?: string): number {
   if (!ts) return Date.now();
@@ -12,7 +13,6 @@ function parseUtcTime(ts?: string): number {
   return isNaN(time) ? Date.now() : time;
 }
 
-// Sync state helpers — mirrors StudentFlipCard logic
 function getSyncState(syncStatus?: string, lastVerifiedAt?: string): 'pending'|'syncing'|'verified'|'failed'|'mismatch'|'stale'|'invalid_profile' {
   if (syncStatus === 'invalid_profile' || syncStatus === 'INVALID_LINK' || syncStatus === 'MISSING_LINK') return 'invalid_profile';
   if (syncStatus === 'syncing') return 'syncing';
@@ -27,18 +27,6 @@ function getSyncState(syncStatus?: string, lastVerifiedAt?: string): 'pending'|'
   if (syncStatus === 'mismatch' || syncStatus === 'data_mismatch') return 'mismatch';
   return 'failed';
 }
-function formatAgo(ts?: string): string {
-  if (!ts) return 'just now';
-  const diffMs = Date.now() - parseUtcTime(ts);
-  if (diffMs <= 0) return 'just now';
-  const s = Math.floor(diffMs / 1000);
-  if (s < 60) return 'just now';
-  if (s < 3600) return `${Math.floor(s/60)}m ago`;
-  if (s < 86400) return `${Math.floor(s/3600)}h ago`;
-  return `${Math.floor(s/86400)}d ago`;
-}
-
-import api from '../services/api';
 
 export interface StudentData {
   id: number;
@@ -57,9 +45,9 @@ export interface StudentData {
   username?: string;
   stats?: {
     total_solved: number | null;
-    easy_solved: number | null;
-    medium_solved: number | null;
-    hard_solved: number | null;
+    easy_solved?: number | null;
+    medium_solved?: number | null;
+    hard_solved?: number | null;
     contest_rating?: number | null;
     contest_global_ranking?: number | null;
     public_profile_ranking?: number | null;
@@ -111,9 +99,10 @@ interface LeaderboardTableProps {
   students: StudentData[];
   loading?: boolean;
   onSelectStudent?: (student: StudentData) => void;
-  onRefreshStudent?: (studentId: number) => void;
+  onRefreshStudent?: (studentId?: number) => void;
   onDeleteStudent?: (student: StudentData) => void;
   onBulkDeleteStudents?: (studentIds: number[]) => void;
+  onUpdateStudent?: (updated: StudentData) => void;
 }
 
 export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
@@ -122,10 +111,19 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
   onSelectStudent,
   onRefreshStudent,
   onDeleteStudent,
-  onBulkDeleteStudents
+  onBulkDeleteStudents,
+  onUpdateStudent
 }) => {
-  const { isConnected } = useLiveLeaderboard();
-  const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [editingStudent, setEditingStudent] = useState<StudentData | null>(null);
+  const [deletingStudent, setDeletingStudent] = useState<StudentData | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editDeptId, setEditDeptId] = useState<number>(1);
+  const [editYearLevel, setEditYearLevel] = useState('III');
+  const [editLeetCodeUrl, setEditLeetCodeUrl] = useState('');
+  const [editUsername, setEditUsername] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const toggleStudent = (id: number) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
@@ -139,6 +137,13 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
     }
   };
 
+  const getRankBadge = (rank?: number) => {
+    if (!rank) return null;
+    if (rank === 1) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300">🥇 #1</span>;
+    if (rank === 2) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-300">🥈 #2</span>;
+    if (rank === 3) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-800/20 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 border border-amber-600/30">🥉 #3</span>;
+    return <span className="text-xs font-semibold text-gray-500">#{rank}</span>;
+  };
 
   const handleTriggerBulkDelete = async () => {
     if (onBulkDeleteStudents) {
@@ -158,7 +163,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
           await api.post('/students/bulk-delete', { student_ids: selectedIds });
           alert(`✅ Successfully deleted ${selectedIds.length} student records!`);
           setSelectedIds([]);
-          if (onRefreshStudent) onRefreshStudent(0);
+          window.location.reload();
         } catch (err: any) {
           alert(err.response?.data?.detail || "Failed to bulk delete student records.");
         }
@@ -166,55 +171,53 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
     }
   };
 
-  const handleSingleDelete = async (student: StudentData) => {
-    if (onDeleteStudent) {
-      onDeleteStudent(student);
-    } else {
-      if (!confirm(`Are you sure you want to delete student "${student.name}" (${student.reg_no})? This action cannot be undone.`)) {
-        return;
-      }
-      try {
-        await api.delete(`/students/${student.id}`);
-        alert(`Student "${student.name}" deleted successfully!`);
-        if (onRefreshStudent) onRefreshStudent(student.id);
-      } catch (err: any) {
-        alert(err.response?.data?.detail || "Failed to delete student record.");
-      }
+
+  const handleOpenEdit = (st: StudentData) => {
+    setEditingStudent(st);
+    setEditName(st.name);
+    setEditDeptId(st.department_id || 1);
+    setEditYearLevel(st.year_level || 'III');
+    setEditLeetCodeUrl(st.leetcode_url || '');
+    setEditUsername(st.username || '');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingStudent) return;
+    setIsSaving(true);
+    try {
+      const res = await api.patch(`/students/${editingStudent.id}`, {
+        name: editName.trim(),
+        department_id: editDeptId,
+        year_level: editYearLevel,
+        leetcode_url: editLeetCodeUrl.trim() || undefined,
+        username: editUsername.trim() || undefined
+      });
+      if (onUpdateStudent) onUpdateStudent(res.data);
+      setEditingStudent(null);
+    } catch (err: any) {
+      alert(`Update failed: ${err?.response?.data?.detail || err.message}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const getRankBadge = (rank?: number) => {
-    if (!rank) return null;
-    if (rank === 1) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300">🥇 #1</span>;
-    if (rank === 2) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-300">🥈 #2</span>;
-    if (rank === 3) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-800/20 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 border border-amber-600/30">🥉 #3</span>;
-    return <span className="text-xs font-semibold text-gray-500">#{rank}</span>;
+  const handleConfirmSoftDelete = async () => {
+    if (!deletingStudent) return;
+    setIsDeleting(true);
+    try {
+      await api.delete(`/students/${deletingStudent.id}?soft_delete=true`);
+      if (onDeleteStudent) onDeleteStudent(deletingStudent);
+      setDeletingStudent(null);
+    } catch (err: any) {
+      alert(`Deactivation failed: ${err?.response?.data?.detail || err.message}`);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
-  const getStatusBadge = (status: string = "DATA UNAVAILABLE") => {
-    if (status === "OK" || status === "STARTED") {
-      return (
-        <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
-          <CheckCircle2 className="w-3 h-3" />
-          <span>OK</span>
-        </span>
-      );
-    }
-    if (status === "NOT STARTED" || status === "WARNING") {
-      return (
-        <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">
-          <AlertTriangle className="w-3 h-3" />
-          <span>NOT STARTED</span>
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300">
-        <XCircle className="w-3 h-3" />
-        <span>{status}</span>
-      </span>
-    );
-  };
+
+
+
 
   return (
     <div className="w-full space-y-2">
@@ -424,7 +427,20 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   </td>
 
                   <td className="py-3 px-3 whitespace-nowrap font-mono font-bold text-brand-600 dark:text-brand-400">
-                    {username}
+                    {student.leetcode_url || (username !== '—' && username !== 'N/A') ? (
+                      <a
+                        href={student.leetcode_url || `https://leetcode.com/u/${username}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:underline flex items-center gap-1 text-brand-600 dark:text-brand-400 font-bold"
+                        title={`Open ${username}'s official LeetCode profile`}
+                      >
+                        {username}
+                        <ExternalLink className="w-3 h-3 opacity-70" />
+                      </a>
+                    ) : (
+                      <span className="text-gray-400">LeetCode Profile Unavailable</span>
+                    )}
                   </td>
 
                   <td className="py-3 px-3 whitespace-nowrap text-center font-bold text-gray-900 dark:text-white text-sm">
@@ -458,41 +474,49 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   </td>
 
                   <td className="py-3 px-3 text-right whitespace-nowrap">
-                    <div className="flex items-center justify-end space-x-2">
-                      {student.leetcode_url && (
-                        <a
-                          href={student.leetcode_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                          title="View LeetCode Profile"
-                          aria-label="View LeetCode Profile"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                      )}
+                    <div className="flex items-center justify-end space-x-1.5">
+                      <button
+                        onClick={() => onSelectStudent && onSelectStudent(student)}
+                        className="p-1.5 rounded-xl text-gray-600 dark:text-gray-300 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition-colors font-bold text-xs flex items-center gap-1"
+                        title="👁 View Full Profile"
+                      >
+                        <Eye className="w-4 h-4 text-brand-500" />
+                        <span className="hidden md:inline">Profile</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleOpenEdit(student)}
+                        className="p-1.5 rounded-xl text-gray-600 dark:text-gray-300 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors font-bold text-xs flex items-center gap-1"
+                        title="✏️ Edit Student Profile"
+                      >
+                        <Edit3 className="w-4 h-4 text-amber-500" />
+                        <span className="hidden md:inline">Edit</span>
+                      </button>
+
                       {onRefreshStudent && (
                         <button
                           onClick={() => onRefreshStudent(student.id)}
                           disabled={isSyncing}
-                          className={`p-1.5 rounded-lg transition-colors ${isSyncing ? 'text-blue-500 animate-spin' : 'text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'}`}
+                          className={`p-1.5 rounded-xl transition-colors ${isSyncing ? 'text-blue-500 animate-spin' : 'text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'}`}
                           title="Sync LeetCode Profile"
                           aria-label="Sync LeetCode Profile"
                         >
                           <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
                         </button>
                       )}
+
                       <button
-                        onClick={() => handleSingleDelete(student)}
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                        title="Delete Student Record"
-                        aria-label="Delete Student Record"
+                        onClick={() => setDeletingStudent(student)}
+                        className="p-1.5 rounded-xl text-gray-600 dark:text-gray-300 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors font-bold text-xs flex items-center gap-1"
+                        title="🗑 Deactivate Student Roster Entry"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4 text-rose-500" />
+                        <span className="hidden md:inline">Delete</span>
                       </button>
                     </div>
                   </td>
                 </tr>
+
               );
             })
           )}
