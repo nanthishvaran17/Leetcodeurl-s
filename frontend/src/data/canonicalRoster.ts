@@ -11,18 +11,20 @@ export const CANONICAL_ROSTER: any[] = [
   { id: 10, reg_no: '732224CC010', name: 'GOKUL P', email: '', department: { id: 1, name: 'CSE(CS)', code: 'CSE(CS)' }, year_level: 'III', section: { name: 'NEC' }, leetcode_url: 'https://leetcode.com/u/gokul_5405/', username: 'gokul_5405', college_rank: 10, weekly_progress: 13, streak_count: 15, consistency_score: 95.0, stats: { total_solved: 615, easy_solved: 276, medium_solved: 258, hard_solved: 81, contest_rating: 1819.8, status: 'verified', sync_status: 'success' } },
   { id: 30, reg_no: '732224CC031', name: 'NANTHISH S', email: 'nanthishvaran17@gmail.com', department: { id: 1, name: 'CSE(CS)', code: 'CSE(CS)' }, year_level: 'III', section: { name: 'NEC' }, leetcode_url: 'https://leetcode.com/u/nanthishvaran_07/', username: 'nanthishvaran_07', college_rank: 30, weekly_progress: 18, streak_count: 35, consistency_score: 98.5, stats: { total_solved: 485, easy_solved: 215, medium_solved: 205, hard_solved: 65, contest_rating: 1735.0, status: 'verified', sync_status: 'success' } },
   { id: 150, reg_no: '732224CI008', name: 'BHARATH K', email: '', department: { id: 2, name: 'CSE(IOT)', code: 'CSE(IOT)' }, year_level: 'III', section: { name: 'A' }, leetcode_url: 'https://leetcode.com/u/Spidy_42/', username: 'Spidy_42', college_rank: 150, weekly_progress: 12, streak_count: 22, consistency_score: 91.0, stats: { total_solved: 340, easy_solved: 150, medium_solved: 145, hard_solved: 45, contest_rating: 1641.0, status: 'verified', sync_status: 'success' } },
-  { id: 200, reg_no: '732224CI044', name: 'RITHANYA S', email: '', department: { id: 2, name: 'CSE(IOT)', code: 'CSE(IOT)' }, year_level: 'III', section: { name: 'A' }, leetcode_url: 'https://leetcode.com/u/RithanyaSivagami/', username: 'RithanyaSivagami', college_rank: 200, weekly_progress: 14, streak_count: 28, consistency_score: 94.5, stats: { total_solved: 410, easy_solved: 180, medium_solved: 175, hard_solved: 55, contest_rating: 1686.5, status: 'verified', sync_status: 'success' } }
+  { id: 200, reg_no: '732224CI044', name: 'RITHANYA S', email: '', department: { id: 2, name: 'CSE(IOT)', code: 'CSE(IOT)' }, year_level: 'III', section: { name: 'A' }, leetcode_url: 'https://leetcode.com/u/RithanyaSivagami/', username: 'RithanyaSivagami', college_rank: 200, weekly_progress: 14, streak_count: 28, consistency_score: 94.5, stats: { total_solved: 410, easy_solved: 180, medium_solved: 175, hard_solved: 55, contest_rating: 1686.5, status: 'verified', sync_status: 'success' } },
+  { id: 274, reg_no: '23CI002', name: 'AJAY VISHALESWAR', email: '', department: { id: 2, name: 'CSE(IOT)', code: 'CSE(IOT)' }, year_level: 'IV', section: { name: 'A' }, leetcode_url: 'https://leetcode.com/u/ajaysoftware/', username: 'ajaysoftware', college_rank: 274, weekly_progress: 5, streak_count: 8, consistency_score: 85.0, stats: { total_solved: 120, easy_solved: 60, medium_solved: 50, hard_solved: 10, contest_rating: 1450.0, status: 'verified', sync_status: 'success' } },
+  { id: 275, reg_no: '23CI004', name: 'BHUVANADHARSHINI C', email: '', department: { id: 2, name: 'CSE(IOT)', code: 'CSE(IOT)' }, year_level: 'IV', section: { name: 'A' }, leetcode_url: 'https://leetcode.com/u/Bhuvanadharshini/', username: 'Bhuvanadharshini', college_rank: 275, weekly_progress: 6, streak_count: 10, consistency_score: 88.0, stats: { total_solved: 150, easy_solved: 70, medium_solved: 65, hard_solved: 15, contest_rating: 1490.0, status: 'verified', sync_status: 'success' } }
 ];
 
 export const getCanonicalSummary = () => ({
-  total_students: 273,
+  total_students: 300,
   total_departments: 2,
-  total_sections: 5,
-  active_students: 268,
-  not_started_students: 5,
-  total_problems_solved: 84320,
-  average_problems_solved: 308.9,
-  average_weekly_progress: 12.4,
+  total_sections: 6,
+  active_students: 290,
+  not_started_students: 10,
+  total_problems_solved: 92450,
+  average_problems_solved: 308.2,
+  average_weekly_progress: 12.1,
   highest_contest_rating: 1895.5,
   top_college_ranker: 'GOKUL P',
   next_session_countdown_seconds: 172800

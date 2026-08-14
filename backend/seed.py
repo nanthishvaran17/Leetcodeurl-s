@@ -302,6 +302,38 @@ III_YEAR_CSE_IOT = [
     ("732224CIR01", "SOWMIYA K", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/sowmiya4306/"),
 ]
 
+# IV Year CSE(IOT) Students (27 records)
+IV_YEAR_CSE_IOT = [
+    ("23CI002", "AJAY VISHALESWAR", "CSE(IOT)", "IV", "A", "", "https://leetcode.com/u/ajaysoftware/"),
+    ("23CI004", "BHUVANADHARSHINI C", "CSE(IOT)", "IV", "A", "", "https://leetcode.com/u/Bhuvanadharshini/"),
+    ("23CI006", "DHARNEESH P", "CSE(IOT)", "IV", "A", "", "https://leetcode.com/u/TDq3huRfEI/"),
+    ("23CI007", "DIVYA A", "CSE(IOT)", "IV", "A", "", "https://leetcode.com/u/DIVI_ARUL/"),
+    ("23CI010", "GOKILA.G", "CSE(IOT)", "IV", "A", "", ""),
+    ("23CI012", "GOWCIKA U", "CSE(IOT)", "IV", "A", "", "https://leetcode.com/u/Gowcika/"),
+    ("23CI013", "HAMSHA N", "CSE(IOT)", "IV", "A", "", "https://leetcode.com/u/hamsha07/"),
+    ("23CI014", "HAREE D", "CSE(IOT)", "IV", "A", "", "https://leetcode.com/u/Haree05/"),
+    ("23CI015", "HARINI S", "CSE(IOT)", "IV", "A", "", ""),
+    ("23CI018", "JAYASURYA P", "CSE(IOT)", "IV", "A", "", "https://leetcode.com/u/Jayasurya-619/"),
+    ("23CI021", "KAMALA VISHNU G", "CSE(IOT)", "IV", "A", "", ""),
+    ("23CI022", "KARMUKILAN A", "CSE(IOT)", "IV", "A", "", "https://leetcode.com/u/pPPRNakI4T/"),
+    ("23CI023", "KARTHIK.V", "CSE(IOT)", "IV", "A", "", "https://leetcode.com/u/karthik_v3/"),
+    ("23CI025", "KARUNYA C", "CSE(IOT)", "IV", "A", "", "https://leetcode.com/u/sivakarunya/"),
+    ("23CI027", "KAVI ISHWARRYA S K", "CSE(IOT)", "IV", "A", "", "https://leetcode.com/u/s9hXtuAA2E/"),
+    ("23CI028", "KAVIN V", "CSE(IOT)", "IV", "A", "", ""),
+    ("23CI029", "KAVIYARASU S", "CSE(IOT)", "IV", "A", "", "https://leetcode.com/u/KAVIYARASU_S123/"),
+    ("23CI030", "KEERTHANA.K", "CSE(IOT)", "IV", "A", "", "https://leetcode.com/u/K_KEERTHANA_/"),
+    ("23CI034", "MOHAMED AQDHAS U", "CSE(IOT)", "IV", "A", "", "https://leetcode.com/u/AQDHAS/"),
+    ("23CI038", "PRABHAKARAN . S", "CSE(IOT)", "IV", "A", "", "https://leetcode.com/u/Prabha_1503/"),
+    ("23CI044", "RAVI BHARATHI.J", "CSE(IOT)", "IV", "A", "", "https://leetcode.com/u/ravi_bharathi509/"),
+    ("23CI046", "ROHITH T", "CSE(IOT)", "IV", "A", "", ""),
+    ("23CI050", "SATHISHKUMAR.S", "CSE(IOT)", "IV", "A", "", ""),
+    ("23CI053", "SUJITH K", "CSE(IOT)", "IV", "A", "", "https://leetcode.com/u/sujith2006/"),
+    ("23CI055", "G THEJASWINI", "CSE(IOT)", "IV", "A", "", "https://leetcode.com/u/thejaswini_10/"),
+    ("23CI058", "VICHITHRA.V", "CSE(IOT)", "IV", "A", "", "https://leetcode.com/u/VichithraVelusamy/"),
+    ("23CI001", "AAKASH SHIVA KB", "CSE(IOT)", "IV", "A", "", "https://leetcode.com/u/aakashshiva/"),
+]
+
+
 def seed_database():
     Base.metadata.create_all(bind=engine)
     
@@ -383,6 +415,13 @@ def seed_database():
             sec_cs_ii = Section(name="A", department_id=cs_dept.id, year_level="II")
             db.add(sec_cs_ii)
 
+        sec_iot_iv = db.query(Section).filter(
+            Section.department_id == iot_dept.id, Section.year_level == "IV", Section.name == "A"
+        ).first()
+        if not sec_iot_iv:
+            sec_iot_iv = Section(name="A", department_id=iot_dept.id, year_level="IV")
+            db.add(sec_iot_iv)
+
         sec_iot_iii = db.query(Section).filter(
             Section.department_id == iot_dept.id, Section.year_level == "III", Section.name == "A"
         ).first()
@@ -401,6 +440,7 @@ def seed_database():
         db.refresh(sec_cs_iv)
         db.refresh(sec_cs_iii)
         db.refresh(sec_cs_ii)
+        db.refresh(sec_iot_iv)
         db.refresh(sec_iot_iii)
         db.refresh(sec_iot_ii)
 
@@ -435,7 +475,7 @@ def seed_database():
             db.commit()
 
 
-        # Combine all 5 datasets (Total 273 real students)
+        # Combine all 6 datasets (Total 300 real students)
         all_students = []
         for row in IV_YEAR_CSE_CS:
             all_students.append((*row, cs_dept.id, sec_cs_iv.id))
@@ -443,10 +483,13 @@ def seed_database():
             all_students.append((*row, cs_dept.id, sec_cs_iii.id))
         for row in II_YEAR_CSE_CS:
             all_students.append((*row, cs_dept.id, sec_cs_ii.id))
+        for row in IV_YEAR_CSE_IOT:
+            all_students.append((*row, iot_dept.id, sec_iot_iv.id))
         for row in III_YEAR_CSE_IOT:
             all_students.append((*row, iot_dept.id, sec_iot_iii.id))
         for row in II_YEAR_CSE_IOT:
             all_students.append((*row, iot_dept.id, sec_iot_ii.id))
+
 
         # Purge any old test students safely without foreign key conflicts
         try:
