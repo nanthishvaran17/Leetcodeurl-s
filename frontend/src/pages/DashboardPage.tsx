@@ -42,23 +42,39 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
     // 1. Try fetching via REST API
     try {
-      const [sumRes, deptRes, qualRes, studRes] = await Promise.all([
+      const [sumRes, deptRes, qualRes, studRes] = await Promise.allSettled([
         api.get('/sessions/dashboard-summary'),
         api.get('/analytics/department-comparison'),
         api.get('/analytics/data-quality'),
         api.get('/students')
       ]);
 
-      if (studRes.data && studRes.data.length > 0) {
-        setSummary(sumRes.data);
-        setDepartments(deptRes.data);
-        setDataQuality(qualRes.data);
-        setStudents(studRes.data.slice(0, 10));
+      let hasApiData = false;
+
+      if (sumRes.status === 'fulfilled' && sumRes.value.data) {
+        setSummary(sumRes.value.data);
+        hasApiData = true;
+      }
+      if (deptRes.status === 'fulfilled' && deptRes.value.data) {
+        setDepartments(deptRes.value.data);
+        hasApiData = true;
+      }
+      if (qualRes.status === 'fulfilled' && qualRes.value.data) {
+        setDataQuality(qualRes.value.data);
+        hasApiData = true;
+      }
+      if (studRes.status === 'fulfilled' && studRes.value.data && studRes.value.data.length > 0) {
+        setStudents(studRes.value.data.slice(0, 10));
+        hasApiData = true;
+      }
+
+      if (hasApiData) {
         loadedFromApi = true;
       }
     } catch (err) {
       console.warn("REST API request delayed or offline, falling back to Cloud Firestore direct read...", err);
     }
+
 
     // 2. Fallback to Cloud Firestore direct read if REST API fails/delays
     if (!loadedFromApi) {
@@ -270,16 +286,35 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
               </>
             ) : (
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-gray-400"></span>
             )}
           </span>
           <span className="font-extrabold text-gray-800 dark:text-gray-200">
-          <span className="text-emerald-600 dark:text-emerald-400">🟢 Cloud Firestore Sync</span>
+            {isConnected ? (
+              <span className="text-emerald-600 dark:text-emerald-400">🟢 Real-Time WebSocket Active</span>
+            ) : (
+              <span className="text-gray-500 dark:text-gray-400">⚪ Real-Time Updates Standby</span>
+            )}
           </span>
         </div>
 
         <div className="flex items-center space-x-3 text-gray-500 font-bold">
-          <span>{loading ? '🔄 Loading...' : '🟢 Data loaded'}</span>
+          <span>
+            {loading ? (
+              <span className="text-amber-500 flex items-center space-x-1">
+                <RefreshCw className="w-3.5 h-3.5 animate-spin inline mr-1" />
+                <span>⏳ Loading live institutional data...</span>
+              </span>
+            ) : totalStudents > 0 ? (
+              <span className="text-emerald-600 dark:text-emerald-400">
+                🟢 Database Connected ({totalStudents} Student Records Loaded)
+              </span>
+            ) : (
+              <span className="text-rose-500">
+                🔴 Database connection unavailable or unpopulated
+              </span>
+            )}
+          </span>
           <button
             onClick={fetchDashboardData}
             className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-navy-800 text-brand-600 dark:text-brand-400 transition-colors"
@@ -289,6 +324,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           </button>
         </div>
       </div>
+
 
       {/* Official Executive Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-2xl border border-brand-500/30">

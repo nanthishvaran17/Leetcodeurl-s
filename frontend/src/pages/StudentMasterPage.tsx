@@ -40,13 +40,11 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     let loadedFromApi = false;
     try {
       const res = await api.get(`/students?search=${search}`);
-      if (res.data && res.data.length > 0) {
-        const hasVerifiedStats = res.data.some((s: any) => s.stats && (s.stats.total_solved !== null && s.stats.total_solved > 0));
-        if (hasVerifiedStats || search) {
-          setStudents(res.data);
-          loadedFromApi = true;
-        }
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+        setStudents(res.data);
+        loadedFromApi = true;
       }
+
     } catch (err) {
       console.warn("REST API request delayed or offline, falling back to Cloud Firestore direct read...", err);
     }
