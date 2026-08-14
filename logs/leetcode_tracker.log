@@ -27387,3 +27387,15 @@ Action: Request blocked
 [2026-08-14 17:36:53,634] [INFO] [leetcode_tracker]: Session WEEK-2026-07-26 is locked (FINALIZED). No recovery action needed.
 [2026-08-14 17:36:55,683] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
 [2026-08-14 17:36:55,716] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-14 17:43:04,896] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-14 17:43:05,220] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-14 17:45:22,109] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-14 17:45:22,113] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 17:46:44,721] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-14 17:46:44,723] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-14 17:46:45,040] [WARNING] [leetcode_tracker]: Database seed/reseed skipped or noted: name 'LeetCodeProfileStats' is not defined
+[2026-08-14 17:46:45,043] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-14 17:46:45,045] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-14 17:46:45,045] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-14 17:46:45,202] [INFO] [leetcode_tracker]: Checking WeeklySession ID 20 (WEEK-2026-07-26) status: 'FINALIZED' at IST 17:46
+[2026-08-14 17:46:45,203] [INFO] [leetcode_tracker]: Session WEEK-2026-07-26 is locked (FINALIZED). No recovery action needed.

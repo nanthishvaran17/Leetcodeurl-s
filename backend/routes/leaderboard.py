@@ -29,7 +29,9 @@ def get_leaderboard(
         query = query.filter(Student.department_id == dept_id)
     if year_level and year_level.strip().upper() not in ['ALL', 'ALL YEARS', '']:
         from sqlalchemy import func
-        query = query.filter(func.upper(Student.year_level) == year_level.strip().upper())
+        clean_yr = year_level.strip().upper().replace('YEAR', '').strip()
+        query = query.filter(func.upper(Student.year_level) == clean_yr)
+
     if section_id:
         query = query.filter(Student.section_id == section_id)
 

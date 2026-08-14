@@ -262,8 +262,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </h1>
 
           <p className="text-sm md:text-base text-gray-100 font-medium max-w-2xl leading-relaxed drop-shadow">
-            Real-time automated performance monitoring for 270+ students across Computer Science and Engineering (Cyber Security) and Computer Science and Engineering (IoT) departments. Sunday session tracking, multi-level rankings, official Excel matrix reporting, and automated email dispatch.
+            Real-time automated performance monitoring across Computer Science and Engineering (Cyber Security) and Computer Science and Engineering (IoT) departments. Sunday session tracking, multi-level rankings, official Excel matrix reporting, and automated email dispatch.
           </p>
+
 
           <div className="flex flex-wrap items-center gap-4 pt-2">
             <button
@@ -274,21 +275,33 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <ArrowRight className="w-4 h-4 text-slate-950 stroke-[3]" />
             </button>
 
-            <button
-              onClick={handleRefreshAll}
-              disabled={refreshing || syncProgress?.is_running}
-              className="px-5 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white border border-white/20 font-black text-sm backdrop-blur-md shadow-xl flex items-center space-x-2 transition-all transform hover:scale-105"
-              title="Perform full live synchronization for active student roster"
-            >
-              <RefreshCw className={`w-4 h-4 ${refreshing || syncProgress?.is_running ? 'animate-spin' : ''}`} />
-              <span>{refreshing || syncProgress?.is_running ? `⏳ FETCHING ${syncProgress?.processed || 0} / ${syncProgress?.total || students.length || 300}` : '🔄 FETCH LIVE DATA'}</span>
-            </button>
+            {(() => {
+              const totalStudents = summaryData?.total_students ?? (students.length > 0 ? students.length : null);
+              const processedCount = syncProgress?.processed ?? 0;
+              const totalProgress = syncProgress?.total ?? totalStudents;
+
+              return (
+                <button
+                  onClick={handleRefreshAll}
+                  disabled={refreshing || syncProgress?.is_running}
+                  className="px-5 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white border border-white/20 font-black text-sm backdrop-blur-md shadow-xl flex items-center space-x-2 transition-all transform hover:scale-105"
+                  title="Perform full live synchronization for active student roster"
+                >
+                  <RefreshCw className={`w-4 h-4 ${refreshing || syncProgress?.is_running ? 'animate-spin' : ''}`} />
+                  <span>
+                    {refreshing || syncProgress?.is_running
+                      ? `⏳ FETCHING ${processedCount} / ${totalProgress !== null ? totalProgress : '...'}`
+                      : '🔄 FETCH LIVE DATA'}
+                  </span>
+                </button>
+              );
+            })()}
 
             {(() => {
+              const totalStudents = summaryData?.total_students ?? (students.length > 0 ? students.length : null);
               const verifiedCount = students.filter(s =>
                 s.stats?.sync_status === 'success' || s.stats?.sync_status === 'OK' || (s.stats?.total_solved !== null && (s.stats?.total_solved ?? 0) > 0)
               ).length;
-              const totalCount = summaryData?.total_students || students.length || 300;
               const lastVerifiedTs = students
                 .map(s => s.stats?.last_verified_at)
                 .filter(Boolean)
@@ -303,7 +316,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     : 'bg-amber-500/20 border-amber-400/30 text-amber-300'
                 } border font-extrabold text-xs backdrop-blur-md`}>
                   <CheckCircle2 className={`w-4 h-4 ${verifiedCount > 0 ? 'text-emerald-400' : 'text-amber-400'}`} />
-                  <span>{verifiedCount > 0 ? `🟢 ${verifiedCount}/${totalCount} Verified • ${formattedLastFetched}` : `⏳ ${verifiedCount}/${totalCount} Verified • Pending Sync`}</span>
+                  <span>
+                    {totalStudents !== null
+                      ? (verifiedCount > 0 ? `🟢 ${verifiedCount}/${totalStudents} Verified • ${formattedLastFetched}` : `⏳ ${verifiedCount}/${totalStudents} Verified • Pending Sync`)
+                      : '⏳ Loading roster status...'}
+                  </span>
                 </div>
               );
             })()}
@@ -323,7 +340,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* Stat Cards Grid — Data-quality-aware */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
         {(() => {
-          // Compute verified/pending/failed from loaded students
+          const totalStudents = summaryData?.total_students ?? (students.length > 0 ? students.length : null);
           const isVerifiedSt = (s: StudentData) => {
             const st = s.stats?.sync_status;
             const tot = s.stats?.total_solved ?? s.total_solved;
@@ -336,16 +353,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           const verifiedProblems = students.reduce((sum, s) => sum + (s.stats?.total_solved ?? s.total_solved ?? 0), 0);
 
 
-
           return (
             <>
               <div className="glass-card p-6 rounded-2xl space-y-2 border shadow-md">
                 <div className="p-3 w-fit rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
                   <Users className="w-6 h-6" />
                 </div>
-                <h4 className="text-2xl font-black text-gray-900 dark:text-white">{summaryData?.total_students || students.length || 300}</h4>
+                <h4 className="text-2xl font-black text-gray-900 dark:text-white">
+                  {totalStudents !== null ? totalStudents : 'Loading institutional roster...'}
+                </h4>
                 <p className="text-xs font-semibold text-gray-500">Total Enrolled Students</p>
               </div>
+
 
               <div className="glass-card p-6 rounded-2xl space-y-2 border shadow-md">
 
