@@ -109,6 +109,7 @@ export interface StudentData {
 
 interface LeaderboardTableProps {
   students: StudentData[];
+  loading?: boolean;
   onSelectStudent?: (student: StudentData) => void;
   onRefreshStudent?: (studentId: number) => void;
   onDeleteStudent?: (student: StudentData) => void;
@@ -117,6 +118,7 @@ interface LeaderboardTableProps {
 
 export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
   students,
+  loading = false,
   onSelectStudent,
   onRefreshStudent,
   onDeleteStudent,
@@ -136,6 +138,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
       setSelectedIds(students.map(s => s.id));
     }
   };
+
 
   const handleTriggerBulkDelete = async () => {
     if (onBulkDeleteStudents) {
@@ -275,7 +278,16 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-          {students.length === 0 ? (
+          {loading ? (
+            <tr>
+              <td colSpan={12} className="py-12 text-center text-brand-600 dark:text-brand-400 font-bold">
+                <div className="flex flex-col items-center justify-center space-y-2">
+                  <RefreshCw className="w-6 h-6 animate-spin text-brand-500" />
+                  <span className="text-xs">Loading 273 real institutional student records...</span>
+                </div>
+              </td>
+            </tr>
+          ) : students.length === 0 ? (
             <tr>
               <td colSpan={12} className="py-8 text-center text-gray-500 dark:text-gray-400">
                 No student records found.
@@ -283,6 +295,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
             </tr>
           ) : (
             students.map((student, idx) => {
+
               const syncState = getSyncState(student.stats?.sync_status, student.stats?.last_verified_at);
               const isVerified = syncState === 'verified' || syncState === 'stale';
 
