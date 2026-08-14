@@ -25788,3 +25788,19 @@ Action: Request blocked
 [2026-08-14 11:30:04,348] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
 [2026-08-14 11:31:36,906] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
 [2026-08-14 11:31:36,908] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-14 11:42:34,820] [WARNING] [leetcode_tracker]: SECURITY ALERT: 5 blocked protected-resource attempts detected.
+Time: 14-08-2026 11:42 IST
+Source: ip_05d870d977dcf987
+User/Role: UNKNOWN
+Resource: Department Analytics
+Contest: N/A
+Attempts: 5 blocked attempts in 10 minutes
+Reason: NOT_AUTHENTICATED
+Action: Request blocked
+[2026-08-14 11:42:37,370] [INFO] [leetcode_tracker]: Successfully delivered email to 'admin@nandha.edu.in' via Brevo HTTPS API
+[2026-08-14 11:42:49,005] [INFO] [leetcode_tracker]: [ADMIN_LOGIN_SUCCESS] Administrator admin logged in successfully.
+[2026-08-14 11:42:49,026] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-27011] ADMIN_LOGIN by admin (admin@college.edu)
+[2026-08-14 11:42:49,409] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-14 11:42:49,442] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-14 11:47:11,634] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-14 11:47:11,635] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0

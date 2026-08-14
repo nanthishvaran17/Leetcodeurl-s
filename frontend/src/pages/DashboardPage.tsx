@@ -51,17 +51,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
       let hasApiData = false;
 
-      if (sumRes.status === 'fulfilled' && sumRes.value.data) {
+      if (sumRes.status === 'fulfilled' && sumRes.value.data && sumRes.value.data.total_students > 0) {
         setSummary(sumRes.value.data);
         hasApiData = true;
       }
-      if (deptRes.status === 'fulfilled' && deptRes.value.data) {
+      if (deptRes.status === 'fulfilled' && deptRes.value.data && Array.isArray(deptRes.value.data) && deptRes.value.data.length > 0) {
         setDepartments(deptRes.value.data);
-        hasApiData = true;
       }
       if (qualRes.status === 'fulfilled' && qualRes.value.data) {
         setDataQuality(qualRes.value.data);
-        hasApiData = true;
       }
       if (studRes.status === 'fulfilled' && studRes.value.data && studRes.value.data.length > 0) {
         setStudents(studRes.value.data.slice(0, 10));
@@ -70,7 +68,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
       if (hasApiData) {
         loadedFromApi = true;
+        setLoading(false);
+        return;
       }
+
     } catch (err) {
       console.warn("REST API request delayed or offline, falling back to Cloud Firestore direct read...", err);
     }
@@ -187,22 +188,24 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           failed_count: failedCount,
           health_score_percentage: list.length > 0 ? round((verifiedCount / list.length) * 100, 1) : 0
         });
-        if (list.length === 0) {
-          // Automatic retry in 4 seconds to catch Render free-tier cold-start response
+        if (list.length > 0) {
+          setLoading(false);
+          return;
+        } else {
+          // Automatic retry in 3 seconds to catch Render free-tier cold-start response
           setTimeout(() => {
             fetchDashboardData();
-          }, 4000);
+          }, 3000);
         }
       } catch (fErr) {
         console.error("Firestore direct read error", fErr);
         setTimeout(() => {
           fetchDashboardData();
-        }, 4000);
+        }, 3000);
       }
     }
-
-    setLoading(false);
   };
+
 
 
   const round = (val: number, dec: number) => Math.round(val * Math.pow(10, dec)) / Math.pow(10, dec);

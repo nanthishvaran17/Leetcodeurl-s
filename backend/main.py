@@ -163,11 +163,20 @@ def on_startup():
 
         if student_cnt == 0:
             logger.info("Empty database detected. Seeding initial student roster & profile stats...")
-            seed_database()
-            from backend.assets.reseed_all_stats import reseed_all_student_stats
-            reseed_all_student_stats()
+            try:
+                seed_database()
+                logger.info("Database seeding completed successfully for student roster.")
+            except Exception as _seed_err:
+                logger.error(f"Error seeding database: {_seed_err}")
+
+            try:
+                from backend.assets.reseed_all_stats import reseed_all_student_stats
+                reseed_all_student_stats()
+            except Exception as _reseed_err:
+                logger.warning(f"Reseed all stats note: {_reseed_err}")
     except Exception as e:
         logger.warning(f"Database seed/reseed skipped or noted: {e}")
+
 
 
     try:
