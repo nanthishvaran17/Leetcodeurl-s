@@ -38,6 +38,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   }, [selectedDept, yearLevel]);
 
   const fetchFilteredStudents = async () => {
+    let loadedApi = false;
     try {
       let url = '/students';
       const params = [];
@@ -52,11 +53,75 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
       }
 
       const res = await api.get(url);
-      setStudents(res.data);
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+        setStudents(res.data);
+        loadedApi = true;
+      }
     } catch (err) {
-      console.error(err);
+      console.warn("Department REST API delayed, falling back to Cloud Firestore...", err);
+    }
+
+    if (!loadedApi) {
+      try {
+        const { getOrInitDb } = await import('../services/firebase');
+        const { collection, getDocs } = await import('firebase/firestore');
+        const firestoreDb = getOrInitDb();
+        const studSnap = await getDocs(collection(firestoreDb, "students"));
+        const statsSnap = await getDocs(collection(firestoreDb, "leetcodeStats"));
+
+        const statsMap = new Map();
+        statsSnap.forEach(docSnap => {
+          statsMap.set(docSnap.id, docSnap.data());
+        });
+
+        const list: StudentData[] = [];
+        studSnap.forEach(docSnap => {
+          const sData = docSnap.data();
+          const sStats = statsMap.get(docSnap.id) || {};
+          const deptCode = sData.department || 'GEN';
+          const yr = sData.year || 'III';
+
+          if (selectedDept && selectedDept.code && deptCode !== selectedDept.code) return;
+          if (yearLevel !== 'ALL' && yr !== yearLevel) return;
+
+          const syncStatus = sStats.syncStatus || 'pending';
+          const isVerified = syncStatus === 'success' || syncStatus === 'OK';
+          const totSolved = isVerified ? (sStats.totalSolved ?? 0) : null;
+
+          list.push({
+            id: sData.id || Number(docSnap.id),
+            reg_no: sData.registerNo || '',
+            name: sData.name || '',
+            email: sData.email || '',
+            department: { name: sData.departmentName || deptCode, code: deptCode },
+            year_level: yr,
+            section: { name: sData.section || 'A' },
+            leetcode_url: sData.leetcodeProfileUrl || '',
+            username: sData.leetcodeUsername || '',
+            college_rank: sStats.collegeRank ?? null,
+            weekly_progress: sStats.weeklySolved ?? 0,
+            streak_count: sStats.streakCount ?? 0,
+            consistency_score: sStats.consistencyScore ?? 0,
+            stats: {
+              total_solved: totSolved,
+              easy_solved: isVerified ? (sStats.easySolved ?? 0) : null,
+              medium_solved: isVerified ? (sStats.mediumSolved ?? 0) : null,
+              hard_solved: isVerified ? (sStats.hardSolved ?? 0) : null,
+              contest_rating: sStats.contestRating ?? null,
+              contest_global_ranking: sStats.globalRanking ?? null,
+              status: sStats.status || (isVerified ? 'OK' : 'pending'),
+              sync_status: syncStatus,
+              last_verified_at: sStats.lastVerifiedAt ?? null
+            }
+          });
+        });
+        setStudents(list);
+      } catch (fErr) {
+        console.error("Firestore fallback error in DepartmentDashboard:", fErr);
+      }
     }
   };
+
 
   const handleRefreshAllStats = async () => {
     setIsRefreshing(true);

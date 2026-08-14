@@ -15,35 +15,40 @@ from backend.logger import logger
 def get_or_create_current_weekly_session(db: Session) -> WeeklySession:
     """
     Retrieves or creates the active/upcoming weekly contest session.
-    Guarantees unique session per week using session_code constraint (e.g. WEEK-2026-08-16).
+    Fast path: returns existing session from DB without blocking on external HTTP calls.
     """
-    meta = discover_contest_metadata()
-    session_code = meta["session_code"]
-    
-    session = db.query(WeeklySession).filter(WeeklySession.session_code == session_code).first()
-    
-    if not session:
-        now_ist = get_current_ist_datetime()
-        week_num = now_ist.isocalendar()[1]
-        
-        session = WeeklySession(
-            academic_year="2026-27",
-            week_number=week_num,
-            session_code=session_code,
-            session_date=meta["session_date"],
-            contest_id=meta["contest_id"],
-            contest_name=meta["contest_name"],
-            start_time="08:00",
-            end_time="09:30",
-            status="SCHEDULED",
-            total_students=273
-        )
-        db.add(session)
-        db.commit()
-        db.refresh(session)
-        logger.info(f"Created new WeeklySession ID={session.id} for {session_code}")
+    latest_session = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+    if latest_session:
+        return latest_session
 
-    return session
+    try:
+        meta = discover_contest_metadata()
+        session_code = meta["session_code"]
+        session = db.query(WeeklySession).filter(WeeklySession.session_code == session_code).first()
+        if not session:
+            now_ist = get_current_ist_datetime()
+            week_num = now_ist.isocalendar()[1]
+            session = WeeklySession(
+                academic_year="2026-27",
+                week_number=week_num,
+                session_code=session_code,
+                session_date=meta["session_date"],
+                contest_id=meta["contest_id"],
+                contest_name=meta["contest_name"],
+                start_time="08:00",
+                end_time="09:30",
+                status="SCHEDULED",
+                total_students=273
+            )
+            db.add(session)
+            db.commit()
+            db.refresh(session)
+        return session
+    except Exception as e:
+        logger.warning(f"Contest discovery fallback note: {e}")
+        fallback_sess = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+        return fallback_sess
+
 
 async def trigger_start_snapshot_0800(db: Session, session_id: int):
     """
