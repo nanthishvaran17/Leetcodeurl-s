@@ -125,9 +125,40 @@ def on_startup():
 
     try:
         from backend.database import SessionLocal
-        from backend.models import Student
+        from backend.models import Student, User
+        from backend.routes.auth import get_password_hash, verify_password
+
         db_init = SessionLocal()
         student_cnt = db_init.query(Student).count()
+
+        # Reconcile Admin Credentials on Startup
+        admin_username = getattr(settings, "ADMIN_USERNAME", "admin").strip()
+        admin_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
+        admin_pass = getattr(settings, "ADMIN_PASSWORD", "admin123").strip() or "admin123"
+
+        admin_user = db_init.query(User).filter(
+            (User.username.ilike(admin_username)) | (User.email.ilike(admin_email))
+        ).first()
+
+        if not admin_user:
+            admin_user = User(
+                username=admin_username,
+                email=admin_email,
+                hashed_password=get_password_hash(admin_pass),
+                role="Admin",
+                is_active=True
+            )
+            db_init.add(admin_user)
+            db_init.commit()
+            logger.info(f"[STARTUP_RECONCILE] Created admin user '{admin_username}' with secure password hash.")
+        else:
+            admin_user.role = "Admin"
+            admin_user.is_active = True
+            if not verify_password(admin_pass, admin_user.hashed_password):
+                admin_user.hashed_password = get_password_hash(admin_pass)
+                db_init.commit()
+                logger.info(f"[STARTUP_RECONCILE] Reconciled admin user '{admin_username}' password hash.")
+
         db_init.close()
 
         if student_cnt == 0:
@@ -137,6 +168,7 @@ def on_startup():
             reseed_all_student_stats()
     except Exception as e:
         logger.warning(f"Database seed/reseed skipped or noted: {e}")
+
 
     try:
         from backend.database import SessionLocal
