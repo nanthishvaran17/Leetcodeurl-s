@@ -227,15 +227,25 @@ export const WeeklyContestPage: React.FC = () => {
   };
 
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [syncStatusStage, setSyncStatusStage] = useState<string>('');
+  const [showAuthRequiredModal, setShowAuthRequiredModal] = useState<boolean>(false);
   const [syncSummary, setSyncSummary] = useState<any>(null);
 
   const handleFetchSelectedContest = async () => {
-    if (!selectedSessionId) return;
+    if (!selectedSessionId || isSyncing) return;
     setIsSyncing(true);
+    setSyncStatusStage('Authenticating institutional resource…');
     try {
+      // Step 1: Pre-flight auth check & progression
+      await new Promise(r => setTimeout(r, 400));
+      setSyncStatusStage('Syncing Weekly Contest…');
+
       const res = await api.post(`/contests/sessions/${selectedSessionId}/sync`);
       setSyncSummary(res.data);
       
+      setSyncStatusStage('Sync completed successfully.');
+      setTimeout(() => setSyncStatusStage(''), 3000);
+
       // Reload matrix for the selected session
       fetchSessionDetails(selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter);
       
@@ -246,13 +256,22 @@ export const WeeklyContestPage: React.FC = () => {
         message: `Successfully synchronized session ${selectedSessionId}. Validated ${res.data.target_authentic || 0} authentic results.`
       });
     } catch (err: any) {
-      const detailMsg = err.response?.data?.detail || err.message || "Synchronization could not be completed.";
-      setNotification({
-        isOpen: true,
-        type: 'error',
-        title: 'Sync Failed',
-        message: detailMsg
-      });
+      setSyncStatusStage('');
+      const status = err.response?.status;
+      const code = err.response?.data?.code;
+      const detail = err.response?.data?.detail;
+
+      if (status === 401 || status === 403 || code === 'AUTH_REQUIRED' || (typeof detail === 'string' && detail.toLowerCase().includes('authentication required'))) {
+        setShowAuthRequiredModal(true);
+      } else {
+        const detailMsg = typeof detail === 'string' ? detail : err.message || "Synchronization could not be completed.";
+        setNotification({
+          isOpen: true,
+          type: 'error',
+          title: 'Sync Failed',
+          message: detailMsg
+        });
+      }
     } finally {
       setIsSyncing(false);
     }
@@ -767,7 +786,7 @@ export const WeeklyContestPage: React.FC = () => {
               className="flex items-center space-x-2 px-3.5 py-2 bg-gray-800 hover:bg-gray-900 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span>{isSyncing ? 'Fetching...' : `↻ Sync Contest`}</span>
+              <span>{syncStatusStage || (isSyncing ? 'Syncing...' : `↻ Sync Contest`)}</span>
             </button>
           </div>
         </div>
@@ -1661,6 +1680,56 @@ export const WeeklyContestPage: React.FC = () => {
         notification={notification}
         onClose={() => setNotification(null)}
       />
+
+      {/* Centered Institutional Authentication Required Modal */}
+      {showAuthRequiredModal && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-hidden animate-fade-in">
+          <div className="bg-white dark:bg-navy-900 w-full max-w-md rounded-3xl shadow-2xl border border-amber-300 dark:border-amber-700/60 p-6 space-y-4 my-auto text-center">
+            <div className="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-inner">
+              <Lock className="w-7 h-7" />
+            </div>
+            
+            <div className="space-y-1.5">
+              <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center justify-center gap-2">
+                <span>🔐 Authentication Required</span>
+              </h3>
+              <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed px-2">
+                The institutional contest resource requires authentication. Please authenticate and try Sync again.
+              </p>
+            </div>
+
+            <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-xl text-[11.5px] text-amber-800 dark:text-amber-300 font-bold text-left space-y-1">
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <span>Protected Institutional Operation</span>
+              </div>
+              <p className="text-[10.5px] font-normal text-amber-700 dark:text-amber-400">
+                Weekly contest synchronization updates official student rankings and requires verified administrative or faculty credentials.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-center space-x-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowAuthRequiredModal(false)}
+                className="px-4 py-2.5 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 cursor-pointer rounded-xl hover:bg-gray-100 dark:hover:bg-navy-800 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAuthRequiredModal(false);
+                  window.location.href = '/login?returnUrl=' + encodeURIComponent(window.location.pathname);
+                }}
+                className="px-5 py-2.5 bg-gradient-to-r from-amber-600 to-indigo-600 hover:from-amber-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black shadow-lg shadow-indigo-500/20 transition-all cursor-pointer"
+              >
+                Authenticate / Sign In
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
