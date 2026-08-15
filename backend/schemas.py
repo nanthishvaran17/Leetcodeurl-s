@@ -243,16 +243,31 @@ class VerifyOtpRequest(BaseModel):
 class AIAssistantContext(BaseModel):
     page: Optional[str] = None
     section: Optional[str] = None
+    department: Optional[str] = None
+    year: Optional[str] = None
+    contest: Optional[str] = None
+    role: Optional[str] = None
+
+class AIAssistantMessage(BaseModel):
+    sender: str
+    text: str
 
 class AIAssistantRequest(BaseModel):
     message: str
+    mode: Optional[str] = "institutional" # "operations" | "institutional"
+    history: Optional[List[Dict[str, Any]]] = None
     context: Optional[AIAssistantContext] = None
 
 class AIAssistantResponse(BaseModel):
     success: bool
     answer: str
+    why: Optional[str] = None
+    evidence: Optional[str] = None
+    confidence: Optional[str] = "VERIFIED"
+    actionLabel: Optional[str] = None
+    actionTab: Optional[str] = None
     source: str
-    dataStatus: str # VERIFIED, DATA_UNAVAILABLE
+    dataStatus: str
     requestId: str
 
 

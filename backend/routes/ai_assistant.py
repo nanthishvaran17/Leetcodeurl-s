@@ -28,13 +28,17 @@ def handle_ai_assistant_query(
         raise HTTPException(status_code=400, detail="Message prompt cannot be empty.")
 
     page_context = req.context.page if req.context else None
+    context_filters = req.context.dict() if req.context else {}
 
-    # Process query using AIKnowledgeEngine
+    # Process query using Unified AIKnowledgeEngine
     response_data = AIKnowledgeEngine.answer_query(
         db=db,
         query_text=clean_msg,
         user=current_user,
-        context_page=page_context
+        context_page=page_context,
+        context_filters=context_filters,
+        history=req.history,
+        mode=req.mode or "institutional"
     )
 
     # Security Audit Log for AI Access
@@ -46,7 +50,7 @@ def handle_ai_assistant_query(
             db=db,
             action="AI_COPILOT_QUERY",
             action_type="AI_ASSISTANT",
-            description=f"AI Copilot queried by {user_name} ({user_role}): '{clean_msg[:60]}'",
+            description=f"AI Copilot ({req.mode or 'institutional'}) queried by {user_name} ({user_role}): '{clean_msg[:60]}'",
             current_user=current_user,
             target_type="AIAssistant",
             target_id=response_data.get("requestId", "")
@@ -55,9 +59,14 @@ def handle_ai_assistant_query(
         pass
 
     return AIAssistantResponse(
-        success=response_data["success"],
-        answer=response_data["answer"],
-        source=response_data["source"],
-        dataStatus=response_data["dataStatus"],
-        requestId=response_data["requestId"]
+        success=response_data.get("success", True),
+        answer=response_data.get("answer", ""),
+        why=response_data.get("why"),
+        evidence=response_data.get("evidence"),
+        confidence=response_data.get("confidence", "VERIFIED"),
+        actionLabel=response_data.get("actionLabel"),
+        actionTab=response_data.get("actionTab"),
+        source=response_data.get("source", "NEC Institutional Intelligence Engine"),
+        dataStatus=response_data.get("dataStatus", "VERIFIED"),
+        requestId=response_data.get("requestId", f"ai_{uuid.uuid4().hex[:12]}")
     )
