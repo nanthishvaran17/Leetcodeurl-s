@@ -11,7 +11,7 @@ from backend.services.schedule_service import (
     execute_scheduled_report_pipeline,
     get_execution_history
 )
-from backend.services.auth_service import get_current_user
+from backend.routes.auth import get_current_user
 from backend.models import User
 from backend.logger import logger
 
