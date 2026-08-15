@@ -438,8 +438,36 @@ def seed_institutional_historical_sessions(db: Session):
                 )
                 db.add(res)
 
+            # Seed authentic Virtual Results for historical completed sessions
+            virtual_targets = {510: 4, 511: 3, 512: 5, 513: 4, 514: 6, 515: 0}
+            target_virt = virtual_targets.get(c_num, 0)
+            if target_virt > 0 and c_num < 515:
+                non_participants = [s for s in students if s.reg_no not in participant_reg_nos]
+                selected_v = non_participants[:target_virt]
+                for idx, vs in enumerate(selected_v, start=1):
+                    v_solved = min(3, max(1, (idx % 3) + 1))
+                    vq1 = 1 if v_solved >= 1 else 0
+                    vq2 = 1 if v_solved >= 2 else 0
+                    vq3 = 1 if v_solved >= 3 else 0
+                    vq4 = 1 if v_solved >= 4 else 0
+                    v_score = vq1 * 3 + vq2 * 4 + vq3 * 5 + vq4 * 6
+                    vres = WeeklyVirtualResult(
+                        session_id=sess.id,
+                        student_id=vs.id,
+                        reg_no=vs.reg_no,
+                        name=vs.name,
+                        participation_status="VIRTUAL_ATTENDED",
+                        q1=vq1, q2=vq2, q3=vq3, q4=vq4,
+                        total_contest_solved=v_solved,
+                        contest_score=v_score
+                    )
+                    db.add(vres)
+                sess.virtual_participants = target_virt
+            else:
+                sess.virtual_participants = 0
+
             sess.official_participants = target_cnt
-            sess.not_participated = len(students) - target_cnt
+            sess.not_participated = max(0, len(students) - target_cnt - sess.virtual_participants)
             db.commit()
 
 async def resume_active_weekly_session(db: Session):
