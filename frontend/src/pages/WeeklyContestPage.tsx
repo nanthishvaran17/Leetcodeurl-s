@@ -809,10 +809,76 @@ export const WeeklyContestPage: React.FC = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Canonical 6-Tab Report Navigation Bar */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-black uppercase text-gray-400 tracking-wider">Report & Analytics Scope</span>
+            <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">Canonical Dataset: {matrixRows.length} Students</span>
+          </div>
+          <div className="flex items-center space-x-2 overflow-x-auto pb-1 no-scrollbar">
+            {[
+              { id: 'EXECUTIVE_SUMMARY', label: '📊 Executive Summary', badge: 'College-Wide' },
+              { id: 'CYBER_SECURITY', label: '🛡️ Cyber Security', badge: 'Department' },
+              { id: 'IOT', label: '🌐 IoT', badge: 'Department' },
+              { id: 'YEAR_II', label: '🎓 II Year (2029)', badge: '2025–2029' },
+              { id: 'YEAR_III', label: '🎓 III Year (2028)', badge: '2024–2028' },
+              { id: 'YEAR_IV', label: '🎓 IV Year (2027)', badge: '2023–2027' },
+            ].map((tab) => {
+              const isActive = (
+                (tab.id === 'EXECUTIVE_SUMMARY' && selectedDeptFilter === 'ALL' && selectedYearFilter === 'ALL') ||
+                (tab.id === 'CYBER_SECURITY' && (selectedDeptFilter === 'CSE(CS)' || selectedDeptFilter === 'Cyber Security') && selectedYearFilter === 'ALL') ||
+                (tab.id === 'IOT' && (selectedDeptFilter === 'CSE(IOT)' || selectedDeptFilter === 'IoT') && selectedYearFilter === 'ALL') ||
+                (tab.id === 'YEAR_II' && selectedYearFilter === 'II' && selectedDeptFilter === 'ALL') ||
+                (tab.id === 'YEAR_III' && selectedYearFilter === 'III' && selectedDeptFilter === 'ALL') ||
+                (tab.id === 'YEAR_IV' && selectedYearFilter === 'IV' && selectedDeptFilter === 'ALL')
+              );
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    if (tab.id === 'EXECUTIVE_SUMMARY') {
+                      setSelectedDeptFilter('ALL');
+                      setSelectedYearFilter('ALL');
+                    } else if (tab.id === 'CYBER_SECURITY') {
+                      setSelectedDeptFilter('CSE(CS)');
+                      setSelectedYearFilter('ALL');
+                    } else if (tab.id === 'IOT') {
+                      setSelectedDeptFilter('CSE(IOT)');
+                      setSelectedYearFilter('ALL');
+                    } else if (tab.id === 'YEAR_II') {
+                      setSelectedDeptFilter('ALL');
+                      setSelectedYearFilter('II');
+                    } else if (tab.id === 'YEAR_III') {
+                      setSelectedDeptFilter('ALL');
+                      setSelectedYearFilter('III');
+                    } else if (tab.id === 'YEAR_IV') {
+                      setSelectedDeptFilter('ALL');
+                      setSelectedYearFilter('IV');
+                    }
+                  }}
+                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-2xl text-xs font-black transition-all cursor-pointer whitespace-nowrap shadow-sm ${
+                    isActive
+                      ? 'bg-gradient-to-r from-indigo-600 to-brand-600 text-white shadow-lg shadow-indigo-500/25 scale-[1.02]'
+                      : 'bg-white dark:bg-navy-900 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-800 border border-gray-200 dark:border-gray-800'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono ${
+                    isActive ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-navy-800 text-gray-500'
+                  }`}>
+                    {tab.badge}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Secondary Sub-Filters & Attendance */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-gray-100 dark:border-gray-800/80">
           {/* Department Filter Buttons */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Department</label>
+            <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Dept Sub-Filter</label>
             <div className="flex flex-wrap gap-2">
               {['ALL', 'CSE(CS)', 'CSE(IOT)'].map((dept) => (
                 <button
@@ -831,7 +897,7 @@ export const WeeklyContestPage: React.FC = () => {
 
           {/* Year Filter Buttons */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Academic Year</label>
+            <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Year Sub-Filter</label>
             <div className="flex flex-wrap gap-2">
               {['ALL', 'II', 'III', 'IV'].map((yr) => (
                 <button
@@ -874,88 +940,179 @@ export const WeeklyContestPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Interactive Metrics Snapshot Grid (Clickable Cards) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        {/* Card 0: Filter Roster Count */}
+      {/* Scope Title Banner */}
+      <div className="p-4 rounded-2xl bg-gradient-to-r from-navy-900 via-indigo-950 to-navy-900 text-white flex flex-wrap items-center justify-between gap-3 shadow-md border border-indigo-900/50">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 text-[10px] font-black uppercase rounded bg-indigo-500/30 text-indigo-300 border border-indigo-400/30">
+              {selectedDeptFilter === 'ALL' && selectedYearFilter === 'ALL' ? 'EXECUTIVE SUMMARY' : (selectedDeptFilter !== 'ALL' ? selectedDeptFilter : `${selectedYearFilter} YEAR`)}
+            </span>
+            <h3 className="text-base font-black text-white">
+              {selectedDeptFilter === 'ALL' && selectedYearFilter === 'ALL'
+                ? 'College-Wide Executive Summary'
+                : (selectedDeptFilter !== 'ALL' && selectedYearFilter === 'ALL'
+                    ? `${selectedDeptFilter === 'CSE(CS)' ? 'Cyber Security' : 'Internet of Things (IoT)'} Performance Report`
+                    : (selectedDeptFilter === 'ALL'
+                        ? `${selectedYearFilter} Year (Batch Breakdown) Report`
+                        : `${selectedDeptFilter} — ${selectedYearFilter} Year Report`))}
+            </h3>
+          </div>
+          <p className="text-xs text-indigo-200/80 mt-0.5">
+            Active Scope: <b>{selectedDeptFilter === 'ALL' ? 'All Departments' : selectedDeptFilter}</b> • <b>{selectedYearFilter === 'ALL' ? 'All Years' : `${selectedYearFilter} Year`}</b> • <b>{totalRows} Verified Students</b>
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-indigo-200">Public Participation:</span>
+          <span className="text-lg font-black text-emerald-400">
+            {totalRows - errorRows > 0 ? ((attendedRows / (totalRows - errorRows)) * 100).toFixed(1) : '0.0'}%
+          </span>
+        </div>
+      </div>
+
+      {/* Primary Metrics Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <button
           onClick={() => setSelectedAttendanceFilter('ALL')}
-          className={`p-5 rounded-2xl bg-white dark:bg-navy-900 border text-center transition-all cursor-pointer ${selectedAttendanceFilter === 'ALL'
-              ? 'border-brand-500 ring-4 ring-brand-500/20 scale-105 shadow-xl'
+          className={`p-4 rounded-2xl bg-white dark:bg-navy-900 border text-center transition-all cursor-pointer ${selectedAttendanceFilter === 'ALL'
+              ? 'border-brand-500 ring-4 ring-brand-500/20 shadow-lg'
               : 'border-gray-200 dark:border-gray-800 hover:border-brand-300 shadow-sm'
             }`}
         >
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Filter Roster Count</p>
-            {selectedAttendanceFilter === 'ALL' && (
-              <span className="text-[9px] font-black bg-brand-100 text-brand-800 px-1.5 py-0.5 rounded">ACTIVE</span>
-            )}
-          </div>
+          <p className="text-[10px] font-black uppercase text-gray-400 tracking-wider mb-1">Total Students</p>
           <p className="text-2xl font-black text-gray-900 dark:text-white">{totalRows}</p>
         </button>
 
-        {/* Card 1: Public Attended (Clickable) */}
         <button
           onClick={() => toggleAttendanceFilter('PUBLIC_ATTENDED')}
-          className={`p-5 rounded-2xl bg-emerald-500/10 border text-center transition-all cursor-pointer ${selectedAttendanceFilter === 'PUBLIC_ATTENDED'
-              ? 'border-emerald-500 ring-4 ring-emerald-500/30 scale-105 shadow-xl bg-emerald-500/20'
-              : 'border-emerald-500/20 hover:border-emerald-400'
+          className={`p-4 rounded-2xl bg-emerald-500/10 border text-center transition-all cursor-pointer ${selectedAttendanceFilter === 'PUBLIC_ATTENDED'
+              ? 'border-emerald-500 ring-4 ring-emerald-500/30 shadow-lg bg-emerald-500/20'
+              : 'border-emerald-500/20 hover:border-emerald-400 shadow-sm'
             }`}
         >
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">🟢 Public Attended</p>
-            {selectedAttendanceFilter === 'PUBLIC_ATTENDED' && (
-              <span className="text-[9px] font-black bg-emerald-600 text-white px-1.5 py-0.5 rounded">ACTIVE</span>
-            )}
-          </div>
+          <p className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider mb-1">🟢 Public Attended</p>
           <p className="text-2xl font-black text-emerald-700 dark:text-emerald-300">{attendedRows}</p>
         </button>
 
-        {/* Card 2: Public Not Attended (Clickable) */}
         <button
-          onClick={() => toggleAttendanceFilter('PUBLIC_NOT_ATTENDED')}
-          className={`p-5 rounded-2xl bg-rose-500/10 border text-center transition-all cursor-pointer ${selectedAttendanceFilter === 'PUBLIC_NOT_ATTENDED'
-              ? 'border-rose-500 ring-4 ring-rose-500/30 scale-105 shadow-xl bg-rose-500/20'
-              : 'border-rose-500/20 hover:border-rose-400'
+          onClick={() => toggleAttendanceFilter('VIRTUAL_ATTENDED')}
+          className={`p-4 rounded-2xl bg-blue-500/10 border text-center transition-all cursor-pointer ${selectedAttendanceFilter === 'VIRTUAL_ATTENDED'
+              ? 'border-blue-500 ring-4 ring-blue-500/30 shadow-lg bg-blue-500/20'
+              : 'border-blue-500/20 hover:border-blue-400 shadow-sm'
             }`}
         >
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400 tracking-wider">🔴 Public Not Attended</p>
-            {selectedAttendanceFilter === 'PUBLIC_NOT_ATTENDED' && (
-              <span className="text-[9px] font-black bg-rose-600 text-white px-1.5 py-0.5 rounded">ACTIVE</span>
-            )}
-          </div>
+          <p className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider mb-1">🔵 Virtual Attended</p>
+          <p className="text-2xl font-black text-blue-700 dark:text-blue-300">{virtualRows}</p>
+        </button>
+
+        <button
+          onClick={() => toggleAttendanceFilter('PUBLIC_NOT_ATTENDED')}
+          className={`p-4 rounded-2xl bg-rose-500/10 border text-center transition-all cursor-pointer ${selectedAttendanceFilter === 'PUBLIC_NOT_ATTENDED'
+              ? 'border-rose-500 ring-4 ring-rose-500/30 shadow-lg bg-rose-500/20'
+              : 'border-rose-500/20 hover:border-rose-400 shadow-sm'
+            }`}
+        >
+          <p className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400 tracking-wider mb-1">🔴 Not Attended</p>
           <p className="text-2xl font-black text-rose-700 dark:text-rose-300">{notAttendedRows}</p>
         </button>
 
-        {/* Card 3: Virtual Attended (Clickable / NOT AVAILABLE) */}
-        <button
-          onClick={() => toggleAttendanceFilter('VIRTUAL_ATTENDED')}
-          className={`p-5 rounded-2xl bg-blue-500/10 border text-center transition-all cursor-pointer ${selectedAttendanceFilter === 'VIRTUAL_ATTENDED'
-              ? 'border-blue-500 ring-4 ring-blue-500/30 scale-105 shadow-xl bg-blue-500/20'
-              : 'border-blue-500/20 hover:border-blue-400'
-            }`}
-        >
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider">🔵 Virtual Attended</p>
-            {selectedAttendanceFilter === 'VIRTUAL_ATTENDED' && (
-              <span className="text-[9px] font-black bg-blue-600 text-white px-1.5 py-0.5 rounded">ACTIVE</span>
-            )}
-          </div>
-          {isVirtualAvailable ? (
-            <p className="text-2xl font-black text-blue-700 dark:text-blue-300">{virtualRows}</p>
-          ) : (
-            <div className="pt-1">
-              <span className="inline-block px-2 py-0.5 text-[10px] font-black uppercase rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                NOT AVAILABLE
-              </span>
-            </div>
-          )}
-        </button>
-
-        {/* Card 4: Data Errors */}
-        <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center">
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center shadow-sm">
           <p className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider mb-1">⚠️ Data Errors</p>
           <p className="text-2xl font-black text-amber-700 dark:text-amber-300">{errorRows}</p>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-center shadow-sm">
+          <p className="text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-wider mb-1">📈 Participation %</p>
+          <p className="text-2xl font-black text-indigo-700 dark:text-indigo-300">
+            {totalRows - errorRows > 0 ? `${((attendedRows / (totalRows - errorRows)) * 100).toFixed(1)}%` : '0.0%'}
+          </p>
+        </div>
+      </div>
+
+      {/* Structured Category Breakdown Table based on Active Scope */}
+      <div className="p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
+        <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            <h4 className="text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white">
+              {selectedDeptFilter === 'ALL' && selectedYearFilter === 'ALL'
+                ? 'Department & Academic Year Matrix Breakdown'
+                : (selectedDeptFilter !== 'ALL'
+                    ? `${selectedDeptFilter} — Year-Wise Breakdown (II, III, IV Year)`
+                    : `${selectedYearFilter} Year — Department Split (Cyber Security vs IoT)`)}
+            </h4>
+          </div>
+          <span className="text-[11px] font-bold text-gray-400">Exact Mathematical Aggregation</span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="border-b border-gray-200 dark:border-gray-800 text-[11px] font-black text-gray-400 uppercase tracking-wider">
+                <th className="py-2.5 px-3">Segment / Category</th>
+                <th className="py-2.5 px-3 text-center">Total Students</th>
+                <th className="py-2.5 px-3 text-center text-emerald-600 dark:text-emerald-400">Public</th>
+                <th className="py-2.5 px-3 text-center text-blue-600 dark:text-blue-400">Virtual</th>
+                <th className="py-2.5 px-3 text-center text-rose-600 dark:text-rose-400">Not Attended</th>
+                <th className="py-2.5 px-3 text-center text-amber-600 dark:text-amber-400">Errors</th>
+                <th className="py-2.5 px-3 text-right">Public Part. %</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800/60 font-bold">
+              {/* Department breakdown rows */}
+              {['CSE(CS)', 'CSE(IOT)'].map((deptCode) => {
+                const subset = matrixRows.filter(r => (r.dept === deptCode || (deptCode === 'CSE(CS)' ? r.dept === 'Cyber Security' : r.dept === 'IoT')));
+                const tot = subset.length;
+                const pub = subset.filter(r => r.participation_status === 'PUBLIC_ATTENDED').length;
+                const virt = subset.filter(r => r.participation_status === 'VIRTUAL_ATTENDED').length;
+                const notAtt = subset.filter(r => r.participation_status === 'PUBLIC_NOT_ATTENDED').length;
+                const errs = subset.filter(r => r.participation_status === 'DATA_ERROR' || r.fetch_status === 'FAILED').length;
+                const elig = tot - errs;
+                const pct = elig > 0 ? ((pub / elig) * 100).toFixed(1) : '0.0';
+
+                return (
+                  <tr key={deptCode} className="hover:bg-gray-50 dark:hover:bg-navy-800/50">
+                    <td className="py-2.5 px-3 font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                      <span>Department: {deptCode === 'CSE(CS)' ? 'Cyber Security' : 'Internet of Things (IoT)'}</span>
+                    </td>
+                    <td className="py-2.5 px-3 text-center text-gray-700 dark:text-gray-300">{tot}</td>
+                    <td className="py-2.5 px-3 text-center text-emerald-600 dark:text-emerald-400 font-black">{pub}</td>
+                    <td className="py-2.5 px-3 text-center text-blue-600 dark:text-blue-400 font-black">{virt}</td>
+                    <td className="py-2.5 px-3 text-center text-rose-600 dark:text-rose-400 font-black">{notAtt}</td>
+                    <td className="py-2.5 px-3 text-center text-amber-600 dark:text-amber-400">{errs}</td>
+                    <td className="py-2.5 px-3 text-right text-indigo-600 dark:text-indigo-400 font-black">{pct}%</td>
+                  </tr>
+                );
+              })}
+
+              {/* Academic Year breakdown rows */}
+              {['II', 'III', 'IV'].map((yr) => {
+                const subset = matrixRows.filter(r => r.year === yr);
+                const tot = subset.length;
+                const pub = subset.filter(r => r.participation_status === 'PUBLIC_ATTENDED').length;
+                const virt = subset.filter(r => r.participation_status === 'VIRTUAL_ATTENDED').length;
+                const notAtt = subset.filter(r => r.participation_status === 'PUBLIC_NOT_ATTENDED').length;
+                const errs = subset.filter(r => r.participation_status === 'DATA_ERROR' || r.fetch_status === 'FAILED').length;
+                const elig = tot - errs;
+                const pct = elig > 0 ? ((pub / elig) * 100).toFixed(1) : '0.0';
+
+                return (
+                  <tr key={yr} className="hover:bg-gray-50 dark:hover:bg-navy-800/50 bg-gray-50/40 dark:bg-navy-950/20">
+                    <td className="py-2.5 px-3 font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                      <span>Academic Year: {yr} Year ({yr === 'II' ? '2025–2029' : (yr === 'III' ? '2024–2028' : '2023–2027')})</span>
+                    </td>
+                    <td className="py-2.5 px-3 text-center text-gray-700 dark:text-gray-300">{tot}</td>
+                    <td className="py-2.5 px-3 text-center text-emerald-600 dark:text-emerald-400 font-black">{pub}</td>
+                    <td className="py-2.5 px-3 text-center text-blue-600 dark:text-blue-400 font-black">{virt}</td>
+                    <td className="py-2.5 px-3 text-center text-rose-600 dark:text-rose-400 font-black">{notAtt}</td>
+                    <td className="py-2.5 px-3 text-center text-amber-600 dark:text-amber-400">{errs}</td>
+                    <td className="py-2.5 px-3 text-right text-purple-600 dark:text-purple-400 font-black">{pct}%</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 
