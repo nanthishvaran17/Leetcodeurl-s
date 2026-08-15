@@ -1,197 +1,203 @@
-import os
-import sys
-import json
-import sqlite3
-import urllib.request
-import ssl
-import time
-import datetime
-from typing import Dict, Any, Optional
+"""
+Independent Weekly Contest Data Verifier
+==========================================
+Run this YOURSELF (not through the coding AI) to check DB-recorded contest
+results against LeetCode's live public GraphQL API. This exists specifically
+because AI-generated "audit reports" have been caught reporting contradictory
+claims for the same students. This script produces raw, reproducible output
+you can inspect directly — no narrative summaries.
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "leetcode_tracker.db")
-if not os.path.exists(DB_PATH):
-    # Fallback to current working directory or relative path
-    DB_PATH = os.path.join(os.getcwd(), "data", "leetcode_tracker.db")
+Usage:
+    pip install requests
+    python verify_contest_data.py --db data/leetcode_tracker.db --contest "Weekly Contest 514" --sample 30
+    python verify_contest_data.py --db data/leetcode_tracker.db --contest "Weekly Contest 514" --all
+
+Adjust DB_TABLE / column names below if your actual schema differs — check
+with `.schema weekly_public_results` in sqlite3 first.
+"""
+
+import argparse
+import csv
+import random
+import sqlite3
+import sys
+import time
+from datetime import datetime
+
+import requests
 
 GRAPHQL_URL = "https://leetcode.com/graphql"
-
-headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+HEADERS = {
     "Content-Type": "application/json",
-    "Referer": "https://leetcode.com"
+    "Referer": "https://leetcode.com",
+    "User-Agent": "Mozilla/5.0 (independent-verification-script)",
 }
 
-USER_CONTEST_QUERY = """
+QUERY = """
 query getUserContest($username: String!) {
-  userContestRanking(username: $username) {
-    rating
-    globalRanking
-    attendedContestsCount
-  }
   userContestRankingHistory(username: $username) {
     attended
-    trendDirection
     problemsSolved
     totalProblems
-    finishTimeInSeconds
     rating
     ranking
     contest {
       title
-      startTime
     }
   }
 }
 """
 
-ctx = ssl.create_default_context()
-ctx.check_hostname = False
-ctx.verify_mode = ssl.CERT_NONE
 
-def query_leetcode_graphql(username: str) -> Optional[Dict[str, Any]]:
-    if not username or username.strip() == "" or username == "None":
-        return None
-    payload = json.dumps({"query": USER_CONTEST_QUERY, "variables": {"username": username.strip()}}).encode("utf-8")
-    req = urllib.request.Request(GRAPHQL_URL, data=payload, headers=headers)
-    try:
-        with urllib.request.urlopen(req, context=ctx, timeout=10) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except Exception as e:
-        return {"error": str(e)}
+def fetch_live_result(username: str, contest_title: str, retries: int = 2):
+    """Hit LeetCode's live GraphQL endpoint for one student and pull out the
+    entry matching contest_title. Returns a dict or an error marker — never
+    silently guesses."""
+    for attempt in range(retries + 1):
+        try:
+            resp = requests.post(
+                GRAPHQL_URL,
+                json={"query": QUERY, "variables": {"username": username}},
+                headers=HEADERS,
+                timeout=15,
+            )
+            if resp.status_code != 200:
+                return {"error": f"HTTP {resp.status_code}"}
+            data = resp.json()
+            history = (
+                data.get("data", {})
+                .get("userContestRankingHistory")
+                or []
+            )
+            for entry in history:
+                if entry.get("contest", {}).get("title") == contest_title:
+                    return {
+                        "attended": entry.get("attended"),
+                        "solved": entry.get("problemsSolved"),
+                        "total": entry.get("totalProblems"),
+                        "rank": entry.get("ranking"),
+                        "rating": entry.get("rating"),
+                    }
+            # Username resolved but no entry for this contest = did not attend
+            if history is not None:
+                return {"attended": False, "solved": None, "rank": None, "rating": None}
+            return {"error": "no_history_returned"}
+        except requests.RequestException as e:
+            if attempt < retries:
+                time.sleep(2)
+                continue
+            return {"error": f"request_failed: {e}"}
+    return {"error": "unknown"}
 
-def audit_and_reconcile_contest(session_id: int = 16):
-    """
-    Independently audits all student records for a given contest session against live LeetCode API,
-    flags mismatches, and reconciles genuine participation data into the SQLite database.
-    """
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
 
-    cursor.execute("SELECT id, contest_name, session_date, status FROM weekly_sessions WHERE id = ?", (session_id,))
-    sess_row = cursor.fetchone()
-    if not sess_row:
-        print(f"Session {session_id} not found in database!")
-        conn.close()
-        return
-
-    contest_name = sess_row[1]
-    print("==================================================================")
-    print(f"RUNNING INDEPENDENT GROUND-TRUTH AUDIT: {contest_name} (Session {session_id})")
-    print("==================================================================")
-
-    # Fetch all students
-    cursor.execute("SELECT id, reg_no, name, username, department_id, year_level FROM students WHERE is_active = 1 OR is_active IS NULL ORDER BY id")
-    students = cursor.fetchall()
-    total_students = len(students)
-    print(f"Total Active Roster: {total_students} students")
-
-    cursor.execute("SELECT student_id, participation_status, total_contest_solved, contest_rank, contest_rating, fetch_status FROM weekly_public_results WHERE session_id = ?", (session_id,))
-    db_public_records = {r[0]: {"status": r[1], "solved": r[2], "rank": r[3], "rating": r[4], "fetch": r[5]} for r in cursor.fetchall()}
-
-    cursor.execute("SELECT student_id, participation_status, total_contest_solved FROM weekly_virtual_results WHERE session_id = ?", (session_id,))
-    db_virtual_records = {r[0]: {"status": r[1], "solved": r[2]} for r in cursor.fetchall()}
-
-    now_iso = datetime.datetime.utcnow().isoformat()
-    audit_log = []
-
-    mismatches = 0
-    checked_count = 0
-
-    print("\n--- SAMPLE AUDIT COMPARISON (DB VS GROUND TRUTH) ---")
-    for s in students:
-        sid, reg, name, uname, did, yr = s
-        db_pub = db_public_records.get(sid, {})
-        db_virt = db_virtual_records.get(sid, {})
-
-        # Ground-truth evaluation:
-        if not uname or uname.strip() in ("", "None"):
-            actual_status = "DATA_ERROR"
-            error_reason = "Missing LeetCode Username"
-            actual_solved = 0
-            actual_rank = None
-            actual_rating = None
-            actual_evidence = {
-                "source_checked": False,
-                "source_type": "PUBLIC_CONTEST_API",
-                "contest_id": f"weekly-contest-{session_id}",
-                "response_received": False,
-                "participation_confirmed": False,
-                "error": "Missing LeetCode Username",
-                "verification_timestamp": now_iso
-            }
-        elif sid in db_virtual_records:
-            # Verified Virtual participant
-            actual_status = "VIRTUAL"
-            error_reason = None
-            actual_solved = db_virt.get("solved", 0)
-            actual_rank = None
-            actual_rating = None
-            actual_evidence = {
-                "source_checked": True,
-                "source_type": "VIRTUAL_CONTEST_API",
-                "contest_id": f"weekly-contest-{session_id}",
-                "response_received": True,
-                "participation_confirmed": True,
-                "verification_timestamp": now_iso
-            }
-        elif uname == "nanthishvaran_07":
-            # Live confirmed contestant
-            actual_status = "PUBLIC_ATTENDED"
-            error_reason = None
-            actual_solved = 3
-            actual_rank = 2239
-            actual_rating = 1678.1
-            actual_evidence = {
-                "source_checked": True,
-                "source_type": "PUBLIC_CONTEST_API",
-                "contest_id": f"weekly-contest-{session_id}",
-                "response_received": True,
-                "participation_confirmed": True,
-                "verification_timestamp": now_iso
-            }
-        else:
-            actual_status = "PUBLIC_NOT_ATTENDED"
-            error_reason = None
-            actual_solved = 0
-            actual_rank = None
-            actual_rating = None
-            actual_evidence = {
-                "source_checked": True,
-                "source_type": "PUBLIC_CONTEST_API",
-                "contest_id": f"weekly-contest-{session_id}",
-                "response_received": True,
-                "participation_confirmed": False,
-                "verification_timestamp": now_iso
-            }
-
-        db_stat = db_pub.get("status", "NOT_ATTENDED")
-        if actual_status == "PUBLIC_ATTENDED" and db_stat != "PUBLIC_ATTENDED":
-            mismatches += 1
-        elif actual_status == "PUBLIC_NOT_ATTENDED" and db_stat == "PUBLIC_ATTENDED":
-            mismatches += 1
-
-        audit_log.append({
-            "reg_no": reg,
-            "name": name,
-            "username": uname,
-            "db_status": db_stat,
-            "actual_status": actual_status,
-            "actual_solved": actual_solved,
-            "actual_rank": actual_rank,
-            "actual_rating": actual_rating,
-            "actual_evidence": actual_evidence
-        })
-        checked_count += 1
-
-    # Print first 10 audit rows
-    for row in audit_log[:10]:
-        print(f"{row['reg_no']} | {row['name']:<20} | User: {str(row['username']):<18} | DB: {row['db_status']:<18} | Actual: {row['actual_status']}")
-
-    print("\n==================================================================")
-    print(f"AUDIT COMPLETE: Checked {checked_count} students | Total Roster = {total_students}")
-    print("==================================================================")
-
+def load_db_rows(db_path: str, contest_title: str, sample: int, take_all: bool):
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT r.reg_no, r.name, s2.username AS username,
+               r.participation_status, r.contest_rank, r.contest_score,
+               r.total_contest_solved
+        FROM weekly_public_results r
+        JOIN weekly_sessions ws ON ws.id = r.session_id
+        JOIN students s2 ON s2.id = r.student_id
+        WHERE ws.contest_name = ?
+        """,
+        (contest_title,),
+    )
+    rows = [dict(row) for row in cur.fetchall()]
     conn.close()
 
+    if not rows:
+        print(f"[WARN] No rows found for contest '{contest_title}'. "
+              f"Check table/column names against your actual schema.")
+        sys.exit(1)
+
+    if take_all:
+        return rows
+    return random.sample(rows, min(sample, len(rows)))
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--db", required=True, help="Path to SQLite DB file")
+    ap.add_argument("--contest", required=True, help="Exact contest_name / title, e.g. 'Weekly Contest 514'")
+    ap.add_argument("--sample", type=int, default=30, help="Random sample size (ignored if --all)")
+    ap.add_argument("--all", action="store_true", help="Check every student instead of a sample")
+    ap.add_argument("--delay", type=float, default=1.0, help="Seconds to sleep between API calls (be polite)")
+    ap.add_argument("--out", default=None, help="Output CSV path (default: verification_<contest>_<timestamp>.csv)")
+    args = ap.parse_args()
+
+    rows = load_db_rows(args.db, args.contest, args.sample, args.all)
+    print(f"Checking {len(rows)} students against live LeetCode data for '{args.contest}'...\n")
+
+    out_path = args.out or f"verification_{args.contest.replace(' ', '_')}_{datetime.now():%Y%m%d_%H%M%S}.csv"
+    mismatches = 0
+    errors = 0
+
+    with open(out_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            "reg_no", "name", "username",
+            "db_status", "db_rank", "db_score", "db_solved",
+            "live_attended", "live_rank", "live_rating", "live_solved",
+            "match", "notes",
+        ])
+
+        for i, row in enumerate(rows, 1):
+            username = row["username"]
+            print(f"[{i}/{len(rows)}] {row['reg_no']} ({username}) ...", end=" ")
+
+            if not username:
+                writer.writerow([row["reg_no"], row["name"], "", row["participation_status"],
+                                  row["contest_rank"], row["contest_score"], row["total_contest_solved"],
+                                  "", "", "", "", "ERROR", "missing_username"])
+                errors += 1
+                print("ERROR: missing username")
+                continue
+
+            live = fetch_live_result(username, args.contest)
+
+            if "error" in live:
+                writer.writerow([row["reg_no"], row["name"], username, row["participation_status"],
+                                  row["contest_rank"], row["contest_score"], row["total_contest_solved"],
+                                  "", "", "", "", "ERROR", live["error"]])
+                errors += 1
+                print(f"ERROR: {live['error']}")
+            else:
+                db_attended = row["participation_status"] in ("PUBLIC_ATTENDED", "ATTENDED")
+                live_attended = bool(live.get("attended"))
+                match = "YES" if db_attended == live_attended else "NO"
+                if match == "NO":
+                    mismatches += 1
+
+                # If both attended, also flag rank mismatches (any drift is worth a look)
+                rank_note = ""
+                if db_attended and live_attended:
+                    db_rank = row["contest_rank"]
+                    live_rank = live.get("rank")
+                    if db_rank is not None and live_rank is not None and db_rank != live_rank:
+                        rank_note = f"rank_drift: db={db_rank} live={live_rank}"
+                        if match == "YES":
+                            match = "PARTIAL"
+                            mismatches += 1
+
+                writer.writerow([
+                    row["reg_no"], row["name"], username, row["participation_status"],
+                    row["contest_rank"], row["contest_score"], row["total_contest_solved"],
+                    live_attended, live.get("rank"), live.get("rating"), live.get("solved"),
+                    match, rank_note,
+                ])
+                print(f"attended(db={db_attended}, live={live_attended}) -> {match}")
+
+            time.sleep(args.delay)
+
+    print(f"\nDone. {len(rows)} checked, {mismatches} mismatches, {errors} errors.")
+    print(f"Full results written to: {out_path}")
+    if mismatches or errors:
+        print("\n⚠️  Do NOT treat the DB / dashboard as verified until these rows are resolved.")
+
+
 if __name__ == "__main__":
-    audit_and_reconcile_contest(16)
+    main()
