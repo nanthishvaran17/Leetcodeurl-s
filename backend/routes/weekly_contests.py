@@ -380,15 +380,16 @@ def get_normalized_contest_data(
             score_val = p_res.contest_score or 0
             rank_val = getattr(p_res, 'contest_rank', None)
             rating_val = getattr(p_res, 'contest_rating', None)
-        elif p_res and p_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED") and p_fetch_st == "SUCCESS":
-            resolved_status = "NOT_ATTENDED"
-            data_fetch_st = "SUCCESS"
-            confidence_val = "VERIFIED"
-        elif p_res and (p_fetch_st == "FETCH_FAILED" or p_status in ("FETCH_ERROR", "DATA_ERROR")):
-            resolved_status = "UNKNOWN"
-            data_fetch_st = "FETCH_FAILED"
-            confidence_val = "UNVERIFIED"
-            err_re = getattr(p_res, 'error_reason', 'Network timeout or API fetch failure')
+        elif p_res and p_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED"):
+            if getattr(p_res, 'fetch_status', None) == "FETCH_ERROR" or p_fetch_st == "FETCH_FAILED":
+                resolved_status = "UNKNOWN"
+                data_fetch_st = "FETCH_FAILED"
+                confidence_val = "UNVERIFIED"
+                err_re = getattr(p_res, 'error_reason', 'Network timeout or API fetch failure')
+            else:
+                resolved_status = "NOT_ATTENDED"
+                data_fetch_st = "SUCCESS"
+                confidence_val = "VERIFIED"
         elif is_upcoming_or_in_progress:
             resolved_status = "UNKNOWN"
             data_fetch_st = "DATA_UNAVAILABLE"
@@ -557,8 +558,9 @@ def get_normalized_contest_data(
             "virtualDataStatus": "AVAILABLE" if virtual_attended_cnt > 0 else "NOT_AVAILABLE",
             "unknown": unknown_cnt,
             "usernameNotFound": username_missing_cnt,
+            "unlinkedProfiles": username_missing_cnt,
             "fetchFailed": fetch_failed_cnt,
-            "dataErrors": unknown_cnt,
+            "dataErrors": fetch_failed_cnt,
             "failedVerification": unknown_cnt,
             "publicParticipationRate": participation_rate,
             "participationRate": f"{participation_rate:.2f}%",

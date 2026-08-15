@@ -215,18 +215,30 @@ async def trigger_final_snapshot_0930(db: Session, session_id: int) -> OfficialW
     dataset_hash = hashlib.sha256(data_json_str.encode('utf-8')).hexdigest()
     session.dataset_hash = dataset_hash
 
-    snapshot = OfficialWeeklySnapshot(
-        session_id=session.id,
-        contest_id=session.contest_id or "weekly-contest",
-        contest_name=session.contest_name,
-        contest_date=session.session_date,
-        finalized_at=session.finalized_at,
-        dataset=snapshot_data,
-        dataset_hash=dataset_hash,
-        student_count=session.total_students,
-        error_count=data_errors
-    )
-    db.add(snapshot)
+    existing_snap = db.query(OfficialWeeklySnapshot).filter(OfficialWeeklySnapshot.session_id == session.id).first()
+    if existing_snap:
+        existing_snap.contest_id = session.contest_id or "weekly-contest"
+        existing_snap.contest_name = session.contest_name
+        existing_snap.contest_date = session.session_date
+        existing_snap.finalized_at = session.finalized_at
+        existing_snap.dataset = snapshot_data
+        existing_snap.dataset_hash = dataset_hash
+        existing_snap.student_count = session.total_students
+        existing_snap.error_count = data_errors
+        snapshot = existing_snap
+    else:
+        snapshot = OfficialWeeklySnapshot(
+            session_id=session.id,
+            contest_id=session.contest_id or "weekly-contest",
+            contest_name=session.contest_name,
+            contest_date=session.session_date,
+            finalized_at=session.finalized_at,
+            dataset=snapshot_data,
+            dataset_hash=dataset_hash,
+            student_count=session.total_students,
+            error_count=data_errors
+        )
+        db.add(snapshot)
 
     session.status = "FINALIZED"
     db.commit()

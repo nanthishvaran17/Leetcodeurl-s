@@ -100,7 +100,7 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         "average_weekly_progress": float(avg_progress),
         "highest_contest_rating": float(highest_rating) if highest_rating is not None else 0.0,
         "top_college_ranker": str(top_college_ranker) if top_college_ranker else "N/A",
-        "current_session": current_session,
+        "current_session": WeeklySessionOut.from_orm(current_session) if current_session else None,
         "next_session_countdown_seconds": int(max(countdown_sec, 0)),
         "verified_profiles": int(verified_profiles),
         "pending_sync": int(pending_sync),
@@ -111,12 +111,14 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
 
 @router.post("/trigger-start")
 async def trigger_session_start(background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    from backend.services.weekly_session_manager import trigger_start_snapshot_0800
     session = get_or_create_current_session(db)
-    background_tasks.add_task(trigger_start_snapshot, db, session.id)
+    background_tasks.add_task(trigger_start_snapshot_0800, db, session.id)
     return {"message": "Session start (8:00 AM baseline snapshot) triggered in background.", "session_id": session.id}
 
 @router.post("/trigger-end")
 async def trigger_session_end(background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    from backend.services.weekly_session_manager import trigger_final_snapshot_0930
     session = get_or_create_current_session(db)
-    background_tasks.add_task(trigger_end_snapshot, db, session.id)
+    background_tasks.add_task(trigger_final_snapshot_0930, db, session.id)
     return {"message": "Session end (9:30 AM snapshot & progress evaluation) triggered in background.", "session_id": session.id}

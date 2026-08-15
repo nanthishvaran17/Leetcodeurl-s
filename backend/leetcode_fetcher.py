@@ -72,12 +72,6 @@ query getUserProfile($username: String!) {
       totalActiveDays
       streak
     }
-    submitStatsGlobal {
-      acSubmissionNum {
-        difficulty
-        count
-      }
-    }
     submitStats {
       acSubmissionNum {
         difficulty
