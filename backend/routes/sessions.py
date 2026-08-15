@@ -15,8 +15,15 @@ router = APIRouter(prefix="/api/sessions", tags=["Sessions"])
 def get_current_session_info(db: Session = Depends(get_db)):
     return get_or_create_current_session(db)
 
+from backend.cache import cache
+
 @router.get("/dashboard-summary", response_model=DashboardSummary)
 def get_dashboard_summary(db: Session = Depends(get_db)):
+    cache_key = "sessions:dashboard_summary"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     students = db.query(Student).options(
         joinedload(Student.stats)
     ).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
@@ -33,7 +40,6 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
     top_college_ranker = None
 
     if students:
-        # Guard: total_solved can be NULL in DB even when stats row exists
         total_problems = sum((s.stats.total_solved or 0) if s.stats else 0 for s in students)
         ratings = [s.stats.contest_rating for s in students if s.stats and s.stats.contest_rating]
         if ratings:
@@ -56,7 +62,6 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
                 else:
                     not_started_students += 1
         else:
-            # Fallback based on live student stats
             active_students = sum(1 for s in students if s.stats and (s.stats.total_solved or 0) > 0)
             not_started_students = total_students - active_students
     else:
@@ -65,7 +70,6 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
 
     avg_solved = round(total_problems / total_students, 1) if total_students > 0 else 0.0
     
-    # Calculate progress average
     avg_progress = 0.0
     if current_session:
         snaps = db.query(WeeklySessionSnapshot).filter(WeeklySessionSnapshot.session_id == current_session.id).all()
@@ -74,7 +78,6 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         else:
             avg_progress = round(total_problems / max(total_students, 1), 1)
 
-    # Next session countdown seconds (Sunday 8:00 AM IST)
     now = datetime.datetime.now()
     days_until_sunday = (6 - now.weekday()) % 7
     if days_until_sunday == 0 and now.hour >= 8:
@@ -82,7 +85,7 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
     next_sunday = (now + datetime.timedelta(days=days_until_sunday)).replace(hour=8, minute=0, second=0, microsecond=0)
     countdown_sec = int((next_sunday - now).total_seconds())
 
-    return {
+    resp = {
         "total_students": int(total_students),
         "total_departments": int(total_departments),
         "total_sections": int(total_sections),
@@ -96,6 +99,8 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         "current_session": current_session,
         "next_session_countdown_seconds": int(max(countdown_sec, 0))
     }
+    cache.set(cache_key, resp, ttl_seconds=60, tags=["sessions", "students"])
+    return resp
 
 @router.post("/trigger-start")
 async def trigger_session_start(background_tasks: BackgroundTasks, db: Session = Depends(get_db)):

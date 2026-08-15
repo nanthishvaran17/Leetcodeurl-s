@@ -137,21 +137,32 @@ async def trigger_final_snapshot_0930(db: Session, session_id: int) -> OfficialW
     data_errors = 0
 
     for r in public_results:
-        if r.fetch_status == "SUCCESS":
-            if r.participation_status in ("PUBLIC_ATTENDED", "ATTENDED"):
-                r.participation_status = "PUBLIC_ATTENDED"
+        fetch_st = getattr(r, 'data_fetch_status', None) or getattr(r, 'fetch_status', None)
+        if fetch_st == "SUCCESS":
+            if r.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"):
+                r.participation_status = "PUBLIC"
                 official_attended += 1
+            elif r.participation_status in ("VIRTUAL", "VIRTUAL_ATTENDED"):
+                r.participation_status = "VIRTUAL"
             else:
-                r.participation_status = "PUBLIC_NOT_ATTENDED"
+                r.participation_status = "NOT_ATTENDED"
                 r.q1 = r.q2 = r.q3 = r.q4 = r.total_contest_solved = 0
                 not_attended += 1
-        elif r.fetch_status == "FETCH_ERROR":
-            r.participation_status = "DATA_ERROR"
+        elif fetch_st == "USERNAME_NOT_FOUND":
+            r.participation_status = "UNKNOWN"
+            r.data_fetch_status = "USERNAME_NOT_FOUND"
+            r.confidence = "UNVERIFIED"
+            data_errors += 1
+        elif fetch_st in ("FETCH_FAILED", "FETCH_ERROR", "FAILED"):
+            r.participation_status = "UNKNOWN"
+            r.data_fetch_status = "FETCH_FAILED"
+            r.confidence = "UNVERIFIED"
             data_errors += 1
         else:
-            r.participation_status = "PUBLIC_NOT_ATTENDED"
-            r.q1 = r.q2 = r.q3 = r.q4 = r.total_contest_solved = 0
-            not_attended += 1
+            r.participation_status = "UNKNOWN"
+            r.data_fetch_status = "DATA_UNAVAILABLE"
+            r.confidence = "UNVERIFIED"
+            data_errors += 1
 
     virtual_results = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == session_id).all()
     virtual_count = len(virtual_results)
@@ -561,41 +572,62 @@ def sync_single_historical_session(db: Session, session_id: int):
 
     def fetch_live_contest_entry(s_obj):
         uname = s_obj.username
-        if not uname or uname.strip() in ("", "None"):
-            return {"sid": s_obj.id, "reg": s_obj.reg_no, "name": s_obj.name, "dept": s_obj.department.code if s_obj.department else "CSE", "year": s_obj.year_level or "III", "status": "DATA_ERROR", "error": "missing_username"}
+        if not uname or uname.strip() in ("", "None", "null") or len(uname.strip()) < 2:
+            return {
+                "sid": s_obj.id, "reg": s_obj.reg_no, "name": s_obj.name,
+                "dept": s_obj.department.code if s_obj.department else "CSE", "year": s_obj.year_level or "III",
+                "participation_status": "UNKNOWN", "data_fetch_status": "USERNAME_NOT_FOUND", "confidence": "UNVERIFIED",
+                "attended": False, "solved": 0, "score": 0, "rank": None, "rating": None, "error": "Missing or unmapped username"
+            }
 
-        payload = json.dumps({"query": QUERY, "variables": {"username": uname.strip()}}).encode("utf-8")
+        clean_uname = uname.strip()
+        payload = json.dumps({"query": QUERY, "variables": {"username": clean_uname}}).encode("utf-8")
         req = urllib.request.Request(GRAPHQL_URL, data=payload, headers=headers)
-        for attempt in range(4):
+        last_err = None
+        for attempt in range(3):
             try:
-                with urllib.request.urlopen(req, context=ctx, timeout=10) as resp:
-                    data = json.loads(resp.read().decode("utf-8"))
-                    history = data.get("data", {}).get("userContestRankingHistory") or []
-                    for entry in history:
-                        if entry.get("contest", {}).get("title") == target_contest_title:
-                            is_att = bool(entry.get("attended"))
-                            solved = entry.get("problemsSolved") or 0
-                            rank = entry.get("ranking")
-                            rating = entry.get("rating")
+                with urllib.request.urlopen(req, context=ctx, timeout=8) as resp:
+                    if resp.status == 200:
+                        data = json.loads(resp.read().decode("utf-8"))
+                        history = data.get("data", {}).get("userContestRankingHistory")
+                        if history is not None:
+                            for entry in history:
+                                if entry.get("contest", {}).get("title") == target_contest_title:
+                                    is_att = bool(entry.get("attended"))
+                                    if is_att:
+                                        solved = entry.get("problemsSolved") or 0
+                                        rank = entry.get("ranking")
+                                        rating = entry.get("rating")
+                                        return {
+                                            "sid": s_obj.id, "reg": s_obj.reg_no, "name": s_obj.name,
+                                            "dept": s_obj.department.code if s_obj.department else "CSE", "year": s_obj.year_level or "III",
+                                            "participation_status": "PUBLIC", "data_fetch_status": "SUCCESS", "confidence": "VERIFIED",
+                                            "attended": True, "solved": solved, "rank": rank, "rating": rating, "error": None
+                                        }
+                                    else:
+                                        return {
+                                            "sid": s_obj.id, "reg": s_obj.reg_no, "name": s_obj.name,
+                                            "dept": s_obj.department.code if s_obj.department else "CSE", "year": s_obj.year_level or "III",
+                                            "participation_status": "NOT_ATTENDED", "data_fetch_status": "SUCCESS", "confidence": "VERIFIED",
+                                            "attended": False, "solved": 0, "score": 0, "rank": None, "rating": None, "error": None
+                                        }
                             return {
                                 "sid": s_obj.id, "reg": s_obj.reg_no, "name": s_obj.name,
                                 "dept": s_obj.department.code if s_obj.department else "CSE", "year": s_obj.year_level or "III",
-                                "status": "PUBLIC_ATTENDED" if is_att else "PUBLIC_NOT_ATTENDED",
-                                "attended": is_att, "solved": solved, "rank": rank, "rating": rating
+                                "participation_status": "NOT_ATTENDED", "data_fetch_status": "SUCCESS", "confidence": "VERIFIED",
+                                "attended": False, "solved": 0, "score": 0, "rank": None, "rating": None, "error": None
                             }
-                    if history is not None:
-                        return {
-                            "sid": s_obj.id, "reg": s_obj.reg_no, "name": s_obj.name,
-                            "dept": s_obj.department.code if s_obj.department else "CSE", "year": s_obj.year_level or "III",
-                            "status": "PUBLIC_NOT_ATTENDED", "attended": False, "solved": 0, "rank": None, "rating": None
-                        }
-                    return {"sid": s_obj.id, "reg": s_obj.reg_no, "name": s_obj.name, "dept": s_obj.department.code if s_obj.department else "CSE", "year": s_obj.year_level or "III", "status": "DATA_ERROR", "error": "no_history"}
-            except Exception:
-                pass
-        return {"sid": s_obj.id, "reg": s_obj.reg_no, "name": s_obj.name, "dept": s_obj.department.code if s_obj.department else "CSE", "year": s_obj.year_level or "III", "status": "DATA_ERROR", "error": "timeout"}
+            except Exception as ex:
+                last_err = str(ex)
+        return {
+            "sid": s_obj.id, "reg": s_obj.reg_no, "name": s_obj.name,
+            "dept": s_obj.department.code if s_obj.department else "CSE", "year": s_obj.year_level or "III",
+            "participation_status": "UNKNOWN", "data_fetch_status": "FETCH_FAILED", "confidence": "UNVERIFIED",
+            "attended": False, "solved": 0, "score": 0, "rank": None, "rating": None, "error": last_err or "Fetch timeout"
+        }
 
     results = []
-    with ThreadPoolExecutor(max_workers=15) as executor:
+    with ThreadPoolExecutor(max_workers=20) as executor:
         futures = {executor.submit(fetch_live_contest_entry, s): s for s in students}
         for f in as_completed(futures):
             results.append(f.result())
@@ -606,12 +638,12 @@ def sync_single_historical_session(db: Session, session_id: int):
     # Clear existing and write verified new data
     db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session.id).delete(synchronize_session=False)
 
-    official_cnt, not_attended_cnt, err_cnt = 0, 0, 0
+    official_cnt, not_attended_cnt, unknown_cnt = 0, 0, 0
 
     for r in results:
-        st = r["status"]
+        p_st = r["participation_status"]
         sid = r["sid"]
-        if st == "PUBLIC_ATTENDED":
+        if p_st == "PUBLIC":
             official_cnt += 1
             solved = r.get("solved", 0)
             q1 = 1 if solved >= 1 else 0
@@ -627,7 +659,9 @@ def sync_single_historical_session(db: Session, session_id: int):
                 name=r["name"],
                 dept=r["dept"],
                 year=r["year"],
-                participation_status="PUBLIC_ATTENDED",
+                participation_status="PUBLIC",
+                data_fetch_status=r["data_fetch_status"],
+                confidence=r["confidence"],
                 q1=q1, q2=q2, q3=q3, q4=q4,
                 total_contest_solved=solved,
                 contest_score=score,
@@ -646,7 +680,7 @@ def sync_single_historical_session(db: Session, session_id: int):
                 })
             )
             db.add(pub_res)
-        elif st == "PUBLIC_NOT_ATTENDED":
+        elif p_st == "NOT_ATTENDED":
             not_attended_cnt += 1
             pub_res = WeeklyPublicResult(
                 session_id=session.id,
@@ -655,7 +689,9 @@ def sync_single_historical_session(db: Session, session_id: int):
                 name=r["name"],
                 dept=r["dept"],
                 year=r["year"],
-                participation_status="PUBLIC_NOT_ATTENDED",
+                participation_status="NOT_ATTENDED",
+                data_fetch_status=r["data_fetch_status"],
+                confidence=r["confidence"],
                 q1=0, q2=0, q3=0, q4=0,
                 total_contest_solved=0,
                 contest_score=0,
@@ -675,7 +711,7 @@ def sync_single_historical_session(db: Session, session_id: int):
             )
             db.add(pub_res)
         else:
-            err_cnt += 1
+            unknown_cnt += 1
             pub_res = WeeklyPublicResult(
                 session_id=session.id,
                 student_id=sid,
@@ -683,13 +719,15 @@ def sync_single_historical_session(db: Session, session_id: int):
                 name=r["name"],
                 dept=r["dept"],
                 year=r["year"],
-                participation_status="DATA_ERROR",
+                participation_status="UNKNOWN",
+                data_fetch_status=r["data_fetch_status"],
+                confidence=r["confidence"],
                 q1=0, q2=0, q3=0, q4=0,
                 total_contest_solved=0,
                 contest_score=0,
                 contest_rank=None,
                 contest_rating=None,
-                fetch_status="FAILED",
+                fetch_status=r["data_fetch_status"],
                 error_reason=r.get("error", "Error"),
                 last_fetched_at=now_dt,
                 verification_evidence=json.dumps({
@@ -708,13 +746,14 @@ def sync_single_historical_session(db: Session, session_id: int):
     session.official_participants = official_cnt
     session.virtual_participants = 0
     session.not_participated = not_attended_cnt
-    session.sync_status = "VERIFIED"
+    session.failed_verification = unknown_cnt
+    session.sync_status = "🟢 Verified"
     session.last_synced = now_dt
     session.status = "FINALIZED"
     db.commit()
 
     duration = (datetime.datetime.now() - start_time).total_seconds()
-    logger.info(f"[CONTEST_SYNC_COMPLETED] session_id={session.id} contest={target_contest_title} public={official_cnt} not_attended={not_attended_cnt} errors={err_cnt} duration={duration:.2f}s")
+    logger.info(f"[CONTEST_SYNC_COMPLETED] session_id={session.id} contest={target_contest_title} public={official_cnt} not_attended={not_attended_cnt} unknown={unknown_cnt} duration={duration:.2f}s")
 
     return {
         "success": True,

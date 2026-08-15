@@ -20,6 +20,9 @@ from sqlalchemy import func
 
 from sqlalchemy.orm import joinedload
 
+from backend.cache import cache
+from sqlalchemy import desc, asc, nullslast
+
 @router.get("", response_model=List[StudentOut])
 def get_students(
     dept_id: Optional[int] = None,
@@ -27,21 +30,24 @@ def get_students(
     section_id: Optional[int] = None,
     search: Optional[str] = None,
     session_id: Optional[int] = None,
+    sort_by: Optional[str] = Query(None, description="solved_desc, solved_asc, name_asc, name_desc, rating_desc, streak_desc"),
+    min_solved: Optional[int] = None,
+    max_solved: Optional[int] = None,
+    verified_only: Optional[bool] = False,
+    page: Optional[int] = Query(None, ge=1),
+    limit: Optional[int] = Query(None, ge=1, le=500),
     db: Session = Depends(get_db)
 ):
-    if db.query(Student).count() < 300:
-        try:
-            from backend.seed import seed_database
-            seed_database()
-        except Exception:
-            pass
+    cache_key = f"students_list:{dept_id}:{year_level}:{section_id}:{search}:{session_id}:{sort_by}:{min_solved}:{max_solved}:{verified_only}:{page}:{limit}"
+    cached_data = cache.get(cache_key)
+    if cached_data is not None:
+        return cached_data
 
-    query = db.query(Student).options(
+    query = db.query(Student).outerjoin(Student.stats).options(
         joinedload(Student.department),
         joinedload(Student.section),
         joinedload(Student.stats)
     ).filter((Student.is_active == True) | (Student.is_active.is_(None)))
-
 
     if dept_id:
         query = query.filter(Student.department_id == dept_id)
@@ -51,6 +57,14 @@ def get_students(
 
     if section_id:
         query = query.filter(Student.section_id == section_id)
+
+    if min_solved is not None:
+        query = query.filter(LeetCodeProfileStats.total_solved >= min_solved)
+    if max_solved is not None:
+        query = query.filter(LeetCodeProfileStats.total_solved <= max_solved)
+    if verified_only:
+        query = query.filter(LeetCodeProfileStats.sync_status.in_(["success", "OK", "verified"]))
+
     if search:
         s = f"%{search.strip()}%"
         query = query.filter(
@@ -59,7 +73,28 @@ def get_students(
             (Student.username.ilike(s))
         )
 
-    students = query.order_by(Student.name.asc()).all()
+    # Server-side sorting
+    if sort_by == "solved_desc" or sort_by == "solved":
+        query = query.order_by(nullslast(desc(LeetCodeProfileStats.total_solved)), Student.name.asc())
+    elif sort_by == "solved_asc":
+        query = query.order_by(nullslast(asc(LeetCodeProfileStats.total_solved)), Student.name.asc())
+    elif sort_by == "name_desc":
+        query = query.order_by(Student.name.desc())
+    elif sort_by == "rating_desc" or sort_by == "rating":
+        query = query.order_by(nullslast(desc(LeetCodeProfileStats.contest_rating)), Student.name.asc())
+    elif sort_by == "streak_desc" or sort_by == "streak":
+        query = query.order_by(nullslast(desc(LeetCodeProfileStats.max_streak)), Student.name.asc())
+    else:
+        query = query.order_by(Student.name.asc())
+
+    # Pagination if page and limit provided
+    if page and limit:
+        offset = (page - 1) * limit
+        students = query.offset(offset).limit(limit).all()
+    elif limit:
+        students = query.limit(limit).all()
+    else:
+        students = query.all()
     
     if not students:
         return []
@@ -118,25 +153,28 @@ def get_students(
         pub_res = pub_map.get(st.id)
         vir_res = vir_map.get(st.id)
 
-        pub_status = pub_res.participation_status if pub_res else "PUBLIC_NOT_ATTENDED"
+        pub_status = pub_res.participation_status if pub_res else ("UNKNOWN" if (not st.username or not st.username.strip()) else "NOT_ATTENDED")
         vir_status = vir_res.participation_status if vir_res else "NO_VIRTUAL_RECORD"
 
-        if pub_status in ("PUBLIC_ATTENDED", "ATTENDED"):
+        if pub_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"):
             st_out.overall_participation_mode = "PUBLIC"
-        elif vir_status in ("VIRTUAL_ATTENDED", "VIRTUAL"):
+        elif vir_status in ("VIRTUAL", "VIRTUAL_ATTENDED"):
             st_out.overall_participation_mode = "VIRTUAL"
         else:
             st_out.overall_participation_mode = "NONE"
 
         if pub_res:
             tot_solved = pub_res.total_contest_solved or (pub_res.q1 + pub_res.q2 + pub_res.q3 + pub_res.q4)
+            is_att = pub_res.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED")
+            is_not_att = pub_res.participation_status == "NOT_ATTENDED"
+            score_disp = f"{tot_solved} / 4" if is_att else ("Not Attended" if is_not_att else "Data Unavailable")
             st_out.public_contest_result = {
                 "contest_name": pub_res.session.contest_name if pub_res.session else "Weekly Contest",
                 "contest_number": None,
                 "contest_date": pub_res.session.session_date if pub_res.session else None,
-                "questions_solved": tot_solved,
+                "questions_solved": tot_solved if is_att else 0,
                 "questions_total": 4,
-                "score_display": f"{tot_solved} / 4" if pub_res.participation_status in ("PUBLIC_ATTENDED", "ATTENDED") else "Not Attended",
+                "score_display": score_disp,
                 "contest_rank": pub_res.contest_rank,
                 "contest_rating": pub_res.contest_rating,
                 "top_percentage": None,
@@ -144,19 +182,18 @@ def get_students(
                 "fetched_at": pub_res.last_fetched_at.isoformat() if pub_res.last_fetched_at else None
             }
         else:
-            target_sess = db.query(WeeklySession).filter(WeeklySession.id == target_session_id).first() if target_session_id else None
-            c_name = target_sess.contest_name if target_sess else "Weekly Contest"
+            has_uname = bool(st.username and st.username.strip())
             st_out.public_contest_result = {
-                "contest_name": c_name,
+                "contest_name": "Weekly Contest",
                 "contest_number": None,
-                "contest_date": target_sess.session_date if target_sess else None,
+                "contest_date": None,
                 "questions_solved": 0,
                 "questions_total": 4,
-                "score_display": "Not Attended",
+                "score_display": "Not Attended" if has_uname else "Data Unavailable",
                 "contest_rank": None,
                 "contest_rating": None,
                 "top_percentage": None,
-                "status": "PUBLIC_NOT_ATTENDED",
+                "status": "NOT_ATTENDED" if has_uname else "UNKNOWN",
                 "fetched_at": None
             }
 
@@ -169,11 +206,11 @@ def get_students(
                 "questions_solved": tot_solved_v,
                 "questions_total": 4,
                 "score_display": f"{tot_solved_v} / 4" if vir_res.participation_status in ("VIRTUAL_ATTENDED", "VIRTUAL") else "Not Attended",
-                "contest_rank": vir_res.contest_rank,
-                "contest_rating": vir_res.contest_rating,
-                "top_percentage": None,
+                "contest_rank": getattr(vir_res, 'contest_rank', None),
+                "contest_rating": getattr(vir_res, 'contest_rating', None),
+                "top_percentage": getattr(vir_res, 'top_percentage', None),
                 "status": vir_res.participation_status,
-                "fetched_at": vir_res.last_fetched_at.isoformat() if vir_res.last_fetched_at else None
+                "fetched_at": getattr(vir_res, 'completed_at', None).isoformat() if getattr(vir_res, 'completed_at', None) else None
             }
         else:
             st_out.virtual_contest_result = {
@@ -191,6 +228,8 @@ def get_students(
             }
 
         results.append(st_out)
+
+    cache.set(cache_key, results, ttl_seconds=30, tags=["students"])
     return results
 
 @router.get("/sample-excel")

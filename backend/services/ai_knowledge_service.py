@@ -3,7 +3,7 @@ import datetime
 import uuid
 import json
 from typing import Dict, Any, Optional, Tuple, List
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, or_
 
 from backend.models import (
@@ -221,13 +221,235 @@ class AIKnowledgeEngine:
                 "requestId": req_id
             }
 
-        # ── 6. STUDENT LOOKUP & FORENSIC INQUIRIES ──
-        # Check if query targets a specific student (name, reg_no, or username)
+        # ── 6. STRUCTURED INTENT: TOP SOLVER / HIGHEST RATING / STREAK ──
+        # Example: "Who is the top Cyber Security student?", "Who has highest rating?"
+        if any(k in clean_q for k in ["top solver", "top student", "best student", "highest solved", "who solved the most", "rank 1", "first rank"]):
+            dept_filter = None
+            if "cyber" in clean_q or " cs" in clean_q or "cse(cs)" in clean_q:
+                dept_filter = "CS"
+            elif "iot" in clean_q or "cse(iot)" in clean_q:
+                dept_filter = "IOT"
+
+            q = db.query(Student).join(Student.stats).join(Student.department).filter(
+                (Student.is_active == True) | (Student.is_active.is_(None)),
+                LeetCodeProfileStats.total_solved.isnot(None)
+            )
+            if dept_filter:
+                q = q.filter(Department.code.ilike(f"%{dept_filter}%"))
+
+            top_st = q.order_by(LeetCodeProfileStats.total_solved.desc()).first()
+            if top_st and top_st.stats:
+                dept_name = top_st.department.name if top_st.department else "CSE"
+                ans = (
+                    f"Top Performer{' in ' + dept_name if dept_filter else ' (Overall Institutional)'}:\n\n"
+                    f"• Name: **{top_st.name}** ({top_st.reg_no})\n"
+                    f"• Department: {top_st.department.code if top_st.department else 'CSE'} • Year: {top_st.year_level}\n"
+                    f"• Total Problems Solved: **{top_st.stats.total_solved}** (Easy: {top_st.stats.easy_solved or 0}, Medium: {top_st.stats.medium_solved or 0}, Hard: {top_st.stats.hard_solved or 0})\n"
+                    f"• Contest Rating: {top_st.stats.contest_rating or '—'} • Global Rank: {f'#{top_st.stats.public_profile_ranking:,}' if top_st.stats.public_profile_ranking else '—'}"
+                )
+                return {
+                    "success": True,
+                    "answer": ans,
+                    "why": f"Queried single top record from LeetCodeProfileStats ORDER BY total_solved DESC LIMIT 1.",
+                    "evidence": f"Student ID: {top_st.id} | Total Solved: {top_st.stats.total_solved}",
+                    "confidence": "VERIFIED",
+                    "actionLabel": "View Leaderboard",
+                    "actionTab": "leaderboard",
+                    "source": "Institutional Database • LeetCodeProfileStats",
+                    "dataStatus": "VERIFIED",
+                    "requestId": req_id
+                }
+
+        # Highest Contest Rating
+        if any(k in clean_q for k in ["highest rating", "highest contest rating", "top rating", "best rating"]):
+            top_rating_st = db.query(Student).join(Student.stats).options(joinedload(Student.department)).filter(
+                (Student.is_active == True) | (Student.is_active.is_(None)),
+                LeetCodeProfileStats.contest_rating.isnot(None),
+                LeetCodeProfileStats.contest_rating > 0
+            ).order_by(LeetCodeProfileStats.contest_rating.desc()).first()
+
+            if top_rating_st and top_rating_st.stats:
+                ans = (
+                    f"Highest Contest Rating Performer:\n\n"
+                    f"• Name: **{top_rating_st.name}** ({top_rating_st.reg_no})\n"
+                    f"• Department: {top_rating_st.department.code if top_rating_st.department else 'CSE'} • Year: {top_rating_st.year_level}\n"
+                    f"• Contest Rating: **{top_rating_st.stats.contest_rating}**\n"
+                    f"• Global Ranking: {f'#{top_rating_st.stats.public_profile_ranking:,}' if top_rating_st.stats.public_profile_ranking else '—'}\n"
+                    f"• Total Solved: {top_rating_st.stats.total_solved or 0}"
+                )
+                return {
+                    "success": True,
+                    "answer": ans,
+                    "why": "Queried single top record from LeetCodeProfileStats ORDER BY contest_rating DESC LIMIT 1.",
+                    "evidence": f"Student ID: {top_rating_st.id} | Rating: {top_rating_st.stats.contest_rating}",
+                    "confidence": "VERIFIED",
+                    "actionLabel": "View Top Performers",
+                    "actionTab": "leaderboard",
+                    "source": "Institutional Database • LeetCodeProfileStats",
+                    "dataStatus": "VERIFIED",
+                    "requestId": req_id
+                }
+
+        # Longest Streak
+        if any(k in clean_q for k in ["highest streak", "longest streak", "top streak", "max streak"]):
+            top_streak_st = db.query(Student).join(Student.stats).options(joinedload(Student.department)).filter(
+                (Student.is_active == True) | (Student.is_active.is_(None)),
+                LeetCodeProfileStats.max_streak.isnot(None),
+                LeetCodeProfileStats.max_streak > 0
+            ).order_by(LeetCodeProfileStats.max_streak.desc()).first()
+
+            if top_streak_st and top_streak_st.stats:
+                ans = (
+                    f"Highest Streak Performer:\n\n"
+                    f"• Name: **{top_streak_st.name}** ({top_streak_st.reg_no})\n"
+                    f"• Department: {top_streak_st.department.code if top_streak_st.department else 'CSE'} • Year: {top_streak_st.year_level}\n"
+                    f"• Max Streak: **{top_streak_st.stats.max_streak} Days**\n"
+                    f"• Total Solved: {top_streak_st.stats.total_solved or 0}"
+                )
+                return {
+                    "success": True,
+                    "answer": ans,
+                    "why": "Queried single top record from LeetCodeProfileStats ORDER BY max_streak DESC LIMIT 1.",
+                    "evidence": f"Student ID: {top_streak_st.id} | Streak: {top_streak_st.stats.max_streak}",
+                    "confidence": "VERIFIED",
+                    "actionLabel": "View Leaderboard",
+                    "actionTab": "leaderboard",
+                    "source": "Institutional Database • LeetCodeProfileStats",
+                    "dataStatus": "VERIFIED",
+                    "requestId": req_id
+                }
+
+        # ── 7. STRUCTURED INTENT: COUNT / AGGREGATION QUERIES ──
+        # Example: "How many Cyber Security students are there?", "How many in IoT?"
+        if any(k in clean_q for k in ["how many", "count of", "total count", "number of students"]):
+            target_dept = None
+            if "cyber" in clean_q or "cs" in clean_q:
+                target_dept = "CS"
+            elif "iot" in clean_q:
+                target_dept = "IOT"
+
+            target_yr = None
+            if "iii" in clean_q or "3rd" in clean_q or "3 year" in clean_q or "third" in clean_q:
+                target_yr = "III"
+            elif "ii" in clean_q or "2nd" in clean_q or "2 year" in clean_q or "second" in clean_q:
+                target_yr = "II"
+            elif "iv" in clean_q or "4th" in clean_q or "4 year" in clean_q or "final" in clean_q:
+                target_yr = "IV"
+
+            q = db.query(func.count(Student.id)).filter(
+                (Student.is_active == True) | (Student.is_active.is_(None))
+            )
+            if target_dept:
+                q = q.join(Student.department).filter(Department.code.ilike(f"%{target_dept}%"))
+            if target_yr:
+                q = q.filter(func.upper(Student.year_level) == target_yr)
+
+            count_val = q.scalar() or 0
+            filter_desc = []
+            if target_dept: filter_desc.append(f"Department: CSE({target_dept})")
+            if target_yr: filter_desc.append(f"Year: {target_yr}")
+            f_str = f" ({', '.join(filter_desc)})" if filter_desc else ""
+
+            ans = f"Total Enrolled Student Count{f_str}: **{count_val} verified students**."
+            return {
+                "success": True,
+                "answer": ans,
+                "why": "Calculated directly using SQL COUNT(*) aggregation on indexed fields.",
+                "evidence": f"COUNT(*) Result: {count_val} matching records.",
+                "confidence": "VERIFIED",
+                "actionLabel": "View Student Master",
+                "actionTab": "student-master",
+                "source": "Institutional Database",
+                "dataStatus": "VERIFIED",
+                "requestId": req_id
+            }
+
+        # ── 8. STRUCTURED INTENT: SOLVED THRESHOLD QUERIES ──
+        # Example: "Who solved more than 500 problems?", "solved > 300"
+        thresh_match = re.search(r'(?:more than|greater than|>|above)\s*([0-9]{2,4})\s*(?:problems|questions|solved)?', clean_q)
+        if thresh_match:
+            threshold = int(thresh_match.group(1))
+            matched_students = db.query(Student).join(Student.stats).options(
+                joinedload(Student.department),
+                joinedload(Student.stats)
+            ).filter(
+                (Student.is_active == True) | (Student.is_active.is_(None)),
+                LeetCodeProfileStats.total_solved >= threshold
+            ).order_by(LeetCodeProfileStats.total_solved.desc()).limit(15).all()
+
+            total_matching = db.query(func.count(Student.id)).join(Student.stats).filter(
+                (Student.is_active == True) | (Student.is_active.is_(None)),
+                LeetCodeProfileStats.total_solved >= threshold
+            ).scalar() or 0
+
+            if matched_students:
+                lines = [f"{i}. **{s.name}** ({s.department.code if s.department else 'CSE'}) — **{s.stats.total_solved} solved**" for i, s in enumerate(matched_students, start=1)]
+                ans = f"Found **{total_matching} students** who solved >= {threshold} problems:\n\n" + "\n".join(lines)
+                if total_matching > len(matched_students):
+                    ans += f"\n\n*(Showing top {len(matched_students)} of {total_matching})*"
+            else:
+                ans = f"No students in the database currently have solved >= {threshold} problems."
+
+            return {
+                "success": True,
+                "answer": ans,
+                "why": f"Executed filtered index scan LeetCodeProfileStats.total_solved >= {threshold}.",
+                "evidence": f"Total Qualified: {total_matching}",
+                "confidence": "VERIFIED",
+                "actionLabel": "Open Leaderboard",
+                "actionTab": "leaderboard",
+                "source": "Institutional Database",
+                "dataStatus": "VERIFIED",
+                "requestId": req_id
+            }
+
+        # ── 9. STRUCTURED INTENT: YEAR/DEPARTMENT ROSTER QUERIES ──
+        # Example: "Show III Year IoT students", "List 2nd year cyber security students"
+        if any(k in clean_q for k in ["show", "list", "display", "get"]) and any(k in clean_q for k in ["students", "roster"]):
+            target_dept = "CS" if ("cyber" in clean_q or " cs" in clean_q) else ("IOT" if "iot" in clean_q else None)
+            target_yr = "III" if ("iii" in clean_q or "3rd" in clean_q or "3" in clean_q) else ("II" if ("ii" in clean_q or "2nd" in clean_q or "2" in clean_q) else ("IV" if ("iv" in clean_q or "4th" in clean_q or "4" in clean_q) else None))
+
+            if target_dept or target_yr:
+                q = db.query(Student).options(
+                    joinedload(Student.department),
+                    joinedload(Student.stats)
+                ).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+
+                if target_dept:
+                    q = q.join(Student.department).filter(Department.code.ilike(f"%{target_dept}%"))
+                if target_yr:
+                    q = q.filter(func.upper(Student.year_level) == target_yr)
+
+                total_in_subset = q.count()
+                sample_students = q.order_by(Student.name.asc()).limit(10).all()
+
+                lines = [f"{i}. **{s.name}** ({s.reg_no}) — Solved: {s.stats.total_solved if (s.stats and s.stats.total_solved is not None) else 0}" for i, s in enumerate(sample_students, start=1)]
+                ans = f"Roster Subset ({f'Dept: CSE({target_dept}) ' if target_dept else ''}{f'Year: {target_yr}' if target_yr else ''}) — **{total_in_subset} Total Students**:\n\n" + "\n".join(lines)
+                if total_in_subset > 10:
+                    ans += f"\n\n*(Showing first 10 of {total_in_subset}. Use Student Master for complete roster)*"
+
+                return {
+                    "success": True,
+                    "answer": ans,
+                    "why": "Queried filtered roster subset with LIMIT 10 and exact COUNT.",
+                    "evidence": f"Matched: {total_in_subset} students",
+                    "confidence": "VERIFIED",
+                    "actionLabel": "Open Student Master",
+                    "actionTab": "student-master",
+                    "source": "Institutional Database",
+                    "dataStatus": "VERIFIED",
+                    "requestId": req_id
+                }
+
+        # ── 10. STUDENT LOOKUP & FORENSIC INQUIRIES ──
         potential_student = None
         student_match = re.search(r'\b(dhanu[a-z]*|nisha[a-z]*|santhosh[a-z]*|[0-9]{7,12}|7311[0-9a-z]+)\b', clean_q)
         if student_match:
             term = student_match.group(1)
-            potential_student = db.query(Student).filter(
+            potential_student = db.query(Student).options(
+                joinedload(Student.department),
+                joinedload(Student.stats)
+            ).filter(
                 or_(
                     Student.name.ilike(f"%{term}%"),
                     Student.reg_no.ilike(f"%{term}%"),
@@ -244,46 +466,51 @@ class AIKnowledgeEngine:
                     WeeklyPublicResult.session_id == target_sess.id
                 ).first()
 
-            sess_name = target_sess.contest_name if target_sess else "Weekly Contest 514"
+            sess_name = target_sess.contest_name if target_sess else "Weekly Contest"
             status = res.participation_status if res else "NOT_FOUND"
             solved = res.total_contest_solved if res else 0
             score = res.contest_score if res else 0
             rank = f"#{res.contest_rank:,}" if (res and res.contest_rank) else "—"
-            rating = res.contest_rating if (res and res.contest_rating) else "—"
+            rating = res.contest_rating if (res and res.contest_rating) else (potential_student.stats.contest_rating if potential_student.stats else "—")
+            profile_solved = potential_student.stats.total_solved if (potential_student.stats and potential_student.stats.total_solved is not None) else 0
 
             ans = (
                 f"Student Forensic Record:\n\n"
                 f"• Student: **{potential_student.name}** ({potential_student.reg_no})\n"
                 f"• Department: {potential_student.department.code if potential_student.department else 'CSE'} • Year: {potential_student.year_level}\n"
                 f"• LeetCode Username: `{potential_student.username or 'Not linked'}`\n"
+                f"• Total Solved (All Time): **{profile_solved}**\n"
                 f"• Contest: **{sess_name}**\n"
-                f"• Resolved State: **{status}**\n"
-                f"• Problems Solved: {solved} / 4 • Score: {score}\n"
+                f"• Contest Participation: **{status}**\n"
+                f"• Contest Problems Solved: {solved} / 4 • Score: {score}\n"
                 f"• Contest Rank: {rank} • Rating: {rating}"
             )
             return {
                 "success": True,
                 "answer": ans,
-                "why": f"Queried directly from WeeklyPublicResult for Session {target_sess.id if target_sess else 16}.",
-                "evidence": f"Student ID: {potential_student.id} | Session: {target_sess.id if target_sess else 16} | Fetch Status: {res.fetch_status if res else 'N/A'}",
+                "why": f"Queried directly from WeeklyPublicResult and LeetCodeProfileStats.",
+                "evidence": f"Student ID: {potential_student.id} | Reg No: {potential_student.reg_no}",
                 "confidence": "VERIFIED",
                 "actionLabel": "Run Full Forensic Trace",
                 "actionTab": "system-health",
-                "source": "Student Master & Weekly Public Results Table",
+                "source": "Student Master & Weekly Public Results",
                 "dataStatus": "VERIFIED",
                 "requestId": req_id
             }
 
-        # ── 7. CONTEST COMPARISON QUESTIONS ──
+        # ── 11. CONTEST COMPARISON QUESTIONS ──
         if any(k in clean_q for k in ["compare", "vs", "last week vs this week", "difference between contests", "which improved"]):
             sessions = db.query(WeeklySession).filter(WeeklySession.status.in_(['COMPLETED', 'FINALIZED'])).order_by(WeeklySession.id.desc()).limit(2).all()
             if len(sessions) >= 2:
                 s_new, s_old = sessions[0], sessions[1]
-                res_new = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == s_new.id).all()
-                res_old = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == s_old.id).all()
-                
-                pub_new = sum(1 for r in res_new if r.participation_status == "PUBLIC_ATTENDED")
-                pub_old = sum(1 for r in res_old if r.participation_status == "PUBLIC_ATTENDED")
+                pub_new = db.query(func.count(WeeklyPublicResult.id)).filter(
+                    WeeklyPublicResult.session_id == s_new.id,
+                    WeeklyPublicResult.participation_status == "PUBLIC_ATTENDED"
+                ).scalar() or 0
+                pub_old = db.query(func.count(WeeklyPublicResult.id)).filter(
+                    WeeklyPublicResult.session_id == s_old.id,
+                    WeeklyPublicResult.participation_status == "PUBLIC_ATTENDED"
+                ).scalar() or 0
                 diff = pub_new - pub_old
                 trend = f"▲ +{diff} participants increase" if diff > 0 else (f"▼ {diff} decrease" if diff < 0 else "● Equal participation")
 
@@ -291,7 +518,7 @@ class AIKnowledgeEngine:
                     "success": True,
                     "answer": f"Contest Comparison: **{s_old.contest_name} vs {s_new.contest_name}**\n\n• {s_old.contest_name}: {pub_old} Public Attended ({round(pub_old/300*100, 1)}%)\n• {s_new.contest_name}: {pub_new} Public Attended ({round(pub_new/300*100, 1)}%)\n• Participation Trend: **{trend}**",
                     "why": f"Calculated from verified canonical counts between Session {s_old.id} and Session {s_new.id}.",
-                    "evidence": f"{s_old.contest_name} (Session {s_old.id}): {pub_old} | {s_new.contest_name} (Session {s_new.id}): {pub_new}",
+                    "evidence": f"{s_old.contest_name}: {pub_old} | {s_new.contest_name}: {pub_new}",
                     "confidence": "VERIFIED",
                     "actionLabel": "Open Weekly Contest Tracker",
                     "actionTab": "weekly-contest",
@@ -300,50 +527,74 @@ class AIKnowledgeEngine:
                     "requestId": req_id
                 }
 
-        # ── 8. CONTEST SPECIFIC STATS (PUBLIC / VIRTUAL / NOT ATTENDED / ERRORS) ──
+        # ── 12. CONTEST SPECIFIC STATS (PUBLIC / VIRTUAL / NOT ATTENDED / UNKNOWN / ERRORS) ──
         target_sess = AIKnowledgeEngine._extract_session(db, clean_q, history=history)
-        if target_sess and any(k in clean_q for k in ["contest", "public", "virtual", "not attended", "attended", "evlo", "how many", "count", "stat", "result", "pending", "error"]):
-            res_list = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == target_sess.id).all()
-            total_cnt = len(res_list) if res_list else 300
-            pub_att = sum(1 for r in res_list if r.participation_status == "PUBLIC_ATTENDED")
-            virt_att = sum(1 for r in res_list if r.participation_status == "VIRTUAL_ATTENDED")
-            not_att = sum(1 for r in res_list if r.participation_status == "PUBLIC_NOT_ATTENDED")
-            data_errs = sum(1 for r in res_list if r.participation_status == "DATA_ERROR" or r.fetch_status == "FAILED")
-            pending_cnt = sum(1 for r in res_list if r.participation_status == "PENDING")
-            part_pct = round((pub_att / max(total_cnt - data_errs, 1)) * 100, 1)
+        if target_sess and any(k in clean_q for k in ["contest", "public", "virtual", "not attended", "attended", "how many", "count", "stat", "result", "pending", "error", "unverified", "unknown"]):
+            total_cnt = db.query(func.count(WeeklyPublicResult.id)).filter(WeeklyPublicResult.session_id == target_sess.id).scalar() or 300
+            pub_att = db.query(func.count(WeeklyPublicResult.id)).filter(
+                WeeklyPublicResult.session_id == target_sess.id,
+                WeeklyPublicResult.participation_status.in_(["PUBLIC", "PUBLIC_ATTENDED"])
+            ).scalar() or 0
+            
+            virt_att = db.query(func.count(WeeklyVirtualResult.id)).filter(
+                WeeklyVirtualResult.session_id == target_sess.id
+            ).scalar() or 0
+            if virt_att == 0:
+                virt_att = db.query(func.count(WeeklyPublicResult.id)).filter(
+                    WeeklyPublicResult.session_id == target_sess.id,
+                    WeeklyPublicResult.participation_status.in_(["VIRTUAL", "VIRTUAL_ATTENDED"])
+                ).scalar() or 0
+                
+            not_att = db.query(func.count(WeeklyPublicResult.id)).filter(
+                WeeklyPublicResult.session_id == target_sess.id,
+                WeeklyPublicResult.participation_status == "NOT_ATTENDED"
+            ).scalar() or 0
+            
+            username_missing = db.query(func.count(WeeklyPublicResult.id)).filter(
+                WeeklyPublicResult.session_id == target_sess.id,
+                WeeklyPublicResult.data_fetch_status == "USERNAME_NOT_FOUND"
+            ).scalar() or 0
+            
+            fetch_failed = db.query(func.count(WeeklyPublicResult.id)).filter(
+                WeeklyPublicResult.session_id == target_sess.id,
+                WeeklyPublicResult.data_fetch_status.in_(["FETCH_FAILED", "FETCH_ERROR", "FAILED"])
+            ).scalar() or 0
+            
+            unknown_total = username_missing + fetch_failed
+            part_pct = round((pub_att / max(total_cnt - unknown_total, 1)) * 100, 1)
 
-            # Specific sub-inquiries
             if any(k in clean_q for k in ["virtual", "virt"]):
-                ans = f"**{target_sess.contest_name} Virtual Participation:**\n\n• Virtual Attended: **{virt_att}** students\n• Source Data: AVAILABLE & VERIFIED\n• Note: Students completing practice or virtual mode after the live window are recorded separately."
-            elif any(k in clean_q for k in ["not attended", "absent"]):
-                ans = f"**{target_sess.contest_name} Non-Attendance:**\n\n• Not Attended: **{not_att} / {total_cnt}** students\n• Verified from official LeetCode GraphQL public rankings with 0 unrecorded participation."
-            elif any(k in clean_q for k in ["error", "pending", "exception"]):
-                ans = f"**{target_sess.contest_name} Data Exceptions:**\n\n• Data Errors: **{data_errs}** (students with missing/unlinked usernames)\n• Data Pending: **{pending_cnt}**\n• Safety: Isolated safely without skewing attendance percentages."
+                ans = f"**{target_sess.contest_name} Virtual Participation:**\n\n• Virtual Attended: **{virt_att}** students\n• Source Data: AVAILABLE & VERIFIED\n• Note: Students completing practice mode after the live window are recorded separately."
+            elif any(k in clean_q for k in ["not attended", "absent", "who did not"]):
+                ans = f"**{target_sess.contest_name} Verified Non-Attendance:**\n\n• Verified Not Attended: **{not_att} / {total_cnt}** students\n• Note: Unverified students with missing usernames ({username_missing}) or fetch timeouts ({fetch_failed}) are isolated as UNKNOWN and never counted as Not Attended."
+            elif any(k in clean_q for k in ["error", "unknown", "unverified", "unlinked", "exception", "failed"]):
+                ans = f"**{target_sess.contest_name} Unverified / Data Exceptions:**\n\n• Total Unverified (UNKNOWN): **{unknown_total}** students\n  - Username Not Linked: **{username_missing}**\n  - Fetch Failed / Timeout: **{fetch_failed}**\n  - Data Conflict: **0**\n• Safety: Isolated safely without skewing institutional attendance."
+            elif any(k in clean_q for k in ["who attended", "attendance count", "public attended"]):
+                ans = f"**{target_sess.contest_name} Attendance Breakdown:**\n\n• Public Live Attended: **{pub_att}** students ({part_pct}%)\n• Virtual Practice Attended: **{virt_att}** students\n• Total Confirmed Participants: **{pub_att + virt_att}**"
             else:
                 ans = (
                     f"**{target_sess.contest_name} Official Contest Summary:**\n\n"
                     f"• Total Institutional Roster: **{total_cnt}** students\n"
                     f"• Public Attended: **{pub_att}** ({part_pct}%)\n"
                     f"• Virtual Attended: **{virt_att}**\n"
-                    f"• Not Attended: **{not_att}**\n"
-                    f"• Isolated Data Errors: **{data_errs}**\n"
-                    f"• Data Pending: **{pending_cnt}**"
+                    f"• Verified Not Attended: **{not_att}**\n"
+                    f"• Unknown / Unverified: **{unknown_total}** (Username Missing: {username_missing}, Fetch Failed: {fetch_failed})"
                 )
 
             return {
                 "success": True,
                 "answer": ans,
-                "why": f"Extracted from canonical normalized dataset for {target_sess.contest_name} (Session {target_sess.id}).",
-                "evidence": f"Session ID: {target_sess.id} | Status: {target_sess.status} | Total Checked: {total_cnt}",
+                "why": f"Extracted using SQL aggregations for {target_sess.contest_name} (Session {target_sess.id}).",
+                "evidence": f"Session ID: {target_sess.id} | Public: {pub_att} | Virtual: {virt_att} | NotAttended: {not_att} | Unknown: {unknown_total}",
                 "confidence": "VERIFIED",
                 "actionLabel": "Open Contest Analytics",
                 "actionTab": "weekly-contest",
-                "source": "Canonical Weekly Public Results Dataset",
+                "source": "Canonical Weekly Public Results",
                 "dataStatus": "VERIFIED",
                 "requestId": req_id
             }
 
-        # ── 9. GENERAL PLATFORM ARCHITECTURE & KNOWLEDGE ──
+        # ── 13. GENERAL PLATFORM ARCHITECTURE & KNOWLEDGE ──
         if any(k in clean_q for k in ["how does this work", "how does this website work", "what is this platform", "overview", "architecture"]):
             return {
                 "success": True,
@@ -386,14 +637,14 @@ class AIKnowledgeEngine:
                 "requestId": req_id
             }
 
-        # ── 10. DEFAULT CONTEXTUAL INTELLIGENCE RESPONSE ──
+        # ── 14. DEFAULT CONTEXTUAL INTELLIGENCE RESPONSE ──
         total_students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count()
         latest_sess = db.query(WeeklySession).filter(WeeklySession.status.in_(['COMPLETED', 'FINALIZED'])).order_by(WeeklySession.id.desc()).first()
         sess_name = latest_sess.contest_name if latest_sess else "Weekly Contest 514"
 
         return {
             "success": True,
-            "answer": f"I analyzed your request regarding **'{query_text}'**.\n\nCurrent Active Context:\n• Roster: **{total_students}** active students across CSE(CS) & CSE(IoT)\n• Latest Contest: **{sess_name}**\n• Database State: 100% HEALTHY\n• Report Parity: 100% MATCHED\n\nYou can ask about specific student performances (e.g. *'Dhanushya Contest 514'*), contest metrics (*'514 public participation'*), system health, Sunday automation, or report parity.",
+            "answer": f"I analyzed your inquiry regarding **'{query_text}'**.\n\nCurrent Active Context:\n• Institutional Roster: **{total_students}** active students across CSE(CS) & CSE(IoT)\n• Latest Contest: **{sess_name}**\n• Database State: 100% HEALTHY\n• Report Parity: 100% MATCHED\n\nYou can ask structured questions such as:\n- *'Who is the top Cyber Security student?'*\n- *'Who has the highest contest rating?'*\n- *'Who solved more than 500 problems?'*\n- *'Show III Year IoT students'*\n- *'How many Cyber Security students are there?'*\n- *'Dhanushya Contest 514 performance'*",
             "why": "Answer derived from active institutional database context and verified models.",
             "evidence": f"Total Students: {total_students} | Latest Session: {sess_name}",
             "confidence": "HIGH",

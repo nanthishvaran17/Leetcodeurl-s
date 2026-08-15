@@ -270,11 +270,11 @@ def create_nandha_official_department_sheet(ws, dept: Department, db: Session):
         ).all()
         
         total_count = len(students)
-        above_500 = sum(1 for s in students if s.stats and s.stats.total_solved > 500)
-        between_250_500 = sum(1 for s in students if s.stats and 250 <= s.stats.total_solved <= 500)
-        less_250 = sum(1 for s in students if s.stats and 100 <= s.stats.total_solved < 250)
-        less_100 = sum(1 for s in students if s.stats and 0 < s.stats.total_solved < 100)
-        not_started = sum(1 for s in students if not s.stats or s.stats.total_solved == 0)
+        above_500 = sum(1 for s in students if s.stats and (s.stats.total_solved or 0) > 500)
+        between_250_500 = sum(1 for s in students if s.stats and 250 <= (s.stats.total_solved or 0) <= 500)
+        less_250 = sum(1 for s in students if s.stats and 100 <= (s.stats.total_solved or 0) < 250)
+        less_100 = sum(1 for s in students if s.stats and 0 < (s.stats.total_solved or 0) < 100)
+        not_started = sum(1 for s in students if not s.stats or (s.stats.total_solved or 0) == 0)
 
         q4_cnt, q3_cnt, q2_cnt, q1_cnt = 0, 0, 0, 0
         if latest_session:
@@ -466,11 +466,11 @@ def _create_dept_year_sheet(wb, dept, year_lvl: str, students_list, db: Session)
     # --- Summary mini-table below data ---
     summary_row = 3 + len(sorted_students) + 2
     total_count  = len(sorted_students)
-    above_500    = sum(1 for s in sorted_students if s.stats and s.stats.total_solved > 500)
-    b250_500     = sum(1 for s in sorted_students if s.stats and 250 <= s.stats.total_solved <= 500)
-    b101_250     = sum(1 for s in sorted_students if s.stats and 101 <= s.stats.total_solved < 250)
-    lt100        = sum(1 for s in sorted_students if s.stats and 0 < s.stats.total_solved < 100)
-    not_started  = sum(1 for s in sorted_students if not s.stats or s.stats.total_solved == 0)
+    above_500    = sum(1 for s in sorted_students if s.stats and (s.stats.total_solved or 0) > 500)
+    b250_500     = sum(1 for s in sorted_students if s.stats and 250 <= (s.stats.total_solved or 0) <= 500)
+    b101_250     = sum(1 for s in sorted_students if s.stats and 101 <= (s.stats.total_solved or 0) < 250)
+    lt100        = sum(1 for s in sorted_students if s.stats and 0 < (s.stats.total_solved or 0) < 100)
+    not_started  = sum(1 for s in sorted_students if not s.stats or (s.stats.total_solved or 0) == 0)
 
     ws.merge_cells(f"A{summary_row}:K{summary_row}")
     ws[f"A{summary_row}"] = "NUMBER OF PROBLEMS SOLVED — CATEGORY SUMMARY"
@@ -521,10 +521,10 @@ def _create_analytics_summary_sheet(wb, db: Session):
 
     all_students = db.query(Student).filter(Student.is_active == True).all()
     total_students = len(all_students)
-    active = sum(1 for s in all_students if s.stats and s.stats.total_solved > 0)
+    active = sum(1 for s in all_students if s.stats and (s.stats.total_solved or 0) > 0)
     total_solved_all = sum((s.stats.total_solved or 0) for s in all_students if s.stats)
     avg_solved = round(total_solved_all / active, 1) if active > 0 else 0
-    top_student = max(all_students, key=lambda s: s.stats.total_solved if s.stats else 0, default=None)
+    top_student = max(all_students, key=lambda s: (s.stats.total_solved or 0) if s.stats else 0, default=None)
 
     # Quick stats block
     quick_stats = [
@@ -605,11 +605,11 @@ def _create_analytics_summary_sheet(wb, db: Session):
                 continue
 
             tc = len(students_dy)
-            above_500   = sum(1 for s in students_dy if s.stats and s.stats.total_solved > 500)
-            b250_500    = sum(1 for s in students_dy if s.stats and 250 <= s.stats.total_solved <= 500)
-            lt250       = sum(1 for s in students_dy if s.stats and 100 <= s.stats.total_solved < 250)
-            lt100       = sum(1 for s in students_dy if s.stats and 0 < s.stats.total_solved < 100)
-            not_started = sum(1 for s in students_dy if not s.stats or s.stats.total_solved == 0)
+            above_500   = sum(1 for s in students_dy if s.stats and (s.stats.total_solved or 0) > 500)
+            b250_500    = sum(1 for s in students_dy if s.stats and 250 <= (s.stats.total_solved or 0) <= 500)
+            lt250       = sum(1 for s in students_dy if s.stats and 100 <= (s.stats.total_solved or 0) < 250)
+            lt100       = sum(1 for s in students_dy if s.stats and 0 < (s.stats.total_solved or 0) < 100)
+            not_started = sum(1 for s in students_dy if not s.stats or (s.stats.total_solved or 0) == 0)
 
             q4, q3, q2, q1 = 0, 0, 0, 0
             if latest_session:

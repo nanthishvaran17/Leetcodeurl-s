@@ -289,11 +289,23 @@ def get_normalized_contest_data(
         from backend.database import SessionLocal
         db = SessionLocal()
 
+    from sqlalchemy.orm import joinedload
+    from backend.cache import cache
+
+    cache_key = f"contest_matrix:{session_id}:{dept}:{year}:{attendance}"
+    # Only cache completed/finalized sessions or read-only requests
+    cached_data = cache.get(cache_key)
+    if cached_data is not None:
+        return cached_data
+
     session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
     if not session:
         raise HTTPException(status_code=404, detail="Contest data is unavailable for the selected Weekly Contest.")
 
-    students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).order_by(Student.id.asc()).all()
+    students = db.query(Student).options(
+        joinedload(Student.department),
+        joinedload(Student.stats)
+    ).filter((Student.is_active == True) | (Student.is_active.is_(None))).order_by(Student.id.asc()).all()
     if not students or len(students) < 100:
         try:
             from backend.seed import seed_database
@@ -325,28 +337,29 @@ def get_normalized_contest_data(
         dept_code = s.department.code if s.department else "CSE"
         year_lvl = derive_academic_year(s)
 
-        # 1. ATTENDANCE STATE MACHINE RESOLUTION
+        # 1. ATTENDANCE STATE MACHINE RESOLUTION (Phases C, D, E, G, H, I)
         # Exactly one state per student:
-        # PUBLIC_ATTENDED | VIRTUAL | NOT_ATTENDED | DATA_PENDING | DATA_ERROR
-        resolved_status = "NOT_ATTENDED"
+        # PUBLIC | VIRTUAL | NOT_ATTENDED | UNKNOWN
+        resolved_status = "UNKNOWN"
+        data_fetch_st = "DATA_UNAVAILABLE"
+        confidence_val = "UNVERIFIED"
         q1_val = q2_val = q3_val = q4_val = tot_val = score_val = 0
         rank_val = rating_val = None
-        fetch_st = "SUCCESS"
         err_re = None
 
-        if p_res and p_res.participation_status in ("PUBLIC_ATTENDED", "ATTENDED"):
-            resolved_status = "PUBLIC_ATTENDED"
-            q1_val = p_res.q1 or 0
-            q2_val = p_res.q2 or 0
-            q3_val = p_res.q3 or 0
-            q4_val = p_res.q4 or 0
-            tot_val = p_res.total_contest_solved or 0
-            score_val = p_res.contest_score or 0
-            rank_val = getattr(p_res, 'contest_rank', None)
-            rating_val = getattr(p_res, 'contest_rating', None)
-            fetch_st = getattr(p_res, 'fetch_status', 'SUCCESS')
+        p_status = getattr(p_res, 'participation_status', None)
+        p_fetch_st = getattr(p_res, 'data_fetch_status', None) or getattr(p_res, 'fetch_status', None)
+        p_conf = getattr(p_res, 'confidence', None)
+
+        if not s.username or s.username.strip() in ("", "None", "null") or len(s.username.strip()) < 2:
+            resolved_status = "UNKNOWN"
+            data_fetch_st = "USERNAME_NOT_FOUND"
+            confidence_val = "UNVERIFIED"
+            err_re = "Missing or unmapped LeetCode profile handle"
         elif v_res and (v_res.participation_status in ("VIRTUAL_ATTENDED", "VIRTUAL")):
             resolved_status = "VIRTUAL"
+            data_fetch_st = "SUCCESS"
+            confidence_val = "VERIFIED"
             q1_val = v_res.q1 or 0
             q2_val = v_res.q2 or 0
             q3_val = v_res.q3 or 0
@@ -355,26 +368,37 @@ def get_normalized_contest_data(
             score_val = v_res.contest_score or 0
             rank_val = getattr(v_res, 'contest_rank', None)
             rating_val = getattr(v_res, 'contest_rating', None)
-            fetch_st = getattr(v_res, 'fetch_status', 'SUCCESS')
-        elif p_res and (p_res.fetch_status == "FAILED" or p_res.participation_status == "DATA_ERROR"):
-            resolved_status = "DATA_ERROR"
-            fetch_st = "FAILED"
-            err_re = getattr(p_res, 'error_reason', 'API fetch error or invalid username')
+        elif p_res and p_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"):
+            resolved_status = "PUBLIC"
+            data_fetch_st = "SUCCESS"
+            confidence_val = "VERIFIED"
+            q1_val = p_res.q1 or 0
+            q2_val = p_res.q2 or 0
+            q3_val = p_res.q3 or 0
+            q4_val = p_res.q4 or 0
+            tot_val = p_res.total_contest_solved or 0
+            score_val = p_res.contest_score or 0
+            rank_val = getattr(p_res, 'contest_rank', None)
+            rating_val = getattr(p_res, 'contest_rating', None)
+        elif p_res and p_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED") and p_fetch_st == "SUCCESS":
+            resolved_status = "NOT_ATTENDED"
+            data_fetch_st = "SUCCESS"
+            confidence_val = "VERIFIED"
+        elif p_res and (p_fetch_st == "FETCH_FAILED" or p_status in ("FETCH_ERROR", "DATA_ERROR")):
+            resolved_status = "UNKNOWN"
+            data_fetch_st = "FETCH_FAILED"
+            confidence_val = "UNVERIFIED"
+            err_re = getattr(p_res, 'error_reason', 'Network timeout or API fetch failure')
         elif is_upcoming_or_in_progress:
-            # Before or during a contest, absence of attendance record is NOT proof of absence
-            resolved_status = "DATA_PENDING"
-            fetch_st = "PENDING"
-        elif p_res and p_res.participation_status in ("DATA_PENDING", "PENDING"):
-            resolved_status = "DATA_PENDING"
-            fetch_st = "PENDING"
-        elif p_res and p_res.participation_status in ("PUBLIC_NOT_ATTENDED", "NOT_ATTENDED"):
-            resolved_status = "NOT_ATTENDED"
-            fetch_st = "SUCCESS"
+            resolved_status = "UNKNOWN"
+            data_fetch_st = "DATA_UNAVAILABLE"
+            confidence_val = "UNVERIFIED"
         else:
-            resolved_status = "NOT_ATTENDED"
-            fetch_st = "SUCCESS"
+            resolved_status = "UNKNOWN"
+            data_fetch_st = "DATA_UNAVAILABLE"
+            confidence_val = "UNVERIFIED"
 
-        # Mandatory Attendance Evidence Record (Addendum 3)
+        # Mandatory Attendance Evidence Record
         now_iso = datetime.datetime.utcnow().isoformat()
         evidence_timestamp = (
             p_res.last_fetched_at.isoformat() if (p_res and p_res.last_fetched_at)
@@ -384,8 +408,8 @@ def get_normalized_contest_data(
         
         has_positive_evidence = bool(p_res or v_res or (not is_session_in_progress and session.status in ('COMPLETED', 'FINALIZED')))
         evidence_source_type = (
-            "PUBLIC_CONTEST_API" if p_res
-            else ("VIRTUAL_CONTEST_API" if v_res
+            "PUBLIC_CONTEST_API" if (p_res and resolved_status == "PUBLIC")
+            else ("VIRTUAL_CONTEST_API" if (v_res and resolved_status == "VIRTUAL")
             else "VERIFIED_SESSION_ROSTER")
         )
 
@@ -394,7 +418,7 @@ def get_normalized_contest_data(
             "source_type": evidence_source_type,
             "contest_id": session.contest_id or f"weekly-contest-{session.id}",
             "response_received": has_positive_evidence,
-            "participation_confirmed": resolved_status in ("PUBLIC_ATTENDED", "VIRTUAL"),
+            "participation_confirmed": resolved_status in ("PUBLIC", "VIRTUAL"),
             "verification_timestamp": evidence_timestamp
         }
 
@@ -408,6 +432,8 @@ def get_normalized_contest_data(
             "profile_rank": f"#{s.stats.public_profile_ranking:,}" if (s.stats and s.stats.public_profile_ranking) else "—",
             "profile_total_solved": s.stats.total_solved if (s.stats and s.stats.total_solved is not None) else 0,
             "participation_status": resolved_status,
+            "data_fetch_status": data_fetch_st,
+            "confidence": confidence_val,
             "q1": q1_val,
             "q2": q2_val,
             "q3": q3_val,
@@ -416,7 +442,7 @@ def get_normalized_contest_data(
             "contest_score": score_val,
             "contest_rank": rank_val,
             "contest_rating": rating_val,
-            "fetch_status": fetch_st,
+            "fetch_status": data_fetch_st,
             "error_reason": err_re,
             "attendance_evidence": attendance_evidence
         })
@@ -429,37 +455,49 @@ def get_normalized_contest_data(
 
     # Step 3: Exact mathematical formulas across the filtered roster
     verified_roster_count = len(dept_year_results)
-    public_attended_cnt = sum(1 for r in dept_year_results if r["participation_status"] == "PUBLIC_ATTENDED")
+    public_attended_cnt = sum(1 for r in dept_year_results if r["participation_status"] == "PUBLIC")
     virtual_attended_cnt = sum(1 for r in dept_year_results if r["participation_status"] == "VIRTUAL")
     public_not_attended_cnt = sum(1 for r in dept_year_results if r["participation_status"] == "NOT_ATTENDED")
-    data_pending_cnt = sum(1 for r in dept_year_results if r["participation_status"] == "DATA_PENDING")
-    data_errors_cnt = sum(1 for r in dept_year_results if r["participation_status"] == "DATA_ERROR")
+    unknown_cnt = sum(1 for r in dept_year_results if r["participation_status"] == "UNKNOWN")
+    username_missing_cnt = sum(1 for r in dept_year_results if r["data_fetch_status"] == "USERNAME_NOT_FOUND")
+    fetch_failed_cnt = sum(1 for r in dept_year_results if r["data_fetch_status"] == "FETCH_FAILED")
 
-    # Mathematical Invariant check: Total = Public + Virtual + NotAttended + Pending + Errors
-    is_mathematically_sound = (verified_roster_count == (public_attended_cnt + virtual_attended_cnt + public_not_attended_cnt + data_pending_cnt + data_errors_cnt))
+    # Mathematical Invariant check: Total = Public + Virtual + NotAttended + Unknown
+    is_mathematically_sound = (verified_roster_count == (public_attended_cnt + virtual_attended_cnt + public_not_attended_cnt + unknown_cnt))
     integrity_status = "PASSED" if is_mathematically_sound else "FAILED"
 
-    # Formula: Public Participation % = (Public Attended / Verified Eligible Roster) * 100
-    participation_rate = round((public_attended_cnt / max(verified_roster_count, 1)) * 100.0, 2)
+    # Formula: Public Participation % = (Public Attended / (Verified Eligible Roster - Unknown)) * 100
+    valid_denom = max(verified_roster_count - unknown_cnt, 1)
+    participation_rate = round((public_attended_cnt / valid_denom) * 100.0, 2)
 
     # Step 4: Apply Attendance filter if specified
     results = dept_year_results
     norm_att = normalize_attendance_filter(attendance)
     if norm_att:
         if norm_att in ("PUBLIC_ATTENDED", "PUBLIC"):
-            results = [r for r in results if r["participation_status"] == "PUBLIC_ATTENDED"]
+            results = [r for r in results if r["participation_status"] == "PUBLIC"]
         elif norm_att in ("PUBLIC_NOT_ATTENDED", "NOT_ATTENDED"):
             results = [r for r in results if r["participation_status"] == "NOT_ATTENDED"]
         elif norm_att in ("VIRTUAL_ATTENDED", "VIRTUAL"):
             results = [r for r in results if r["participation_status"] == "VIRTUAL"]
-        elif norm_att in ("DATA_ERROR", "ERROR"):
-            results = [r for r in results if r["participation_status"] == "DATA_ERROR"]
-        elif norm_att in ("DATA_PENDING", "PENDING"):
-            results = [r for r in results if r["participation_status"] == "DATA_PENDING"]
+        elif norm_att in ("UNKNOWN", "DATA_ERROR", "ERROR"):
+            results = [r for r in results if r["participation_status"] == "UNKNOWN"]
 
     rows = []
     for idx, r in enumerate(results, start=1):
-        is_att = r["participation_status"] in ("PUBLIC_ATTENDED", "VIRTUAL")
+        is_att = r["participation_status"] in ("PUBLIC", "VIRTUAL")
+        is_not_att = r["participation_status"] == "NOT_ATTENDED"
+        
+        status_label = "PUBLIC" if r["participation_status"] == "PUBLIC" else (
+            "VIRTUAL" if r["participation_status"] == "VIRTUAL" else (
+                "NOT ATTENDED" if is_not_att else (
+                    "USERNAME NOT LINKED" if r["data_fetch_status"] == "USERNAME_NOT_FOUND" else "FETCH ERROR"
+                )
+            )
+        )
+        
+        score_disp = f"{r['total_contest_solved']} / 4" if is_att else ("Not Attended" if is_not_att else "Data Unavailable")
+
         rows.append({
             "s_no": idx,
             "reg_no": r["reg_no"],
@@ -469,23 +507,26 @@ def get_normalized_contest_data(
             "username": r.get("username", ""),
             "profile_rank": r.get("profile_rank", "—"),
             "profile_total_solved": r.get("profile_total_solved", 0),
-            "status": "PUBLIC" if r["participation_status"] == "PUBLIC_ATTENDED" else ("VIRTUAL" if r["participation_status"] == "VIRTUAL" else ("NOT ATTENDED" if r["participation_status"] == "NOT_ATTENDED" else r["participation_status"])),
+            "status": status_label,
             "participation_status": r["participation_status"],
+            "data_fetch_status": r["data_fetch_status"],
+            "confidence": r["confidence"],
+            "score_display": score_disp,
             "contest_name": session.contest_name,
             "q1": r["q1"] if is_att else "—",
             "q2": r["q2"] if is_att else "—",
             "q3": r["q3"] if is_att else "—",
             "q4": r["q4"] if is_att else "—",
-            "total_solved": r["total_contest_solved"] if is_att else "—",
-            "score": r["contest_score"] if is_att else 0,
+            "total_solved": r["total_contest_solved"] if is_att else ("0" if is_not_att else "—"),
+            "score": r["contest_score"] if is_att else (0 if is_not_att else "—"),
             "rank": r["contest_rank"] if (is_att and r["contest_rank"] is not None) else "—",
             "rating": r["contest_rating"] if (is_att and r["contest_rating"] is not None) else "—",
-            "fetch_status": r["fetch_status"],
+            "fetch_status": r["data_fetch_status"],
             "error_reason": r["error_reason"],
             "attendance_evidence": r.get("attendance_evidence", {})
         })
 
-    return {
+    resp = {
         "session_id": session.id,
         "sessionId": session.id,
         "contest_id": session.contest_id,
@@ -514,18 +555,23 @@ def get_normalized_contest_data(
             "virtualAttended": virtual_attended_cnt,
             "virtualParticipants": virtual_attended_cnt,
             "virtualDataStatus": "AVAILABLE" if virtual_attended_cnt > 0 else "NOT_AVAILABLE",
-            "dataPending": data_pending_cnt,
-            "dataErrors": data_errors_cnt,
-            "failedVerification": data_errors_cnt,
+            "unknown": unknown_cnt,
+            "usernameNotFound": username_missing_cnt,
+            "fetchFailed": fetch_failed_cnt,
+            "dataErrors": unknown_cnt,
+            "failedVerification": unknown_cnt,
             "publicParticipationRate": participation_rate,
             "participationRate": f"{participation_rate:.2f}%",
-            "4 Q Solved": sum(1 for r in dept_year_results if r.get("total_contest_solved") == 4),
-            "3 Q Solved": sum(1 for r in dept_year_results if r.get("total_contest_solved") == 3),
-            "2 Q Solved": sum(1 for r in dept_year_results if r.get("total_contest_solved") == 2),
-            "1 Q Solved": sum(1 for r in dept_year_results if r.get("total_contest_solved") == 1),
+            "4 Q Solved": sum(1 for r in dept_year_results if r.get("total_contest_solved") == 4 and r.get("participation_status") in ("PUBLIC", "VIRTUAL")),
+            "3 Q Solved": sum(1 for r in dept_year_results if r.get("total_contest_solved") == 3 and r.get("participation_status") in ("PUBLIC", "VIRTUAL")),
+            "2 Q Solved": sum(1 for r in dept_year_results if r.get("total_contest_solved") == 2 and r.get("participation_status") in ("PUBLIC", "VIRTUAL")),
+            "1 Q Solved": sum(1 for r in dept_year_results if r.get("total_contest_solved") == 1 and r.get("participation_status") in ("PUBLIC", "VIRTUAL")),
         },
         "rows": rows
     }
+    if is_session_finalized:
+        cache.set(cache_key, resp, ttl_seconds=60, tags=["contest_matrix"])
+    return resp
 
 @router.get("/sessions/{session_id}/matrix")
 def get_session_matrix(

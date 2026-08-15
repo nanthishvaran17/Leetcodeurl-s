@@ -297,6 +297,14 @@ async def _run_full_sync_worker(job_id: str):
 
         sync_tracker.finish()
 
+        # Invalidate all caches so dashboard and leaderboard immediately serve fresh data
+        try:
+            from backend.cache import cache
+            cache.clear()
+            logger.info("[SYNC] Application cache invalidated post-sync.")
+        except Exception as c_err:
+            logger.warning(f"[SYNC] Cache invalidation note: {c_err}")
+
         # 7. Final Completion WebSocket Broadcast
         await broadcast_sync_event({
             "type": "SYNC_COMPLETED",

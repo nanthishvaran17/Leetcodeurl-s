@@ -59,6 +59,8 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
             cursor.execute("PRAGMA journal_mode=WAL")
             cursor.execute("PRAGMA synchronous=NORMAL")
             cursor.execute("PRAGMA busy_timeout=60000")
+            cursor.execute("PRAGMA cache_size=-64000")  # 64MB cache
+            cursor.execute("PRAGMA temp_store=MEMORY")
             cursor.close()
         except Exception:
             pass
@@ -75,7 +77,7 @@ def get_db():
         db.close()
 
 def run_migrations():
-    """Apply any missing column migrations to the existing SQLite database."""
+    """Apply any missing column migrations and performance indexes to the existing SQLite database."""
     if "sqlite" not in db_url:
         return  # Only needed for local SQLite
     try:
@@ -149,6 +151,22 @@ def run_migrations():
                         conn.commit()
                         print(f"[DB Migration] Added weekly_sessions column: {col_name}")
 
+            # Check weekly_public_results columns
+            result_pub = conn.execute(
+                __import__('sqlalchemy').text("PRAGMA table_info(weekly_public_results)")
+            )
+            pub_cols = {row[1] for row in result_pub}
+            if pub_cols:
+                pub_migrations = [
+                    ("data_fetch_status", "ALTER TABLE weekly_public_results ADD COLUMN data_fetch_status VARCHAR DEFAULT 'DATA_UNAVAILABLE'"),
+                    ("confidence",        "ALTER TABLE weekly_public_results ADD COLUMN confidence VARCHAR DEFAULT 'UNVERIFIED'"),
+                ]
+                for col_name, sql in pub_migrations:
+                    if col_name not in pub_cols:
+                        conn.execute(__import__('sqlalchemy').text(sql))
+                        conn.commit()
+                        print(f"[DB Migration] Added weekly_public_results column: {col_name}")
+
             # Promote nanthishvaran17@gmail.com to Admin role
             admin_check = conn.execute(
                 __import__('sqlalchemy').text("SELECT id, role FROM users WHERE email = 'nanthishvaran17@gmail.com'")
@@ -170,5 +188,32 @@ def run_migrations():
                 )
                 conn.commit()
                 print("[DB Migration] Created Admin User account for nanthishvaran17@gmail.com.")
+
+            # Performance Indexes Creation
+            indexes = [
+                ("idx_students_dept_year", "CREATE INDEX IF NOT EXISTS idx_students_dept_year ON students(department_id, year_level)"),
+                ("idx_students_is_active", "CREATE INDEX IF NOT EXISTS idx_students_is_active ON students(is_active)"),
+                ("idx_students_name", "CREATE INDEX IF NOT EXISTS idx_students_name ON students(name)"),
+                ("idx_students_reg_no", "CREATE INDEX IF NOT EXISTS idx_students_reg_no ON students(reg_no)"),
+                ("idx_students_username", "CREATE INDEX IF NOT EXISTS idx_students_username ON students(username)"),
+                ("idx_profile_stats_student_id", "CREATE INDEX IF NOT EXISTS idx_profile_stats_student_id ON leetcode_profile_stats(student_id)"),
+                ("idx_profile_stats_total_solved", "CREATE INDEX IF NOT EXISTS idx_profile_stats_total_solved ON leetcode_profile_stats(total_solved)"),
+                ("idx_profile_stats_contest_rating", "CREATE INDEX IF NOT EXISTS idx_profile_stats_contest_rating ON leetcode_profile_stats(contest_rating)"),
+                ("idx_profile_stats_sync_status", "CREATE INDEX IF NOT EXISTS idx_profile_stats_sync_status ON leetcode_profile_stats(sync_status)"),
+                ("idx_profile_stats_sync_solved", "CREATE INDEX IF NOT EXISTS idx_profile_stats_sync_solved ON leetcode_profile_stats(sync_status, total_solved)"),
+                ("idx_weekly_public_sess_stud", "CREATE INDEX IF NOT EXISTS idx_weekly_public_sess_stud ON weekly_public_results(session_id, student_id)"),
+                ("idx_weekly_public_sess_status", "CREATE INDEX IF NOT EXISTS idx_weekly_public_sess_status ON weekly_public_results(session_id, participation_status)"),
+                ("idx_weekly_public_solved", "CREATE INDEX IF NOT EXISTS idx_weekly_public_solved ON weekly_public_results(total_contest_solved)"),
+                ("idx_weekly_prog_stud_id", "CREATE INDEX IF NOT EXISTS idx_weekly_prog_stud_id ON weekly_student_progress(student_id)"),
+                ("idx_weekly_prog_college_rank", "CREATE INDEX IF NOT EXISTS idx_weekly_prog_college_rank ON weekly_student_progress(college_rank)"),
+                ("idx_weekly_prog_total_solved", "CREATE INDEX IF NOT EXISTS idx_weekly_prog_total_solved ON weekly_student_progress(total_solved)")
+            ]
+            for idx_name, idx_sql in indexes:
+                try:
+                    conn.execute(__import__('sqlalchemy').text(idx_sql))
+                except Exception:
+                    pass
+            conn.commit()
+            print("[DB Migration] Performance indexes verified/created successfully.")
     except Exception as e:
         print(f"[DB Migration] Warning: {e}")

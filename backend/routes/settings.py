@@ -430,8 +430,14 @@ def get_operations_center_overview(db: Session = Depends(get_db)):
     """
     from backend.models import Student, WeeklySession, WeeklyPublicResult, SyncJob, AdminAuditLog, EmailDispatchLog
     from backend.backup_manager import list_backups_detail
+    from backend.cache import cache
     import json
     import time
+
+    cache_key = "settings:operations_overview"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
 
     start_t = time.time()
 
@@ -517,7 +523,7 @@ def get_operations_center_overview(db: Session = Depends(get_db)):
 
     elapsed_ms = round((time.time() - start_t) * 1000, 2)
 
-    return {
+    overview_res = {
         "status": "SUCCESS",
         "responseTimeMs": elapsed_ms,
         "operatingMode": "PRODUCTION",
@@ -598,6 +604,8 @@ def get_operations_center_overview(db: Session = Depends(get_db)):
         },
         "recentAudits": audit_list
     }
+    cache.set(cache_key, overview_res, ttl_seconds=30, tags=["settings", "operations"])
+    return overview_res
 
 
 @router.get("/available-contests")

@@ -404,10 +404,10 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
                     top_students.append(entry)
 
             top_students.sort(key=lambda x: x.get("score", 0) or 0, reverse=True)
-            pub_attended_cnt = matrix_metrics.get("officialParticipants", sum(1 for r in normalized_rows if r.get("status") == "PUBLIC"))
-            virt_attended_cnt = matrix_metrics.get("virtualParticipants", sum(1 for r in normalized_rows if r.get("status") == "VIRTUAL"))
-            not_attended_cnt = matrix_metrics.get("notParticipated", sum(1 for r in normalized_rows if r.get("status") == "NOT ATTENDED"))
-            error_cnt = matrix_metrics.get("failedVerification", sum(1 for r in normalized_rows if r.get("participation_status") == "DATA_ERROR"))
+            pub_attended_cnt = matrix_metrics.get("publicAttended", matrix_metrics.get("officialParticipants", sum(1 for r in normalized_rows if r.get("status") == "PUBLIC")))
+            virt_attended_cnt = matrix_metrics.get("virtualAttended", matrix_metrics.get("virtualParticipants", sum(1 for r in normalized_rows if r.get("status") == "VIRTUAL")))
+            not_attended_cnt = matrix_metrics.get("notAttended", matrix_metrics.get("notParticipated", sum(1 for r in normalized_rows if r.get("status") == "NOT ATTENDED")))
+            error_cnt = matrix_metrics.get("unknown", matrix_metrics.get("failedVerification", sum(1 for r in normalized_rows if r.get("participation_status") == "UNKNOWN")))
             total_roster_cnt = matrix_metrics.get("totalStudents", len(normalized_rows))
 
             now_ist = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)

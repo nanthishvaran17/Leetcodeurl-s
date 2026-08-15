@@ -47,7 +47,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         api.get('/sessions/dashboard-summary'),
         api.get('/analytics/department-comparison'),
         api.get('/analytics/data-quality'),
-        api.get('/students')
+        api.get('/students?limit=10')
       ]);
 
       if (sumRes.status === 'fulfilled' && sumRes.value.data) {
@@ -60,7 +60,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         setDataQuality(qualRes.value.data);
       }
       if (studRes.status === 'fulfilled' && studRes.value.data && Array.isArray(studRes.value.data)) {
-        setStudents(studRes.value.data.slice(0, 10));
+        setStudents(studRes.value.data);
       }
       setLoading(false);
     } catch (err) {

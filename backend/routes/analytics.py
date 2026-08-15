@@ -1,22 +1,50 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
+from sqlalchemy import func
 
 from backend.database import get_db
 from backend.models import Student, Department, Section, LeetCodeProfileStats, WeeklyStudentProgress, WeeklySessionSnapshot
 from backend.schemas import StudentOut
 from backend.insights import get_student_insights
 from backend.gamification import calculate_section_battles
+from backend.cache import cache
 
 router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
 
 @router.get("/department-comparison")
 def compare_departments(db: Session = Depends(get_db)):
-    departments = db.query(Department).all()
-    results = []
+    cache_key = "analytics:dept_comparison"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
 
+    departments = db.query(Department).all()
+    if not departments:
+        return []
+
+    # Single batch fetch for all active students with department & stats
+    all_students = db.query(Student).options(
+        joinedload(Student.stats)
+    ).filter(
+        (Student.is_active == True) | (Student.is_active.is_(None))
+    ).all()
+
+    # Single batch fetch for all progress records
+    all_progs = db.query(WeeklyStudentProgress).all()
+    prog_map = {}
+    for p in all_progs:
+        if p.student_id not in prog_map or p.id > prog_map[p.student_id].id:
+            prog_map[p.student_id] = p
+
+    # Group students by department
+    dept_students_map = {}
+    for s in all_students:
+        dept_students_map.setdefault(s.department_id, []).append(s)
+
+    results = []
     for dept in departments:
-        students = db.query(Student).filter(Student.department_id == dept.id, Student.is_active == True).all()
+        students = dept_students_map.get(dept.id, [])
         total_stud = len(students)
         if total_stud == 0:
             continue
@@ -27,7 +55,7 @@ def compare_departments(db: Session = Depends(get_db)):
         weekly_prog_total = 0
         active_count = 0
         for s in students:
-            prog = db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id == s.id).order_by(WeeklyStudentProgress.id.desc()).first()
+            prog = prog_map.get(s.id)
             if prog:
                 weekly_prog_total += prog.weekly_progress
                 if prog.weekly_progress > 0:
@@ -50,6 +78,7 @@ def compare_departments(db: Session = Depends(get_db)):
             "top_student_name": top_stud.name if top_stud else "N/A"
         })
 
+    cache.set(cache_key, results, ttl_seconds=60, tags=["analytics", "students"])
     return results
 
 @router.get("/compare-students")
@@ -59,12 +88,25 @@ def compare_students(ids: str = Query(..., description="Comma separated student 
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid student IDs format.")
 
-    students = db.query(Student).filter(Student.id.in_(id_list)).all()
-    comparison_data = []
+    students = db.query(Student).options(
+        joinedload(Student.department),
+        joinedload(Student.section),
+        joinedload(Student.stats)
+    ).filter(Student.id.in_(id_list)).all()
 
+    # Batch progress fetch
+    progs = db.query(WeeklyStudentProgress).filter(
+        WeeklyStudentProgress.student_id.in_(id_list)
+    ).all()
+    prog_map = {}
+    for p in progs:
+        if p.student_id not in prog_map or p.id > prog_map[p.student_id].id:
+            prog_map[p.student_id] = p
+
+    comparison_data = []
     for s in students:
         st_out = StudentOut.from_orm(s)
-        latest_prog = db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id == s.id).order_by(WeeklyStudentProgress.id.desc()).first()
+        latest_prog = prog_map.get(s.id)
         if latest_prog:
             st_out.college_rank = latest_prog.college_rank
             st_out.dept_rank = latest_prog.dept_rank
@@ -85,7 +127,15 @@ def compare_students(ids: str = Query(..., description="Comma separated student 
 
 @router.get("/data-quality")
 def get_data_quality_dashboard(db: Session = Depends(get_db)):
-    students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+    cache_key = "analytics:data_quality"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    students = db.query(Student).options(
+        joinedload(Student.department),
+        joinedload(Student.stats)
+    ).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
     total = len(students)
 
     ok_count = 0
@@ -102,7 +152,6 @@ def get_data_quality_dashboard(db: Session = Depends(get_db)):
         status = (st.status if st else "").upper()
         sync_st = (st.sync_status if st else "").lower()
 
-        # Check if student is verified (has valid stats, total_solved >= 0, or verified/success sync_status)
         is_verified = (
             bool(s.username or s.leetcode_url)
             and (
@@ -140,24 +189,37 @@ def get_data_quality_dashboard(db: Session = Depends(get_db)):
             })
         elif sync_st in ("network_error", "timeout", "failed"):
             network_error_count += 1
-            # Temporary network errors are NOT added as profile errors, but tracked separately
         else:
             data_unavailable += 1
 
     health_score = round((ok_count / max(1, total) * 100), 1) if total > 0 else 100.0
 
-    return {
+    resp = {
         "total_students": total,
         "valid_profiles": ok_count,
+        "verified_profiles": ok_count,
         "missing_links": missing_link,
         "invalid_links": invalid_link,
         "profile_not_found": not_found,
         "network_errors": network_error_count,
         "data_unavailable": data_unavailable,
+        "health_score": health_score,
         "health_score_percentage": health_score,
+        "issues_count": len(issues_list),
+        "issues": issues_list,
         "issues_list": issues_list,
-        "source_status": "ONLINE"
+        "source_status": "ONLINE",
+        "metrics": {
+            "verified": ok_count,
+            "missing_link": missing_link,
+            "invalid_link": invalid_link,
+            "not_found": not_found,
+            "network_errors": network_error_count,
+            "data_unavailable": data_unavailable
+        }
     }
+    cache.set(cache_key, resp, ttl_seconds=60, tags=["analytics", "students"])
+    return resp
 
 @router.get("/section-battles")
 def get_section_battles_leaderboard(db: Session = Depends(get_db)):
