@@ -600,7 +600,8 @@ def sync_single_historical_session(db: Session, session_id: int):
         for f in as_completed(futures):
             results.append(f.result())
 
-    now_iso = datetime.datetime.utcnow().isoformat()
+    now_dt = datetime.datetime.utcnow()
+    now_iso = now_dt.isoformat()
 
     # Clear existing and write verified new data
     db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session.id).delete(synchronize_session=False)
@@ -633,7 +634,7 @@ def sync_single_historical_session(db: Session, session_id: int):
                 contest_rank=r.get("rank"),
                 contest_rating=r.get("rating"),
                 fetch_status="SUCCESS",
-                last_fetched_at=now_iso,
+                last_fetched_at=now_dt,
                 verification_evidence=json.dumps({
                     "source_checked": True,
                     "source_type": "PUBLIC_CONTEST_API",
@@ -661,7 +662,7 @@ def sync_single_historical_session(db: Session, session_id: int):
                 contest_rank=None,
                 contest_rating=None,
                 fetch_status="SUCCESS",
-                last_fetched_at=now_iso,
+                last_fetched_at=now_dt,
                 verification_evidence=json.dumps({
                     "source_checked": True,
                     "source_type": "PUBLIC_CONTEST_API",
@@ -690,7 +691,7 @@ def sync_single_historical_session(db: Session, session_id: int):
                 contest_rating=None,
                 fetch_status="FAILED",
                 error_reason=r.get("error", "Error"),
-                last_fetched_at=now_iso,
+                last_fetched_at=now_dt,
                 verification_evidence=json.dumps({
                     "source_checked": False,
                     "source_type": "PUBLIC_CONTEST_API",
@@ -708,7 +709,7 @@ def sync_single_historical_session(db: Session, session_id: int):
     session.virtual_participants = 0
     session.not_participated = not_attended_cnt
     session.sync_status = "VERIFIED"
-    session.last_synced = now_iso
+    session.last_synced = now_dt
     session.status = "FINALIZED"
     db.commit()
 
