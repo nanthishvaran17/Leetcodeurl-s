@@ -5,6 +5,7 @@ import {
   FileSpreadsheet, FileText, Archive
 } from 'lucide-react';
 import api from '../services/api';
+import { StatusNotificationModal, NotificationState } from './StatusNotificationModal';
 
 interface EmailRecipient {
   id: number;
@@ -79,6 +80,7 @@ export const EmailDeliveryTab: React.FC = () => {
   const [newRole, setNewRole] = useState('HOD');
   const [newDept, setNewDept] = useState('ALL');
   const [addingRecipient, setAddingRecipient] = useState(false);
+  const [notification, setNotification] = useState<NotificationState | null>(null);
 
   // SMTP Test state
   const [testRecipient, setTestRecipient] = useState('nanthishvaran17@gmail.com');
@@ -195,18 +197,77 @@ export const EmailDeliveryTab: React.FC = () => {
     try {
       await api.post(`/admin/email-deliveries/retry/${logId}`);
       await fetchAll();
-    } catch (err) {
+      setNotification({
+        isOpen: true,
+        type: 'success',
+        title: 'Retry Initiated',
+        message: `Email delivery retry request has been queued successfully.`
+      });
+    } catch (err: any) {
       console.error('Retry error:', err);
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Retry Request Failed',
+        message: err.response?.data?.detail || 'Unable to trigger email retry.'
+      });
     }
   };
 
   const handleAddRecipient = async () => {
-    if (!newName.trim() || !newEmail.trim()) return;
+    const cleanName = newName.trim();
+    const cleanEmail = newEmail.trim().toLowerCase();
+
+    // 1. Validate required name
+    if (!cleanName) {
+      setNotification({
+        isOpen: true,
+        type: 'warning',
+        title: 'Missing Full Name',
+        message: 'Please enter the recipient full name (e.g. Dr. K. Ramesh or HOD Cyber Security).'
+      });
+      return;
+    }
+
+    // 2. Validate required email
+    if (!cleanEmail) {
+      setNotification({
+        isOpen: true,
+        type: 'warning',
+        title: 'Missing Email Address',
+        message: 'Please enter an institutional or official email address for the recipient.'
+      });
+      return;
+    }
+
+    // 3. Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      setNotification({
+        isOpen: true,
+        type: 'warning',
+        title: 'Invalid Email Address',
+        message: `The email address '${cleanEmail}' is not formatted correctly. Please enter a valid email (e.g. name@nandha.edu.in).`
+      });
+      return;
+    }
+
+    // 4. Validate duplicate in active list
+    if (recipients.some(r => r.email.toLowerCase() === cleanEmail)) {
+      setNotification({
+        isOpen: true,
+        type: 'warning',
+        title: 'Recipient Already Exists',
+        message: `A report recipient with email address '${cleanEmail}' is already registered in the system.`
+      });
+      return;
+    }
+
     setAddingRecipient(true);
     try {
-      await api.post('/admin/recipients', {
-        name: newName,
-        email: newEmail,
+      const res = await api.post('/admin/recipients', {
+        name: cleanName,
+        email: cleanEmail,
         role: newRole,
         department: newDept,
         weekly_enabled: true,
@@ -214,24 +275,68 @@ export const EmailDeliveryTab: React.FC = () => {
         error_enabled: true,
         active: true
       });
+
+      // Successful creation
       setShowAddRecipient(false);
-      setNewName(''); setNewEmail(''); setNewRole('HOD'); setNewDept('ALL');
+      const savedName = cleanName;
+      const savedEmail = cleanEmail;
+      setNewName('');
+      setNewEmail('');
+      setNewRole('HOD');
+      setNewDept('ALL');
+
       await fetchAll();
+
+      setNotification({
+        isOpen: true,
+        type: 'success',
+        title: 'Recipient Added Successfully',
+        message: res.data?.message || `Recipient '${savedName}' (${savedEmail}) has been successfully added to the report distribution list.`
+      });
     } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to add recipient');
+      console.error('Add recipient error:', err);
+      const backendError = err.response?.data?.detail || err.message || 'Failed to save recipient. Please try again.';
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Failed to Add Recipient',
+        message: backendError
+      });
     } finally {
       setAddingRecipient(false);
     }
   };
 
-  const handleDeleteRecipient = async (id: number, email: string) => {
-    if (!window.confirm(`Remove ${email} from recipient list?`)) return;
-    try {
-      await api.delete(`/admin/recipients/${id}`);
-      await fetchAll();
-    } catch (err) {
-      console.error('Delete error:', err);
-    }
+  const handleDeleteRecipient = (id: number, email: string, name?: string) => {
+    setNotification({
+      isOpen: true,
+      type: 'warning',
+      isConfirm: true,
+      title: 'Delete Email Recipient',
+      message: `Are you sure you want to remove '${name || email}' (${email}) from the report distribution list?`,
+      confirmText: 'Yes, Delete',
+      cancelText: 'Cancel',
+      onConfirm: async () => {
+        try {
+          const res = await api.delete(`/admin/recipients/${id}`);
+          await fetchAll();
+          setNotification({
+            isOpen: true,
+            type: 'success',
+            title: 'Recipient Removed',
+            message: res.data?.message || `Recipient (${email}) was removed successfully.`
+          });
+        } catch (err: any) {
+          console.error('Delete error:', err);
+          setNotification({
+            isOpen: true,
+            type: 'error',
+            title: 'Failed to Delete Recipient',
+            message: err.response?.data?.detail || 'Unable to delete recipient.'
+          });
+        }
+      }
+    });
   };
 
   const handleToggleRecipient = async (r: any) => {
@@ -239,7 +344,15 @@ export const EmailDeliveryTab: React.FC = () => {
       const newStatus = !(r.is_active ?? r.active);
       await api.patch(`/admin/recipients/${r.id}/status`, { active: newStatus });
       setRecipients(prev => prev.map(x => x.id === r.id ? { ...x, is_active: newStatus, active: newStatus } : x));
-    } catch (err) { console.error('Toggle error:', err); }
+    } catch (err: any) {
+      console.error('Toggle error:', err);
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Status Update Failed',
+        message: err.response?.data?.detail || 'Could not update recipient status.'
+      });
+    }
   };
 
   const handleSendEmail = async () => {
@@ -502,8 +615,8 @@ export const EmailDeliveryTab: React.FC = () => {
                       </button>
                     </td>
                     <td className="px-4 py-3">
-                      <button onClick={() => handleDeleteRecipient(r.id, r.email)}
-                        className="flex items-center gap-1 p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all font-bold text-[10px]">
+                      <button onClick={() => handleDeleteRecipient(r.id, r.email, r.name)}
+                        className="flex items-center gap-1 p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all font-bold text-[10px] cursor-pointer">
                         <Trash2 className="w-3.5 h-3.5" />
                         Delete
                       </button>
@@ -624,9 +737,9 @@ export const EmailDeliveryTab: React.FC = () => {
               </div>
             </div>
             <div className="flex gap-3 pt-2">
-              <button onClick={() => setShowAddRecipient(false)} className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-navy-800 transition-all">Cancel</button>
-              <button onClick={handleAddRecipient} disabled={addingRecipient || !newName || !newEmail}
-                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white text-sm font-black transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+              <button onClick={() => setShowAddRecipient(false)} className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-navy-800 transition-all cursor-pointer">Cancel</button>
+              <button onClick={handleAddRecipient} disabled={addingRecipient}
+                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white text-sm font-black transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-md">
                 {addingRecipient ? <><Loader2 className="w-4 h-4 animate-spin" /> Adding...</> : <><Plus className="w-4 h-4" /> Add Recipient</>}
               </button>
             </div>
@@ -819,6 +932,12 @@ export const EmailDeliveryTab: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ── CENTRALIZED CUSTOM NOTIFICATION MODAL ────────────────── */}
+      <StatusNotificationModal
+        notification={notification}
+        onClose={() => setNotification(null)}
+      />
     </div>
   );
 };

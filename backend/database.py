@@ -40,7 +40,7 @@ if "postgresql" in db_url or "postgres" in db_url:
     })
 else:
     engine_kwargs.update({
-        "connect_args": {"check_same_thread": False, "timeout": 30}
+        "connect_args": {"check_same_thread": False, "timeout": 60}
     })
 
 engine = create_engine(
@@ -48,6 +48,20 @@ engine = create_engine(
     echo=False,
     **engine_kwargs
 )
+
+from sqlalchemy import event
+
+@event.listens_for(engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    if "sqlite" in db_url:
+        try:
+            cursor = dbapi_connection.cursor()
+            cursor.execute("PRAGMA journal_mode=WAL")
+            cursor.execute("PRAGMA synchronous=NORMAL")
+            cursor.execute("PRAGMA busy_timeout=60000")
+            cursor.close()
+        except Exception:
+            pass
 
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
