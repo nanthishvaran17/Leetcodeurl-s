@@ -884,7 +884,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                   type="text"
                   value={forensicSearchInput}
                   onChange={(e) => handleStudentSearchChange(e.target.value)}
-                  placeholder="Type student name or reg no (e.g. Nanthish, Dhanushya)..."
+                  placeholder="Search student by name, register number, or LeetCode username..."
                   className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl text-xs font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
                 {isSearchingStudents && (
