@@ -177,8 +177,13 @@ def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(get_db
     logger.info(f"[OTP_REQUEST] Verification requested for email address: {clean_email}")
 
     # Verify authorized email status
-    configured_admin_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
-    is_admin = (clean_email == configured_admin_email)
+    configured_admin_emails = {
+        getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower(),
+        "msanthoshkumar@nandhaengg.org",
+        "nanthishvaran17@gmail.com",
+        "admin@college.edu"
+    }
+    is_admin = (clean_email in configured_admin_emails)
 
     user = db.query(User).filter(User.email.ilike(clean_email)).first()
     student = None
@@ -261,15 +266,20 @@ def verify_otp(req: VerifyOtpRequest, request: Request, response: Response, db: 
 
     logger.info(f"[OTP_VERIFY_SUCCESS] Verification successful for email: {clean_email}")
 
-    configured_admin_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
+    configured_admin_emails = {
+        getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower(),
+        "msanthoshkumar@nandhaengg.org",
+        "nanthishvaran17@gmail.com",
+        "admin@college.edu"
+    }
     user = db.query(User).filter(User.email.ilike(clean_email)).first()
 
-    if clean_email == configured_admin_email:
-        admin_pass = getattr(settings, "ADMIN_PASSWORD", "admin123").strip() or "admin123"
+    if clean_email in configured_admin_emails:
+        admin_pass = getattr(settings, "ADMIN_PASSWORD", "Nandha@123").strip() or "Nandha@123"
         if not user:
             user = User(
-                username=getattr(settings, "ADMIN_USERNAME", "admin"),
-                email=configured_admin_email,
+                username=clean_email.split("@")[0],
+                email=clean_email,
                 hashed_password=get_password_hash(admin_pass),
                 role="Admin",
                 is_active=True
@@ -384,17 +394,22 @@ def google_auth(payload: dict, request: Request, response: Response, db: Session
         raise HTTPException(status_code=400, detail="Your Google account email must be verified.")
 
     # Step 2: Authorize Admin Account
-    configured_admin_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
-    is_config_admin = (verified_email == configured_admin_email)
+    configured_admin_emails = {
+        getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower(),
+        "msanthoshkumar@nandhaengg.org",
+        "nanthishvaran17@gmail.com",
+        "admin@college.edu"
+    }
+    is_config_admin = (verified_email in configured_admin_emails)
 
     user = db.query(User).filter(User.email.ilike(verified_email)).first()
 
     if not user and is_config_admin:
-        admin_username = getattr(settings, "ADMIN_USERNAME", "admin").strip()
-        admin_pass = getattr(settings, "ADMIN_PASSWORD", "admin123").strip()
+        admin_username = verified_email.split("@")[0]
+        admin_pass = getattr(settings, "ADMIN_PASSWORD", "Nandha@123").strip()
         user = User(
             username=admin_username,
-            email=configured_admin_email,
+            email=verified_email,
             hashed_password=get_password_hash(admin_pass),
             role="Admin",
             is_active=True
@@ -410,6 +425,12 @@ def google_auth(payload: dict, request: Request, response: Response, db: Session
     if not user.is_active:
         logger.warning(f"[GOOGLE_ADMIN_REJECTED] Account {verified_email} is currently deactivated.")
         raise HTTPException(status_code=403, detail="Your account is currently deactivated.")
+
+    # Ensure full Admin role
+    if is_config_admin and user.role not in ("Admin", "Super Admin"):
+        user.role = "Admin"
+        user.is_active = True
+        db.commit()
 
     logger.info(f"[GOOGLE_ADMIN_AUTHORIZED] Administrator {user.username} ({user.email}) authorized with role {user.role}.")
 
