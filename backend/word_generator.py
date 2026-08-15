@@ -51,6 +51,93 @@ def set_table_borders(table, color="CCCCCC", sz="4", val="single"):
                 tcBorders.append(border)
             tcPr.append(tcBorders)
 
+BATCH_CONFIG = {
+    "2023_2027": {"label": "2023 - 2027", "year": "IV"},
+    "2024_2028": {"label": "2024 - 2028", "year": "III"},
+    "2025_2029": {"label": "2025 - 2029", "year": "II"}
+}
+
+def _compute_dept_matrix(db: Session, dept_id: int) -> Dict[str, Any]:
+    """
+    Computes the 13-column matrix for a department across all batches for last week and current week.
+    """
+    from backend.routes.weekly_contests import get_normalized_contest_data, derive_academic_year
+
+    completed_sessions = db.query(WeeklySession).filter(
+        WeeklySession.status.in_(['COMPLETED', 'FINALIZED'])
+    ).order_by(WeeklySession.id.desc()).all()
+
+    current_sess = completed_sessions[0] if len(completed_sessions) > 0 else None
+    last_sess = completed_sessions[1] if len(completed_sessions) > 1 else None
+
+    curr_norm = get_normalized_contest_data(current_sess.id, db=db) if current_sess else {"rows": [], "metrics": {}}
+    last_norm = get_normalized_contest_data(last_sess.id, db=db) if last_sess else {"rows": [], "metrics": {}}
+
+    all_students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+    dept_students = [s for s in all_students if s.department_id == dept_id]
+
+    res = {}
+    for b_key, b_info in BATCH_CONFIG.items():
+        yr_lvl = b_info["year"]
+        b_studs = [s for s in dept_students if derive_academic_year(s) == yr_lvl]
+        b_reg_nos = {s.reg_no for s in b_studs}
+        total_students_count = len(b_studs)
+
+        above_500 = sum(1 for s in b_studs if s.stats and (s.stats.total_solved or 0) > 500)
+        between_250_500 = sum(1 for s in b_studs if s.stats and 250 <= (s.stats.total_solved or 0) <= 500)
+        between_100_249 = sum(1 for s in b_studs if s.stats and 100 <= (s.stats.total_solved or 0) < 250)
+        between_1_99 = sum(1 for s in b_studs if s.stats and 1 <= (s.stats.total_solved or 0) < 100)
+        not_started = sum(1 for s in b_studs if not s.stats or (s.stats.total_solved or 0) == 0)
+
+        rating_above_1500 = sum(1 for s in b_studs if s.stats and s.stats.contest_rating and s.stats.contest_rating > 1500)
+        ranking_below_20000 = sum(1 for s in b_studs if s.stats and s.stats.contest_global_ranking and 0 < s.stats.contest_global_ranking < 20000)
+
+        last_rows = [r for r in last_norm.get('rows', []) if r['reg_no'] in b_reg_nos]
+        last_4q = sum(1 for r in last_rows if r.get('total_solved') == 4)
+        last_3q = sum(1 for r in last_rows if r.get('total_solved') == 3)
+        last_2q = sum(1 for r in last_rows if r.get('total_solved') == 2)
+        last_1q = sum(1 for r in last_rows if r.get('total_solved') == 1)
+
+        curr_rows = [r for r in curr_norm.get('rows', []) if r['reg_no'] in b_reg_nos]
+        curr_4q = sum(1 for r in curr_rows if r.get('total_solved') == 4)
+        curr_3q = sum(1 for r in curr_rows if r.get('total_solved') == 3)
+        curr_2q = sum(1 for r in curr_rows if r.get('total_solved') == 2)
+        curr_1q = sum(1 for r in curr_rows if r.get('total_solved') == 1)
+
+        res[b_key] = {
+            "last_week": {
+                "total_students": total_students_count,
+                "prob_above_500": above_500,
+                "prob_250_500": between_250_500,
+                "prob_100_249": between_100_249,
+                "prob_1_99": between_1_99,
+                "prob_0": not_started,
+                "q4": last_4q,
+                "q3": last_3q,
+                "q2": last_2q,
+                "q1": last_1q,
+                "rating_above_1500": rating_above_1500,
+                "rank_below_20000": ranking_below_20000,
+                "rank_below_20k": ranking_below_20000
+            },
+            "current_week": {
+                "total_students": total_students_count,
+                "prob_above_500": above_500,
+                "prob_250_500": between_250_500,
+                "prob_100_249": between_100_249,
+                "prob_1_99": between_1_99,
+                "prob_0": not_started,
+                "q4": curr_4q,
+                "q3": curr_3q,
+                "q2": curr_2q,
+                "q1": curr_1q,
+                "rating_above_1500": rating_above_1500,
+                "rank_below_20000": ranking_below_20000,
+                "rank_below_20k": ranking_below_20000
+            }
+        }
+    return res
+
 def generate_word_report(db: Session, dept_id: Optional[int] = None) -> bytes:
     """
     CANONICAL OFFICIAL WEEKLY PERFORMANCE WORD REPORT (.DOCX) GENERATOR.
