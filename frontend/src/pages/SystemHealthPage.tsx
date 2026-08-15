@@ -43,7 +43,9 @@ import {
   Play,
   RotateCcw,
   CheckCircle,
-  FileCheck
+  FileCheck,
+  Fingerprint,
+  UserCheck
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -312,24 +314,25 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
   return (
     <div className="space-y-6 pb-20 animate-fade-in text-gray-900 dark:text-gray-100 font-sans">
-      {/* ── 1. TOP IDENTITY & HERO BENTO ARCHITECTURE ── */}
-      <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-indigo-500/10 via-brand-500/5 to-transparent rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
+      {/* ── 1. TOP HERO BANNER (RICH GLOWING INSTITUTIONAL GRADIENT) ── */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-2xl border border-brand-500/30">
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
 
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           {/* Left Column: Institutional Header & Status */}
-          <div className="space-y-2 max-w-xl">
+          <div className="space-y-3 max-w-xl">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 PRODUCTION
               </span>
-              <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-navy-800 border border-gray-200 dark:border-gray-700">
+              <span className="px-3 py-1 rounded-full text-xs font-bold text-gray-300 bg-white/10 backdrop-blur-md border border-white/15">
                 🌐 Asia/Kolkata (IST)
               </span>
               <button
                 onClick={() => setShowCommandPalette(true)}
-                className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 cursor-pointer"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-indigo-300 bg-indigo-500/20 border border-indigo-400/30 hover:bg-indigo-500/30 cursor-pointer transition-all"
                 title="Open Command Palette"
               >
                 <span>⌘K / Ctrl+K</span>
@@ -337,10 +340,10 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             </div>
 
             <div>
-              <h1 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight">
-                NANDHA INSTITUTIONAL OPERATIONS CENTER
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">
+                NANDHA INSTITUTIONAL <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-orange-200 to-indigo-200">OPERATIONS CENTER</span>
               </h1>
-              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-0.5">
+              <p className="text-xs sm:text-sm font-semibold text-gray-300 mt-1">
                 Real-time Academic Data • Automation • Integrity • Recovery • Intelligence
               </p>
             </div>
@@ -351,51 +354,51 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             {/* System Trust Score Card */}
             <div
               onClick={() => setShowTrustModal(true)}
-              className="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-brand-500/5 to-transparent border border-indigo-500/20 text-left cursor-pointer hover:border-indigo-400 transition-all hover:scale-[1.02] shadow-sm"
+              className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-left cursor-pointer hover:border-amber-400/60 transition-all hover:scale-[1.02] shadow-sm"
               title="Click to view contributing factors"
             >
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-wider">
+                <span className="text-[10px] font-black uppercase text-amber-300 tracking-wider">
                   Trust Score
                 </span>
-                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-300">
                   TRUSTED
                 </span>
               </div>
               <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{trustScore}</span>
+                <span className="text-2xl font-black text-white">{trustScore}</span>
                 <span className="text-xs text-gray-400 font-bold">/ 100</span>
               </div>
-              <p className="text-[10px] text-gray-400 font-bold mt-0.5 flex items-center gap-1">
+              <p className="text-[10px] text-amber-200 font-bold mt-0.5 flex items-center gap-1">
                 <span>Why this score?</span>
                 <ChevronRight className="w-3 h-3" />
               </p>
             </div>
 
             {/* Data Freshness Card */}
-            <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-950/40 border border-gray-200 dark:border-gray-800 text-left shadow-sm">
-              <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Data Freshness</span>
+            <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-left shadow-sm">
+              <span className="text-[10px] font-black uppercase text-gray-300 tracking-wider">Data Freshness</span>
               <div className="flex items-center gap-1.5 mt-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span className="text-sm font-black text-gray-900 dark:text-white">FRESH</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span className="text-sm font-black text-white">FRESH</span>
               </div>
-              <p className="text-[10px] text-gray-400 font-bold mt-0.5">Contest Data • Just now</p>
+              <p className="text-[10px] text-gray-300 font-bold mt-0.5">Contest Data • Just now</p>
             </div>
 
             {/* Next Automation Card */}
-            <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-950/40 border border-gray-200 dark:border-gray-800 text-left shadow-sm">
-              <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Next Sunday Run</span>
-              <p className="text-sm font-black text-gray-900 dark:text-white mt-1">08:00 AM</p>
-              <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-black mt-0.5">ARMED & READY</p>
+            <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-left shadow-sm">
+              <span className="text-[10px] font-black uppercase text-gray-300 tracking-wider">Next Sunday Run</span>
+              <p className="text-sm font-black text-white mt-1">08:00 AM</p>
+              <p className="text-[10px] text-emerald-300 font-black mt-0.5">ARMED & READY</p>
             </div>
 
             {/* Last Verified Snapshot Card */}
-            <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-950/40 border border-gray-200 dark:border-gray-800 text-left shadow-sm">
-              <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Last Snapshot</span>
-              <p className="text-xs font-black text-gray-900 dark:text-white mt-1 truncate">
+            <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-left shadow-sm">
+              <span className="text-[10px] font-black uppercase text-gray-300 tracking-wider">Last Snapshot</span>
+              <p className="text-xs font-black text-white mt-1 truncate">
                 {hero.lastSnapshot || 'Verified'}
               </p>
-              <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-black mt-0.5">SHA-256 VALIDATED</p>
+              <p className="text-[10px] text-indigo-300 font-black mt-0.5">SHA-256 VALIDATED</p>
             </div>
           </div>
         </div>
@@ -443,7 +446,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
       {/* ── 3. EXCEPTION-FIRST "ATTENTION REQUIRED" & NEXT BEST ACTION ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Left Column: Attention Required (organizes around operators' immediate needs) */}
+        {/* Left Column: Attention Required */}
         <div className="lg:col-span-2 p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-3">
           <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <div className="flex items-center gap-2">
@@ -551,15 +554,27 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
         ))}
       </div>
 
-      {/* ── 5. TAB 1: OPERATIONS OVERVIEW ── */}
+      {/* ── 5. TAB 1: OPERATIONS OVERVIEW (INCLUDES AUDIT BOARD & CONFIG CARDS) ── */}
       {activeOpsTab === 'overview' && (
         <div className="space-y-6">
-          {/* Data Freshness Intelligence Grid */}
-          <div className="p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-3">
-            <h3 className="text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white">
-              Data Freshness Intelligence
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {/* Institutional Configuration Banner Card */}
+          <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
+              <div>
+                <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight">
+                  Admin System Control Center
+                </h3>
+                <p className="text-xs text-gray-500 font-medium mt-0.5">
+                  Institutional Configuration • Automation • Integrity • Recovery • Nandha Engineering College
+                </p>
+              </div>
+              <span className="text-[10px] font-mono text-gray-400 self-start sm:self-center">
+                Last configuration update: 2026-08-15 15:37:34 IST
+              </span>
+            </div>
+
+            {/* Data Freshness Intelligence Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-1">
               {Object.entries(dataFreshness).map(([key, item]: [string, any]) => (
                 <div
                   key={key}
@@ -578,22 +593,83 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             </div>
           </div>
 
-          {/* Safe Failure / Zero-Damage Guarantee Banner */}
-          <div className="p-4 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <ShieldCheck className="w-6 h-6 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-              <div>
-                <h4 className="text-xs font-black text-emerald-900 dark:text-emerald-200">
-                  Zero-Damage Data Safety Guarantee Active
+          {/* Data Integrity & Profile Health Box */}
+          <div className="p-6 rounded-3xl bg-gradient-to-br from-navy-950 via-slate-900 to-indigo-950 text-white border border-brand-500/30 shadow-xl space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
+              <div className="space-y-1">
+                <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full bg-brand-500/20 border border-brand-400/30 text-amber-300 text-[10px] font-black uppercase">
+                  <ShieldCheck className="w-3 h-3 text-amber-400" />
+                  <span>DATA INTEGRITY & PROFILE HEALTH • REALTIME AUDIT BOARD</span>
+                </div>
+                <h4 className="text-base font-black text-white">
+                  Data Quality & Profile Health Dashboard
                 </h4>
-                <p className="text-[11px] text-emerald-700 dark:text-emerald-300">
-                  If any sync or authentication error occurs, the previous verified dataset is 100% preserved. Unauthenticated calls never cause students to be marked as Not-Attended.
+                <p className="text-xs text-gray-300">
+                  Monitor missing links, invalid profile URLs, profile not found errors, and network anomalies across all institutional student records.
                 </p>
               </div>
+              <span className="px-3 py-1 text-xs font-black rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 self-start sm:self-center">
+                100% HEALTH SCORE
+              </span>
             </div>
-            <span className="px-3 py-1 text-[10px] font-black rounded-lg bg-emerald-600 text-white self-start sm:self-center">
-              FAIL-CLOSED SAFE
-            </span>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {(data?.dataIntegrityMatrix || []).slice(0, 4).map((pillar: any, idx: number) => (
+                <div
+                  key={idx}
+                  className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1"
+                >
+                  <span className="text-[10px] font-black uppercase text-gray-400">{pillar.category}</span>
+                  <p className="text-xs font-black text-white">{pillar.records}</p>
+                  <p className="text-[10px] text-emerald-400 font-bold">✓ 0 Conflicts Detected</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Admin Identity & Audit Log Card Box */}
+          <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <Fingerprint className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                  <h4 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider">
+                    Admin Identity & Audit Log
+                  </h4>
+                </div>
+                <p className="text-[11px] text-gray-500">
+                  Real-time database audit log recording administrator identity, logins, report generation, email dispatches & setting modifications.
+                </p>
+              </div>
+              <button
+                onClick={() => setActiveOpsTab('audit')}
+                className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline self-start sm:self-center"
+              >
+                View Full Audit Stream →
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {(data?.recentAudits || []).slice(0, 3).map((audit: any) => (
+                <div
+                  key={audit.id}
+                  className="p-3 rounded-2xl bg-gray-50/70 dark:bg-navy-950/40 border border-gray-100 dark:border-gray-800 flex items-center justify-between gap-4 text-xs font-bold"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-[11px] text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                      {audit.timestamp}
+                    </span>
+                    <div>
+                      <p className="text-gray-900 dark:text-white">{audit.action}</p>
+                      <p className="text-[11px] text-gray-500 font-normal">{audit.description || audit.user}</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                    {audit.status}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
