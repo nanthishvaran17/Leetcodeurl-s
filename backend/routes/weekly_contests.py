@@ -244,81 +244,130 @@ def matches_year(r_year: str, target_year: str) -> bool:
     else:
         return t_y == r_y
 
-@router.get("/sessions/{session_id}/matrix")
-def get_session_matrix(
-    session_id: int, 
-    dept: Optional[str] = Query(None), 
-    year: Optional[str] = Query(None), 
-    attendance: Optional[str] = Query(None),
-    db: Session = Depends(get_db),
-    current_user = Depends(require_security_access(resource_name="Weekly Contest Matrix", dept_scoped=True))
-):
+# ---------------------------------------------------------
+# BATCH TO ACADEMIC YEAR CONFIGURABLE MAPPING
+# ---------------------------------------------------------
+BATCH_YEAR_MAPPING = {
+    "2022": "IV",
+    "2023": "III",
+    "2024": "II",
+    "2025": "I",
+    "2026": "I"
+}
+
+def derive_academic_year(student: Student) -> str:
+    """Derives academic year (I, II, III, IV) from student record or batch year via configurable mapping."""
+    if getattr(student, 'year_level', None) and str(student.year_level).strip().upper() in ("I", "II", "III", "IV"):
+        return str(student.year_level).strip().upper()
+    
+    # Try reg_no pattern e.g. 732224... (2024 batch -> II Year)
+    reg = str(student.reg_no or "").strip()
+    if len(reg) >= 6 and reg[4:6].isdigit():
+        yr_short = reg[4:6]
+        full_batch = f"20{yr_short}"
+        if full_batch in BATCH_YEAR_MAPPING:
+            return BATCH_YEAR_MAPPING[full_batch]
+            
+    return "III"
+
+# ---------------------------------------------------------
+# MANDATE: SINGLE NORMALIZED DATASET ENGINE
+# ---------------------------------------------------------
+def get_normalized_contest_data(
+    session_id: int,
+    dept: Optional[str] = None,
+    year: Optional[str] = None,
+    attendance: Optional[str] = None,
+    db: Session = None
+) -> Dict[str, Any]:
     """
-    Fetches official student question-wise contest matrix for a session with optional dept, year, and attendance filtering.
-    Dynamically recalculates metric counts for the filtered roster subset.
+    CANONICAL SINGLE SOURCE OF TRUTH: Normalized Weekly Contest Data Engine.
+    All consumers (UI Table, Comparison, Filter Cards, Excel, PDF, CSV, Word, ZIP, Email, Preview)
+    must read strictly from this dataset to guarantee 100% mathematical consistency.
     """
+    if db is None:
+        from backend.database import SessionLocal
+        db = SessionLocal()
+
     session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
     if not session:
         raise HTTPException(status_code=404, detail="Contest data is unavailable for the selected Weekly Contest.")
 
-    students = db.query(Student).all()
+    students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).order_by(Student.id.asc()).all()
     if not students or len(students) < 100:
         try:
             from backend.seed import seed_database
             seed_database(db)
-            students = db.query(Student).all()
+            students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).order_by(Student.id.asc()).all()
         except Exception as _e:
             from backend.logger import logger
             logger.warning(f"Student seed note: {_e}")
-
-    # Step 1: Guarantee authentic institutional historical reconciliation
-    # DISABLED: Removed global sync as per architecture rules.
-    # We now strictly depend on the cron job or the explicit manual selected-contest sync button.
-    
-    students = db.query(Student).order_by(Student.id.asc()).all()
 
     import re
     match = re.search(r'\d+', session.contest_name or "")
     c_num = int(match.group(0)) if match else None
 
-    # Build res_map (student_id -> WeeklyPublicResult / WeeklyVirtualResult) for selected session_id
-    res_map = {}
-    
-    # 1. Add public results
-    for r in db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session_id).all():
-        res_map[r.student_id] = r
-        
-    # 2. Add virtual results (override if public result is just NOT_ATTENDED or PENDING)
-    for v in db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == session_id).all():
-        if v.student_id not in res_map or res_map[v.student_id].participation_status in ("PUBLIC_NOT_ATTENDED", "PENDING", "NOT_ATTENDED"):
-            res_map[v.student_id] = v
+    # Fetch public and virtual results for this specific session
+    pub_results = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session_id).all()
+    virt_results = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == session_id).all()
 
-    # Construct LEFT JOIN matrix starting from 273 institutional roster students
+    pub_map = {r.student_id: r for r in pub_results}
+    virt_map = {v.student_id: v for v in virt_results}
+
+    is_session_finalized = session.status in ("COMPLETED", "FINALIZED")
+    is_session_in_progress = session.status in ("LIVE", "SYNCING", "UPCOMING")
+
     full_roster_matrix = []
     for s in students:
-        r = res_map.get(s.id)
-        dept_code = s.department.code if s.department else "CSE"
-        year_lvl = s.year_level or "III"
+        p_res = pub_map.get(s.id)
+        v_res = virt_map.get(s.id)
 
-        if r:
-            p_status = r.participation_status
-            q1_val = r.q1
-            q2_val = r.q2
-            q3_val = r.q3
-            q4_val = r.q4
-            tot_val = r.total_contest_solved
-            score_val = r.contest_score
-            rank_val = getattr(r, 'contest_rank', None)
-            rating_val = getattr(r, 'contest_rating', None)
-            fetch_st = getattr(r, 'fetch_status', 'SUCCESS')
-            err_re = getattr(r, 'error_reason', None)
+        dept_code = s.department.code if s.department else "CSE"
+        year_lvl = derive_academic_year(s)
+
+        # 1. ATTENDANCE STATE MACHINE RESOLUTION
+        # Exactly one state per student:
+        # PUBLIC_ATTENDED | VIRTUAL | NOT_ATTENDED | DATA_PENDING | DATA_ERROR
+        resolved_status = "NOT_ATTENDED"
+        q1_val = q2_val = q3_val = q4_val = tot_val = score_val = 0
+        rank_val = rating_val = None
+        fetch_st = "SUCCESS"
+        err_re = None
+
+        if p_res and (p_res.participation_status in ("PUBLIC_ATTENDED", "ATTENDED") or (p_res.total_contest_solved and p_res.total_contest_solved > 0) or (p_res.contest_rank and p_res.contest_rank > 0)):
+            resolved_status = "PUBLIC_ATTENDED"
+            q1_val, q2_val, q3_val, q4_val = p_res.q1, p_res.q2, p_res.q3, p_res.q4
+            tot_val = p_res.total_contest_solved or 0
+            score_val = p_res.contest_score or 0
+            rank_val = getattr(p_res, 'contest_rank', None)
+            rating_val = getattr(p_res, 'contest_rating', None)
+            fetch_st = getattr(p_res, 'fetch_status', 'SUCCESS')
+        elif v_res and (v_res.participation_status in ("VIRTUAL_ATTENDED", "VIRTUAL") or (v_res.total_contest_solved and v_res.total_contest_solved > 0)):
+            resolved_status = "VIRTUAL"
+            q1_val, q2_val, q3_val, q4_val = v_res.q1, v_res.q2, v_res.q3, v_res.q4
+            tot_val = v_res.total_contest_solved or 0
+            score_val = v_res.contest_score or 0
+            rank_val = getattr(v_res, 'contest_rank', None)
+            rating_val = getattr(v_res, 'contest_rating', None)
+            fetch_st = getattr(v_res, 'fetch_status', 'SUCCESS')
+        elif p_res and (p_res.fetch_status == "FAILED" or p_res.participation_status == "DATA_ERROR"):
+            resolved_status = "DATA_ERROR"
+            fetch_st = "FAILED"
+            err_re = getattr(p_res, 'error_reason', 'API fetch error or invalid username')
+        elif p_res and p_res.participation_status in ("DATA_PENDING", "PENDING"):
+            resolved_status = "DATA_PENDING"
+            fetch_st = "PENDING"
+        elif p_res and p_res.participation_status in ("PUBLIC_NOT_ATTENDED", "NOT_ATTENDED"):
+            resolved_status = "NOT_ATTENDED"
+            fetch_st = "SUCCESS"
         else:
-            p_status = "PUBLIC_NOT_ATTENDED" if c_num and c_num < 515 else "PENDING"
-            q1_val = q2_val = q3_val = q4_val = tot_val = 0
-            score_val = 0
-            rank_val = rating_val = None
-            fetch_st = "SUCCESS" if c_num and c_num < 515 else "PENDING"
-            err_re = None
+            # Source hasn't recorded data yet for this student
+            if is_session_in_progress:
+                resolved_status = "DATA_PENDING"
+                fetch_st = "PENDING"
+            else:
+                resolved_status = "NOT_ATTENDED"
+                fetch_st = "SUCCESS"
 
         full_roster_matrix.append({
             "student_id": s.id,
@@ -329,7 +378,7 @@ def get_session_matrix(
             "username": s.username or s.reg_no,
             "profile_rank": f"#{s.stats.public_profile_ranking:,}" if (s.stats and s.stats.public_profile_ranking) else "—",
             "profile_total_solved": s.stats.total_solved if (s.stats and s.stats.total_solved is not None) else 0,
-            "participation_status": p_status,
+            "participation_status": resolved_status,
             "q1": q1_val,
             "q2": q2_val,
             "q3": q3_val,
@@ -342,35 +391,43 @@ def get_session_matrix(
             "error_reason": err_re
         })
 
-    # Step 2: Apply Dept & Year filters first
+    # Step 2: Apply Dept & Year filters to establish Verified Eligible Roster
     dept_year_results = [
         r for r in full_roster_matrix
         if matches_dept(r["dept"], dept) and matches_year(r["year"], year)
     ]
 
-    # Step 3: Calculate dynamic metrics for this Dept+Year filtered subset
-    tot_students = len(dept_year_results)
-    pub_attended_cnt = sum(1 for r in dept_year_results if r["participation_status"] in ("PUBLIC_ATTENDED", "ATTENDED"))
-    pub_not_attended_cnt = sum(1 for r in dept_year_results if r["participation_status"] in ("PUBLIC_NOT_ATTENDED", "NOT_ATTENDED", "PENDING"))
-    virt_attended_cnt = sum(1 for r in dept_year_results if r["participation_status"] == "VIRTUAL_ATTENDED")
+    # Step 3: Exact mathematical formulas across the filtered roster
+    verified_roster_count = len(dept_year_results)
+    public_attended_cnt = sum(1 for r in dept_year_results if r["participation_status"] == "PUBLIC_ATTENDED")
+    virtual_attended_cnt = sum(1 for r in dept_year_results if r["participation_status"] == "VIRTUAL")
+    data_pending_cnt = sum(1 for r in dept_year_results if r["participation_status"] == "DATA_PENDING")
     data_errors_cnt = sum(1 for r in dept_year_results if r["participation_status"] == "DATA_ERROR")
+
+    # Formula: Public Not Attended = verified_roster_count - Public Attended - Virtual Attended - Data Pending - Data Error
+    public_not_attended_cnt = max(0, verified_roster_count - public_attended_cnt - virtual_attended_cnt - data_pending_cnt - data_errors_cnt)
+
+    # Formula: Public Participation % = (Public Attended / Verified Eligible Roster) * 100
+    participation_rate = round((public_attended_cnt / max(verified_roster_count, 1)) * 100.0, 2)
 
     # Step 4: Apply Attendance filter if specified
     results = dept_year_results
     norm_att = normalize_attendance_filter(attendance)
     if norm_att:
-        if norm_att == "PUBLIC_ATTENDED":
-            results = [r for r in results if r["participation_status"] in ("PUBLIC_ATTENDED", "ATTENDED")]
-        elif norm_att == "PUBLIC_NOT_ATTENDED":
-            results = [r for r in results if r["participation_status"] in ("PUBLIC_NOT_ATTENDED", "NOT_ATTENDED", "PENDING")]
-        elif norm_att == "VIRTUAL_ATTENDED":
-            results = [r for r in results if r["participation_status"] == "VIRTUAL_ATTENDED"]
-        elif norm_att == "DATA_ERROR":
+        if norm_att in ("PUBLIC_ATTENDED", "PUBLIC"):
+            results = [r for r in results if r["participation_status"] == "PUBLIC_ATTENDED"]
+        elif norm_att in ("PUBLIC_NOT_ATTENDED", "NOT_ATTENDED"):
+            results = [r for r in results if r["participation_status"] == "NOT_ATTENDED"]
+        elif norm_att in ("VIRTUAL_ATTENDED", "VIRTUAL"):
+            results = [r for r in results if r["participation_status"] == "VIRTUAL"]
+        elif norm_att in ("DATA_ERROR", "ERROR"):
             results = [r for r in results if r["participation_status"] == "DATA_ERROR"]
+        elif norm_att in ("DATA_PENDING", "PENDING"):
+            results = [r for r in results if r["participation_status"] == "DATA_PENDING"]
 
     rows = []
     for idx, r in enumerate(results, start=1):
-        attended = r["participation_status"] in ("PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL_ATTENDED")
+        is_att = r["participation_status"] in ("PUBLIC_ATTENDED", "VIRTUAL")
         rows.append({
             "s_no": idx,
             "reg_no": r["reg_no"],
@@ -380,37 +437,20 @@ def get_session_matrix(
             "username": r.get("username", ""),
             "profile_rank": r.get("profile_rank", "—"),
             "profile_total_solved": r.get("profile_total_solved", 0),
-            "status": "PUBLIC" if r["participation_status"] in ("PUBLIC_ATTENDED", "ATTENDED") else ("VIRTUAL" if r["participation_status"] == "VIRTUAL_ATTENDED" else "NOT ATTENDED"),
+            "status": "PUBLIC" if r["participation_status"] == "PUBLIC_ATTENDED" else ("VIRTUAL" if r["participation_status"] == "VIRTUAL" else ("NOT ATTENDED" if r["participation_status"] == "NOT_ATTENDED" else r["participation_status"])),
             "participation_status": r["participation_status"],
             "contest_name": session.contest_name,
-            "q1": r["q1"] if attended else "—",
-            "q2": r["q2"] if attended else "—",
-            "q3": r["q3"] if attended else "—",
-            "q4": r["q4"] if attended else "—",
-            "total_solved": r["total_contest_solved"] if attended else "—",
-            "score": r["contest_score"] if attended else 0,
-            "rank": r["contest_rank"] if (attended and r["contest_rank"] is not None) else "—",
-            "rating": r["contest_rating"] if (attended and r["contest_rating"] is not None) else "—",
+            "q1": r["q1"] if is_att else "—",
+            "q2": r["q2"] if is_att else "—",
+            "q3": r["q3"] if is_att else "—",
+            "q4": r["q4"] if is_att else "—",
+            "total_solved": r["total_contest_solved"] if is_att else "—",
+            "score": r["contest_score"] if is_att else 0,
+            "rank": r["contest_rank"] if (is_att and r["contest_rank"] is not None) else "—",
+            "rating": r["contest_rating"] if (is_att and r["contest_rating"] is not None) else "—",
             "fetch_status": r["fetch_status"],
             "error_reason": r["error_reason"]
         })
-
-    import re
-    match = re.search(r'\d+', session.contest_name or "")
-    c_num = int(match.group(0)) if match else None
-
-    from backend.logger import logger
-    logger.info("[MATRIX DIAGNOSTICS]")
-    logger.info(f"session_id={session.id}")
-    logger.info(f"contest={c_num}")
-    logger.info(f"date={session.session_date}")
-    logger.info(f"roster={len(students)}")
-    logger.info(f"results={len(res_map)}")
-    logger.info(f"joined={len(full_roster_matrix)}")
-    logger.info(f"dept={dept or 'ALL'}")
-    logger.info(f"year={year or 'ALL'}")
-    logger.info(f"attendance={attendance or 'ALL'}")
-    logger.info(f"final_rows={len(rows)}")
 
     return {
         "session_id": session.id,
@@ -428,19 +468,43 @@ def get_session_matrix(
         "cacheKey": f"weekly_matrix:session_{session.id}:{session.contest_id}",
         "metrics": {
             "totalStudents": len(results),
-            "deptYearTotal": tot_students,
-            "officialAttended": pub_attended_cnt,
-            "officialParticipants": pub_attended_cnt,
-            "notAttended": pub_not_attended_cnt,
-            "notParticipated": pub_not_attended_cnt,
-            "virtualAttended": virt_attended_cnt,
-            "virtualParticipants": virt_attended_cnt,
-            "virtualDataStatus": "AVAILABLE" if virt_attended_cnt > 0 else "NOT_AVAILABLE",
+            "verifiedEligibleRoster": verified_roster_count,
+            "deptYearTotal": verified_roster_count,
+            "officialAttended": public_attended_cnt,
+            "officialParticipants": public_attended_cnt,
+            "publicAttended": public_attended_cnt,
+            "notAttended": public_not_attended_cnt,
+            "notParticipated": public_not_attended_cnt,
+            "publicNotAttended": public_not_attended_cnt,
+            "virtualAttended": virtual_attended_cnt,
+            "virtualParticipants": virtual_attended_cnt,
+            "virtualDataStatus": "AVAILABLE" if virtual_attended_cnt > 0 else "NOT_AVAILABLE",
+            "dataPending": data_pending_cnt,
             "dataErrors": data_errors_cnt,
-            "failedVerification": data_errors_cnt
+            "failedVerification": data_errors_cnt,
+            "publicParticipationRate": participation_rate,
+            "participationRate": f"{participation_rate:.1f}%",
+            "4 Q Solved": sum(1 for r in dept_year_results if r.get("total_contest_solved") == 4),
+            "3 Q Solved": sum(1 for r in dept_year_results if r.get("total_contest_solved") == 3),
+            "2 Q Solved": sum(1 for r in dept_year_results if r.get("total_contest_solved") == 2),
+            "1 Q Solved": sum(1 for r in dept_year_results if r.get("total_contest_solved") == 1),
         },
         "rows": rows
     }
+
+@router.get("/sessions/{session_id}/matrix")
+def get_session_matrix(
+    session_id: int, 
+    dept: Optional[str] = Query(None), 
+    year: Optional[str] = Query(None), 
+    attendance: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Weekly Contest Matrix", dept_scoped=True))
+):
+    """
+    Delegates strictly to the single canonical normalized dataset function.
+    """
+    return get_normalized_contest_data(session_id, dept=dept, year=year, attendance=attendance, db=db)
 
 @router.get("/sessions/{session_id}/data-quality")
 def get_session_data_quality_board(
@@ -468,13 +532,16 @@ def get_session_data_quality_board(
 @router.get("/sessions/{session_id}/comparison")
 def get_week_comparison(
     session_id: int, 
+    dept: Optional[str] = Query(None),
+    year: Optional[str] = Query(None),
+    attendance: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Student Comparison"))
 ):
     """
     Calculates dynamic Week-to-Week comparison metrics comparing the selected Weekly Contest
     against the immediately previous Weekly Contest by actual contest date.
-    Strictly filters to Weekly Contests only (excluding Biweekly/Special contests).
+    Strictly derives both datasets from get_normalized_contest_data with identical active filters.
     """
     current_session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
     if not current_session:
@@ -499,74 +566,63 @@ def get_week_comparison(
             WeeklySession.contest_name.ilike("%Weekly Contest%")
         ).order_by(WeeklySession.id.desc()).first()
 
-    def build_week_payload(sess: Optional[WeeklySession]):
-        if not sess:
-            return {
-                "contestId": None,
-                "contestNumber": None,
-                "contestName": "Previous Contest",
-                "sessionDate": "",
-                "publicParticipationRate": 0.0,
-                "totalStudents": 0,
-                "publicAttended": 0,
-                "publicNotAttended": 0,
-                "virtualAttended": 0,
-                "dataErrors": 0,
-                "rate": 0.0
-            }
+    # Read from single canonical normalized dataset engine
+    curr_data = get_normalized_contest_data(current_session.id, dept=dept, year=year, attendance=attendance, db=db)
+    prev_data = get_normalized_contest_data(prev_session.id, dept=dept, year=year, attendance=attendance, db=db) if prev_session else None
 
-        # Calculate actual counts from WeeklyPublicResult for this session
-        pub_results = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == sess.id).all()
-        
-        if pub_results:
-            pub_attended = sum(1 for r in pub_results if r.participation_status in ("PUBLIC_ATTENDED", "ATTENDED"))
-            pub_not_attended = sum(1 for r in pub_results if r.participation_status in ("PUBLIC_NOT_ATTENDED", "NOT_ATTENDED", "PENDING"))
-            virt_attended = sum(1 for r in pub_results if r.participation_status == "VIRTUAL_ATTENDED")
-            data_errors = sum(1 for r in pub_results if r.participation_status == "DATA_ERROR")
-            total_students = len(pub_results)
-        else:
-            pub_attended = sess.official_participants or 0
-            pub_not_attended = sess.not_participated or 0
-            virt_attended = sess.virtual_participants or 0
-            data_errors = sess.failed_verification or 0
-            total_students = sess.total_students or 273
+    curr_metrics = curr_data["metrics"]
+    prev_metrics = prev_data["metrics"] if prev_data else {
+        "publicParticipationRate": 0.0,
+        "publicAttended": 0,
+        "publicNotAttended": 0,
+        "virtualAttended": 0,
+        "dataErrors": 0,
+        "totalStudents": 0,
+        "verifiedEligibleRoster": 0
+    }
 
-        rate = round((pub_attended / max(total_students, 1)) * 100, 1)
-        
-        import re
-        match = re.search(r'\d+', sess.contest_name or "")
-        c_num = int(match.group(0)) if match else None
+    curr_payload = {
+        "contestId": current_session.contest_id,
+        "contestNumber": curr_data["contest_number"],
+        "contestName": current_session.contest_name,
+        "sessionDate": current_session.session_date,
+        "publicParticipationRate": curr_metrics["publicParticipationRate"],
+        "totalStudents": curr_metrics["verifiedEligibleRoster"],
+        "publicAttended": curr_metrics["publicAttended"],
+        "publicNotAttended": curr_metrics["publicNotAttended"],
+        "virtualAttended": curr_metrics["virtualAttended"],
+        "dataErrors": curr_metrics["dataErrors"],
+        "rate": curr_metrics["publicParticipationRate"]
+    }
 
-        return {
-            "contestId": getattr(sess, 'contest_id', None) or f"weekly-contest-{c_num}",
-            "contestNumber": c_num,
-            "contestName": sess.contest_name,
-            "sessionDate": sess.session_date,
-            "publicParticipationRate": rate,
-            "totalStudents": total_students,
-            "publicAttended": pub_attended,
-            "publicNotAttended": pub_not_attended,
-            "virtualAttended": virt_attended,
-            "dataErrors": data_errors,
-            "rate": rate
-        }
+    prev_payload = {
+        "contestId": prev_session.contest_id if prev_session else None,
+        "contestNumber": prev_data["contest_number"] if prev_data else None,
+        "contestName": prev_session.contest_name if prev_session else "Previous Contest",
+        "sessionDate": prev_session.session_date if prev_session else "",
+        "publicParticipationRate": prev_metrics["publicParticipationRate"],
+        "totalStudents": prev_metrics["verifiedEligibleRoster"] if prev_data else 0,
+        "publicAttended": prev_metrics["publicAttended"],
+        "publicNotAttended": prev_metrics["publicNotAttended"],
+        "virtualAttended": prev_metrics["virtualAttended"],
+        "dataErrors": prev_metrics["dataErrors"],
+        "rate": prev_metrics["publicParticipationRate"]
+    }
 
-    curr_payload = build_week_payload(current_session)
-    prev_payload = build_week_payload(prev_session)
-
-    rate_change = round(curr_payload["publicParticipationRate"] - prev_payload["publicParticipationRate"], 1)
+    rate_change = round(curr_payload["publicParticipationRate"] - prev_payload["publicParticipationRate"], 2)
     
     if rate_change > 0:
-        status_label = "IMPROVED"
+        status_label = f"IMPROVED (+{rate_change:.1f}%)"
     elif rate_change < 0:
-        status_label = "DECLINED"
+        status_label = f"DECLINED ({rate_change:.1f}%)"
     else:
-        status_label = "NO CHANGE"
+        status_label = "NO CHANGE (0.0%)"
 
     diff = {
         "attendedChange": curr_payload["publicAttended"] - prev_payload["publicAttended"],
         "rateChange": rate_change,
-        "status": status_label
+        "status": status_label,
+        "comparisonStatus": "IMPROVED" if rate_change > 0 else ("DECLINED" if rate_change < 0 else "NO_CHANGE")
     }
 
     return {

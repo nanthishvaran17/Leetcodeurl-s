@@ -170,7 +170,7 @@ export const WeeklyContestPage: React.FC = () => {
       const [matRes, errRes, compRes] = await Promise.all([
         api.get(matrixUrl, { signal: controller.signal }),
         api.get(`/contests/sessions/${requestedSessionId}/data-quality`, { signal: controller.signal }),
-        api.get(`/contests/sessions/${requestedSessionId}/comparison`, { signal: controller.signal })
+        api.get(`/contests/sessions/${requestedSessionId}/comparison?dept=${dept}&year=${year}&attendance=${attendance}`, { signal: controller.signal })
       ]);
       
       const responseSessionId = matRes.data?.sessionId ?? matRes.data?.session_id;
@@ -941,9 +941,9 @@ export const WeeklyContestPage: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-2">
-            <span className={`px-3 py-1 rounded-full text-xs font-black flex items-center space-x-1 ${comparison.comparison?.status === 'IMPROVED' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'}`}>
-              {comparison.comparison?.status === 'IMPROVED' ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-              <span>{comparison.comparison?.status} ({comparison.comparison?.rateChange > 0 ? `+${comparison.comparison?.rateChange}%` : `${comparison.comparison?.rateChange}%`})</span>
+            <span className={`px-3 py-1 rounded-full text-xs font-black flex items-center space-x-1 ${(comparison.comparison?.rateChange ?? 0) > 0 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : (comparison.comparison?.rateChange ?? 0) < 0 ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300' : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300'}`}>
+              {(comparison.comparison?.rateChange ?? 0) > 0 ? <ArrowUpRight className="w-4 h-4" /> : (comparison.comparison?.rateChange ?? 0) < 0 ? <ArrowDownRight className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
+              <span>{comparison.comparison?.status?.includes('(') ? comparison.comparison?.status : `${comparison.comparison?.status || 'NO CHANGE'} (${(comparison.comparison?.rateChange ?? 0) > 0 ? `+${comparison.comparison?.rateChange}%` : `${comparison.comparison?.rateChange ?? 0}%`})`}</span>
             </span>
           </div>
         </div>
