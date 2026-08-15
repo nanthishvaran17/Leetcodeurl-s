@@ -96,12 +96,16 @@ export const CertificateManagementModal: React.FC<{
 
   useEffect(() => {
     if (isOpen) {
+      document.body.style.overflow = 'hidden';
       fetchStudents();
       fetchSignatures();
       fetchHistory();
       if (preselectedStudent) {
         setSelectedStudent(preselectedStudent);
       }
+      return () => {
+        document.body.style.overflow = '';
+      };
     }
   }, [isOpen, preselectedStudent]);
 
@@ -243,23 +247,23 @@ export const CertificateManagementModal: React.FC<{
   const currentHodSig = (selectedStudent?.department?.code || '').toUpperCase().includes('IOT') ? iotHodSig : csHodSig;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm overflow-y-auto">
-      <div className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl max-w-6xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-scaleUp">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm overflow-hidden">
+      <div className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl max-w-5xl w-full max-h-[88vh] flex flex-col overflow-hidden animate-scaleUp my-auto">
 
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+        <div className="px-5 py-3.5 border-b border-slate-800 flex items-center justify-between bg-slate-950/80 shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
-              <Award className="w-5 h-5" />
+            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              <Award className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-base font-black text-white flex items-center space-x-2">
+              <h3 className="text-sm sm:text-base font-black text-white flex items-center space-x-2">
                 <span>Certificate of Excellence — Institutional Issuance Hub</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                   PRINT READY A4
                 </span>
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-[11px] text-slate-400">
                 Nandha Engineering College (Autonomous) • Official Academic Credential System
               </p>
             </div>
@@ -269,19 +273,19 @@ export const CertificateManagementModal: React.FC<{
             <div className="flex bg-slate-800 p-1 rounded-xl border border-slate-700 text-xs font-bold">
               <button
                 onClick={() => setActiveTab('generate')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${activeTab === 'generate' ? 'bg-amber-500 text-slate-950 font-black shadow' : 'text-slate-400 hover:text-white'}`}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${activeTab === 'generate' ? 'bg-amber-500 text-slate-950 font-black shadow' : 'text-slate-400 hover:text-white'}`}
               >
                 Issue Certificate
               </button>
               <button
                 onClick={() => setActiveTab('signatures')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${activeTab === 'signatures' ? 'bg-amber-500 text-slate-950 font-black shadow' : 'text-slate-400 hover:text-white'}`}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${activeTab === 'signatures' ? 'bg-amber-500 text-slate-950 font-black shadow' : 'text-slate-400 hover:text-white'}`}
               >
                 Signatures
               </button>
               <button
                 onClick={() => setActiveTab('history')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${activeTab === 'history' ? 'bg-amber-500 text-slate-950 font-black shadow' : 'text-slate-400 hover:text-white'}`}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${activeTab === 'history' ? 'bg-amber-500 text-slate-950 font-black shadow' : 'text-slate-400 hover:text-white'}`}
               >
                 Issued Registry ({history.length})
               </button>
@@ -289,7 +293,7 @@ export const CertificateManagementModal: React.FC<{
 
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors ml-2"
+              className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors ml-2 cursor-pointer"
             >
               ✕
             </button>
@@ -297,14 +301,14 @@ export const CertificateManagementModal: React.FC<{
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 overflow-y-auto flex-1 space-y-6">
+        <div className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4">
 
           {/* TAB 1: GENERATE & PREVIEW CERTIFICATE */}
           {activeTab === 'generate' && (
-            <div className="space-y-4">
+            <div className="space-y-3">
 
               {/* Signature Pre-flight Validation Banner */}
-              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between flex-wrap gap-4 text-xs">
+              <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between flex-wrap gap-2 text-xs">
                 <div className="flex items-center space-x-6 flex-wrap gap-3">
                   <div className="flex items-center space-x-2">
                     <span className="text-slate-400 font-bold uppercase text-[10px]">Principal Signature:</span>
