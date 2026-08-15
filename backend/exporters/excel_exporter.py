@@ -109,8 +109,9 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     rows = dataset.get("rows", [])
     all_students = dataset.get("allStudents") or []
 
-    # ── SHEET 1: COVER SHEET / OVERVIEW ──────────────────────────────────────
-    ws_cover = wb.create_sheet(title="Report Overview")
+    # ── SHEET 1: WEEKLY CONTEST SUMMARY ──────────────────────────────────────
+    sheet1_title = "Weekly Contest Summary" if is_weekly else "Report Overview"
+    ws_cover = wb.create_sheet(title=sheet1_title)
     ws_cover.sheet_view.showGridLines = True
 
     # Try inserting Logo Image at top left if PIL / openpyxl image works
@@ -136,18 +137,20 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     ws_cover["A3"].alignment = center
 
     ws_cover.merge_cells("A5:L5")
-    ws_cover["A5"] = dataset.get("title", "INSTITUTIONAL REPORT & ANALYTICS").upper()
+    ws_cover["A5"] = dataset.get("title", "PUBLIC WEEKLY CONTEST PERFORMANCE REPORT").upper()
     ws_cover["A5"].font = Font(name=font_tnr, size=14, bold=True, color="2E5B88")
     ws_cover["A5"].alignment = center
 
-    gen_at = str(dataset.get('generatedAt') or dataset.get('generated_at') or '')[:10]
-    rep_id = str(dataset.get('reportId') or dataset.get('report_id') or '')
-    status_str = str(dataset.get('dataStatus') or dataset.get('data_status') or 'READY')
-    ws_cover["A7"] = f"Report ID: {rep_id}   |   Status: {status_str}   |   Generated: {gen_at}"
+    now_ist = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
+    gen_ist_str = dataset.get("generatedAtIST") or now_ist.strftime("%d %b %Y, %I:%M %p IST")
+    rep_id = str(dataset.get('reportId') or dataset.get('report_id') or 'WEEKLY_REPORT')
+    status_str = str(dataset.get('dataStatus') or dataset.get('data_status') or 'FINALIZED')
+
+    ws_cover["A7"] = f"Report ID: {rep_id}   |   Status: {status_str}   |   Generated: {gen_ist_str}"
     ws_cover["A7"].font = Font(name=font_tnr, size=10, bold=True, color="0284C7")
     ws_cover["A7"].alignment = center
 
-    # Executive Summary Metrics Block (Section 10 Spec)
+    # Executive Summary Metrics Block
     metrics = dataset.get("metrics", {})
     r_idx = 10
     ws_cover.merge_cells(f"B{r_idx}:K{r_idx}")
@@ -158,19 +161,41 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     ws_cover.row_dimensions[r_idx].height = 24
     r_idx += 1
 
+    virt_val = metrics.get("virtualAttended", 0)
+    if virt_val == 0 and metrics.get("virtualDataStatus") != "AVAILABLE":
+        virt_disp = "NOT AVAILABLE"
+    else:
+        virt_disp = virt_val
+
+    dept_disp = dataset.get("deptFilter") or "All Departments"
+    if dept_disp == "ALL": dept_disp = "All Departments"
+    year_disp = dataset.get("yearFilter") or "All Years"
+    if year_disp == "ALL": year_disp = "All Years"
+    else: year_disp = f"{year_disp} Year"
+    att_disp = dataset.get("attendanceFilter") or "All"
+    if att_disp == "PUBLIC_ATTENDED": att_disp = "Public Attended"
+    elif att_disp == "PUBLIC_NOT_ATTENDED": att_disp = "Not Attended"
+    elif att_disp == "VIRTUAL_ATTENDED": att_disp = "Virtual Attended"
+    elif att_disp == "ALL": att_disp = "All Attendance"
+
     summary_items = [
-        ("Weekly Contest Name", dataset.get("contestName") or metrics.get("contestName") or "Weekly Contest"),
-        ("Contest Date", dataset.get("contestDate") or metrics.get("sessionDate") or "Sunday Session"),
-        ("Status", dataset.get("dataStatus") or dataset.get("data_status") or "FINALIZED"),
-        ("IST Window", "08:00 AM – 09:30 AM IST"),
-        ("Department Filter", dataset.get("deptFilter") or "ALL"),
-        ("Academic Year Filter", dataset.get("yearFilter") or "ALL"),
-        ("Attendance Filter", dataset.get("attendanceFilter") or "ALL"),
+        ("College Name", "Nandha Engineering College (Autonomous)"),
+        ("Contest Name", dataset.get("contestName") or metrics.get("contestName") or "Weekly Contest"),
+        ("Department Scope", dept_disp),
+        ("Academic Year Scope", year_disp),
+        ("Attendance Scope", att_disp),
+        ("Report Type", "Public Weekly Contest Report"),
+        ("Generated At", gen_ist_str),
         ("Total Roster Students", metrics.get("totalStudents", len(rows))),
         ("Public Attended", metrics.get("officialAttended", 0)),
         ("Public Not Attended", metrics.get("notAttended", 0)),
-        ("Virtual Attended", metrics.get("virtualAttended", 0)),
+        ("Virtual Attended", virt_disp),
         ("Data Errors", metrics.get("dataErrors", 0)),
+        ("Participation Rate", metrics.get("participationRate", "—")),
+        ("4 Questions Solved", metrics.get("4 Q Solved", 0)),
+        ("3 Questions Solved", metrics.get("3 Q Solved", 0)),
+        ("2 Questions Solved", metrics.get("2 Q Solved", 0)),
+        ("1 Question Solved", metrics.get("1 Q Solved", 0)),
     ]
 
     for label_text, val_text in summary_items:
@@ -187,92 +212,15 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
 
     r_idx += 2
 
-    # BATCH PERFORMANCE SUMMARY TABLE (Year Breakdown)
-    student_records = rows if rows else all_students
-    if student_records:
-        ws_cover.merge_cells(f"A{r_idx}:L{r_idx}")
-        ws_cover[f"A{r_idx}"] = "NUMBER OF PROBLEMS SOLVED — CATEGORY & BATCH SUMMARY"
-        ws_cover[f"A{r_idx}"].font = Font(name=font_tnr, size=11, bold=True, color="FFFFFF")
-        ws_cover[f"A{r_idx}"].fill = navy_fill
-        ws_cover[f"A{r_idx}"].alignment = center
-        ws_cover.row_dimensions[r_idx].height = 24
-        r_idx += 1
-
-        headers_b = ["Batch / Year", "Total Students", "Above 500", "250 - 500", "101 - 250", "Less than 100", "Not Started", "4 Q Solved", "3 Q Solved", "2 Q Solved", "1 Q Solved", "Rating > 1500"]
-        w_b = [20, 14, 12, 12, 12, 14, 12, 12, 12, 12, 12, 14]
-        for col_i, (h_text, w_val) in enumerate(zip(headers_b, w_b), start=1):
-            c = ws_cover.cell(row=r_idx, column=col_i, value=h_text)
-            c.font = Font(name=font_tnr, size=9, bold=True, color="FFFFFF")
-            c.fill = header_fill
-            c.alignment = center
-            _apply_thin_border(c)
-            ws_cover.column_dimensions[get_column_letter(col_i)].width = w_val
-        ws_cover.row_dimensions[r_idx].height = 22
-        r_idx += 1
-
-        # Group stats by Year / Batch
-        batch_map = {
-            "IV":  "2023 - 2027 (IV Yr)",
-            "III": "2024 - 2028 (III Yr)",
-            "II":  "2025 - 2029 (II Yr)",
-            "I":   "2026 - 2030 (I Yr)"
-        }
-
-        # Calculate counts per year
-        by_year = {}
-        for rec in student_records:
-            yr = str(rec.get("year") or "III").strip()
-            if yr not in by_year:
-                by_year[yr] = {
-                    "total": 0, "a500": 0, "b250_500": 0, "b101_250": 0, "l100": 0, "zero": 0,
-                    "q4": 0, "q3": 0, "q2": 0, "q1": 0, "r1500": 0
-                }
-            st = by_year[yr]
-            st["total"] += 1
-
-            attended = rec.get("participation_status", "") in ("PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL_ATTENDED")
-            q_sum = sum(1 for q_key in ["q1","q2","q3","q4"] if _to_int(rec.get(q_key)) > 0)
-            if q_sum == 4: st["q4"] += 1
-            elif q_sum == 3: st["q3"] += 1
-            elif q_sum == 2: st["q2"] += 1
-            elif q_sum == 1: st["q1"] += 1
-
-            tot_solv = _to_int(rec.get("total_solved") or rec.get("score"))
-            if tot_solv >= 500: st["a500"] += 1
-            elif tot_solv >= 250: st["b250_500"] += 1
-            elif tot_solv >= 101: st["b101_250"] += 1
-            elif tot_solv > 0: st["l100"] += 1
-            else: st["zero"] += 1
-
-            rating = _to_float(rec.get("rating") or rec.get("contest_rating"))
-            if rating > 1500: st["r1500"] += 1
-
-        for yr_code in ["IV", "III", "II", "I"]:
-            if yr_code in by_year:
-                st = by_year[yr_code]
-                batch_label = batch_map.get(yr_code, f"Year {yr_code}")
-                row_vals = [
-                    batch_label, st["total"], st["a500"], st["b250_500"], st["b101_250"],
-                    st["l100"], st["zero"], st["q4"], st["q3"], st["q2"], st["q1"], st["r1500"]
-                ]
-                for col_i, val in enumerate(row_vals, start=1):
-                    c = ws_cover.cell(row=r_idx, column=col_i, value=val)
-                    c.font = Font(name=font_tnr, size=9.5, bold=(col_i in (1, 2)))
-                    c.alignment = center if col_i != 1 else left
-                    c.fill = alt_fill if r_idx % 2 == 0 else white_fill
-                    _apply_thin_border(c)
-                ws_cover.row_dimensions[r_idx].height = 20
-                r_idx += 1
-
-    # ── SHEET 2: MASTER CONTEST MATRIX (for Weekly Contest) ──────────────────
+    # ── SHEET 2: STUDENT PERFORMANCE MATRIX ──────────────────────────────────
     STATUS_LABEL = {
-        "PUBLIC_ATTENDED":    "PUBLIC",
-        "ATTENDED":           "PUBLIC",
-        "VIRTUAL_ATTENDED":   "VIRTUAL",
-        "PUBLIC_NOT_ATTENDED":"NOT ATTENDED",
-        "NOT_ATTENDED":       "NOT ATTENDED",
-        "DATA_ERROR":         "DATA ERROR",
-        "PENDING":            "PENDING",
+        "PUBLIC_ATTENDED":    "🟢 PUBLIC",
+        "ATTENDED":           "🟢 PUBLIC",
+        "VIRTUAL_ATTENDED":   "🔵 VIRTUAL",
+        "PUBLIC_NOT_ATTENDED":"🔴 NOT ATTENDED",
+        "NOT_ATTENDED":       "🔴 NOT ATTENDED",
+        "DATA_ERROR":         "⚠️ DATA ERROR",
+        "PENDING":            "🟡 PENDING",
     }
 
     def _write_matrix_tab(ws_tab, tab_header_title, student_row_list):
@@ -280,15 +228,20 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         _write_college_header(
             ws_tab,
             title=tab_header_title,
-            cols=13,
+            cols=17,
             font_tnr=font_tnr,
             navy_fill=navy_fill,
             header_fill=header_fill,
             center=center
         )
 
-        m_headers   = ["S.No", "Reg No", "Student Name", "Dept", "Year", "Status", "Contest Name", "Q1", "Q2", "Q3", "Q4", "Contest Solved", "Rank"]
-        m_col_widths = [8,       18,            30,             14,     10,     20,       24,            8,    8,    8,    8,    16,               12]
+        m_headers   = [
+            "S.No", "Register No", "Student Name", "Department", "Year",
+            "LeetCode Handle", "Attendance Status", "Contest Name", "Contest Rating",
+            "Contest Rank", "Profile Rank", "Total Solved",
+            "Q1", "Q2", "Q3", "Q4", "Total Contest Solved"
+        ]
+        m_col_widths = [8, 16, 28, 14, 10, 20, 20, 24, 16, 14, 14, 14, 8, 8, 8, 8, 20]
         _write_header_row(ws_tab, 3, m_headers, m_col_widths, navy_fill, font_tnr, center)
 
         for idx, r in enumerate(student_row_list, start=1):
@@ -316,8 +269,10 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
 
             solved_cnt = r.get("total_solved") if (attended and r.get("total_solved") != "—") else "—"
             rank_disp = r.get("rank") or r.get("contest_rank") or "—"
+            rating_disp = r.get("rating") or r.get("contest_rating") or "—"
             if not attended:
                 rank_disp = "—"
+                rating_disp = "—"
 
             row_data = [
                 idx,
@@ -325,14 +280,18 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
                 r.get("name", ""),
                 r.get("dept", ""),
                 r.get("year", ""),
+                r.get("username", "") or r.get("reg_no", ""),
                 status_label,
                 c_name_val,
+                rating_disp,
+                rank_disp,
+                r.get("profile_rank", "—"),
+                r.get("profile_total_solved", "—"),
                 q1_disp,
                 q2_disp,
                 q3_disp,
                 q4_disp,
                 solved_cnt,
-                rank_disp,
             ]
 
             for col_idx, val in enumerate(row_data, start=1):
@@ -340,20 +299,20 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
                 c.fill = row_fill
                 c.font = Font(
                     name=font_tnr, size=9.5,
-                    bold=(col_idx in (1, 6, 12)),
+                    bold=(col_idx in (1, 7, 17)),
                     color=("006400" if (attended and not is_virtual) else ("0051A8" if is_virtual else "8B0000"))
-                    if col_idx == 6 else "1E293B"
+                    if col_idx == 7 else "1E293B"
                 )
-                c.alignment = center if col_idx not in (3, 7) else left
+                c.alignment = center if col_idx not in (3, 6, 8) else left
                 _apply_thin_border(c)
             ws_tab.row_dimensions[row_num].height = 20
 
         ws_tab.freeze_panes = "A4"
 
     if is_weekly and rows:
-        # Sheet 2: All Students
-        ws_all = wb.create_sheet(title="All Students")
-        _write_matrix_tab(ws_all, dataset.get("title", "Weekly Contest — All Students Roster"), rows)
+        # Sheet 2: Student Performance
+        ws_perf = wb.create_sheet(title="Student Performance")
+        _write_matrix_tab(ws_perf, dataset.get("title", "Weekly Contest — Student Performance Matrix"), rows)
 
         # Sheet 3: Public Attended
         pub_attended_rows = [r for r in rows if r.get("participation_status") in ("PUBLIC_ATTENDED", "ATTENDED") or r.get("status") == "PUBLIC"]

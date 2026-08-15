@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   Trophy, Calendar, RefreshCw, AlertTriangle, Download, FileSpreadsheet,
-  FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Zap, Filter, Trash2
+  FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Zap, Filter, Trash2, Mail, Send, Sparkles, X
 } from 'lucide-react';
 import api from '../services/api';
+import { StatusNotificationModal, NotificationState } from '../components/StatusNotificationModal';
 
 export const WeeklyContestPage: React.FC = () => {
   const [currentSession, setCurrentSession] = useState<any>(null);
@@ -23,12 +24,33 @@ export const WeeklyContestPage: React.FC = () => {
   const [deletingSessionId, setDeletingSessionId] = useState<number | null>(null);
 
   const [showPreviewModal, setShowPreviewModal] = useState<boolean>(false);
+  const [showEmailModal, setShowEmailModal] = useState<boolean>(false);
+  const [notification, setNotification] = useState<NotificationState | null>(null);
+
+  // Email state
+  const [recipientsList, setRecipientsList] = useState<any[]>([]);
+  const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
+  const [customEmailNote, setCustomEmailNote] = useState<string>('');
+  const [testEmailInput, setTestEmailInput] = useState<string>('');
+  const [isSendingEmail, setIsSendingEmail] = useState<boolean>(false);
 
   const latestReqIdRef = React.useRef(0);
 
   useEffect(() => {
     fetchInitialContestData();
+    fetchRecipients();
   }, []);
+
+  const fetchRecipients = async () => {
+    try {
+      const res = await api.get('/api/email/recipients');
+      setRecipientsList(res.data || []);
+      const activeEmails = (res.data || []).filter((r: any) => r.is_active !== false).map((r: any) => r.email);
+      setSelectedRecipients(activeEmails);
+    } catch (_err) {
+      console.error('Failed to load email recipients');
+    }
+  };
 
   const handleCalendarDateChange = async (dateStr: string) => {
     if (!dateStr) return;
@@ -197,19 +219,26 @@ export const WeeklyContestPage: React.FC = () => {
     if (!selectedSessionId) return;
     setIsSyncing(true);
     try {
-      console.log(`[SINGLE CONTEST SYNC START] Session ${selectedSessionId}`);
       const res = await api.post(`/contests/sessions/${selectedSessionId}/sync`);
-      console.log("[SINGLE CONTEST SYNC RESPONSE]", res.data);
       setSyncSummary(res.data);
       
       // Reload matrix for the selected session
       fetchSessionDetails(selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter);
       
-      alert(`Successfully synchronized session ${selectedSessionId}. Validated ${res.data.target_authentic} authentic results.`);
+      setNotification({
+        isOpen: true,
+        type: 'success',
+        title: 'Contest Synchronized',
+        message: `Successfully synchronized session ${selectedSessionId}. Validated ${res.data.target_authentic || 0} authentic results.`
+      });
     } catch (err: any) {
-      console.error("[SINGLE CONTEST SYNC ERROR]", err);
       const detailMsg = err.response?.data?.detail || err.message || "Synchronization could not be completed.";
-      alert(`Sync Notice: ${detailMsg}`);
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Sync Failed',
+        message: detailMsg
+      });
     } finally {
       setIsSyncing(false);
     }
@@ -219,30 +248,65 @@ export const WeeklyContestPage: React.FC = () => {
     e.stopPropagation(); // Don't trigger session select
     const session = displaySessions.find(s => s.sessionId === sessionId);
     if (session?.status === 'LIVE') {
-      alert('🔴 Cannot delete a LIVE session. Finalize the contest first.');
+      setNotification({
+        isOpen: true,
+        type: 'warning',
+        title: 'Cannot Delete Live Session',
+        message: 'Cannot delete a LIVE session. Finalize the contest first.'
+      });
       return;
     }
-    if (!window.confirm(`⚠️ Permanently delete "${sessionLabel}"?\n\nThis will also delete all contest results, snapshots, and email logs for this session.\n\nThis action cannot be undone.`)) return;
-    setDeletingSessionId(sessionId);
-    try {
-      await api.delete(`/contests/sessions/${sessionId}`);
-      // Remove from local list
-      setSessionsList(prev => prev.filter(s => s.sessionId !== sessionId));
-      // If deleted session was selected, switch to the first remaining
-      if (selectedSessionId === sessionId) {
-        const remaining = sessionsList.filter(s => s.sessionId !== sessionId);
-        if (remaining.length > 0) handleSelectSession(remaining[0].sessionId);
-        else { setSelectedSessionId(null); setMatrixRows([]); setErrorLogs([]); setComparison(null); }
+
+    setNotification({
+      isOpen: true,
+      type: 'warning',
+      isConfirm: true,
+      title: 'Delete Contest Session?',
+      message: `Permanently delete "${sessionLabel}"? All contest results, snapshots, and email logs for this session will be removed.`,
+      confirmText: 'Delete Session',
+      cancelText: 'Cancel',
+      onConfirm: async () => {
+        setNotification(null);
+        setDeletingSessionId(sessionId);
+        try {
+          await api.delete(`/contests/sessions/${sessionId}`);
+          setSessionsList(prev => prev.filter(s => s.sessionId !== sessionId));
+          if (selectedSessionId === sessionId) {
+            const remaining = sessionsList.filter(s => s.sessionId !== sessionId);
+            if (remaining.length > 0) handleSelectSession(remaining[0].sessionId);
+            else { setSelectedSessionId(null); setMatrixRows([]); setErrorLogs([]); setComparison(null); }
+          }
+          setNotification({
+            isOpen: true,
+            type: 'success',
+            title: 'Session Deleted',
+            message: `Successfully deleted contest session ${sessionLabel}.`
+          });
+        } catch (err: any) {
+          setNotification({
+            isOpen: true,
+            type: 'error',
+            title: 'Delete Failed',
+            message: err.response?.data?.detail || 'Failed to delete session.'
+          });
+        } finally {
+          setDeletingSessionId(null);
+        }
       }
-    } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to delete session.');
-    } finally {
-      setDeletingSessionId(null);
-    }
+    });
   };
 
   const downloadReportFile = (format: string) => {
-    if (!selectedSessionId) return;
+    if (!selectedSessionId) {
+      setNotification({
+        isOpen: true,
+        type: 'warning',
+        title: 'No Contest Selected',
+        message: 'Please select a Weekly Contest before generating the report.'
+      });
+      return;
+    }
+
     const deptParam = encodeURIComponent(selectedDeptFilter || 'ALL');
     const yearParam = encodeURIComponent(selectedYearFilter || 'ALL');
     const attParam = encodeURIComponent(selectedAttendanceFilter || 'ALL');
@@ -254,13 +318,7 @@ export const WeeklyContestPage: React.FC = () => {
     const contestNum = match ? match[0] : selectedSessionId;
     const ext = format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : format === 'zip' ? 'zip' : format;
 
-    let filename = `Weekly_Contest_${contestNum}`;
-    const isFiltered = (selectedDeptFilter !== 'ALL') || (selectedYearFilter !== 'ALL') || (selectedAttendanceFilter !== 'ALL');
-    if (isFiltered) {
-      if (selectedDeptFilter !== 'ALL') filename += `_${selectedDeptFilter.replace(/[()]/g, '')}`;
-      if (selectedYearFilter !== 'ALL') filename += `_${selectedYearFilter}`;
-      if (selectedAttendanceFilter !== 'ALL') filename += `_${selectedAttendanceFilter}`;
-    }
+    let filename = `NEC_Weekly_Contest_${contestNum}_PUBLIC`;
     filename += `.${ext}`;
 
     api.get(url, { responseType: 'blob' }).then(res => {
@@ -281,7 +339,7 @@ export const WeeklyContestPage: React.FC = () => {
       link.remove();
     }).catch(async (err) => {
       console.error('Download failed:', err);
-      let errMsg = 'Failed to download report. Please try again.';
+      let errMsg = 'Failed to generate Excel report. Please verify that students match the active filters.';
       if (err.response?.data instanceof Blob) {
         try {
           const text = await err.response.data.text();
@@ -289,8 +347,75 @@ export const WeeklyContestPage: React.FC = () => {
           if (parsed.detail) errMsg = parsed.detail;
         } catch (_e) { }
       }
-      alert(errMsg);
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Excel Report Generation Failed',
+        message: errMsg
+      });
     });
+  };
+
+  const handleSendWeeklyEmail = async (isSafeTest: boolean = false) => {
+    if (!selectedSessionId) return;
+
+    let targetEmails: string[] = [];
+    if (isSafeTest) {
+      if (!testEmailInput || !testEmailInput.includes('@')) {
+        setNotification({
+          isOpen: true,
+          type: 'warning',
+          title: 'Invalid Test Recipient',
+          message: 'Please enter a valid test email address (e.g. admin@nandha.edu.in).'
+        });
+        return;
+      }
+      targetEmails = [testEmailInput.trim()];
+    } else {
+      if (selectedRecipients.length === 0) {
+        setNotification({
+          isOpen: true,
+          type: 'warning',
+          title: 'No Recipients Selected',
+          message: 'Please select at least one configured recipient to dispatch the report to.'
+        });
+        return;
+      }
+      targetEmails = selectedRecipients;
+    }
+
+    setIsSendingEmail(true);
+    try {
+      const payload = {
+        session_id: selectedSessionId,
+        recipient_emails: targetEmails,
+        dept: selectedDeptFilter,
+        year: selectedYearFilter,
+        attendance: selectedAttendanceFilter,
+        custom_message: customEmailNote || null,
+        is_safe_test: isSafeTest
+      };
+
+      const res = await api.post('/api/email/send-manual', payload);
+      setShowEmailModal(false);
+      setNotification({
+        isOpen: true,
+        type: 'success',
+        title: isSafeTest ? 'Test Email Sent' : 'Weekly Report Dispatched',
+        message: res.data?.message || `Successfully dispatched report to ${targetEmails.length} recipient(s).`,
+        details: `Attached file: ${res.data?.excel_filename || 'Excel Report'} (${res.data?.total_students || matrixRows.length} filtered students included)`
+      });
+    } catch (err: any) {
+      const errMsg = err.response?.data?.detail || err.message || 'Failed to dispatch report email.';
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Email Dispatch Failed',
+        message: errMsg
+      });
+    } finally {
+      setIsSendingEmail(false);
+    }
   };
 
   if (loading) {
@@ -470,14 +595,42 @@ export const WeeklyContestPage: React.FC = () => {
             <span>Combined Department, Year & Attendance Filter:</span>
           </div>
 
-          <button
-            onClick={handleFetchSelectedContest}
-            disabled={isSyncing || !selectedSessionId}
-            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-brand-600 hover:from-indigo-700 hover:to-brand-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span>{isSyncing ? 'Fetching...' : `↻ Fetch Selected Contest`}</span>
-          </button>
+          <div className="flex items-center flex-wrap gap-2.5">
+            <button
+              onClick={() => downloadReportFile('excel')}
+              className="flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer"
+              title="Download Filtered Excel Workbook"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>📊 Generate Excel</span>
+            </button>
+
+            <button
+              onClick={() => setShowPreviewModal(true)}
+              className="flex items-center space-x-1.5 px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer"
+              title="Preview Filtered Table"
+            >
+              <span>👁 Report Preview</span>
+            </button>
+
+            <button
+              onClick={() => setShowEmailModal(true)}
+              className="flex items-center space-x-1.5 px-3.5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer"
+              title="Send Filtered Report Email"
+            >
+              <Mail className="w-3.5 h-3.5" />
+              <span>📧 Send Report Email</span>
+            </button>
+
+            <button
+              onClick={handleFetchSelectedContest}
+              disabled={isSyncing || !selectedSessionId}
+              className="flex items-center space-x-2 px-3.5 py-2 bg-gray-800 hover:bg-gray-900 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span>{isSyncing ? 'Fetching...' : `↻ Sync Contest`}</span>
+            </button>
+          </div>
         </div>
 
         {/* Sync Summary Progress Panel */}
@@ -1004,6 +1157,172 @@ export const WeeklyContestPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Interactive Report Email Dispatch Modal */}
+      {showEmailModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
+          <div className="bg-white dark:bg-navy-900 w-full max-w-2xl rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className="p-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-black flex items-center space-x-2">
+                  <Mail className="w-5 h-5 text-indigo-400" />
+                  <span>Dispatch Filtered Weekly Report</span>
+                </h3>
+                <p className="text-xs text-gray-300 font-bold mt-0.5">
+                  Sends the exact generated Excel report (<code className="text-indigo-300 font-mono">NEC_Weekly_Contest_{selectedSessionId}_PUBLIC.xlsx</code>)
+                </p>
+              </div>
+              <button
+                onClick={() => setShowEmailModal(false)}
+                className="p-1 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+              {/* Active Filter Scope Card */}
+              <div className="p-4 rounded-2xl bg-indigo-50/50 dark:bg-navy-950 border border-indigo-100 dark:border-indigo-900/50 space-y-2">
+                <div className="text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-300 tracking-wider">
+                  Report Scope & Target Roster
+                </div>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 font-bold">
+                    📅 Contest: <b className="text-gray-900 dark:text-white">{activeSessionObj?.contestName || selectedSessionId}</b>
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 font-bold">
+                    🏢 Dept: <b className="text-indigo-600">{selectedDeptFilter}</b>
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 font-bold">
+                    🎓 Year: <b className="text-purple-600">{selectedYearFilter}</b>
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 font-bold">
+                    📊 Attendance: <b className="text-emerald-600">{selectedAttendanceFilter}</b>
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-black">
+                    ✓ {matrixRows.length} Students Selected
+                  </span>
+                </div>
+              </div>
+
+              {/* Recipient Contacts */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                    Select Delivery Recipients ({selectedRecipients.length} selected)
+                  </label>
+                  <button
+                    onClick={() => {
+                      if (selectedRecipients.length === recipientsList.length) setSelectedRecipients([]);
+                      else setSelectedRecipients(recipientsList.map((r: any) => r.email));
+                    }}
+                    className="text-[11px] font-bold text-brand-600 hover:text-brand-700 cursor-pointer"
+                  >
+                    {selectedRecipients.length === recipientsList.length ? 'Deselect All' : 'Select All'}
+                  </button>
+                </div>
+
+                <div className="max-h-36 overflow-y-auto space-y-1.5 border border-gray-200 dark:border-gray-800 rounded-xl p-3 bg-gray-50 dark:bg-navy-950">
+                  {recipientsList.length === 0 ? (
+                    <p className="text-xs text-gray-500 font-bold py-2 text-center">
+                      No configured recipients found in database. You can send a test email below.
+                    </p>
+                  ) : (
+                    recipientsList.map((r: any) => {
+                      const isChecked = selectedRecipients.includes(r.email);
+                      return (
+                        <label
+                          key={r.id}
+                          className="flex items-center space-x-2.5 text-xs p-1.5 rounded-lg hover:bg-white dark:hover:bg-navy-900 cursor-pointer transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) setSelectedRecipients(prev => [...prev, r.email]);
+                              else setSelectedRecipients(prev => prev.filter(em => em !== r.email));
+                            }}
+                            className="rounded text-brand-600 focus:ring-brand-500"
+                          />
+                          <span className="font-bold text-gray-800 dark:text-gray-200">{r.name}</span>
+                          <span className="text-gray-400 font-mono text-[11px]">({r.email})</span>
+                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-gray-200 dark:bg-navy-800 text-gray-600 dark:text-gray-300 ml-auto">
+                            {r.role || 'HOD'}
+                          </span>
+                        </label>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* Custom Note */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                  Executive Note / Remarks (Optional)
+                </label>
+                <textarea
+                  value={customEmailNote}
+                  onChange={(e) => setCustomEmailNote(e.target.value)}
+                  placeholder="e.g. Please review the CSE(CS) performance metrics from Sunday contest..."
+                  rows={2}
+                  className="w-full px-3.5 py-2.5 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500 resize-none"
+                />
+              </div>
+
+              {/* Safe Test Section */}
+              <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 space-y-2">
+                <div className="flex items-center space-x-1.5 text-xs font-black text-amber-800 dark:text-amber-300">
+                  <Zap className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Run Safe Test (Single Recipient)</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="email"
+                    value={testEmailInput}
+                    onChange={(e) => setTestEmailInput(e.target.value)}
+                    placeholder="Enter test recipient email (e.g. admin@nandha.edu.in)"
+                    className="flex-1 px-3 py-1.5 text-xs bg-white dark:bg-navy-900 border border-amber-300 dark:border-amber-700 rounded-lg text-gray-900 dark:text-white outline-none"
+                  />
+                  <button
+                    onClick={() => handleSendWeeklyEmail(true)}
+                    disabled={isSendingEmail}
+                    className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-black transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap"
+                  >
+                    {isSendingEmail ? 'Sending...' : '⚡ Send Test'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-5 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between">
+              <button
+                onClick={() => setShowEmailModal(false)}
+                className="px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-gray-800 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleSendWeeklyEmail(false)}
+                disabled={isSendingEmail || selectedRecipients.length === 0}
+                className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black shadow-lg shadow-blue-500/20 transition-all cursor-pointer disabled:opacity-50"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>{isSendingEmail ? 'Dispatching...' : `Dispatch Report to ${selectedRecipients.length} Recipient(s)`}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Centered Application Notification Modal */}
+      <StatusNotificationModal
+        notification={notification}
+        onClose={() => setNotification(null)}
+      />
 
     </div>
   );

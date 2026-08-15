@@ -250,21 +250,35 @@ from backend.routes.weekly_contests import matches_dept, matches_year
 import re
 
 def get_contest_filename_base(contest_name: str, dept: str = "ALL", year: str = "ALL", attendance: str = "ALL") -> str:
-    """Derives standard Weekly_Contest_{number}[_{Dept}_{Year}_{Attendance}] filename dynamically."""
+    """Derives standard NEC_Weekly_Contest_{contest}[_{filters}]_{HHMM} filename dynamically."""
     import re
-    if not contest_name:
-        c_num = "Report"
-    else:
-        match = re.search(r'\d+', str(contest_name))
-        c_num = match.group(0) if match else contest_name.replace(" ", "_").replace("/", "-")
+    now_ist = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
+    hhmm = now_ist.strftime("%H%M")
+    
+    clean_cname = (contest_name or "WEEKLY_CONTEST").replace(" ", "_").upper()
+    if not clean_cname.startswith("WEEKLY_CONTEST"):
+        m = re.search(r'\d+', str(contest_name or ""))
+        if m:
+            clean_cname = f"WEEKLY_CONTEST_{m.group(0)}"
+        else:
+            clean_cname = "WEEKLY_CONTEST"
 
-    parts = [f"Weekly_Contest_{c_num}"]
+    parts = ["NEC", clean_cname]
     if dept and dept.upper() != "ALL":
-        parts.append(dept.replace(" ", "_").replace("(", "").replace(")", ""))
+        parts.append(dept.replace(" ", "_").replace("(", "").replace(")", "").upper())
     if year and year.upper() != "ALL":
-        parts.append(year.replace(" ", "_"))
-    if attendance and attendance.upper() != "ALL":
-        parts.append(attendance.replace(" ", "_"))
+        parts.append(f"YEAR_{year.replace(' ', '_').upper()}")
+    
+    att_label = "PUBLIC"
+    if attendance and attendance.upper() == "VIRTUAL_ATTENDED":
+        att_label = "VIRTUAL"
+    elif attendance and attendance.upper() == "PUBLIC_NOT_ATTENDED":
+        att_label = "NOT_ATTENDED"
+    elif attendance and attendance.upper() == "ALL":
+        att_label = "PUBLIC"
+    parts.append(att_label)
+    parts.append(hhmm)
+
     return "_".join(parts)
 
 def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: str = "ALL", attendance: str = "ALL"):
@@ -310,11 +324,17 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
             session_date = ws.session_date or ""
             r_filename = get_contest_filename_base(contest_name, dept=dept, year=year, attendance=attendance)
 
-            # Fetch rows via session matrix logic to ensure strict 13-column compatibility and data isolation
+            # Fetch rows via session matrix logic to ensure strict consistency and data isolation
             from backend.routes.weekly_contests import get_session_matrix
             mat = get_session_matrix(session_id=session_id, dept=dept, year=year, attendance=attendance, db=db)
             raw_rows = mat.get("rows", [])
             matrix_metrics = mat.get("metrics", {})
+
+            if len(raw_rows) == 0:
+                raise HTTPException(
+                    status_code=400,
+                    detail="No students match the selected filter criteria."
+                )
 
             normalized_rows = []
             all_students = []
@@ -346,6 +366,9 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
                     "name": r.get("name", ""),
                     "dept": r.get("dept", ""),
                     "year": r.get("year", ""),
+                    "username": r.get("username", ""),
+                    "profile_rank": r.get("profile_rank", "—"),
+                    "profile_total_solved": r.get("profile_total_solved", 0),
                     "status": "PUBLIC" if p_status in ("PUBLIC_ATTENDED", "ATTENDED") else ("VIRTUAL" if p_status == "VIRTUAL_ATTENDED" else ("DATA ERROR" if p_status == "DATA_ERROR" else "NOT ATTENDED")),
                     "participation_status": p_status,
                     "contest_name": contest_name,
@@ -365,6 +388,8 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
                     "name": r.get("name", ""),
                     "dept": r.get("dept", ""),
                     "year": r.get("year", ""),
+                    "username": r.get("username", ""),
+                    "profile_rank": r.get("profile_rank", "—"),
                     "easy": v_q1 if isinstance(v_q1, int) else 0,
                     "medium": v_q2 if isinstance(v_q2, int) else 0,
                     "hard": v_q3 if isinstance(v_q3, int) else 0,
@@ -385,6 +410,9 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
             error_cnt = matrix_metrics.get("failedVerification", sum(1 for r in normalized_rows if r.get("participation_status") == "DATA_ERROR"))
             total_roster_cnt = matrix_metrics.get("totalStudents", len(normalized_rows))
 
+            now_ist = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
+            ist_formatted = now_ist.strftime("%d %b %Y, %I:%M %p IST")
+
             dataset = {
                 "report_id": f"Session_{session_id}",
                 "reportId": f"Session_{session_id}",
@@ -394,15 +422,16 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
                 "sessionDate": session_date,
                 "contestDate": session_date,
                 "title": f"NANDHA ENGINEERING COLLEGE\n{contest_name.upper()}\nSTUDENT PERFORMANCE REPORT",
-                "generated_at": datetime.datetime.utcnow().isoformat(),
-                "generatedAt": datetime.datetime.utcnow().isoformat(),
-                "verified_at": ws.finalized_at.isoformat() if ws.finalized_at else datetime.datetime.utcnow().isoformat(),
+                "generated_at": now_ist.isoformat(),
+                "generatedAt": now_ist.isoformat(),
+                "generatedAtIST": ist_formatted,
+                "verified_at": ws.finalized_at.isoformat() if ws.finalized_at else now_ist.isoformat(),
                 "data_status": ws.status,
                 "dataStatus": ws.status,
                 "istWindow": "08:00 AM – 09:30 AM IST",
-                "deptFilter": dept,
-                "yearFilter": year,
-                "attendanceFilter": attendance,
+                "deptFilter": dept or "ALL",
+                "yearFilter": year or "ALL",
+                "attendanceFilter": attendance or "ALL",
                 "metrics": {
                     "totalStudents": total_roster_cnt,
                     "officialAttended": pub_attended_cnt,
@@ -444,13 +473,23 @@ def download_universal_excel(report_id: str, dept: str = "ALL", year: str = "ALL
     try:
         dataset, r_filename = _get_dataset_for_id(report_id, db, dept=dept, year=year, attendance=attendance)
         excel_bytes = export_excel_from_dataset(dataset)
+        
+        # Validate Excel workbook
+        if not excel_bytes or len(excel_bytes) < 100:
+            raise ValueError("Generated Excel file is empty or corrupted.")
+
         return Response(
             content=excel_bytes,
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": f'attachment; filename="{r_filename}.xlsx"'}
+            headers={
+                "Content-Disposition": f'attachment; filename="{r_filename}.xlsx"',
+                "Access-Control-Expose-Headers": "Content-Disposition"
+            }
         )
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error generating Excel report: {e}")
+        logger.error(f"[EXCEL GENERATION FAILED] report_id={report_id}, error={e}")
         raise HTTPException(status_code=500, detail=f"Failed to generate Excel report: {str(e)}")
 
 @router.get("/{report_id}/pdf")

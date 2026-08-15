@@ -25,7 +25,11 @@ class RecipientCreateSchema(BaseModel):
 class ManualSendSchema(BaseModel):
     session_id: Optional[int] = None
     recipient_emails: List[str]
+    dept: Optional[str] = "ALL"
+    year: Optional[str] = "ALL"
+    attendance: Optional[str] = "ALL"
     custom_message: Optional[str] = None
+    is_safe_test: Optional[bool] = False
 
 class TestEmailSchema(BaseModel):
     recipient: str
@@ -181,7 +185,7 @@ def get_email_delivery_logs(
 @router.post("/send-manual")
 def trigger_manual_report_email(payload: ManualSendSchema, db: Session = Depends(get_db)):
     """
-    Triggers manual email dispatch to selected recipient emails with custom message.
+    Triggers manual email dispatch to selected recipient emails with filtered Excel report.
     """
     if not payload.recipient_emails:
         raise HTTPException(status_code=400, detail="At least one recipient email must be specified.")
@@ -190,7 +194,11 @@ def trigger_manual_report_email(payload: ManualSendSchema, db: Session = Depends
         db,
         session_id=payload.session_id,
         recipient_emails=[str(e) for e in payload.recipient_emails],
-        custom_message=payload.custom_message
+        dept=payload.dept or "ALL",
+        year=payload.year or "ALL",
+        attendance=payload.attendance or "ALL",
+        custom_message=payload.custom_message,
+        is_safe_test=bool(payload.is_safe_test)
     )
     return res
 
