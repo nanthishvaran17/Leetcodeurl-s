@@ -65,6 +65,7 @@ export interface StudentData {
   weekly_progress?: number;
   streak_count?: number;
   consistency_score?: number;
+  contest_status?: string;
   badge_list?: string[];
   public_contest_result?: {
     contest_name?: string;
@@ -338,9 +339,9 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   ? student.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
                   : (isVerified ? 'Unrated' : '—');
 
-              const isPublicAttended = student.public_contest_result?.status === 'PUBLIC_ATTENDED' || student.public_contest_result?.status === 'ATTENDED' || (student.public_contest_result?.score_display && !student.public_contest_result.score_display.includes('Not Attended'));
-              const isVirtualAttended = student.virtual_contest_result?.status === 'VIRTUAL_ATTENDED' || student.virtual_contest_result?.status === 'ATTENDED';
-              const isDataError = student.public_contest_result?.status === 'DATA_ERROR' || student.virtual_contest_result?.status === 'DATA_ERROR';
+              const isPublicAttended = student.contest_status === 'PUBLIC_ATTENDED' || student.public_contest_result?.status === 'PUBLIC_ATTENDED' || student.public_contest_result?.status === 'ATTENDED' || (student.public_contest_result?.score_display && !student.public_contest_result.score_display.includes('Not Attended'));
+              const isVirtualAttended = student.contest_status === 'VIRTUAL_ATTENDED' || student.virtual_contest_result?.status === 'VIRTUAL_ATTENDED' || student.virtual_contest_result?.status === 'ATTENDED';
+              const isDataError = student.contest_status === 'DATA_ERROR' || student.public_contest_result?.status === 'DATA_ERROR' || student.virtual_contest_result?.status === 'DATA_ERROR';
 
               // Status Badge Config per Specification
               const contestStatusBadge = isPublicAttended

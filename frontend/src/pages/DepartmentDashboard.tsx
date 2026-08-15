@@ -17,7 +17,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   const [sortBy, setSortBy] = useState<string>('top_solved');
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [students, setStudents] = useState<StudentData[]>(CANONICAL_ROSTER);
-  const [displayCount, setDisplayCount] = useState<number>(32);
+  const [displayCount, setDisplayCount] = useState<number>(300);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [solvedFilter, setSolvedFilter] = useState<string>('ALL');
 
@@ -65,12 +65,17 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
       if (selectedDept && student.department?.code !== selectedDept.code) {
         return false;
       }
-      // 2. Year Level Filter (Determined by reg_no or academic_year)
+      // 2. Year Level Filter (Determined by reg_no, year_level, or academic_year)
       if (yearLevel !== 'ALL') {
-        const reg = student.reg_no.toUpperCase();
-        if (yearLevel === 'II' && !reg.startsWith('732224')) return false;
-        if (yearLevel === 'III' && !reg.startsWith('732223')) return false;
-        if (yearLevel === 'IV' && !reg.startsWith('732222')) return false;
+        const reg = (student.reg_no || '').toUpperCase();
+        const yl = (student.year_level || '').toUpperCase();
+        if (yearLevel === 'II') {
+          if (!reg.startsWith('732224') && !reg.startsWith('24') && yl !== 'II' && yl !== '2') return false;
+        } else if (yearLevel === 'III') {
+          if (!reg.startsWith('732223') && !reg.startsWith('23') && yl !== 'III' && yl !== '3') return false;
+        } else if (yearLevel === 'IV') {
+          if (!reg.startsWith('732222') && !reg.startsWith('22') && yl !== 'IV' && yl !== '4') return false;
+        }
       }
       return true;
     });
