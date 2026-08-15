@@ -331,13 +331,15 @@ async def execute_scheduled_report_pipeline(
 
         # 4. State: REPORT_GENERATED & ATTACHMENT_READY (Dynamic Excel Filename)
         hist.status = "REPORT_GENERATED"
-        hhmm_str = f"{config.hour:02d}{config.minute:02d}"
-        clean_contest = contest_name.replace(" ", "_").upper()
-        excel_filename = f"NEC_Weekly_Contest_{clean_contest}_PUBLIC_{hhmm_str}.xlsx"
         
-        # Generate Master institutional Excel
-        from backend.excel_handler import generate_single_week_matrix_excel
-        excel_bytes = generate_single_week_matrix_excel(db, week_offset=0)
+        # Generate Master institutional Excel from unified pipeline
+        from backend.routes.reports import _get_dataset_for_id
+        from backend.exporters.excel_exporter import export_excel_from_dataset
+        
+        report_id_str = f"Session_{session.id}" if session else "official"
+        dataset, filename_base = _get_dataset_for_id(report_id_str, db, dept="ALL", year="ALL", attendance="ALL")
+        excel_bytes = export_excel_from_dataset(dataset)
+        excel_filename = f"{filename_base}.xlsx"
 
         hist.excel_generated = True
         hist.excel_filename = excel_filename
@@ -348,7 +350,15 @@ async def execute_scheduled_report_pipeline(
         hist.status = "EMAIL_SENDING"
         db.commit()
 
-        recipients = [test_recipient] if (is_test_run and test_recipient) else (config.recipients or [])
+        if is_test_run and test_recipient:
+            recipients = [test_recipient]
+        else:
+            db_recs = db.query(ReportEmailRecipient).filter(ReportEmailRecipient.is_active == True).all()
+            db_emails = [r.email for r in db_recs if r.email]
+            cfg_emails = config.recipients or []
+            combined_emails = list(dict.fromkeys(db_emails + cfg_emails))
+            recipients = combined_emails if combined_emails else ["nanthishvaran17@gmail.com", "msanthoshkumar@nandhaengg.org"]
+        
         hist.recipients_count = len(recipients)
 
         subject = f"{'[SAFE TEST MODE] ' if is_test_run else ''}NANDHA Engineering College — Weekly LeetCode Public Performance Report | {config.hour:02d}:{config.minute:02d} AM IST"

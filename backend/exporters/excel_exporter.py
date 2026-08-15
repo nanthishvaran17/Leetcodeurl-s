@@ -244,6 +244,16 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         m_col_widths = [8, 16, 28, 14, 10, 20, 20, 24, 16, 14, 14, 14, 8, 8, 8, 8, 20]
         _write_header_row(ws_tab, 3, m_headers, m_col_widths, navy_fill, font_tnr, center)
 
+        if not student_row_list:
+            ws_tab.merge_cells("A4:Q4")
+            c = ws_tab.cell(row=4, column=1, value="No student records recorded for this category.")
+            c.font = Font(name=font_tnr, size=10, italic=True, color="64748B")
+            c.alignment = center
+            ws_tab.row_dimensions[4].height = 24
+            for col_i in range(1, 18):
+                _apply_thin_border(ws_tab.cell(row=4, column=col_i))
+            return
+
         for idx, r in enumerate(student_row_list, start=1):
             row_num   = 3 + idx
             p_status  = r.get("participation_status") or "PENDING"
@@ -326,11 +336,10 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
             ws_not = wb.create_sheet(title="Public Not Attended")
             _write_matrix_tab(ws_not, f"{dataset.get('contestName', 'Weekly Contest')} — Public Not Attended Roster", pub_not_rows)
 
-        # Sheet 5: Virtual Attended
+        # Sheet 5: Virtual Attended (Always Created)
         virt_rows = [r for r in rows if r.get("participation_status") == "VIRTUAL_ATTENDED" or r.get("status") == "VIRTUAL"]
-        if virt_rows:
-            ws_virt = wb.create_sheet(title="Virtual Attended")
-            _write_matrix_tab(ws_virt, f"{dataset.get('contestName', 'Weekly Contest')} — Virtual Attended Roster", virt_rows)
+        ws_virt = wb.create_sheet(title="Virtual Attended")
+        _write_matrix_tab(ws_virt, f"{dataset.get('contestName', 'Weekly Contest')} — Virtual Attended Roster", virt_rows)
 
     # ── SHEET 3+: PER-DEPARTMENT & YEAR SHEET TABS ────────────────────────────
     # Group students by Department & Year for dedicated class/dept tabs
