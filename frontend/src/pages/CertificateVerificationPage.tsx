@@ -16,6 +16,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import api from '../services/api';
+import { fetchCertificateFromFirestoreWeb } from '../services/firebaseSync';
 
 interface CertificateVerificationData {
   status: 'VERIFIED' | 'REVOKED' | 'NOT_VERIFIED';
@@ -58,17 +59,35 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
     setLoading(true);
     setError(null);
     try {
+      // 1. Primary: Authoritative Backend API
       const res = await api.get(`/certificates/verify/${verificationId}`);
-      setData(res.data);
-    } catch (err: any) {
-      if (err.response?.data) {
-        setData(err.response.data);
-      } else {
-        setError(err.message || "Failed to reach verification gateway.");
+      if (res.data && res.data.status) {
+        setData(res.data);
+        return;
       }
-    } finally {
-      setLoading(false);
+    } catch (err: any) {
+      console.debug("Backend lookup note, attempting Cloud Firestore fallback:", err);
     }
+
+    try {
+      // 2. Secondary High-Availability Fallback: Cloud Firestore
+      const firestoreCert = await fetchCertificateFromFirestoreWeb(verificationId);
+      if (firestoreCert) {
+        setData(firestoreCert as CertificateVerificationData);
+        return;
+      }
+    } catch (firestoreErr) {
+      console.debug("Firestore lookup error:", firestoreErr);
+    }
+
+    // Default Not Found State
+    setData({
+      status: 'NOT_VERIFIED',
+      is_valid: false,
+      verification_id: verificationId,
+      message: 'Verification Code Not Found'
+    });
+    setLoading(false);
   };
 
   const handleDownloadPdf = () => {

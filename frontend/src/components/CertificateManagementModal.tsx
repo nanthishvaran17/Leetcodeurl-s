@@ -19,6 +19,7 @@ import {
   Check
 } from 'lucide-react';
 import api from '../services/api';
+import { syncCertificateToFirestoreWeb } from '../services/firebaseSync';
 
 interface CertificateRecord {
   id: number;
@@ -160,6 +161,7 @@ export const CertificateManagementModal: React.FC<{
       });
       setGeneratedCert(res.data);
       setGenSuccessMsg(`Official Certificate ${res.data.verification_id} generated successfully!`);
+      await syncCertificateToFirestoreWeb(res.data);
       await fetchHistory();
     } catch (err: any) {
       alert(err.response?.data?.detail || "Failed to generate certificate.");

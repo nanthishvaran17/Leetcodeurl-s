@@ -1,4 +1,4 @@
-import { doc, setDoc, writeBatch } from 'firebase/firestore';
+import { doc, setDoc, getDoc, writeBatch } from 'firebase/firestore';
 import { getOrInitDb } from './firebase';
 
 /**
@@ -110,6 +110,39 @@ export async function syncAllStudentsToFirestoreWeb(studentsList: any[]) {
     console.log('[Firestore] Successfully committed all student records & stats to Cloud Firestore!');
   } catch (err) {
     console.debug('[Firestore] Web SDK client sync note (Backend is authoritative):', err);
+  }
+}
+
+export async function syncCertificateToFirestoreWeb(certData: any) {
+  try {
+    const firestoreDb = getOrInitDb();
+    if (!firestoreDb || !certData || !certData.verification_id) return;
+    const certRef = doc(firestoreDb, 'certificates', certData.verification_id);
+    await setDoc(certRef, {
+      ...certData,
+      status: certData.status || 'VERIFIED',
+      is_valid: certData.status !== 'REVOKED',
+      syncedAt: new Date().toISOString()
+    }, { merge: true });
+    console.log(`[Firestore] Synced certificate ${certData.verification_id} to Cloud Firestore.`);
+  } catch (err) {
+    console.debug('[Firestore] Certificate sync note:', err);
+  }
+}
+
+export async function fetchCertificateFromFirestoreWeb(verificationId: string) {
+  try {
+    const firestoreDb = getOrInitDb();
+    if (!firestoreDb || !verificationId) return null;
+    const certRef = doc(firestoreDb, 'certificates', verificationId);
+    const snap = await getDoc(certRef);
+    if (snap.exists()) {
+      return snap.data();
+    }
+    return null;
+  } catch (err) {
+    console.debug('[Firestore] Certificate lookup note:', err);
+    return null;
   }
 }
 
