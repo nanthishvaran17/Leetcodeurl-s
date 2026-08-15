@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     REQUEST_TIMEOUT: int = 15
     MAX_RETRIES: int = 3
     CACHE_DURATION: int = 30  # minutes
+    SYNC_FRESHNESS_HOURS: float = float(os.environ.get("SYNC_FRESHNESS_HOURS", "6.0"))
+    CONCURRENCY_WORKERS: int = int(os.environ.get("CONCURRENCY_WORKERS", "15"))
     
     # Session Configuration
     SESSION_START: str = "08:00"

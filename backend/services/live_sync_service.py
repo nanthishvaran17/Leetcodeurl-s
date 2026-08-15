@@ -64,21 +64,20 @@ def get_active_students(db: Session) -> List[Student]:
     return students
 
 
+import threading
+
 def dispatch_background_task(coro):
-    """Dispatches async coroutine task reliably from sync or async threadpool contexts."""
+    """Dispatches async coroutine task reliably and non-blockingly (<10ms) across all execution contexts."""
     try:
         loop = asyncio.get_running_loop()
         loop.create_task(coro)
     except RuntimeError:
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                loop.create_task(coro)
-            else:
-                asyncio.run(coro)
-        except Exception as e:
-            logger.error(f"[SYNC] Failed to dispatch background coroutine: {e}")
+        t = threading.Thread(target=asyncio.run, args=(coro,), daemon=True)
+        t.start()
 
+
+from backend.config import Settings
+settings = Settings()
 
 def start_full_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, Any]:
     """
@@ -97,8 +96,9 @@ def start_full_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, A
         else:
             logger.info(f"Sync job {running_job.job_id} is already RUNNING. Reusing active job.")
             return {
+                "success": False,
+                "status": "SYNC_ALREADY_RUNNING",
                 "job_id": running_job.job_id,
-                "status": "RUNNING",
                 "message": "A synchronization job is already in progress.",
                 "started_at": running_job.started_at.isoformat() if running_job.started_at else None
             }
@@ -123,47 +123,144 @@ def start_full_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, A
     db.commit()
     db.refresh(new_job)
 
-    # 3. Create persistent Cloud Firestore sync_job document
-    try:
-        from backend.services.firestore_service import save_firestore_sync_job
-        save_firestore_sync_job(job_id, {
-            "job_id": job_id,
-            "status": "RUNNING",
-            "total": total_count,
-            "processed": 0,
-            "successful": 0,
-            "failed": 0,
-            "pending": total_count,
-            "started_at": datetime.datetime.utcnow().isoformat() + "Z",
-            "triggered_by": triggered_by
-        })
-        logger.info(f"[SYNC_JOB_CREATED] Persistent Cloud Firestore sync_job record created for job_id={job_id}")
-    except Exception as fs_job_err:
-        logger.warning(f"[SYNC] Cloud Firestore sync_job creation note: {fs_job_err}")
-
     sync_tracker.start(job_id, total_count)
 
-    # 4. Launch background worker task reliably
+    # 3. Launch background worker task reliably
     dispatch_background_task(_run_full_sync_worker(job_id))
 
     return {
+        "success": True,
         "job_id": job_id,
-        "status": "RUNNING",
+        "status": "SYNCING",
         "total_records": total_count,
-        "message": f"Started live sync job for {total_count} active students."
+        "message": f"Started background live sync job for {total_count} active students."
     }
 
 
-async def _run_full_sync_worker(job_id: str):
+def start_stale_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, Any]:
     """
-    Asynchronous background worker that executes full roster LeetCode profile refresh,
+    Synchronizes only stale student profiles (older than SYNC_FRESHNESS_HOURS) or never synced.
+    """
+    running_job = db.query(SyncJob).filter(SyncJob.status == "RUNNING").first()
+    if running_job and sync_tracker.is_running:
+        return {
+            "success": False,
+            "status": "SYNC_ALREADY_RUNNING",
+            "job_id": running_job.job_id,
+            "message": "A synchronization job is already in progress."
+        }
+
+    now = datetime.datetime.utcnow()
+    freshness_seconds = settings.SYNC_FRESHNESS_HOURS * 3600
+    threshold = now - datetime.timedelta(seconds=freshness_seconds)
+
+    stale_students = db.query(Student).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id).filter(
+        ((Student.is_active == True) | (Student.is_active.is_(None))) &
+        ((LeetCodeProfileStats.id.is_(None)) | 
+         (LeetCodeProfileStats.last_successful_sync.is_(None)) | 
+         (LeetCodeProfileStats.last_successful_sync < threshold) |
+         (LeetCodeProfileStats.sync_status == "failed"))
+    ).all()
+
+    if not stale_students:
+        return {
+            "success": True,
+            "status": "FRESH",
+            "job_id": None,
+            "total_records": 0,
+            "message": f"All student profiles are already fresh (synced within last {settings.SYNC_FRESHNESS_HOURS} hours)."
+        }
+
+    job_id = f"SYNC-STALE-{datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')}"
+    target_ids = [s.id for s in stale_students]
+    total_count = len(target_ids)
+
+    new_job = SyncJob(
+        job_id=job_id,
+        job_type="STALE_SYNC",
+        started_at=datetime.datetime.utcnow(),
+        status="RUNNING",
+        total_records=total_count,
+        success_count=0,
+        partial_count=0,
+        error_count=0,
+        triggered_by=triggered_by
+    )
+    db.add(new_job)
+    db.commit()
+
+    sync_tracker.start(job_id, total_count)
+    dispatch_background_task(_run_full_sync_worker(job_id, target_student_ids=target_ids))
+
+    return {
+        "success": True,
+        "job_id": job_id,
+        "status": "SYNCING",
+        "total_records": total_count,
+        "message": f"Started targeted background sync for {total_count} stale student profiles."
+    }
+
+
+def start_targeted_sync_job(db: Session, student_ids: List[int], triggered_by: str = "admin") -> Dict[str, Any]:
+    """
+    Synchronizes only a specific allowlisted subset of student IDs (e.g. after username mapping update).
+    """
+    running_job = db.query(SyncJob).filter(SyncJob.status == "RUNNING").first()
+    if running_job and sync_tracker.is_running:
+        return {
+            "success": False,
+            "status": "SYNC_ALREADY_RUNNING",
+            "job_id": running_job.job_id,
+            "message": "A synchronization job is already in progress."
+        }
+
+    valid_students = db.query(Student).filter(Student.id.in_(student_ids)).all()
+    if not valid_students:
+        return {"success": False, "status": "ERROR", "message": "No valid matching students found for targeted sync."}
+
+    job_id = f"SYNC-TARGET-{datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')}"
+    total_count = len(valid_students)
+
+    new_job = SyncJob(
+        job_id=job_id,
+        job_type="TARGETED_SYNC",
+        started_at=datetime.datetime.utcnow(),
+        status="RUNNING",
+        total_records=total_count,
+        success_count=0,
+        partial_count=0,
+        error_count=0,
+        triggered_by=triggered_by
+    )
+    db.add(new_job)
+    db.commit()
+
+    sync_tracker.start(job_id, total_count)
+    dispatch_background_task(_run_full_sync_worker(job_id, target_student_ids=[s.id for s in valid_students]))
+
+    return {
+        "success": True,
+        "job_id": job_id,
+        "status": "SYNCING",
+        "total_records": total_count,
+        "message": f"Started targeted sync for {total_count} specified students."
+    }
+
+
+async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[int]] = None):
+    """
+    Asynchronous background worker that executes LeetCode profile refresh,
     field-level merging, audit logging, dynamic contest updates, and rank recalculations.
     """
     logger.info(f"[SYNC_WORKER_STARTED] Starting live background sync worker for job_id: {job_id}")
     db = SessionLocal()
 
     try:
-        students = get_active_students(db)
+        if target_student_ids:
+            students = db.query(Student).filter(Student.id.in_(target_student_ids)).all()
+        else:
+            students = get_active_students(db)
+
         total_students = len(students)
         success_count = 0
         partial_count = 0
@@ -172,7 +269,7 @@ async def _run_full_sync_worker(job_id: str):
         sync_tracker.start(job_id, total_students)
         logger.info(f"[SYNC_WORKER_STARTED] Worker active for job_id={job_id} | Total students: {total_students}")
 
-        semaphore = asyncio.Semaphore(8)
+        semaphore = asyncio.Semaphore(settings.CONCURRENCY_WORKERS)
 
         async def _process_student_task(student: Student, idx: int):
             nonlocal success_count, partial_count, error_count
@@ -618,15 +715,16 @@ def get_system_freshness(db: Session) -> Dict[str, Any]:
     latest_sync: Optional[datetime.datetime] = None
 
     now = datetime.datetime.utcnow()
+    freshness_seconds = settings.SYNC_FRESHNESS_HOURS * 3600
 
     for s in students:
         st = s.stats
-        if st and st.sync_status == "success" and st.total_solved is not None:
+        if st and st.sync_status in ("success", "verified") and st.total_solved is not None:
             verified_count += 1
             if st.last_successful_sync and (latest_sync is None or st.last_successful_sync > latest_sync):
                 latest_sync = st.last_successful_sync
-            # Check if sync is older than 24 hours
-            if st.last_successful_sync and (now - st.last_successful_sync).total_seconds() > 86400:
+            # Check if sync is older than configurable threshold
+            if st.last_successful_sync and (now - st.last_successful_sync).total_seconds() > freshness_seconds:
                 stale_count += 1
         elif st and st.total_solved is not None:
             partial_count += 1
@@ -634,8 +732,9 @@ def get_system_freshness(db: Session) -> Dict[str, Any]:
             stale_count += 1
 
     needs_attention = partial_count + stale_count
-
     running_job = db.query(SyncJob).filter(SyncJob.status == "RUNNING").first()
+
+    data_freshness = "FRESH" if (latest_sync and (now - latest_sync).total_seconds() <= freshness_seconds) else "STALE"
 
     return {
         "total_students": total_count,
@@ -643,6 +742,8 @@ def get_system_freshness(db: Session) -> Dict[str, Any]:
         "partial_count": partial_count,
         "stale_count": stale_count,
         "needs_attention_count": needs_attention,
+        "data_freshness_status": data_freshness,
+        "freshness_hours_threshold": settings.SYNC_FRESHNESS_HOURS,
         "last_successful_sync": latest_sync.isoformat() if latest_sync else None,
         "is_sync_running": running_job is not None,
         "running_job_id": running_job.job_id if running_job else None,
