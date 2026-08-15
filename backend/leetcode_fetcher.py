@@ -59,7 +59,7 @@ def extract_leetcode_username(url_or_username: Optional[str]) -> Tuple[Optional[
 GRAPHQL_URL = "https://leetcode.com/graphql"
 
 USER_PROFILE_QUERY = """
-query getUserProfile($username: String!) {
+query userPublicProfile($username: String!) {
   matchedUser(username: $username) {
     username
     profile {
@@ -67,12 +67,7 @@ query getUserProfile($username: String!) {
       userAvatar
       realName
     }
-    userCalendar(username: $username) {
-      activeYears
-      totalActiveDays
-      streak
-    }
-    submitStats {
+    submitStats: submitStatsGlobal {
       acSubmissionNum {
         difficulty
         count
@@ -83,11 +78,13 @@ query getUserProfile($username: String!) {
 """
 
 USER_CONTEST_QUERY = """
-query getUserContest($username: String!) {
+query userContestRankingInfo($username: String!) {
   userContestRanking(username: $username) {
+    attendedContestsCount
     rating
     globalRanking
-    attendedContestsCount
+    totalParticipants
+    topPercentage
   }
   userContestRankingHistory(username: $username) {
     attended
@@ -203,7 +200,8 @@ async def fetch_leetcode_profile(
         # 1. Fetch Profile & Submission Stats
         payload_profile = {
             "query": USER_PROFILE_QUERY,
-            "variables": {"username": username}
+            "variables": {"username": username},
+            "operationName": "userPublicProfile"
         }
 
         for attempt in range(1, retries + 1):
@@ -360,7 +358,8 @@ async def fetch_leetcode_profile(
         try:
             payload_contest = {
                 "query": USER_CONTEST_QUERY,
-                "variables": {"username": username}
+                "variables": {"username": username},
+                "operationName": "userContestRankingInfo"
             }
             res_contest = await client.post(GRAPHQL_URL, json=payload_contest, headers=headers)
             if res_contest.status_code == 200:

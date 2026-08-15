@@ -23,11 +23,11 @@ function parseUtcTime(ts?: string): number {
   return isNaN(time) ? Date.now() : time;
 }
 
-function getSyncState(syncStatus?: string, lastVerifiedAt?: string): SyncState {
+function getSyncState(syncStatus?: string, lastVerifiedAt?: string, totalSolved?: number | null): SyncState {
   if (syncStatus === 'invalid_profile' || syncStatus === 'INVALID_LINK' || syncStatus === 'MISSING_LINK') return 'invalid_profile';
   if (syncStatus === 'syncing') return 'syncing';
-  if (!syncStatus || syncStatus === 'pending' || syncStatus === 'not_started') return 'pending';
-  if (syncStatus === 'success' || syncStatus === 'OK' || syncStatus === 'verified' || syncStatus === 'stale') {
+  if (syncStatus === 'failed' && (totalSolved === null || totalSolved === undefined || totalSolved === 0)) return 'failed';
+  if (syncStatus === 'success' || syncStatus === 'OK' || syncStatus === 'verified' || syncStatus === 'stale' || (totalSolved !== null && totalSolved !== undefined && totalSolved > 0)) {
     // "Stale" = verified more than 24 hours ago
     if (lastVerifiedAt) {
       const age = Date.now() - parseUtcTime(lastVerifiedAt);
@@ -35,6 +35,7 @@ function getSyncState(syncStatus?: string, lastVerifiedAt?: string): SyncState {
     }
     return 'verified';
   }
+  if (!syncStatus || syncStatus === 'pending' || syncStatus === 'not_started') return 'pending';
   if (syncStatus === 'mismatch' || syncStatus === 'data_mismatch') return 'mismatch';
   return 'failed'; // covers "failed", "timeout", "error"
 }
@@ -56,13 +57,14 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
   const [isFlipped, setIsFlipped] = useState(false);
 
   // ── Sync State ──────────────────────────────────────────────────────────────
+  const rawTotal = student.stats?.total_solved ?? student.total_solved;
   const syncStatus = student.stats?.sync_status;
   const lastVerifiedAt = student.stats?.last_verified_at;
-  const state = getSyncState(syncStatus, lastVerifiedAt);
+  const state = getSyncState(syncStatus, lastVerifiedAt, rawTotal);
   const isVerified = state === 'verified' || state === 'stale';
 
   // RULE: Never display stats as 0 unless they were actually verified.
-  const totalSolved = isVerified ? (student.stats?.total_solved ?? 0) : null;
+  const totalSolved = isVerified ? (rawTotal ?? 0) : null;
   const easy        = isVerified ? (student.stats?.easy_solved   ?? 0) : null;
   const medium      = isVerified ? (student.stats?.medium_solved ?? 0) : null;
   const hard        = isVerified ? (student.stats?.hard_solved   ?? 0) : null;

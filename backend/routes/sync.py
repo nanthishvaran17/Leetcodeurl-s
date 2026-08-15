@@ -20,6 +20,8 @@ class TargetedSyncRequest(BaseModel):
     student_ids: List[int]
     triggered_by: Optional[str] = "admin"
 
+@router.post("/full")
+@router.post("/trigger")
 @router.post("/api/sync/full")
 @router.post("/api/sync/trigger")
 async def trigger_full_sync(triggered_by: str = Query("admin"), db: Session = Depends(get_db)):
@@ -33,6 +35,7 @@ async def trigger_full_sync(triggered_by: str = Query("admin"), db: Session = De
     return result
 
 
+@router.post("/stale")
 @router.post("/api/sync/stale")
 async def trigger_stale_sync(triggered_by: str = Query("admin"), db: Session = Depends(get_db)):
     """
@@ -44,6 +47,7 @@ async def trigger_stale_sync(triggered_by: str = Query("admin"), db: Session = D
     return result
 
 
+@router.post("/targeted")
 @router.post("/api/sync/targeted")
 async def trigger_targeted_sync(req: TargetedSyncRequest, db: Session = Depends(get_db)):
     """
@@ -55,6 +59,7 @@ async def trigger_targeted_sync(req: TargetedSyncRequest, db: Session = Depends(
     return result
 
 
+@router.get("/status")
 @router.get("/api/sync/status")
 def get_current_sync_status(db: Session = Depends(get_db)):
     """
@@ -140,6 +145,7 @@ def get_current_sync_status(db: Session = Depends(get_db)):
 
 
 
+@router.get("/jobs/{job_id}")
 @router.get("/api/sync/jobs/{job_id}")
 def get_sync_job_details(job_id: str, db: Session = Depends(get_db)):
     """
@@ -162,6 +168,7 @@ def get_sync_job_details(job_id: str, db: Session = Depends(get_db)):
     }
 
 
+@router.get("/jobs/{job_id}/items")
 @router.get("/api/sync/jobs/{job_id}/items")
 def get_sync_job_items(
     job_id: str, 

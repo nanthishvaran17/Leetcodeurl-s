@@ -56,7 +56,10 @@ def get_rtdb_reference(path: str = "/"):
     """
     Returns a Firebase Realtime Database reference for the given child path.
     """
-    rtdb = initialize_firebase_rtdb()
-    if rtdb:
-        return rtdb.reference(path)
+    try:
+        rtdb = initialize_firebase_rtdb()
+        if rtdb:
+            return rtdb.reference(path, url=RTDB_URL)
+    except Exception:
+        pass
     return None
