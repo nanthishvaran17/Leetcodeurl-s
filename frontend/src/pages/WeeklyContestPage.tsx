@@ -310,6 +310,30 @@ export const WeeklyContestPage: React.FC = () => {
     });
   };
 
+  useEffect(() => {
+    if (editingStudent || deletingStudent || showPreviewModal || showEmailModal) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          if (!isSavingStudent && !isDeletingStudent) {
+            setEditingStudent(null);
+            setDeletingStudent(null);
+            setShowPreviewModal(false);
+            setShowEmailModal(false);
+          }
+        }
+      };
+
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = originalOverflow || 'unset';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [editingStudent, deletingStudent, showPreviewModal, showEmailModal, isSavingStudent, isDeletingStudent]);
+
   const downloadReportFile = (format: string) => {
     if (!selectedSessionId) {
       setNotification({
@@ -1454,10 +1478,18 @@ export const WeeklyContestPage: React.FC = () => {
 
       {/* Viewport-Centered Student Edit Modal */}
       {editingStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
-          <div className="bg-white dark:bg-navy-900 w-full max-w-lg max-h-[90vh] rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col">
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-hidden animate-fade-in"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isSavingStudent) setEditingStudent(null);
+          }}
+        >
+          <div
+            className="bg-white dark:bg-navy-900 w-full max-w-lg max-h-[90vh] rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header */}
-            <div className="p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between">
+            <div className="p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between shrink-0">
               <div className="flex items-center space-x-2.5">
                 <Edit3 className="w-5 h-5 text-indigo-400" />
                 <div>
@@ -1466,10 +1498,14 @@ export const WeeklyContestPage: React.FC = () => {
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setEditingStudent(null)}
-                className="p-1 rounded-xl bg-white/10 hover:bg-white/20 text-white cursor-pointer"
+                title="Close"
+                aria-label="Close"
+                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500 text-white hover:text-white transition-all font-black text-xs flex items-center space-x-1 cursor-pointer"
               >
-                <X className="w-4 h-4" />
+                <span className="text-sm">✕</span>
+                <span>Close</span>
               </button>
             </div>
 
@@ -1553,12 +1589,14 @@ export const WeeklyContestPage: React.FC = () => {
             {/* Footer */}
             <div className="p-4 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between">
               <button
+                type="button"
                 onClick={() => setEditingStudent(null)}
                 className="px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-gray-800 cursor-pointer"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleSaveStudentEdit}
                 disabled={isSavingStudent}
                 className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer disabled:opacity-50"
@@ -1572,8 +1610,16 @@ export const WeeklyContestPage: React.FC = () => {
 
       {/* Viewport-Centered Student Delete Confirmation Modal */}
       {deletingStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
-          <div className="bg-white dark:bg-navy-900 w-full max-w-md max-h-[90vh] rounded-3xl shadow-2xl border border-rose-200 dark:border-rose-900/50 overflow-hidden flex flex-col p-6 space-y-4">
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-hidden animate-fade-in"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isDeletingStudent) setDeletingStudent(null);
+          }}
+        >
+          <div
+            className="bg-white dark:bg-navy-900 w-full max-w-md max-h-[90vh] rounded-3xl shadow-2xl border border-rose-200 dark:border-rose-900/50 overflow-hidden flex flex-col p-6 space-y-4 my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
               <Trash2 className="w-6 h-6" />
             </div>
@@ -1591,12 +1637,14 @@ export const WeeklyContestPage: React.FC = () => {
 
             <div className="flex items-center justify-end space-x-3 pt-2">
               <button
+                type="button"
                 onClick={() => setDeletingStudent(null)}
                 className="px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-gray-800 cursor-pointer"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleConfirmDeleteStudent}
                 disabled={isDeletingStudent}
                 className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer disabled:opacity-50"
