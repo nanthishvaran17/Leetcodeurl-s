@@ -4,6 +4,7 @@ import api from '../services/api';
 import { ReportPreview } from '../components/ReportPreview';
 import { EmailDeliveryTab } from '../components/EmailDeliveryTab';
 import { CertificateManagementModal } from '../components/CertificateManagementModal';
+import { ConfirmDeleteModal, DeleteItemInfo } from '../components/ConfirmDeleteModal';
 
 export const ReportsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'reports' | 'email'>('reports');
@@ -20,6 +21,12 @@ export const ReportsPage: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState<string>('ALL');
   const [selectedOutputScope, setSelectedOutputScope] = useState<string>('COLLEGE');
 
+  // Floating Center Delete Modal & Toast States
+  const [deleteModalItem, setDeleteModalItem] = useState<DeleteItemInfo | null>(null);
+  const [isDeletingSnapshot, setIsDeletingSnapshot] = useState<boolean>(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
   useEffect(() => {
     fetchEmailLogs();
     fetchHodSnapshots();
@@ -30,7 +37,7 @@ export const ReportsPage: React.FC = () => {
       const res = await api.get('/reports/email-logs');
       setEmailLogs(res.data);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to fetch email logs", err);
     }
   };
 
@@ -53,29 +60,47 @@ export const ReportsPage: React.FC = () => {
         created_at: new Date().toISOString(),
         metrics: res.data.metrics || {}
       };
-      alert(res.data.message || "HOD Executive Snapshot captured successfully!");
+      setToastMessage("✓ HOD Executive Snapshot captured successfully!");
+      setTimeout(() => setToastMessage(null), 4000);
       setHodSnapshots(prev => [newSnapshot, ...prev.filter(s => s.snapshot_id !== newSnapshot.snapshot_id)]);
       setSelectedSnapshotPreview(newSnapshot);
       fetchHodSnapshots();
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Failed to generate HOD snapshot.");
+      setToastMessage(`⚠ ${err.response?.data?.detail || "Failed to generate HOD snapshot."}`);
+      setTimeout(() => setToastMessage(null), 5000);
     } finally {
       setIsGeneratingSnapshot(false);
     }
   };
 
-  const handleDeleteHodSnapshot = async (snapshotId: string) => {
-    if (!window.confirm(`Are you sure you want to delete HOD snapshot '${snapshotId}'? This cannot be undone.`)) {
-      return;
-    }
+  const promptDeleteHodSnapshot = (snap: any) => {
+    setDeleteError(null);
+    setDeleteModalItem({
+      id: snap.snapshot_id,
+      title: snap.title || "HOD Executive Snapshot",
+      type: "HOD Snapshot",
+      metrics: `${snap.metrics?.synced_students || 0} / ${snap.metrics?.total_students || 0} Verified • ${(snap.metrics?.total_solved_college || 0).toLocaleString()} Solved`,
+      created_at: new Date(snap.created_at).toLocaleString()
+    });
+  };
+
+  const executeDeleteHodSnapshot = async () => {
+    if (!deleteModalItem) return;
+    setIsDeletingSnapshot(true);
+    setDeleteError(null);
     try {
-      await api.delete(`/reports/hod-snapshots/${snapshotId}`);
-      setHodSnapshots(prev => prev.filter(s => s.snapshot_id !== snapshotId));
-      if (selectedSnapshotPreview?.snapshot_id === snapshotId) {
+      await api.delete(`/reports/hod-snapshots/${deleteModalItem.id}`);
+      setHodSnapshots(prev => prev.filter(s => s.snapshot_id !== deleteModalItem.id));
+      if (selectedSnapshotPreview?.snapshot_id === deleteModalItem.id) {
         setSelectedSnapshotPreview(null);
       }
+      setDeleteModalItem(null);
+      setToastMessage("✓ HOD Snapshot deleted successfully");
+      setTimeout(() => setToastMessage(null), 4000);
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Failed to delete snapshot.");
+      setDeleteError(err.response?.data?.detail || err.message || "Failed to delete snapshot.");
+    } finally {
+      setIsDeletingSnapshot(false);
     }
   };
   const downloadReportFile = async (endpoint: string, filename: string) => {
@@ -549,7 +574,7 @@ export const ReportsPage: React.FC = () => {
                         <FileText className="w-4 h-4" />
                       </button>
                       <button 
-                        onClick={() => handleDeleteHodSnapshot(snap.snapshot_id)}
+                        onClick={() => promptDeleteHodSnapshot(snap)}
                         title="Delete Snapshot"
                         className="p-1.5 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 rounded-lg transition-colors cursor-pointer"
                       >
@@ -914,6 +939,40 @@ export const ReportsPage: React.FC = () => {
           isOpen={showCertModal}
           onClose={() => setShowCertModal(false)}
         />
+      )}
+
+      {/* Premium Floating Center Confirmation Modal */}
+      {deleteModalItem && (
+        <ConfirmDeleteModal
+          isOpen={!!deleteModalItem}
+          item={deleteModalItem}
+          isDeleting={isDeletingSnapshot}
+          errorMessage={deleteError}
+          onConfirm={executeDeleteHodSnapshot}
+          onCancel={() => {
+            if (!isDeletingSnapshot) {
+              setDeleteModalItem(null);
+              setDeleteError(null);
+            }
+          }}
+          onRetry={executeDeleteHodSnapshot}
+        />
+      )}
+
+      {/* Floating Success / Status Toast */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-[10000] animate-slideUp">
+          <div className="px-5 py-3 rounded-2xl bg-slate-900 border border-slate-700 text-white text-xs font-bold shadow-2xl flex items-center space-x-3">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>{toastMessage}</span>
+            <button
+              onClick={() => setToastMessage(null)}
+              className="text-slate-400 hover:text-white text-xs font-bold pl-2 cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
       )}
         </>
       )}
