@@ -309,6 +309,7 @@ export const WeeklyContestPage: React.FC = () => {
   const attendedRows = sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? matrixRows.filter(r => r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'ATTENDED' || r.status === 'PUBLIC').length;
   const notAttendedRows = sessionMetrics?.notAttended ?? sessionMetrics?.notParticipated ?? matrixRows.filter(r => r.participation_status === 'PUBLIC_NOT_ATTENDED' || r.participation_status === 'PENDING' || r.status === 'NOT ATTENDED').length;
   const virtualRows = sessionMetrics?.virtualAttended ?? sessionMetrics?.virtualParticipants ?? matrixRows.filter(r => r.participation_status === 'VIRTUAL_ATTENDED' || r.status === 'VIRTUAL').length;
+  const isVirtualAvailable = sessionMetrics?.virtualDataStatus === 'AVAILABLE' || virtualRows > 0;
   const errorRows = sessionMetrics?.dataErrors ?? sessionMetrics?.failedVerification ?? matrixRows.filter(r => r.participation_status === 'DATA_ERROR').length;
 
   const displaySessions = sessionsList;
@@ -483,16 +484,16 @@ export const WeeklyContestPage: React.FC = () => {
         {syncSummary && (
           <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-navy-950 border border-indigo-200 dark:border-indigo-800 text-xs space-y-2">
             <div className="flex items-center justify-between font-extrabold text-indigo-900 dark:text-indigo-200">
-              <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Global Archive Sync Complete ({syncSummary.timezone})</span>
-              <button onClick={() => setSyncSummary(null)} className="text-gray-400 hover:text-gray-600">✕</button>
+              <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Contest Synchronization Complete</span>
+              <button onClick={() => setSyncSummary(null)} className="text-gray-400 hover:text-gray-600 cursor-pointer">✕</button>
             </div>
             <div className="flex flex-wrap gap-4 text-gray-700 dark:text-gray-300 font-bold">
-              <span>Discovered: <b>{syncSummary.weeklyContestsDiscovered}</b></span>
-              <span>Processed: <b>{syncSummary.processed}</b></span>
-              <span>Validated: <b>{syncSummary.skippedExisting}</b></span>
-              <span>Inserted: <b>{syncSummary.inserted}</b></span>
-              <span>Conflicts: <b>{syncSummary.conflicts}</b></span>
-              <span>Errors: <b className={syncSummary.errors > 0 ? 'text-rose-600' : 'text-emerald-600'}>{syncSummary.errors}</b></span>
+              <span>Contest: <b>{syncSummary.contestName || selectedSessionId}</b></span>
+              <span>Roster: <b>{syncSummary.rosterCount || 300}</b></span>
+              <span>Public Attended: <b className="text-emerald-600">{syncSummary.officialParticipants || 0}</b></span>
+              <span>Virtual Attended: <b className="text-blue-600">{syncSummary.virtualParticipants || 0}</b></span>
+              <span>Not Attended: <b className="text-rose-600">{syncSummary.notParticipated || 0}</b></span>
+              <span>Virtual Status: <b>{syncSummary.virtualDataStatus || 'NOT_AVAILABLE'}</b></span>
             </div>
           </div>
         )}
@@ -506,7 +507,7 @@ export const WeeklyContestPage: React.FC = () => {
                 <button
                   key={dept}
                   onClick={() => setSelectedDeptFilter(dept)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${selectedDeptFilter === dept
+                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${selectedDeptFilter === dept
                       ? 'bg-indigo-600 text-white shadow-md'
                       : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
                     }`}
@@ -525,7 +526,7 @@ export const WeeklyContestPage: React.FC = () => {
                 <button
                   key={yr}
                   onClick={() => setSelectedYearFilter(yr)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${selectedYearFilter === yr
+                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${selectedYearFilter === yr
                       ? 'bg-purple-600 text-white shadow-md'
                       : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
                     }`}
@@ -549,7 +550,7 @@ export const WeeklyContestPage: React.FC = () => {
                 <button
                   key={att.code}
                   onClick={() => toggleAttendanceFilter(att.code)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${selectedAttendanceFilter === att.code
+                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${selectedAttendanceFilter === att.code
                       ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-400'
                       : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
                     }`}
@@ -564,7 +565,7 @@ export const WeeklyContestPage: React.FC = () => {
 
       {/* Interactive Metrics Snapshot Grid (Clickable Cards) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        {/* Card 0: All Roster Count */}
+        {/* Card 0: Filter Roster Count */}
         <button
           onClick={() => setSelectedAttendanceFilter('ALL')}
           className={`p-5 rounded-2xl bg-white dark:bg-navy-900 border text-center transition-all cursor-pointer ${selectedAttendanceFilter === 'ALL'
@@ -615,7 +616,7 @@ export const WeeklyContestPage: React.FC = () => {
           <p className="text-2xl font-black text-rose-700 dark:text-rose-300">{notAttendedRows}</p>
         </button>
 
-        {/* Card 3: Virtual Attended (Clickable) */}
+        {/* Card 3: Virtual Attended (Clickable / NOT AVAILABLE) */}
         <button
           onClick={() => toggleAttendanceFilter('VIRTUAL_ATTENDED')}
           className={`p-5 rounded-2xl bg-blue-500/10 border text-center transition-all cursor-pointer ${selectedAttendanceFilter === 'VIRTUAL_ATTENDED'
@@ -629,7 +630,15 @@ export const WeeklyContestPage: React.FC = () => {
               <span className="text-[9px] font-black bg-blue-600 text-white px-1.5 py-0.5 rounded">ACTIVE</span>
             )}
           </div>
-          <p className="text-2xl font-black text-blue-700 dark:text-blue-300">{virtualRows}</p>
+          {isVirtualAvailable ? (
+            <p className="text-2xl font-black text-blue-700 dark:text-blue-300">{virtualRows}</p>
+          ) : (
+            <div className="pt-1">
+              <span className="inline-block px-2 py-0.5 text-[10px] font-black uppercase rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                NOT AVAILABLE
+              </span>
+            </div>
+          )}
         </button>
 
         {/* Card 4: Data Errors */}
@@ -719,12 +728,13 @@ export const WeeklyContestPage: React.FC = () => {
                   <th className="px-4 py-3 text-center">Q4</th>
                   <th className="px-4 py-3 text-right">Contest Solved</th>
                   <th className="px-4 py-3 text-right">Rank</th>
+                  <th className="px-4 py-3 text-right">Rating</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                 {matrixRows.length === 0 ? (
                   <tr>
-                    <td colSpan={13} className="p-12 text-center text-gray-500 font-bold">
+                    <td colSpan={14} className="p-12 text-center text-gray-500 font-bold">
                       {activeSessionObj?.status === 'SCHEDULED' ? (
                         <div className="py-8 space-y-3 text-center">
                           <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto mb-2">
@@ -740,10 +750,10 @@ export const WeeklyContestPage: React.FC = () => {
                       ) : (
                         <div className="py-6 space-y-2">
                           <p className="text-sm font-bold text-gray-700 dark:text-gray-300">
-                            No contest participation records found for the selected Weekly Contest.
+                            No contest participation records found for the selected filter combination.
                           </p>
                           <p className="text-xs text-gray-400">
-                            Click <span className="font-extrabold text-indigo-500">↻ Fetch Selected Contest</span> above to retrieve or reconcile contest results.
+                            Click <span className="font-extrabold text-indigo-500">↻ Fetch Selected Contest</span> above or reset filters to view all roster students.
                           </p>
                         </div>
                       )}
@@ -776,8 +786,8 @@ export const WeeklyContestPage: React.FC = () => {
                     const renderQ = (val: any) => {
                       if (!isAttended || val === '—' || val === null || val === undefined) return <span className="text-gray-300 dark:text-gray-600 font-normal">—</span>;
                       return (val === 1 || val === '1')
-                        ? <span className="text-emerald-600 dark:text-emerald-400 font-black">1</span>
-                        : <span className="text-rose-400 dark:text-rose-500 font-bold">0</span>;
+                        ? <span className="inline-block w-5 h-5 leading-5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-black text-center">1</span>
+                        : <span className="inline-block w-5 h-5 leading-5 rounded bg-rose-500/10 text-rose-400 dark:text-rose-500 font-bold text-center">0</span>;
                     };
 
                     return (
@@ -807,6 +817,9 @@ export const WeeklyContestPage: React.FC = () => {
                         </td>
                         <td className="px-4 py-2.5 text-right font-mono text-gray-600 dark:text-gray-400">
                           {isAttended ? (r.rank || '—') : '—'}
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-mono font-bold text-amber-600 dark:text-amber-400">
+                          {isAttended ? (r.rating ? Number(r.rating).toFixed(1) : '—') : '—'}
                         </td>
                       </tr>
                     );
