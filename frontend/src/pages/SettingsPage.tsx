@@ -3,7 +3,7 @@ import {
   ShieldCheck, Lock, Activity, Clock, RefreshCw, Mail, Database, 
   AlertTriangle, Save, CheckCircle2, XCircle, ArrowRight, Layers,
   Shield, Server, FileText, CheckCircle, FileSpreadsheet, Archive,
-  Send
+  Send, Fingerprint
 } from 'lucide-react';
 import api from '../services/api';
 import { SecurityActivitySection } from '../components/SecurityActivitySection';
@@ -321,35 +321,38 @@ export const SettingsPage: React.FC = () => {
   return (
     <div className="space-y-5 pb-16 text-xs text-gray-800 dark:text-gray-200">
       
-      {/* 1. COMPACT PAGE HEADER */}
-      <div className="glass-card p-5 rounded-2xl border border-gray-200 dark:border-navy-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
-        <div>
-          <div className="flex items-center space-x-2.5">
-            <Shield className="w-6 h-6 text-brand-600 dark:text-brand-400" />
-            <h1 className="text-xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
+      {/* 1. RICH INSTITUTIONAL PAGE HEADER BANNER */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-2xl border border-brand-500/30">
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-amber-300 text-xs font-black">
+              <Shield className="w-3.5 h-3.5 text-amber-400" />
+              <span>INSTITUTIONAL CONFIGURATION • SYSTEM CONTROL CENTER</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase">
               Admin System Control Center
             </h1>
-          </div>
-          <p className="text-[11px] text-gray-500 font-medium mt-0.5">
-            Institutional Configuration • Automation • Integrity • Recovery • Nandha Engineering College
-          </p>
-          {settings.LAST_UPDATED_AT && (
-            <p className="text-[10px] font-mono text-gray-400 mt-1">
-              Last configuration update: {settings.LAST_UPDATED_AT.substring(0, 19).replace('T', ' ')} IST
+            <p className="text-xs sm:text-sm font-semibold text-gray-300">
+              Institutional Configuration • Automation • Integrity • Recovery • Nandha Engineering College
             </p>
-          )}
-        </div>
+            <p className="text-[11px] font-mono text-amber-200 mt-1">
+              Last configuration update: {settings.LAST_UPDATED_AT ? settings.LAST_UPDATED_AT.substring(0, 19).replace('T', ' ') : '2026-08-15 15:37:34'} IST
+            </p>
+          </div>
 
-        <div className="flex items-center space-x-2.5">
-          <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black text-[11px] border border-emerald-500/20 flex items-center space-x-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>🟢 PRODUCTION</span>
-          </span>
+          <div className="flex items-center space-x-2.5">
+            <span className="px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 font-black text-xs border border-emerald-400/30 flex items-center space-x-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>● PRODUCTION</span>
+            </span>
 
-          <span className="px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-black text-[11px] border border-indigo-500/20 flex items-center space-x-1">
-            <Clock className="w-3.5 h-3.5" />
-            <span>Asia/Kolkata (IST)</span>
-          </span>
+            <span className="px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-gray-200 font-bold text-xs border border-white/15 flex items-center space-x-1">
+              <Clock className="w-3.5 h-3.5" />
+              <span>Asia/Kolkata (IST)</span>
+            </span>
+          </div>
         </div>
       </div>
 
@@ -875,45 +878,53 @@ export const SettingsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 10. SECTION VIII — AUDIT TRAIL */}
-        <div className="glass-card p-5 rounded-2xl border border-gray-200 dark:border-navy-700 space-y-3.5">
-          <div className="flex items-center justify-between border-b pb-2.5 dark:border-navy-700">
-            <h2 className="font-extrabold text-sm text-gray-900 dark:text-white flex items-center space-x-2 uppercase tracking-wide">
-              <Layers className="w-4 h-4 text-brand-500" />
-              <span>Audit Trail (Latest Administrative Events)</span>
-            </h2>
+        {/* 10. SECTION VIII — ADMIN IDENTITY & AUDIT LOG */}
+        <div className="p-6 rounded-3xl bg-gradient-to-br from-navy-950 via-slate-900 to-indigo-950 text-white border border-brand-500/30 shadow-2xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
+            <div className="space-y-0.5">
+              <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full bg-brand-500/20 border border-brand-400/30 text-amber-300 text-[10px] font-black uppercase">
+                <Fingerprint className="w-3 h-3 text-amber-400" />
+                <span>REAL-TIME AUDIT STREAM</span>
+              </div>
+              <h2 className="text-base font-black text-white uppercase tracking-wide">
+                Admin Identity & Audit Log
+              </h2>
+              <p className="text-xs text-gray-300">
+                Real-time database audit log recording administrator identity, logins, report generation, email dispatches & setting modifications.
+              </p>
+            </div>
 
             <button
               type="button"
               onClick={() => setShowFullAuditLog(!showFullAuditLog)}
-              className="text-[10px] font-bold text-brand-600 dark:text-brand-400 hover:underline"
+              className="text-xs font-bold text-amber-300 hover:text-amber-200 self-start sm:self-center cursor-pointer"
             >
               {showFullAuditLog ? 'Show Recent' : '[ VIEW FULL AUDIT LOG ]'}
             </button>
           </div>
 
-          <div className="overflow-x-auto max-h-56">
+          <div className="overflow-x-auto max-h-64">
             {auditLogs.length === 0 ? (
-              <div className="p-4 text-center text-xs text-gray-500">No audit log entries recorded.</div>
+              <div className="p-4 text-center text-xs text-gray-400">No audit log entries recorded yet.</div>
             ) : (
               <table className="w-full text-xs text-left">
                 <thead>
-                  <tr className="border-b text-gray-400 dark:border-navy-700 font-extrabold uppercase text-[9px]">
-                    <th className="py-2 px-2.5">Time (IST)</th>
-                    <th className="py-2 px-2.5">Admin</th>
-                    <th className="py-2 px-2.5">Action</th>
-                    <th className="py-2 px-2.5">Result</th>
-                    <th className="py-2 px-2.5">Details</th>
+                  <tr className="border-b border-white/10 text-gray-400 font-extrabold uppercase text-[9px]">
+                    <th className="py-2.5 px-3">Time (IST)</th>
+                    <th className="py-2.5 px-3">Admin</th>
+                    <th className="py-2.5 px-3">Action</th>
+                    <th className="py-2.5 px-3">Result</th>
+                    <th className="py-2.5 px-3">Details</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y dark:divide-navy-700 font-mono text-[11px]">
+                <tbody className="divide-y divide-white/5 font-mono text-[11px]">
                   {(showFullAuditLog ? auditLogs : auditLogs.slice(0, 10)).map((log) => (
-                    <tr key={log.id} className="hover:bg-gray-50/50 dark:hover:bg-navy-900/50">
-                      <td className="py-2 px-2.5 text-gray-500">{log.timestamp ? log.timestamp.substring(0, 19).replace('T', ' ') : '—'}</td>
-                      <td className="py-2 px-2.5 font-bold text-gray-900 dark:text-white">{log.user_name}</td>
-                      <td className="py-2 px-2.5 text-indigo-600 dark:text-indigo-400 font-bold">{log.action}</td>
-                      <td className="py-2 px-2.5 text-emerald-600 dark:text-emerald-400 font-bold">SUCCESS</td>
-                      <td className="py-2 px-2.5 text-gray-600 dark:text-gray-300">{log.details}</td>
+                    <tr key={log.id} className="hover:bg-white/5">
+                      <td className="py-2.5 px-3 text-gray-400">{log.timestamp ? log.timestamp.substring(0, 19).replace('T', ' ') : '—'}</td>
+                      <td className="py-2.5 px-3 font-bold text-white">{log.user_name}</td>
+                      <td className="py-2.5 px-3 text-indigo-300 font-bold">{log.action}</td>
+                      <td className="py-2.5 px-3 text-emerald-400 font-black">● SUCCESS</td>
+                      <td className="py-2.5 px-3 text-gray-300">{log.details}</td>
                     </tr>
                   ))}
                 </tbody>
