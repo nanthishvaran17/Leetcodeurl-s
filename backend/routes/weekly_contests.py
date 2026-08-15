@@ -315,7 +315,7 @@ def get_normalized_contest_data(
     virt_map = {v.student_id: v for v in virt_results}
 
     is_session_finalized = session.status in ("COMPLETED", "FINALIZED")
-    is_session_in_progress = session.status in ("LIVE", "SYNCING", "UPCOMING")
+    is_upcoming_or_in_progress = session.status in ("LIVE", "SYNCING", "UPCOMING", "SCHEDULED")
 
     full_roster_matrix = []
     for s in students:
@@ -360,6 +360,10 @@ def get_normalized_contest_data(
             resolved_status = "DATA_ERROR"
             fetch_st = "FAILED"
             err_re = getattr(p_res, 'error_reason', 'API fetch error or invalid username')
+        elif is_upcoming_or_in_progress:
+            # Before or during a contest, absence of attendance record is NOT proof of absence
+            resolved_status = "DATA_PENDING"
+            fetch_st = "PENDING"
         elif p_res and p_res.participation_status in ("DATA_PENDING", "PENDING"):
             resolved_status = "DATA_PENDING"
             fetch_st = "PENDING"
@@ -367,13 +371,8 @@ def get_normalized_contest_data(
             resolved_status = "NOT_ATTENDED"
             fetch_st = "SUCCESS"
         else:
-            # Source hasn't recorded data yet for this student
-            if is_session_in_progress:
-                resolved_status = "DATA_PENDING"
-                fetch_st = "PENDING"
-            else:
-                resolved_status = "NOT_ATTENDED"
-                fetch_st = "SUCCESS"
+            resolved_status = "NOT_ATTENDED"
+            fetch_st = "SUCCESS"
 
         # Mandatory Attendance Evidence Record (Addendum 3)
         now_iso = datetime.datetime.utcnow().isoformat()
