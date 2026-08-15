@@ -96,18 +96,30 @@ export const CertificateManagementModal: React.FC<{
 
   useEffect(() => {
     if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          onClose();
+        }
+      };
+
+      window.addEventListener('keydown', handleKeyDown);
+
       fetchStudents();
       fetchSignatures();
       fetchHistory();
       if (preselectedStudent) {
         setSelectedStudent(preselectedStudent);
       }
+
       return () => {
-        document.body.style.overflow = '';
+        document.body.style.overflow = originalOverflow || 'unset';
+        window.removeEventListener('keydown', handleKeyDown);
       };
     }
-  }, [isOpen, preselectedStudent]);
+  }, [isOpen, preselectedStudent, onClose]);
 
   const fetchStudents = async () => {
     try {
@@ -201,17 +213,17 @@ export const CertificateManagementModal: React.FC<{
     setIsUploadingSig(true);
     try {
       const formData = new FormData();
-      formData.append('signature_type', uploadType);
-      formData.append('file', uploadFile);
+      formData.append("file", uploadFile);
+      formData.append("signature_type", uploadType);
 
       await api.post('/signatures/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      alert(`Successfully saved authorized signature for ${uploadType}!`);
       setUploadFile(null);
       setUploadPreview(null);
       await fetchSignatures();
+      alert("Signature uploaded successfully!");
     } catch (err: any) {
       alert(err.response?.data?.detail || "Failed to upload signature.");
     } finally {
@@ -247,61 +259,77 @@ export const CertificateManagementModal: React.FC<{
   const currentHodSig = (selectedStudent?.department?.code || '').toUpperCase().includes('IOT') ? iotHodSig : csHodSig;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm overflow-hidden">
-      <div className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl max-w-5xl w-full max-h-[88vh] flex flex-col overflow-hidden animate-scaleUp my-auto">
+    <div
+      className="fixed inset-0 z-[9999] flex items-start justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-hidden animate-fade-in"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl max-w-6xl w-full max-h-[calc(100vh-48px)] flex flex-col overflow-hidden animate-scaleUp mt-2 sm:mt-4"
+        onClick={(e) => e.stopPropagation()}
+      >
 
-        {/* Modal Header */}
-        <div className="px-5 py-3.5 border-b border-slate-800 flex items-center justify-between bg-slate-950/80 shrink-0">
+        {/* Modal Header — Fixed / Sticky at top */}
+        <div className="sticky top-0 z-30 px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/95 backdrop-blur-md shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
-              <Award className="w-4 h-4" />
+            <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              <Award className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm sm:text-base font-black text-white flex items-center space-x-2">
+              <h3 className="text-base font-black text-white flex items-center space-x-2.5">
                 <span>Certificate of Excellence — Institutional Issuance Hub</span>
-                <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                   PRINT READY A4
                 </span>
               </h3>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-xs text-slate-400 font-semibold mt-0.5">
                 Nandha Engineering College (Autonomous) • Official Academic Credential System
               </p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <div className="flex bg-slate-800 p-1 rounded-xl border border-slate-700 text-xs font-bold">
+          <div className="flex items-center space-x-3">
+            <div className="flex bg-slate-800/80 p-1 rounded-xl border border-slate-700 text-xs font-bold">
               <button
+                type="button"
                 onClick={() => setActiveTab('generate')}
-                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${activeTab === 'generate' ? 'bg-amber-500 text-slate-950 font-black shadow' : 'text-slate-400 hover:text-white'}`}
+                className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${activeTab === 'generate' ? 'bg-amber-500 text-slate-950 font-black shadow' : 'text-slate-400 hover:text-white'}`}
               >
                 Issue Certificate
               </button>
               <button
+                type="button"
                 onClick={() => setActiveTab('signatures')}
-                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${activeTab === 'signatures' ? 'bg-amber-500 text-slate-950 font-black shadow' : 'text-slate-400 hover:text-white'}`}
+                className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${activeTab === 'signatures' ? 'bg-amber-500 text-slate-950 font-black shadow' : 'text-slate-400 hover:text-white'}`}
               >
                 Signatures
               </button>
               <button
+                type="button"
                 onClick={() => setActiveTab('history')}
-                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${activeTab === 'history' ? 'bg-amber-500 text-slate-950 font-black shadow' : 'text-slate-400 hover:text-white'}`}
+                className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${activeTab === 'history' ? 'bg-amber-500 text-slate-950 font-black shadow' : 'text-slate-400 hover:text-white'}`}
               >
                 Issued Registry ({history.length})
               </button>
             </div>
 
+            {/* Prominent High-Visibility Close Button */}
             <button
+              type="button"
               onClick={onClose}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors ml-2 cursor-pointer"
+              title="Close"
+              aria-label="Close"
+              className="px-3.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white border border-rose-500/30 transition-all font-black text-xs flex items-center space-x-1.5 cursor-pointer shadow-sm ml-2"
             >
-              ✕
+              <span className="text-base leading-none font-black">✕</span>
+              <span>Close</span>
             </button>
           </div>
         </div>
 
-        {/* Modal Body */}
-        <div className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4">
+        {/* Modal Body — Internal Scroll */}
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-6 overscroll-contain">
 
           {/* TAB 1: GENERATE & PREVIEW CERTIFICATE */}
           {activeTab === 'generate' && (
