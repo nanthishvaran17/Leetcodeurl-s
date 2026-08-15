@@ -196,7 +196,7 @@ def main():
     print(f"\nDone. {len(rows)} checked, {mismatches} mismatches, {errors} errors.")
     print(f"Full results written to: {out_path}")
     if mismatches or errors:
-        print("\n⚠️  Do NOT treat the DB / dashboard as verified until these rows are resolved.")
+        print("\n[WARNING] Do NOT treat the DB / dashboard as verified until these rows are resolved.")
 
 
 if __name__ == "__main__":
