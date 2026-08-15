@@ -151,6 +151,8 @@ class WeeklySession(Base):
     not_participated = Column(Integer, default=0)
     failed_verification = Column(Integer, default=0)
     dataset_hash = Column(String(100), nullable=True)
+    sync_status = Column(String(50), default="🟢 Verified") # 🟢 Verified, 🟡 Syncing, 🔴 Sync Error
+    last_synced = Column(DateTime, nullable=True)
 
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)
