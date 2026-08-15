@@ -298,7 +298,7 @@ export const ReportsPage: React.FC = () => {
               className="flex items-center space-x-2 px-5 py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-2xl text-xs font-black shadow-xl shadow-amber-500/30 transition-all transform hover:scale-105 cursor-pointer"
             >
               <Award className="w-4 h-4" />
-              <span>🎓 Certificate of Excellence Hub</span>
+              <span>Certificate of Excellence Hub</span>
             </button>
 
             <button
@@ -306,7 +306,7 @@ export const ReportsPage: React.FC = () => {
               className="flex items-center space-x-2.5 px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-2xl text-xs font-black shadow-xl shadow-emerald-500/30 transition-all transform hover:scale-105 cursor-pointer"
             >
               <Mail className="w-4 h-4" />
-              <span>📧 Open Email Delivery Center</span>
+              <span>Email Delivery Center</span>
             </button>
           </div>
         </div>
@@ -316,26 +316,26 @@ export const ReportsPage: React.FC = () => {
       <div className="flex items-center space-x-2 bg-gray-100 dark:bg-navy-900 p-1.5 rounded-2xl max-w-fit border border-gray-200 dark:border-gray-800">
         <button
           onClick={() => setActiveTab('reports')}
-          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all ${
+          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeTab === 'reports'
               ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
           }`}
         >
           <FileSpreadsheet className="w-4 h-4" />
-          <span>📊 Reports & Downloads</span>
+          <span>Reports & Analytics</span>
         </button>
 
         <button
           onClick={() => setActiveTab('email')}
-          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all ${
+          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeTab === 'email'
               ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
           }`}
         >
           <Mail className="w-4 h-4" />
-          <span>📧 Automated Email Delivery</span>
+          <span>Automated Email Delivery</span>
         </button>
       </div>
 
@@ -352,7 +352,7 @@ export const ReportsPage: React.FC = () => {
               <Layers className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-gray-900 dark:text-white">📊 Universal Reports & Analytics</h2>
+              <h2 className="text-xl font-black text-gray-900 dark:text-white">Universal Reports & Analytics</h2>
               <p className="text-xs text-gray-500 dark:text-gray-400 font-bold">
                 Central Report Engine: Generate standardized datasets viewable via <b>Preview</b>, <b>Excel (.xlsx)</b>, <b>PDF (.pdf)</b>, <b>Word (.docx)</b>, and <b>CSV (.csv)</b>.
               </p>
@@ -450,10 +450,10 @@ export const ReportsPage: React.FC = () => {
           <button
             onClick={() => handleGenerateUniversalReport()}
             disabled={isGeneratingUniversal}
-            className="flex items-center space-x-2.5 px-8 py-3.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 text-white font-black text-sm rounded-2xl shadow-xl shadow-blue-500/25 transition-all transform hover:scale-105"
+            className="flex items-center space-x-2.5 px-8 py-3.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 text-white font-black text-sm rounded-2xl shadow-xl shadow-blue-500/25 transition-all transform hover:scale-105 cursor-pointer"
           >
             <Sparkles className={`w-4 h-4 ${isGeneratingUniversal ? 'animate-spin' : ''}`} />
-            <span>{isGeneratingUniversal ? 'Building Dataset...' : '⚡ Generate Preview'}</span>
+            <span>{isGeneratingUniversal ? 'Building Dataset...' : 'Generate Preview'}</span>
           </button>
         </div>
       </div>
@@ -478,10 +478,10 @@ export const ReportsPage: React.FC = () => {
           <button
             onClick={handleGenerateHodSnapshot}
             disabled={isGeneratingSnapshot}
-            className="flex items-center space-x-2 px-5 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 text-white rounded-2xl text-xs font-black shadow-lg shadow-purple-500/30 transition-all transform hover:scale-105"
+            className="flex items-center space-x-2 px-5 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 text-white rounded-2xl text-xs font-black shadow-lg shadow-purple-500/30 transition-all transform hover:scale-105 cursor-pointer"
           >
             <Camera className={`w-4 h-4 ${isGeneratingSnapshot ? 'animate-pulse' : ''}`} />
-            <span>{isGeneratingSnapshot ? 'Generating Snapshot...' : '📸 Capture New Snapshot'}</span>
+            <span>{isGeneratingSnapshot ? 'Generating Snapshot...' : 'Capture New Snapshot'}</span>
           </button>
         </div>
 

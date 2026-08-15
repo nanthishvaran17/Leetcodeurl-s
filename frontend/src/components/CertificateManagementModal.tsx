@@ -16,7 +16,8 @@ import {
   Building2,
   Sparkles,
   Layers,
-  Check
+  Check,
+  AlertTriangle
 } from 'lucide-react';
 import api from '../services/api';
 import { syncCertificateToFirestoreWeb } from '../services/firebaseSync';

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layers, Users, Trophy, CheckCircle2, RefreshCw, LayoutGrid, List, ChevronDown } from 'lucide-react';
+import { Layers, Users, Trophy, CheckCircle2, RefreshCw, LayoutGrid, List, ChevronDown, Building2, GraduationCap } from 'lucide-react';
 import api from '../services/api';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { StudentFlipCard } from '../components/StudentFlipCard';
@@ -16,15 +16,14 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   const [yearLevel, setYearLevel] = useState<string>('ALL');
   const [sortBy, setSortBy] = useState<string>('top_solved');
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
-  const [contestMode, setContestMode] = useState<string>('ALL');
   const [students, setStudents] = useState<StudentData[]>(CANONICAL_ROSTER);
   const [displayCount, setDisplayCount] = useState<number>(32);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [solvedFilter, setSolvedFilter] = useState<string>('ALL');
 
-
   useEffect(() => {
     fetchDepartments();
+    fetchStudents();
   }, []);
 
   const fetchDepartments = async () => {
@@ -36,51 +35,80 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
     }
   };
 
-  useEffect(() => {
-    fetchFilteredStudents();
-  }, [selectedDept, yearLevel]);
-
-  const fetchFilteredStudents = async () => {
-    let loadedApi = false;
+  const fetchStudents = async () => {
     try {
-      let url = '/students';
-      const params = [];
-      if (selectedDept) {
-        params.push(`dept_id=${selectedDept.id}`);
-      }
-      if (yearLevel !== 'ALL') {
-        params.push(`year_level=${yearLevel}`);
-      }
-      if (params.length > 0) {
-        url += '?' + params.join('&');
-      }
-
-      const res = await api.get(url);
-      if (res.data && Array.isArray(res.data)) {
+      const res = await api.get('/students');
+      if (res.data && res.data.length > 0) {
         setStudents(res.data);
       }
     } catch (err) {
-      console.warn("Department REST API request delayed or offline", err);
+      console.error(err);
     }
   };
-
-
 
   const handleRefreshAllStats = async () => {
     setIsRefreshing(true);
     try {
-      const res = await api.post('/students/refresh-all');
-      alert(res.data?.message || "Live stats refresh started in background for all students!");
-
-      setTimeout(() => {
-        fetchFilteredStudents();
-      }, 1500);
-    } catch (err: any) {
-      alert(err.response?.data?.message || err.response?.data?.detail || "Live stats refresh initiated in background!");
+      await api.post('/students/sync-all');
+      await fetchStudents();
+    } catch (err) {
+      console.error("Manual sync error:", err);
     } finally {
       setIsRefreshing(false);
     }
   };
+
+  // Filter pipeline
+  const getFilteredStudents = () => {
+    return students.filter(student => {
+      // 1. Department Filter
+      if (selectedDept && student.department?.code !== selectedDept.code) {
+        return false;
+      }
+      // 2. Year Level Filter (Determined by reg_no or academic_year)
+      if (yearLevel !== 'ALL') {
+        const reg = student.reg_no.toUpperCase();
+        if (yearLevel === 'II' && !reg.startsWith('732224')) return false;
+        if (yearLevel === 'III' && !reg.startsWith('732223')) return false;
+        if (yearLevel === 'IV' && !reg.startsWith('732222')) return false;
+      }
+      return true;
+    });
+  };
+
+  // Sort pipeline
+  const getSortedStudents = () => {
+    const filtered = getFilteredStudents();
+    return [...filtered].sort((a, b) => {
+      const aSolved = a.stats?.total_solved ?? a.total_solved ?? 0;
+      const bSolved = b.stats?.total_solved ?? b.total_solved ?? 0;
+      const aRating = a.stats?.contest_rating ?? 0;
+      const bRating = b.stats?.contest_rating ?? 0;
+      const aConsistency = a.consistency_score ?? 0;
+      const bConsistency = b.consistency_score ?? 0;
+
+      if (sortBy === 'top_solved') return bSolved - aSolved;
+      if (sortBy === 'top_rating') return bRating - aRating;
+      if (sortBy === 'consistency') return bConsistency - aConsistency;
+      if (sortBy === 'name') return a.name.localeCompare(b.name);
+      return 0;
+    });
+  };
+
+  const getFilteredSolvedStudents = (list: StudentData[]) => {
+    if (solvedFilter === 'ALL') return list;
+    return list.filter(student => {
+      const solved = student.stats?.total_solved ?? student.total_solved ?? 0;
+      if (solvedFilter === 'above_500') return solved > 500;
+      if (solvedFilter === '250_500') return solved >= 250 && solved <= 500;
+      if (solvedFilter === '101_250') return solved >= 101 && solved <= 250;
+      if (solvedFilter === 'less_100') return solved > 0 && solved <= 100;
+      if (solvedFilter === 'not_started') return solved === 0;
+      return true;
+    });
+  };
+
+  const finalStudentList = getFilteredSolvedStudents(getSortedStudents());
 
   const handleDeleteStudent = async (student: StudentData) => {
     if (!confirm(`Are you sure you want to delete student "${student.name}" (${student.reg_no})? This action cannot be undone.`)) {
@@ -89,57 +117,14 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
     try {
       await api.delete(`/students/${student.id}`);
       alert(`Student "${student.name}" deleted successfully!`);
-      fetchFilteredStudents();
+      fetchStudents();
     } catch (err: any) {
       alert(err.response?.data?.detail || "Failed to delete student record.");
     }
   };
 
-  const getSortedStudents = () => {
-    let sorted = [...students];
-
-    // Filter by contest participation mode (Public Live vs Virtual vs Not Started)
-    if (contestMode === 'PUBLIC') {
-      sorted = sorted.filter(s => (s.stats?.total_solved || 0) > 0 && (s.id as number) % 4 !== 0);
-    } else if (contestMode === 'VIRTUAL') {
-      sorted = sorted.filter(s => (s.stats?.total_solved || 0) > 0 && (s.id as number) % 4 === 0);
-    } else if (contestMode === 'NOT_STARTED') {
-      sorted = sorted.filter(s => (s.stats?.total_solved || 0) === 0);
-    }
-
-    switch (sortBy) {
-      case 'top_solved':
-        return sorted.sort((a, b) => (b.stats?.total_solved || 0) - (a.stats?.total_solved || 0));
-      case 'low_solved':
-        return sorted.sort((a, b) => (a.stats?.total_solved || 0) - (b.stats?.total_solved || 0));
-      case 'name_asc':
-        return sorted.sort((a, b) => a.name.localeCompare(b.name));
-      case 'name_desc':
-        return sorted.sort((a, b) => b.name.localeCompare(a.name));
-      case 'streak':
-        return sorted.sort((a, b) => (b.streak_count || 0) - (a.streak_count || 0));
-      case 'rating':
-        return sorted.sort((a, b) => (b.stats?.contest_rating || 0) - (a.stats?.contest_rating || 0));
-      default:
-        return sorted;
-    }
-  };
-
-  const getFilteredSolvedStudents = (list: StudentData[]) => {
-    switch (solvedFilter) {
-      case 'above_500':  return list.filter(s => (s.stats?.total_solved || 0) > 500);
-      case '250_500':    return list.filter(s => { const t = s.stats?.total_solved || 0; return t >= 250 && t <= 500; });
-      case '101_250':    return list.filter(s => { const t = s.stats?.total_solved || 0; return t >= 101 && t < 250; });
-      case 'less_100':   return list.filter(s => { const t = s.stats?.total_solved || 0; return t > 0 && t < 100; });
-      case 'not_started':return list.filter(s => !s.stats || s.stats.total_solved === 0);
-      default:           return list;
-    }
-  };
-
-  const sortedList = getFilteredSolvedStudents(getSortedStudents());
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pb-10 animate-fade-in">
       
       {/* Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-2xl border border-brand-500/30">
@@ -166,35 +151,35 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
             <div className="flex items-center space-x-1 p-1.5 bg-white/10 rounded-2xl border border-white/20 backdrop-blur-md">
               <button
                 onClick={() => setViewMode('cards')}
-                className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
                   viewMode === 'cards'
                     ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/40'
                     : 'text-gray-300 hover:text-white'
                 }`}
               >
                 <LayoutGrid className="w-4 h-4" />
-                <span>🎴 3D Flip Cards</span>
+                <span>Card Grid</span>
               </button>
 
               <button
                 onClick={() => setViewMode('table')}
-                className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
                   viewMode === 'table'
                     ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/40'
                     : 'text-gray-300 hover:text-white'
                 }`}
               >
                 <List className="w-4 h-4" />
-                <span>📋 Table View</span>
+                <span>Roster Table</span>
               </button>
             </div>
             <button
               onClick={handleRefreshAllStats}
               disabled={isRefreshing}
-              className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 disabled:opacity-50 text-white rounded-2xl text-xs font-bold shadow-lg shadow-brand-600/30 transition-all"
+              className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 disabled:opacity-50 text-white rounded-2xl text-xs font-bold shadow-lg shadow-brand-600/30 transition-all cursor-pointer"
             >
               <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              <span>{isRefreshing ? 'Fetching Live Stats...' : '🔄 Fetch Live Stats for All Students'}</span>
+              <span>{isRefreshing ? 'Syncing Roster...' : 'Sync Live Stats'}</span>
             </button>
           </div>
         </div>
@@ -209,26 +194,28 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           <div className="flex flex-wrap gap-2.5">
             <button
               onClick={() => setSelectedDept(null)}
-              className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all ${
+              className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center space-x-2 cursor-pointer ${
                 !selectedDept
                   ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/30 scale-[1.02]'
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
               }`}
             >
-              🏢 All Departments (Cyber Security & IoT)
+              <Building2 className="w-3.5 h-3.5" />
+              <span>All Departments (Cyber Security & IoT)</span>
             </button>
 
             {departments.map((dept) => (
               <button
                 key={dept.id}
                 onClick={() => setSelectedDept(dept)}
-                className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all ${
+                className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center space-x-2 cursor-pointer ${
                   selectedDept?.id === dept.id
                     ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/30 scale-[1.02]'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
                 }`}
               >
-                🏢 {dept.name}
+                <Building2 className="w-3.5 h-3.5" />
+                <span>{dept.name}</span>
               </button>
             ))}
           </div>
@@ -247,13 +234,14 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
               <button
                 key={yr.id}
                 onClick={() => setYearLevel(yr.id)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer ${
                   yearLevel === yr.id
                     ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
                 }`}
               >
-                🎓 {yr.label}
+                <GraduationCap className="w-3.5 h-3.5" />
+                <span>{yr.label}</span>
               </button>
             ))}
           </div>
@@ -336,21 +324,21 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-extrabold text-sm text-gray-900 dark:text-white">
-            {selectedDept ? selectedDept.name : 'All Departments (Cyber Security & IoT)'} • {yearLevel === 'ALL' ? 'All Years' : `${yearLevel} Year`}{solvedFilter !== 'ALL' ? ` • ${({'above_500':'Above 500','250_500':'250–500','101_250':'101–250','less_100':'<100','not_started':'Not Started'}[solvedFilter] ?? '')} Solved` : ''} ({sortedList.length} Students)
+            {selectedDept ? selectedDept.name : 'All Departments (Cyber Security & IoT)'} • {yearLevel === 'ALL' ? 'All Years' : `${yearLevel} Year`}{solvedFilter !== 'ALL' ? ` • ${({'above_500':'Above 500','250_500':'250–500','101_250':'101–250','less_100':'<100','not_started':'Not Started'}[solvedFilter] ?? '')} Solved` : ''} ({finalStudentList.length} Students)
           </h3>
         </div>
 
         {viewMode === 'table' ? (
           <LeaderboardTable
-            students={sortedList}
+            students={finalStudentList}
             onSelectStudent={onSelectStudent}
-            onRefreshStudent={() => fetchFilteredStudents()}
+            onRefreshStudent={() => fetchStudents()}
             onDeleteStudent={handleDeleteStudent}
           />
         ) : (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sortedList.slice(0, displayCount).map((st) => (
+              {finalStudentList.slice(0, displayCount).map((st) => (
                 <StudentFlipCard
                   key={st.id}
                   student={st}
@@ -360,23 +348,23 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
               ))}
             </div>
 
-            {displayCount < sortedList.length && (
+            {displayCount < finalStudentList.length && (
               <div className="flex flex-col items-center justify-center pt-4 space-y-2">
                 <p className="text-xs text-gray-500 font-semibold">
-                  Showing <span className="font-extrabold text-brand-600 dark:text-brand-400">{Math.min(displayCount, sortedList.length)}</span> of <span className="font-extrabold text-gray-900 dark:text-white">{sortedList.length}</span> Students
+                  Showing <span className="font-extrabold text-brand-600 dark:text-brand-400">{Math.min(displayCount, finalStudentList.length)}</span> of <span className="font-extrabold text-gray-900 dark:text-white">{finalStudentList.length}</span> Students
                 </p>
                 <div className="flex items-center space-x-3">
                   <button
                     onClick={() => setDisplayCount(prev => prev + 32)}
-                    className="px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-black text-xs shadow-xl shadow-brand-600/30 transition-all hover:scale-105"
+                    className="px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-black text-xs shadow-xl shadow-brand-600/30 transition-all hover:scale-105 cursor-pointer"
                   >
-                    <span>👇 Load More Students (+32)</span>
+                    <span>Load More (+32)</span>
                   </button>
                   <button
-                    onClick={() => setDisplayCount(sortedList.length)}
-                    className="px-5 py-3 rounded-2xl glass-card hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold text-xs border border-gray-200 dark:border-gray-700 transition-all"
+                    onClick={() => setDisplayCount(finalStudentList.length)}
+                    className="px-5 py-3 rounded-2xl glass-card hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold text-xs border border-gray-200 dark:border-gray-700 transition-all cursor-pointer"
                   >
-                    Show All {sortedList.length} Students
+                    Show All {finalStudentList.length} Students
                   </button>
                 </div>
               </div>

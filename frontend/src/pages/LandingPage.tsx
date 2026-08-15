@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CollegeLogo } from '../components/CollegeLogo';
-import { Shield, ArrowRight, Trophy, Users, Layers, Activity, Flame, Star, LayoutGrid, List, RefreshCw, CheckCircle2, Clock, AlertCircle, ChevronDown } from 'lucide-react';
+import { Shield, ArrowRight, Trophy, Users, Layers, Activity, Flame, Star, LayoutGrid, List, RefreshCw, CheckCircle2, Clock, AlertCircle, ChevronDown, Building2, GraduationCap } from 'lucide-react';
 import { CountdownTimer } from '../components/CountdownTimer';
 import { StudentFlipCard } from '../components/StudentFlipCard';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
@@ -444,25 +444,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="flex items-center space-x-1 p-1 bg-gray-100 dark:bg-gray-800/80 rounded-2xl border border-gray-200 dark:border-gray-700">
             <button
               onClick={() => setViewMode('cards')}
-              className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 viewMode === 'cards'
                   ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
               }`}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
-              <span>🎴 3D Flip Cards</span>
+              <span>Card Grid</span>
             </button>
             <button
               onClick={() => setViewMode('table')}
-              className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 viewMode === 'table'
                   ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
               }`}
             >
               <List className="w-3.5 h-3.5" />
-              <span>📋 Table View</span>
+              <span>Roster Table</span>
             </button>
           </div>
         </div>
@@ -473,25 +473,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="flex flex-wrap gap-2.5">
             <button
               onClick={() => setSelectedDept(null)}
-              className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all ${
+              className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center space-x-2 cursor-pointer ${
                 !selectedDept
                   ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/30 scale-[1.02]'
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
               }`}
             >
-              🏢 All Departments (Cyber Security & IoT)
+              <Building2 className="w-3.5 h-3.5" />
+              <span>All Departments (Cyber Security & IoT)</span>
             </button>
             {departments.map((dept) => (
               <button
                 key={dept.id}
                 onClick={() => setSelectedDept(dept)}
-                className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all ${
+                className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center space-x-2 cursor-pointer ${
                   selectedDept?.id === dept.id
                     ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/30 scale-[1.02]'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
                 }`}
               >
-                🏢 {dept.name}
+                <Building2 className="w-3.5 h-3.5" />
+                <span>{dept.name}</span>
               </button>
             ))}
           </div>
@@ -510,13 +512,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <button
                 key={yr.id}
                 onClick={() => setYearLevel(yr.id)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer ${
                   yearLevel === yr.id
                     ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
                 }`}
               >
-                🎓 {yr.label}
+                <GraduationCap className="w-3.5 h-3.5" />
+                <span>{yr.label}</span>
               </button>
             ))}
           </div>
