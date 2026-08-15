@@ -323,57 +323,100 @@ def generate_student_certificate(
     story.append(Spacer(1, 14))
 
     # ─── BOTTOM 3-COLUMN LAYOUT: Left (Principal), Center (QR + Verification), Right (HOD) ───
-    qr_element = Image(qr_path, width=0.9*inch, height=0.9*inch)
-    
-    # Check for uploaded physical signature images
-    principal_img_block = ""
+    # 1. Left Subtable: Principal Signature Image + Line
+    principal_img_cell = None
     if principal_sig and principal_sig.image_path and os.path.exists(principal_sig.image_path):
         try:
-            p_img = Image(principal_sig.image_path, width=1.5*inch, height=0.5*inch)
+            p_img = Image(principal_sig.image_path, width=1.6*inch, height=0.55*inch, kind='proportional')
             p_img.hAlign = 'CENTER'
-        except Exception:
-            pass
+            principal_img_cell = p_img
+        except Exception as e:
+            logger.warning(f"Error loading principal signature: {e}")
+            principal_img_cell = Spacer(1, 0.55*inch)
+    else:
+        principal_img_cell = Spacer(1, 0.55*inch)
 
-    left_block = (
-        "<br/>"
+    principal_text_cell = Paragraph(
         "____________________________<br/>"
         "<b>PRINCIPAL</b><br/>"
-        "Nandha Engineering College"
+        "<font size='7.5' color='#475569'>Nandha Engineering College</font>",
+        sig_style
     )
 
-    center_block = (
+    left_subtable = Table([[principal_img_cell], [principal_text_cell]], colWidths=[3.0*inch])
+    left_subtable.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, 0), 'BOTTOM'),
+        ('VALIGN', (0, 1), (-1, 1), 'TOP'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+        ('TOPPADDING', (0, 0), (-1, -1), 1),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+    ]))
+
+    # 2. Center Subtable: Verification QR Code + Details
+    qr_img_cell = Image(qr_path, width=0.85*inch, height=0.85*inch)
+    qr_img_cell.hAlign = 'CENTER'
+    center_text_cell = Paragraph(
         f"<b>CERTIFICATE VERIFICATION</b><br/>"
         f"Verification Code: <b>{cert_id}</b><br/>"
         f"Issue Date: {issue_date_display}<br/>"
-        f"<font color='#64748B' size='7'>Scan QR to verify authenticity</font>"
+        f"<font color='#64748B' size='7'>Scan QR to verify authenticity</font>",
+        sig_style
     )
-
-    right_block = (
-        "<br/>"
-        "____________________________<br/>"
-        "<b>HOD / COORDINATOR</b><br/>"
-        f"{clean_dept_full}"
-    )
-
-    table_data = [
-        [
-            Paragraph(left_block, sig_style),
-            Table([[qr_element], [Paragraph(center_block, sig_style)]], colWidths=[2.6*inch]),
-            Paragraph(right_block, sig_style)
-        ]
-    ]
-
-    t = Table(table_data, colWidths=[3.2*inch, 2.8*inch, 3.2*inch])
-    t.setStyle(TableStyle([
+    center_subtable = Table([[qr_img_cell], [center_text_cell]], colWidths=[2.8*inch])
+    center_subtable.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
-        ('LEFTPADDING', (0, 0), (-1, -1), 4),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 4),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
-        ('TOPPADDING', (0, 0), (-1, -1), 0),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+        ('TOPPADDING', (0, 0), (-1, -1), 1),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
     ]))
 
-    story.append(t)
+    # 3. Right Subtable: HOD / Coordinator Signature Image + Line
+    hod_img_cell = None
+    if hod_sig and hod_sig.image_path and os.path.exists(hod_sig.image_path):
+        try:
+            h_img = Image(hod_sig.image_path, width=1.6*inch, height=0.55*inch, kind='proportional')
+            h_img.hAlign = 'CENTER'
+            hod_img_cell = h_img
+        except Exception as e:
+            logger.warning(f"Error loading HOD signature: {e}")
+            hod_img_cell = Spacer(1, 0.55*inch)
+    else:
+        hod_img_cell = Spacer(1, 0.55*inch)
+
+    hod_text_cell = Paragraph(
+        "____________________________<br/>"
+        "<b>HOD / COORDINATOR</b><br/>"
+        f"<font size='7.5' color='#475569'>{clean_dept_full}</font>",
+        sig_style
+    )
+
+    right_subtable = Table([[hod_img_cell], [hod_text_cell]], colWidths=[3.0*inch])
+    right_subtable.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, 0), 'BOTTOM'),
+        ('VALIGN', (0, 1), (-1, 1), 'TOP'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+        ('TOPPADDING', (0, 0), (-1, -1), 1),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+    ]))
+
+    # 4. Main 3-column table
+    main_footer_table = Table([[left_subtable, center_subtable, right_subtable]], colWidths=[3.1*inch, 2.8*inch, 3.1*inch])
+    main_footer_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 2),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+        ('TOPPADDING', (0, 0), (-1, -1), 0),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+    ]))
+
+    story.append(main_footer_table)
 
     # 7. Build PDF with custom ornate border on first page
     doc.build(story, onFirstPage=draw_ornate_border)

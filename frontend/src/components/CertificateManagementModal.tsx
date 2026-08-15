@@ -69,12 +69,12 @@ export const CertificateManagementModal: React.FC<{
   preselectedStudent?: StudentOption | null;
 }> = ({ isOpen, onClose, preselectedStudent }) => {
   const [activeTab, setActiveTab] = useState<'generate' | 'signatures' | 'history'>('generate');
-  
+
   // Student selection
   const [students, setStudents] = useState<StudentOption[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<StudentOption | null>(preselectedStudent || null);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Certificate Generation State
   const [certType, setCertType] = useState('Top Performer');
   const [customDate, setCustomDate] = useState('');
@@ -244,7 +244,7 @@ export const CertificateManagementModal: React.FC<{
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm overflow-y-auto">
       <div className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl max-w-6xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-scaleUp">
-        
+
         {/* Modal Header */}
         <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
           <div className="flex items-center space-x-3">
@@ -297,222 +297,274 @@ export const CertificateManagementModal: React.FC<{
 
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto flex-1 space-y-6">
-          
+
           {/* TAB 1: GENERATE & PREVIEW CERTIFICATE */}
           {activeTab === 'generate' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              
-              {/* Left Column: Student Selector & Parameters */}
-              <div className="lg:col-span-4 space-y-4">
-                <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 flex items-center space-x-1.5">
-                    <UserCheck className="w-3.5 h-3.5" />
-                    <span>Select Student Recipient</span>
-                  </span>
+            <div className="space-y-4">
 
-                  <div className="relative">
-                    <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="Search by name or reg no..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-500"
-                    />
+              {/* Signature Pre-flight Validation Banner */}
+              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between flex-wrap gap-4 text-xs">
+                <div className="flex items-center space-x-6 flex-wrap gap-3">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-slate-400 font-bold uppercase text-[10px]">Principal Signature:</span>
+                    {principalSig?.image_preview ? (
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold flex items-center space-x-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>Configured ({principalSig.version})</span>
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold flex items-center space-x-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        <span>⚠ NOT CONFIGURED</span>
+                      </span>
+                    )}
                   </div>
 
-                  <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1 divide-y divide-slate-800/50">
-                    {filteredStudents.slice(0, 30).map((st) => (
-                      <div
-                        key={st.id}
-                        onClick={() => { setSelectedStudent(st); setGeneratedCert(null); }}
-                        className={`p-2.5 rounded-xl text-xs cursor-pointer transition-all ${
-                          selectedStudent?.id === st.id
-                            ? 'bg-amber-500/20 text-white border border-amber-500/40 font-bold'
-                            : 'bg-slate-900/60 hover:bg-slate-800 text-slate-300'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold">{st.name}</span>
-                          <span className="text-[10px] font-mono text-slate-400">{st.reg_no}</span>
-                        </div>
-                        <div className="text-[10px] text-slate-400 mt-0.5 flex items-center justify-between">
-                          <span>{st.department?.code || 'CSE'}</span>
-                          {st.stats?.total_solved !== undefined && (
-                            <span className="text-emerald-400 font-bold">{st.stats.total_solved} Solved</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                  <div className="flex items-center space-x-2">
+                    <span className="text-slate-400 font-bold uppercase text-[10px]">
+                      HOD Signature ({selectedStudent?.department?.code?.includes('IOT') ? 'IoT' : 'Cyber Security'}):
+                    </span>
+                    {currentHodSig?.image_preview ? (
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold flex items-center space-x-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>Configured ({currentHodSig.version})</span>
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold flex items-center space-x-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        <span>⚠ HOD SIGNATURE NOT CONFIGURED</span>
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                {/* Parameters */}
-                <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-3.5 text-xs">
-                  <div className="space-y-1">
-                    <label className="font-bold text-slate-400 uppercase text-[10px]">Recognition Title</label>
-                    <input
-                      type="text"
-                      value={certType}
-                      onChange={(e) => setCertType(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-bold"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="font-bold text-slate-400 uppercase text-[10px]">Issue Date Display</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Aug 15, 2026 (Defaults to today)"
-                      value={customDate}
-                      onChange={(e) => setCustomDate(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-mono"
-                    />
-                  </div>
-
-                  <button
-                    onClick={handleGenerateCertificate}
-                    disabled={isGenerating || !selectedStudent}
-                    className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 flex items-center justify-center space-x-2 transition-all transform hover:scale-[1.02] cursor-pointer disabled:opacity-50"
-                  >
-                    <Award className="w-4 h-4" />
-                    <span>{isGenerating ? 'Generating High-Res Certificate...' : 'Generate & Issue Certificate'}</span>
-                  </button>
-
-                  {generatedCert && (
-                    <div className="space-y-2 pt-2 border-t border-slate-800">
-                      <button
-                        onClick={() => handleDownloadPdf(generatedCert.verification_id)}
-                        className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-2 shadow-md cursor-pointer"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        <span>Download Official PDF</span>
-                      </button>
-
-                      <a
-                        href={generatedCert.verification_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl flex items-center justify-center space-x-2 border border-slate-700"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        <span>Verify Public QR Page</span>
-                      </a>
-                    </div>
-                  )}
-                </div>
+                <button
+                  onClick={() => setActiveTab('signatures')}
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 font-bold transition-all flex items-center space-x-1.5 cursor-pointer"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Configure Signatures</span>
+                </button>
               </div>
 
-              {/* Right Column: High-Fidelity A4 Landscape Live Preview */}
-              <div className="lg:col-span-8 space-y-3">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px] flex items-center space-x-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                    <span>A4 Landscape Live Institutional Preview</span>
-                  </span>
-                  <span className="font-mono text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 font-bold">
-                    Ratio: 297mm × 210mm
-                  </span>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                {/* Left Column: Student Selector & Parameters */}
+                <div className="lg:col-span-4 space-y-4">
+                  <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 flex items-center space-x-1.5">
+                      <UserCheck className="w-3.5 h-3.5" />
+                      <span>Select Student Recipient</span>
+                    </span>
+
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Search by name or reg no..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+
+                    <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1 divide-y divide-slate-800/50">
+                      {filteredStudents.slice(0, 30).map((st) => (
+                        <div
+                          key={st.id}
+                          onClick={() => { setSelectedStudent(st); setGeneratedCert(null); }}
+                          className={`p-2.5 rounded-xl text-xs cursor-pointer transition-all ${selectedStudent?.id === st.id
+                              ? 'bg-amber-500/20 text-white border border-amber-500/40 font-bold'
+                              : 'bg-slate-900/60 hover:bg-slate-800 text-slate-300'
+                            }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold">{st.name}</span>
+                            <span className="text-[10px] font-mono text-slate-400">{st.reg_no}</span>
+                          </div>
+                          <div className="text-[10px] text-slate-400 mt-0.5 flex items-center justify-between">
+                            <span>{st.department?.code || 'CSE'}</span>
+                            {st.stats?.total_solved !== undefined && (
+                              <span className="text-emerald-400 font-bold">{st.stats.total_solved} Solved</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Parameters */}
+                  <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-3.5 text-xs">
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-400 uppercase text-[10px]">Recognition Title</label>
+                      <input
+                        type="text"
+                        value={certType}
+                        onChange={(e) => setCertType(e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-bold"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-400 uppercase text-[10px]">Issue Date Display</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Aug 15, 2026 (Defaults to today)"
+                        value={customDate}
+                        onChange={(e) => setCustomDate(e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-mono"
+                      />
+                    </div>
+
+                    <button
+                      onClick={handleGenerateCertificate}
+                      disabled={isGenerating || !selectedStudent}
+                      className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 flex items-center justify-center space-x-2 transition-all transform hover:scale-[1.02] cursor-pointer disabled:opacity-50"
+                    >
+                      <Award className="w-4 h-4" />
+                      <span>{isGenerating ? 'Generating High-Res Certificate...' : 'Generate & Issue Certificate'}</span>
+                    </button>
+
+                    {generatedCert && (
+                      <div className="space-y-2 pt-2 border-t border-slate-800">
+                        <button
+                          onClick={() => handleDownloadPdf(generatedCert.verification_id)}
+                          className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-2 shadow-md cursor-pointer"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Download Official PDF</span>
+                        </button>
+
+                        <a
+                          href={generatedCert.verification_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl flex items-center justify-center space-x-2 border border-slate-700"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span>Verify Public QR Page</span>
+                        </a>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* The Certificate Canvas */}
-                <div className="relative w-full aspect-[297/210] bg-[#FCFCFA] text-slate-900 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-2xl border-[5px] border-[#0B192C] overflow-hidden select-none font-serif">
-                  
-                  {/* Inner Gold Border */}
-                  <div className="absolute inset-2 border-[1.5px] border-[#C5A059] pointer-events-none"></div>
-                  
-                  {/* Corner Ornaments */}
-                  <div className="absolute top-2 left-2 w-3.5 h-3.5 bg-[#C5A059] flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#0B192C]"></div>
-                  </div>
-                  <div className="absolute top-2 right-2 w-3.5 h-3.5 bg-[#C5A059] flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#0B192C]"></div>
-                  </div>
-                  <div className="absolute bottom-2 left-2 w-3.5 h-3.5 bg-[#C5A059] flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#0B192C]"></div>
-                  </div>
-                  <div className="absolute bottom-2 right-2 w-3.5 h-3.5 bg-[#C5A059] flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#0B192C]"></div>
+                {/* Right Column: High-Fidelity A4 Landscape Live Preview */}
+                <div className="lg:col-span-8 space-y-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px] flex items-center space-x-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                      <span>A4 Landscape Live Institutional Preview</span>
+                    </span>
+                    <span className="font-mono text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 font-bold">
+                      Ratio: 297mm × 210mm
+                    </span>
                   </div>
 
-                  {/* Top Header */}
-                  <div className="text-center space-y-1 relative z-10">
-                    <img
-                      src="/nandha_emblem.png"
-                      alt="Nandha College Emblem"
-                      className="w-12 h-12 object-contain mx-auto drop-shadow-sm mb-1"
-                      onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
-                    />
-                    <h2 className="text-base sm:text-lg font-black text-[#0B192C] tracking-wide uppercase font-serif">
-                      NANDHA ENGINEERING COLLEGE
-                    </h2>
-                    <p className="text-[10px] font-bold text-[#0B192C] tracking-widest">(AUTONOMOUS)</p>
-                    <p className="text-[8px] sm:text-[9px] text-[#475569] leading-tight">
-                      Approved by AICTE, New Delhi • Affiliated to Anna University, Chennai • Accredited by NAAC with 'A+' Grade
-                    </p>
-                    <div className="text-[#C5A059] text-[10px] font-bold tracking-widest pt-0.5">
-                      ────────────── ◆ ──────────────
+                  {/* The Certificate Canvas */}
+                  <div className="relative w-full aspect-[297/210] bg-[#FCFCFA] text-slate-900 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-2xl border-[5px] border-[#0B192C] overflow-hidden select-none font-serif">
+
+                    {/* Inner Gold Border */}
+                    <div className="absolute inset-2 border-[1.5px] border-[#C5A059] pointer-events-none"></div>
+
+                    {/* Corner Ornaments */}
+                    <div className="absolute top-2 left-2 w-3.5 h-3.5 bg-[#C5A059] flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#0B192C]"></div>
                     </div>
-                  </div>
-
-                  {/* Certificate Title & Student */}
-                  <div className="text-center space-y-2 relative z-10 my-auto">
-                    <h3 className="text-lg sm:text-xl font-black text-[#B45309] tracking-wider uppercase drop-shadow-xs">
-                      CERTIFICATE OF EXCELLENCE
-                    </h3>
-                    <p className="text-[9px] font-bold text-[#475569] uppercase tracking-widest">
-                      THIS CERTIFICATE IS PROUDLY PRESENTED TO
-                    </p>
-                    <h4 className="text-xl sm:text-2xl font-black text-[#0B192C] tracking-wide underline decoration-[#C5A059] decoration-2 underline-offset-4 uppercase">
-                      {studentName}
-                    </h4>
-                    <p className="text-[10px] text-[#1E293B] font-sans font-semibold">
-                      Register No: <strong>{studentReg}</strong> &nbsp;|&nbsp; <strong>{currentDeptTitle}</strong>
-                    </p>
-                    <p className="text-[9px] sm:text-[10px] text-[#334155] max-w-xl mx-auto leading-relaxed pt-1">
-                      For exceptional algorithmic problem-solving competence, dedication, and achieving <strong>Top Performer</strong> distinction in the Institutional LeetCode Continuous Performance Tracking System during the academic session.
-                    </p>
-                    <div className="inline-block px-3 py-0.5 rounded-full bg-[#065F46]/10 text-[#065F46] border border-[#065F46]/30 text-[8px] font-black uppercase tracking-wider">
-                      ★ TOP PERFORMER • WEEKLY LEETCODE PROGRAM ★
+                    <div className="absolute top-2 right-2 w-3.5 h-3.5 bg-[#C5A059] flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#0B192C]"></div>
                     </div>
-                  </div>
-
-                  {/* Bottom Signatures & QR Section */}
-                  <div className="grid grid-cols-3 gap-2 items-end text-center relative z-10 pt-2 text-[#0B192C]">
-                    
-                    {/* Left: Principal */}
-                    <div className="space-y-0.5">
-                      {principalSig?.image_preview ? (
-                        <img src={principalSig.image_preview} alt="Principal Signature" className="h-8 max-w-[120px] object-contain mx-auto mb-1" />
-                      ) : (
-                        <div className="h-6"></div>
-                      )}
-                      <div className="w-32 border-b border-slate-800 mx-auto"></div>
-                      <p className="text-[9px] font-black leading-tight mt-1">PRINCIPAL</p>
-                      <p className="text-[8px] text-slate-600">Nandha Engineering College</p>
+                    <div className="absolute bottom-2 left-2 w-3.5 h-3.5 bg-[#C5A059] flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#0B192C]"></div>
+                    </div>
+                    <div className="absolute bottom-2 right-2 w-3.5 h-3.5 bg-[#C5A059] flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#0B192C]"></div>
                     </div>
 
-                    {/* Center: Verification */}
-                    <div className="space-y-0.5">
-                      <div className="w-12 h-12 bg-white border border-slate-300 rounded p-1 mx-auto flex items-center justify-center shadow-xs">
-                        <QrCode className="w-10 h-10 text-[#0B192C]" />
-                      </div>
-                      <p className="text-[8px] font-bold text-slate-700 leading-tight">
-                        Verification Code: <strong className="font-mono text-[#0B192C]">{activeVerificationId}</strong>
+                    {/* Top Header */}
+                    <div className="text-center space-y-1 relative z-10">
+                      <img
+                        src="/nandha_emblem.png"
+                        alt="Nandha College Emblem"
+                        className="w-12 h-12 object-contain mx-auto drop-shadow-sm mb-1"
+                        onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                      />
+                      <h2 className="text-base sm:text-lg font-black text-[#0B192C] tracking-wide uppercase font-serif">
+                        NANDHA ENGINEERING COLLEGE
+                      </h2>
+                      <p className="text-[10px] font-bold text-[#0B192C] tracking-widest">(AUTONOMOUS)</p>
+                      <p className="text-[8px] sm:text-[9px] text-[#475569] leading-tight">
+                        Approved by AICTE, New Delhi • Affiliated to Anna University, Chennai • Accredited by NAAC with 'A+' Grade
                       </p>
-                      <p className="text-[7px] text-slate-500">Scan QR to verify authenticity</p>
+                      <div className="text-[#C5A059] text-[10px] font-bold tracking-widest pt-0.5">
+                        ────────────── ◆ ──────────────
+                      </div>
                     </div>
 
-                    {/* Right: HOD */}
-                    <div className="space-y-0.5">
-                      {currentHodSig?.image_preview ? (
-                        <img src={currentHodSig.image_preview} alt="HOD Signature" className="h-8 max-w-[120px] object-contain mx-auto mb-1" />
-                      ) : (
-                        <div className="h-6"></div>
-                      )}
-                      <div className="w-32 border-b border-slate-800 mx-auto"></div>
-                      <p className="text-[9px] font-black leading-tight mt-1">HOD / COORDINATOR</p>
-                      <p className="text-[7px] text-slate-600 truncate max-w-[160px] mx-auto" title={currentDeptTitle}>{currentDeptTitle}</p>
+                    {/* Certificate Title & Student */}
+                    <div className="text-center space-y-2 relative z-10 my-auto">
+                      <h3 className="text-lg sm:text-xl font-black text-[#B45309] tracking-wider uppercase drop-shadow-xs">
+                        CERTIFICATE OF EXCELLENCE
+                      </h3>
+                      <p className="text-[9px] font-bold text-[#475569] uppercase tracking-widest">
+                        THIS CERTIFICATE IS PROUDLY PRESENTED TO
+                      </p>
+                      <h4 className="text-xl sm:text-2xl font-black text-[#0B192C] tracking-wide underline decoration-[#C5A059] decoration-2 underline-offset-4 uppercase">
+                        {studentName}
+                      </h4>
+                      <p className="text-[10px] text-[#1E293B] font-sans font-semibold">
+                        Register No: <strong>{studentReg}</strong> &nbsp;|&nbsp; <strong>{currentDeptTitle}</strong>
+                      </p>
+                      <p className="text-[9px] sm:text-[10px] text-[#334155] max-w-xl mx-auto leading-relaxed pt-1">
+                        For exceptional algorithmic problem-solving competence, dedication, and achieving <strong>Top Performer</strong> distinction in the Institutional LeetCode Continuous Performance Tracking System during the academic session.
+                      </p>
+                      <div className="inline-block px-3 py-0.5 rounded-full bg-[#065F46]/10 text-[#065F46] border border-[#065F46]/30 text-[8px] font-black uppercase tracking-wider">
+                        ★ TOP PERFORMER • WEEKLY LEETCODE PROGRAM ★
+                      </div>
+                    </div>
+
+                    {/* Bottom Signatures & QR Section */}
+                    <div className="grid grid-cols-3 gap-2 items-end text-center relative z-10 pt-2 text-[#0B192C]">
+
+                      {/* Left: Principal */}
+                      <div className="space-y-0.5 flex flex-col justify-end">
+                        {principalSig?.image_preview ? (
+                          <img src={principalSig.image_preview} alt="Principal Signature" className="h-10 max-w-[140px] object-contain mx-auto mb-1" />
+                        ) : (
+                          <div className="h-10 flex items-center justify-center text-[9px] text-amber-700/60 font-mono italic">
+                            [Authorized Signatory]
+                          </div>
+                        )}
+                        <div className="w-32 border-b border-slate-800 mx-auto"></div>
+                        <p className="text-[9px] font-black leading-tight mt-1">PRINCIPAL</p>
+                        <p className="text-[8px] text-slate-600">Nandha Engineering College</p>
+                      </div>
+
+                      {/* Center: Verification */}
+                      <div className="space-y-0.5">
+                        <div className="w-12 h-12 bg-white border border-slate-300 rounded p-1 mx-auto flex items-center justify-center shadow-xs">
+                          <QrCode className="w-10 h-10 text-[#0B192C]" />
+                        </div>
+                        <p className="text-[8px] font-bold text-slate-700 leading-tight">
+                          Verification Code: <strong className="font-mono text-[#0B192C]">{activeVerificationId}</strong>
+                        </p>
+                        <p className="text-[7px] text-slate-500">Scan QR to verify authenticity</p>
+                      </div>
+
+                      {/* Right: HOD */}
+                      <div className="space-y-0.5 flex flex-col justify-end">
+                        {currentHodSig?.image_preview ? (
+                          <img src={currentHodSig.image_preview} alt="HOD Signature" className="h-10 max-w-[140px] object-contain mx-auto mb-1" />
+                        ) : (
+                          <div className="h-10 flex items-center justify-center text-[9px] text-amber-700/60 font-mono italic">
+                            [Authorized Signatory]
+                          </div>
+                        )}
+                        <div className="w-32 border-b border-slate-800 mx-auto"></div>
+                        <p className="text-[9px] font-black leading-tight mt-1">HOD / COORDINATOR</p>
+                        <p className="text-[7px] text-slate-600 truncate max-w-[160px] mx-auto" title={currentDeptTitle}>{currentDeptTitle}</p>
+                      </div>
+
                     </div>
 
                   </div>
@@ -520,129 +572,203 @@ export const CertificateManagementModal: React.FC<{
                 </div>
 
               </div>
-
             </div>
           )}
 
           {/* TAB 2: SIGNATURE MANAGEMENT */}
           {activeTab === 'signatures' && (
             <div className="space-y-6">
-              <div className="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
-                <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-800 pb-3">
-                  <div>
-                    <h4 className="text-sm font-black text-white flex items-center space-x-2">
-                      <span>Authorized Signature Management</span>
-                    </h4>
-                    <p className="text-xs text-slate-400">
-                      Upload and manage transparent PNG signatures for Principal and Department HODs/Coordinators.
-                    </p>
-                  </div>
 
-                  <span className="px-3 py-1 rounded-full text-xs font-black bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-                    Version Controlled & Secure
-                  </span>
+              {/* Header Info */}
+              <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between flex-wrap gap-3">
+                <div>
+                  <h4 className="text-sm font-black text-white flex items-center space-x-2">
+                    <span>Authorized Signatures Management Center</span>
+                  </h4>
+                  <p className="text-xs text-slate-400">
+                    Upload official transparent PNG signatures (max 5MB). Signatures are automatically embedded above baseline lines in generated PDFs.
+                  </p>
                 </div>
+                <span className="px-3 py-1 rounded-full text-xs font-black bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+                  Dual Signatory Architecture
+                </span>
+              </div>
 
-                {/* Upload Form */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                  <div className="space-y-1">
-                    <label className="font-bold text-slate-400 uppercase text-[10px]">Signatory Position</label>
-                    <select
-                      value={uploadType}
-                      onChange={(e: any) => setUploadType(e.target.value)}
-                      className="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white font-bold"
-                    >
-                      <option value="PRINCIPAL">Principal (College-wide)</option>
-                      <option value="HOD_CSE_CS">HOD / Coordinator — Cyber Security</option>
-                      <option value="HOD_CSE_IOT">HOD / Coordinator — IoT</option>
-                    </select>
+              {/* CARD 1 & CARD 2 GRID */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                {/* ── CARD 1: PRINCIPAL SIGNATURE ── */}
+                <div className="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div>
+                      <h5 className="text-sm font-black text-amber-400">CARD 1: PRINCIPAL SIGNATURE</h5>
+                      <p className="text-[11px] text-slate-400">Applies across all institutional certificates</p>
+                    </div>
+                    {principalSig?.image_preview ? (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        ✓ ACTIVE ({principalSig.version})
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                        ⚠ NOT CONFIGURED
+                      </span>
+                    )}
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="font-bold text-slate-400 uppercase text-[10px]">Upload Signature File</label>
+                  {/* Signature Preview Canvas */}
+                  <div className="h-28 rounded-xl bg-slate-900 border border-slate-800 flex flex-col items-center justify-center p-3 relative overflow-hidden">
+                    {principalSig?.image_preview ? (
+                      <div className="text-center space-y-1">
+                        <img
+                          src={principalSig.image_preview}
+                          alt="Principal Signature"
+                          className="max-h-16 max-w-[200px] object-contain mx-auto"
+                        />
+                        <span className="text-[9px] font-mono text-slate-500 block">Uploaded: {principalSig.uploaded_at || 'Active'}</span>
+                      </div>
+                    ) : (
+                      <div className="text-center space-y-1">
+                        <AlertTriangle className="w-6 h-6 text-slate-600 mx-auto" />
+                        <span className="text-xs text-slate-500 font-medium">No signature image uploaded</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="space-y-3 pt-1">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase">
+                      {principalSig?.image_preview ? 'Replace Principal Signature' : 'Upload Principal Signature'}
+                    </label>
                     <input
                       type="file"
                       accept="image/png,image/jpeg,image/webp"
-                      onChange={handleFileChange}
-                      className="w-full p-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-slate-300 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-black file:bg-amber-500 file:text-slate-950"
+                      onChange={(e) => { setUploadType('PRINCIPAL'); handleFileChange(e); }}
+                      className="w-full p-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-slate-300 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-black file:bg-amber-500 file:text-slate-950 cursor-pointer"
                     />
+
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => { setUploadType('PRINCIPAL'); handleUploadSignature(); }}
+                        disabled={isUploadingSig || !uploadFile || uploadType !== 'PRINCIPAL'}
+                        className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white font-bold text-xs rounded-xl shadow transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>{isUploadingSig && uploadType === 'PRINCIPAL' ? 'Saving...' : (principalSig ? 'Replace Signature' : 'Upload & Save')}</span>
+                      </button>
+
+                      {principalSig && (
+                        <button
+                          onClick={async () => {
+                            if (confirm("Remove Principal signature image?")) {
+                              await api.delete(`/signatures/${principalSig.id}`);
+                              await fetchSignatures();
+                            }
+                          }}
+                          className="p-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 cursor-pointer"
+                          title="Remove Signature"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── CARD 2: HOD / COORDINATOR SIGNATURES ── */}
+                <div className="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div>
+                      <h5 className="text-sm font-black text-emerald-400">CARD 2: HOD / COORDINATOR SIGNATURE</h5>
+                      <p className="text-[11px] text-slate-400">Dynamic Department Signature Mapping</p>
+                    </div>
                   </div>
 
-                  <div className="flex items-end">
+                  {/* Department Selector */}
+                  <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-bold">
                     <button
-                      onClick={handleUploadSignature}
-                      disabled={isUploadingSig || !uploadFile}
-                      className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-lg transition-all disabled:opacity-50 flex items-center justify-center space-x-1.5 cursor-pointer"
+                      onClick={() => setUploadType('HOD_CSE_CS')}
+                      className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer text-center ${uploadType === 'HOD_CSE_CS' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                        }`}
                     >
-                      <Upload className="w-3.5 h-3.5" />
-                      <span>{isUploadingSig ? 'Uploading...' : 'Save Signature'}</span>
+                      Cyber Security {csHodSig ? `(${csHodSig.version})` : '⚠'}
+                    </button>
+                    <button
+                      onClick={() => setUploadType('HOD_CSE_IOT')}
+                      className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer text-center ${uploadType === 'HOD_CSE_IOT' ? 'bg-sky-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                        }`}
+                    >
+                      IoT {iotHodSig ? `(${iotHodSig.version})` : '⚠'}
                     </button>
                   </div>
-                </div>
 
-                {uploadPreview && (
-                  <div className="p-3 rounded-xl bg-slate-900 border border-amber-500/30 flex items-center space-x-4">
-                    <span className="text-xs text-slate-400 font-bold">Selected Preview:</span>
-                    <img src={uploadPreview} alt="Signature Upload Preview" className="h-10 bg-white/10 p-1 rounded object-contain border border-slate-700" />
-                  </div>
-                )}
-              </div>
+                  {/* Active HOD Preview Canvas */}
+                  {(() => {
+                    const activeHod = uploadType === 'HOD_CSE_IOT' ? iotHodSig : csHodSig;
+                    const deptLabel = uploadType === 'HOD_CSE_IOT' ? 'IoT' : 'Cyber Security';
+                    return (
+                      <div className="space-y-3">
+                        <div className="h-28 rounded-xl bg-slate-900 border border-slate-800 flex flex-col items-center justify-center p-3 relative overflow-hidden">
+                          {activeHod?.image_preview ? (
+                            <div className="text-center space-y-1">
+                              <img
+                                src={activeHod.image_preview}
+                                alt="HOD Signature"
+                                className="max-h-16 max-w-[200px] object-contain mx-auto"
+                              />
+                              <span className="text-[9px] font-mono text-slate-500 block">
+                                {deptLabel} • {activeHod.version} • Uploaded: {activeHod.uploaded_at || 'Active'}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="text-center space-y-1">
+                              <AlertTriangle className="w-6 h-6 text-slate-600 mx-auto" />
+                              <span className="text-xs text-slate-500 font-medium">No signature uploaded for {deptLabel}</span>
+                            </div>
+                          )}
+                        </div>
 
-              {/* Active Signatures Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                
-                {/* 1. Principal */}
-                <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-amber-400">PRINCIPAL</span>
-                    <span className="text-[10px] font-mono text-slate-400">{principalSig?.version || 'v1'}</span>
-                  </div>
-                  <div className="h-16 bg-slate-900 rounded-xl border border-slate-800 flex items-center justify-center p-2">
-                    {principalSig?.image_preview ? (
-                      <img src={principalSig.image_preview} alt="Principal Signature" className="h-full object-contain" />
-                    ) : (
-                      <span className="text-xs text-slate-500 font-medium">Text Line Only</span>
-                    )}
-                  </div>
-                  <div className="text-[10px] text-slate-400">
-                    Status: <strong className={principalSig ? 'text-emerald-400' : 'text-slate-500'}>{principalSig ? 'Active Signature Loaded' : 'Default Signatory Line'}</strong>
-                  </div>
-                </div>
+                        {/* Upload Controls */}
+                        <div className="space-y-3 pt-1">
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase">
+                            Upload / Replace {deptLabel} Signature
+                          </label>
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp"
+                            onChange={handleFileChange}
+                            className="w-full p-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-slate-300 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-black file:bg-emerald-500 file:text-slate-950 cursor-pointer"
+                          />
 
-                {/* 2. HOD CSE(CS) */}
-                <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-emerald-400">HOD — CYBER SECURITY</span>
-                    <span className="text-[10px] font-mono text-slate-400">{csHodSig?.version || 'v1'}</span>
-                  </div>
-                  <div className="h-16 bg-slate-900 rounded-xl border border-slate-800 flex items-center justify-center p-2">
-                    {csHodSig?.image_preview ? (
-                      <img src={csHodSig.image_preview} alt="Cyber Security HOD Signature" className="h-full object-contain" />
-                    ) : (
-                      <span className="text-xs text-slate-500 font-medium">Text Line Only</span>
-                    )}
-                  </div>
-                  <div className="text-[10px] text-slate-400">
-                    Status: <strong className={csHodSig ? 'text-emerald-400' : 'text-slate-500'}>{csHodSig ? 'Active Signature Loaded' : 'Default Signatory Line'}</strong>
-                  </div>
-                </div>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={handleUploadSignature}
+                              disabled={isUploadingSig || !uploadFile}
+                              className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white font-bold text-xs rounded-xl shadow transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
+                            >
+                              <Upload className="w-3.5 h-3.5" />
+                              <span>{isUploadingSig ? 'Saving...' : (activeHod ? `Replace ${deptLabel} Signature` : `Upload & Save ${deptLabel}`)}</span>
+                            </button>
 
-                {/* 3. HOD CSE(IoT) */}
-                <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-sky-400">HOD — IOT</span>
-                    <span className="text-[10px] font-mono text-slate-400">{iotHodSig?.version || 'v1'}</span>
-                  </div>
-                  <div className="h-16 bg-slate-900 rounded-xl border border-slate-800 flex items-center justify-center p-2">
-                    {iotHodSig?.image_preview ? (
-                      <img src={iotHodSig.image_preview} alt="IoT HOD Signature" className="h-full object-contain" />
-                    ) : (
-                      <span className="text-xs text-slate-500 font-medium">Text Line Only</span>
-                    )}
-                  </div>
-                  <div className="text-[10px] text-slate-400">
-                    Status: <strong className={iotHodSig ? 'text-emerald-400' : 'text-slate-500'}>{iotHodSig ? 'Active Signature Loaded' : 'Default Signatory Line'}</strong>
-                  </div>
+                            {activeHod && (
+                              <button
+                                onClick={async () => {
+                                  if (confirm(`Remove ${deptLabel} signature image?`)) {
+                                    await api.delete(`/signatures/${activeHod.id}`);
+                                    await fetchSignatures();
+                                  }
+                                }}
+                                className="p-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 cursor-pointer"
+                                title="Remove Signature"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                 </div>
 
               </div>
@@ -705,11 +831,10 @@ export const CertificateManagementModal: React.FC<{
                             {rec.issue_date}
                           </td>
                           <td className="py-3 px-4 text-center">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                              rec.status === 'VALID'
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${rec.status === 'VALID'
                                 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                                 : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                            }`}>
+                              }`}>
                               {rec.status}
                             </span>
                           </td>
