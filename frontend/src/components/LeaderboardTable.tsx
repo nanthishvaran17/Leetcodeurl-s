@@ -523,6 +523,147 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
         </tbody>
       </table>
       </div>
+
+      {/* Viewport-Centered Student Edit Modal */}
+      {editingStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
+          <div className="bg-white dark:bg-navy-900 w-full max-w-lg max-h-[90vh] rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <Edit3 className="w-5 h-5 text-indigo-400" />
+                <div>
+                  <h3 className="text-base font-black">Edit Student Profile</h3>
+                  <p className="text-xs text-gray-300 font-mono font-bold mt-0.5">{editingStudent.reg_no}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingStudent(null)}
+                className="p-1 rounded-xl bg-white/10 hover:bg-white/20 text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Form Content */}
+            <div className="p-6 space-y-4 overflow-y-auto">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-700 dark:text-gray-300">Student Full Name</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-3.5 py-2 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500 font-semibold"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-700 dark:text-gray-300">Department</label>
+                  <select
+                    value={editDeptId}
+                    onChange={(e) => setEditDeptId(Number(e.target.value))}
+                    className="w-full px-3.5 py-2 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500 font-bold cursor-pointer"
+                  >
+                    <option value={1}>CSE(CS)</option>
+                    <option value={2}>CSE(IOT)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-700 dark:text-gray-300">Academic Year</label>
+                  <select
+                    value={editYearLevel}
+                    onChange={(e) => setEditYearLevel(e.target.value)}
+                    className="w-full px-3.5 py-2 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500 font-bold cursor-pointer"
+                  >
+                    <option value="II">II Year</option>
+                    <option value="III">III Year</option>
+                    <option value="IV">IV Year</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-700 dark:text-gray-300">LeetCode Username Handle</label>
+                <input
+                  type="text"
+                  value={editUsername}
+                  onChange={(e) => setEditUsername(e.target.value)}
+                  placeholder="e.g. AADHISH_S_B"
+                  className="w-full px-3.5 py-2 text-xs font-mono bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-700 dark:text-gray-300">LeetCode Profile URL</label>
+                <input
+                  type="text"
+                  value={editLeetCodeUrl}
+                  onChange={(e) => setEditLeetCodeUrl(e.target.value)}
+                  placeholder="https://leetcode.com/u/..."
+                  className="w-full px-3.5 py-2 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between">
+              <button
+                onClick={() => setEditingStudent(null)}
+                className="px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-gray-800 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={isSaving}
+                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer disabled:opacity-50"
+              >
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Viewport-Centered Student Delete Confirmation Modal */}
+      {deletingStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
+          <div className="bg-white dark:bg-navy-900 w-full max-w-md max-h-[90vh] rounded-3xl shadow-2xl border border-rose-200 dark:border-rose-900/50 overflow-hidden flex flex-col p-6 space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
+              <Trash2 className="w-6 h-6" />
+            </div>
+
+            <div className="text-center space-y-1">
+              <h3 className="text-base font-black text-gray-900 dark:text-white">Deactivate Student Record?</h3>
+              <p className="text-xs text-gray-500">
+                Are you sure you want to deactivate <b className="text-gray-900 dark:text-white">{deletingStudent.name}</b> (<code className="font-mono text-rose-600">{deletingStudent.reg_no}</code>)?
+              </p>
+            </div>
+
+            <div className="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 rounded-xl text-[11px] text-rose-700 dark:text-rose-300 font-bold">
+              ⚠️ This student will be marked as inactive and removed from public contest rankings. You can re-activate them anytime from Student Master.
+            </div>
+
+            <div className="flex items-center justify-end space-x-3 pt-2">
+              <button
+                onClick={() => setDeletingStudent(null)}
+                className="px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-gray-800 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmSoftDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer disabled:opacity-50"
+              >
+                {isDeleting ? 'Deactivating...' : 'Confirm Deactivation'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -145,7 +145,7 @@ export const App: React.FC = () => {
         )}
 
         {/* Main Content View Container */}
-        <main key={activeTab} className="flex-1 w-full overflow-hidden animate-fadeIn">
+        <main key={activeTab} className="flex-1 w-full min-w-0 animate-fadeIn">
 
           
           {activeTab === 'landing' && (

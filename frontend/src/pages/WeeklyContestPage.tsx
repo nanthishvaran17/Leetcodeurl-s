@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Trophy, Calendar, RefreshCw, AlertTriangle, Download, FileSpreadsheet,
-  FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Zap, Filter, Trash2, Mail, Send, Sparkles, X
+  FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Zap, Filter, Trash2, Mail, Send, Sparkles, X, Edit3, UserCheck, UserX
 } from 'lucide-react';
 import api from '../services/api';
 import { StatusNotificationModal, NotificationState } from '../components/StatusNotificationModal';
@@ -26,6 +26,20 @@ export const WeeklyContestPage: React.FC = () => {
   const [showPreviewModal, setShowPreviewModal] = useState<boolean>(false);
   const [showEmailModal, setShowEmailModal] = useState<boolean>(false);
   const [notification, setNotification] = useState<NotificationState | null>(null);
+
+  // Student Edit / Delete state
+  const [editingStudent, setEditingStudent] = useState<any | null>(null);
+  const [editName, setEditName] = useState<string>('');
+  const [editDeptId, setEditDeptId] = useState<number>(1);
+  const [editDeptCode, setEditDeptCode] = useState<string>('CSE(CS)');
+  const [editYearLevel, setEditYearLevel] = useState<string>('III');
+  const [editUsername, setEditUsername] = useState<string>('');
+  const [editLeetCodeUrl, setEditLeetCodeUrl] = useState<string>('');
+  const [editEmail, setEditEmail] = useState<string>('');
+  const [isSavingStudent, setIsSavingStudent] = useState<boolean>(false);
+
+  const [deletingStudent, setDeletingStudent] = useState<any | null>(null);
+  const [isDeletingStudent, setIsDeletingStudent] = useState<boolean>(false);
 
   // Email state
   const [recipientsList, setRecipientsList] = useState<any[]>([]);
@@ -420,6 +434,102 @@ export const WeeklyContestPage: React.FC = () => {
       });
     } finally {
       setIsSendingEmail(false);
+    }
+  };
+
+  const handleOpenEditStudent = (r: any) => {
+    setEditingStudent(r);
+    setEditName(r.name || '');
+    setEditDeptCode(r.dept || 'CSE(CS)');
+    setEditDeptId(r.dept?.includes('IOT') ? 2 : 1);
+    setEditYearLevel(r.year || 'III');
+    setEditUsername(r.username || '');
+    setEditLeetCodeUrl(r.leetcode_url || (r.username ? `https://leetcode.com/u/${r.username}/` : ''));
+    setEditEmail(r.email || '');
+  };
+
+  const handleSaveStudentEdit = async () => {
+    if (!editingStudent) return;
+    const studentId = editingStudent.student_id || editingStudent.id;
+    if (!studentId) {
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Update Error',
+        message: 'Student identifier not found.'
+      });
+      return;
+    }
+
+    setIsSavingStudent(true);
+    try {
+      await api.patch(`/api/students/${studentId}`, {
+        name: editName.trim(),
+        department_id: editDeptId,
+        year_level: editYearLevel,
+        username: editUsername.trim() || undefined,
+        leetcode_url: editLeetCodeUrl.trim() || undefined,
+        email: editEmail.trim() || undefined
+      });
+
+      // Update local row in matrixRows
+      setMatrixRows(prev => prev.map(row => {
+        if ((row.student_id || row.id) === studentId) {
+          return {
+            ...row,
+            name: editName.trim(),
+            dept: editDeptCode,
+            year: editYearLevel,
+            username: editUsername.trim()
+          };
+        }
+        return row;
+      }));
+
+      setEditingStudent(null);
+      setNotification({
+        isOpen: true,
+        type: 'success',
+        title: 'Student Profile Updated',
+        message: `Successfully updated details for ${editName.trim()} (${editingStudent.reg_no}).`
+      });
+    } catch (err: any) {
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Failed to Update Student',
+        message: err.response?.data?.detail || err.message || 'Could not update student details.'
+      });
+    } finally {
+      setIsSavingStudent(false);
+    }
+  };
+
+  const handleConfirmDeleteStudent = async () => {
+    if (!deletingStudent) return;
+    const studentId = deletingStudent.student_id || deletingStudent.id;
+    if (!studentId) return;
+
+    setIsDeletingStudent(true);
+    try {
+      await api.delete(`/api/students/${studentId}?soft_delete=true`);
+      setMatrixRows(prev => prev.filter(row => (row.student_id || row.id) !== studentId));
+      setDeletingStudent(null);
+      setNotification({
+        isOpen: true,
+        type: 'success',
+        title: 'Student Deactivated',
+        message: `Successfully deactivated student record ${deletingStudent.reg_no} (${deletingStudent.name}).`
+      });
+    } catch (err: any) {
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Failed to Deactivate Student',
+        message: err.response?.data?.detail || err.message || 'Could not deactivate student record.'
+      });
+    } finally {
+      setIsDeletingStudent(false);
     }
   };
 
@@ -887,6 +997,7 @@ export const WeeklyContestPage: React.FC = () => {
                   <th className="px-4 py-3 text-right">Contest Solved</th>
                   <th className="px-4 py-3 text-right">Rank</th>
                   <th className="px-4 py-3 text-right">Rating</th>
+                  <th className="px-4 py-3 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -964,7 +1075,7 @@ export const WeeklyContestPage: React.FC = () => {
                           </span>
                         </td>
                         <td className="px-4 py-2.5 text-center font-bold text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                          {r.contest_name || activeSessionObj?.contestName || 'Weekly Contest'}
+                          {(r.contest_name || activeSessionObj?.contestName || 'Weekly Contest').replace(/Weekly Contest Weekly Contest/gi, 'Weekly Contest').trim()}
                         </td>
                         <td className="px-4 py-2.5 text-center">{renderQ(r.q1)}</td>
                         <td className="px-4 py-2.5 text-center">{renderQ(r.q2)}</td>
@@ -978,6 +1089,24 @@ export const WeeklyContestPage: React.FC = () => {
                         </td>
                         <td className="px-4 py-2.5 text-right font-mono font-bold text-amber-600 dark:text-amber-400">
                           {isAttended ? (r.rating ? Number(r.rating).toFixed(1) : '—') : '—'}
+                        </td>
+                        <td className="px-4 py-2.5 text-center whitespace-nowrap">
+                          <div className="flex items-center justify-center space-x-1.5">
+                            <button
+                              onClick={() => handleOpenEditStudent(r)}
+                              className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900 text-indigo-600 dark:text-indigo-400 transition-colors cursor-pointer"
+                              title={`Edit ${r.name}`}
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => setDeletingStudent(r)}
+                              className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-400 transition-colors cursor-pointer"
+                              title={`Deactivate ${r.name}`}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -1317,6 +1446,162 @@ export const WeeklyContestPage: React.FC = () => {
               >
                 <Send className="w-3.5 h-3.5" />
                 <span>{isSendingEmail ? 'Dispatching...' : `Dispatch Report to ${selectedRecipients.length} Recipient(s)`}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Viewport-Centered Student Edit Modal */}
+      {editingStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
+          <div className="bg-white dark:bg-navy-900 w-full max-w-lg max-h-[90vh] rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <Edit3 className="w-5 h-5 text-indigo-400" />
+                <div>
+                  <h3 className="text-base font-black">Edit Student Profile</h3>
+                  <p className="text-xs text-gray-300 font-mono font-bold mt-0.5">{editingStudent.reg_no}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingStudent(null)}
+                className="p-1 rounded-xl bg-white/10 hover:bg-white/20 text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Form Content */}
+            <div className="p-6 space-y-4 overflow-y-auto">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-700 dark:text-gray-300">Student Full Name</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-3.5 py-2 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500 font-semibold"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-700 dark:text-gray-300">Department</label>
+                  <select
+                    value={editDeptCode}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setEditDeptCode(val);
+                      setEditDeptId(val.includes('IOT') ? 2 : 1);
+                    }}
+                    className="w-full px-3.5 py-2 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500 font-bold cursor-pointer"
+                  >
+                    <option value="CSE(CS)">CSE(CS)</option>
+                    <option value="CSE(IOT)">CSE(IOT)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-700 dark:text-gray-300">Academic Year</label>
+                  <select
+                    value={editYearLevel}
+                    onChange={(e) => setEditYearLevel(e.target.value)}
+                    className="w-full px-3.5 py-2 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500 font-bold cursor-pointer"
+                  >
+                    <option value="II">II Year</option>
+                    <option value="III">III Year</option>
+                    <option value="IV">IV Year</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-700 dark:text-gray-300">LeetCode Username Handle</label>
+                <input
+                  type="text"
+                  value={editUsername}
+                  onChange={(e) => setEditUsername(e.target.value)}
+                  placeholder="e.g. AADHISH_S_B"
+                  className="w-full px-3.5 py-2 text-xs font-mono bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-700 dark:text-gray-300">LeetCode Profile URL</label>
+                <input
+                  type="text"
+                  value={editLeetCodeUrl}
+                  onChange={(e) => setEditLeetCodeUrl(e.target.value)}
+                  placeholder="https://leetcode.com/u/..."
+                  className="w-full px-3.5 py-2 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-700 dark:text-gray-300">Institutional Email (Optional)</label>
+                <input
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  placeholder="student@nandha.edu.in"
+                  className="w-full px-3.5 py-2 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between">
+              <button
+                onClick={() => setEditingStudent(null)}
+                className="px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-gray-800 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveStudentEdit}
+                disabled={isSavingStudent}
+                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer disabled:opacity-50"
+              >
+                {isSavingStudent ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Viewport-Centered Student Delete Confirmation Modal */}
+      {deletingStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
+          <div className="bg-white dark:bg-navy-900 w-full max-w-md max-h-[90vh] rounded-3xl shadow-2xl border border-rose-200 dark:border-rose-900/50 overflow-hidden flex flex-col p-6 space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
+              <Trash2 className="w-6 h-6" />
+            </div>
+
+            <div className="text-center space-y-1">
+              <h3 className="text-base font-black text-gray-900 dark:text-white">Deactivate Student Record?</h3>
+              <p className="text-xs text-gray-500">
+                Are you sure you want to deactivate <b className="text-gray-900 dark:text-white">{deletingStudent.name}</b> (<code className="font-mono text-rose-600">{deletingStudent.reg_no}</code>)?
+              </p>
+            </div>
+
+            <div className="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 rounded-xl text-[11px] text-rose-700 dark:text-rose-300 font-bold">
+              ⚠️ This student will be marked as inactive and removed from public contest rankings. You can re-activate them anytime from Student Master.
+            </div>
+
+            <div className="flex items-center justify-end space-x-3 pt-2">
+              <button
+                onClick={() => setDeletingStudent(null)}
+                className="px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-gray-800 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDeleteStudent}
+                disabled={isDeletingStudent}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer disabled:opacity-50"
+              >
+                {isDeletingStudent ? 'Deactivating...' : 'Confirm Deactivation'}
               </button>
             </div>
           </div>
