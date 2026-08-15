@@ -680,21 +680,33 @@ def get_student_forensic_trace(
 
     # Resolved canonical status
     canonical_state = "DATA_PENDING"
-    if contest_result:
-        canonical_state = contest_result.participation_status
-    elif virtual_result:
+    resolution_reason = "No contest record found yet for this student session."
+    
+    if contest_result and contest_result.participation_status == "PUBLIC_ATTENDED":
+        canonical_state = "PUBLIC_ATTENDED"
+        resolution_reason = "Verified public contest participation from LeetCode GraphQL history."
+    elif virtual_result and virtual_result.participation_status in ("VIRTUAL_ATTENDED", "VIRTUAL"):
         canonical_state = "VIRTUAL_ATTENDED"
+        resolution_reason = "Verified virtual contest mode participation."
+    elif contest_result and contest_result.participation_status == "DATA_ERROR":
+        canonical_state = "DATA_ERROR"
+        resolution_reason = f"Source verification failed: {contest_result.error_reason or 'Invalid student username or network error'}."
+    elif contest_result and contest_result.participation_status == "PUBLIC_NOT_ATTENDED":
+        canonical_state = "PUBLIC_NOT_ATTENDED"
+        resolution_reason = "Public contest source checked; student did not attend this weekly session."
 
     # Human-readable evidence summary
-    public_status_summary = "Not Found / Absent"
+    public_status_summary = "Not Attended / Absent"
     if contest_result and contest_result.participation_status == "PUBLIC_ATTENDED":
-        public_status_summary = "✓ Verified (Rank & Score Present)"
+        public_status_summary = "✓ Verified (Public Contest Participation Confirmed)"
     elif contest_result and contest_result.participation_status == "DATA_ERROR":
         public_status_summary = "✕ Isolated as Data Error"
 
-    virtual_status_summary = "Not Found"
+    virtual_status_summary = "Not Used / Not Found"
     if virtual_result or (contest_result and contest_result.participation_status == "VIRTUAL_ATTENDED"):
         virtual_status_summary = "✓ Verified Virtual Mode"
+    elif contest_result and contest_result.participation_status == "PUBLIC_ATTENDED":
+        virtual_status_summary = "Not used because public participation was verified first"
 
     evidence_summary = {
         "studentIdentityMatched": True,
@@ -702,7 +714,8 @@ def get_student_forensic_trace(
         "publicParticipation": public_status_summary,
         "virtualParticipation": virtual_status_summary,
         "databaseRecordMatched": contest_result is not None,
-        "canonicalResolution": canonical_state
+        "canonicalResolution": canonical_state,
+        "resolutionExplanation": resolution_reason
     }
 
     source_metadata = {

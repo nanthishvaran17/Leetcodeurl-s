@@ -334,17 +334,23 @@ def get_normalized_contest_data(
         fetch_st = "SUCCESS"
         err_re = None
 
-        if p_res and (p_res.participation_status in ("PUBLIC_ATTENDED", "ATTENDED") or (p_res.total_contest_solved and p_res.total_contest_solved > 0) or (p_res.contest_rank and p_res.contest_rank > 0)):
+        if p_res and p_res.participation_status in ("PUBLIC_ATTENDED", "ATTENDED"):
             resolved_status = "PUBLIC_ATTENDED"
-            q1_val, q2_val, q3_val, q4_val = p_res.q1, p_res.q2, p_res.q3, p_res.q4
+            q1_val = p_res.q1 or 0
+            q2_val = p_res.q2 or 0
+            q3_val = p_res.q3 or 0
+            q4_val = p_res.q4 or 0
             tot_val = p_res.total_contest_solved or 0
             score_val = p_res.contest_score or 0
             rank_val = getattr(p_res, 'contest_rank', None)
             rating_val = getattr(p_res, 'contest_rating', None)
             fetch_st = getattr(p_res, 'fetch_status', 'SUCCESS')
-        elif v_res and (v_res.participation_status in ("VIRTUAL_ATTENDED", "VIRTUAL") or (v_res.total_contest_solved and v_res.total_contest_solved > 0)):
+        elif v_res and (v_res.participation_status in ("VIRTUAL_ATTENDED", "VIRTUAL")):
             resolved_status = "VIRTUAL"
-            q1_val, q2_val, q3_val, q4_val = v_res.q1, v_res.q2, v_res.q3, v_res.q4
+            q1_val = v_res.q1 or 0
+            q2_val = v_res.q2 or 0
+            q3_val = v_res.q3 or 0
+            q4_val = v_res.q4 or 0
             tot_val = v_res.total_contest_solved or 0
             score_val = v_res.contest_score or 0
             rank_val = getattr(v_res, 'contest_rank', None)
@@ -426,11 +432,13 @@ def get_normalized_contest_data(
     verified_roster_count = len(dept_year_results)
     public_attended_cnt = sum(1 for r in dept_year_results if r["participation_status"] == "PUBLIC_ATTENDED")
     virtual_attended_cnt = sum(1 for r in dept_year_results if r["participation_status"] == "VIRTUAL")
+    public_not_attended_cnt = sum(1 for r in dept_year_results if r["participation_status"] == "NOT_ATTENDED")
     data_pending_cnt = sum(1 for r in dept_year_results if r["participation_status"] == "DATA_PENDING")
     data_errors_cnt = sum(1 for r in dept_year_results if r["participation_status"] == "DATA_ERROR")
 
-    # Formula: Public Not Attended = verified_roster_count - Public Attended - Virtual Attended - Data Pending - Data Error
-    public_not_attended_cnt = max(0, verified_roster_count - public_attended_cnt - virtual_attended_cnt - data_pending_cnt - data_errors_cnt)
+    # Mathematical Invariant check: Total = Public + Virtual + NotAttended + Pending + Errors
+    is_mathematically_sound = (verified_roster_count == (public_attended_cnt + virtual_attended_cnt + public_not_attended_cnt + data_pending_cnt + data_errors_cnt))
+    integrity_status = "PASSED" if is_mathematically_sound else "FAILED"
 
     # Formula: Public Participation % = (Public Attended / Verified Eligible Roster) * 100
     participation_rate = round((public_attended_cnt / max(verified_roster_count, 1)) * 100.0, 2)
