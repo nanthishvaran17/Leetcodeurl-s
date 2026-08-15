@@ -36,156 +36,293 @@ def set_document_margins(doc, top=0.75, bottom=0.75, left=0.75, right=0.75):
         section.left_margin = Inches(left)
         section.right_margin = Inches(right)
 
+def set_table_borders(table, color="CCCCCC", sz="4", val="single"):
+    """Applies clean borders to all cells in a docx table."""
+    for row in table.rows:
+        for cell in row.cells:
+            tcPr = cell._tc.get_or_add_tcPr()
+            tcBorders = OxmlElement('w:tcBorders')
+            for border_name in ['top', 'left', 'bottom', 'right']:
+                border = OxmlElement(f'w:{border_name}')
+                border.set(qn('w:val'), val)
+                border.set(qn('w:sz'), sz)
+                border.set(qn('w:space'), '0')
+                border.set(qn('w:color'), color)
+                tcBorders.append(border)
+            tcPr.append(tcBorders)
+
 def generate_word_report(db: Session, dept_id: Optional[int] = None) -> bytes:
     """
-    Generates an executive Microsoft Word (.docx) report using Times New Roman font ONLY.
-    Features official college header branding, executive summary table, and student performance roster.
+    CANONICAL OFFICIAL WEEKLY PERFORMANCE WORD REPORT (.DOCX) GENERATOR.
+    Produces the official two-department institucional report using exact Times New Roman typography,
+    landscape layout, official table headers, mutually exclusive problem-solving categories,
+    and real SQLite contest results (preventing roster-attended conflation).
     """
-    doc = docx.Document() if DOCX_AVAILABLE else None
-
-    if not doc:
+    if not DOCX_AVAILABLE:
         buffer = io.BytesIO()
-        content = f"NANDHA ENGINEERING COLLEGE (AUTONOMOUS)\n" \
-                  f"LeetCode Performance Summary Report - {datetime.date.today().strftime('%d.%m.%Y')}\n\n"
+        content = f"NANDHA ENGINEERING COLLEGE, ERODE - 638 052.\n" \
+                  f"Leetcode Performance - Weekly Report\n" \
+                  f"Date: {datetime.date.today().strftime('%d.%m.%Y')}\n\n"
         buffer.write(content.encode('utf-8'))
         buffer.seek(0)
         return buffer.getvalue()
 
-    set_document_margins(doc, 0.75, 0.75, 0.75, 0.75)
+    doc = Document()
+    
+    # Configure Landscape A4 layout
+    from docx.enum.section import WD_ORIENT
+    for section in doc.sections:
+        section.orientation = WD_ORIENT.LANDSCAPE
+        section.page_width = Inches(11.69)
+        section.page_height = Inches(8.27)
+        section.top_margin = Inches(0.5)
+        section.bottom_margin = Inches(0.5)
+        section.left_margin = Inches(0.5)
+        section.right_margin = Inches(0.5)
 
-    # 1. Header Banner
-    p_title = doc.add_paragraph()
-    p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run_title = p_title.add_run("NANDHA ENGINEERING COLLEGE (AUTONOMOUS)")
-    run_title.font.name = "Times New Roman"
-    run_title.font.size = Pt(16)
-    run_title.font.bold = True
-    run_title.font.color.rgb = RGBColor(15, 23, 42)
+    from backend.routes.weekly_contests import get_normalized_contest_data, derive_academic_year
 
-    p_sub = doc.add_paragraph()
-    p_sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run_sub = p_sub.add_run("Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai | Erode - 638 052, Tamil Nadu")
-    run_sub.font.name = "Times New Roman"
-    run_sub.font.size = Pt(9)
-    run_sub.font.bold = True
-    run_sub.font.color.rgb = RGBColor(2, 132, 199)
+    # 1. Dynamically identify Current and Last completed weekly contest sessions
+    completed_sessions = db.query(WeeklySession).filter(
+        WeeklySession.status.in_(['COMPLETED', 'FINALIZED'])
+    ).order_by(WeeklySession.id.desc()).all()
 
-    dept_obj = db.query(Department).filter(Department.id == dept_id).first() if dept_id else None
-    dept_name = f"Department of {dept_obj.name}" if dept_obj else "Official College LeetCode Performance Summary"
+    current_sess = completed_sessions[0] if len(completed_sessions) > 0 else None
+    last_sess = completed_sessions[1] if len(completed_sessions) > 1 else None
 
-    p_report = doc.add_paragraph()
-    p_report.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run_report = p_report.add_run(f"{dept_name}\nWeekly Performance & Contest Evaluation Report - {datetime.date.today().strftime('%d.%m.%Y')}")
-    run_report.font.name = "Times New Roman"
-    run_report.font.size = Pt(11)
-    run_report.font.bold = True
-    run_report.font.color.rgb = RGBColor(51, 65, 85)
+    curr_norm = get_normalized_contest_data(current_sess.id, db=db) if current_sess else {"rows": [], "metrics": {}}
+    last_norm = get_normalized_contest_data(last_sess.id, db=db) if last_sess else {"rows": [], "metrics": {}}
 
-    doc.add_paragraph().paragraph_format.space_after = Pt(6)
+    all_students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+    all_depts = db.query(Department).order_by(Department.id.asc()).all()
 
-    # 2. Executive Summary Metrics Table
-    query = db.query(Student).filter(Student.is_active == True)
-    if dept_id:
-        query = query.filter(Student.department_id == dept_id)
-    students = query.all()
+    target_depts = [d for d in all_depts if d.id == dept_id] if dept_id else all_depts
 
-    total_count = len(students)
-    active_solvers = [s for s in students if s.stats and s.stats.total_solved > 0]
-    above_500 = [s for s in students if s.stats and s.stats.total_solved > 500]
-    total_problems = sum(s.stats.total_solved for s in students if s.stats)
-
-    doc.add_heading("I. Executive Summary Metrics", level=2)
-    p_head = doc.paragraphs[-1]
-    for r in p_head.runs:
-        r.font.name = "Times New Roman"
-        r.font.color.rgb = RGBColor(15, 23, 42)
-
-    table_exec = doc.add_table(rows=5, cols=2)
-    table_exec.alignment = WD_TABLE_ALIGNMENT.CENTER
-    exec_data = [
-        ("Total Enrolled Students Monitored", str(total_count)),
-        ("Active Problems Solvers (Total Solved > 0)", str(len(active_solvers))),
-        ("Advanced Star Solvers (Total Solved > 500)", str(len(above_500))),
-        ("Total Problems Solved Across Roster", f"{total_problems:,}"),
-        ("Report Generation Timestamp", datetime.datetime.now().strftime("%d-%b-%Y %I:%M %p IST"))
+    batch_definitions = [
+        ("2023 - 2027", "IV"),
+        ("2024 - 2028", "III"),
+        ("2025 - 2029", "II")
     ]
 
-    for row_idx, (label, val) in enumerate(exec_data):
-        row_cells = table_exec.rows[row_idx].cells
-        
-        p_l = row_cells[0].paragraphs[0]
-        run_l = p_l.add_run(label)
-        run_l.font.name = "Times New Roman"
-        run_l.font.size = Pt(10)
-        run_l.font.bold = True
-        
-        p_v = row_cells[1].paragraphs[0]
-        p_v.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-        run_v = p_v.add_run(val)
-        run_v.font.name = "Times New Roman"
-        run_v.font.size = Pt(10)
-        run_v.font.bold = True
-        run_v.font.color.rgb = RGBColor(2, 132, 199)
+    report_date_str = datetime.date.today().strftime("%d.%m.%Y")
 
-        if row_idx % 2 == 0:
-            set_cell_background(row_cells[0], "F8FAFC")
-            set_cell_background(row_cells[1], "F8FAFC")
+    for dept_index, dept in enumerate(target_depts):
+        if dept_index > 0:
+            doc.add_page_break()
 
-    doc.add_paragraph().paragraph_format.space_after = Pt(12)
+        # ── 1. OFFICIAL INSTITUTIONAL HEADER ──
+        p_inst = doc.add_paragraph()
+        p_inst.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p_inst.paragraph_format.space_after = Pt(2)
+        r_inst = p_inst.add_run("NANDHA ENGINEERING COLLEGE, ERODE - 638 052.")
+        r_inst.font.name = "Times New Roman"
+        r_inst.font.size = Pt(14)
+        r_inst.font.bold = True
+        r_inst.font.color.rgb = RGBColor(15, 23, 42)
 
-    # 3. Student Performance Roster Table
-    doc.add_heading("II. Student Performance Roster (Top Performers)", level=2)
-    p_head2 = doc.paragraphs[-1]
-    for r in p_head2.runs:
-        r.font.name = "Times New Roman"
-        r.font.color.rgb = RGBColor(15, 23, 42)
+        p_dept = doc.add_paragraph()
+        p_dept.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p_dept.paragraph_format.space_after = Pt(2)
+        dept_title = f"Department of {dept.name}" if not dept.name.startswith("Department of") else dept.name
+        r_dept = p_dept.add_run(dept_title)
+        r_dept.font.name = "Times New Roman"
+        r_dept.font.size = Pt(11)
+        r_dept.font.bold = True
+        r_dept.font.color.rgb = RGBColor(30, 41, 59)
 
-    sorted_students = sorted(students, key=lambda s: (s.stats.total_solved if s.stats else 0), reverse=True)[:50]
+        p_date = doc.add_paragraph()
+        p_date.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        p_date.paragraph_format.space_after = Pt(2)
+        r_date = p_date.add_run(f"Date: {report_date_str}")
+        r_date.font.name = "Times New Roman"
+        r_date.font.size = Pt(10)
+        r_date.font.bold = True
 
-    headers = ["Rank", "Reg No", "Student Name", "Dept", "Year", "Easy", "Med", "Hard", "Total", "Rating"]
-    table_roster = doc.add_table(rows=1 + len(sorted_students), cols=len(headers))
-    table_roster.alignment = WD_TABLE_ALIGNMENT.CENTER
+        p_title = doc.add_paragraph()
+        p_title.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        p_title.paragraph_format.space_after = Pt(2)
+        r_title = p_title.add_run("Leetcode Performance - Weekly Report")
+        r_title.font.name = "Times New Roman"
+        r_title.font.size = Pt(10.5)
+        r_title.font.bold = True
+        r_title.font.underline = True
 
-    hdr_cells = table_roster.rows[0].cells
-    for i, h in enumerate(headers):
-        p = hdr_cells[i].paragraphs[0]
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run(h)
-        run.font.name = "Times New Roman"
-        run.font.size = Pt(9.5)
-        run.font.bold = True
-        run.font.color.rgb = RGBColor(255, 255, 255)
-        set_cell_background(hdr_cells[i], "0F172A")
+        p_coord = doc.add_paragraph()
+        p_coord.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        p_coord.paragraph_format.space_after = Pt(6)
+        r_coord = p_coord.add_run("Name & Designation of the Academic Coordinator:")
+        r_coord.font.name = "Times New Roman"
+        r_coord.font.size = Pt(10)
+        r_coord.font.bold = True
 
-    for idx, s in enumerate(sorted_students, start=1):
-        st = s.stats
-        row_cells = table_roster.rows[idx].cells
-        row_vals = [
-            f"#{idx}",
-            s.reg_no,
-            s.name,
-            s.department.code if s.department else "",
-            s.year_level,
-            str(st.easy_solved if st else 0),
-            str(st.medium_solved if st else 0),
-            str(st.hard_solved if st else 0),
-            str(st.total_solved if st else 0),
-            f"{round(st.contest_rating, 1):,}" if (st and st.contest_rating) else "Unrated"
+        # ── 2. OFFICIAL MULTI-LEVEL TABLE ──
+        # 2 header rows + 6 data rows (3 batches x 2 weeks) = 8 rows, 13 columns
+        table = doc.add_table(rows=8, cols=13)
+        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+
+        col_widths = [
+            Inches(1.2), Inches(0.9),
+            Inches(0.7), Inches(0.7), Inches(0.7), Inches(0.7), Inches(0.75),
+            Inches(0.65), Inches(0.65), Inches(0.65), Inches(0.65),
+            Inches(0.95), Inches(0.95)
         ]
 
-        for i, val in enumerate(row_vals):
-            p = row_cells[i].paragraphs[0]
-            p.alignment = WD_ALIGN_PARAGRAPH.CENTER if i in [0, 1, 3, 4, 5, 6, 7, 8, 9] else WD_ALIGN_PARAGRAPH.LEFT
-            run = p.add_run(val)
-            run.font.name = "Times New Roman"
-            run.font.size = Pt(9)
-            if i in [0, 8]:
-                run.font.bold = True
-                run.font.color.rgb = RGBColor(15, 23, 42)
+        for row in table.rows:
+            for c_idx, width in enumerate(col_widths):
+                row.cells[c_idx].width = width
 
-        if idx % 2 == 1:
-            for cell in row_cells:
-                set_cell_background(cell, "F1F5F9")
+        # Row 0 (Main Headers)
+        # Merge Batch vertically: cell(0,0) with cell(1,0)
+        table.cell(0, 0).merge(table.cell(1, 0))
+        table.cell(0, 0).paragraphs[0].text = "Batch"
+
+        # Merge Number of Students vertically: cell(0,1) with cell(1,1)
+        table.cell(0, 1).merge(table.cell(1, 1))
+        table.cell(0, 1).paragraphs[0].text = "Number of Students\n(Total Count)"
+
+        # Merge Number of Problems Solved horizontally: cell(0,2) to cell(0,6)
+        table.cell(0, 2).merge(table.cell(0, 6))
+        table.cell(0, 2).paragraphs[0].text = "Number of Problems Solved"
+
+        # Merge Weekly Contest Attended horizontally: cell(0,7) to cell(0,10)
+        table.cell(0, 7).merge(table.cell(0, 10))
+        table.cell(0, 7).paragraphs[0].text = "Weekly Contest Attended"
+
+        # Merge Leetcode Contest Rating and Ranking: cell(0,11) to cell(0,12)
+        table.cell(0, 11).merge(table.cell(0, 12))
+        table.cell(0, 11).paragraphs[0].text = "Leetcode Contest Rating and Ranking"
+
+        # Row 1 (Sub-Headers)
+        sub_headers = [
+            (2, "Above 500"),
+            (3, "250 - 500"),
+            (4, "Less than 250"),
+            (5, "Less than 100"),
+            (6, "Not yet started"),
+            (7, "4 Q Solved"),
+            (8, "3 Q Solved"),
+            (9, "2 Q Solved"),
+            (10, "1 Q Solved"),
+            (11, "Rating:\nAbove 1500"),
+            (12, "Ranking:\nBelow 20000")
+        ]
+
+        for col_idx, sub_title in sub_headers:
+            table.cell(1, col_idx).paragraphs[0].text = sub_title
+
+        # Style Header Rows
+        for r_idx in range(2):
+            for c_idx in range(13):
+                cell = table.cell(r_idx, c_idx)
+                set_cell_background(cell, "0F172A")
+                cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+                for p in cell.paragraphs:
+                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    for run in p.runs:
+                        run.font.name = "Times New Roman"
+                        run.font.size = Pt(8.5)
+                        run.font.bold = True
+                        run.font.color.rgb = RGBColor(255, 255, 255)
+
+        # ── 3. DATA ROWS FOR EACH BATCH (LAST WEEK & CURRENT WEEK) ──
+        dept_students = [s for s in all_students if s.department_id == dept.id]
+        curr_row = 2
+
+        for batch_label, yr_lvl in batch_definitions:
+            b_studs = [s for s in dept_students if derive_academic_year(s) == yr_lvl]
+            b_reg_nos = {s.reg_no for s in b_studs}
+            total_students_count = len(b_studs)
+
+            # Mutually exclusive problem solving categories
+            above_500 = sum(1 for s in b_studs if s.stats and (s.stats.total_solved or 0) > 500)
+            between_250_500 = sum(1 for s in b_studs if s.stats and 250 <= (s.stats.total_solved or 0) <= 500)
+            between_100_249 = sum(1 for s in b_studs if s.stats and 100 <= (s.stats.total_solved or 0) < 250)
+            between_1_99 = sum(1 for s in b_studs if s.stats and 1 <= (s.stats.total_solved or 0) < 100)
+            not_started = sum(1 for s in b_studs if not s.stats or (s.stats.total_solved or 0) == 0)
+
+            rating_above_1500 = sum(1 for s in b_studs if s.stats and s.stats.contest_rating and s.stats.contest_rating > 1500)
+            ranking_below_20000 = sum(1 for s in b_studs if s.stats and s.stats.contest_global_ranking and 0 < s.stats.contest_global_ranking < 20000)
+
+            # Last Week Contest Stats (from normalized dataset)
+            last_rows = [r for r in last_norm.get('rows', []) if r['reg_no'] in b_reg_nos]
+            last_4q = sum(1 for r in last_rows if r.get('total_solved') == 4)
+            last_3q = sum(1 for r in last_rows if r.get('total_solved') == 3)
+            last_2q = sum(1 for r in last_rows if r.get('total_solved') == 2)
+            last_1q = sum(1 for r in last_rows if r.get('total_solved') == 1)
+
+            # Current Week Contest Stats (from normalized dataset)
+            curr_rows = [r for r in curr_norm.get('rows', []) if r['reg_no'] in b_reg_nos]
+            curr_4q = sum(1 for r in curr_rows if r.get('total_solved') == 4)
+            curr_3q = sum(1 for r in curr_rows if r.get('total_solved') == 3)
+            curr_2q = sum(1 for r in curr_rows if r.get('total_solved') == 2)
+            curr_1q = sum(1 for r in curr_rows if r.get('total_solved') == 1)
+
+            # Last Week Row
+            last_week_cells = table.rows[curr_row].cells
+            last_week_vals = [
+                f"{batch_label}\n(Last Week)",
+                str(total_students_count),
+                str(above_500),
+                str(between_250_500),
+                str(between_100_249),
+                str(between_1_99),
+                str(not_started),
+                str(last_4q),
+                str(last_3q),
+                str(last_2q),
+                str(last_1q),
+                str(rating_above_1500),
+                str(ranking_below_20000)
+            ]
+
+            # Current Week Row
+            curr_week_cells = table.rows[curr_row + 1].cells
+            curr_week_vals = [
+                f"{batch_label}\n(Current Week)",
+                str(total_students_count),
+                str(above_500),
+                str(between_250_500),
+                str(between_100_249),
+                str(between_1_99),
+                str(not_started),
+                str(curr_4q),
+                str(curr_3q),
+                str(curr_2q),
+                str(curr_1q),
+                str(rating_above_1500),
+                str(ranking_below_20000)
+            ]
+
+            for c_i in range(13):
+                # Last week cell
+                p_l = last_week_cells[c_i].paragraphs[0]
+                p_l.text = last_week_vals[c_i]
+                p_l.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                last_week_cells[c_i].vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+                for run in p_l.runs:
+                    run.font.name = "Times New Roman"
+                    run.font.size = Pt(8.5)
+                    if c_i in (0, 1):
+                        run.font.bold = True
+
+                # Current week cell
+                p_c = curr_week_cells[c_i].paragraphs[0]
+                p_c.text = curr_week_vals[c_i]
+                p_c.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                curr_week_cells[c_i].vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+                for run in p_c.runs:
+                    run.font.name = "Times New Roman"
+                    run.font.size = Pt(8.5)
+                    if c_i in (0, 1):
+                        run.font.bold = True
+
+                set_cell_background(last_week_cells[c_i], "FFFFFF")
+                set_cell_background(curr_week_cells[c_i], "F8FAFC")
+
+            curr_row += 2
+
+        # Apply clean table borders
+        set_table_borders(table, color="64748B", sz="4", val="single")
 
     buffer = io.BytesIO()
     doc.save(buffer)
