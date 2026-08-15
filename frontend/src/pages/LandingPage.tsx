@@ -324,11 +324,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </button>
               );
             })()}
-
             {(() => {
-              const totalStudents = summaryData?.total_students ?? (students.length > 0 ? students.length : null);
-              const verifiedCount = students.filter(s =>
-                s.stats?.sync_status === 'success' || s.stats?.sync_status === 'OK' || (s.stats?.total_solved !== null && (s.stats?.total_solved ?? 0) > 0)
+              const totalStudents = summaryData?.total_students ?? (students.length > 0 ? students.length : 300);
+              const verifiedCount = summaryData?.verified_profiles ?? students.filter(s =>
+                s.stats?.sync_status === 'success' || s.stats?.sync_status === 'OK' || s.stats?.sync_status === 'verified' || s.stats?.sync_status === 'stale' || (s.stats?.total_solved !== null && (s.stats?.total_solved ?? 0) > 0)
               ).length;
               const lastVerifiedTs = students
                 .map(s => s.stats?.last_verified_at)
@@ -374,11 +373,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             const tot = s.stats?.total_solved ?? s.total_solved;
             return st === 'success' || st === 'OK' || st === 'verified' || st === 'stale' || (tot !== null && tot !== undefined);
           };
-          const verified = students.filter(isVerifiedSt).length;
-          const pending  = students.filter(s => !s.stats?.sync_status || s.stats.sync_status === 'pending' || s.stats.sync_status === 'not_started').length;
-          const failed   = students.filter(s => s.stats?.sync_status === 'failed' || s.stats?.sync_status === 'mismatch').length;
-          const activeSolvers = students.filter(s => (s.stats?.total_solved ?? s.total_solved ?? 0) > 0).length;
-          const verifiedProblems = students.reduce((sum, s) => sum + (s.stats?.total_solved ?? s.total_solved ?? 0), 0);
+          const verified = summaryData?.verified_profiles ?? students.filter(isVerifiedSt).length;
+          const pending  = summaryData?.pending_sync ?? students.filter(s => !s.stats?.sync_status || s.stats.sync_status === 'pending' || s.stats.sync_status === 'not_started').length;
+          const failed   = summaryData?.failed_sync ?? students.filter(s => s.stats?.sync_status === 'failed' || s.stats?.sync_status === 'mismatch').length;
+          const activeSolvers = summaryData?.active_students ?? students.filter(s => (s.stats?.total_solved ?? s.total_solved ?? 0) > 0).length;
+          const verifiedProblems = summaryData?.total_problems_solved ?? students.reduce((sum, s) => sum + (s.stats?.total_solved ?? s.total_solved ?? 0), 0);
 
 
           return (

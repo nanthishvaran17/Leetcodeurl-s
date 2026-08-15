@@ -85,6 +85,10 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
     next_sunday = (now + datetime.timedelta(days=days_until_sunday)).replace(hour=8, minute=0, second=0, microsecond=0)
     countdown_sec = int((next_sunday - now).total_seconds())
 
+    verified_profiles = sum(1 for s in students if s.stats and (s.stats.total_solved is not None or s.stats.sync_status in ('success', 'OK', 'verified', 'stale')))
+    pending_sync = sum(1 for s in students if not s.stats or (s.stats.sync_status in ('pending', 'not_started') and s.stats.total_solved is None))
+    failed_sync = sum(1 for s in students if s.stats and s.stats.sync_status == 'failed' and s.stats.total_solved is None)
+
     resp = {
         "total_students": int(total_students),
         "total_departments": int(total_departments),
@@ -97,7 +101,10 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         "highest_contest_rating": float(highest_rating) if highest_rating is not None else 0.0,
         "top_college_ranker": str(top_college_ranker) if top_college_ranker else "N/A",
         "current_session": current_session,
-        "next_session_countdown_seconds": int(max(countdown_sec, 0))
+        "next_session_countdown_seconds": int(max(countdown_sec, 0)),
+        "verified_profiles": int(verified_profiles),
+        "pending_sync": int(pending_sync),
+        "failed_sync": int(failed_sync)
     }
     cache.set(cache_key, resp, ttl_seconds=60, tags=["sessions", "students"])
     return resp
