@@ -1,6 +1,6 @@
 import datetime
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey, Text, JSON, UniqueConstraint
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from backend.database import Base
 
 class Department(Base):
@@ -844,7 +844,7 @@ class LeetCodeProfile(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
-    student = relationship("Student", backref="lc_profile", uselist=False)
+    student = relationship("Student", backref=backref("lc_profile", uselist=False))
 
 
 class LeetCodeProblemStats(Base):
@@ -876,7 +876,7 @@ class LeetCodeProblemStats(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
-    student = relationship("Student", backref="lc_problem_stats", uselist=False)
+    student = relationship("Student", backref=backref("lc_problem_stats", uselist=False))
 
 
 class LeetCodeContest(Base):
@@ -902,7 +902,7 @@ class LeetCodeContest(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
-    student = relationship("Student", backref="lc_contest_standing", uselist=False)
+    student = relationship("Student", backref=backref("lc_contest_standing", uselist=False))
 
 
 class LeetCodeContestRatingHistory(Base):
@@ -1034,7 +1034,7 @@ class LeetCodeActivity(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
-    student = relationship("Student", backref="lc_activity", uselist=False)
+    student = relationship("Student", backref=backref("lc_activity", uselist=False))
 
 
 class LeetCodeSubmission(Base):

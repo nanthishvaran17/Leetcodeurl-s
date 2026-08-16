@@ -216,11 +216,21 @@ def generate_comprehensive_excel(db) -> bytes:
                 max_len = max(max_len, len(val))
             ws.column_dimensions[col_letter].width = max(max_len + 4, 13)
 
-    add_roster_sheet("Cyber Security", [s for s in students if s.department_id == 1])
-    add_roster_sheet("IoT", [s for s in students if s.department_id == 2])
-    add_roster_sheet("II Year (2029)", [s for s in students if s.year_level == 2])
-    add_roster_sheet("III Year (2028)", [s for s in students if s.year_level == 3])
-    add_roster_sheet("IV Year (2027)", [s for s in students if s.year_level == 4])
+    def _is_year(s_obj, target_yr_int: int):
+        y_str = str(s_obj.year_level or "").strip().upper()
+        if target_yr_int == 2:
+            return y_str in ("2", "II", "YEAR 2", "YEAR II", "2ND", "SECOND")
+        elif target_yr_int == 3:
+            return y_str in ("3", "III", "YEAR 3", "YEAR III", "3RD", "THIRD")
+        elif target_yr_int == 4:
+            return y_str in ("4", "IV", "YEAR 4", "YEAR IV", "4TH", "FOURTH")
+        return False
+
+    add_roster_sheet("Cyber Security", [s for s in students if s.department_id == 1 or (s.department and "CYBER" in s.department.name.upper())])
+    add_roster_sheet("IoT", [s for s in students if s.department_id == 2 or (s.department and "IOT" in s.department.name.upper())])
+    add_roster_sheet("II Year (2029)", [s for s in students if _is_year(s, 2)])
+    add_roster_sheet("III Year (2028)", [s for s in students if _is_year(s, 3)])
+    add_roster_sheet("IV Year (2027)", [s for s in students if _is_year(s, 4)])
 
     buf = io.BytesIO()
     wb.save(buf)

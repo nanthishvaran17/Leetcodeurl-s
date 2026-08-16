@@ -277,7 +277,7 @@ def build_otp_email_template(otp: str) -> Tuple[str, str, str]:
     Generates a premium, modern corporate-grade institutional HTML & plain-text email
     for NANDHA ENGINEERING COLLEGE (AUTONOMOUS) LeetCode Tracker Admin Verification.
     """
-    subject = "NEC LeetCode Tracker — Secure Administrator Verification"
+    subject = "NEC LeetCode Tracker -  Secure Administrator Verification"
 
     html_body = f"""<!DOCTYPE html>
 <html lang="en">
@@ -757,94 +757,78 @@ def send_manual_report_email(
     Validates Excel attachment, creates rich HTML body, and records execution audit.
     """
     from backend.routes.reports import _get_dataset_for_id
-    from backend.routes.reports import _get_dataset_for_id
-    from backend.comprehensive_excel_generator import generate_comprehensive_excel
-    from backend.word_generator import generate_word_report
-    from backend.pdf_generator import generate_pdf_report
+    from backend.exporters.excel_exporter import export_excel_from_dataset
     import openpyxl
 
     report_id_str = f"Session_{session_id}" if session_id else "official"
     dataset, filename_base = _get_dataset_for_id(report_id_str, db, dept=dept, year=year, attendance=attendance)
     
-    # 1. Generate multi-sheet institutional Excel
-    excel_bytes = generate_comprehensive_excel(db)
+    excel_bytes = export_excel_from_dataset(dataset)
+    
+    # 1. Validate generated Excel bytes
     if not excel_bytes or len(excel_bytes) < 100:
         raise ValueError("Excel report generation failed: File is empty or corrupted.")
+    
+    try:
+        test_wb = openpyxl.load_workbook(io.BytesIO(excel_bytes))
+        sheet_names = test_wb.sheetnames
+        if "Weekly Contest Summary" not in sheet_names and "Student Performance" not in sheet_names:
+            raise ValueError("Generated Excel is missing standard required sheets.")
+    except Exception as e:
+        raise ValueError(f"Excel report validation error: {e}")
 
-    # 2. Generate official Word DOCX report
-    word_bytes = generate_word_report(db)
-    if not word_bytes or len(word_bytes) < 100:
-        raise ValueError("Word report generation failed: File is empty or corrupted.")
-
-    # 3. Generate official landscape PDF report
-    pdf_bytes = generate_pdf_report(db)
-    if not pdf_bytes or len(pdf_bytes) < 100:
-        raise ValueError("PDF report generation failed: File is empty or corrupted.")
-
-    excel_filename = f"{filename_base}_Summary.xlsx"
-    word_filename = f"{filename_base}_Official_Report.docx"
-    pdf_filename = f"{filename_base}_Official_Report.pdf"
-
-    attachments_bundle = [
-        (excel_filename, excel_bytes),
-        (word_filename, word_bytes),
-        (pdf_filename, pdf_bytes)
-    ]
-
+    excel_filename = f"{filename_base}.xlsx"
     total_students_cnt = len(dataset.get("rows", []))
     contest_name = dataset.get("contestName") or "Weekly Contest"
     metrics = dataset.get("metrics", {})
     gen_time_str = dataset.get("generatedAtIST") or datetime.datetime.utcnow().strftime("%d %b %Y, %I:%M %p IST")
 
+    # Format department, year, attendance labels for display
     dept_label = "All Departments" if dept == "ALL" else dept
     year_label = "All Years" if year == "ALL" else f"{year} Year"
     att_label = "Public Attended" if attendance == "PUBLIC_ATTENDED" else ("Virtual Attended" if attendance == "VIRTUAL_ATTENDED" else ("Not Attended" if attendance == "PUBLIC_NOT_ATTENDED" else "All Attendance"))
 
     test_badge = " [TEST RUN]" if is_safe_test else ""
-    subject = f"{test_badge}Nandha Engineering College — {contest_name} Official Performance Bundle (Excel, Word & PDF)"
+    subject = f"{test_badge}Nandha Engineering College — {contest_name} Performance Report"
 
     custom_block = f"<div style='background: #f0fdf4; border-left: 4px solid #16a34a; padding: 12px; margin: 15px 0; font-style: italic; color: #166534;'>{custom_message}</div>" if custom_message else ""
 
     body_html = f"""
     <!DOCTYPE html>
     <html>
-    <body style="font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; line-height: 1.6; max-width: 680px; margin: 0 auto; padding: 20px; background-color: #f8fafc;">
+    <body style="font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; line-height: 1.6; max-width: 650px; margin: 0 auto; padding: 20px; background-color: #f8fafc;">
         <div style="background-color: #0f172a; color: #ffffff; padding: 24px 20px; text-align: center; border-radius: 12px 12px 0 0;">
             <h2 style="margin: 0; font-size: 20px; letter-spacing: 0.5px;">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</h2>
-            <p style="margin: 6px 0 0 0; font-size: 13px; color: #38bdf8;">Department of Computer Science and Engineering (Cyber Security & IoT)</p>
-            <p style="margin: 4px 0 0 0; font-size: 12px; color: #94a3b8;">LeetCode Weekly Performance Tracker • Official Weekly Report Bundle</p>
+            <p style="margin: 6px 0 0 0; font-size: 13px; color: #38bdf8;">LeetCode Weekly Performance Tracker • Official Institutional Report</p>
         </div>
 
         <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-top: none; padding: 28px; border-radius: 0 0 12px 12px;">
             <p style="margin-top: 0;">Dear Sir/Madam,</p>
-            <p>Please find attached the official performance report package for <strong>{contest_name}</strong> containing Excel, Word Document, and PDF formats.</p>
+            <p>Please find attached the official performance report spreadsheet for <strong>{contest_name}</strong>.</p>
             
             {custom_block}
 
             <div style="background-color: #f1f5f9; border-radius: 8px; padding: 16px; margin: 20px 0;">
-                <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">📊 Performance Summary</h4>
+                <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">📊 Report Scope & Summary</h4>
                 <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
                     <tr><td style="padding: 6px 0; color: #64748b;">Contest Name:</td><td style="font-weight: bold; text-align: right; color: #0f172a;">{contest_name}</td></tr>
-                    <tr><td style="padding: 6px 0; color: #64748b;">Department Scope:</td><td style="font-weight: bold; text-align: right; color: #0f172a;">{dept_label}</td></tr>
+                    <tr><td style="padding: 6px 0; color: #64748b;">Department:</td><td style="font-weight: bold; text-align: right; color: #0f172a;">{dept_label}</td></tr>
                     <tr><td style="padding: 6px 0; color: #64748b;">Academic Year:</td><td style="font-weight: bold; text-align: right; color: #0f172a;">{year_label}</td></tr>
-                    <tr><td style="padding: 6px 0; color: #64748b;">Monitored Students:</td><td style="font-weight: bold; text-align: right; color: #0284c7;">{total_students_cnt} Students</td></tr>
+                    <tr><td style="padding: 6px 0; color: #64748b;">Attendance Scope:</td><td style="font-weight: bold; text-align: right; color: #0f172a;">{att_label}</td></tr>
+                    <tr><td style="padding: 6px 0; color: #64748b;">Filtered Students Count:</td><td style="font-weight: bold; text-align: right; color: #0284c7;">{total_students_cnt} Students</td></tr>
                     <tr><td style="padding: 6px 0; color: #64748b;">Public Attended:</td><td style="font-weight: bold; text-align: right; color: #16a34a;">{metrics.get('officialAttended', 0)}</td></tr>
                     <tr><td style="padding: 6px 0; color: #64748b;">Public Not Attended:</td><td style="font-weight: bold; text-align: right; color: #dc2626;">{metrics.get('notAttended', 0)}</td></tr>
+                    <tr><td style="padding: 6px 0; color: #64748b;">Virtual Attended:</td><td style="font-weight: bold; text-align: right; color: #2563eb;">{metrics.get('virtualAttended', '—')}</td></tr>
                     <tr><td style="padding: 6px 0; color: #64748b;">Generated At:</td><td style="font-weight: bold; text-align: right; color: #64748b;">{gen_time_str}</td></tr>
                 </table>
             </div>
 
-            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin: 15px 0;">
-                <h5 style="margin: 0 0 8px 0; color: #1e293b; font-size: 13px;">📎 Attached Official Documents (3 Files):</h5>
-                <ul style="margin: 0; padding-left: 20px; font-size: 12.5px; color: #475569;">
-                    <li style="margin-bottom: 4px;"><strong>Excel Spreadsheet:</strong> <code>{excel_filename}</code> ({len(excel_bytes):,} bytes) — Multi-sheet breakdown with year & department tabs</li>
-                    <li style="margin-bottom: 4px;"><strong>Official Word Report:</strong> <code>{word_filename}</code> ({len(word_bytes):,} bytes) — Landscape multi-level performance matrix</li>
-                    <li><strong>PDF Report:</strong> <code>{pdf_filename}</code> ({len(pdf_bytes):,} bytes) — Print-ready institutional report</li>
-                </ul>
-            </div>
+            <p style="font-size: 13px; color: #475569;">
+                📎 <strong>Attached Document:</strong> <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">{excel_filename}</code> ({len(excel_bytes):,} bytes)
+            </p>
             
             <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-            <p style="font-size: 11px; color: #94a3b8; margin: 0; text-align: center;">NANDHA ENGINEERING COLLEGE (AUTONOMOUS) • ERODE - 638 052</p>
+            <p style="font-size: 11px; color: #94a3b8; margin: 0; text-align: center;">Nandha Engineering College • Autonomous • Erode - 638 052</p>
         </div>
     </body>
     </html>
@@ -874,33 +858,22 @@ def send_manual_report_email(
             role="ADMIN_DISPATCH",
             subject=subject,
             status="SENDING",
-            attachment_count=3,
-            total_attachment_bytes=len(excel_bytes) + len(word_bytes) + len(pdf_bytes)
+            attachment_count=1,
+            total_attachment_bytes=len(excel_bytes)
         )
         db.add(log)
         db.commit()
 
-        # Build MIME message with 3 attachments
+        # Build MIME message with attachment
         msg = MIMEMultipart()
         msg['From'] = from_email
         msg['To'] = email
         msg['Subject'] = subject
         msg.attach(MIMEText(body_html, 'html'))
 
-        # 1. Excel Part
-        excel_part = MIMEApplication(excel_bytes, _subtype="vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-        excel_part.add_header('Content-Disposition', 'attachment', filename=excel_filename)
+        excel_part = MIMEApplication(excel_bytes, Name=excel_filename)
+        excel_part['Content-Disposition'] = f'attachment; filename="{excel_filename}"'
         msg.attach(excel_part)
-
-        # 2. Word Part
-        word_part = MIMEApplication(word_bytes, _subtype="vnd.openxmlformats-officedocument.wordprocessingml.document")
-        word_part.add_header('Content-Disposition', 'attachment', filename=word_filename)
-        msg.attach(word_part)
-
-        # 3. PDF Part
-        pdf_part = MIMEApplication(pdf_bytes, _subtype="pdf")
-        pdf_part.add_header('Content-Disposition', 'attachment', filename=pdf_filename)
-        msg.attach(pdf_part)
 
         delivered = False
         err_details = None
@@ -908,12 +881,12 @@ def send_manual_report_email(
         if resend_key:
             delivered, err_details = send_email_via_resend(
                 resend_key, from_email, email, subject, body_html,
-                attachments_bundle
+                [(excel_filename, excel_bytes)]
             )
         elif brevo_key:
             delivered, err_details = send_email_via_brevo(
                 brevo_key, from_email, email, subject, body_html,
-                attachments_bundle
+                [(excel_filename, excel_bytes)]
             )
         elif smtp_user and smtp_pass:
             try:
@@ -939,13 +912,7 @@ def send_manual_report_email(
             log.error_message = None if not err_details else err_details
             db.commit()
             dispatched_count += 1
-            logger.info(
-                f"[ATTACHMENT INTEGRITY AUDIT] EXEC_ID={exec_id} | "
-                f"EXCEL_VALIDATION=PASS | ATTACHMENT=PASS | "
-                f"MIME=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet | "
-                f"SIZE={len(excel_bytes)} B | EMAIL_DELIVERY=DELIVERED | "
-                f"GMAIL_PREVIEW=NOT_CONTROLLED_BY_APP | TO={email}"
-            )
+            logger.info(f"[REPORT EMAIL DELIVERED] To: {email} | File: {excel_filename} ({len(excel_bytes)} B) | Students: {total_students_cnt}")
         else:
             log.status = "FAILED"
             log.error_message = err_details
@@ -959,19 +926,10 @@ def send_manual_report_email(
             detail=f"Failed to send email to recipients: {'; '.join(errors)}"
         )
 
-    last_exec_id = f"EXEC-{datetime.datetime.utcnow().strftime('%Y%m%d')}-{int(time.time()*1000) % 100000}"
-
     return {
         "status": "success",
-        "execution_id": last_exec_id,
-        "message": f"Weekly Excel Report Delivered Successfully to {dispatched_count} recipient(s).",
+        "message": f"Successfully sent '{excel_filename}' to {dispatched_count} recipient(s).",
         "excel_filename": excel_filename,
-        "file_size_bytes": len(excel_bytes),
-        "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "excel_validation": "PASS",
-        "attachment_validation": "PASS",
-        "email_delivery": "DELIVERED",
-        "gmail_preview": "CLIENT_SIDE_PREVIEW_LIMITATION",
         "total_students": total_students_cnt,
         "dispatched_count": dispatched_count,
         "errors": errors if errors else None

@@ -342,23 +342,38 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
             q4_count = q3_count = q2_count = q1_count = 0
 
             for idx, r in enumerate(raw_rows, start=1):
-                p_status = r.get("participation_status", "PUBLIC_NOT_ATTENDED")
-                attended = p_status in ("PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL_ATTENDED")
-                
-                v_q1 = 1 if r.get("q1") == 1 else (0 if attended else "—")
-                v_q2 = 1 if r.get("q2") == 1 else (0 if attended else "—")
-                v_q3 = 1 if r.get("q3") == 1 else (0 if attended else "—")
-                v_q4 = 1 if r.get("q4") == 1 else (0 if attended else "—")
+                p_status = r.get("participation_status", "NOT_ATTENDED")
+                # Canonical statuses: PUBLIC, VIRTUAL, NOT_ATTENDED, UNKNOWN
+                # Legacy statuses: PUBLIC_ATTENDED, ATTENDED, VIRTUAL_ATTENDED, PUBLIC_NOT_ATTENDED
+                attended = p_status in ("PUBLIC", "VIRTUAL", "PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL_ATTENDED")
+                is_virtual = p_status in ("VIRTUAL", "VIRTUAL_ATTENDED")
 
-                solved_val = r.get("total_solved") if attended else "—"
-                rank_val = r.get("rank") if attended else "—"
+                v_q1 = r.get("q1", 0)
+                v_q2 = r.get("q2", 0)
+                v_q3 = r.get("q3", 0)
+                v_q4 = r.get("q4", 0)
+
+                # Raw rows use "total_solved", "rating", "rank" as keys from get_session_matrix
+                solved_total = r.get("total_solved") or r.get("total_contest_solved")
+                c_rank = r.get("rank") or r.get("contest_rank")
+                c_rating = r.get("rating") or r.get("contest_rating")
+                solved_val = solved_total if attended else "—"
+                rank_val = c_rank if attended else "—"
+                rating_val = c_rating if attended else "—"
 
                 if attended:
-                    q_sum = (1 if v_q1 == 1 else 0) + (1 if v_q2 == 1 else 0) + (1 if v_q3 == 1 else 0) + (1 if v_q4 == 1 else 0)
+                    q_sum = (1 if (v_q1 or 0) >= 1 else 0) + (1 if (v_q2 or 0) >= 1 else 0) + (1 if (v_q3 or 0) >= 1 else 0) + (1 if (v_q4 or 0) >= 1 else 0)
                     if q_sum == 4: q4_count += 1
                     elif q_sum == 3: q3_count += 1
                     elif q_sum == 2: q2_count += 1
                     elif q_sum == 1: q1_count += 1
+
+                status_display = (
+                    "PUBLIC" if p_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED")
+                    else "VIRTUAL" if p_status in ("VIRTUAL", "VIRTUAL_ATTENDED")
+                    else "NOT ATTENDED" if p_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED")
+                    else "DATA ERROR"
+                )
 
                 row_dict = {
                     "s_no": idx,
@@ -367,19 +382,31 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
                     "dept": r.get("dept", ""),
                     "year": r.get("year", ""),
                     "username": r.get("username", ""),
+                    "profile_url": r.get("profile_url", ""),
                     "profile_rank": r.get("profile_rank", "—"),
                     "profile_total_solved": r.get("profile_total_solved", 0),
-                    "status": "PUBLIC" if p_status in ("PUBLIC_ATTENDED", "ATTENDED") else ("VIRTUAL" if p_status == "VIRTUAL_ATTENDED" else ("DATA ERROR" if p_status == "DATA_ERROR" else "NOT ATTENDED")),
+                    "easy_solved": r.get("easy_solved", "—"),
+                    "medium_solved": r.get("medium_solved", "—"),
+                    "hard_solved": r.get("hard_solved", "—"),
+                    "status": status_display,
                     "participation_status": p_status,
                     "contest_name": contest_name,
-                    "q1": v_q1,
-                    "q2": v_q2,
-                    "q3": v_q3,
-                    "q4": v_q4,
+                    "q1": v_q1 if attended else "—",
+                    "q2": v_q2 if attended else "—",
+                    "q3": v_q3 if attended else "—",
+                    "q4": v_q4 if attended else "—",
                     "total_solved": solved_val,
+                    "total_contest_solved": solved_val,
                     "rank": rank_val,
-                    "score": r.get("score", 0),
-                    "rating": r.get("rating", "—")
+                    "contest_rank": rank_val,
+                    "score": r.get("contest_score") or r.get("score") or (solved_total if attended else 0) or 0,
+                    "rating": rating_val,
+                    "contest_rating": rating_val,
+                    "sync_status": r.get("sync_status", "—"),
+                    "last_verified": r.get("last_verified", "—"),
+                    "data_fetch_status": r.get("data_fetch_status", "—"),
+                    "confidence": r.get("confidence", "—"),
+                    "error_reason": r.get("error_reason", ""),
                 }
                 normalized_rows.append(row_dict)
 
@@ -390,20 +417,30 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
                     "year": r.get("year", ""),
                     "username": r.get("username", ""),
                     "profile_rank": r.get("profile_rank", "—"),
-                    "easy": v_q1 if isinstance(v_q1, int) else 0,
-                    "medium": v_q2 if isinstance(v_q2, int) else 0,
-                    "hard": v_q3 if isinstance(v_q3, int) else 0,
-                    "total_solved": solved_val if isinstance(solved_val, int) else None,
+                    "easy": int(v_q1) if (v_q1 not in (None, "—") and str(v_q1).isdigit()) else 0,
+                    "medium": int(v_q2) if (v_q2 not in (None, "—") and str(v_q2).isdigit()) else 0,
+                    "hard": int(v_q3) if (v_q3 not in (None, "—") and str(v_q3).isdigit()) else 0,
+                    "total_solved": int(solved_val) if (attended and str(solved_val).isdigit()) else None,
                     "status": row_dict["status"],
                     "rank": rank_val,
-                    "score": r.get("score", 0),
-                    "rating": float(r.get("rating")) if (r.get("rating") not in (None, "—")) else None
+                    "score": row_dict["score"],
+                    "rating": float(rating_val) if (rating_val not in (None, "—") and str(rating_val).replace(".", "", 1).isdigit()) else None
                 }
                 all_students.append(entry)
-                if attended and isinstance(solved_val, int) and solved_val > 0:
+                if attended:
                     top_students.append(entry)
 
-            top_students.sort(key=lambda x: x.get("score", 0) or 0, reverse=True)
+            def _extract_score_num(x):
+                s_val = x.get("score")
+                if isinstance(s_val, (int, float)):
+                    return float(s_val)
+                if isinstance(s_val, str):
+                    m_val = re.search(r'\d+', s_val)
+                    if m_val:
+                        return float(m_val.group(0))
+                return 0.0
+
+            top_students.sort(key=_extract_score_num, reverse=True)
             pub_attended_cnt = matrix_metrics.get("publicAttended", matrix_metrics.get("officialParticipants", sum(1 for r in normalized_rows if r.get("status") == "PUBLIC")))
             virt_attended_cnt = matrix_metrics.get("virtualAttended", matrix_metrics.get("virtualParticipants", sum(1 for r in normalized_rows if r.get("status") == "VIRTUAL")))
             not_attended_cnt = matrix_metrics.get("notAttended", matrix_metrics.get("notParticipated", sum(1 for r in normalized_rows if r.get("status") == "NOT ATTENDED")))

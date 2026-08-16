@@ -214,11 +214,14 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
 
     # ── SHEET 2: STUDENT PERFORMANCE MATRIX ──────────────────────────────────
     STATUS_LABEL = {
+        "PUBLIC":             "🟢 PUBLIC",
         "PUBLIC_ATTENDED":    "🟢 PUBLIC",
         "ATTENDED":           "🟢 PUBLIC",
+        "VIRTUAL":            "🔵 VIRTUAL",
         "VIRTUAL_ATTENDED":   "🔵 VIRTUAL",
-        "PUBLIC_NOT_ATTENDED":"🔴 NOT ATTENDED",
         "NOT_ATTENDED":       "🔴 NOT ATTENDED",
+        "PUBLIC_NOT_ATTENDED":"🔴 NOT ATTENDED",
+        "UNKNOWN":            "⚪ UNVERIFIED",
         "DATA_ERROR":         "⚠️ DATA ERROR",
         "PENDING":            "🟡 PENDING",
     }
@@ -228,61 +231,61 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         _write_college_header(
             ws_tab,
             title=tab_header_title,
-            cols=17,
+            cols=20,
             font_tnr=font_tnr,
             navy_fill=navy_fill,
             header_fill=header_fill,
             center=center
         )
 
-        m_headers   = [
+        m_headers = [
             "S.No", "Register No", "Student Name", "Department", "Year",
-            "LeetCode Handle", "Attendance Status", "Contest Name", "Contest Rating",
-            "Contest Rank", "Profile Rank", "Total Solved",
-            "Q1", "Q2", "Q3", "Q4", "Total Contest Solved"
+            "LeetCode Username", "Profile URL", "Total Solved", "Easy", "Medium", "Hard",
+            "Contest Rating", "Global Rank", "Profile Rank",
+            "Contest Participation", "Contest Score", "Contest Rank", "Rating Change",
+            "Sync Status", "Last Verified"
         ]
-        m_col_widths = [8, 16, 28, 14, 10, 20, 20, 24, 16, 14, 14, 14, 8, 8, 8, 8, 20]
+        m_col_widths = [6, 16, 26, 12, 8, 18, 32, 12, 8, 8, 8, 14, 14, 14, 20, 14, 14, 12, 16, 18]
         _write_header_row(ws_tab, 3, m_headers, m_col_widths, navy_fill, font_tnr, center)
 
         if not student_row_list:
-            ws_tab.merge_cells("A4:Q4")
+            ws_tab.merge_cells("A4:T4")
             c = ws_tab.cell(row=4, column=1, value="No student records recorded for this category.")
             c.font = Font(name=font_tnr, size=10, italic=True, color="64748B")
             c.alignment = center
             ws_tab.row_dimensions[4].height = 24
-            for col_i in range(1, 18):
+            for col_i in range(1, 21):
                 _apply_thin_border(ws_tab.cell(row=4, column=col_i))
             return
 
         for idx, r in enumerate(student_row_list, start=1):
             row_num   = 3 + idx
-            p_status  = r.get("participation_status") or "PENDING"
-            attended  = p_status in ("PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL_ATTENDED")
-            is_virtual = p_status == "VIRTUAL_ATTENDED"
-            row_fill  = (green_fill if attended else red_fill) if idx % 2 != 0 else (
-                PatternFill(start_color="D1FAE5", end_color="D1FAE5", fill_type="solid") if attended
-                else PatternFill(start_color="FFE4E6", end_color="FFE4E6", fill_type="solid")
-            )
+            p_status  = r.get("participation_status") or "NOT_ATTENDED"
+            attended  = p_status in ("PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL_ATTENDED", "PUBLIC", "VIRTUAL")
+            is_virtual = p_status in ("VIRTUAL_ATTENDED", "VIRTUAL")
+            row_fill  = (green_fill if attended else (alt_fill if idx % 2 == 0 else white_fill))
 
             status_label = STATUS_LABEL.get(p_status, p_status)
-            c_name_val = r.get("contest_name") or dataset.get("contestName") or "Weekly Contest"
+            c_url = r.get("profile_url") or (f"https://leetcode.com/u/{r.get('username')}/" if r.get('username') else "—")
             
-            v_q1 = r.get("q1")
-            v_q2 = r.get("q2")
-            v_q3 = r.get("q3")
-            v_q4 = r.get("q4")
+            p_solved = r.get("profile_total_solved") if r.get("profile_total_solved") is not None else (r.get("total_solved") if r.get("total_solved") != "—" else "—")
+            p_easy = r.get("easy_solved", "—")
+            p_med = r.get("medium_solved", "—")
+            p_hard = r.get("hard_solved", "—")
 
-            q1_disp = v_q1 if (attended and v_q1 != "—") else "—"
-            q2_disp = v_q2 if (attended and v_q2 != "—") else "—"
-            q3_disp = v_q3 if (attended and v_q3 != "—") else "—"
-            q4_disp = v_q4 if (attended and v_q4 != "—") else "—"
+            c_rating_disp = r.get("contest_rating") or r.get("rating") or "—"
+            c_rank_disp = r.get("contest_rank") or r.get("rank") or "—"
+            
+            t_c_solved = r.get("total_contest_solved")
+            if t_c_solved is None or t_c_solved == "—":
+                t_c_solved = r.get("total_solved")
+            if t_c_solved is None or t_c_solved == "—":
+                t_c_solved = 0 if attended else "—"
 
-            solved_cnt = r.get("total_solved") if (attended and r.get("total_solved") != "—") else "—"
-            rank_disp = r.get("rank") or r.get("contest_rank") or "—"
-            rating_disp = r.get("rating") or r.get("contest_rating") or "—"
-            if not attended:
-                rank_disp = "—"
-                rating_disp = "—"
+            c_score_disp = f"{t_c_solved} / 4" if attended else "Not Attended"
+
+            sync_st = r.get("sync_status") or ("VERIFIED" if attended else "PENDING_USERNAME")
+            last_ver = r.get("last_verified") or "—"
 
             row_data = [
                 idx,
@@ -290,18 +293,21 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
                 r.get("name", ""),
                 r.get("dept", ""),
                 r.get("year", ""),
-                r.get("username", "") or r.get("reg_no", ""),
-                status_label,
-                c_name_val,
-                rating_disp,
-                rank_disp,
+                r.get("username", "") or "—",
+                c_url,
+                p_solved,
+                p_easy,
+                p_med,
+                p_hard,
+                c_rating_disp if attended else "—",
+                r.get("contest_global_rank") or "—",
                 r.get("profile_rank", "—"),
-                r.get("profile_total_solved", "—"),
-                q1_disp,
-                q2_disp,
-                q3_disp,
-                q4_disp,
-                solved_cnt,
+                status_label,
+                c_score_disp if attended else "Not Attended",
+                c_rank_disp if attended else "—",
+                "—",
+                sync_st,
+                last_ver,
             ]
 
             for col_idx, val in enumerate(row_data, start=1):
@@ -309,11 +315,10 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
                 c.fill = row_fill
                 c.font = Font(
                     name=font_tnr, size=9.5,
-                    bold=(col_idx in (1, 7, 17)),
-                    color=("006400" if (attended and not is_virtual) else ("0051A8" if is_virtual else "8B0000"))
-                    if col_idx == 7 else "1E293B"
+                    bold=(col_idx in (1, 15)),
+                    color=("006400" if (attended and not is_virtual) else ("0051A8" if is_virtual else "1E293B"))
                 )
-                c.alignment = center if col_idx not in (3, 6, 8) else left
+                c.alignment = center if col_idx not in (3, 6, 7) else left
                 _apply_thin_border(c)
             ws_tab.row_dimensions[row_num].height = 20
 
@@ -325,19 +330,19 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         _write_matrix_tab(ws_perf, dataset.get("title", "Weekly Contest — Student Performance Matrix"), rows)
 
         # Sheet 3: Public Attended
-        pub_attended_rows = [r for r in rows if r.get("participation_status") in ("PUBLIC_ATTENDED", "ATTENDED") or r.get("status") == "PUBLIC"]
+        pub_attended_rows = [r for r in rows if r.get("participation_status") in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED") or r.get("status") == "PUBLIC"]
         if pub_attended_rows:
             ws_pub = wb.create_sheet(title="Public Attended")
             _write_matrix_tab(ws_pub, f"{dataset.get('contestName', 'Weekly Contest')} — Public Attended Roster", pub_attended_rows)
 
         # Sheet 4: Public Not Attended
-        pub_not_rows = [r for r in rows if r.get("participation_status") in ("PUBLIC_NOT_ATTENDED", "NOT_ATTENDED", "PENDING") or r.get("status") == "NOT ATTENDED"]
+        pub_not_rows = [r for r in rows if r.get("participation_status") in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "PENDING", "UNKNOWN") or r.get("status") in ("NOT ATTENDED", "UNVERIFIED")]
         if pub_not_rows:
             ws_not = wb.create_sheet(title="Public Not Attended")
             _write_matrix_tab(ws_not, f"{dataset.get('contestName', 'Weekly Contest')} — Public Not Attended Roster", pub_not_rows)
 
         # Sheet 5: Virtual Attended (Always Created)
-        virt_rows = [r for r in rows if r.get("participation_status") == "VIRTUAL_ATTENDED" or r.get("status") == "VIRTUAL"]
+        virt_rows = [r for r in rows if r.get("participation_status") in ("VIRTUAL", "VIRTUAL_ATTENDED") or r.get("status") == "VIRTUAL"]
         ws_virt = wb.create_sheet(title="Virtual Attended")
         _write_matrix_tab(ws_virt, f"{dataset.get('contestName', 'Weekly Contest')} — Virtual Attended Roster", virt_rows)
 

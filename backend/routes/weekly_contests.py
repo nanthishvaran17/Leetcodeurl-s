@@ -326,6 +326,16 @@ def get_normalized_contest_data(
     pub_map = {r.student_id: r for r in pub_results}
     virt_map = {v.student_id: v for v in virt_results}
 
+    # Fetch verified contest rating history for this contest across all students
+    from backend.models import LeetCodeContestRatingHistory
+    hist_map = {}
+    if c_num:
+        hist_rows = db.query(LeetCodeContestRatingHistory).filter(
+            LeetCodeContestRatingHistory.contest_name.ilike(f"%{c_num}%")
+        ).all()
+        for hr in hist_rows:
+            hist_map[hr.student_id] = hr
+
     is_session_finalized = session.status in ("COMPLETED", "FINALIZED")
     is_upcoming_or_in_progress = session.status in ("LIVE", "SYNCING", "UPCOMING", "SCHEDULED")
 
@@ -333,13 +343,18 @@ def get_normalized_contest_data(
     for s in students:
         p_res = pub_map.get(s.id)
         v_res = virt_map.get(s.id)
+        h_res = hist_map.get(s.id)
 
         dept_code = s.department.code if s.department else "CSE"
         year_lvl = derive_academic_year(s)
 
-        # 1. ATTENDANCE STATE MACHINE RESOLUTION (Phases C, D, E, G, H, I)
-        # Exactly one state per student:
-        # PUBLIC | VIRTUAL | NOT_ATTENDED | UNKNOWN
+        # Canonical relations — accessed via backref (lazy loaded after initial query)
+        lc_p = getattr(s, 'lc_profile', None)
+        lc_st = getattr(s, 'lc_problem_stats', None)
+        is_p_verified = bool(lc_p and getattr(lc_p, 'verification_status', None) == "PROFILE_VERIFIED")
+
+        # 1. ATTENDANCE STATE MACHINE RESOLUTION
+        # Exactly one state per student: PUBLIC | VIRTUAL | NOT_ATTENDED | UNKNOWN
         resolved_status = "UNKNOWN"
         data_fetch_st = "DATA_UNAVAILABLE"
         confidence_val = "UNVERIFIED"
@@ -349,13 +364,34 @@ def get_normalized_contest_data(
 
         p_status = getattr(p_res, 'participation_status', None)
         p_fetch_st = getattr(p_res, 'data_fetch_status', None) or getattr(p_res, 'fetch_status', None)
-        p_conf = getattr(p_res, 'confidence', None)
 
         if not s.username or s.username.strip() in ("", "None", "null") or len(s.username.strip()) < 2:
             resolved_status = "UNKNOWN"
             data_fetch_st = "USERNAME_NOT_FOUND"
             confidence_val = "UNVERIFIED"
             err_re = "Missing or unmapped LeetCode profile handle"
+        elif h_res and h_res.attended:
+            resolved_status = "PUBLIC"
+            data_fetch_st = "SUCCESS"
+            confidence_val = "VERIFIED"
+            tot_val = h_res.problems_solved or 0
+            score_val = f"{tot_val} / 4"
+            rank_val = h_res.contest_rank
+            rating_val = round(h_res.rating_after, 1) if h_res.rating_after else None
+            q1_val = 1 if tot_val >= 1 else 0
+            q2_val = 1 if tot_val >= 2 else 0
+            q3_val = 1 if tot_val >= 3 else 0
+            q4_val = 1 if tot_val == 4 else 0
+        elif h_res and not h_res.attended and (h_res.problems_solved or 0) > 0:
+            resolved_status = "VIRTUAL"
+            data_fetch_st = "SUCCESS"
+            confidence_val = "VERIFIED"
+            tot_val = h_res.problems_solved or 0
+            score_val = f"{tot_val} / 4"
+            q1_val = 1 if tot_val >= 1 else 0
+            q2_val = 1 if tot_val >= 2 else 0
+            q3_val = 1 if tot_val >= 3 else 0
+            q4_val = 1 if tot_val == 4 else 0
         elif v_res and (v_res.participation_status in ("VIRTUAL_ATTENDED", "VIRTUAL")):
             resolved_status = "VIRTUAL"
             data_fetch_st = "SUCCESS"
@@ -380,6 +416,10 @@ def get_normalized_contest_data(
             score_val = p_res.contest_score or 0
             rank_val = getattr(p_res, 'contest_rank', None)
             rating_val = getattr(p_res, 'contest_rating', None)
+        elif is_p_verified:
+            resolved_status = "NOT_ATTENDED"
+            data_fetch_st = "SUCCESS"
+            confidence_val = "VERIFIED"
         elif p_res and p_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED"):
             if getattr(p_res, 'fetch_status', None) == "FETCH_ERROR" or p_fetch_st == "FETCH_FAILED":
                 resolved_status = "UNKNOWN"
@@ -390,38 +430,22 @@ def get_normalized_contest_data(
                 resolved_status = "NOT_ATTENDED"
                 data_fetch_st = "SUCCESS"
                 confidence_val = "VERIFIED"
-        elif is_upcoming_or_in_progress:
-            resolved_status = "UNKNOWN"
-            data_fetch_st = "DATA_UNAVAILABLE"
-            confidence_val = "UNVERIFIED"
         else:
             resolved_status = "UNKNOWN"
             data_fetch_st = "DATA_UNAVAILABLE"
             confidence_val = "UNVERIFIED"
 
-        # Mandatory Attendance Evidence Record
-        now_iso = datetime.datetime.utcnow().isoformat()
-        evidence_timestamp = (
-            p_res.last_fetched_at.isoformat() if (p_res and p_res.last_fetched_at)
-            else (v_res.completed_at.isoformat() if (v_res and getattr(v_res, 'completed_at', None))
-            else (session.completed_at.isoformat() if session.completed_at else now_iso))
-        )
-        
-        has_positive_evidence = bool(p_res or v_res or (not is_session_in_progress and session.status in ('COMPLETED', 'FINALIZED')))
-        evidence_source_type = (
-            "PUBLIC_CONTEST_API" if (p_res and resolved_status == "PUBLIC")
-            else ("VIRTUAL_CONTEST_API" if (v_res and resolved_status == "VIRTUAL")
-            else "VERIFIED_SESSION_ROSTER")
-        )
-
-        attendance_evidence = {
-            "source_checked": has_positive_evidence,
-            "source_type": evidence_source_type,
-            "contest_id": session.contest_id or f"weekly-contest-{session.id}",
-            "response_received": has_positive_evidence,
-            "participation_confirmed": resolved_status in ("PUBLIC", "VIRTUAL"),
-            "verification_timestamp": evidence_timestamp
-        }
+        # Profile fields from canonical relations (backref, may be None)
+        c_user = getattr(lc_p, 'canonical_username', None) if is_p_verified else (s.username or s.reg_no)
+        c_p_url = getattr(lc_p, 'profile_url', None) if is_p_verified else (f"https://leetcode.com/u/{s.username}/" if s.username else None)
+        p_solved = lc_st.total_solved if (lc_st and lc_st.total_solved is not None) else (s.stats.total_solved if (s.stats and s.stats.total_solved is not None) else 0)
+        p_easy = lc_st.easy_solved if (lc_st and lc_st.easy_solved is not None) else (getattr(s.stats, 'easy_solved', None) or 0)
+        p_med = lc_st.medium_solved if (lc_st and lc_st.medium_solved is not None) else (getattr(s.stats, 'medium_solved', None) or 0)
+        p_hard = lc_st.hard_solved if (lc_st and lc_st.hard_solved is not None) else (getattr(s.stats, 'hard_solved', None) or 0)
+        p_rank_num = lc_st.profile_global_ranking if (lc_st and lc_st.profile_global_ranking) else (getattr(s.stats, 'public_profile_ranking', None) or getattr(s.stats, 'contest_global_ranking', None))
+        p_rank_disp = f"#{p_rank_num:,}" if p_rank_num else "—"
+        p_sync_state = getattr(lc_p, 'sync_state', None) if lc_p else ("VERIFIED" if is_p_verified else "PENDING_USERNAME")
+        p_last_verified = lc_p.last_verified_at.strftime('%d.%m.%Y %H:%M') if (lc_p and getattr(lc_p, 'last_verified_at', None)) else "—"
 
         full_roster_matrix.append({
             "student_id": s.id,
@@ -429,9 +453,13 @@ def get_normalized_contest_data(
             "name": s.name,
             "dept": dept_code,
             "year": year_lvl,
-            "username": s.username or s.reg_no,
-            "profile_rank": f"#{s.stats.public_profile_ranking:,}" if (s.stats and s.stats.public_profile_ranking) else "—",
-            "profile_total_solved": s.stats.total_solved if (s.stats and s.stats.total_solved is not None) else 0,
+            "username": c_user,
+            "profile_url": c_p_url,
+            "profile_rank": p_rank_disp,
+            "profile_total_solved": p_solved,
+            "easy_solved": p_easy,
+            "medium_solved": p_med,
+            "hard_solved": p_hard,
             "participation_status": resolved_status,
             "data_fetch_status": data_fetch_st,
             "confidence": confidence_val,
@@ -443,9 +471,10 @@ def get_normalized_contest_data(
             "contest_score": score_val,
             "contest_rank": rank_val,
             "contest_rating": rating_val,
+            "sync_status": p_sync_state,
+            "last_verified": p_last_verified,
             "fetch_status": data_fetch_st,
-            "error_reason": err_re,
-            "attendance_evidence": attendance_evidence
+            "error_reason": err_re
         })
 
     # Step 2: Apply Dept & Year filters to establish Verified Eligible Roster
