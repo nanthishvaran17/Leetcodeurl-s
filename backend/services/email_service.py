@@ -274,7 +274,7 @@ def send_email(
             msg.attach(part)
 
     try:
-        server = connect_and_login_smtp(smtp_host, smtp_port, smtp_user, smtp_pass, timeout=15)
+        server = connect_and_login_smtp(smtp_host, smtp_port, smtp_user, smtp_pass, timeout=5)
         try:
             server.sendmail(from_email, recipient, msg.as_string())
         finally:

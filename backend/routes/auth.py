@@ -237,6 +237,12 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
     return user
 
 
+ALLOWED_ADMIN_EMAILS = {
+    "nanthishvaran17@gmail.com",
+    "msanthoshkumar@nandhaengg.org",
+    getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
+}
+
 @router.post("/send-otp")
 @router.post("/request-otp")
 async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(get_db)):
@@ -247,20 +253,21 @@ async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(
 
     logger.info(f"[OTP_REQUEST] Verification requested for email address: {clean_email}")
 
-    # Verify authorized email status
-    configured_admin_emails = {
-        getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower(),
-        "msanthoshkumar@nandhaengg.org",
-        "nanthishvaran17@gmail.com",
-        "admin@college.edu"
-    }
-    is_admin = (clean_email in configured_admin_emails)
+    # Strict Whitelist Enforcement: Only authorized administrator emails can access portal
+    is_admin = (clean_email in ALLOWED_ADMIN_EMAILS)
 
     user = db.query(User).filter(User.email.ilike(clean_email)).first()
     student = None
     if not user and not is_admin:
         from backend.models import Student
         student = db.query(Student).filter(Student.email.ilike(clean_email)).first()
+
+    if not is_admin and not user and not student:
+        logger.warning(f"[OTP_REQUEST_DENIED] Unauthorized email attempt: {clean_email}")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: Only authorized administrator emails (nanthishvaran17@gmail.com, msanthoshkumar@nandhaengg.org) can access this portal."
+        )
 
     if user and not user.is_active:
         raise HTTPException(status_code=400, detail="Your account is currently inactive. Please contact the administrator.")
@@ -277,22 +284,21 @@ async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(
     from backend.services.email_service import build_otp_email_template, send_email
     subject, body_html, body_text = build_otp_email_template(plain_otp)
 
-    logger.info(f"[EMAIL_PROVIDER] Dispatching OTP email to: {clean_email} (OTP: {plain_otp})")
+    logger.info(f"[EMAIL_PROVIDER] Dispatching verification OTP code to: {clean_email} (OTP: {plain_otp})")
 
     import asyncio
     email_sent, err_msg = await asyncio.to_thread(send_email, clean_email, subject, body_html, None, body_text)
 
     if not email_sent:
         logger.error(f"[EMAIL_SEND_FAILURE] Delivery failed for {clean_email}: {err_msg}")
-        # Log delivery issue but proceed so user can access with logged OTP in emergency
-        logger.warning(f"[EMAIL_RECOVERY_KEY] Emergency verification OTP for {clean_email}: {plain_otp}")
+        logger.warning(f"[EMAIL_RECOVERY_KEY] Verification OTP for {clean_email}: {plain_otp}")
 
-    logger.info(f"[EMAIL_SEND_SUCCESS] Verification OTP processed for: {clean_email}")
+    logger.info(f"[EMAIL_SEND_SUCCESS] Verification OTP process completed for: {clean_email}")
 
     from backend.services.audit_service import log_admin_action
     log_admin_action(
         db, action="OTP_SENT", action_type="SECURITY",
-        description=f"Verification code dispatched to {clean_email}",
+        description=f"Verification code dispatched to {clean_email} (OTP: {plain_otp if not email_sent else '***'})",
         current_user=user, target_type="EmailOTPRecord", target_id=str(otp_rec.id)
     )
 
@@ -335,15 +341,9 @@ def verify_otp(req: VerifyOtpRequest, request: Request, response: Response, db: 
 
     logger.info(f"[OTP_VERIFY_SUCCESS] Verification successful for email: {clean_email}")
 
-    configured_admin_emails = {
-        getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower(),
-        "msanthoshkumar@nandhaengg.org",
-        "nanthishvaran17@gmail.com",
-        "admin@college.edu"
-    }
     user = db.query(User).filter(User.email.ilike(clean_email)).first()
 
-    if clean_email in configured_admin_emails:
+    if clean_email in ALLOWED_ADMIN_EMAILS:
         admin_pass = getattr(settings, "ADMIN_PASSWORD", "Nandha@123").strip() or "Nandha@123"
         if not user:
             user = User(
