@@ -164,16 +164,20 @@ def send_email_via_resend(
         method="POST"
     )
     try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        with urllib.request.urlopen(req, timeout=10) as resp:
             if resp.status in (200, 201):
-                logger.info(f"Successfully delivered email to '{recipient}' via Resend HTTPS API")
+                user_part, domain_part = recipient.split("@", 1) if "@" in recipient else (recipient, "")
+                masked_r = f"{user_part[0]}*****{user_part[-1]}@{domain_part}" if len(user_part) > 2 else recipient
+                logger.info(f"OTP_EMAIL_PROVIDER=RESEND_API OTP_EMAIL_TRANSPORT=HTTPS_443 OTP_PROVIDER_ACCEPTED=true RECIPIENT_MASKED={masked_r}")
                 return True, None
-            return False, f"Resend API HTTP status {resp.status}"
+            return False, f"RESEND_API_ERROR: HTTP status {resp.status}"
     except urllib.error.HTTPError as he:
         body = he.read().decode('utf-8', errors='ignore')
-        return False, f"Resend API HTTP {he.code}: {body}"
+        logger.error(f"OTP_EMAIL_PROVIDER=RESEND_API OTP_PROVIDER_ACCEPTED=false HTTP_{he.code}: {body}")
+        return False, f"RESEND_API_ERROR {he.code}: {body}"
     except Exception as exc:
-        return False, f"Resend API error: {exc}"
+        logger.error(f"OTP_EMAIL_PROVIDER=RESEND_API OTP_PROVIDER_ACCEPTED=false Error: {exc}")
+        return False, f"RESEND_API_ERROR: {exc}"
 
 def send_email_via_brevo(
     api_key: str,
@@ -184,8 +188,9 @@ def send_email_via_brevo(
     attachments: Optional[List[Tuple[str, bytes]]] = None,
     text_body: Optional[str] = None
 ) -> Tuple[bool, Optional[str]]:
+    sender_email = from_email if (from_email and "@" in from_email and "nandha.edu.in" not in from_email) else "nanthishvaran17@gmail.com"
     payload: Dict[str, Any] = {
-        "sender": {"name": "Nandha Engineering College — LeetCode Tracker", "email": from_email or "reports@nandha.edu.in"},
+        "sender": {"name": "Nandha Engineering College — LeetCode Tracker", "email": sender_email},
         "to": [{"email": recipient}],
         "subject": subject,
         "htmlContent": html_body
@@ -206,22 +211,26 @@ def send_email_via_brevo(
         "https://api.brevo.com/v3/smtp/email",
         data=json.dumps(payload).encode("utf-8"),
         headers={
-            "api-key": api_key,
+            "api-key": api_key.strip(),
             "Content-Type": "application/json"
         },
         method="POST"
     )
     try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        with urllib.request.urlopen(req, timeout=10) as resp:
             if resp.status in (200, 201):
-                logger.info(f"Successfully delivered email to '{recipient}' via Brevo HTTPS API")
+                user_part, domain_part = recipient.split("@", 1) if "@" in recipient else (recipient, "")
+                masked_r = f"{user_part[0]}*****{user_part[-1]}@{domain_part}" if len(user_part) > 2 else recipient
+                logger.info(f"OTP_EMAIL_PROVIDER=BREVO_API OTP_EMAIL_TRANSPORT=HTTPS_443 OTP_PROVIDER_ACCEPTED=true RECIPIENT_MASKED={masked_r}")
                 return True, None
-            return False, f"Brevo API HTTP status {resp.status}"
+            return False, f"BREVO_API_ERROR: HTTP status {resp.status}"
     except urllib.error.HTTPError as he:
         body = he.read().decode('utf-8', errors='ignore')
-        return False, f"Brevo API HTTP {he.code}: {body}"
+        logger.error(f"OTP_EMAIL_PROVIDER=BREVO_API OTP_PROVIDER_ACCEPTED=false HTTP_{he.code}: {body}")
+        return False, f"BREVO_API_ERROR {he.code}: {body}"
     except Exception as exc:
-        return False, f"Brevo API error: {exc}"
+        logger.error(f"OTP_EMAIL_PROVIDER=BREVO_API OTP_PROVIDER_ACCEPTED=false Error: {exc}")
+        return False, f"BREVO_API_ERROR: {exc}"
 
 def send_email(
     recipient: str,
@@ -231,32 +240,38 @@ def send_email(
     text_body: Optional[str] = None
 ) -> Tuple[bool, Optional[str]]:
     """
-    Core Email Sender function with HTTPS API (Resend/Brevo) & Gmail SMTP support.
+    Core Email Sender function with strict HTTPS API priority (Resend/Brevo over port 443).
+    NEVER falls back to SMTP if an HTTPS API key is configured.
     """
     smtp_host = os.environ.get("SMTP_HOST") or getattr(settings, "SMTP_HOST", "smtp.gmail.com")
     smtp_port = int(os.environ.get("SMTP_PORT") or getattr(settings, "SMTP_PORT", 587))
     smtp_user = (os.environ.get("SMTP_USERNAME") or getattr(settings, "SMTP_USERNAME", "")).strip()
     smtp_pass = (os.environ.get("SMTP_PASSWORD") or getattr(settings, "SMTP_PASSWORD", "")).replace(" ", "")
-    from_email = (os.environ.get("REPORT_FROM_EMAIL") or smtp_user or "reports@nandha.edu.in").strip()
+    from_email = (os.environ.get("REPORT_FROM_EMAIL") or smtp_user or "nanthishvaran17@gmail.com").strip()
 
     # Check for HTTPS API keys (bypasses Render SMTP port block)
     resend_key = os.environ.get("RESEND_API_KEY", "").strip()
     brevo_key = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
 
+    # Priority 1: RESEND_API_KEY (HTTPS Port 443)
     if resend_key:
         ok, err = send_email_via_resend(resend_key, from_email, recipient, subject, html_body, attachments, text_body)
         if ok:
             return True, None
-        logger.warning(f"Resend API failed ({err}), falling back...")
+        logger.error(f"[EMAIL_ROUTING] Resend HTTPS API request failed: {err}. Fast-failing (no SMTP fallback allowed when API key is configured).")
+        return False, err
 
+    # Priority 2: BREVO_API_KEY (HTTPS Port 443)
     if brevo_key:
         ok, err = send_email_via_brevo(brevo_key, from_email, recipient, subject, html_body, attachments, text_body)
         if ok:
             return True, None
-        logger.warning(f"Brevo API failed ({err}), falling back to Gmail SMTP...")
+        logger.error(f"[EMAIL_ROUTING] Brevo HTTPS API request failed: {err}. Fast-failing (no SMTP fallback allowed when API key is configured).")
+        return False, err
 
+    # Priority 3: Local / Development SMTP fallback ONLY if no HTTPS API key is configured
     if not smtp_user or not smtp_pass:
-        return False, "SMTP credentials not configured. Set SMTP_USERNAME & SMTP_PASSWORD or RESEND_API_KEY / BREVO_API_KEY."
+        return False, "OTP_EMAIL_PROVIDER_NOT_CONFIGURED: Set RESEND_API_KEY or BREVO_API_KEY in environment variables."
 
     msg = MIMEMultipart('alternative')
     msg['From'] = f"Nandha Engineering College — LeetCode Tracker <{from_email}>"
