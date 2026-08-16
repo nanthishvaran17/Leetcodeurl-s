@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Layers, Users, Trophy, CheckCircle2, RefreshCw, LayoutGrid, List, ChevronDown, Building2, GraduationCap } from 'lucide-react';
 import api from '../services/api';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
@@ -58,33 +58,114 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
     }
   };
 
-  // Filter pipeline
-  const getFilteredStudents = () => {
-    return students.filter(student => {
-      // 1. Department Filter
-      if (selectedDept && student.department?.code !== selectedDept.code) {
-        return false;
-      }
-      // 2. Year Level Filter (Determined by reg_no, year_level, or academic_year)
-      if (yearLevel !== 'ALL') {
-        const reg = (student.reg_no || '').toUpperCase();
-        const yl = (student.year_level || '').toUpperCase();
-        if (yearLevel === 'II') {
-          if (!reg.startsWith('732224') && !reg.startsWith('24') && yl !== 'II' && yl !== '2') return false;
-        } else if (yearLevel === 'III') {
-          if (!reg.startsWith('732223') && !reg.startsWith('23') && yl !== 'III' && yl !== '3') return false;
-        } else if (yearLevel === 'IV') {
-          if (!reg.startsWith('732222') && !reg.startsWith('22') && yl !== 'IV' && yl !== '4') return false;
-        }
-      }
-      return true;
-    });
+  // --- Canonical Normalization & Matching Helpers ---
+  const normalizeYear = (yrStr: string | undefined | null): string => {
+    if (!yrStr) return '';
+    const clean = yrStr.toString().trim().toUpperCase().replace(/YEAR/g, '').trim();
+    if (clean === '2' || clean === '2ND' || clean === 'SECOND' || clean === 'II') return 'II';
+    if (clean === '3' || clean === '3RD' || clean === 'THIRD' || clean === 'III') return 'III';
+    if (clean === '4' || clean === '4TH' || clean === 'FOURTH' || clean === 'IV') return 'IV';
+    return clean;
   };
 
-  // Sort pipeline
-  const getSortedStudents = () => {
-    const filtered = getFilteredStudents();
-    return [...filtered].sort((a, b) => {
+  const matchesDepartment = (s: StudentData, dept: any): boolean => {
+    if (!dept || dept.id === 'ALL' || dept.code === 'ALL') return true;
+
+    // Direct ID match
+    if (s.department_id && typeof dept.id === 'number' && s.department_id === dept.id) return true;
+    if (s.department?.id && typeof dept.id === 'number' && s.department.id === dept.id) return true;
+
+    // Code match
+    const targetCode = (dept.code || '').toUpperCase();
+    const studentCode = (s.department?.code || '').toUpperCase();
+    if (targetCode && studentCode) {
+      const cleanTarget = targetCode.replace(/[^A-Z0-9]/g, '');
+      const cleanStudent = studentCode.replace(/[^A-Z0-9]/g, '');
+      if (cleanTarget === cleanStudent) return true;
+    }
+
+    // Name keyword fallback
+    const targetName = (dept.name || '').toLowerCase();
+    const studentName = (s.department?.name || '').toLowerCase();
+
+    const isTargetCyber = targetCode.includes('CS') || targetName.includes('cyber');
+    const isStudentCyber = studentCode.includes('CS') || studentName.includes('cyber');
+    if (isTargetCyber && isStudentCyber) return true;
+
+    const isTargetIot = targetCode.includes('IOT') || targetName.includes('iot');
+    const isStudentIot = studentCode.includes('IOT') || studentName.includes('iot');
+    if (isTargetIot && isStudentIot) return true;
+
+    return false;
+  };
+
+  const matchesYear = (s: StudentData, targetYear: string): boolean => {
+    if (!targetYear || targetYear === 'ALL' || targetYear === 'ALL YEARS') return true;
+    const sYear = normalizeYear(s.year_level);
+    const tYear = normalizeYear(targetYear);
+    return sYear === tYear;
+  };
+
+  // --- 1. Department + Academic Year Filtered Dataset ---
+  const deptAndYearStudents = useMemo(() => {
+    return students.filter(s => matchesDepartment(s, selectedDept) && matchesYear(s, yearLevel));
+  }, [students, selectedDept, yearLevel]);
+
+  // --- 2. Performance Range Counts (Derived STRICTLY from deptAndYearStudents) ---
+  const performanceCounts = useMemo(() => {
+    let above500 = 0;
+    let between250And500 = 0;
+    let between101And250 = 0;
+    let under100 = 0;
+    let notStarted = 0;
+
+    for (const s of deptAndYearStudents) {
+      const solved = s.stats?.total_solved ?? s.total_solved ?? 0;
+      if (solved > 500) {
+        above500++;
+      } else if (solved >= 250) {
+        between250And500++;
+      } else if (solved >= 101) {
+        between101And250++;
+      } else if (solved > 0) {
+        under100++;
+      } else {
+        notStarted++;
+      }
+    }
+
+    return {
+      total: deptAndYearStudents.length,
+      above500,
+      between250And500,
+      between101And250,
+      under100,
+      notStarted
+    };
+  }, [deptAndYearStudents]);
+
+  // --- 3. Performance Solved Filter Range (applied on deptAndYearStudents) ---
+  const rangeFilteredStudents = useMemo(() => {
+    switch (solvedFilter) {
+      case 'above_500':
+        return deptAndYearStudents.filter(s => (s.stats?.total_solved ?? s.total_solved ?? 0) > 500);
+      case '250_500':
+        return deptAndYearStudents.filter(s => { const v = s.stats?.total_solved ?? s.total_solved ?? 0; return v >= 250 && v <= 500; });
+      case '101_250':
+        return deptAndYearStudents.filter(s => { const v = s.stats?.total_solved ?? s.total_solved ?? 0; return v >= 101 && v <= 250; });
+      case 'less_100':
+        return deptAndYearStudents.filter(s => { const v = s.stats?.total_solved ?? s.total_solved ?? 0; return v > 0 && v <= 100; });
+      case 'not_started':
+        return deptAndYearStudents.filter(s => !s.stats || (s.stats?.total_solved ?? s.total_solved ?? 0) === 0);
+      default:
+        return deptAndYearStudents;
+    }
+  }, [deptAndYearStudents, solvedFilter]);
+
+  // --- 4. Sorted Display List (Sorted AFTER filtering) ---
+  const finalStudentList = useMemo(() => {
+    const list = [...rangeFilteredStudents];
+    return list.sort((a, b) => {
       const aSolved = a.stats?.total_solved ?? a.total_solved ?? 0;
       const bSolved = b.stats?.total_solved ?? b.total_solved ?? 0;
       const aRating = a.stats?.contest_rating ?? 0;
@@ -98,22 +179,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
       if (sortBy === 'name') return a.name.localeCompare(b.name);
       return 0;
     });
-  };
-
-  const getFilteredSolvedStudents = (list: StudentData[]) => {
-    if (solvedFilter === 'ALL') return list;
-    return list.filter(student => {
-      const solved = student.stats?.total_solved ?? student.total_solved ?? 0;
-      if (solvedFilter === 'above_500') return solved > 500;
-      if (solvedFilter === '250_500') return solved >= 250 && solved <= 500;
-      if (solvedFilter === '101_250') return solved >= 101 && solved <= 250;
-      if (solvedFilter === 'less_100') return solved > 0 && solved <= 100;
-      if (solvedFilter === 'not_started') return solved === 0;
-      return true;
-    });
-  };
-
-  const finalStudentList = getFilteredSolvedStudents(getSortedStudents());
+  }, [rangeFilteredStudents, sortBy]);
 
   const handleDeleteStudent = async (student: StudentData) => {
     if (!confirm(`Are you sure you want to delete student "${student.name}" (${student.reg_no})? This action cannot be undone.`)) {
@@ -266,12 +332,12 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
             </label>
             <div className="flex flex-wrap gap-2">
               {[
-                { id: 'ALL',         label: 'All Students',   count: getFilteredSolvedStudents(getSortedStudents()).length },
-                { id: 'above_500',   label: '500+',           count: students.filter(s => (s.stats?.total_solved ?? s.total_solved ?? 0) > 500).length },
-                { id: '250_500',     label: '250–500',        count: students.filter(s => { const v = s.stats?.total_solved ?? s.total_solved ?? 0; return v >= 250 && v <= 500; }).length },
-                { id: '101_250',     label: '101–250',        count: students.filter(s => { const v = s.stats?.total_solved ?? s.total_solved ?? 0; return v >= 101 && v <= 250; }).length },
-                { id: 'less_100',    label: '<100',           count: students.filter(s => { const v = s.stats?.total_solved ?? s.total_solved ?? 0; return v > 0 && v <= 100; }).length },
-                { id: 'not_started', label: 'Not Started',     count: students.filter(s => (s.stats?.total_solved ?? s.total_solved ?? 0) === 0).length },
+                { id: 'ALL',         label: 'All Students',   count: performanceCounts.total },
+                { id: 'above_500',   label: '500+',           count: performanceCounts.above500 },
+                { id: '250_500',     label: '250–500',        count: performanceCounts.between250And500 },
+                { id: '101_250',     label: '101–250',        count: performanceCounts.between101And250 },
+                { id: 'less_100',    label: '<100',           count: performanceCounts.under100 },
+                { id: 'not_started', label: 'Not Started',     count: performanceCounts.notStarted },
               ].map((f) => (
                 <button
                   key={f.id}
