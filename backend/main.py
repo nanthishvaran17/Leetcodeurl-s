@@ -48,7 +48,9 @@ origins = [
     "http://127.0.0.1:3000",
     "https://leetcodeurls.netlify.app",
     "https://leetcode-student-data.web.app",
-    "https://leetcode-student-data.firebaseapp.com"
+    "https://leetcode-student-data.firebaseapp.com",
+    "https://leetcodeurl-s-1.onrender.com",
+    "https://leetcodeurl-s.onrender.com",
 ]
 app.add_middleware(
     CORSMiddleware,
