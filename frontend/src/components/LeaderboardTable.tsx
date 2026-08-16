@@ -338,8 +338,12 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
             </tr>
           ) : students.length === 0 ? (
             <tr>
-              <td colSpan={12} className="py-8 text-center text-gray-500 dark:text-gray-400">
-                No student records found.
+              <td colSpan={12} className="py-12 text-center text-gray-500 dark:text-gray-400">
+                <div className="flex flex-col items-center justify-center space-y-2">
+                  <AlertCircle className="w-6 h-6 text-amber-500" />
+                  <span className="text-sm font-bold text-gray-800 dark:text-gray-200">No students match the selected filters.</span>
+                  <span className="text-xs text-gray-400">Try changing or resetting the filters.</span>
+                </div>
               </td>
             </tr>
           ) : (
