@@ -109,8 +109,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
       </div>
 
       {/* Preview Content */}
-      <div className="flex-1 overflow-auto p-6 md:p-10 space-y-8">
-        <div className="max-w-6xl mx-auto bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-2xl p-6 md:p-10 space-y-8">
+      <div className="flex-1 overflow-auto p-4 md:p-8 lg:p-10 space-y-8">
+        <div className="w-full max-w-[96%] xl:max-w-[92%] 2xl:max-w-[1650px] mx-auto bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-2xl p-6 md:p-10 space-y-8">
           
           {/* Official Letterhead */}
           <div className="text-center space-y-2 border-b border-gray-200 dark:border-gray-800 pb-6">

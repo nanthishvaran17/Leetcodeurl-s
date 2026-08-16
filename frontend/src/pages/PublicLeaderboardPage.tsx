@@ -239,12 +239,6 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
 
         <div className="flex items-center justify-between text-xs text-gray-400 font-bold">
           <span>Showing {filtered.length} of {students.length} students</span>
-          {topSolver && (
-            <span className="flex items-center space-x-1 text-amber-600 dark:text-amber-400">
-              <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-              <span>Institution Topper: {topSolver.name} — {topSolver.stats?.total_solved || 0} Solved</span>
-            </span>
-          )}
         </div>
       </div>
 

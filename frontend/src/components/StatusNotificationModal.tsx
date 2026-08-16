@@ -114,12 +114,12 @@ export const StatusNotificationModal: React.FC<StatusNotificationModalProps> = (
       role="dialog"
       aria-modal="true"
       aria-labelledby="notif-modal-title"
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-[#07111E]/75 backdrop-blur-md overflow-hidden animate-fadeIn"
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-slate-950/70 backdrop-blur-sm overflow-hidden animate-fadeIn"
       onClick={handleCancelClick}
     >
       {/* Modal Container Card */}
       <div
-        className={`relative w-full max-w-[440px] bg-slate-900/95 dark:bg-navy-900/95 backdrop-blur-2xl rounded-3xl border ${config.borderGlow} p-6 sm:p-7 text-center space-y-5 text-white animate-scaleUp transition-all`}
+        className={`relative w-full max-w-[460px] bg-slate-900/95 dark:bg-navy-900/95 backdrop-blur-2xl rounded-3xl border ${config.borderGlow} p-6 sm:p-8 text-center space-y-5 text-white animate-scaleUp transition-all shadow-2xl my-auto`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Subtle Top Close Icon */}
