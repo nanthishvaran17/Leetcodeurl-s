@@ -13,10 +13,10 @@ function parseUtcTime(ts?: string): number {
   return isNaN(time) ? Date.now() : time;
 }
 
-function getSyncState(syncStatus?: string, lastVerifiedAt?: string): 'pending'|'syncing'|'verified'|'failed'|'mismatch'|'stale'|'invalid_profile' {
-  if (syncStatus === 'invalid_profile' || syncStatus === 'INVALID_LINK' || syncStatus === 'MISSING_LINK') return 'invalid_profile';
+function getSyncState(syncStatus?: string, lastVerifiedAt?: string): 'pending'|'syncing'|'verified'|'failed'|'mismatch'|'stale'|'invalid_profile'|'pending_username' {
+  if (syncStatus === 'pending_username' || syncStatus === 'PENDING_USERNAME' || syncStatus === 'MISSING LINK') return 'pending_username';
+  if (syncStatus === 'invalid_profile' || syncStatus === 'invalid_username' || syncStatus === 'INVALID_USERNAME' || syncStatus === 'INVALID_LINK') return 'invalid_profile';
   if (syncStatus === 'syncing') return 'syncing';
-  if (!syncStatus || syncStatus === 'pending' || syncStatus === 'not_started') return 'pending';
   if (syncStatus === 'success' || syncStatus === 'OK' || syncStatus === 'verified' || syncStatus === 'stale') {
     if (lastVerifiedAt) {
       const age = Date.now() - parseUtcTime(lastVerifiedAt);
@@ -24,6 +24,7 @@ function getSyncState(syncStatus?: string, lastVerifiedAt?: string): 'pending'|'
     }
     return 'verified';
   }
+  if (!syncStatus || syncStatus === 'pending' || syncStatus === 'not_started') return 'pending';
   if (syncStatus === 'mismatch' || syncStatus === 'data_mismatch') return 'mismatch';
   return 'failed';
 }
@@ -354,20 +355,17 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
 
               const rawContestRank = student.public_contest_result?.contest_rank;
 
-              const contestRank = isPublicAttended
-                ? (rawContestRank !== null && rawContestRank !== undefined && rawContestRank > 0
-                    ? `#${rawContestRank.toLocaleString('en-US')}`
-                    : 'Unranked')
+              const contestRank = isPublicAttended && rawContestRank
+                ? `#${rawContestRank.toLocaleString('en-US')}`
                 : '—';
 
-              const profileRank = (syncState === 'failed' || syncState === 'invalid_profile')
-                ? 'Profile data unavailable'
-                : (isVerified && student.stats?.public_profile_ranking !== null && student.stats?.public_profile_ranking !== undefined && student.stats?.public_profile_ranking > 0)
-                  ? `#${student.stats.public_profile_ranking.toLocaleString('en-US')}`
-                  : (isVerified ? 'Unranked' : '—');
+              const profileRank = isVerified && student.stats?.public_profile_ranking
+                ? `#${student.stats.public_profile_ranking.toLocaleString('en-US')}`
+                : '—';
 
               const effectiveCollegeRank = isSolver ? (student.college_rank || idx + 1) : undefined;
-              const username = student.username || student.leetcode_url?.split('/u/')[1]?.replace('/', '') || `${student.name.replace(/\s+/g, '_')}`;
+              const hasCanonicalUrl = isVerified && Boolean(student.leetcode_url && student.leetcode_url.includes('/u/'));
+              const verifiedUsername = student.username || (student.leetcode_url ? student.leetcode_url.split('/u/')[1]?.replace('/', '') : null);
 
               // Determine Participation Mode Badge per specification
               // Determine Participation Mode Badge per specification
@@ -450,19 +448,27 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   </td>
 
                   <td className="py-3 px-3 whitespace-nowrap font-mono font-bold text-brand-600 dark:text-brand-400">
-                    {student.leetcode_url || (username !== '—' && username !== 'N/A') ? (
+                    {hasCanonicalUrl && verifiedUsername ? (
                       <a
-                        href={student.leetcode_url || `https://leetcode.com/u/${username}`}
+                        href={student.leetcode_url!}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="hover:underline flex items-center gap-1 text-brand-600 dark:text-brand-400 font-bold"
-                        title={`Open ${username}'s official LeetCode profile`}
+                        title={`Open ${verifiedUsername}'s verified LeetCode profile`}
                       >
-                        {username}
+                        {verifiedUsername}
                         <ExternalLink className="w-3 h-3 opacity-70" />
                       </a>
+                    ) : syncState === 'pending_username' ? (
+                      <span className="inline-flex items-center space-x-1 text-amber-600 dark:text-amber-400 font-sans font-medium text-[11px]">
+                        <span>⏳ Pending Username</span>
+                      </span>
+                    ) : syncState === 'invalid_profile' ? (
+                      <span className="inline-flex items-center space-x-1 text-rose-500 font-sans font-medium text-[11px]">
+                        <span>⚠ Invalid Profile</span>
+                      </span>
                     ) : (
-                      <span className="text-gray-400">LeetCode Profile Unavailable</span>
+                      <span className="text-gray-400 font-sans text-xs">—</span>
                     )}
                   </td>
 

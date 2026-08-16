@@ -237,97 +237,81 @@ async def fetch_leetcode_profile(
             if attempt < retries and matched_user is None and "matchedUser is null" not in last_error_detail:
                 await asyncio.sleep(0.3 * attempt)
 
-        # Fallback APIs if GraphQL failed
-        if not matched_user and "matchedUser is null" not in last_error_detail:
-            fallback_urls = [
-                f"https://leetcode-api-faisalshohag.vercel.app/{username}",
-                f"https://alfa-leetcode-api.onrender.com/userProfile/{username}",
-                f"https://alfa-leetcode-api.onrender.com/{username}/solved"
-            ]
-
-            for fb_url in fallback_urls:
-                try:
-                    fb_res = await client.get(fb_url, timeout=6.0)
-                    if fb_res.status_code == 200:
-                        fb_data = fb_res.json()
-                        tot_s = fb_data.get("totalSolved") if fb_data.get("totalSolved") is not None else fb_data.get("solvedProblem")
-                        if tot_s is not None:
-                            duration = round(time.time() - start_time, 3)
-                            ez_s = fb_data.get("easySolved") if fb_data.get("easySolved") is not None else fb_data.get("easySolvedCount", 0)
-                            med_s = fb_data.get("mediumSolved") if fb_data.get("mediumSolved") is not None else fb_data.get("mediumSolvedCount", 0)
-                            hd_s = fb_data.get("hardSolved") if fb_data.get("hardSolved") is not None else fb_data.get("hardSolvedCount", 0)
-                            p_rank = fb_data.get("ranking")
-
-                            is_valid_sum = (ez_s + med_s + hd_s == tot_s)
-                            sync_status = "success" if is_valid_sum else "mismatch"
-                            validation_status = "verified" if is_valid_sum else "mismatch"
-                            error_detail = None if is_valid_sum else f"Difficulty sum mismatch in fallback: {ez_s} + {med_s} + {hd_s} != {tot_s}"
-                            
-                            result = {
-                                "username": username,
-                                "profile_url": profile_url,
-                                "total_solved": tot_s,
-                                "easy_solved": ez_s,
-                                "medium_solved": med_s,
-                                "hard_solved": hd_s,
-                                "contest_rating": None,
-                                "contest_global_rank": None,
-                                "contest_global_ranking": None,
-                                "leetcode_global_rank": p_rank,
-                                "public_profile_ranking": p_rank,
-                                "active_days": None,
-                                "max_streak": None,
-                                "recent_accepted": None,
-                                "recent_contest_name": None,
-                                "recent_contest_score": None,
-                                "recent_contest_type": "UNKNOWN",
-                                "contest_participations": [],
-                                "status": "success" if is_valid_sum else "MISMATCH",
-                                "sync_status": sync_status,
-                                "validation_status": validation_status,
-                                "error": error_detail,
-                                "error_message": error_detail,
-                                "fetch_duration": duration
-                            }
-                            _profile_cache[username] = {"timestamp": now, "data": result}
-                            return result
-                except Exception as fb_err:
-                    logger.info(f"Fallback API ({fb_url}) note for '{username}': {fb_err}")
-
-        # If user is not found or failed completely
+        # Handle profile not found (404 / matchedUser is null) or network failures
         if not matched_user:
             duration = round(time.time() - start_time, 3)
-            err_msg = f"Profile load failed: {last_error_detail}"
-            status_code = "PROFILE NOT FOUND" if "matchedUser is null" in last_error_detail else "failed"
+            is_404 = "matchedUser is null" in last_error_detail
+            status_code = "INVALID_USERNAME" if is_404 else "FETCH_FAILED"
+            sync_code = "invalid_username" if is_404 else "fetch_failed"
+            val_code = "invalid_username" if is_404 else "fetch_failed"
+            err_msg = f"LeetCode profile not found (404)" if is_404 else f"Profile fetch failed: {last_error_detail}"
 
             result = {
                 "username": username,
-                "profile_url": profile_url,
-                "total_solved":   None,  # Never claim fake zero
-                "easy_solved":    None,
-                "medium_solved":  None,
-                "hard_solved":    None,
-                "contest_rating":         None,
-                "contest_global_rank":     None,
-                "contest_global_ranking":  None,
-                "leetcode_global_rank":    None,
-                "public_profile_ranking":  None,
-                "active_days":             None,
-                "max_streak":              None,
-                "recent_accepted":         None,
-                "recent_contest_name":     None,
-                "recent_contest_score":    None,
-                "recent_contest_type":     "UNKNOWN",
-                "contest_participations":  [],
+                "profile_url": None,  # Rule 2 & 15: profile_url = null when verification fails
+                "total_solved": None,  # Rule 6: Never claim fake zero
+                "easy_solved": None,
+                "medium_solved": None,
+                "hard_solved": None,
+                "contest_rating": None,
+                "contest_global_rank": None,
+                "contest_global_ranking": None,
+                "leetcode_global_rank": None,
+                "public_profile_ranking": None,
+                "active_days": None,
+                "max_streak": None,
+                "recent_accepted": None,
+                "recent_contest_name": None,
+                "recent_contest_score": None,
+                "recent_contest_type": "UNKNOWN",
+                "contest_participations": [],
                 "status": status_code,
-                "sync_status": "failed",
-                "validation_status": "pending",
+                "sync_status": sync_code,
+                "validation_status": val_code,
                 "error": err_msg,
                 "error_message": err_msg,
                 "fetch_duration": duration
             }
             _profile_cache[username] = {"timestamp": now, "data": result}
             return result
+
+        # Rule 4: IDENTITY MATCHING — CRITICAL
+        canonical_username = matched_user.get("username")
+        if not canonical_username or canonical_username.lower() != username.lower():
+            duration = round(time.time() - start_time, 3)
+            err_msg = f"Identity mismatch: returned '{canonical_username}' != candidate '{username}'"
+            logger.warning(f"[IDENTITY_MISMATCH] {err_msg}")
+            result = {
+                "username": username,
+                "profile_url": None,
+                "total_solved": None,
+                "easy_solved": None,
+                "medium_solved": None,
+                "hard_solved": None,
+                "contest_rating": None,
+                "contest_global_rank": None,
+                "contest_global_ranking": None,
+                "leetcode_global_rank": None,
+                "public_profile_ranking": None,
+                "active_days": None,
+                "max_streak": None,
+                "recent_accepted": None,
+                "recent_contest_name": None,
+                "recent_contest_score": None,
+                "recent_contest_type": "UNKNOWN",
+                "contest_participations": [],
+                "status": "IDENTITY_MISMATCH",
+                "sync_status": "identity_mismatch",
+                "validation_status": "identity_mismatch",
+                "error": err_msg,
+                "error_message": err_msg,
+                "fetch_duration": duration
+            }
+            _profile_cache[username] = {"timestamp": now, "data": result}
+            return result
+
+        # Rule 2: Canonical profile URL generated ONLY after successful verification
+        canonical_profile_url = f"https://leetcode.com/u/{canonical_username}/"
 
         # Parse submission stats
         submit_stats = (
@@ -440,8 +424,8 @@ async def fetch_leetcode_profile(
         verified_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
         result = {
-            "username": username,
-            "profile_url": profile_url,
+            "username": canonical_username,
+            "profile_url": canonical_profile_url,
             "total_solved": total_solved,
             "easy_solved": easy_solved,
             "medium_solved": medium_solved,

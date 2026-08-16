@@ -139,15 +139,48 @@ def get_students(
     results = []
     for st in students:
         st_out = StudentOut.from_orm(st)
+
+        # Rule 1 & 2: Canonical accuracy check — zero out fake/guessed data on invalid/pending profiles
+        is_verified = bool(st.stats and st.stats.sync_status in ("success", "verified") and st.stats.status == "verified" and st.stats.total_solved is not None)
+        is_invalid = bool(st.stats and (st.stats.sync_status == "invalid_username" or st.stats.status == "INVALID_USERNAME"))
+        is_pending = bool(not st.username or not str(st.username).strip() or (st.stats and (st.stats.sync_status == "pending_username" or st.stats.status == "PENDING_USERNAME")))
+
+        if is_invalid:
+            st_out.leetcode_url = None
+            if st_out.stats:
+                st_out.stats.total_solved = None
+                st_out.stats.easy_solved = None
+                st_out.stats.medium_solved = None
+                st_out.stats.hard_solved = None
+                st_out.stats.contest_rating = None
+                st_out.stats.contest_global_ranking = None
+                st_out.stats.public_profile_ranking = None
+                st_out.stats.status = "INVALID_USERNAME"
+                st_out.stats.sync_status = "invalid_username"
+                st_out.stats.validation_status = "invalid_username"
+        elif is_pending:
+            st_out.leetcode_url = None
+            if st_out.stats:
+                st_out.stats.total_solved = None
+                st_out.stats.easy_solved = None
+                st_out.stats.medium_solved = None
+                st_out.stats.hard_solved = None
+                st_out.stats.contest_rating = None
+                st_out.stats.contest_global_ranking = None
+                st_out.stats.public_profile_ranking = None
+                st_out.stats.status = "PENDING_USERNAME"
+                st_out.stats.sync_status = "pending_username"
+                st_out.stats.validation_status = "pending_username"
+
         latest_prog = prog_map.get(st.id)
         if latest_prog:
-            st_out.college_rank = latest_prog.college_rank
-            st_out.dept_rank = latest_prog.dept_rank
-            st_out.year_rank = latest_prog.year_rank
-            st_out.section_rank = latest_prog.section_rank
-            st_out.weekly_progress = latest_prog.weekly_progress
-            st_out.streak_count = latest_prog.streak_count
-            st_out.consistency_score = latest_prog.consistency_score
+            st_out.college_rank = latest_prog.college_rank if is_verified else None
+            st_out.dept_rank = latest_prog.dept_rank if is_verified else None
+            st_out.year_rank = latest_prog.year_rank if is_verified else None
+            st_out.section_rank = latest_prog.section_rank if is_verified else None
+            st_out.weekly_progress = latest_prog.weekly_progress if is_verified else 0
+            st_out.streak_count = latest_prog.streak_count if is_verified else 0
+            st_out.consistency_score = latest_prog.consistency_score if is_verified else 0.0
             st_out.badge_list = latest_prog.badge_list or []
 
         pub_res = pub_map.get(st.id)

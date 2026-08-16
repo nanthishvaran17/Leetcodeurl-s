@@ -23,13 +23,15 @@ function parseUtcTime(ts?: string): number {
   return isNaN(time) ? Date.now() : time;
 }
 
-function getSyncState(syncStatus?: string, lastVerifiedAt?: string, totalSolved?: number | null): SyncState {
-  if (syncStatus === 'pending_username' || syncStatus === 'PENDING_USERNAME' || syncStatus === 'MISSING LINK') return 'pending_username';
-  if (syncStatus === 'invalid_profile' || syncStatus === 'INVALID_LINK') return 'invalid_profile';
+function getSyncState(syncStatus?: string, lastVerifiedAt?: string, totalSolved?: number | null, username?: string): SyncState {
+  if (!username || !username.trim() || syncStatus === 'pending_username' || syncStatus === 'PENDING_USERNAME' || syncStatus === 'MISSING LINK') {
+    return 'pending_username';
+  }
+  if (syncStatus === 'invalid_profile' || syncStatus === 'invalid_username' || syncStatus === 'INVALID_USERNAME' || syncStatus === 'INVALID_LINK') {
+    return 'invalid_profile';
+  }
   if (syncStatus === 'syncing') return 'syncing';
-  if (syncStatus === 'failed' && (totalSolved === null || totalSolved === undefined || totalSolved === 0)) return 'failed';
-  if (syncStatus === 'success' || syncStatus === 'OK' || syncStatus === 'verified' || (totalSolved !== null && totalSolved !== undefined && totalSolved > 0)) {
-    // "Stale" = verified more than 24 hours ago
+  if (syncStatus === 'success' || syncStatus === 'OK' || syncStatus === 'verified' || syncStatus === 'stale') {
     if (lastVerifiedAt) {
       const age = Date.now() - parseUtcTime(lastVerifiedAt);
       if (age > 24 * 60 * 60 * 1000) return 'stale';
@@ -38,7 +40,7 @@ function getSyncState(syncStatus?: string, lastVerifiedAt?: string, totalSolved?
   }
   if (!syncStatus || syncStatus === 'pending' || syncStatus === 'not_started') return 'pending';
   if (syncStatus === 'mismatch' || syncStatus === 'data_mismatch') return 'mismatch';
-  return 'failed'; // covers "failed", "timeout", "error"
+  return 'failed';
 }
 
 function formatVerifiedAgo(lastVerifiedAt?: string): string {
@@ -61,7 +63,7 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
   const rawTotal = student.stats?.total_solved ?? student.total_solved;
   const syncStatus = student.stats?.sync_status;
   const lastVerifiedAt = student.stats?.last_verified_at;
-  const state = getSyncState(syncStatus, lastVerifiedAt, rawTotal);
+  const state = getSyncState(syncStatus, lastVerifiedAt, rawTotal, student.username);
   const isVerified = state === 'verified' || state === 'stale';
 
   // RULE: Never display stats as 0 unless they were actually verified.
@@ -197,7 +199,7 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
           <div className="flex items-center justify-between gap-2">
             <span className={`px-3 py-0.5 rounded-full text-xs border uppercase tracking-wider flex items-center space-x-1 whitespace-nowrap ${getRankBadgeStyle(effectiveRank)}`}>
               {!isSolver || !effectiveRank ? (
-                <span>Unranked</span>
+                <span>—</span>
               ) : effectiveRank === 1 ? (
                 <><span>🥇</span><span>#1 Rank</span></>
               ) : effectiveRank === 2 ? (
@@ -327,19 +329,19 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
                   <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 min-w-0">
                     <span className="text-gray-400 font-bold block uppercase tracking-tight">Rating</span>
                     <span className="font-mono font-black text-amber-600 dark:text-amber-400 text-[11px] truncate block">
-                      {isSolver && student.stats?.contest_rating ? student.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1 }) : 'Unrated'}
+                      {isSolver && student.stats?.contest_rating ? student.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1 }) : '—'}
                     </span>
                   </div>
                   <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 min-w-0">
                     <span className="text-gray-400 font-bold block uppercase tracking-tight">Contest Rank</span>
                     <span className="font-mono font-black text-indigo-600 dark:text-indigo-400 text-[11px] truncate block">
-                      {isSolver && student.stats?.contest_global_ranking ? `#${student.stats.contest_global_ranking.toLocaleString('en-US')}` : 'Unranked'}
+                      {isSolver && student.stats?.contest_global_ranking ? `#${student.stats.contest_global_ranking.toLocaleString('en-US')}` : '—'}
                     </span>
                   </div>
                   <div className="p-2 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 min-w-0">
                     <span className="text-gray-400 font-bold block uppercase tracking-tight">Profile Rank</span>
                     <span className="font-mono font-black text-gray-700 dark:text-gray-300 text-[11px] truncate block">
-                      {isSolver && student.stats?.public_profile_ranking ? `#${student.stats.public_profile_ranking.toLocaleString('en-US')}` : 'Unranked'}
+                      {isSolver && student.stats?.public_profile_ranking ? `#${student.stats.public_profile_ranking.toLocaleString('en-US')}` : '—'}
                     </span>
                   </div>
                 </div>

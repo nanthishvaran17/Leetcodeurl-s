@@ -592,8 +592,68 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
         db.commit()
         return (False, has_prev_data, not has_prev_data)
 
-    # Case B: Standard API Response Parse
+    # Case B: Explicit Invalid Username (404 on LeetCode)
     status_str = res.get("status", "pending")
+    if status_str == "INVALID_USERNAME":
+        st.status = "INVALID_USERNAME"
+        st.sync_status = "invalid_username"
+        st.validation_status = "invalid_username"
+        st.error_message = res.get("error_message") or "LeetCode username does not resolve (404)"
+        st.error_code = "INVALID_USERNAME"
+        st.total_solved = None
+        st.easy_solved = None
+        st.medium_solved = None
+        st.hard_solved = None
+        st.contest_rating = None
+        st.contest_global_ranking = None
+        st.public_profile_ranking = None
+        st.last_attempt_at = now
+        student.leetcode_url = None
+
+        item = SyncJobItem(
+            job_id=job_id,
+            student_id=student.id,
+            field="username",
+            status="INVALID_USERNAME",
+            old_value=str(old_total) if old_total is not None else None,
+            new_value=None,
+            error_code="INVALID_USERNAME"
+        )
+        db.add(item)
+        db.commit()
+        return (False, False, True)
+
+    # Case C: Identity Mismatch
+    if status_str == "IDENTITY_MISMATCH":
+        st.status = "IDENTITY_MISMATCH"
+        st.sync_status = "identity_mismatch"
+        st.validation_status = "identity_mismatch"
+        st.error_message = res.get("error_message") or "Returned LeetCode identity does not match requested identity"
+        st.error_code = "IDENTITY_MISMATCH"
+        st.total_solved = None
+        st.easy_solved = None
+        st.medium_solved = None
+        st.hard_solved = None
+        st.contest_rating = None
+        st.contest_global_ranking = None
+        st.public_profile_ranking = None
+        st.last_attempt_at = now
+        student.leetcode_url = None
+
+        item = SyncJobItem(
+            job_id=job_id,
+            student_id=student.id,
+            field="username",
+            status="IDENTITY_MISMATCH",
+            old_value=str(old_total) if old_total is not None else None,
+            new_value=None,
+            error_code="IDENTITY_MISMATCH"
+        )
+        db.add(item)
+        db.commit()
+        return (False, False, True)
+
+    # Case D: Verified Profile Data
     total_solved = res.get("total_solved")
     easy_solved = res.get("easy_solved")
     medium_solved = res.get("medium_solved")
@@ -601,7 +661,13 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
     contest_rating = res.get("contest_rating")
     global_ranking = res.get("contest_global_ranking")
 
-    if status_str in ("OK", "success", "verified") and total_solved is not None:
+    if status_str in ("OK", "success", "verified", "PROFILE_VERIFIED") and total_solved is not None:
+        # Rule 2: Save verified canonical username & URL
+        if res.get("username"):
+            student.username = res.get("username")
+        if res.get("profile_url"):
+            student.leetcode_url = res.get("profile_url")
+
         # Calculate derived total
         derived_total = (easy_solved or 0) + (medium_solved or 0) + (hard_solved or 0)
         source_total = total_solved
@@ -620,16 +686,11 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
         st.medium_solved = medium_solved if medium_solved is not None else st.medium_solved
         st.hard_solved = hard_solved if hard_solved is not None else st.hard_solved
 
-        if res.get("recent_contest_name"):
-            st.recent_contest_name = res.get("recent_contest_name")
-        if res.get("recent_contest_score"):
-            st.recent_contest_score = res.get("recent_contest_score")
-        if res.get("public_profile_ranking") is not None:
-            st.public_profile_ranking = res.get("public_profile_ranking")
-        if contest_rating is not None:
-            st.contest_rating = contest_rating
-        if global_ranking is not None:
-            st.contest_global_ranking = global_ranking
+        st.recent_contest_name = res.get("recent_contest_name")
+        st.recent_contest_score = res.get("recent_contest_score")
+        st.public_profile_ranking = res.get("public_profile_ranking")
+        st.contest_rating = contest_rating
+        st.contest_global_ranking = global_ranking
 
         # Create historical StudentContestSnapshot if contest data is present
         if res.get("recent_contest_name"):
@@ -694,6 +755,7 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
             sync_run_id=job_id,
             source="leetcode_live_sync"
         )
+        db.add(snapshot)
         db.commit()
 
         # Update persistent stats in Cloud Firestore & Firebase Realtime Database
@@ -746,27 +808,26 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
 
         return (True, False, False)
 
-
-
     else:
-        # Fetch failed or profile not found — PRESERVE PREVIOUS VALID DATA
+        # Case E: Generic Fetch Error
         st.error_message = res.get("error_message") or "Profile fetch failed"
         st.error_code = res.get("error_code") or "FETCH_ERROR"
         st.last_attempt_at = now
-        st.sync_status = "stale" if old_total is not None else "failed"
+        st.sync_status = "failed"
+        st.status = "FETCH_FAILED"
 
         item = SyncJobItem(
             job_id=job_id,
             student_id=student.id,
             field="total_solved",
-            status="LAST_VERIFIED" if old_total is not None else "FETCH_ERROR",
+            status="FETCH_ERROR",
             old_value=str(old_total) if old_total is not None else None,
-            new_value=str(old_total) if old_total is not None else None,
+            new_value=None,
             error_code=st.error_code
         )
         db.add(item)
         db.commit()
-        return (False, old_total is not None, old_total is None)
+        return (False, False, True)
 
 
 def _sync_active_contest_data(db: Session):
