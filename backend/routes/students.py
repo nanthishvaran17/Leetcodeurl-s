@@ -901,6 +901,7 @@ async def refresh_single_student(student_id: int):
         raise HTTPException(status_code=500, detail=f"Sync error: {err}")
 
 @router.post("/refresh-all")
+@router.post("/sync-all")
 @router.post("/admin/sync/start")
 async def refresh_all_students(
     background_tasks: BackgroundTasks,

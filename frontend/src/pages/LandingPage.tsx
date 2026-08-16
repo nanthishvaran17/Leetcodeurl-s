@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { CollegeLogo } from '../components/CollegeLogo';
-import { Shield, ArrowRight, Trophy, Users, Layers, Activity, Flame, Star, LayoutGrid, List, RefreshCw, CheckCircle2, Clock, AlertCircle, ChevronDown, Building2, GraduationCap, RotateCcw, Filter } from 'lucide-react';
+import { Shield, ArrowRight, Trophy, Users, Layers, Activity, Flame, Star, LayoutGrid, List, RefreshCw, CheckCircle2, Clock, AlertCircle, ChevronDown, Building2, GraduationCap, RotateCcw, Filter, Search, X } from 'lucide-react';
 import { CountdownTimer } from '../components/CountdownTimer';
 import { StudentFlipCard } from '../components/StudentFlipCard';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
@@ -45,6 +45,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [departments, setDepartments] = useState<any[]>([]);
   const [selectedDept, setSelectedDept] = useState<string>('all');
   const [yearLevel, setYearLevel] = useState<string>('all');
+  const [nameSearch, setNameSearch] = useState<string>('');
   const [solvedFilter, setSolvedFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('top_solved');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
@@ -273,19 +274,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     }
   };
 
-  // --- Combined Canonical Filter Pipeline: Dept + Academic Year + Performance Range + Sort ---
+  // --- Combined Canonical Filter Pipeline: Dept + Academic Year + Name Search + Performance Range + Sort ---
   const { filteredAndSorted: sortedList, counts: performanceCounts } = useMemo(() => {
     return filterAndSortStudents(students, {
       department: selectedDept,
       academicYear: yearLevel,
+      nameSearch,
       performanceRange: solvedFilter,
       sortBy
     });
-  }, [students, selectedDept, yearLevel, solvedFilter, sortBy]);
+  }, [students, selectedDept, yearLevel, nameSearch, solvedFilter, sortBy]);
 
   const handleResetFilters = () => {
     setSelectedDept('all');
     setYearLevel('all');
+    setNameSearch('');
     setSolvedFilter('all');
     setSortBy('top_solved');
     setDisplayCount(32);
@@ -506,8 +509,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
         </div>
 
-        {/* 4 Separate Dropdown Filter Selects */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* 4 Separate Dropdown Filter Selects + 1 Name Search */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           
           {/* 1. Department Filter */}
           <div className="space-y-1.5">
@@ -560,7 +563,39 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
           </div>
 
-          {/* 3. Performance Range Filter */}
+          {/* 3. Name Search */}
+          <div className="space-y-1.5">
+            <label htmlFor="landing-name-search" className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              Search Student Name
+            </label>
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                <Search className="w-3.5 h-3.5" />
+              </div>
+              <input
+                id="landing-name-search"
+                type="text"
+                value={nameSearch}
+                onChange={(e) => {
+                  setNameSearch(e.target.value);
+                  setDisplayCount(32);
+                }}
+                placeholder="Search by name, reg no, handle..."
+                className="w-full bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-xs font-bold py-3 pl-9 pr-9 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+              />
+              {nameSearch && (
+                <button
+                  onClick={() => { setNameSearch(''); setDisplayCount(32); }}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer"
+                  title="Clear search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* 4. Performance Range Filter */}
           <div className="space-y-1.5">
             <label htmlFor="performance-range-filter" className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               Performance Range
@@ -588,7 +623,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
           </div>
 
-          {/* 4. Sort Students */}
+          {/* 5. Sort Students */}
           <div className="space-y-1.5">
             <label htmlFor="sort-students-filter" className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               Sort Students

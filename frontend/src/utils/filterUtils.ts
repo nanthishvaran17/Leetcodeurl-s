@@ -3,6 +3,7 @@ import { StudentData } from '../components/LeaderboardTable';
 export type NormalizedDepartment = 'all' | 'cyber_security' | 'iot' | 'unknown';
 export type NormalizedAcademicYear = 'all' | 'II' | 'III' | 'IV' | string;
 export type PerformanceRangeKey = 'all' | '500_plus' | '251_500' | '101_250' | '1_100' | 'not_started';
+export type SortByKey = 'top_solved' | 'low_solved' | 'name_asc' | 'name_desc' | 'streak' | 'rating';
 
 /**
  * Normalizes any department reference (object, ID, name, code, string) to a canonical key:
@@ -99,6 +100,22 @@ export function matchesAcademicYear(student: StudentData, selectedYear: string):
 }
 
 /**
+ * Name search matching predicate
+ * Case-insensitive partial match across: name, reg_no, username (LeetCode handle)
+ * Empty search string returns true (match all).
+ */
+export function matchesNameSearch(student: StudentData, search: string): boolean {
+  const q = search.trim().toLowerCase();
+  if (!q) return true;
+
+  const name = (student.name || '').toLowerCase();
+  const regNo = (student.reg_no || '').toLowerCase();
+  const username = (student.username || '').toLowerCase();
+
+  return name.includes(q) || regNo.includes(q) || username.includes(q);
+}
+
+/**
  * Performance Range matching predicate using numeric values
  * - 500+: solved >= 500
  * - 251–500: solved >= 251 && solved <= 500 (also handles 250..500)
@@ -165,13 +182,24 @@ export function computePerformanceCounts(studentsCohort: StudentData[]) {
 }
 
 /**
- * Executes full filter pipeline: Raw Students -> Normalize -> Filter Department -> Filter Year -> Filter Performance -> Apply Sort
+ * Executes full filter pipeline:
+ *   Raw Students
+ *   → Department Filter
+ *   → Academic Year Filter
+ *   → [Performance counts computed HERE from dept+year cohort]
+ *   → Name Search Filter
+ *   → Performance Range Filter
+ *   → Sort
+ *
+ * Performance counts always reflect the Dept+Year cohort (not the name-filtered subset)
+ * so they remain stable while the user types in the search box.
  */
 export function filterAndSortStudents(
   students: StudentData[],
   filters: {
     department: string;
     academicYear: string;
+    nameSearch?: string;
     performanceRange: string;
     sortBy: string;
   }
@@ -185,15 +213,20 @@ export function filterAndSortStudents(
     matchesDepartment(s, filters.department) && matchesAcademicYear(s, filters.academicYear)
   );
 
-  // Step 2: Calculate dynamic performance counts based strictly on current Dept + Year cohort
+  // Step 2: Performance counts from Dept+Year cohort (unaffected by name search)
   const counts = computePerformanceCounts(deptAndYearCohort);
 
-  // Step 3: Apply Performance Range Filter
-  const performanceFiltered = deptAndYearCohort.filter(s =>
+  // Step 3: Apply Name Search Filter
+  const nameFiltered = deptAndYearCohort.filter(s =>
+    matchesNameSearch(s, filters.nameSearch || '')
+  );
+
+  // Step 4: Apply Performance Range Filter
+  const performanceFiltered = nameFiltered.filter(s =>
     matchesPerformanceRange(s, filters.performanceRange)
   );
 
-  // Step 4: Apply Sort
+  // Step 5: Apply Sort
   const filteredAndSorted = [...performanceFiltered].sort((a, b) => {
     const aSolved = getSolvedCount(a);
     const bSolved = getSolvedCount(b);
