@@ -279,18 +279,20 @@ def create_nandha_official_department_sheet(ws, dept: Department, db: Session):
         q4_cnt, q3_cnt, q2_cnt, q1_cnt = 0, 0, 0, 0
         if latest_session:
             stud_ids = {s.id for s in students}
-            snaps = db.query(WeeklySessionSnapshot).filter(
-                WeeklySessionSnapshot.session_id == latest_session.id,
-                WeeklySessionSnapshot.student_id.in_(stud_ids)
+            pub_results = db.query(WeeklyPublicResult).filter(
+                WeeklyPublicResult.session_id == latest_session.id,
+                WeeklyPublicResult.student_id.in_(stud_ids)
             ).all()
-            for sn in snaps:
-                if sn.problems_added >= 4: q4_cnt += 1
-                elif sn.problems_added == 3: q3_cnt += 1
-                elif sn.problems_added == 2: q2_cnt += 1
-                elif sn.problems_added == 1: q1_cnt += 1
+            for pr in pub_results:
+                if pr.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL", "VIRTUAL_ATTENDED"):
+                    tot_s = pr.total_contest_solved or 0
+                    if tot_s >= 4: q4_cnt += 1
+                    elif tot_s == 3: q3_cnt += 1
+                    elif tot_s == 2: q2_cnt += 1
+                    elif tot_s == 1: q1_cnt += 1
 
         rating_above_1500 = sum(1 for s in students if s.stats and s.stats.contest_rating and s.stats.contest_rating > 1500)
-        rank_below_20000 = sum(1 for s in students if s.stats and s.stats.contest_global_ranking and s.stats.contest_global_ranking < 20000)
+        rank_below_20000 = sum(1 for s in students if s.stats and ((s.stats.contest_global_ranking and s.stats.contest_global_ranking < 20000) or (s.stats.public_profile_ranking and s.stats.public_profile_ranking < 20000)))
 
         ws.cell(row=current_row, column=1, value=f"{batch_label}\n(Last Week)").alignment = center_align
         ws.cell(row=current_row, column=1).font = font_bold_10

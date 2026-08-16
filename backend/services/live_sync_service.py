@@ -9,7 +9,7 @@ from backend.leetcode_fetcher import fetch_leetcode_profile
 from backend.ranking import update_all_rankings_and_badges
 from backend.logger import logger
 
-# In-memory progress tracker for quick polling
+# In-memory progress tracker for quick polling & live WebSocket push
 class LiveSyncTracker:
     def __init__(self):
         self.current_job_id: Optional[str] = None
@@ -22,14 +22,18 @@ class LiveSyncTracker:
         self.partial: int = 0
         self.failed: int = 0
         self.pending_usernames: int = 0
+        self.invalid: int = 0
+        self.unknown: int = 0
         self.current_student: Optional[str] = None
         self.current_username: Optional[str] = None
+        self.current_student_status: Optional[str] = None
         self.progress_percentage: float = 0.0
         self.started_at: Optional[str] = None
         self.last_progress_at: Optional[str] = None
         self.completed_at: Optional[str] = None
         self.last_successful_sync: Optional[str] = None
         self.recent_logs: List[str] = []
+        self.recent_completed: List[Dict[str, Any]] = []
         self.error_summary: Optional[str] = None
 
     @property
@@ -41,8 +45,20 @@ class LiveSyncTracker:
         return self.students_processed
 
     @property
+    def processed(self) -> int:
+        return self.students_processed
+
+    @property
     def success(self) -> int:
         return self.successful
+
+    @property
+    def pending(self) -> int:
+        return self.pending_usernames
+
+    @property
+    def progress_percent(self) -> float:
+        return self.progress_percentage
 
     def start(self, job_id: str, total: int):
         now_iso = datetime.datetime.utcnow().isoformat()
@@ -56,19 +72,79 @@ class LiveSyncTracker:
         self.partial = 0
         self.failed = 0
         self.pending_usernames = 0
+        self.invalid = 0
+        self.unknown = 0
         self.current_student = None
         self.current_username = None
+        self.current_student_status = None
         self.progress_percentage = 0.0
         self.started_at = now_iso
         self.last_progress_at = now_iso
         self.completed_at = None
         self.error_summary = None
+        self.recent_completed = []
         self.recent_logs = [f"[WORKER] Live sync worker started for {total} active students."]
 
     def set_current(self, student_name: str, username: Optional[str] = None):
         self.current_student = student_name
         self.current_username = username or ""
         self.last_progress_at = datetime.datetime.utcnow().isoformat()
+
+    def record_student_completion(
+        self,
+        student_name: str,
+        username: Optional[str],
+        status: str,
+        total_solved: Optional[int] = None,
+        contest_rating: Optional[float] = None,
+        reg_no: Optional[str] = None,
+        error_msg: Optional[str] = None
+    ):
+        """
+        Invoked immediately when a single student reaches a terminal state.
+        Monotonically advances processed count and updates classification metrics.
+        """
+        self.students_processed += 1
+        now_iso = datetime.datetime.utcnow().isoformat()
+        self.last_progress_at = now_iso
+        self.current_student = student_name
+        self.current_username = username or ""
+        self.current_student_status = status.upper()
+
+        if status.upper() in ("SUCCESS", "VERIFIED", "PROFILE_VERIFIED", "SYNCED"):
+            self.successful += 1
+            self.profiles_synced += 1
+        elif status.upper() in ("PENDING_USERNAME", "MISSING_LINK", "PENDING"):
+            self.pending_usernames += 1
+        elif status.upper() in ("INVALID_USERNAME", "404_NOT_FOUND", "INVALID_LINK"):
+            self.invalid += 1
+        elif status.upper() in ("FETCH_FAILED", "NETWORK_ERROR", "FAILED", "ERROR"):
+            self.failed += 1
+        else:
+            self.unknown += 1
+
+        self.progress_percentage = round((self.students_processed / max(1, self.total_students)) * 100.0, 2)
+
+        # Append to recent completed list (up to 15 items)
+        completed_record = {
+            "student_name": student_name,
+            "username": username or "",
+            "reg_no": reg_no or "",
+            "status": status.upper(),
+            "total_solved": total_solved,
+            "contest_rating": contest_rating,
+            "error_msg": error_msg,
+            "timestamp": now_iso
+        }
+        self.recent_completed.insert(0, completed_record)
+        if len(self.recent_completed) > 15:
+            self.recent_completed.pop()
+
+        log_symbol = "✓" if status.upper() in ("SUCCESS", "VERIFIED", "PROFILE_VERIFIED", "SYNCED") else "✕"
+        solved_str = f" — {total_solved} solved" if total_solved is not None else f" — {status.upper()}"
+        self.recent_logs.append(f"{log_symbol} {student_name} ({username or 'no_user'}){solved_str}")
+        if len(self.recent_logs) > 50:
+            self.recent_logs.pop(0)
 
     def update(self, success_inc=0, profiles_synced_inc=0, partial_inc=0, failed_inc=0, pending_inc=0, log_msg=""):
         self.students_processed += 1
@@ -90,9 +166,46 @@ class LiveSyncTracker:
         self.completed_at = datetime.datetime.utcnow().isoformat()
         if status in ("COMPLETED", "PARTIAL"):
             self.last_successful_sync = self.completed_at
+            self.progress_percentage = 100.0
+            self.students_processed = self.total_students
         self.error_summary = error_summary
         self.current_student = None
         self.current_username = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "job_id": self.current_job_id,
+            "is_running": self.is_running,
+            "status": self.status,
+            "operation": self.status,
+            "total": self.total_students,
+            "total_students": self.total_students,
+            "processed": self.students_processed,
+            "students_processed": self.students_processed,
+            "completed": self.students_processed,
+            "successful": self.successful,
+            "success": self.successful,
+            "profiles_synced": self.profiles_synced,
+            "failed": self.failed,
+            "pending": self.pending_usernames,
+            "pending_usernames": self.pending_usernames,
+            "invalid": self.invalid,
+            "unknown": self.unknown,
+            "current_student": self.current_student,
+            "current_username": self.current_username,
+            "current_student_status": self.current_student_status,
+            "current_index": self.students_processed,
+            "progress_percent": self.progress_percentage,
+            "progress_percentage": self.progress_percentage,
+            "started_at": self.started_at,
+            "updated_at": self.last_progress_at,
+            "last_progress_at": self.last_progress_at,
+            "completed_at": self.completed_at,
+            "last_successful_sync": self.last_successful_sync,
+            "recent_completed": self.recent_completed,
+            "recent_logs": self.recent_logs,
+            "error_summary": self.error_summary
+        }
 
 sync_tracker = LiveSyncTracker()
 

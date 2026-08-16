@@ -5,6 +5,7 @@ import { CountdownTimer } from '../components/CountdownTimer';
 import { StudentFlipCard } from '../components/StudentFlipCard';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import api, { triggerFullSync, getSyncStatus } from '../services/api';
+import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 
 function parseUtcTime(ts?: string): number {
   if (!ts) return Date.now();
@@ -61,6 +62,53 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     is_running: boolean;
   } | null>(null);
   const pollTimerRef = useRef<any>(null);
+
+  // Real-time WebSocket streaming subscription for true per-student progress
+  useLiveLeaderboard((data) => {
+    if (!data) return;
+
+    if (data.type === 'sync_progress') {
+      setSyncProgress({
+        total: data.total || 300,
+        processed: data.processed,
+        successful: data.successful,
+        failed: data.failed,
+        pending_usernames: data.pending,
+        current_student: data.current_student,
+        current_username: data.current_username,
+        is_running: true
+      });
+
+      // Update student card progressively in React state without full page reload
+      if (data.student_update) {
+        const u = data.student_update;
+        setStudents(prev => prev.map(st => {
+          if (st.id === u.id || (st.reg_no && st.reg_no === u.reg_no)) {
+            return {
+              ...st,
+              username: u.username || st.username,
+              stats: {
+                ...st.stats,
+                total_solved: u.total_solved ?? st.stats?.total_solved,
+                easy_solved: u.easy_solved ?? st.stats?.easy_solved,
+                medium_solved: u.medium_solved ?? st.stats?.medium_solved,
+                hard_solved: u.hard_solved ?? st.stats?.hard_solved,
+                contest_rating: u.contest_rating ?? st.stats?.contest_rating,
+                sync_status: u.sync_status || st.stats?.sync_status,
+                status: u.status || st.stats?.status,
+                last_verified_at: new Date().toISOString()
+              }
+            };
+          }
+          return st;
+        }));
+      }
+    } else if (data.type === 'SYNC_COMPLETED') {
+      setSyncProgress(prev => prev ? { ...prev, is_running: false, processed: prev.total } : null);
+      setRefreshing(false);
+      fetchFilteredStudents();
+    }
+  });
 
   useEffect(() => {
     fetchDepartments();

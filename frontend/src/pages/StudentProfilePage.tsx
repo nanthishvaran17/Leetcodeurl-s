@@ -14,6 +14,8 @@ interface StudentProfilePageProps {
 export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student, onBack }) => {
   const [detail, setDetail] = useState<any>(student);
   const [insights, setInsights] = useState<any>(null);
+  const [isLiveFetching, setIsLiveFetching] = useState(false);
+  const [liveFetchError, setLiveFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     if (student?.id) {
@@ -60,6 +62,41 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       alert(`Certificate Error: ${detailMsg}`);
     } finally {
       setDownloadingCert(false);
+    }
+  };
+
+  const handleLiveFetch = async () => {
+    // Determine username from leetcode_url if username is not explicitly set
+    const username = detail?.username || (detail?.leetcode_url ? detail.leetcode_url.split('/u/')[1]?.replace('/', '') : null);
+    if (!username) {
+      setLiveFetchError("No valid LeetCode username found.");
+      return;
+    }
+    
+    setIsLiveFetching(true);
+    setLiveFetchError(null);
+    try {
+      const res = await api.get(`/leetcode/stats?username=${username}`);
+      setDetail((prev: any) => ({
+        ...prev,
+        stats: {
+          ...prev.stats,
+          total_solved: res.data.total_solved,
+          easy_solved: res.data.easy_solved,
+          medium_solved: res.data.medium_solved,
+          hard_solved: res.data.hard_solved,
+          contest_rating: res.data.contest_rating,
+          official_contests: res.data.official_contests,
+          virtual_contests: res.data.virtual_contests ?? 0,
+          virtual_contest_status: res.data.virtual_contest_status || 'NOT_ATTENDED',
+          virtual_problems_solved: res.data.virtual_problems_solved ?? 0,
+        }
+      }));
+    } catch (err: any) {
+      console.error("Live fetch error:", err);
+      setLiveFetchError(err.response?.data?.detail || "Failed to fetch live stats");
+    } finally {
+      setIsLiveFetching(false);
     }
   };
 
@@ -115,6 +152,15 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             )}
 
             <button
+              onClick={handleLiveFetch}
+              disabled={isLiveFetching}
+              className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md shadow-indigo-600/30 transition-all hover:scale-105 disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isLiveFetching ? 'animate-spin' : ''}`} />
+              <span>{isLiveFetching ? 'Fetching...' : 'Live Sync'}</span>
+            </button>
+
+            <button
               onClick={handleGenerateCert}
               disabled={downloadingCert}
               className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md shadow-amber-600/30 transition-all hover:scale-105 disabled:opacity-50"
@@ -125,6 +171,11 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           </div>
 
         </div>
+        {liveFetchError && (
+          <div className="mt-3 text-xs font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/50 p-2 rounded-lg border border-rose-200 dark:border-rose-800">
+            {liveFetchError}
+          </div>
+        )}
       </div>
 
       {/* Ranks & Streaks Grid */}
@@ -150,6 +201,39 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           <h3 className="text-2xl font-extrabold text-amber-500 mt-1">🔥 {detail?.streak_count || 0} wks</h3>
         </div>
 
+      </div>
+
+      {/* Contest Performance Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="glass-card p-5 rounded-2xl border text-center shadow-md">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Official Contests</p>
+          <h3 className="text-2xl font-extrabold text-blue-600 dark:text-blue-400 mt-1">{detail?.stats?.official_contests || 0}</h3>
+        </div>
+        <div className="glass-card p-5 rounded-2xl border text-center shadow-md">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Virtual Contests</p>
+          <div className="mt-1">
+            <h3 className="text-2xl font-extrabold text-blue-600 dark:text-blue-400">
+              {detail?.stats?.virtual_contests ?? 0}
+            </h3>
+            <div className="mt-1">
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                (detail?.stats?.virtual_contest_status === 'ATTENDED' || (detail?.stats?.virtual_contests && detail.stats.virtual_contests > 0))
+                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-400/30'
+                  : 'bg-gray-100 text-gray-600 dark:bg-navy-950 dark:text-gray-400 border border-gray-300/30'
+              }`}>
+                {(detail?.stats?.virtual_contest_status === 'ATTENDED' || (detail?.stats?.virtual_contests && detail.stats.virtual_contests > 0))
+                  ? '🔵 Attended'
+                  : '⚪ Not Attended'}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="glass-card p-5 rounded-2xl border text-center shadow-md col-span-2 md:col-span-1">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Contest Rating</p>
+          <h3 className="text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">
+            {detail?.stats?.contest_rating ? detail.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1 }) : '—'}
+          </h3>
+        </div>
       </div>
 
       {/* Skill Radar & Digital Student Pass */}

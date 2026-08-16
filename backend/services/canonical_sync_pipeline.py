@@ -1,14 +1,12 @@
 """
 canonical_sync_pipeline.py — Single Canonical Dataset Pipeline for LeetCode Sync.
 
-Architecture:
-1. Batched processing across data types (Phases A -> B -> C -> D -> E).
-2. Rate-limit aware with httpx async client & semaphore bounds.
-3. State machine per student:
-   PENDING_USERNAME -> VERIFYING -> PROFILE_VERIFIED -> SYNCING -> SYNCED / PARTIAL_SYNC / FETCH_FAILED / INVALID_USERNAME / IDENTITY_MISMATCH
-4. Writes to normalized database tables (lc_profiles, lc_problem_stats, lc_contest_standing,
-   lc_contest_rating_history, lc_badges, lc_language_stats, lc_topic_stats, lc_activity, lc_submissions)
-   AND updates compatibility shim LeetCodeProfileStats.
+True Real-Time Per-Student Streaming Pipeline:
+1. Bounded concurrency (Semaphore(8)) with asynchronous per-student lifecycle.
+2. Immediate DB persistence per student upon fetch completion.
+3. Immediate WebSocket broadcast of `sync_progress` event for every finished student.
+4. Increments processed strictly when reaching a terminal state.
+5. In-memory tracking of recent completed students for real-time UI feed.
 """
 
 import asyncio
@@ -30,6 +28,7 @@ from backend.models import (
     LeetCodeActivity,
     LeetCodeSubmission,
     LeetCodeProfileStats,
+    SyncJob,
 )
 from backend.leetcode_fetcher import (
     extract_leetcode_username,
@@ -44,93 +43,68 @@ from backend.cache import cache
 from backend.logger import logger
 
 
-async def run_full_pipeline(
-    job_id: Optional[str] = None,
-    student_ids: Optional[List[int]] = None,
-    progress_callback: Optional[Any] = None,
-    run_optional_phases: bool = True
-) -> Dict[str, Any]:
-    """
-    Executes the full canonical sync pipeline for all active students (or specified student_ids).
-    Returns comprehensive summary dict for audit and logging.
-    """
-    start_time = datetime.datetime.utcnow()
-    db = SessionLocal()
+async def _sync_single_student_canonical(
+    student: Student,
+    client: httpx.AsyncClient,
+    sem: asyncio.Semaphore,
+    lock: asyncio.Lock,
+    job_id: str,
+    progress_callback: Optional[Any],
+    run_optional_phases: bool = False
+):
+    async with sem:
+        now_dt = datetime.datetime.utcnow()
+        db_student = SessionLocal()
+        try:
+            st = db_student.query(Student).filter(Student.id == student.id).first()
+            if not st:
+                return
 
-    try:
-        # Load students
-        query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
-        if student_ids:
-            query = query.filter(Student.id.in_(student_ids))
-        students = query.all()
+            c_username, c_url, u_status = extract_leetcode_username(st.username or st.leetcode_url)
 
-        total_students = len(students)
-        logger.info(f"[CANONICAL_PIPELINE] Starting full pipeline for {total_students} students (Job ID: {job_id or 'manual'})")
+            lc_prof = db_student.query(LeetCodeProfile).filter(LeetCodeProfile.student_id == st.id).first()
+            if not lc_prof:
+                lc_prof = LeetCodeProfile(student_id=st.id)
+                db_student.add(lc_prof)
 
-        if progress_callback and hasattr(progress_callback, "start"):
-            progress_callback.start(job_id or f"canonical-{int(start_time.timestamp())}", total_students)
+            lc_stats = db_student.query(LeetCodeProblemStats).filter(LeetCodeProblemStats.student_id == st.id).first()
+            if not lc_stats:
+                lc_stats = LeetCodeProblemStats(student_id=st.id)
+                db_student.add(lc_stats)
 
-        timeout_cfg = httpx.Timeout(connect=5.0, read=15.0, write=5.0, pool=5.0)
-        limits_cfg = httpx.Limits(max_keepalive_connections=15, max_connections=30)
+            shim_stats = db_student.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id == st.id).first()
+            if not shim_stats:
+                shim_stats = LeetCodeProfileStats(student_id=st.id)
+                db_student.add(shim_stats)
 
-        async with httpx.AsyncClient(timeout=timeout_cfg, limits=limits_cfg, follow_redirects=True, http2=False) as client:
+            lc_prof.last_attempted_at = now_dt
 
-            # ── PHASE A: Identity Verification & Core Stats (All Students) ────────────────
-            logger.info("[CANONICAL_PIPELINE] Phase A: Verifying profile identities and fetching problem stats...")
-            phase_a_results = {}
-            sem_a = asyncio.Semaphore(15)
+            status_code = "PENDING_USERNAME"
+            total_solved = None
+            easy_solved = None
+            medium_solved = None
+            hard_solved = None
+            contest_rating = None
+            sync_status_str = "pending"
+            error_msg = None
 
-            async def _process_phase_a(student: Student):
-                async with sem_a:
-                    c_username, c_url, u_status = extract_leetcode_username(student.username or student.leetcode_url)
-                    if u_status != "OK" or not c_username:
-                        return student.id, {"status": "pending_username", "username": None, "detail": u_status}
+            if u_status != "OK" or not c_username:
+                lc_prof.verification_status = "PENDING_USERNAME"
+                lc_prof.sync_state = "PENDING_USERNAME"
+                lc_prof.canonical_username = None
+                lc_prof.profile_url = None
+                shim_stats.status = "MISSING LINK"
+                shim_stats.sync_status = "pending"
+                status_code = "PENDING_USERNAME"
+                sync_status_str = "pending"
+            else:
+                # Phase A: Core Profile & Problem Stats
+                res_a = await fetch_profile_and_stats(c_username, client)
+                await asyncio.sleep(0.08)
 
-                    res = await fetch_profile_and_stats(c_username, client)
-                    await asyncio.sleep(0.15) # Rate limit padding
-                    return student.id, res
+                phase_a_status = res_a.get("status")
 
-            tasks_a = [_process_phase_a(s) for s in students]
-            raw_a = await asyncio.gather(*tasks_a)
-            for st_id, res in raw_a:
-                phase_a_results[st_id] = res
-
-            # Persist Phase A to DB
-            verified_students = []
-            now_dt = datetime.datetime.utcnow()
-
-            for student in students:
-                st_id = student.id
-                res = phase_a_results.get(st_id, {})
-                status = res.get("status")
-
-                lc_prof = db.query(LeetCodeProfile).filter(LeetCodeProfile.student_id == st_id).first()
-                if not lc_prof:
-                    lc_prof = LeetCodeProfile(student_id=st_id)
-                    db.add(lc_prof)
-
-                lc_stats = db.query(LeetCodeProblemStats).filter(LeetCodeProblemStats.student_id == st_id).first()
-                if not lc_stats:
-                    lc_stats = LeetCodeProblemStats(student_id=st_id)
-                    db.add(lc_stats)
-
-                # Compatibility shim update
-                shim_stats = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id == st_id).first()
-                if not shim_stats:
-                    shim_stats = LeetCodeProfileStats(student_id=st_id)
-                    db.add(shim_stats)
-
-                lc_prof.last_attempted_at = now_dt
-
-                if status == "pending_username":
-                    lc_prof.verification_status = "PENDING_USERNAME"
-                    lc_prof.sync_state = "PENDING_USERNAME"
-                    lc_prof.canonical_username = None
-                    lc_prof.profile_url = None
-                    shim_stats.status = "MISSING LINK"
-                    shim_stats.sync_status = "pending"
-
-                elif status == "not_found":
+                if phase_a_status == "not_found":
                     lc_prof.verification_status = "INVALID_USERNAME"
                     lc_prof.sync_state = "INVALID_USERNAME"
                     lc_prof.error_code = "404_NOT_FOUND"
@@ -138,18 +112,24 @@ async def run_full_pipeline(
                     shim_stats.status = "INVALID_USERNAME"
                     shim_stats.sync_status = "failed"
                     shim_stats.error_code = "PROFILE_NOT_FOUND"
+                    status_code = "INVALID_USERNAME"
+                    sync_status_str = "failed"
+                    error_msg = "Profile not found (404)"
 
-                elif status == "identity_mismatch":
+                elif phase_a_status == "identity_mismatch":
                     lc_prof.verification_status = "IDENTITY_MISMATCH"
                     lc_prof.sync_state = "IDENTITY_MISMATCH"
                     lc_prof.error_code = "IDENTITY_MISMATCH"
-                    lc_prof.error_message = res.get("detail")
+                    lc_prof.error_message = res_a.get("detail")
                     shim_stats.status = "IDENTITY_MISMATCH"
                     shim_stats.sync_status = "mismatch"
                     shim_stats.error_code = "MISMATCH"
+                    status_code = "IDENTITY_MISMATCH"
+                    sync_status_str = "mismatch"
+                    error_msg = res_a.get("detail")
 
-                elif status == "ok" and res.get("data"):
-                    data = res["data"]
+                elif phase_a_status == "ok" and res_a.get("data"):
+                    data = res_a["data"]
                     c_user = data["canonical_username"]
                     lc_prof.canonical_username = c_user
                     lc_prof.profile_url = data["profile_url"]
@@ -161,28 +141,31 @@ async def run_full_pipeline(
                     lc_prof.country = data.get("country")
                     lc_prof.reputation = data.get("reputation")
                     lc_prof.verification_status = "PROFILE_VERIFIED"
-                    lc_prof.sync_state = "SYNCING"
+                    lc_prof.sync_state = "SYNCED"
                     lc_prof.last_verified_at = now_dt
+                    lc_prof.last_synced_at = now_dt
                     lc_prof.error_code = None
                     lc_prof.error_message = None
 
-                    # Update student.username and leetcode_url if canonical username updated
-                    student.username = c_user
-                    student.leetcode_url = data["profile_url"]
+                    st.username = c_user
+                    st.leetcode_url = data["profile_url"]
 
-                    # Update Problem Stats
-                    lc_stats.total_solved = data.get("total_solved")
-                    lc_stats.easy_solved = data.get("easy_solved")
-                    lc_stats.medium_solved = data.get("medium_solved")
-                    lc_stats.hard_solved = data.get("hard_solved")
+                    total_solved = data.get("total_solved")
+                    easy_solved = data.get("easy_solved")
+                    medium_solved = data.get("medium_solved")
+                    hard_solved = data.get("hard_solved")
+
+                    lc_stats.total_solved = total_solved
+                    lc_stats.easy_solved = easy_solved
+                    lc_stats.medium_solved = medium_solved
+                    lc_stats.hard_solved = hard_solved
                     lc_stats.profile_global_ranking = data.get("profile_global_ranking")
                     lc_stats.fetched_at = now_dt
 
-                    # Update Compatibility Shim
-                    shim_stats.total_solved = data.get("total_solved")
-                    shim_stats.easy_solved = data.get("easy_solved")
-                    shim_stats.medium_solved = data.get("medium_solved")
-                    shim_stats.hard_solved = data.get("hard_solved")
+                    shim_stats.total_solved = total_solved
+                    shim_stats.easy_solved = easy_solved
+                    shim_stats.medium_solved = medium_solved
+                    shim_stats.hard_solved = hard_solved
                     shim_stats.public_profile_ranking = data.get("profile_global_ranking")
                     shim_stats.status = "verified"
                     shim_stats.sync_status = "success"
@@ -190,253 +173,238 @@ async def run_full_pipeline(
                     shim_stats.last_successful_sync = now_dt
                     shim_stats.last_verified_at = now_dt
 
-                    # Persist Badges
+                    # Badges
                     for b in data.get("badges", []):
-                        badge_id = b["badge_id"]
-                        if not badge_id:
-                            continue
-                        existing_badge = db.query(LeetCodeBadge).filter(
-                            LeetCodeBadge.student_id == st_id, LeetCodeBadge.badge_id == badge_id
-                        ).first()
-                        if not existing_badge:
-                            existing_badge = LeetCodeBadge(student_id=st_id, badge_id=badge_id)
-                            db.add(existing_badge)
-                        existing_badge.display_name = b.get("display_name")
-                        existing_badge.icon_url = b.get("icon_url")
+                        badge_id = b.get("badge_id")
+                        if badge_id:
+                            existing_b = db_student.query(LeetCodeBadge).filter(
+                                LeetCodeBadge.student_id == st.id, LeetCodeBadge.badge_id == badge_id
+                            ).first()
+                            if not existing_b:
+                                existing_b = LeetCodeBadge(student_id=st.id, badge_id=badge_id)
+                                db_student.add(existing_b)
+                            existing_b.display_name = b.get("display_name")
+                            existing_b.icon_url = b.get("icon_url")
 
-                    # Persist Languages
+                    # Languages
                     for lang in data.get("languages", []):
-                        l_name = lang["language_name"]
-                        if not l_name:
-                            continue
-                        existing_lang = db.query(LeetCodeLanguageStats).filter(
-                            LeetCodeLanguageStats.student_id == st_id, LeetCodeLanguageStats.language_name == l_name
-                        ).first()
-                        if not existing_lang:
-                            existing_lang = LeetCodeLanguageStats(student_id=st_id, language_name=l_name)
-                            db.add(existing_lang)
-                        existing_lang.problems_solved = lang.get("problems_solved", 0)
-                        existing_lang.fetched_at = now_dt
+                        l_name = lang.get("language_name")
+                        if l_name:
+                            existing_l = db_student.query(LeetCodeLanguageStats).filter(
+                                LeetCodeLanguageStats.student_id == st.id, LeetCodeLanguageStats.language_name == l_name
+                            ).first()
+                            if not existing_l:
+                                existing_l = LeetCodeLanguageStats(student_id=st.id, language_name=l_name)
+                                db_student.add(existing_l)
+                            existing_l.problems_solved = lang.get("problems_solved", 0)
+                            existing_l.fetched_at = now_dt
 
-                    verified_students.append(student)
+                    # Phase B: Contest Standings & Rating History
+                    res_b = await fetch_contest_data(c_user, client)
+                    await asyncio.sleep(0.08)
+
+                    if res_b.get("status") == "ok" and res_b.get("data"):
+                        c_data = res_b["data"]
+                        contest_rating = c_data.get("contest_rating")
+
+                        lc_contest = db_student.query(LeetCodeContest).filter(LeetCodeContest.student_id == st.id).first()
+                        if not lc_contest:
+                            lc_contest = LeetCodeContest(student_id=st.id)
+                            db_student.add(lc_contest)
+
+                        lc_contest.contest_rating = contest_rating
+                        lc_contest.contest_global_ranking = c_data.get("contest_global_ranking")
+                        lc_contest.attended_count = c_data.get("attended_count")
+                        lc_contest.top_percentage = c_data.get("top_percentage")
+                        lc_contest.most_recent_contest_name = c_data.get("most_recent_contest_name")
+                        lc_contest.most_recent_contest_type = c_data.get("most_recent_contest_type")
+                        lc_contest.fetched_at = now_dt
+
+                        shim_stats.contest_rating = contest_rating
+                        shim_stats.contest_global_ranking = c_data.get("contest_global_ranking")
+                        shim_stats.recent_contest_name = c_data.get("most_recent_contest_name")
+
+                        for hist in c_data.get("history", []):
+                            c_name = hist.get("contest_name")
+                            if not c_name:
+                                continue
+                            is_att = hist.get("attended", False)
+                            existing_hist = db_student.query(LeetCodeContestRatingHistory).filter(
+                                LeetCodeContestRatingHistory.student_id == st.id,
+                                LeetCodeContestRatingHistory.contest_name == c_name,
+                                LeetCodeContestRatingHistory.attended == is_att
+                            ).first()
+                            if not existing_hist:
+                                existing_hist = LeetCodeContestRatingHistory(
+                                    student_id=st.id,
+                                    contest_name=c_name,
+                                    attended=is_att
+                                )
+                                db_student.add(existing_hist)
+                            existing_hist.contest_type = hist.get("contest_type")
+                            existing_hist.contest_start_time = hist.get("contest_start_time")
+                            existing_hist.problems_solved = hist.get("problems_solved", 0)
+                            existing_hist.total_problems = hist.get("total_problems", 4)
+                            existing_hist.finish_time_seconds = hist.get("finish_time_seconds")
+                            existing_hist.contest_rank = hist.get("contest_rank")
+                            existing_hist.rating_after = hist.get("rating_after")
+
+                    status_code = "SUCCESS"
+                    sync_status_str = "success"
+
                 else:
                     lc_prof.sync_state = "FETCH_FAILED"
-                    lc_prof.error_code = status.upper() if status else "FETCH_FAILED"
-                    lc_prof.error_message = res.get("detail", "Fetch failed during Phase A")
+                    lc_prof.error_code = phase_a_status.upper() if phase_a_status else "FETCH_FAILED"
+                    lc_prof.error_message = res_a.get("detail", "Fetch failed during Phase A")
                     shim_stats.status = "FETCH_FAILED"
                     shim_stats.sync_status = "failed"
                     shim_stats.error_code = "NETWORK_ERROR"
+                    status_code = "FETCH_FAILED"
+                    sync_status_str = "failed"
+                    error_msg = res_a.get("detail", "Fetch failed")
 
-            db.commit()
-            logger.info(f"[CANONICAL_PIPELINE] Phase A complete: {len(verified_students)} verified profiles ready for Phase B.")
+            db_student.commit()
 
-            # ── PHASE B: Contest Standing & Rating History (Verified Students Only) ───────
-            logger.info("[CANONICAL_PIPELINE] Phase B: Fetching contest standings and rating history...")
-            phase_b_results = {}
-            sem_b = asyncio.Semaphore(12)
+            # Record completion in LiveSyncTracker and broadcast progress event immediately
+            async with lock:
+                from backend.services.live_sync_service import broadcast_sync_event, sync_tracker
 
-            async def _process_phase_b(student: Student):
-                async with sem_b:
-                    lc_prof = db.query(LeetCodeProfile).filter(LeetCodeProfile.student_id == student.id).first()
-                    username = lc_prof.canonical_username if lc_prof else student.username
-                    if not username:
-                        return student.id, {"status": "error", "data": None}
-                    res = await fetch_contest_data(username, client)
-                    await asyncio.sleep(0.2)
-                    return student.id, res
+                if progress_callback and hasattr(progress_callback, "record_student_completion"):
+                    progress_callback.record_student_completion(
+                        student_name=st.name,
+                        username=st.username or c_username,
+                        status=status_code,
+                        total_solved=total_solved,
+                        contest_rating=contest_rating,
+                        reg_no=st.reg_no,
+                        error_msg=error_msg
+                    )
 
-            tasks_b = [_process_phase_b(s) for s in verified_students]
-            raw_b = await asyncio.gather(*tasks_b)
-            for st_id, res in raw_b:
-                phase_b_results[st_id] = res
+                payload = {
+                    "type": "sync_progress",
+                    "job_id": job_id,
+                    "processed": sync_tracker.students_processed,
+                    "total": sync_tracker.total_students,
+                    "successful": sync_tracker.successful,
+                    "failed": sync_tracker.failed,
+                    "pending": sync_tracker.pending_usernames,
+                    "invalid": sync_tracker.invalid,
+                    "unknown": sync_tracker.unknown,
+                    "current_student": st.name,
+                    "current_username": st.username or c_username or "",
+                    "current_status": status_code,
+                    "progress_percent": sync_tracker.progress_percentage,
+                    "recent_completed": sync_tracker.recent_completed,
+                    "student_update": {
+                        "id": st.id,
+                        "reg_no": st.reg_no,
+                        "name": st.name,
+                        "username": st.username,
+                        "total_solved": total_solved,
+                        "easy_solved": easy_solved,
+                        "medium_solved": medium_solved,
+                        "hard_solved": hard_solved,
+                        "contest_rating": contest_rating,
+                        "status": status_code,
+                        "sync_status": sync_status_str
+                    },
+                    "timestamp": datetime.datetime.utcnow().isoformat()
+                }
+                await broadcast_sync_event(payload)
 
-            # Persist Phase B
-            for student in verified_students:
-                st_id = student.id
-                res = phase_b_results.get(st_id, {})
-                status = res.get("status")
+        except Exception as st_err:
+            logger.error(f"[CANONICAL_PIPELINE] Error syncing student {student.id} ({student.name}): {st_err}", exc_info=True)
+            async with lock:
+                from backend.services.live_sync_service import broadcast_sync_event, sync_tracker
+                if progress_callback and hasattr(progress_callback, "record_student_completion"):
+                    progress_callback.record_student_completion(
+                        student_name=student.name,
+                        username=student.username,
+                        status="FETCH_FAILED",
+                        total_solved=None,
+                        contest_rating=None,
+                        reg_no=student.reg_no,
+                        error_msg=str(st_err)
+                    )
+                payload = {
+                    "type": "sync_progress",
+                    "job_id": job_id,
+                    "processed": sync_tracker.students_processed,
+                    "total": sync_tracker.total_students,
+                    "successful": sync_tracker.successful,
+                    "failed": sync_tracker.failed,
+                    "pending": sync_tracker.pending_usernames,
+                    "invalid": sync_tracker.invalid,
+                    "unknown": sync_tracker.unknown,
+                    "current_student": student.name,
+                    "current_username": student.username or "",
+                    "current_status": "FETCH_FAILED",
+                    "progress_percent": sync_tracker.progress_percentage,
+                    "recent_completed": sync_tracker.recent_completed,
+                    "student_update": {
+                        "id": student.id,
+                        "reg_no": student.reg_no,
+                        "name": student.name,
+                        "username": student.username,
+                        "total_solved": None,
+                        "status": "FETCH_FAILED",
+                        "sync_status": "failed"
+                    },
+                    "timestamp": datetime.datetime.utcnow().isoformat()
+                }
+                await broadcast_sync_event(payload)
+        finally:
+            db_student.close()
 
-                lc_contest = db.query(LeetCodeContest).filter(LeetCodeContest.student_id == st_id).first()
-                if not lc_contest:
-                    lc_contest = LeetCodeContest(student_id=st_id)
-                    db.add(lc_contest)
 
-                shim_stats = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id == st_id).first()
+async def run_full_pipeline(
+    job_id: Optional[str] = None,
+    student_ids: Optional[List[int]] = None,
+    progress_callback: Optional[Any] = None,
+    run_optional_phases: bool = True
+) -> Dict[str, Any]:
+    """
+    Executes the full canonical sync pipeline for all active students with true real-time streaming progress.
+    """
+    start_time = datetime.datetime.utcnow()
+    db = SessionLocal()
 
-                if status == "ok" and res.get("data"):
-                    data = res["data"]
-                    lc_contest.contest_rating = data.get("contest_rating")
-                    lc_contest.contest_global_ranking = data.get("contest_global_ranking")
-                    lc_contest.attended_count = data.get("attended_count")
-                    lc_contest.top_percentage = data.get("top_percentage")
-                    lc_contest.most_recent_contest_name = data.get("most_recent_contest_name")
-                    lc_contest.most_recent_contest_type = data.get("most_recent_contest_type")
-                    lc_contest.fetched_at = now_dt
+    try:
+        query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+        if student_ids:
+            query = query.filter(Student.id.in_(student_ids))
+        students = query.all()
 
-                    if shim_stats:
-                        shim_stats.contest_rating = data.get("contest_rating")
-                        shim_stats.contest_global_ranking = data.get("contest_global_ranking")
+        total_students = len(students)
+        effective_job_id = job_id or f"SYNC-{int(start_time.timestamp())}"
+        logger.info(f"[CANONICAL_PIPELINE] Starting streaming per-student sync for {total_students} students (Job: {effective_job_id})")
 
-                    # Append Rating History
-                    for hist in data.get("history", []):
-                        c_name = hist["contest_name"]
-                        if not c_name:
-                            continue
-                        is_att = hist["attended"]
-                        existing_hist = db.query(LeetCodeContestRatingHistory).filter(
-                            LeetCodeContestRatingHistory.student_id == st_id,
-                            LeetCodeContestRatingHistory.contest_name == c_name,
-                            LeetCodeContestRatingHistory.attended == is_att
-                        ).first()
-                        if not existing_hist:
-                            existing_hist = LeetCodeContestRatingHistory(
-                                student_id=st_id,
-                                contest_name=c_name,
-                                attended=is_att
-                            )
-                            db.add(existing_hist)
-                        existing_hist.contest_type = hist.get("contest_type")
-                        existing_hist.contest_start_time = hist.get("contest_start_time")
-                        existing_hist.problems_solved = hist.get("problems_solved", 0)
-                        existing_hist.total_problems = hist.get("total_problems", 4)
-                        existing_hist.finish_time_seconds = hist.get("finish_time_seconds")
-                        existing_hist.contest_rank = hist.get("contest_rank")
-                        existing_hist.rating_after = hist.get("rating_after")
+        if progress_callback and hasattr(progress_callback, "start"):
+            progress_callback.start(effective_job_id, total_students)
 
-            db.commit()
-            logger.info("[CANONICAL_PIPELINE] Phase B complete: Contest standing and history persisted.")
+        timeout_cfg = httpx.Timeout(connect=5.0, read=15.0, write=5.0, pool=5.0)
+        limits_cfg = httpx.Limits(max_keepalive_connections=20, max_connections=40)
 
-            # ── PHASES C, D, E: Optional / Volatile Datasets ─────────────────────────────
-            if run_optional_phases and verified_students:
-                logger.info("[CANONICAL_PIPELINE] Phases C, D, E: Fetching topic stats, activity calendar, and recent submissions...")
+        sem = asyncio.Semaphore(8)  # Safe bounded concurrency
+        lock = asyncio.Lock()
 
-                sem_opt = asyncio.Semaphore(5)
+        async with httpx.AsyncClient(timeout=timeout_cfg, limits=limits_cfg, follow_redirects=True, http2=False) as client:
+            tasks = [
+                _sync_single_student_canonical(
+                    student=s,
+                    client=client,
+                    sem=sem,
+                    lock=lock,
+                    job_id=effective_job_id,
+                    progress_callback=progress_callback,
+                    run_optional_phases=run_optional_phases
+                )
+                for s in students
+            ]
+            await asyncio.gather(*tasks, return_exceptions=True)
 
-                async def _process_optional(student: Student):
-                    async with sem_opt:
-                        lc_prof = db.query(LeetCodeProfile).filter(LeetCodeProfile.student_id == student.id).first()
-                        username = lc_prof.canonical_username if lc_prof else student.username
-                        if not username:
-                            return student.id, None, None, None
-
-                        topic_res = await fetch_topic_stats(username, client, retries=2, backoff_base=1.2)
-                        await asyncio.sleep(0.1)
-
-                        cal_res = await fetch_activity_calendar(username, client, retries=2, backoff_base=1.2)
-                        await asyncio.sleep(0.1)
-
-                        sub_res = await fetch_recent_submissions(username, client, limit=20, retries=2, backoff_base=1.2)
-                        await asyncio.sleep(0.1)
-
-                        return student.id, topic_res, cal_res, sub_res
-
-                opt_tasks = [_process_optional(s) for s in verified_students]
-                opt_raw = await asyncio.gather(*opt_tasks, return_exceptions=True)
-
-                for item in opt_raw:
-                    if isinstance(item, Exception) or not isinstance(item, tuple) or len(item) != 4:
-                        continue
-                    st_id, topic_res, cal_res, sub_res = item
-                    # Persist Topics (Phase C)
-                    if isinstance(topic_res, dict) and topic_res.get("status") == "ok":
-                        for top in topic_res.get("data", {}).get("topics", []):
-                            t_slug = top["topic_slug"]
-                            if not t_slug:
-                                continue
-                            existing_top = db.query(LeetCodeTopicStats).filter(
-                                LeetCodeTopicStats.student_id == st_id, LeetCodeTopicStats.topic_slug == t_slug
-                            ).first()
-                            if not existing_top:
-                                existing_top = LeetCodeTopicStats(student_id=st_id, topic_slug=t_slug)
-                                db.add(existing_top)
-                            existing_top.topic_name = top.get("topic_name")
-                            existing_top.topic_tier = top.get("topic_tier")
-                            existing_top.problems_solved = top.get("problems_solved", 0)
-                            existing_top.fetched_at = now_dt
-
-                    # Persist Activity & Calendar (Phase D)
-                    if isinstance(cal_res, dict) and cal_res.get("status") == "ok":
-                        cal_data = cal_res.get("data", {})
-                        lc_act = db.query(LeetCodeActivity).filter(LeetCodeActivity.student_id == st_id).first()
-                        if not lc_act:
-                            lc_act = LeetCodeActivity(student_id=st_id)
-                            db.add(lc_act)
-                        lc_act.submission_calendar_json = cal_data.get("submission_calendar_json")
-                        lc_act.total_active_days = cal_data.get("total_active_days")
-                        lc_act.current_streak = cal_data.get("current_streak")
-                        lc_act.longest_streak = cal_data.get("longest_streak")
-                        lc_act.fetched_at = now_dt
-
-                        shim_stats = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id == st_id).first()
-                        if shim_stats:
-                            shim_stats.active_days = cal_data.get("total_active_days")
-                            shim_stats.max_streak = cal_data.get("longest_streak")
-
-                    # Persist Recent Submissions (Phase E)
-                    if isinstance(sub_res, dict) and sub_res.get("status") == "ok":
-                        for sub in sub_res.get("data", {}).get("submissions", []):
-                            t_slug = sub["title_slug"]
-                            sub_ts = sub.get("submission_timestamp")
-                            if not t_slug or not sub_ts:
-                                continue
-                            existing_sub = db.query(LeetCodeSubmission).filter(
-                                LeetCodeSubmission.student_id == st_id,
-                                LeetCodeSubmission.title_slug == t_slug,
-                                LeetCodeSubmission.submission_timestamp == sub_ts
-                            ).first()
-                            if not existing_sub:
-                                existing_sub = LeetCodeSubmission(
-                                    student_id=st_id,
-                                    title_slug=t_slug,
-                                    submission_timestamp=sub_ts
-                                )
-                                db.add(existing_sub)
-                            existing_sub.title = sub.get("title")
-                            existing_sub.lang = sub.get("lang")
-                            existing_sub.status_display = sub.get("status_display")
-                            existing_sub.runtime_display = sub.get("runtime_display")
-                            existing_sub.memory_display = sub.get("memory_display")
-
-                db.commit()
-                logger.info("[CANONICAL_PIPELINE] Phases C, D, E complete: Optional datasets persisted.")
-
-        # ── FINAL STATE EVALUATION & RANKINGS REFRESH ─────────────────────────────────
-        synced_count = 0
-        partial_count = 0
-        failed_count = 0
-        invalid_count = 0
-        pending_count = 0
-        mismatch_count = 0
-
-        for student in students:
-            lc_prof = db.query(LeetCodeProfile).filter(LeetCodeProfile.student_id == student.id).first()
-            if not lc_prof:
-                continue
-
-            status = lc_prof.verification_status
-            if status == "PENDING_USERNAME":
-                pending_count += 1
-            elif status == "INVALID_USERNAME":
-                invalid_count += 1
-            elif status == "IDENTITY_MISMATCH":
-                mismatch_count += 1
-            elif status == "PROFILE_VERIFIED":
-                # Check if core problem stats present
-                p_stats = db.query(LeetCodeProblemStats).filter(LeetCodeProblemStats.student_id == student.id).first()
-                if p_stats and p_stats.total_solved is not None:
-                    lc_prof.sync_state = "SYNCED"
-                    lc_prof.last_synced_at = datetime.datetime.utcnow()
-                    synced_count += 1
-                else:
-                    lc_prof.sync_state = "PARTIAL_SYNC"
-                    partial_count += 1
-            else:
-                failed_count += 1
-
-        db.commit()
-
-        # Recalculate institutional rankings
-        logger.info("[CANONICAL_PIPELINE] Recalculating college/department/year rankings...")
+        # Recalculate institutional multi-level rankings
+        logger.info("[CANONICAL_PIPELINE] Recalculating college/department/year rankings post-sync...")
         update_all_rankings_and_badges(db)
 
         # Clear global caches to ensure instant UI freshness
@@ -445,16 +413,17 @@ async def run_full_pipeline(
         end_time = datetime.datetime.utcnow()
         duration_sec = round((end_time - start_time).total_seconds(), 2)
 
+        from backend.services.live_sync_service import sync_tracker
+
         summary = {
-            "job_id": job_id,
+            "job_id": effective_job_id,
             "total_students": total_students,
-            "profile_verified": len(verified_students),
-            "full_dataset_synced": synced_count,
-            "partial_sync": partial_count,
-            "pending_username": pending_count,
-            "invalid_username": invalid_count,
-            "identity_mismatch": mismatch_count,
-            "fetch_failed": failed_count,
+            "profile_verified": sync_tracker.successful,
+            "full_dataset_synced": sync_tracker.successful,
+            "partial_sync": 0,
+            "pending_username": sync_tracker.pending_usernames,
+            "invalid_username": sync_tracker.invalid,
+            "fetch_failed": sync_tracker.failed,
             "duration_seconds": duration_sec,
             "completed_at": end_time.isoformat()
         }
@@ -462,7 +431,7 @@ async def run_full_pipeline(
         if progress_callback and hasattr(progress_callback, "finish"):
             progress_callback.finish("COMPLETED")
 
-        logger.info(f"[CANONICAL_PIPELINE] Sync complete in {duration_sec}s. Synced={synced_count}, Invalid={invalid_count}, Pending={pending_count}, Failed={failed_count}")
+        logger.info(f"[CANONICAL_PIPELINE] Streaming sync completed in {duration_sec}s. Synced={sync_tracker.successful}, Invalid={sync_tracker.invalid}, Pending={sync_tracker.pending_usernames}, Failed={sync_tracker.failed}")
         return summary
 
     except Exception as exc:

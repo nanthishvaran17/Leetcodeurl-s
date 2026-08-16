@@ -178,6 +178,12 @@ def get_current_sync_status(db: Session = Depends(get_db)):
         "current_username": current_username,
         "progress_percentage": progress_pct,
         "percentage": progress_pct,
+        "progress_percent": progress_pct,
+        "pending": pending_usernames,
+        "invalid": sync_tracker.invalid if is_running else 0,
+        "unknown": sync_tracker.unknown if is_running else 0,
+        "current_student_status": sync_tracker.current_student_status if is_running else None,
+        "recent_completed": sync_tracker.recent_completed if is_running else [],
         "retrying": 0,
         "recent_logs": sync_tracker.recent_logs[-10:] if sync_tracker.recent_logs else [f"[{last_sync_time}] Synchronization worker ready. {successful} student profiles verified."]
     }

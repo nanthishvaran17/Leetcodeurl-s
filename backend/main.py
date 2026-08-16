@@ -22,7 +22,7 @@ from backend.routes import (
     audit, public, sync, history, risk, goals, system_health, weekly_contests,
     scheduled_reports, certificates
 )
-from backend.routes import admin, email_reports, ai_assistant
+from backend.routes import admin, email_reports, ai_assistant, leetcode
 
 app = FastAPI(
     title="College LeetCode Weekly Tracker API",
@@ -102,6 +102,8 @@ app.include_router(scheduled_reports.router, prefix="/api")
 app.include_router(scheduled_reports.router)
 app.include_router(certificates.router, prefix="/api")
 app.include_router(certificates.router)
+app.include_router(leetcode.router, prefix="/api")
+app.include_router(leetcode.router)
 app.include_router(ai_assistant.router, prefix="/api")
 app.include_router(ai_assistant.router)
 
