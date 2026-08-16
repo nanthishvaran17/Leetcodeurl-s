@@ -385,12 +385,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                 </button>
               </form>
 
-              <div className="space-y-3 pt-2">
-                <div className="relative flex items-center justify-center">
-                  <div className="border-t border-gray-200 dark:border-gray-800 w-full"></div>
-                  <span className="bg-white dark:bg-navy-950 px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest absolute">
-                    OR
-                  </span>
+              <div className="space-y-4 pt-2">
+                <div className="relative flex items-center justify-center py-2">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-gray-300 dark:via-navy-700 to-transparent"></div>
+                  </div>
+                  <div className="relative px-3.5 py-1 rounded-full bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 shadow-sm flex items-center space-x-1.5 text-[10px] font-black text-brand-600 dark:text-brand-400 uppercase tracking-widest">
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse"></span>
+                    <span>OR</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse"></span>
+                  </div>
                 </div>
                 <GoogleSignInButton onSuccess={onSuccess} />
               </div>
