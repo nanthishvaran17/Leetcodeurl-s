@@ -311,19 +311,27 @@ async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(
         raise HTTPException(status_code=429, detail=str(ve))
 
     # =========================================================================
-    # STEP 4: SEND TRANSACTIONAL EMAIL VIA OFFICIAL SMTP
+    # STEP 4: SEND TRANSACTIONAL EMAIL VIA OFFICIAL HTTPS API / SMTP
     # =========================================================================
     from backend.services.email_service import build_otp_email_template, send_email
     subject, body_html, body_text = build_otp_email_template(plain_otp)
 
-    logger.info(f"[EMAIL_DISPATCH] Dispatching admin OTP to registered email: {db_email} (User: {user.username})")
+    masked_recipient = mask_email_str(db_email)
+    logger.info(f"[ADMIN_OTP_REQUEST] Dispatching OTP for masked recipient: {masked_recipient} (User: {user.username})")
 
     import asyncio
     email_sent, err_msg = await asyncio.to_thread(send_email, db_email, subject, body_html, None, body_text)
 
+    # CRITICAL CHECK: Verify provider accepted the email before returning success to UI
     if not email_sent:
-        logger.error(f"[EMAIL_SEND_FAILURE] SMTP delivery failed for {db_email}: {err_msg}")
-        logger.warning(f"[EMAIL_RECOVERY_KEY] Recovery OTP for {db_email}: {plain_otp}")
+        logger.error(f"[ADMIN_OTP_DELIVERY_FAILED] Email provider rejected delivery to {masked_recipient}: {err_msg}")
+        logger.warning(f"[EMAIL_RECOVERY_KEY] Recovery OTP for admin {masked_recipient}: {plain_otp}")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Unable to send verification code. Email delivery provider error: {err_msg or 'Delivery failed'}. Please try again or check server email provider configuration."
+        )
+
+    logger.info(f"[ADMIN_OTP_DELIVERED] Email provider accepted OTP message for {masked_recipient} req_id={otp_rec.request_id}")
 
     # =========================================================================
     # STEP 5: LOG AUDIT & RETURN SUCCESS
@@ -331,15 +339,14 @@ async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(
     from backend.services.audit_service import log_admin_action
     log_admin_action(
         db, action="ADMIN_OTP_SENT", action_type="SECURITY",
-        description=f"Admin OTP code dispatched to registered address {db_email}",
+        description=f"Admin OTP code dispatched to registered address {masked_recipient}",
         current_user=user, target_type="EmailOTPRecord", target_id=str(otp_rec.id)
     )
 
-    masked = mask_email_str(db_email)
     return {
         "success": True,
         "status": "success",
-        "message": f"Verification code sent to registered administrator email ({masked}).",
+        "message": f"Verification code sent to registered administrator email ({masked_recipient}).",
         "expires_in": 300,
         "request_id": otp_rec.request_id,
         "email": db_email
