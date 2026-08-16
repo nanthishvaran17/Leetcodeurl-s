@@ -15,10 +15,24 @@ from backend.logger import logger
 def get_or_create_current_weekly_session(db: Session) -> WeeklySession:
     """
     Retrieves or creates the active/upcoming weekly contest session.
-    Fast path: returns existing session from DB without blocking on external HTTP calls.
+    Fast path: returns existing session from DB with dynamic IST status check.
     """
     latest_session = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
     if latest_session:
+        try:
+            meta = discover_contest_metadata()
+            dynamic_status = meta.get("status", "SCHEDULED")
+            if dynamic_status == "FINALIZED" and latest_session.status in ("LIVE", "ACTIVE"):
+                latest_session.status = "FINALIZED"
+                db.commit()
+            elif dynamic_status == "SCHEDULED" and latest_session.status in ("LIVE", "ACTIVE"):
+                latest_session.status = "SCHEDULED"
+                db.commit()
+            elif dynamic_status == "LIVE" and latest_session.status != "LIVE":
+                latest_session.status = "LIVE"
+                db.commit()
+        except Exception:
+            pass
         return latest_session
 
     try:
