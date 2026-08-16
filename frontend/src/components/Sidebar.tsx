@@ -37,7 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
   ];
 
   return (
-    <aside className="sticky top-20 w-60 xl:w-64 shrink-0 glass-card h-[calc(100vh-6rem)] border border-gray-200/80 dark:border-navy-800/80 rounded-3xl p-4 flex flex-col justify-between shadow-xl backdrop-blur-xl bg-white/80 dark:bg-navy-900/80 hidden lg:flex transition-all duration-300">
+    <aside className="sticky top-20 w-72 xl:w-80 shrink-0 glass-card h-[calc(100vh-6rem)] border border-gray-200/80 dark:border-navy-800/80 rounded-3xl p-5 flex flex-col justify-between shadow-xl backdrop-blur-xl bg-white/80 dark:bg-navy-900/80 hidden lg:flex transition-all duration-300">
       
       {/* Navigation Links */}
       <div className="space-y-3 overflow-y-auto pr-1 flex-1 custom-scrollbar">
@@ -55,7 +55,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
                 key={item.id}
                 type="button"
                 onClick={() => setActiveTab(item.id)}
-                className={`relative w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl font-bold text-xs text-left transition-all duration-250 group cursor-pointer ${
+                className={`relative w-full flex items-center justify-between px-4 py-3 rounded-2xl font-bold text-sm text-left transition-all duration-250 group cursor-pointer ${
                   isActive
                     ? 'bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 text-white shadow-lg shadow-brand-600/30 font-extrabold translate-x-1 scale-[1.01]'
                     : 'text-gray-600 dark:text-gray-300 hover:bg-brand-50/80 dark:hover:bg-navy-800/80 hover:text-brand-600 dark:hover:text-brand-300 hover:translate-x-1'
@@ -63,16 +63,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
               >
                 {/* Active Indicator Bar */}
                 {isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-amber-400 rounded-r-full shadow-[0_0_8px_#fbbf24] animate-pulse"></span>
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-7 bg-amber-400 rounded-r-full shadow-[0_0_8px_#fbbf24] animate-pulse"></span>
                 )}
 
                 <div className="flex items-center space-x-3 truncate">
-                  <div className={`p-1.5 rounded-xl transition-all duration-200 ${
+                  <div className={`p-2 rounded-xl transition-all duration-200 ${
                     isActive 
                       ? 'bg-white/20 text-white shadow-sm' 
                       : 'bg-gray-100 dark:bg-navy-800 text-gray-500 dark:text-gray-400 group-hover:bg-brand-100 dark:group-hover:bg-navy-700 group-hover:text-brand-600 dark:group-hover:text-brand-300 group-hover:scale-110 group-hover:rotate-3'
                   }`}>
-                    <Icon className="w-4 h-4 shrink-0" />
+                    <Icon className="w-5 h-5 shrink-0" />
                   </div>
                   <span className="truncate tracking-tight">{item.label}</span>
                 </div>

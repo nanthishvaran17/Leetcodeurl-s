@@ -89,49 +89,49 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
   // ── Sync Status Badge (bottom of front card) ────────────────────────────────
   const SyncBadge = () => {
     if (state === 'pending_username') return (
-      <span className="flex items-center space-x-1 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+      <span className="flex items-center space-x-1 text-xs font-bold text-amber-600 dark:text-amber-400">
         <span>⏳ Pending username</span>
       </span>
     );
     if (state === 'invalid_profile') return (
-      <span className="flex items-center space-x-1 text-[10px] font-bold text-gray-400 dark:text-gray-500">
+      <span className="flex items-center space-x-1 text-xs font-bold text-gray-400 dark:text-gray-500">
         <span>⚪ Profile unavailable</span>
       </span>
     );
     if (state === 'syncing') return (
-      <span className="flex items-center space-x-1 text-[10px] font-bold text-blue-500 dark:text-blue-400">
-        <Loader className="w-3 h-3 animate-spin" />
+      <span className="flex items-center space-x-1 text-xs font-bold text-blue-500 dark:text-blue-400">
+        <Loader className="w-3.5 h-3.5 animate-spin" />
         <span>🔄 Syncing...</span>
       </span>
     );
     if (state === 'pending') return (
-      <span className="flex items-center space-x-1 text-[10px] font-bold text-gray-400 dark:text-gray-500">
-        <Clock className="w-3 h-3" />
+      <span className="flex items-center space-x-1 text-xs font-bold text-gray-400 dark:text-gray-500">
+        <Clock className="w-3.5 h-3.5" />
         <span>⏳ Awaiting sync</span>
       </span>
     );
     if (state === 'failed') return (
-      <span className="flex items-center space-x-1 text-[10px] font-bold text-rose-500 dark:text-rose-400">
-        <AlertCircle className="w-3 h-3" />
+      <span className="flex items-center space-x-1 text-xs font-bold text-rose-500 dark:text-rose-400">
+        <AlertCircle className="w-3.5 h-3.5" />
         <span>🔴 Sync failed{lastVerifiedAt ? ` • ${verifiedAgo}` : ''}</span>
       </span>
     );
     if (state === 'mismatch') return (
-      <span className="flex items-center space-x-1 text-[10px] font-bold text-amber-500">
-        <AlertCircle className="w-3 h-3" />
+      <span className="flex items-center space-x-1 text-xs font-bold text-amber-500">
+        <AlertCircle className="w-3.5 h-3.5" />
         <span>🟡 Data mismatch</span>
       </span>
     );
     if (state === 'stale') return (
-      <span className="flex items-center space-x-1 text-[10px] font-bold text-amber-600 dark:text-amber-400">
-        <Clock className="w-3 h-3" />
+      <span className="flex items-center space-x-1 text-xs font-bold text-amber-600 dark:text-amber-400">
+        <Clock className="w-3.5 h-3.5" />
         <span>🟡 Synced • {verifiedAgo}</span>
       </span>
     );
     // verified
     return (
-      <span className="flex items-center space-x-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-        <CheckCircle2 className="w-3 h-3" />
+      <span className="flex items-center space-x-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+        <CheckCircle2 className="w-3.5 h-3.5" />
         <span>🟢 Synced • {verifiedAgo}</span>
       </span>
     );
@@ -140,64 +140,64 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
   // ── Front card bottom stats display ────────────────────────────────────────
   const FrontStatsPill = () => {
     if (state === 'pending_username') return (
-      <div className="flex items-center space-x-1.5 font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1 rounded-xl border border-amber-200 dark:border-amber-800/60">
-        <span className="text-xs">Pending username</span>
+      <div className="flex items-center space-x-1.5 font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-3 py-1.5 rounded-xl border border-amber-200 dark:border-amber-800/60">
+        <span className="text-sm">Pending username</span>
       </div>
     );
     if (state === 'invalid_profile') return (
-      <div className="flex items-center space-x-1.5 font-bold text-gray-400 bg-gray-50 dark:bg-gray-900 px-2.5 py-1 rounded-xl border border-gray-200 dark:border-gray-800">
-        <span className="text-xs">⚪ Profile unavailable</span>
+      <div className="flex items-center space-x-1.5 font-bold text-gray-400 bg-gray-50 dark:bg-gray-900 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-800">
+        <span className="text-sm">⚪ Profile unavailable</span>
       </div>
     );
     if (state === 'syncing') return (
-      <div className="flex items-center space-x-1.5 font-bold text-blue-500 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-xl border border-blue-200 dark:border-blue-800/60">
-        <Loader className="w-3.5 h-3.5 animate-spin" />
-        <span className="text-xs">🔄 Syncing...</span>
+      <div className="flex items-center space-x-1.5 font-bold text-blue-500 bg-blue-50 dark:bg-blue-950/40 px-3 py-1.5 rounded-xl border border-blue-200 dark:border-blue-800/60">
+        <Loader className="w-4 h-4 animate-spin" />
+        <span className="text-sm">🔄 Syncing...</span>
       </div>
     );
     if (state === 'pending') return (
-      <div className="flex items-center space-x-1.5 font-bold text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-900 px-2.5 py-1 rounded-xl border border-gray-200 dark:border-gray-800">
-        <Loader className="w-3.5 h-3.5 animate-spin" />
-        <span className="text-xs">Awaiting sync</span>
+      <div className="flex items-center space-x-1.5 font-bold text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-900 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-800">
+        <Loader className="w-4 h-4 animate-spin" />
+        <span className="text-sm">Awaiting sync</span>
       </div>
     );
     if (state === 'failed') return (
-      <div className="flex items-center space-x-1.5 font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/40 px-2.5 py-1 rounded-xl border border-rose-200 dark:border-rose-800/60">
-        <AlertCircle className="w-3.5 h-3.5" />
-        <span className="text-xs">Stats unavailable</span>
+      <div className="flex items-center space-x-1.5 font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/40 px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-800/60">
+        <AlertCircle className="w-4 h-4" />
+        <span className="text-sm">Stats unavailable</span>
       </div>
     );
     // stale shows previous verified number with amber indicator
     if (state === 'stale') return (
-      <div className="flex items-center space-x-1.5 font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-1 rounded-xl border border-emerald-200 dark:border-emerald-800/60">
-        <Trophy className="w-3.5 h-3.5 text-amber-500" />
-        <span className="text-xs">{totalSolved} Solved</span>
+      <div className="flex items-center space-x-1.5 font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800/60">
+        <Trophy className="w-4 h-4 text-amber-500" />
+        <span className="text-sm font-black">{totalSolved} Solved</span>
       </div>
     );
     return (
-      <div className="flex items-center space-x-1.5 font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-1 rounded-xl border border-emerald-200 dark:border-emerald-800/60">
-        <Trophy className="w-3.5 h-3.5 text-amber-500" />
-        <span className="text-xs">{totalSolved} Solved</span>
+      <div className="flex items-center space-x-1.5 font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800/60">
+        <Trophy className="w-4 h-4 text-amber-500" />
+        <span className="text-sm font-black">{totalSolved} Solved</span>
       </div>
     );
   };
 
   return (
     <div
-      className="w-full min-h-[310px] flex flex-col perspective-1000 cursor-pointer group min-w-0"
+      className="w-full min-h-[360px] flex flex-col perspective-1000 cursor-pointer group min-w-0"
       onClick={() => setIsFlipped(!isFlipped)}
     >
       <div
-        className={`relative w-full h-full min-h-[310px] flex flex-col duration-500 transform-style-3d transition-transform ${
+        className={`relative w-full h-full min-h-[360px] flex flex-col duration-500 transform-style-3d transition-transform ${
           isFlipped ? 'rotate-y-180' : ''
         }`}
       >
         {/* FRONT SIDE */}
-        <div className="absolute inset-0 w-full h-full min-h-[310px] glass-card p-4 sm:p-5 rounded-3xl border border-gray-200/90 dark:border-gray-800 shadow-xl hover:shadow-2xl dark:hover:border-brand-500/40 backface-hidden flex flex-col justify-between transition-all duration-300 bg-white/95 dark:bg-navy-900/90">
+        <div className="absolute inset-0 w-full h-full min-h-[360px] glass-card p-5 sm:p-6 rounded-3xl border border-gray-200/90 dark:border-gray-800 shadow-xl hover:shadow-2xl dark:hover:border-brand-500/40 backface-hidden flex flex-col justify-between transition-all duration-300 bg-white/95 dark:bg-navy-900/90">
           
           {/* Card Top: Rank & Department Pill */}
           <div className="flex items-center justify-between gap-2">
-            <span className={`px-3 py-0.5 rounded-full text-xs border uppercase tracking-wider flex items-center space-x-1 whitespace-nowrap ${getRankBadgeStyle(effectiveRank)}`}>
+            <span className={`px-3 py-1 rounded-full text-xs border uppercase tracking-wider flex items-center space-x-1 whitespace-nowrap ${getRankBadgeStyle(effectiveRank)}`}>
               {!isSolver || !effectiveRank ? (
                 <span>—</span>
               ) : effectiveRank === 1 ? (
@@ -212,33 +212,33 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
                 <span>#{effectiveRank}</span>
               )}
             </span>
-            <span className="px-2.5 py-0.5 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 font-extrabold text-[10px] font-mono whitespace-nowrap">
+            <span className="px-2.5 py-1 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 font-extrabold text-xs font-mono whitespace-nowrap">
               {student.department?.code || 'CSE'}
             </span>
           </div>
 
           {/* Card Center: Avatar & Student Details */}
-          <div className="text-center space-y-1 py-1 flex-1 flex flex-col justify-center min-w-0">
-            <div className="relative w-14 h-14 mx-auto group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
-              <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-600 via-indigo-600 to-navy-800 text-white font-black text-lg flex items-center justify-center shadow-md">
-                {student.name ? student.name.split(' ').map(n => n[0]).join('').slice(0, 2) : <User className="w-7 h-7" />}
+          <div className="text-center space-y-2 py-2 flex-1 flex flex-col justify-center min-w-0">
+            <div className="relative w-20 h-20 mx-auto group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
+              <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-brand-600 via-indigo-600 to-navy-800 text-white font-black text-2xl flex items-center justify-center shadow-md">
+                {student.name ? student.name.split(' ').map(n => n[0]).join('').slice(0, 2) : <User className="w-9 h-9" />}
               </div>
             </div>
             <div className="min-w-0 px-1">
-              <h3 className="font-extrabold text-sm text-gray-900 dark:text-white truncate max-w-full tracking-tight" title={student.name}>
+              <h3 className="font-extrabold text-base text-gray-900 dark:text-white truncate max-w-full tracking-tight" title={student.name}>
                 {student.name}
               </h3>
-              <p className="text-[11px] text-brand-600 dark:text-brand-400 font-mono font-bold mt-0.5 tracking-wider truncate">
+              <p className="text-sm text-brand-600 dark:text-brand-400 font-mono font-bold mt-1 tracking-wider truncate">
                 {student.reg_no}
               </p>
-              <p className="text-[10px] text-gray-500 font-medium mt-0.5 truncate">
+              <p className="text-xs text-gray-500 font-medium mt-1 leading-snug line-clamp-2">
                 {student.department?.name} • <span className="font-bold text-gray-700 dark:text-gray-300">{student.year_level} Year</span>
               </p>
             </div>
           </div>
 
           {/* Card Bottom: Quick Stats & Sync Badge */}
-          <div className="pt-2 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-xs mt-auto">
+          <div className="pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between gap-2 mt-auto">
             <FrontStatsPill />
             <SyncBadge />
           </div>
@@ -246,22 +246,22 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
         </div>
 
         {/* BACK SIDE */}
-        <div className="absolute inset-0 w-full h-full min-h-[310px] p-4 sm:p-5 rounded-3xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-950 text-gray-900 dark:text-white shadow-2xl backface-hidden rotate-y-180 flex flex-col justify-between overflow-y-auto">
+        <div className="absolute inset-0 w-full h-full min-h-[360px] p-5 sm:p-6 rounded-3xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-950 text-gray-900 dark:text-white shadow-2xl backface-hidden rotate-y-180 flex flex-col justify-between overflow-y-auto">
 
           
           {/* Top Header */}
-          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5 gap-2">
-            <div className="flex items-center space-x-1.5 min-w-0">
-              <ShieldCheck className="w-4 h-4 text-brand-600 dark:text-brand-400 flex-shrink-0" />
-              <span className="font-extrabold text-sm text-gray-900 dark:text-white truncate tracking-tight" title={student.name}>{student.name}</span>
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3 gap-2">
+            <div className="flex items-center space-x-2 min-w-0">
+              <ShieldCheck className="w-5 h-5 text-brand-600 dark:text-brand-400 flex-shrink-0" />
+              <span className="font-extrabold text-base text-gray-900 dark:text-white truncate tracking-tight" title={student.name}>{student.name}</span>
             </div>
-            <span className="text-[11px] text-brand-700 dark:text-brand-300 font-mono font-bold bg-brand-50 dark:bg-brand-950 px-2.5 py-1 rounded-xl border border-brand-200 dark:border-brand-800 flex-shrink-0">
+            <span className="text-xs text-brand-700 dark:text-brand-300 font-mono font-bold bg-brand-50 dark:bg-brand-950 px-3 py-1.5 rounded-xl border border-brand-200 dark:border-brand-800 flex-shrink-0">
               {student.reg_no}
             </span>
           </div>
 
           {/* Stats Breakdown or Status Placeholder */}
-          <div className="space-y-3 flex-1 flex flex-col justify-center py-2 min-w-0">
+          <div className="space-y-3 flex-1 flex flex-col justify-center py-3 min-w-0">
             
             {!isVerified ? (
               /* ── PENDING / FAILED state placeholder ── */

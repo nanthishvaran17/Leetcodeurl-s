@@ -295,7 +295,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   };
 
   return (
-    <div className="space-y-10 py-6">
+    <div className="space-y-8 py-6">
       
       {/* Hero Section */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-900 via-navy-900 to-indigo-950 text-white p-8 md:p-12 shadow-2xl border border-brand-500/30">
@@ -390,7 +390,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </div>
 
       {/* Stat Cards Grid — Data-quality-aware */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {(() => {
           const totalStudents = summaryData?.total_students ?? (students.length > 0 ? students.length : null);
           const isVerifiedSt = (s: StudentData) => {
@@ -407,14 +407,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
           return (
             <>
-              <div className="glass-card p-6 rounded-2xl space-y-2 border shadow-md">
+              <div className="glass-card p-6 sm:p-7 rounded-2xl space-y-3 border shadow-md">
                 <div className="p-3 w-fit rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
-                  <Users className="w-6 h-6" />
+                  <Users className="w-7 h-7" />
                 </div>
-                <h4 className="text-2xl font-black text-gray-900 dark:text-white">
+                <h4 className="text-3xl font-black text-gray-900 dark:text-white">
                   {totalStudents !== null ? totalStudents : 'Loading institutional roster...'}
                 </h4>
-                <p className="text-xs font-semibold text-gray-500">Total Enrolled Students</p>
+                <p className="text-sm font-semibold text-gray-500">Total Enrolled Students</p>
               </div>
 
 
@@ -550,7 +550,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   setYearLevel(e.target.value);
                   setDisplayCount(32);
                 }}
-                className="w-full appearance-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-xs font-bold py-3 pl-3.5 pr-9 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 cursor-pointer"
+                className="w-full appearance-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-sm font-bold py-3.5 pl-3.5 pr-9 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 cursor-pointer"
               >
                 <option value="all">All Years</option>
                 <option value="II">II Year</option>
@@ -581,7 +581,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   setDisplayCount(32);
                 }}
                 placeholder="Search by name, reg no, handle..."
-                className="w-full bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-xs font-bold py-3 pl-9 pr-9 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+                className="w-full bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-sm font-bold py-3.5 pl-9 pr-9 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40"
               />
               {nameSearch && (
                 <button
@@ -608,7 +608,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   setSolvedFilter(e.target.value);
                   setDisplayCount(32);
                 }}
-                className="w-full appearance-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-xs font-bold py-3 pl-3.5 pr-9 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 cursor-pointer"
+                className="w-full appearance-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-sm font-bold py-3.5 pl-3.5 pr-9 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 cursor-pointer"
               >
                 <option value="all">All Students ({performanceCounts.total})</option>
                 <option value="500_plus">500+ ({performanceCounts.above500})</option>
@@ -633,7 +633,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 id="sort-students-filter"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="w-full appearance-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-xs font-bold py-3 pl-3.5 pr-9 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 cursor-pointer"
+                className="w-full appearance-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-sm font-bold py-3.5 pl-3.5 pr-9 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 cursor-pointer"
               >
                 <option value="top_solved">Top Solvers</option>
                 <option value="low_solved">Low Solvers</option>
@@ -655,7 +655,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* Student Showcase Display */}
       <div className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <h3 className="font-black text-base text-gray-900 dark:text-white">
+          <h3 className="font-black text-lg text-gray-900 dark:text-white">
             {selectedDept === 'cyber_security'
               ? 'Computer Science and Engineering (Cyber Security)'
               : selectedDept === 'iot'
@@ -775,7 +775,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
         ) : viewMode === 'cards' ? (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {sortedList.slice(0, displayCount).map((st, idx) => {
                 const isSolver = (st.stats?.total_solved || st.total_solved || 0) > 0;
                 const computedRank = (isSolver && sortBy === 'top_solved' && selectedDept === 'all' && (yearLevel === 'ALL' || yearLevel === 'all') && (solvedFilter === 'ALL' || solvedFilter === 'all')) ? idx + 1 : st.college_rank;
