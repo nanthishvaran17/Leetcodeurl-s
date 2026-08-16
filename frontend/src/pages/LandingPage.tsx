@@ -256,7 +256,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const fetchFilteredStudents = async () => {
     let loadedFromApi = false;
     try {
-      let url = '/students';
+      // Use the fast leaderboard endpoint — slim payload, 120s cache, no N+1 queries
+      let url = '/students/leaderboard-fast';
       const params = [];
       if (selectedDept) {
         params.push(`dept_id=${selectedDept.id}`);
@@ -273,7 +274,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         setStudents(res.data);
       }
     } catch (err) {
-      console.warn("Landing REST API request delayed or offline", err);
+      console.warn("Landing fast leaderboard API unavailable, falling back to /students", err);
+      // Fallback to full endpoint if fast one is unavailable
+      try {
+        let url = '/students';
+        const params = [];
+        if (selectedDept) params.push(`dept_id=${selectedDept.id}`);
+        if (yearLevel !== 'ALL') params.push(`year_level=${yearLevel}`);
+        if (params.length > 0) url += '?' + params.join('&');
+        const res2 = await api.get(url);
+        if (res2.data && Array.isArray(res2.data)) setStudents(res2.data);
+      } catch (err2) {
+        console.warn("Fallback /students also failed", err2);
+      }
     }
   };
 
