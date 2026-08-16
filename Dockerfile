@@ -14,8 +14,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend code and files
+# Copy backend code, database, static frontend dist, and essential files
 COPY backend/ ./backend/
+COPY data/ ./data/
+COPY frontend/dist/ ./frontend/dist/
+COPY reports/ ./reports/
+COPY serviceAccountKey.json* ./
 
 # Expose port (Render automatically sets PORT env var, defaults to 8000)
 ENV PORT=8000

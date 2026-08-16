@@ -1,6 +1,5 @@
 {
   "hosting": {
-    "site": "leetcode-student-data",
     "public": "frontend/dist",
     "ignore": [
       "firebase.json",

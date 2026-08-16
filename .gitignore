@@ -61,8 +61,8 @@ data/*.db
 .DS_Store
 Thumbs.db
 
-# Vite Build Output
-frontend/dist/
+# Vite Build Output — kept in repo for Render Docker deployment
+# frontend/dist/
 .firebase/
 
 # Scratch & Temporary Verification Files
