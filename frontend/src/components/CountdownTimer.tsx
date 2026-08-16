@@ -1,16 +1,50 @@
 import React, { useState, useEffect } from 'react';
-import { Clock } from 'lucide-react';
+import { Clock, Radio, Activity } from 'lucide-react';
 
 interface CountdownTimerProps {
   targetSeconds: number;
+  isLive?: boolean;
 }
 
-export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds }) => {
-  const [secondsLeft, setSecondsLeft] = useState(targetSeconds);
+function getIstLiveStatus(): { isLive: boolean; secondsRemaining: number } {
+  try {
+    const now = new Date();
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const ist = new Date(utc + (3600000 * 5.5));
+
+    const day = ist.getDay(); // 0 = Sunday
+    const hours = ist.getHours();
+    const minutes = ist.getMinutes();
+    const seconds = ist.getSeconds();
+    const timeInSec = hours * 3600 + minutes * 60 + seconds;
+
+    const startSec = 8 * 3600;         // 08:00 AM IST = 28800s
+    const endSec = 9 * 3600 + 30 * 60; // 09:30 AM IST = 34200s
+
+    if (day === 0 && timeInSec >= startSec && timeInSec <= endSec) {
+      return { isLive: true, secondsRemaining: endSec - timeInSec };
+    }
+  } catch {
+    // fallback
+  }
+  return { isLive: false, secondsRemaining: 0 };
+}
+
+export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds, isLive: propIsLive }) => {
+  const istStatus = getIstLiveStatus();
+  const isSessionLive = propIsLive !== undefined ? propIsLive : istStatus.isLive;
+  
+  const initialSeconds = isSessionLive && istStatus.isLive ? istStatus.secondsRemaining : targetSeconds;
+  const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
 
   useEffect(() => {
-    setSecondsLeft(targetSeconds);
-  }, [targetSeconds]);
+    const currentIst = getIstLiveStatus();
+    if (currentIst.isLive) {
+      setSecondsLeft(currentIst.secondsRemaining);
+    } else {
+      setSecondsLeft(targetSeconds);
+    }
+  }, [targetSeconds, propIsLive]);
 
   useEffect(() => {
     if (secondsLeft <= 0) return;
@@ -39,44 +73,80 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds })
   const time = formatTime(secondsLeft);
 
   return (
-    <div className="glass-card p-6 rounded-3xl border border-brand-500/20 bg-gradient-to-r from-brand-900/10 via-indigo-900/10 to-purple-900/10">
+    <div className={`glass-card p-6 rounded-3xl border transition-all duration-500 ${
+      isSessionLive 
+        ? 'border-emerald-500/40 bg-gradient-to-r from-emerald-950/40 via-teal-950/30 to-slate-900 shadow-xl shadow-emerald-950/30' 
+        : 'border-brand-500/20 bg-gradient-to-r from-brand-900/10 via-indigo-900/10 to-purple-900/10'
+    }`}>
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         
-        <div className="flex items-center space-x-3">
-          <div className="p-3 rounded-2xl bg-brand-600 text-white shadow-md shadow-brand-500/30">
-            <Clock className="w-6 h-6 animate-pulse" />
+        <div className="flex items-center space-x-3.5">
+          <div className={`p-3 rounded-2xl text-white shadow-lg ${
+            isSessionLive ? 'bg-emerald-600 shadow-emerald-500/40 animate-pulse' : 'bg-brand-600 shadow-brand-500/30'
+          }`}>
+            {isSessionLive ? <Radio className="w-6 h-6 animate-pulse text-white" /> : <Clock className="w-6 h-6 animate-pulse" />}
           </div>
           <div>
-            <h4 className="font-extrabold text-base text-gray-900 dark:text-white">Next Sunday LeetCode Session</h4>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Official Monitoring Window: <b>08:00 AM – 09:30 AM IST</b></p>
+            <div className="flex items-center space-x-2">
+              <h4 className="font-black text-base text-gray-900 dark:text-white">
+                {isSessionLive ? '🟢 SUNDAY SESSION LIVE NOW' : 'Next Sunday LeetCode Session'}
+              </h4>
+              {isSessionLive && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 animate-pulse">
+                  Live Window
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {isSessionLive 
+                ? 'Official Monitoring Window: 08:00 AM – 09:30 AM IST (Remaining Time)'
+                : 'Official Monitoring Window: 08:00 AM – 09:30 AM IST'
+              }
+            </p>
           </div>
         </div>
 
         {/* Timer Numbers */}
         <div className="flex items-center space-x-3 font-mono">
+          {!isSessionLive && (
+            <>
+              <div className="flex flex-col items-center">
+                <span className="text-2xl md:text-3xl font-extrabold px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-brand-600 dark:text-brand-400">
+                  {time.days}
+                </span>
+                <span className="text-[10px] text-gray-400 font-sans mt-1 uppercase font-semibold">Days</span>
+              </div>
+              <span className="text-xl font-bold text-gray-400">:</span>
+            </>
+          )}
           <div className="flex flex-col items-center">
-            <span className="text-2xl md:text-3xl font-extrabold px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-brand-600 dark:text-brand-400">
-              {time.days}
-            </span>
-            <span className="text-[10px] text-gray-400 font-sans mt-1 uppercase font-semibold">Days</span>
-          </div>
-          <span className="text-xl font-bold text-gray-400">:</span>
-          <div className="flex flex-col items-center">
-            <span className="text-2xl md:text-3xl font-extrabold px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100">
+            <span className={`text-2xl md:text-3xl font-extrabold px-3 py-1.5 rounded-xl ${
+              isSessionLive 
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100'
+            }`}>
               {time.hours}
             </span>
             <span className="text-[10px] text-gray-400 font-sans mt-1 uppercase font-semibold">Hours</span>
           </div>
           <span className="text-xl font-bold text-gray-400">:</span>
           <div className="flex flex-col items-center">
-            <span className="text-2xl md:text-3xl font-extrabold px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100">
+            <span className={`text-2xl md:text-3xl font-extrabold px-3 py-1.5 rounded-xl ${
+              isSessionLive 
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100'
+            }`}>
               {time.minutes}
             </span>
             <span className="text-[10px] text-gray-400 font-sans mt-1 uppercase font-semibold">Mins</span>
           </div>
           <span className="text-xl font-bold text-gray-400">:</span>
           <div className="flex flex-col items-center">
-            <span className="text-2xl md:text-3xl font-extrabold px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-rose-500">
+            <span className={`text-2xl md:text-3xl font-extrabold px-3 py-1.5 rounded-xl ${
+              isSessionLive 
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                : 'bg-gray-100 dark:bg-gray-800 text-rose-500'
+            }`}>
               {time.seconds}
             </span>
             <span className="text-[10px] text-gray-400 font-sans mt-1 uppercase font-semibold">Secs</span>

@@ -50,7 +50,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [displayCount, setDisplayCount] = useState<number>(32);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [refreshingId, setRefreshingId] = useState<number | null>(null);
-  const [syncProgress, setSyncProgress] = useState<{ total: number; processed: number; successful: number; failed: number; is_running: boolean } | null>(null);
+  const [syncProgress, setSyncProgress] = useState<{
+    total: number;
+    processed: number;
+    successful: number;
+    failed: number;
+    pending_usernames?: number;
+    current_student?: string;
+    current_username?: string;
+    is_running: boolean;
+  } | null>(null);
   const pollTimerRef = useRef<any>(null);
 
   useEffect(() => {
@@ -63,10 +72,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         const statusData = await getSyncStatus();
         if (statusData.is_running) {
           setSyncProgress({
-            total: statusData.total || (students.length > 0 ? students.length : 300),
-            processed: statusData.completed || 0,
-            successful: statusData.success || 0,
-            failed: statusData.failed || 0,
+            total: statusData.total_students || statusData.total || (students.length > 0 ? students.length : 300),
+            processed: statusData.students_processed ?? statusData.completed ?? 0,
+            successful: statusData.successful ?? statusData.success ?? 0,
+            failed: statusData.failed ?? 0,
+            pending_usernames: statusData.pending_usernames ?? 0,
+            current_student: statusData.current_student,
+            current_username: statusData.current_username,
             is_running: true
           });
           startPollingProgress();
@@ -97,15 +109,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         const statusData = await getSyncStatus();
         consecutiveErrors = 0;
 
-        const rawComp = statusData.completed ?? statusData.processed ?? 0;
-        const totalCount = statusData.total || (students.length > 0 ? students.length : 300);
+        const rawComp = statusData.students_processed ?? statusData.completed ?? statusData.processed ?? 0;
+        const totalCount = statusData.total_students || statusData.total || (students.length > 0 ? students.length : 300);
         const currentProcessed = Math.min(totalCount, Math.max(0, rawComp));
 
         setSyncProgress({
           total: totalCount,
           processed: currentProcessed,
-          successful: statusData.success || 0,
-          failed: statusData.failed || 0,
+          successful: statusData.successful ?? statusData.success ?? 0,
+          failed: statusData.failed ?? 0,
+          pending_usernames: statusData.pending_usernames ?? 0,
+          current_student: statusData.current_student,
+          current_username: statusData.current_username,
           is_running: statusData.is_running
         });
 
@@ -361,7 +376,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Next Sunday Session Timer</span>
           <span className="text-xs font-semibold text-brand-600 dark:text-brand-400">Official Window: 08:00 AM – 09:30 AM IST</span>
         </div>
-        <CountdownTimer targetSeconds={summaryData?.next_session_countdown_seconds || 86400} />
+        <CountdownTimer targetSeconds={summaryData?.next_session_countdown_seconds || 86400} isLive={summaryData?.is_session_live} />
       </div>
 
       {/* Stat Cards Grid — Data-quality-aware */}
@@ -622,16 +637,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </button>
         </div>
 
-        {/* Sync Progress Bar — Firestore real-time listener */}
+        {/* Sync Progress Bar */}
         {syncProgress && (
           <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-navy-900 dark:to-indigo-950 border border-indigo-200 dark:border-indigo-800 space-y-2.5">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center flex-wrap gap-2">
               <span className="text-xs font-extrabold text-indigo-700 dark:text-indigo-300 flex items-center space-x-1.5">
                 <RefreshCw className={`w-3.5 h-3.5 ${syncProgress.is_running ? 'animate-spin' : ''}`} />
-                <span>{syncProgress.is_running ? '🔄 Syncing LeetCode Statistics...' : '✅ Sync Complete'}</span>
+                <span>
+                  {syncProgress.is_running 
+                    ? `🔄 Syncing: ${syncProgress.current_student || 'Processing students...'}`
+                    : '✅ Sync Complete'
+                  }
+                </span>
               </span>
               <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                {syncProgress.processed} / {syncProgress.total}
+                {syncProgress.processed} / {syncProgress.total} Students Processed
               </span>
             </div>
             <div className="w-full bg-indigo-100 dark:bg-indigo-900/50 h-3 rounded-full overflow-hidden">
@@ -640,18 +660,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 style={{ width: `${Math.round((syncProgress.processed / Math.max(1, syncProgress.total)) * 100)}%` }}
               />
             </div>
-            <div className="flex justify-between text-[11px] font-semibold">
+            <div className="flex justify-between items-center flex-wrap gap-2 text-[11px] font-semibold">
               <span className="text-emerald-600 dark:text-emerald-400 flex items-center space-x-1">
                 <CheckCircle2 className="w-3 h-3" />
                 <span>✅ {syncProgress.successful} Successful</span>
               </span>
-              <span className="text-gray-500">{Math.round((syncProgress.processed / Math.max(1, syncProgress.total)) * 100)}%</span>
+              {(syncProgress.pending_usernames ?? 0) > 0 && (
+                <span className="text-amber-600 dark:text-amber-400 flex items-center space-x-1">
+                  <Clock className="w-3 h-3" />
+                  <span>⏳ {syncProgress.pending_usernames} Pending Username</span>
+                </span>
+              )}
               {syncProgress.failed > 0 && (
                 <span className="text-rose-500 flex items-center space-x-1">
                   <AlertCircle className="w-3 h-3" />
                   <span>🔴 {syncProgress.failed} Failed</span>
                 </span>
               )}
+              <span className="text-gray-500 ml-auto">{Math.round((syncProgress.processed / Math.max(1, syncProgress.total)) * 100)}%</span>
             </div>
           </div>
         )}

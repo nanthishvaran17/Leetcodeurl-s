@@ -88,10 +88,10 @@ def get_students(
         query = query.order_by(Student.name.asc())
 
     # Pagination if page and limit provided
-    if page and limit:
+    if isinstance(page, int) and isinstance(limit, int) and page >= 1 and limit >= 1:
         offset = (page - 1) * limit
         students = query.offset(offset).limit(limit).all()
-    elif limit:
+    elif isinstance(limit, int) and limit >= 1:
         students = query.limit(limit).all()
     else:
         students = query.all()

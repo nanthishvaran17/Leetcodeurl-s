@@ -130,7 +130,7 @@ def on_startup():
 
     try:
         from backend.database import SessionLocal
-        from backend.models import Student, User
+        from backend.models import Student, User, LeetCodeProfileStats
         from backend.routes.auth import get_password_hash, verify_password
 
         db_init = SessionLocal()

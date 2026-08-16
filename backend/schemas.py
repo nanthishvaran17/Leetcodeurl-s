@@ -181,11 +181,16 @@ class DashboardSummary(BaseModel):
     average_weekly_progress: float
     highest_contest_rating: Optional[float] = 0.0
     top_college_ranker: Optional[str] = None
-    current_session: Optional[Any] = None
+    current_session: Optional[WeeklySessionOut] = None
+    is_session_live: Optional[bool] = False
+    session_phase: Optional[str] = "SCHEDULED"
     next_session_countdown_seconds: int = 86400
     verified_profiles: Optional[int] = 0
     pending_sync: Optional[int] = 0
     failed_sync: Optional[int] = 0
+
+    class Config:
+        from_attributes = True
 
 # Audit Log Schema
 class AuditLogOut(BaseModel):

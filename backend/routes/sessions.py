@@ -78,12 +78,29 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         else:
             avg_progress = round(total_problems / max(total_students, 1), 1)
 
-    now = datetime.datetime.now()
-    days_until_sunday = (6 - now.weekday()) % 7
-    if days_until_sunday == 0 and now.hour >= 8:
-        days_until_sunday = 7
-    next_sunday = (now + datetime.timedelta(days=days_until_sunday)).replace(hour=8, minute=0, second=0, microsecond=0)
-    countdown_sec = int((next_sunday - now).total_seconds())
+    from backend.services.contest_discovery import get_current_ist_datetime
+    now_ist = get_current_ist_datetime()
+    is_sunday = (now_ist.weekday() == 6)
+    
+    start_dt = now_ist.replace(hour=8, minute=0, second=0, microsecond=0)
+    end_dt = now_ist.replace(hour=9, minute=30, second=0, microsecond=0)
+
+    if is_sunday and start_dt <= now_ist <= end_dt:
+        is_session_live = True
+        countdown_sec = int((end_dt - now_ist).total_seconds())
+        session_phase = "LIVE_NOW"
+    elif is_sunday and now_ist < start_dt:
+        is_session_live = False
+        countdown_sec = int((start_dt - now_ist).total_seconds())
+        session_phase = "SCHEDULED_TODAY"
+    else:
+        is_session_live = False
+        days_until_sunday = (6 - now_ist.weekday()) % 7
+        if days_until_sunday == 0:
+            days_until_sunday = 7
+        next_sunday = (now_ist + datetime.timedelta(days=days_until_sunday)).replace(hour=8, minute=0, second=0, microsecond=0)
+        countdown_sec = int((next_sunday - now_ist).total_seconds())
+        session_phase = "SCHEDULED_NEXT_WEEK"
 
     verified_profiles = sum(1 for s in students if s.stats and (s.stats.total_solved is not None or s.stats.sync_status in ('success', 'OK', 'verified', 'stale')))
     pending_sync = sum(1 for s in students if not s.stats or (s.stats.sync_status in ('pending', 'not_started') and s.stats.total_solved is None))
@@ -101,6 +118,8 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         "highest_contest_rating": float(highest_rating) if highest_rating is not None else 0.0,
         "top_college_ranker": str(top_college_ranker) if top_college_ranker else "N/A",
         "current_session": WeeklySessionOut.from_orm(current_session) if current_session else None,
+        "is_session_live": is_session_live,
+        "session_phase": session_phase,
         "next_session_countdown_seconds": int(max(countdown_sec, 0)),
         "verified_profiles": int(verified_profiles),
         "pending_sync": int(pending_sync),

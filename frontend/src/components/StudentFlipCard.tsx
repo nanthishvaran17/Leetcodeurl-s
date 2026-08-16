@@ -11,7 +11,7 @@ interface StudentFlipCardProps {
 // ─── Sync State Machine ───────────────────────────────────────────────────────
 // Derives a clean status from the raw syncStatus field.
 // CRITICAL: null/undefined NEVER means "0 solved". It means "not yet fetched".
-type SyncState = 'pending' | 'syncing' | 'verified' | 'failed' | 'stale' | 'mismatch' | 'invalid_profile';
+type SyncState = 'pending' | 'syncing' | 'verified' | 'failed' | 'stale' | 'mismatch' | 'invalid_profile' | 'pending_username';
 
 function parseUtcTime(ts?: string): number {
   if (!ts) return Date.now();
@@ -24,10 +24,11 @@ function parseUtcTime(ts?: string): number {
 }
 
 function getSyncState(syncStatus?: string, lastVerifiedAt?: string, totalSolved?: number | null): SyncState {
-  if (syncStatus === 'invalid_profile' || syncStatus === 'INVALID_LINK' || syncStatus === 'MISSING_LINK') return 'invalid_profile';
+  if (syncStatus === 'pending_username' || syncStatus === 'PENDING_USERNAME' || syncStatus === 'MISSING LINK') return 'pending_username';
+  if (syncStatus === 'invalid_profile' || syncStatus === 'INVALID_LINK') return 'invalid_profile';
   if (syncStatus === 'syncing') return 'syncing';
   if (syncStatus === 'failed' && (totalSolved === null || totalSolved === undefined || totalSolved === 0)) return 'failed';
-  if (syncStatus === 'success' || syncStatus === 'OK' || syncStatus === 'verified' || syncStatus === 'stale' || (totalSolved !== null && totalSolved !== undefined && totalSolved > 0)) {
+  if (syncStatus === 'success' || syncStatus === 'OK' || syncStatus === 'verified' || (totalSolved !== null && totalSolved !== undefined && totalSolved > 0)) {
     // "Stale" = verified more than 24 hours ago
     if (lastVerifiedAt) {
       const age = Date.now() - parseUtcTime(lastVerifiedAt);
@@ -85,6 +86,11 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
 
   // ── Sync Status Badge (bottom of front card) ────────────────────────────────
   const SyncBadge = () => {
+    if (state === 'pending_username') return (
+      <span className="flex items-center space-x-1 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+        <span>⏳ Pending username</span>
+      </span>
+    );
     if (state === 'invalid_profile') return (
       <span className="flex items-center space-x-1 text-[10px] font-bold text-gray-400 dark:text-gray-500">
         <span>⚪ Profile unavailable</span>
@@ -99,7 +105,7 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
     if (state === 'pending') return (
       <span className="flex items-center space-x-1 text-[10px] font-bold text-gray-400 dark:text-gray-500">
         <Clock className="w-3 h-3" />
-        <span>⏳ Not synced yet</span>
+        <span>⏳ Awaiting sync</span>
       </span>
     );
     if (state === 'failed') return (
@@ -117,20 +123,25 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
     if (state === 'stale') return (
       <span className="flex items-center space-x-1 text-[10px] font-bold text-amber-600 dark:text-amber-400">
         <Clock className="w-3 h-3" />
-        <span>🟡 Stale • {verifiedAgo}</span>
+        <span>🟡 Synced • {verifiedAgo}</span>
       </span>
     );
     // verified
     return (
       <span className="flex items-center space-x-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
         <CheckCircle2 className="w-3 h-3" />
-        <span>🟢 Verified {verifiedAgo}</span>
+        <span>🟢 Synced • {verifiedAgo}</span>
       </span>
     );
   };
 
   // ── Front card bottom stats display ────────────────────────────────────────
   const FrontStatsPill = () => {
+    if (state === 'pending_username') return (
+      <div className="flex items-center space-x-1.5 font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1 rounded-xl border border-amber-200 dark:border-amber-800/60">
+        <span className="text-xs">Pending username</span>
+      </div>
+    );
     if (state === 'invalid_profile') return (
       <div className="flex items-center space-x-1.5 font-bold text-gray-400 bg-gray-50 dark:bg-gray-900 px-2.5 py-1 rounded-xl border border-gray-200 dark:border-gray-800">
         <span className="text-xs">⚪ Profile unavailable</span>
@@ -156,9 +167,9 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
     );
     // stale shows previous verified number with amber indicator
     if (state === 'stale') return (
-      <div className="flex items-center space-x-1.5 font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2.5 py-1 rounded-xl border border-amber-200 dark:border-amber-800/60">
-        <Trophy className="w-3.5 h-3.5" />
-        <span className="text-xs">{totalSolved} Solved 🟡</span>
+      <div className="flex items-center space-x-1.5 font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-1 rounded-xl border border-emerald-200 dark:border-emerald-800/60">
+        <Trophy className="w-3.5 h-3.5 text-amber-500" />
+        <span className="text-xs">{totalSolved} Solved</span>
       </div>
     );
     return (
@@ -253,18 +264,22 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
             {!isVerified ? (
               /* ── PENDING / FAILED state placeholder ── */
               <div className={`p-4 rounded-2xl text-center space-y-2 ${
+                state === 'pending_username' ? 'bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800' :
                 state === 'pending' ? 'bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800' :
                 state === 'mismatch' ? 'bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800' :
                 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800'
               }`}>
                 <div className="text-2xl">
-                  {state === 'pending' ? '⏳' : state === 'mismatch' ? '🟡' : '🔴'}
+                  {state === 'pending_username' ? '⏳' : state === 'pending' ? '⏳' : state === 'mismatch' ? '🟡' : '🔴'}
                 </div>
                 <p className="font-extrabold text-sm text-gray-700 dark:text-gray-300">
-                  {state === 'pending' ? 'Stats Not Fetched Yet' : state === 'mismatch' ? 'Data Mismatch Detected' : 'Stats Unavailable'}
+                  {state === 'pending_username' ? 'Pending LeetCode Username' :
+                   state === 'pending' ? 'Awaiting Scheduled Sync' :
+                   state === 'mismatch' ? 'Data Mismatch Detected' : 'Stats Unavailable'}
                 </p>
                 <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                  {state === 'pending' && 'Waiting for background sync'}
+                  {state === 'pending_username' && 'Awaiting valid LeetCode profile assignment'}
+                  {state === 'pending' && 'Scheduled for background sync'}
                   {state === 'failed' && (lastVerifiedAt ? `Last verified: ${verifiedAgo}` : 'Never successfully synced')}
                   {state === 'mismatch' && 'Easy + Medium + Hard ≠ Total'}
                 </p>

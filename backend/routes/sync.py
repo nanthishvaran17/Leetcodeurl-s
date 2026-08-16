@@ -77,7 +77,12 @@ def get_current_sync_status(db: Session = Depends(get_db)):
     failed_cnt = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.sync_status == "failed").count()
 
     running_job = db.query(SyncJob).filter(SyncJob.status == "RUNNING").first()
-    last_completed_job = db.query(SyncJob).filter(SyncJob.status == "COMPLETED").order_by(SyncJob.id.desc()).first()
+    last_completed_job = db.query(SyncJob).filter(
+        SyncJob.status.in_(["COMPLETED", "PARTIAL"])
+    ).filter(
+        SyncJob.completed_at.isnot(None)
+    ).order_by(SyncJob.id.desc()).first()
+
     last_failed_job = db.query(SyncJob).filter(SyncJob.status == "FAILED").order_by(SyncJob.id.desc()).first()
     last_any_job = db.query(SyncJob).order_by(SyncJob.id.desc()).first()
 
@@ -89,28 +94,53 @@ def get_current_sync_status(db: Session = Depends(get_db)):
     if is_running and running_job and running_job.started_at:
         elapsed_sec = round((now_utc - running_job.started_at).total_seconds(), 1)
         started_iso = running_job.started_at.isoformat()
+    elif is_running and sync_tracker.started_at:
+        started_iso = sync_tracker.started_at
 
     if is_running:
         operation = "RUNNING"
         status_text = "● Sync Engine Running"
-        comp = sync_tracker.completed or (running_job.success_count + running_job.error_count if running_job else 0)
-        succ = sync_tracker.success or (running_job.success_count if running_job else 0)
-        fail = sync_tracker.failed or (running_job.error_count if running_job else 0)
+        total_students = sync_tracker.total_students or (running_job.total_records if running_job else tot)
+        students_processed = sync_tracker.students_processed or (running_job.success_count + running_job.error_count if running_job else 0)
+        profiles_synced = sync_tracker.profiles_synced or (running_job.success_count if running_job else 0)
+        successful = sync_tracker.successful or (running_job.success_count if running_job else 0)
+        failed = sync_tracker.failed or (running_job.error_count if running_job else 0)
+        pending_usernames = sync_tracker.pending_usernames
+        current_student = sync_tracker.current_student
+        current_username = sync_tracker.current_username
+        progress_pct = sync_tracker.progress_percentage or round((students_processed / max(1, total_students)) * 100.0, 1)
     elif last_completed_job:
         operation = "COMPLETED"
         status_text = "✓ Last Sync Completed"
-        comp = tot
-        succ = verified_cnt or tot
-        fail = failed_cnt
+        total_students = last_completed_job.total_records or tot
+        students_processed = last_completed_job.total_records or tot
+        profiles_synced = last_completed_job.success_count if last_completed_job.success_count else verified_cnt
+        successful = last_completed_job.success_count if last_completed_job.success_count else verified_cnt
+        failed = last_completed_job.error_count if last_completed_job.error_count is not None else failed_cnt
+        pending_usernames = last_completed_job.partial_count if last_completed_job.partial_count is not None else 0
+        current_student = None
+        current_username = None
+        progress_pct = 100.0
     else:
         operation = "IDLE"
         status_text = "● Sync Engine Ready"
-        comp = verified_cnt
-        succ = verified_cnt
-        fail = failed_cnt
+        total_students = tot
+        students_processed = 0
+        profiles_synced = 0
+        successful = 0
+        failed = 0
+        pending_usernames = 0
+        current_student = None
+        current_username = None
+        progress_pct = 0.0
 
-    last_sync_time = last_completed_job.completed_at.strftime("%d %b %Y, %I:%M %p IST") if (last_completed_job and last_completed_job.completed_at) else now_utc.strftime("%d %b %Y, 08:30 AM IST")
-    
+    if last_completed_job and last_completed_job.completed_at:
+        last_sync_time = last_completed_job.completed_at.strftime("%d %b %Y, %I:%M %p IST")
+        last_successful_sync_iso = last_completed_job.completed_at.isoformat()
+    else:
+        last_sync_time = "Never completed"
+        last_successful_sync_iso = None
+
     freshness_seconds = cfg.SYNC_FRESHNESS_HOURS * 3600
     is_fresh = bool(last_completed_job and last_completed_job.completed_at and (now_utc - last_completed_job.completed_at).total_seconds() <= freshness_seconds)
     data_freshness_status = "FRESH" if is_fresh else "STALE"
@@ -122,24 +152,34 @@ def get_current_sync_status(db: Session = Depends(get_db)):
         "status_text": status_text,
         "system_status": "Operational",
         "last_sync_timestamp": last_sync_time,
-        "last_successful_sync": last_completed_job.completed_at.isoformat() if (last_completed_job and last_completed_job.completed_at) else None,
+        "last_successful_sync": last_successful_sync_iso,
         "last_failed_sync": last_failed_job.completed_at.isoformat() if (last_failed_job and last_failed_job.completed_at) else None,
         "data_freshness_status": data_freshness_status,
         "freshness_hours_threshold": cfg.SYNC_FRESHNESS_HOURS,
         "started_at": started_iso,
+        "last_progress_at": sync_tracker.last_progress_at if is_running else (last_completed_job.completed_at.isoformat() if last_completed_job and last_completed_job.completed_at else None),
+        "completed_at": last_completed_job.completed_at.isoformat() if (last_completed_job and last_completed_job.completed_at) else None,
         "elapsed_seconds": elapsed_sec,
         "job_id": running_job.job_id if running_job else (last_any_job.job_id if last_any_job else "OFFICIAL-SYNC-001"),
-        "total": tot,
-        "total_records": tot,
-        "completed": comp,
-        "processed": comp,
-        "success": succ,
-        "successful": succ,
-        "partial": 0,
-        "failed": fail,
+        "total": total_students,
+        "total_students": total_students,
+        "total_records": total_students,
+        "completed": students_processed,
+        "processed": students_processed,
+        "students_processed": students_processed,
+        "synced": profiles_synced,
+        "profiles_synced": profiles_synced,
+        "success": successful,
+        "successful": successful,
+        "partial": pending_usernames,
+        "pending_usernames": pending_usernames,
+        "failed": failed,
+        "current_student": current_student,
+        "current_username": current_username,
+        "progress_percentage": progress_pct,
+        "percentage": progress_pct,
         "retrying": 0,
-        "percentage": round((comp / max(1, tot)) * 100.0, 1),
-        "recent_logs": sync_tracker.recent_logs[-10:] if sync_tracker.recent_logs else [f"[{last_sync_time}] Synchronization worker ready. {succ} student profiles verified."]
+        "recent_logs": sync_tracker.recent_logs[-10:] if sync_tracker.recent_logs else [f"[{last_sync_time}] Synchronization worker ready. {successful} student profiles verified."]
     }
 
 

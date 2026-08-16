@@ -308,7 +308,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           </div>
         </div>
 
-        <CountdownTimer targetSeconds={summary?.next_session_countdown_seconds || 86400} />
+        <CountdownTimer targetSeconds={summary?.next_session_countdown_seconds || 86400} isLive={summary?.is_session_live} />
       </div>
 
       {/* College Participation Analytics & Data Quality Summary Row */}

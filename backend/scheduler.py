@@ -45,15 +45,20 @@ scheduler = AsyncIOScheduler(timezone=tz)
 
 async def sunday_start_job():
     """
-    Scheduled for Sunday 8:00 AM IST: Baseline snapshot.
+    Scheduled for Sunday 8:00 AM IST: Baseline snapshot and live student synchronization.
     """
-    logger.info("Executing Scheduled Job: Sunday 8:00 AM Start Snapshot...")
+    logger.info("[SCHEDULER] Sunday sync window detected (08:00 AM – 09:30 AM IST [Asia/Kolkata]). Starting live sync pipeline...")
     db = SessionLocal()
     try:
         session = get_or_create_current_weekly_session(db)
         await trigger_start_snapshot_0800(db, session.id)
+        
+        from backend.services.live_sync_service import start_full_sync_job
+        logger.info(f"[SYNC] Creating sync session for WeeklySession ID {session.id}...")
+        sync_res = start_full_sync_job(db, triggered_by="sunday_scheduler_0800")
+        logger.info(f"[QUEUE] Sunday 8:00 AM sync job dispatched: status={sync_res.get('status')}, job_id={sync_res.get('job_id')}")
     except Exception as e:
-        logger.error(f"Error in sunday_start_job: {e}")
+        logger.error(f"[SCHEDULER] Error in sunday_start_job execution: {e}")
     finally:
         db.close()
 

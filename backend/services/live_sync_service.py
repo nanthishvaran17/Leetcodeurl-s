@@ -14,35 +14,85 @@ class LiveSyncTracker:
     def __init__(self):
         self.current_job_id: Optional[str] = None
         self.is_running: bool = False
-        self.total: int = 0
-        self.completed: int = 0
-        self.success: int = 0
+        self.status: str = "IDLE"
+        self.total_students: int = 0
+        self.students_processed: int = 0
+        self.profiles_synced: int = 0
+        self.successful: int = 0
         self.partial: int = 0
         self.failed: int = 0
+        self.pending_usernames: int = 0
+        self.current_student: Optional[str] = None
+        self.current_username: Optional[str] = None
+        self.progress_percentage: float = 0.0
+        self.started_at: Optional[str] = None
+        self.last_progress_at: Optional[str] = None
+        self.completed_at: Optional[str] = None
+        self.last_successful_sync: Optional[str] = None
         self.recent_logs: List[str] = []
+        self.error_summary: Optional[str] = None
+
+    @property
+    def total(self) -> int:
+        return self.total_students
+
+    @property
+    def completed(self) -> int:
+        return self.students_processed
+
+    @property
+    def success(self) -> int:
+        return self.successful
 
     def start(self, job_id: str, total: int):
+        now_iso = datetime.datetime.utcnow().isoformat()
         self.current_job_id = job_id
         self.is_running = True
-        self.total = total
-        self.completed = 0
-        self.success = 0
+        self.status = "RUNNING"
+        self.total_students = total
+        self.students_processed = 0
+        self.profiles_synced = 0
+        self.successful = 0
         self.partial = 0
         self.failed = 0
-        self.recent_logs = []
+        self.pending_usernames = 0
+        self.current_student = None
+        self.current_username = None
+        self.progress_percentage = 0.0
+        self.started_at = now_iso
+        self.last_progress_at = now_iso
+        self.completed_at = None
+        self.error_summary = None
+        self.recent_logs = [f"[WORKER] Live sync worker started for {total} active students."]
 
-    def update(self, success_inc=0, partial_inc=0, failed_inc=0, log_msg=""):
-        self.completed += 1
-        self.success += success_inc
+    def set_current(self, student_name: str, username: Optional[str] = None):
+        self.current_student = student_name
+        self.current_username = username or ""
+        self.last_progress_at = datetime.datetime.utcnow().isoformat()
+
+    def update(self, success_inc=0, profiles_synced_inc=0, partial_inc=0, failed_inc=0, pending_inc=0, log_msg=""):
+        self.students_processed += 1
+        self.profiles_synced += profiles_synced_inc
+        self.successful += success_inc
         self.partial += partial_inc
         self.failed += failed_inc
+        self.pending_usernames += pending_inc
+        self.last_progress_at = datetime.datetime.utcnow().isoformat()
+        self.progress_percentage = round((self.students_processed / max(1, self.total_students)) * 100.0, 2)
         if log_msg:
             self.recent_logs.append(log_msg)
             if len(self.recent_logs) > 50:
                 self.recent_logs.pop(0)
 
-    def finish(self):
+    def finish(self, status: str = "COMPLETED", error_summary: Optional[str] = None):
         self.is_running = False
+        self.status = status
+        self.completed_at = datetime.datetime.utcnow().isoformat()
+        if status in ("COMPLETED", "PARTIAL"):
+            self.last_successful_sync = self.completed_at
+        self.error_summary = error_summary
+        self.current_student = None
+        self.current_username = None
 
 sync_tracker = LiveSyncTracker()
 
@@ -58,9 +108,9 @@ async def broadcast_sync_event(event_data: Dict[str, Any]):
 
 def get_active_students(db: Session) -> List[Student]:
     """Returns active student roster from database dynamically."""
-    logger.info("[SYNC_ROSTER_LOADING] Loading active institutional student roster from database...")
+    logger.info("[SYNC] Loading active institutional student roster from database...")
     students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
-    logger.info(f"[SYNC_ROSTER_COUNT] Loaded {len(students)} active institutional students.")
+    logger.info(f"[SYNC] Loaded {len(students)} active students")
     return students
 
 
@@ -94,7 +144,7 @@ def start_full_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, A
             db.commit()
             running_job = None
         else:
-            logger.info(f"Sync job {running_job.job_id} is already RUNNING. Reusing active job.")
+            logger.info(f"[SYNC] Sync job {running_job.job_id} is already RUNNING. Reusing active job.")
             return {
                 "success": False,
                 "status": "SYNC_ALREADY_RUNNING",
@@ -108,6 +158,7 @@ def start_full_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, A
     total_count = len(students)
 
     job_id = f"SYNC-{datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')}"
+    logger.info(f"[SYNC] Creating session: {job_id}")
     new_job = SyncJob(
         job_id=job_id,
         job_type="FULL_SYNC",
@@ -122,6 +173,7 @@ def start_full_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, A
     db.add(new_job)
     db.commit()
     db.refresh(new_job)
+    logger.info(f"[QUEUE] Job queued: {job_id}")
 
     sync_tracker.start(job_id, total_count)
 
@@ -247,12 +299,14 @@ def start_targeted_sync_job(db: Session, student_ids: List[int], triggered_by: s
     }
 
 
+from backend.leetcode_fetcher import extract_leetcode_username
+
 async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[int]] = None):
     """
     Asynchronous background worker that executes LeetCode profile refresh,
     field-level merging, audit logging, dynamic contest updates, and rank recalculations.
     """
-    logger.info(f"[SYNC_WORKER_STARTED] Starting live background sync worker for job_id: {job_id}")
+    logger.info(f"[WORKER] Worker started for job: {job_id}")
     db = SessionLocal()
 
     try:
@@ -263,35 +317,87 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
 
         total_students = len(students)
         success_count = 0
+        profiles_synced_count = 0
         partial_count = 0
         error_count = 0
+        pending_username_count = 0
 
         sync_tracker.start(job_id, total_students)
-        logger.info(f"[SYNC_WORKER_STARTED] Worker active for job_id={job_id} | Total students: {total_students}")
+        logger.info(f"[WORKER] Worker active for job_id={job_id} | Total students: {total_students}")
 
         semaphore = asyncio.Semaphore(settings.CONCURRENCY_WORKERS)
 
         async def _process_student_task(student: Student, idx: int):
-            nonlocal success_count, partial_count, error_count
+            nonlocal success_count, profiles_synced_count, partial_count, error_count, pending_username_count
             async with semaphore:
-                logger.info(f"[SYNC_STUDENT_STARTED] Processing student {idx}/{total_students}: {student.reg_no} ({student.name})")
-                res = None
-                try:
-                    logger.info(f"[SYNC_LEETCODE_REQUEST] Sending GraphQL request to LeetCode for username: {student.username}")
-                    res = await asyncio.wait_for(
-                        fetch_leetcode_profile(student.leetcode_url or student.username),
-                        timeout=25.0
+                # 1. Canonical LeetCode Username Extraction
+                username_to_check = student.username or student.leetcode_url
+                canonical_user, std_url, url_status = extract_leetcode_username(username_to_check)
+                
+                sync_tracker.set_current(student.name, canonical_user or "No username")
+                logger.info(f"[STUDENT] Processing: {student.name} ({student.reg_no}) [{idx}/{total_students}]")
+
+                # Handle students with no canonical username safely without throwing
+                if url_status != "OK" or not canonical_user:
+                    logger.info(f"[STUDENT] Pending LeetCode username for student {student.name} ({student.reg_no})")
+                    student_db = SessionLocal()
+                    try:
+                        st_obj = student_db.query(Student).filter(Student.id == student.id).first()
+                        if st_obj:
+                            st = st_obj.stats
+                            if not st:
+                                st = LeetCodeProfileStats(student_id=st_obj.id)
+                                student_db.add(st)
+                            st.sync_status = "pending_username"
+                            st.validation_status = "pending_username"
+                            st.status = "PENDING_USERNAME"
+                            st.error_message = "No valid LeetCode username assigned"
+                            st.error_code = "PENDING_USERNAME"
+                            st.last_attempt_at = datetime.datetime.utcnow()
+
+                            item = SyncJobItem(
+                                job_id=job_id,
+                                student_id=st_obj.id,
+                                field="username",
+                                status="PENDING_USERNAME",
+                                old_value=None,
+                                new_value=None,
+                                error_code="PENDING_USERNAME"
+                            )
+                            student_db.add(item)
+                            student_db.commit()
+                    except Exception as p_err:
+                        logger.warning(f"[SYNC] Pending username DB record note for {student.reg_no}: {p_err}")
+                    finally:
+                        student_db.close()
+
+                    pending_username_count += 1
+                    sync_tracker.update(
+                        pending_inc=1,
+                        log_msg=f"⏳ {student.name} ({student.reg_no}) - Pending LeetCode username."
                     )
-                    if isinstance(res, dict) and res.get("total_solved") is not None:
-                        logger.info(f"[SYNC_LEETCODE_SUCCESS] Live LeetCode data received for {student.reg_no}: total_solved={res.get('total_solved')}")
-                    else:
-                        logger.warning(f"[SYNC_LEETCODE_FAILURE] LeetCode profile fetch returned non-verified status for {student.reg_no}")
-                except Exception as exc:
-                    logger.warning(f"[SYNC_LEETCODE_FAILURE] Fetch exception for {student.reg_no} ({student.name}): {exc}")
-                    res = exc
+                    logger.info(f"[PROGRESS] {sync_tracker.students_processed} / {total_students}")
+                    return
 
+                # 2. Real LeetCode GraphQL Fetch with bounded retries for transient failures
+                logger.info(f"[LEETCODE] Fetching username: {canonical_user}")
+                res = None
+                for attempt in range(1, 3):
+                    try:
+                        res = await asyncio.wait_for(
+                            fetch_leetcode_profile(canonical_user),
+                            timeout=25.0
+                        )
+                        if isinstance(res, dict) and res.get("status") in ("OK", "success", "verified") and res.get("total_solved") is not None:
+                            break
+                    except Exception as exc:
+                        if attempt == 2:
+                            logger.warning(f"[SYNC] Fetch exception for {student.reg_no} ({student.name}) on attempt {attempt}: {exc}")
+                            res = exc
+                        else:
+                            await asyncio.sleep(1.0)
 
-                # Dedicated DB session per student task to prevent lock collisions
+                # 3. Dedicated DB session per student task for database persistence
                 student_db = SessionLocal()
                 is_succ, is_part, is_err = False, False, True
                 try:
@@ -304,30 +410,40 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
                 finally:
                     student_db.close()
 
-                # MANDATORY COUNTER UPDATE IN FINALLY
+                # 4. Progress Counters & Logging
                 if is_succ:
                     success_count += 1
-                    sync_tracker.update(success_inc=1, log_msg=f"✅ {student.name} ({student.reg_no}) - Fresh live data synced.")
-                    logger.info(f"[SYNC] Fetch success: {student.reg_no} | Progress: {sync_tracker.completed}/{total_students}")
+                    profiles_synced_count += 1
+                    logger.info(f"[DATABASE] Profile persisted successfully for {student.name} ({student.reg_no})")
+                    sync_tracker.update(
+                        success_inc=1,
+                        profiles_synced_inc=1,
+                        log_msg=f"✅ {student.name} ({student.reg_no}) - Fresh live data synced ({res.get('total_solved')} solved)."
+                    )
                 elif is_part:
                     partial_count += 1
-                    sync_tracker.update(partial_inc=1, log_msg=f"⚠️ {student.name} ({student.reg_no}) - Preserved previous valid data.")
-                    logger.info(f"[SYNC] Fetch partial: {student.reg_no} | Progress: {sync_tracker.completed}/{total_students}")
+                    sync_tracker.update(
+                        partial_inc=1,
+                        log_msg=f"⚠️ {student.name} ({student.reg_no}) - Preserved previous valid data."
+                    )
                 else:
                     error_count += 1
-                    sync_tracker.update(failed_inc=1, log_msg=f"❌ {student.name} ({student.reg_no}) - Sync failed.")
-                    logger.info(f"[SYNC] Fetch failed: {student.reg_no} | Progress: {sync_tracker.completed}/{total_students}")
+                    sync_tracker.update(
+                        failed_inc=1,
+                        log_msg=f"❌ {student.name} ({student.reg_no}) - Sync failed."
+                    )
 
-                # Persist progress to SyncJob table in DB & Firebase Realtime Database
+                logger.info(f"[PROGRESS] {sync_tracker.students_processed} / {total_students}")
+
+                # Persist real-time progress to SyncJob table in DB & Firebase RTDB
                 try:
                     job_rec = db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
                     if job_rec:
                         job_rec.success_count = success_count
-                        job_rec.partial_count = partial_count
+                        job_rec.partial_count = partial_count + pending_username_count
                         job_rec.error_count = error_count
                         db.commit()
 
-                    # Write persistent progress node to Firebase RTDB
                     from backend.services.firebase_rtdb_service import get_rtdb_reference
                     rtdb_jobs = get_rtdb_reference(f"sync_jobs/{job_id.replace('.', '_')}")
                     if rtdb_jobs:
@@ -335,64 +451,71 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
                             "job_id": job_id,
                             "status": "RUNNING",
                             "total_students": total_students,
-                            "processed": sync_tracker.completed,
+                            "processed": sync_tracker.students_processed,
                             "successful": success_count,
+                            "profiles_synced": profiles_synced_count,
+                            "pending_usernames": pending_username_count,
                             "failed": error_count,
-                            "pending": max(0, total_students - sync_tracker.completed),
+                            "current_student": student.name,
+                            "current_username": canonical_user,
                             "last_updated_at": datetime.datetime.utcnow().isoformat() + "Z"
                         })
                 except Exception as job_db_err:
                     logger.warning(f"[SYNC] SyncJob DB/RTDB progress update note: {job_db_err}")
 
-
                 # Real-time WebSocket Broadcast
                 await broadcast_sync_event({
                     "type": "SYNC_PROGRESS",
                     "job_id": job_id,
+                    "status": "RUNNING",
                     "total": total_students,
-                    "completed": sync_tracker.completed,
-                    "processed": sync_tracker.completed,
+                    "total_students": total_students,
+                    "completed": sync_tracker.students_processed,
+                    "processed": sync_tracker.students_processed,
+                    "students_processed": sync_tracker.students_processed,
+                    "profiles_synced": profiles_synced_count,
                     "success": success_count,
+                    "successful": success_count,
                     "partial": partial_count,
                     "failed": error_count,
-                    "progress_percentage": round((sync_tracker.completed / max(1, total_students)) * 100.0, 1),
+                    "pending_usernames": pending_username_count,
+                    "current_student": student.name,
+                    "current_username": canonical_user,
+                    "progress_percentage": sync_tracker.progress_percentage,
                     "recent_student": f"{student.name} ({student.reg_no})"
                 })
 
         tasks = [_process_student_task(s, i) for i, s in enumerate(students, start=1)]
         await asyncio.gather(*tasks, return_exceptions=True)
 
-        # 4. Dynamic Current Contest Matrix Refresh
+        # 5. Dynamic Current Contest Matrix Refresh
         try:
             _sync_active_contest_data(db)
         except Exception as c_err:
             logger.warning(f"[SYNC] Contest matrix refresh note: {c_err}")
 
-        # 5. Recalculate Multi-Level Ranks & Badges
+        # 6. Recalculate Multi-Level Ranks & Badges
         try:
             update_all_rankings_and_badges(db)
             db.commit()
         except Exception as r_err:
             logger.warning(f"[SYNC] Ranking update note: {r_err}")
 
-        # 6. Update SyncJob Summary Record
+        # 7. Update SyncJob Summary Record
+        final_status = "COMPLETED" if (error_count == 0 and partial_count == 0) else "PARTIAL"
+        if success_count == 0 and total_students > 0:
+            final_status = "FAILED"
+
         job_record = db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
         if job_record:
             job_record.completed_at = datetime.datetime.utcnow()
             job_record.success_count = success_count
-            job_record.partial_count = partial_count
+            job_record.partial_count = partial_count + pending_username_count
             job_record.error_count = error_count
-
-            if error_count == 0 and partial_count == 0:
-                job_record.status = "COMPLETED"
-            elif success_count > 0:
-                job_record.status = "PARTIAL"
-            else:
-                job_record.status = "FAILED"
-
+            job_record.status = final_status
             db.commit()
 
-        sync_tracker.finish()
+        sync_tracker.finish(status=final_status)
 
         # Invalidate all caches so dashboard and leaderboard immediately serve fresh data
         try:
@@ -402,27 +525,33 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
         except Exception as c_err:
             logger.warning(f"[SYNC] Cache invalidation note: {c_err}")
 
-        # 7. Final Completion WebSocket Broadcast
+        # 8. Final Completion WebSocket Broadcast
         await broadcast_sync_event({
             "type": "SYNC_COMPLETED",
             "job_id": job_id,
-            "status": job_record.status if job_record else "COMPLETED",
+            "status": final_status,
             "total_records": total_students,
+            "total_students": total_students,
+            "students_processed": sync_tracker.students_processed,
+            "profiles_synced": profiles_synced_count,
             "success_count": success_count,
+            "successful": success_count,
             "partial_count": partial_count,
+            "pending_usernames": pending_username_count,
             "error_count": error_count,
+            "failed": error_count,
             "completed_at": datetime.datetime.utcnow().isoformat()
         })
-        logger.info(f"[SYNC] COMPLETE: Job {job_id}. Total: {total_students}, Successful: {success_count}, Partial: {partial_count}, Failed: {error_count}, Processed: {sync_tracker.completed}")
+        logger.info(f"[WORKER] Sync completed: Job {job_id}. Total: {total_students}, Successful: {success_count}, Profiles Synced: {profiles_synced_count}, Pending Usernames: {pending_username_count}, Failed: {error_count}")
 
     except Exception as exc:
-        logger.error(f"[SYNC] Critical error during live sync worker {job_id}: {exc}")
+        logger.error(f"[WORKER] Critical error during live sync worker {job_id}: {exc}")
         job_record = db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
         if job_record:
             job_record.status = "FAILED"
             job_record.completed_at = datetime.datetime.utcnow()
             db.commit()
-        sync_tracker.finish()
+        sync_tracker.finish(status="FAILED", error_summary=str(exc))
     finally:
         db.close()
 
