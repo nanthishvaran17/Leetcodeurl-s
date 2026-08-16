@@ -46,7 +46,11 @@ def get_students(
     query = db.query(Student).outerjoin(Student.stats).options(
         joinedload(Student.department),
         joinedload(Student.section),
-        joinedload(Student.stats)
+        joinedload(Student.stats),
+        joinedload(Student.lc_profile),
+        joinedload(Student.lc_problem_stats),
+        joinedload(Student.lc_contest_standing),
+        joinedload(Student.lc_activity)
     ).filter((Student.is_active == True) | (Student.is_active.is_(None)))
 
     if dept_id:
@@ -172,6 +176,23 @@ def get_students(
                 st_out.stats.sync_status = "pending_username"
                 st_out.stats.validation_status = "pending_username"
 
+        # Canonical fields from normalized tables if available
+        if st.lc_profile:
+            st_out.canonical_username = st.lc_profile.canonical_username if is_verified else None
+            st_out.profile_url = st.lc_profile.profile_url if is_verified else None
+            st_out.real_name = st.lc_profile.real_name if is_verified else None
+            st_out.avatar_url = st.lc_profile.avatar_url if is_verified else None
+            st_out.sync_state = st.lc_profile.sync_state
+        else:
+            st_out.canonical_username = st.username if is_verified else None
+            st_out.profile_url = f"https://leetcode.com/u/{st.username}/" if (is_verified and st.username) else None
+            st_out.sync_state = "SYNCED" if is_verified else ("INVALID_USERNAME" if is_invalid else "PENDING_USERNAME")
+
+        if st.lc_activity:
+            st_out.streak_count = st.lc_activity.current_streak or 0
+            st_out.longest_streak = st.lc_activity.longest_streak or 0
+            st_out.total_active_days = st.lc_activity.total_active_days or 0
+
         latest_prog = prog_map.get(st.id)
         if latest_prog:
             st_out.college_rank = latest_prog.college_rank if is_verified else None
@@ -179,7 +200,8 @@ def get_students(
             st_out.year_rank = latest_prog.year_rank if is_verified else None
             st_out.section_rank = latest_prog.section_rank if is_verified else None
             st_out.weekly_progress = latest_prog.weekly_progress if is_verified else 0
-            st_out.streak_count = latest_prog.streak_count if is_verified else 0
+            if not st.lc_activity:
+                st_out.streak_count = latest_prog.streak_count if is_verified else 0
             st_out.consistency_score = latest_prog.consistency_score if is_verified else 0.0
             st_out.badge_list = latest_prog.badge_list or []
 

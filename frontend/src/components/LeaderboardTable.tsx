@@ -44,6 +44,11 @@ export interface StudentData {
   section?: { name: string };
   leetcode_url?: string;
   username?: string;
+  canonical_username?: string;
+  profile_url?: string;
+  real_name?: string;
+  avatar_url?: string;
+  sync_state?: string;
   stats?: {
     total_solved: number | null;
     easy_solved?: number | null;
@@ -65,6 +70,8 @@ export interface StudentData {
   section_rank?: number;
   weekly_progress?: number;
   streak_count?: number;
+  longest_streak?: number;
+  total_active_days?: number;
   consistency_score?: number;
   contest_status?: string;
   badge_list?: string[];

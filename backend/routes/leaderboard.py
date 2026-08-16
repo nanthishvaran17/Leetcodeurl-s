@@ -27,7 +27,11 @@ def get_leaderboard(
     query = db.query(Student).join(Student.stats).options(
         joinedload(Student.department),
         joinedload(Student.section),
-        joinedload(Student.stats)
+        joinedload(Student.stats),
+        joinedload(Student.lc_profile),
+        joinedload(Student.lc_problem_stats),
+        joinedload(Student.lc_contest_standing),
+        joinedload(Student.lc_activity)
     ).filter(
         (Student.is_active == True) | (Student.is_active.is_(None)),
         LeetCodeProfileStats.sync_status.in_(["success", "OK", "verified"]),
@@ -68,6 +72,22 @@ def get_leaderboard(
     results = []
     for st in students:
         st_out = StudentOut.from_orm(st)
+        if st.lc_profile:
+            st_out.canonical_username = st.lc_profile.canonical_username
+            st_out.profile_url = st.lc_profile.profile_url
+            st_out.real_name = st.lc_profile.real_name
+            st_out.avatar_url = st.lc_profile.avatar_url
+            st_out.sync_state = st.lc_profile.sync_state
+        else:
+            st_out.canonical_username = st.username
+            st_out.profile_url = f"https://leetcode.com/u/{st.username}/" if st.username else None
+            st_out.sync_state = "SYNCED"
+
+        if st.lc_activity:
+            st_out.streak_count = st.lc_activity.current_streak or 0
+            st_out.longest_streak = st.lc_activity.longest_streak or 0
+            st_out.total_active_days = st.lc_activity.total_active_days or 0
+
         latest_prog = prog_map.get(st.id)
         if latest_prog:
             st_out.college_rank = latest_prog.college_rank
@@ -75,7 +95,8 @@ def get_leaderboard(
             st_out.year_rank = latest_prog.year_rank
             st_out.section_rank = latest_prog.section_rank
             st_out.weekly_progress = latest_prog.weekly_progress
-            st_out.streak_count = latest_prog.streak_count
+            if not st.lc_activity:
+                st_out.streak_count = latest_prog.streak_count
             st_out.consistency_score = latest_prog.consistency_score
             st_out.badge_list = latest_prog.badge_list or []
         results.append(st_out)

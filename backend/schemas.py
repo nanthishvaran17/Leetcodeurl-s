@@ -99,13 +99,73 @@ class ContestResultOut(BaseModel):
     status: str = "NOT_ATTENDED"
     fetched_at: Optional[str] = None
 
+class CanonicalProfileOut(BaseModel):
+    canonical_username: Optional[str] = None
+    profile_url: Optional[str] = None
+    real_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+    about_me: Optional[str] = None
+    school: Optional[str] = None
+    company: Optional[str] = None
+    country: Optional[str] = None
+    reputation: Optional[int] = None
+    verification_status: str = "PENDING_USERNAME"
+    sync_state: str = "PENDING_USERNAME"
+    error_code: Optional[str] = None
+    error_message: Optional[str] = None
+    last_verified_at: Optional[datetime.datetime] = None
+    last_synced_at: Optional[datetime.datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class CanonicalProblemStatsOut(BaseModel):
+    total_solved: Optional[int] = None
+    easy_solved: Optional[int] = None
+    medium_solved: Optional[int] = None
+    hard_solved: Optional[int] = None
+    total_submission_count: Optional[int] = None
+    profile_global_ranking: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+class CanonicalContestOut(BaseModel):
+    contest_rating: Optional[float] = None
+    contest_global_ranking: Optional[int] = None
+    attended_count: Optional[int] = None
+    top_percentage: Optional[float] = None
+    most_recent_contest_name: Optional[str] = None
+    most_recent_contest_type: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class CanonicalActivityOut(BaseModel):
+    total_active_days: Optional[int] = None
+    current_streak: Optional[int] = None
+    longest_streak: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
 class StudentOut(StudentBase):
     id: int
     username: Optional[str] = None
+    canonical_username: Optional[str] = None
+    profile_url: Optional[str] = None
+    real_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+    sync_state: Optional[str] = "PENDING_USERNAME"
     joining_date: datetime.datetime
     department: Optional[DepartmentOut] = None
     section: Optional[SectionOut] = None
     stats: Optional[LeetCodeStatsOut] = None
+
+    lc_profile: Optional[CanonicalProfileOut] = None
+    lc_problem_stats: Optional[CanonicalProblemStatsOut] = None
+    lc_contest_standing: Optional[CanonicalContestOut] = None
+    lc_activity: Optional[CanonicalActivityOut] = None
     
     college_rank: Optional[int] = None
     dept_rank: Optional[int] = None
@@ -113,6 +173,8 @@ class StudentOut(StudentBase):
     section_rank: Optional[int] = None
     weekly_progress: Optional[int] = 0
     streak_count: Optional[int] = 0
+    longest_streak: Optional[int] = 0
+    total_active_days: Optional[int] = 0
     consistency_score: Optional[float] = 0.0
     badge_list: List[str] = []
 
@@ -122,6 +184,7 @@ class StudentOut(StudentBase):
 
     class Config:
         from_attributes = True
+
 
 # Auth & User Schemas
 class UserLogin(BaseModel):

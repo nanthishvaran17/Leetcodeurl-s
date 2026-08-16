@@ -792,6 +792,280 @@ class AuthorizedSignature(Base):
     uploaded_by = Column(String(128), default="Admin")
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# CANONICAL NORMALIZED LEETCODE TABLES
+# Every field traces to a specific LeetCode GraphQL API response field.
+# All tables foreign-key to students.id — never to name, reg_no, or username.
+# ─────────────────────────────────────────────────────────────────────────────
+
+class LeetCodeProfile(Base):
+    """
+    Identity + profile metadata. One row per student.
+    Populated by Phase A of the canonical sync pipeline.
+    sync_state drives ALL display logic across every consumer.
+
+    State machine values:
+      PENDING_USERNAME → VERIFYING → PROFILE_VERIFIED → SYNCING → SYNCED
+                                  ↘ INVALID_USERNAME
+                                  ↘ IDENTITY_MISMATCH
+                                  ↘ FETCH_FAILED
+                                  ↘ PARTIAL_SYNC  (core ok, optional data failed)
+    """
+    __tablename__ = "lc_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), unique=True, nullable=False, index=True)
+
+    # Verified canonical identity — null until identity confirmed
+    canonical_username = Column(String(100), nullable=True, index=True)
+    profile_url        = Column(String(255), nullable=True)   # null until verified
+
+    # matchedUser.profile fields — null if user hasn't set them on LeetCode
+    real_name  = Column(String(200), nullable=True)
+    avatar_url = Column(String(500), nullable=True)   # matchedUser.profile.userAvatar
+    about_me   = Column(Text, nullable=True)
+    school     = Column(String(200), nullable=True)
+    company    = Column(String(200), nullable=True)
+    country    = Column(String(100), nullable=True)
+    reputation = Column(Integer, nullable=True)
+
+    # State machine — all consumers read sync_state to decide what to show
+    verification_status = Column(String(30), default="PENDING_USERNAME", nullable=False, index=True)
+    sync_state          = Column(String(30), default="PENDING_USERNAME", nullable=False, index=True)
+
+    error_code    = Column(String(50), nullable=True)
+    error_message = Column(Text, nullable=True)
+
+    last_verified_at  = Column(DateTime(timezone=True), nullable=True)
+    last_synced_at    = Column(DateTime(timezone=True), nullable=True)
+    last_attempted_at = Column(DateTime(timezone=True), nullable=True)
+    retry_count       = Column(Integer, default=0, nullable=False)
+
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    student = relationship("Student", backref="lc_profile", uselist=False)
+
+
+class LeetCodeProblemStats(Base):
+    """
+    Core problem-solved counts. One row per student.
+    Source: matchedUser.submitStatsGlobal.acSubmissionNum
+    Updated on every Phase A sync.
+
+    Ranking formula (applied everywhere ranks appear):
+      college_rank : ORDER BY total_solved DESC, contest_rating DESC NULLS LAST
+      dept_rank    : same formula within department
+      year_rank    : same formula within year_level
+    Only students with sync_state IN (SYNCED, PARTIAL_SYNC) receive a rank.
+    """
+    __tablename__ = "lc_problem_stats"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), unique=True, nullable=False, index=True)
+
+    total_solved  = Column(Integer, nullable=True)   # acSubmissionNum[difficulty=All].count
+    easy_solved   = Column(Integer, nullable=True)   # acSubmissionNum[difficulty=Easy].count
+    medium_solved = Column(Integer, nullable=True)   # acSubmissionNum[difficulty=Medium].count
+    hard_solved   = Column(Integer, nullable=True)   # acSubmissionNum[difficulty=Hard].count
+
+    total_submission_count = Column(Integer, nullable=True)  # raw all-difficulty submission count
+    profile_global_ranking = Column(Integer, nullable=True)  # matchedUser.profile.ranking
+
+    fetched_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    student = relationship("Student", backref="lc_problem_stats", uselist=False)
+
+
+class LeetCodeContest(Base):
+    """
+    Current contest standing. One row per student — upserted every Phase B sync.
+    Source: userContestRanking(username)
+    """
+    __tablename__ = "lc_contest_standing"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), unique=True, nullable=False, index=True)
+
+    contest_rating         = Column(Float, nullable=True)    # userContestRanking.rating
+    contest_global_ranking = Column(Integer, nullable=True)  # userContestRanking.globalRanking
+    attended_count         = Column(Integer, nullable=True)  # userContestRanking.attendedContestsCount
+    top_percentage         = Column(Float, nullable=True)    # userContestRanking.topPercentage
+
+    # Derived from history array: most recent entry where attended=True
+    most_recent_contest_name = Column(String(150), nullable=True)
+    most_recent_contest_type = Column(String(20), nullable=True)   # weekly | biweekly
+
+    fetched_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    student = relationship("Student", backref="lc_contest_standing", uselist=False)
+
+
+class LeetCodeContestRatingHistory(Base):
+    """
+    Append-only per-contest rating history.
+    Source: userContestRankingHistory(username) — full array.
+    Weekly and Biweekly contests come from the SAME array; type is derived from title prefix.
+    One row per contest. NEVER overwritten — only new rows inserted.
+    Unique constraint prevents duplicates on re-sync.
+    """
+    __tablename__ = "lc_contest_rating_history"
+    __table_args__ = (
+        UniqueConstraint("student_id", "contest_name", "attended", name="uix_lc_contest_hist"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+
+    contest_name        = Column(String(150), nullable=False)  # e.g. "Weekly Contest 515"
+    contest_type        = Column(String(20), nullable=True)    # weekly | biweekly
+    contest_start_time  = Column(DateTime, nullable=True)      # from contest.startTime (Unix)
+
+    attended            = Column(Boolean, default=False)       # True=official, False=virtual/not attended
+    problems_solved     = Column(Integer, default=0)
+    total_problems      = Column(Integer, default=4)
+    finish_time_seconds = Column(Integer, nullable=True)       # finishTimeInSeconds
+    contest_rank        = Column(Integer, nullable=True)       # ranking field (official only)
+    rating_after        = Column(Float, nullable=True)         # rating field at end of this contest
+
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    student = relationship("Student", backref="lc_contest_history")
+
+
+class LeetCodeBadge(Base):
+    """
+    Badges awarded by LeetCode.
+    Source: matchedUser.badges[]
+    Unique by (student_id, badge_id) — safe to re-sync.
+    """
+    __tablename__ = "lc_badges"
+    __table_args__ = (
+        UniqueConstraint("student_id", "badge_id", name="uix_lc_badge"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id   = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+
+    badge_id     = Column(String(100), nullable=False)
+    display_name = Column(String(200), nullable=True)
+    icon_url     = Column(String(500), nullable=True)
+    awarded_at   = Column(DateTime, nullable=True)   # badges[].creationDate
+
+    created_at   = Column(DateTime, default=datetime.datetime.utcnow)
+
+    student = relationship("Student", backref="lc_badges")
+
+
+class LeetCodeLanguageStats(Base):
+    """
+    Per-language solved counts.
+    Source: matchedUser.languageProblemCount[]
+    This is real API data — NOT inferred from curriculum or registration data.
+    Unique by (student_id, language_name).
+    """
+    __tablename__ = "lc_language_stats"
+    __table_args__ = (
+        UniqueConstraint("student_id", "language_name", name="uix_lc_lang"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id      = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+
+    language_name   = Column(String(50), nullable=False)   # e.g. "Python3", "C++", "Java"
+    problems_solved = Column(Integer, default=0)
+
+    fetched_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    student = relationship("Student", backref="lc_language_stats")
+
+
+class LeetCodeTopicStats(Base):
+    """
+    Per-topic solved counts.
+    Source: matchedUser.tagProblemCounts (advanced + intermediate + fundamental arrays)
+    This is real API data — do NOT fabricate skill percentages from these counts.
+    Unique by (student_id, topic_slug).
+    """
+    __tablename__ = "lc_topic_stats"
+    __table_args__ = (
+        UniqueConstraint("student_id", "topic_slug", name="uix_lc_topic"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id      = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+
+    topic_slug      = Column(String(100), nullable=False)   # e.g. "dynamic-programming"
+    topic_name      = Column(String(150), nullable=True)    # display name
+    topic_tier      = Column(String(20), nullable=True)     # advanced | intermediate | fundamental
+    problems_solved = Column(Integer, default=0)
+
+    fetched_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    student = relationship("Student", backref="lc_topic_stats")
+
+
+class LeetCodeActivity(Base):
+    """
+    Submission calendar and derived streaks. One row per student.
+    Source: matchedUser.userCalendar(year)
+    Streaks are DERIVED in Python from the calendar map.
+    LeetCode does NOT return a pre-computed streak — compute it ourselves.
+    """
+    __tablename__ = "lc_activity"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), unique=True, nullable=False, index=True)
+
+    # Raw calendar: JSON string of {"unix_timestamp": submission_count, ...}
+    submission_calendar_json = Column(Text, nullable=True)
+
+    total_active_days = Column(Integer, nullable=True)   # days with ≥1 submission
+    current_streak    = Column(Integer, nullable=True)   # consecutive days ending today (Python-derived)
+    longest_streak    = Column(Integer, nullable=True)   # max consecutive-day run (Python-derived)
+
+    fetched_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    student = relationship("Student", backref="lc_activity", uselist=False)
+
+
+class LeetCodeSubmission(Base):
+    """
+    Recent accepted submissions — capped at last 20. NOT exhaustive submission history.
+    Source: recentAcSubmissionList(username, limit=20)
+    Consumers MUST label this as 'Recent submissions (not complete history)'.
+    Unique constraint prevents re-insertion on re-sync.
+    """
+    __tablename__ = "lc_submissions"
+    __table_args__ = (
+        UniqueConstraint("student_id", "title_slug", "submission_timestamp", name="uix_lc_submission"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+
+    title_slug           = Column(String(200), nullable=False)
+    title                = Column(String(300), nullable=True)
+    lang                 = Column(String(50), nullable=True)   # e.g. "python3", "cpp"
+    status_display       = Column(String(30), nullable=True)   # e.g. "Accepted"
+    runtime_display      = Column(String(50), nullable=True)   # e.g. "32 ms"
+    memory_display       = Column(String(50), nullable=True)   # e.g. "16.2 MB"
+    submission_timestamp = Column(DateTime, nullable=True)     # from Unix timestamp in API
+
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    student = relationship("Student", backref="lc_submissions")
+
+
+
 
 
 

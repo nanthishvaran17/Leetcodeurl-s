@@ -40149,3 +40149,291 @@ Action: Request blocked
 [2026-08-16 10:09:57,899] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
 [2026-08-16 10:09:57,930] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
 [2026-08-16 10:10:00,390] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-16 10:10:57,880] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:10:57,886] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:11:21,893] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:11:21,897] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:11:51,885] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:11:51,902] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:12:52,882] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:12:52,897] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:13:53,895] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:13:53,902] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:14:54,880] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:14:54,887] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:15:55,896] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:15:55,903] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:16:56,899] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:16:56,906] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:17:57,880] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:17:57,884] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:18:57,895] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:18:57,898] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:19:57,887] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:19:57,890] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:20:21,022] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:20:21,035] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:20:51,882] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:20:51,889] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:21:21,914] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:21:21,921] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:21:57,889] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:21:57,898] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:22:13,690] [INFO] [leetcode_tracker]: Successfully delivered email to 'msanthoshkumar@nandhaengg.org' via Brevo HTTPS API
+[2026-08-16 10:22:29,119] [INFO] [leetcode_tracker]: Successfully delivered email to 'nanthishvaran17@gmail.com' via Brevo HTTPS API
+[2026-08-16 10:22:57,895] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:22:57,906] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:23:21,882] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:23:21,897] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:23:51,882] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:23:51,889] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:24:52,885] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:24:52,891] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:25:53,888] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:25:53,895] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:26:54,897] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:26:54,906] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:27:55,895] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:27:55,907] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:28:56,886] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:28:56,900] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:29:57,894] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:29:57,904] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:30:57,901] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:30:57,915] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:31:57,905] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:31:57,916] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:32:57,913] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:32:57,928] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:33:57,897] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:33:57,914] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:34:57,886] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:34:57,899] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:35:58,065] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:35:58,077] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:36:57,893] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:36:57,908] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:37:57,885] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:37:57,899] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:38:22,133] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-16 10:38:22,134] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-16 10:38:22,460] [INFO] [leetcode_tracker]: Syncing & seeding student roster definitions...
+[2026-08-16 10:38:26,127] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-16 10:38:28,021] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-16 10:38:28,961] [INFO] [leetcode_tracker]: Database seeding / roster sync completed successfully.
+[2026-08-16 10:38:28,992] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-16 10:38:29,001] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-16 10:38:29,020] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-16 10:38:29,021] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-16 10:38:29,934] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 10:38
+[2026-08-16 10:38:29,935] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-16 10:38:30,661] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 300 students.
+[2026-08-16 10:40:08,961] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-16 10:40:08,963] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-16 10:40:09,261] [INFO] [leetcode_tracker]: Syncing & seeding student roster definitions...
+[2026-08-16 10:40:09,930] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-16 10:40:10,262] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-16 10:40:11,158] [INFO] [leetcode_tracker]: Database seeding / roster sync completed successfully.
+[2026-08-16 10:40:11,181] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-16 10:40:11,188] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-16 10:40:11,206] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-16 10:40:11,208] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-16 10:40:12,137] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 10:40
+[2026-08-16 10:40:12,139] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-16 10:40:13,159] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 300 students.
+[2026-08-16 10:40:13,467] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:40:13,467] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:40:13,474] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:40:13,518] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:40:13,543] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:40:13,585] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:40:52,887] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:40:52,895] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:41:53,890] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:41:53,896] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:42:46,791] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-16 10:42:46,792] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-16 10:42:47,090] [INFO] [leetcode_tracker]: Syncing & seeding student roster definitions...
+[2026-08-16 10:42:47,693] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-16 10:42:47,997] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-16 10:42:48,844] [INFO] [leetcode_tracker]: Database seeding / roster sync completed successfully.
+[2026-08-16 10:42:48,872] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-16 10:42:48,882] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-16 10:42:48,905] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-16 10:42:48,909] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-16 10:42:49,879] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 10:42
+[2026-08-16 10:42:49,882] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-16 10:42:50,871] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 300 students.
+[2026-08-16 10:42:55,153] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:42:55,168] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:43:55,900] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:43:55,909] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:44:20,565] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-16 10:44:20,566] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-16 10:44:20,865] [INFO] [leetcode_tracker]: Syncing & seeding student roster definitions...
+[2026-08-16 10:44:21,582] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-16 10:44:21,913] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-16 10:44:22,099] [INFO] [leetcode_tracker]: Database seeding / roster sync completed successfully.
+[2026-08-16 10:44:22,103] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-16 10:44:22,105] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-16 10:44:22,108] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-16 10:44:22,109] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-16 10:44:22,290] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 10:44
+[2026-08-16 10:44:22,290] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-16 10:44:22,485] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 300 students.
+[2026-08-16 10:44:56,954] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:44:56,956] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:45:57,892] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 10:45:57,899] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 10:46:06,463] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-16 10:46:06,465] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-16 10:46:06,781] [INFO] [leetcode_tracker]: Syncing & seeding student roster definitions...
+[2026-08-16 10:46:07,394] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-16 10:46:07,711] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-16 10:46:07,920] [INFO] [leetcode_tracker]: Database seeding / roster sync completed successfully.
+[2026-08-16 10:46:07,924] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-16 10:46:07,926] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-16 10:46:07,929] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-16 10:46:07,930] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-16 10:46:08,086] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 10:46
+[2026-08-16 10:46:08,086] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-16 10:46:08,255] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 300 students.
+[2026-08-16 10:49:55,863] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Starting full pipeline for 300 students (Job ID: AUDIT-CANONICAL-300)
+[2026-08-16 10:49:55,982] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Phase A: Verifying profile identities and fetching problem stats...
+[2026-08-16 10:50:15,532] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Phase A complete: 243 verified profiles ready for Phase B.
+[2026-08-16 10:50:15,532] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Phase B: Fetching contest standings and rating history...
+[2026-08-16 10:51:11,124] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Phase B complete: Contest standing and history persisted.
+[2026-08-16 10:51:11,124] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Phases C, D, E: Fetching topic stats, activity calendar, and recent submissions...
+[2026-08-16 10:51:24,187] [WARNING] [leetcode_tracker]: [TIMEOUT] nanthishvaran_07/userTagProblemCounts attempt 1
+[2026-08-16 10:51:24,189] [WARNING] [leetcode_tracker]: [TIMEOUT] nanthishvaran_07/recentAcSubmissions attempt 1
+[2026-08-16 10:51:24,285] [WARNING] [leetcode_tracker]: [TIMEOUT] nanthishvaran_07/userCalendar attempt 1
+[2026-08-16 10:51:27,408] [WARNING] [leetcode_tracker]: [TIMEOUT] Nishanthjs/userTagProblemCounts attempt 1
+[2026-08-16 10:51:27,410] [WARNING] [leetcode_tracker]: [TIMEOUT] Nishanthjs/userCalendar attempt 1
+[2026-08-16 10:51:27,413] [WARNING] [leetcode_tracker]: [TIMEOUT] Nishanthjs/recentAcSubmissions attempt 1
+[2026-08-16 10:51:27,416] [WARNING] [leetcode_tracker]: [TIMEOUT] nithin_31_/userTagProblemCounts attempt 1
+[2026-08-16 10:51:27,418] [WARNING] [leetcode_tracker]: [TIMEOUT] nithin_31_/userCalendar attempt 1
+[2026-08-16 10:51:27,420] [WARNING] [leetcode_tracker]: [TIMEOUT] nithin_31_/recentAcSubmissions attempt 1
+[2026-08-16 10:51:27,620] [WARNING] [leetcode_tracker]: [TIMEOUT] Nivethytha0704/userTagProblemCounts attempt 1
+[2026-08-16 10:51:27,623] [WARNING] [leetcode_tracker]: [TIMEOUT] Nivethytha0704/userCalendar attempt 1
+[2026-08-16 10:51:27,625] [WARNING] [leetcode_tracker]: [TIMEOUT] Nivethytha0704/recentAcSubmissions attempt 1
+[2026-08-16 10:51:27,680] [WARNING] [leetcode_tracker]: [TIMEOUT] sahasri_04/userTagProblemCounts attempt 1
+[2026-08-16 10:51:27,682] [WARNING] [leetcode_tracker]: [TIMEOUT] sahasri_04/userCalendar attempt 1
+[2026-08-16 10:51:27,683] [WARNING] [leetcode_tracker]: [TIMEOUT] sahasri_04/recentAcSubmissions attempt 1
+[2026-08-16 10:51:28,030] [WARNING] [leetcode_tracker]: [TIMEOUT] prasath00156/userTagProblemCounts attempt 1
+[2026-08-16 10:51:28,032] [WARNING] [leetcode_tracker]: [TIMEOUT] prasath00156/userCalendar attempt 1
+[2026-08-16 10:51:28,034] [WARNING] [leetcode_tracker]: [TIMEOUT] prasath00156/recentAcSubmissions attempt 1
+[2026-08-16 10:51:28,512] [WARNING] [leetcode_tracker]: [TIMEOUT] Pritss2206/userTagProblemCounts attempt 1
+[2026-08-16 10:51:28,514] [WARNING] [leetcode_tracker]: [TIMEOUT] Pritss2206/userCalendar attempt 1
+[2026-08-16 10:51:28,516] [WARNING] [leetcode_tracker]: [TIMEOUT] Pritss2206/recentAcSubmissions attempt 1
+[2026-08-16 10:51:31,203] [WARNING] [leetcode_tracker]: [TIMEOUT] nanthishvaran_07/userTagProblemCounts attempt 2
+[2026-08-16 10:51:31,205] [WARNING] [leetcode_tracker]: [TIMEOUT] nanthishvaran_07/recentAcSubmissions attempt 2
+[2026-08-16 10:51:31,304] [WARNING] [leetcode_tracker]: [TIMEOUT] nanthishvaran_07/userCalendar attempt 2
+[2026-08-16 10:51:34,161] [WARNING] [leetcode_tracker]: [NETWORK] ManojKumar2315/recentAcSubmissions RemoteProtocolError attempt 1
+[2026-08-16 10:51:34,164] [WARNING] [leetcode_tracker]: [NETWORK] ManojKumar2315/userCalendar RemoteProtocolError attempt 1
+[2026-08-16 10:51:34,166] [WARNING] [leetcode_tracker]: [NETWORK] ManojKumar2315/userTagProblemCounts RemoteProtocolError attempt 1
+[2026-08-16 10:51:34,439] [WARNING] [leetcode_tracker]: [TIMEOUT] Nishanthjs/userTagProblemCounts attempt 2
+[2026-08-16 10:51:34,441] [WARNING] [leetcode_tracker]: [TIMEOUT] Nishanthjs/userCalendar attempt 2
+[2026-08-16 10:51:34,443] [WARNING] [leetcode_tracker]: [TIMEOUT] Nishanthjs/recentAcSubmissions attempt 2
+[2026-08-16 10:51:34,445] [WARNING] [leetcode_tracker]: [TIMEOUT] nithin_31_/userTagProblemCounts attempt 2
+[2026-08-16 10:51:34,449] [WARNING] [leetcode_tracker]: [TIMEOUT] nithin_31_/userCalendar attempt 2
+[2026-08-16 10:51:34,452] [WARNING] [leetcode_tracker]: [TIMEOUT] nithin_31_/recentAcSubmissions attempt 2
+[2026-08-16 10:51:34,644] [WARNING] [leetcode_tracker]: [TIMEOUT] Nivethytha0704/userTagProblemCounts attempt 2
+[2026-08-16 10:51:34,645] [WARNING] [leetcode_tracker]: [TIMEOUT] Nivethytha0704/userCalendar attempt 2
+[2026-08-16 10:51:34,647] [WARNING] [leetcode_tracker]: [TIMEOUT] Nivethytha0704/recentAcSubmissions attempt 2
+[2026-08-16 10:51:34,719] [WARNING] [leetcode_tracker]: [TIMEOUT] sahasri_04/userTagProblemCounts attempt 2
+[2026-08-16 10:51:34,722] [WARNING] [leetcode_tracker]: [TIMEOUT] sahasri_04/userCalendar attempt 2
+[2026-08-16 10:51:34,725] [WARNING] [leetcode_tracker]: [TIMEOUT] sahasri_04/recentAcSubmissions attempt 2
+[2026-08-16 10:51:35,060] [WARNING] [leetcode_tracker]: [TIMEOUT] prasath00156/userTagProblemCounts attempt 2
+[2026-08-16 10:51:35,062] [WARNING] [leetcode_tracker]: [TIMEOUT] prasath00156/userCalendar attempt 2
+[2026-08-16 10:51:35,064] [WARNING] [leetcode_tracker]: [TIMEOUT] prasath00156/recentAcSubmissions attempt 2
+[2026-08-16 10:51:35,538] [WARNING] [leetcode_tracker]: [TIMEOUT] Pritss2206/userTagProblemCounts attempt 2
+[2026-08-16 10:51:35,540] [WARNING] [leetcode_tracker]: [TIMEOUT] Pritss2206/userCalendar attempt 2
+[2026-08-16 10:51:35,543] [WARNING] [leetcode_tracker]: [TIMEOUT] Pritss2206/recentAcSubmissions attempt 2
+[2026-08-16 10:51:46,057] [WARNING] [leetcode_tracker]: [TIMEOUT] SriselvanP/recentAcSubmissions attempt 1
+[2026-08-16 10:51:46,153] [WARNING] [leetcode_tracker]: [TIMEOUT] suba_sri10/userCalendar attempt 1
+[2026-08-16 10:51:46,155] [WARNING] [leetcode_tracker]: [TIMEOUT] suba_sri10/recentAcSubmissions attempt 1
+[2026-08-16 10:51:46,169] [WARNING] [leetcode_tracker]: [TIMEOUT] suba_sri10/userTagProblemCounts attempt 1
+[2026-08-16 10:51:46,673] [WARNING] [leetcode_tracker]: [TIMEOUT] SUPRIYA_2601/userCalendar attempt 1
+[2026-08-16 10:51:46,676] [WARNING] [leetcode_tracker]: [TIMEOUT] SUPRIYA_2601/userTagProblemCounts attempt 1
+[2026-08-16 10:51:46,679] [WARNING] [leetcode_tracker]: [TIMEOUT] subashmurugan212/recentAcSubmissions attempt 1
+[2026-08-16 10:51:46,681] [WARNING] [leetcode_tracker]: [TIMEOUT] SUPRIYA_2601/recentAcSubmissions attempt 1
+[2026-08-16 10:51:46,685] [WARNING] [leetcode_tracker]: [TIMEOUT] subashmurugan212/userTagProblemCounts attempt 1
+[2026-08-16 10:51:46,687] [WARNING] [leetcode_tracker]: [TIMEOUT] subashmurugan212/userCalendar attempt 1
+[2026-08-16 10:51:46,877] [WARNING] [leetcode_tracker]: [TIMEOUT] suresh11092006/userCalendar attempt 1
+[2026-08-16 10:51:46,879] [WARNING] [leetcode_tracker]: [TIMEOUT] suresh11092006/recentAcSubmissions attempt 1
+[2026-08-16 10:51:46,882] [WARNING] [leetcode_tracker]: [TIMEOUT] suresh11092006/userTagProblemCounts attempt 1
+[2026-08-16 10:51:47,051] [WARNING] [leetcode_tracker]: [TIMEOUT] varshini_devi2006/userTagProblemCounts attempt 1
+[2026-08-16 10:51:47,067] [WARNING] [leetcode_tracker]: [TIMEOUT] varshini_devi2006/recentAcSubmissions attempt 1
+[2026-08-16 10:51:47,070] [WARNING] [leetcode_tracker]: [TIMEOUT] varshini_devi2006/userCalendar attempt 1
+[2026-08-16 10:51:48,116] [WARNING] [leetcode_tracker]: [TIMEOUT] vedhasree_2006/recentAcSubmissions attempt 1
+[2026-08-16 10:51:57,473] [WARNING] [leetcode_tracker]: [TIMEOUT] Aarsika_M/userCalendar attempt 1
+[2026-08-16 10:51:57,475] [WARNING] [leetcode_tracker]: [TIMEOUT] Aarsika_M/recentAcSubmissions attempt 1
+[2026-08-16 10:51:57,476] [WARNING] [leetcode_tracker]: [TIMEOUT] Aarsika_M/userTagProblemCounts attempt 1
+[2026-08-16 10:51:57,554] [WARNING] [leetcode_tracker]: [TIMEOUT] abhishek_cc003/userTagProblemCounts attempt 1
+[2026-08-16 10:51:57,556] [WARNING] [leetcode_tracker]: [TIMEOUT] abhishek_cc003/recentAcSubmissions attempt 1
+[2026-08-16 10:51:57,559] [WARNING] [leetcode_tracker]: [TIMEOUT] abhishek_cc003/userCalendar attempt 1
+[2026-08-16 10:51:57,725] [WARNING] [leetcode_tracker]: [TIMEOUT] Abi_CC004/userCalendar attempt 1
+[2026-08-16 10:51:57,727] [WARNING] [leetcode_tracker]: [TIMEOUT] Abi_CC004/userTagProblemCounts attempt 1
+[2026-08-16 10:51:57,739] [WARNING] [leetcode_tracker]: [TIMEOUT] Abi_CC004/recentAcSubmissions attempt 1
+[2026-08-16 10:51:57,755] [WARNING] [leetcode_tracker]: [TIMEOUT] dharshang2007/recentAcSubmissions attempt 1
+[2026-08-16 10:51:57,770] [WARNING] [leetcode_tracker]: [TIMEOUT] dharshang2007/userCalendar attempt 1
+[2026-08-16 10:51:57,772] [WARNING] [leetcode_tracker]: [TIMEOUT] dharshang2007/userTagProblemCounts attempt 1
+[2026-08-16 10:51:58,091] [WARNING] [leetcode_tracker]: [TIMEOUT] n1J49Ovita/userTagProblemCounts attempt 1
+[2026-08-16 10:51:58,092] [WARNING] [leetcode_tracker]: [TIMEOUT] n1J49Ovita/recentAcSubmissions attempt 1
+[2026-08-16 10:51:58,104] [WARNING] [leetcode_tracker]: [TIMEOUT] n1J49Ovita/userCalendar attempt 1
+[2026-08-16 10:51:58,659] [WARNING] [leetcode_tracker]: [TIMEOUT] Gokulraj14/recentAcSubmissions attempt 1
+[2026-08-16 10:51:58,663] [WARNING] [leetcode_tracker]: [TIMEOUT] Gokulraj14/userCalendar attempt 1
+[2026-08-16 10:51:58,667] [WARNING] [leetcode_tracker]: [TIMEOUT] Gokulraj14/userTagProblemCounts attempt 1
+[2026-08-16 10:51:59,008] [WARNING] [leetcode_tracker]: [TIMEOUT] 81jUYqRRqL/userCalendar attempt 1
+[2026-08-16 10:51:59,016] [WARNING] [leetcode_tracker]: [TIMEOUT] 81jUYqRRqL/userTagProblemCounts attempt 1
+[2026-08-16 10:51:59,016] [WARNING] [leetcode_tracker]: [TIMEOUT] 81jUYqRRqL/recentAcSubmissions attempt 1
+[2026-08-16 10:51:59,280] [WARNING] [leetcode_tracker]: [TIMEOUT] 732225CC016/userCalendar attempt 1
+[2026-08-16 10:51:59,281] [WARNING] [leetcode_tracker]: [TIMEOUT] 732225CC016/recentAcSubmissions attempt 1
+[2026-08-16 10:51:59,281] [WARNING] [leetcode_tracker]: [TIMEOUT] 732225CC016/userTagProblemCounts attempt 1
+[2026-08-16 10:52:00,115] [WARNING] [leetcode_tracker]: [TIMEOUT] harishms2007/userTagProblemCounts attempt 1
+[2026-08-16 10:52:00,116] [WARNING] [leetcode_tracker]: [TIMEOUT] harishms2007/recentAcSubmissions attempt 1
+[2026-08-16 10:52:00,117] [WARNING] [leetcode_tracker]: [TIMEOUT] harishms2007/userCalendar attempt 1
+[2026-08-16 10:52:04,752] [WARNING] [leetcode_tracker]: [TIMEOUT] Aarsika_M/userCalendar attempt 2
+[2026-08-16 10:52:04,752] [WARNING] [leetcode_tracker]: [TIMEOUT] Aarsika_M/recentAcSubmissions attempt 2
+[2026-08-16 10:52:04,753] [WARNING] [leetcode_tracker]: [TIMEOUT] Aarsika_M/userTagProblemCounts attempt 2
+[2026-08-16 10:52:04,950] [WARNING] [leetcode_tracker]: [TIMEOUT] abhishek_cc003/recentAcSubmissions attempt 2
+[2026-08-16 10:52:04,952] [WARNING] [leetcode_tracker]: [TIMEOUT] abhishek_cc003/userCalendar attempt 2
+[2026-08-16 10:52:04,954] [WARNING] [leetcode_tracker]: [TIMEOUT] abhishek_cc003/userTagProblemCounts attempt 2
+[2026-08-16 10:52:05,019] [WARNING] [leetcode_tracker]: [TIMEOUT] Abi_CC004/userTagProblemCounts attempt 2
+[2026-08-16 10:52:05,020] [WARNING] [leetcode_tracker]: [TIMEOUT] Abi_CC004/userCalendar attempt 2
+[2026-08-16 10:52:05,037] [WARNING] [leetcode_tracker]: [TIMEOUT] Abi_CC004/recentAcSubmissions attempt 2
+[2026-08-16 10:52:05,038] [WARNING] [leetcode_tracker]: [TIMEOUT] dharshang2007/recentAcSubmissions attempt 2
+[2026-08-16 10:52:05,038] [WARNING] [leetcode_tracker]: [TIMEOUT] dharshang2007/userTagProblemCounts attempt 2
+[2026-08-16 10:52:05,039] [WARNING] [leetcode_tracker]: [TIMEOUT] dharshang2007/userCalendar attempt 2
+[2026-08-16 10:52:05,473] [WARNING] [leetcode_tracker]: [TIMEOUT] n1J49Ovita/userTagProblemCounts attempt 2
+[2026-08-16 10:52:05,474] [WARNING] [leetcode_tracker]: [TIMEOUT] n1J49Ovita/recentAcSubmissions attempt 2
+[2026-08-16 10:52:05,474] [WARNING] [leetcode_tracker]: [TIMEOUT] n1J49Ovita/userCalendar attempt 2
+[2026-08-16 10:52:05,859] [WARNING] [leetcode_tracker]: [TIMEOUT] Gokulraj14/userTagProblemCounts attempt 2
+[2026-08-16 10:52:05,871] [WARNING] [leetcode_tracker]: [TIMEOUT] Gokulraj14/userCalendar attempt 2
+[2026-08-16 10:52:05,879] [WARNING] [leetcode_tracker]: [TIMEOUT] Gokulraj14/recentAcSubmissions attempt 2
+[2026-08-16 10:52:06,332] [WARNING] [leetcode_tracker]: [TIMEOUT] 81jUYqRRqL/userCalendar attempt 2
+[2026-08-16 10:52:06,332] [WARNING] [leetcode_tracker]: [TIMEOUT] 81jUYqRRqL/recentAcSubmissions attempt 2
+[2026-08-16 10:52:06,348] [WARNING] [leetcode_tracker]: [TIMEOUT] 81jUYqRRqL/userTagProblemCounts attempt 2
+[2026-08-16 10:52:06,477] [WARNING] [leetcode_tracker]: [TIMEOUT] 732225CC016/userTagProblemCounts attempt 2
+[2026-08-16 10:52:06,485] [WARNING] [leetcode_tracker]: [TIMEOUT] 732225CC016/userCalendar attempt 2
+[2026-08-16 10:52:06,486] [WARNING] [leetcode_tracker]: [TIMEOUT] 732225CC016/recentAcSubmissions attempt 2
+[2026-08-16 10:52:07,363] [WARNING] [leetcode_tracker]: [TIMEOUT] harishms2007/recentAcSubmissions attempt 2
+[2026-08-16 10:52:07,364] [WARNING] [leetcode_tracker]: [TIMEOUT] harishms2007/userTagProblemCounts attempt 2
+[2026-08-16 10:52:07,364] [WARNING] [leetcode_tracker]: [TIMEOUT] harishms2007/userCalendar attempt 2
+[2026-08-16 10:52:08,263] [WARNING] [leetcode_tracker]: [TIMEOUT] sridhar320076/recentAcSubmissions attempt 1
+[2026-08-16 10:53:17,162] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Phases C, D, E complete: Optional datasets persisted.
+[2026-08-16 10:53:18,635] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Recalculating college/department/year rankings...
+[2026-08-16 10:53:18,635] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-16 10:53:20,725] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-16 10:53:20,726] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Sync complete in 204.94s. Synced=243, Invalid=37, Pending=20, Failed=0
+[2026-08-16 10:53:52,517] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Starting full pipeline for 40 students (Job ID: manual)
+[2026-08-16 10:53:52,592] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Phase A: Verifying profile identities and fetching problem stats...
+[2026-08-16 10:53:58,583] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Phase A complete: 40 verified profiles ready for Phase B.
+[2026-08-16 10:53:58,583] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Phase B: Fetching contest standings and rating history...
+[2026-08-16 10:54:01,680] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Phase B complete: Contest standing and history persisted.
+[2026-08-16 10:54:01,680] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Phases C, D, E: Fetching topic stats, activity calendar, and recent submissions...
+[2026-08-16 10:54:28,857] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Phases C, D, E complete: Optional datasets persisted.
+[2026-08-16 10:54:28,890] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Recalculating college/department/year rankings...
+[2026-08-16 10:54:28,890] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-16 10:54:29,183] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-16 10:54:29,183] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Sync complete in 36.67s. Synced=40, Invalid=0, Pending=0, Failed=0

@@ -58,6 +58,7 @@ def extract_leetcode_username(url_or_username: Optional[str]) -> Tuple[Optional[
 
 GRAPHQL_URL = "https://leetcode.com/graphql"
 
+# ── PROFILE + STATS + BADGES + LANGUAGES (Phase A) ─────────────────────────
 USER_PROFILE_QUERY = """
 query userPublicProfile($username: String!) {
   matchedUser(username: $username) {
@@ -66,6 +67,11 @@ query userPublicProfile($username: String!) {
       ranking
       userAvatar
       realName
+      aboutMe
+      school
+      company
+      countryName
+      reputation
     }
     submitStats: submitStatsGlobal {
       acSubmissionNum {
@@ -73,9 +79,21 @@ query userPublicProfile($username: String!) {
         count
       }
     }
+    badges {
+      id
+      displayName
+      icon
+      creationDate
+    }
+    languageProblemCount {
+      languageName
+      problemsSolved
+    }
   }
 }
 """
+
+# ── CONTEST RANKING + FULL HISTORY (Phase B) ────────────────────────────────
 
 USER_CONTEST_QUERY = """
 query userContestRankingInfo($username: String!) {
@@ -455,3 +473,442 @@ async def fetch_leetcode_profile(
         _profile_cache[username] = {"timestamp": now, "data": result}
         return result
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NEW GRAPHQL QUERIES (Phase C, D, E)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Phase C — Topic stats
+USER_TOPIC_QUERY = """
+query userTagProblemCounts($username: String!) {
+  matchedUser(username: $username) {
+    tagProblemCounts {
+      advanced     { tagName tagSlug problemsSolved }
+      intermediate { tagName tagSlug problemsSolved }
+      fundamental  { tagName tagSlug problemsSolved }
+    }
+  }
+}
+"""
+
+# Phase D — Submission calendar
+USER_CALENDAR_QUERY = """
+query userCalendar($username: String!, $year: Int) {
+  matchedUser(username: $username) {
+    userCalendar(year: $year) {
+      submissionCalendar
+      totalActiveDays
+      streak
+    }
+  }
+}
+"""
+
+# Phase E — Recent accepted submissions (capped at 20 — NOT exhaustive history)
+USER_RECENT_SUBMISSIONS_QUERY = """
+query recentAcSubmissions($username: String!, $limit: Int!) {
+  recentAcSubmissionList(username: $username, limit: $limit) {
+    id
+    title
+    titleSlug
+    timestamp
+    statusDisplay
+    lang
+    runtime
+    memory
+  }
+}
+"""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TYPED ASYNC FETCH FUNCTIONS WITH EXPLICIT BACKOFF
+# Return shape: {"status": "ok"|"rate_limited"|"timeout"|"not_found"|"identity_mismatch"|"error", "data": ...}
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _make_headers(username: str) -> dict:
+    return {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Content-Type": "application/json",
+        "Accept": "*/*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Origin": "https://leetcode.com",
+        "Referer": f"https://leetcode.com/u/{username}/",
+    }
+
+
+async def _gql_post(
+    client: Any,
+    query: str,
+    variables: dict,
+    operation: str,
+    username: str,
+    retries: int = 3,
+    backoff_base: float = 1.5,
+) -> Dict[str, Any]:
+    """
+    Single GraphQL POST with exponential backoff.
+    Handles 429 (rate limit), 5xx (server error), timeouts.
+    Returns canonical result dict — never raises.
+    """
+    headers = _make_headers(username)
+    payload = {"query": query, "variables": variables, "operationName": operation}
+
+    for attempt in range(1, retries + 1):
+        try:
+            res = await client.post(GRAPHQL_URL, json=payload, headers=headers)
+
+            if res.status_code == 429:
+                wait = min(backoff_base ** attempt, 60.0)
+                logger.warning(f"[RATE_LIMIT] {username}/{operation} attempt {attempt} — waiting {wait:.1f}s")
+                if attempt < retries:
+                    await asyncio.sleep(wait)
+                    continue
+                return {"status": "rate_limited", "data": None}
+
+            if res.status_code >= 500:
+                wait = min(backoff_base ** attempt, 30.0)
+                logger.warning(f"[SERVER_ERROR] {username}/{operation} HTTP {res.status_code} attempt {attempt}")
+                if attempt < retries:
+                    await asyncio.sleep(wait)
+                    continue
+                return {"status": "error", "data": None, "detail": f"HTTP {res.status_code}"}
+
+            if res.status_code != 200:
+                return {"status": "error", "data": None, "detail": f"HTTP {res.status_code}"}
+
+            body = res.json()
+            gql_errors = body.get("errors")
+            gql_data   = body.get("data", {})
+
+            if gql_errors and not gql_data:
+                msg = gql_errors[0].get("message", "") if gql_errors else ""
+                return {"status": "error", "data": None, "detail": msg}
+
+            return {"status": "ok", "data": gql_data}
+
+        except httpx.TimeoutException:
+            logger.warning(f"[TIMEOUT] {username}/{operation} attempt {attempt}")
+            if attempt < retries:
+                await asyncio.sleep(backoff_base ** attempt)
+                continue
+            return {"status": "timeout", "data": None}
+
+        except (httpx.RemoteProtocolError, httpx.ConnectError, httpx.NetworkError) as net_err:
+            logger.warning(f"[NETWORK] {username}/{operation} {type(net_err).__name__} attempt {attempt}")
+            if attempt < retries:
+                await asyncio.sleep(backoff_base ** attempt)
+                continue
+            return {"status": "error", "data": None, "detail": str(net_err)}
+
+        except Exception as exc:
+            logger.error(f"[UNEXPECTED] {username}/{operation}: {exc}")
+            return {"status": "error", "data": None, "detail": str(exc)}
+
+    return {"status": "error", "data": None, "detail": "Max retries exceeded"}
+
+
+async def fetch_profile_and_stats(
+    username: str,
+    client: Any,
+    retries: int = 3,
+    backoff_base: float = 1.5,
+) -> Dict[str, Any]:
+    """
+    Phase A fetch: profile identity + problem stats + badges + languages.
+    Returns parsed dict or error status.
+    """
+    result = await _gql_post(
+        client, USER_PROFILE_QUERY, {"username": username},
+        "userPublicProfile", username, retries, backoff_base
+    )
+    if result["status"] != "ok":
+        return result
+
+    matched = result["data"].get("matchedUser")
+    if matched is None:
+        return {"status": "not_found", "data": None}
+
+    # Identity check — required before storing anything
+    canonical = matched.get("username", "")
+    if canonical.lower() != username.lower():
+        return {"status": "identity_mismatch", "data": None,
+                "detail": f"returned '{canonical}' != requested '{username}'"}
+
+    profile = matched.get("profile") or {}
+    submit_stats = (
+        matched.get("submitStatsGlobal", {}).get("acSubmissionNum") or
+        matched.get("submitStats", {}).get("acSubmissionNum") or []
+    )
+    solved_map = {item["difficulty"]: item["count"] for item in submit_stats if isinstance(item, dict)}
+
+    badges_raw = matched.get("badges") or []
+    badges = []
+    for b in badges_raw:
+        if isinstance(b, dict):
+            badges.append({
+                "badge_id":     str(b.get("id", "")),
+                "display_name": b.get("displayName"),
+                "icon_url":     b.get("icon"),
+                "awarded_at":   b.get("creationDate"),
+            })
+
+    languages_raw = matched.get("languageProblemCount") or []
+    languages = [
+        {"language_name": lp["languageName"], "problems_solved": lp["problemsSolved"]}
+        for lp in languages_raw if isinstance(lp, dict)
+    ]
+
+    return {
+        "status": "ok",
+        "data": {
+            "canonical_username":      canonical,
+            "profile_url":            f"https://leetcode.com/u/{canonical}/",
+            "real_name":              profile.get("realName"),
+            "avatar_url":             profile.get("userAvatar"),
+            "about_me":               profile.get("aboutMe"),
+            "school":                 profile.get("school"),
+            "company":                profile.get("company"),
+            "country":                profile.get("countryName"),
+            "reputation":             profile.get("reputation"),
+            "profile_global_ranking": profile.get("ranking"),
+            "total_solved":           solved_map.get("All"),
+            "easy_solved":            solved_map.get("Easy"),
+            "medium_solved":          solved_map.get("Medium"),
+            "hard_solved":            solved_map.get("Hard"),
+            "badges":                 badges,
+            "languages":              languages,
+        }
+    }
+
+
+async def fetch_contest_data(
+    username: str,
+    client: Any,
+    retries: int = 3,
+    backoff_base: float = 1.5,
+) -> Dict[str, Any]:
+    """
+    Phase B fetch: contest standing + full history.
+    Weekly and Biweekly come from the SAME history array — filtered by title prefix.
+    """
+    result = await _gql_post(
+        client, USER_CONTEST_QUERY, {"username": username},
+        "userContestRankingInfo", username, retries, backoff_base
+    )
+    if result["status"] != "ok":
+        return result
+
+    data         = result["data"]
+    ranking_info = data.get("userContestRanking") or {}
+    history_raw  = data.get("userContestRankingHistory") or []
+
+    history = []
+    most_recent_name = None
+    most_recent_type = None
+
+    for item in reversed(history_raw):  # reversed = newest first
+        if not isinstance(item, dict):
+            continue
+        c_info   = item.get("contest") or {}
+        c_title  = c_info.get("title") or ""
+        c_start  = c_info.get("startTime")
+        attended = bool(item.get("attended", False))
+
+        c_type = (
+            "weekly"   if c_title.startswith("Weekly Contest") else
+            "biweekly" if c_title.startswith("Biweekly Contest") else "other"
+        )
+
+        entry = {
+            "contest_name":        c_title,
+            "contest_type":        c_type,
+            "contest_start_time":  datetime.datetime.utcfromtimestamp(c_start) if c_start else None,
+            "attended":            attended,
+            "problems_solved":     item.get("problemsSolved", 0),
+            "total_problems":      item.get("totalProblems", 4),
+            "finish_time_seconds": item.get("finishTimeInSeconds"),
+            "contest_rank":        item.get("ranking") if attended else None,
+            "rating_after":        item.get("rating"),
+        }
+        history.append(entry)
+
+        if most_recent_name is None and attended:
+            most_recent_name = c_title
+            most_recent_type = c_type
+
+    c_rating = ranking_info.get("rating")
+    return {
+        "status": "ok",
+        "data": {
+            "contest_rating":           round(float(c_rating), 1) if c_rating else None,
+            "contest_global_ranking":   ranking_info.get("globalRanking"),
+            "attended_count":           ranking_info.get("attendedContestsCount"),
+            "top_percentage":           ranking_info.get("topPercentage"),
+            "most_recent_contest_name": most_recent_name,
+            "most_recent_contest_type": most_recent_type,
+            "history":                  history,
+        }
+    }
+
+
+async def fetch_topic_stats(
+    username: str,
+    client: Any,
+    retries: int = 3,
+    backoff_base: float = 2.0,
+) -> Dict[str, Any]:
+    """
+    Phase C fetch: per-topic solved counts from tagProblemCounts.
+    Real API data — do NOT fabricate skill percentages.
+    """
+    result = await _gql_post(
+        client, USER_TOPIC_QUERY, {"username": username},
+        "userTagProblemCounts", username, retries, backoff_base
+    )
+    if result["status"] != "ok":
+        return result
+
+    matched   = (result["data"] or {}).get("matchedUser") or {}
+    tag_counts = matched.get("tagProblemCounts") or {}
+
+    topics = []
+    for tier in ("advanced", "intermediate", "fundamental"):
+        for t in (tag_counts.get(tier) or []):
+            if isinstance(t, dict):
+                topics.append({
+                    "topic_slug":      t.get("tagSlug", ""),
+                    "topic_name":      t.get("tagName"),
+                    "topic_tier":      tier,
+                    "problems_solved": t.get("problemsSolved", 0),
+                })
+
+    return {"status": "ok", "data": {"topics": topics}}
+
+
+async def fetch_activity_calendar(
+    username: str,
+    client: Any,
+    year: Optional[int] = None,
+    retries: int = 3,
+    backoff_base: float = 2.0,
+) -> Dict[str, Any]:
+    """
+    Phase D fetch: submission calendar + derived streaks.
+    LeetCode returns submissionCalendar as a JSON string of {unix_ts: count}.
+    Streaks are derived here — LeetCode does NOT return a reliable pre-computed streak.
+    """
+    import json as _json
+
+    yr = year or datetime.datetime.utcnow().year
+    result = await _gql_post(
+        client, USER_CALENDAR_QUERY, {"username": username, "year": yr},
+        "userCalendar", username, retries, backoff_base
+    )
+    if result["status"] != "ok":
+        return result
+
+    matched  = (result["data"] or {}).get("matchedUser") or {}
+    cal_data = matched.get("userCalendar") or {}
+    raw_cal  = cal_data.get("submissionCalendar") or "{}"
+
+    try:
+        cal_map = _json.loads(raw_cal) if isinstance(raw_cal, str) else raw_cal
+    except Exception:
+        cal_map = {}
+
+    today_utc = datetime.datetime.utcnow().date()
+
+    active_dates: set = set()
+    for ts_str, count in cal_map.items():
+        try:
+            d = datetime.datetime.utcfromtimestamp(int(ts_str)).date()
+            if count and int(count) > 0:
+                active_dates.add(d)
+        except Exception:
+            continue
+
+    total_active_days = len(active_dates)
+
+    # Current streak: consecutive days ending today or yesterday
+    current_streak = 0
+    check = today_utc
+    for _ in range(400):
+        if check in active_dates:
+            current_streak += 1
+            check -= datetime.timedelta(days=1)
+        elif check == today_utc:
+            # allow streak that ended yesterday
+            check -= datetime.timedelta(days=1)
+            if check in active_dates:
+                current_streak += 1
+                check -= datetime.timedelta(days=1)
+                continue
+            break
+        else:
+            break
+
+    # Longest streak
+    longest_streak = 0
+    if active_dates:
+        sorted_dates = sorted(active_dates)
+        run = 1
+        for i in range(1, len(sorted_dates)):
+            if (sorted_dates[i] - sorted_dates[i - 1]).days == 1:
+                run += 1
+                longest_streak = max(longest_streak, run)
+            else:
+                run = 1
+        longest_streak = max(longest_streak, run)
+
+    return {
+        "status": "ok",
+        "data": {
+            "submission_calendar_json": _json.dumps(cal_map),
+            "total_active_days":        total_active_days,
+            "current_streak":           current_streak,
+            "longest_streak":           longest_streak,
+        }
+    }
+
+
+async def fetch_recent_submissions(
+    username: str,
+    client: Any,
+    limit: int = 20,
+    retries: int = 3,
+    backoff_base: float = 2.0,
+) -> Dict[str, Any]:
+    """
+    Phase E fetch: recent accepted submissions — capped at limit (default 20).
+    NOT exhaustive — LeetCode exposes only the most recent ~20 accepted submissions.
+    There is NO full submission history endpoint.
+    """
+    result = await _gql_post(
+        client, USER_RECENT_SUBMISSIONS_QUERY, {"username": username, "limit": limit},
+        "recentAcSubmissions", username, retries, backoff_base
+    )
+    if result["status"] != "ok":
+        return result
+
+    raw_list = (result["data"] or {}).get("recentAcSubmissionList") or []
+    submissions = []
+    for s in raw_list:
+        if not isinstance(s, dict):
+            continue
+        ts = s.get("timestamp")
+        try:
+            dt = datetime.datetime.utcfromtimestamp(int(ts)) if ts else None
+        except Exception:
+            dt = None
+        submissions.append({
+            "title_slug":           s.get("titleSlug", ""),
+            "title":                s.get("title"),
+            "lang":                 s.get("lang"),
+            "status_display":       s.get("statusDisplay"),
+            "runtime_display":      s.get("runtime"),
+            "memory_display":       s.get("memory"),
+            "submission_timestamp": dt,
+        })
+
+    return {"status": "ok", "data": {"submissions": submissions}}

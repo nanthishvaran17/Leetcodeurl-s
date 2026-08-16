@@ -303,219 +303,48 @@ from backend.leetcode_fetcher import extract_leetcode_username
 
 async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[int]] = None):
     """
-    Asynchronous background worker that executes LeetCode profile refresh,
-    field-level merging, audit logging, dynamic contest updates, and rank recalculations.
+    Asynchronous background worker that delegates to the canonical sync pipeline.
+    Runs batched multi-phase fetch, updates database, recalculates rankings, and broadcasts progress.
     """
     logger.info(f"[WORKER] Worker started for job: {job_id}")
+    from backend.services.canonical_sync_pipeline import run_full_pipeline
+
     db = SessionLocal()
-
     try:
-        if target_student_ids:
-            students = db.query(Student).filter(Student.id.in_(target_student_ids)).all()
-        else:
-            students = get_active_students(db)
+        summary = await run_full_pipeline(
+            job_id=job_id,
+            student_ids=target_student_ids,
+            progress_callback=sync_tracker,
+            run_optional_phases=True
+        )
 
-        total_students = len(students)
-        success_count = 0
-        profiles_synced_count = 0
-        partial_count = 0
-        error_count = 0
-        pending_username_count = 0
-
-        sync_tracker.start(job_id, total_students)
-        logger.info(f"[WORKER] Worker active for job_id={job_id} | Total students: {total_students}")
-
-        semaphore = asyncio.Semaphore(settings.CONCURRENCY_WORKERS)
-
-        async def _process_student_task(student: Student, idx: int):
-            nonlocal success_count, profiles_synced_count, partial_count, error_count, pending_username_count
-            async with semaphore:
-                # 1. Canonical LeetCode Username Extraction
-                username_to_check = student.username or student.leetcode_url
-                canonical_user, std_url, url_status = extract_leetcode_username(username_to_check)
-                
-                sync_tracker.set_current(student.name, canonical_user or "No username")
-                logger.info(f"[STUDENT] Processing: {student.name} ({student.reg_no}) [{idx}/{total_students}]")
-
-                # Handle students with no canonical username safely without throwing
-                if url_status != "OK" or not canonical_user:
-                    logger.info(f"[STUDENT] Pending LeetCode username for student {student.name} ({student.reg_no})")
-                    student_db = SessionLocal()
-                    try:
-                        st_obj = student_db.query(Student).filter(Student.id == student.id).first()
-                        if st_obj:
-                            st = st_obj.stats
-                            if not st:
-                                st = LeetCodeProfileStats(student_id=st_obj.id)
-                                student_db.add(st)
-                            st.sync_status = "pending_username"
-                            st.validation_status = "pending_username"
-                            st.status = "PENDING_USERNAME"
-                            st.error_message = "No valid LeetCode username assigned"
-                            st.error_code = "PENDING_USERNAME"
-                            st.last_attempt_at = datetime.datetime.utcnow()
-
-                            item = SyncJobItem(
-                                job_id=job_id,
-                                student_id=st_obj.id,
-                                field="username",
-                                status="PENDING_USERNAME",
-                                old_value=None,
-                                new_value=None,
-                                error_code="PENDING_USERNAME"
-                            )
-                            student_db.add(item)
-                            student_db.commit()
-                    except Exception as p_err:
-                        logger.warning(f"[SYNC] Pending username DB record note for {student.reg_no}: {p_err}")
-                    finally:
-                        student_db.close()
-
-                    pending_username_count += 1
-                    sync_tracker.update(
-                        pending_inc=1,
-                        log_msg=f"⏳ {student.name} ({student.reg_no}) - Pending LeetCode username."
-                    )
-                    logger.info(f"[PROGRESS] {sync_tracker.students_processed} / {total_students}")
-                    return
-
-                # 2. Real LeetCode GraphQL Fetch with bounded retries for transient failures
-                logger.info(f"[LEETCODE] Fetching username: {canonical_user}")
-                res = None
-                for attempt in range(1, 3):
-                    try:
-                        res = await asyncio.wait_for(
-                            fetch_leetcode_profile(canonical_user),
-                            timeout=25.0
-                        )
-                        if isinstance(res, dict) and res.get("status") in ("OK", "success", "verified") and res.get("total_solved") is not None:
-                            break
-                    except Exception as exc:
-                        if attempt == 2:
-                            logger.warning(f"[SYNC] Fetch exception for {student.reg_no} ({student.name}) on attempt {attempt}: {exc}")
-                            res = exc
-                        else:
-                            await asyncio.sleep(1.0)
-
-                # 3. Dedicated DB session per student task for database persistence
-                student_db = SessionLocal()
-                is_succ, is_part, is_err = False, False, True
-                try:
-                    st_obj = student_db.query(Student).filter(Student.id == student.id).first()
-                    if st_obj:
-                        is_succ, is_part, is_err = _process_single_student_sync(student_db, job_id, st_obj, res)
-                except Exception as db_exc:
-                    logger.error(f"[SYNC] DB processing error for {student.reg_no}: {db_exc}")
-                    is_succ, is_part, is_err = False, False, True
-                finally:
-                    student_db.close()
-
-                # 4. Progress Counters & Logging
-                if is_succ:
-                    success_count += 1
-                    profiles_synced_count += 1
-                    logger.info(f"[DATABASE] Profile persisted successfully for {student.name} ({student.reg_no})")
-                    sync_tracker.update(
-                        success_inc=1,
-                        profiles_synced_inc=1,
-                        log_msg=f"✅ {student.name} ({student.reg_no}) - Fresh live data synced ({res.get('total_solved')} solved)."
-                    )
-                elif is_part:
-                    partial_count += 1
-                    sync_tracker.update(
-                        partial_inc=1,
-                        log_msg=f"⚠️ {student.name} ({student.reg_no}) - Preserved previous valid data."
-                    )
-                else:
-                    error_count += 1
-                    sync_tracker.update(
-                        failed_inc=1,
-                        log_msg=f"❌ {student.name} ({student.reg_no}) - Sync failed."
-                    )
-
-                logger.info(f"[PROGRESS] {sync_tracker.students_processed} / {total_students}")
-
-                # Persist real-time progress to SyncJob table in DB & Firebase RTDB
-                try:
-                    job_rec = db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
-                    if job_rec:
-                        job_rec.success_count = success_count
-                        job_rec.partial_count = partial_count + pending_username_count
-                        job_rec.error_count = error_count
-                        db.commit()
-
-                    from backend.services.firebase_rtdb_service import get_rtdb_reference
-                    rtdb_jobs = get_rtdb_reference(f"sync_jobs/{job_id.replace('.', '_')}")
-                    if rtdb_jobs:
-                        rtdb_jobs.update({
-                            "job_id": job_id,
-                            "status": "RUNNING",
-                            "total_students": total_students,
-                            "processed": sync_tracker.students_processed,
-                            "successful": success_count,
-                            "profiles_synced": profiles_synced_count,
-                            "pending_usernames": pending_username_count,
-                            "failed": error_count,
-                            "current_student": student.name,
-                            "current_username": canonical_user,
-                            "last_updated_at": datetime.datetime.utcnow().isoformat() + "Z"
-                        })
-                except Exception as job_db_err:
-                    logger.warning(f"[SYNC] SyncJob DB/RTDB progress update note: {job_db_err}")
-
-                # Real-time WebSocket Broadcast
-                await broadcast_sync_event({
-                    "type": "SYNC_PROGRESS",
-                    "job_id": job_id,
-                    "status": "RUNNING",
-                    "total": total_students,
-                    "total_students": total_students,
-                    "completed": sync_tracker.students_processed,
-                    "processed": sync_tracker.students_processed,
-                    "students_processed": sync_tracker.students_processed,
-                    "profiles_synced": profiles_synced_count,
-                    "success": success_count,
-                    "successful": success_count,
-                    "partial": partial_count,
-                    "failed": error_count,
-                    "pending_usernames": pending_username_count,
-                    "current_student": student.name,
-                    "current_username": canonical_user,
-                    "progress_percentage": sync_tracker.progress_percentage,
-                    "recent_student": f"{student.name} ({student.reg_no})"
-                })
-
-        tasks = [_process_student_task(s, i) for i, s in enumerate(students, start=1)]
-        await asyncio.gather(*tasks, return_exceptions=True)
-
-        # 5. Dynamic Current Contest Matrix Refresh
-        try:
-            _sync_active_contest_data(db)
-        except Exception as c_err:
-            logger.warning(f"[SYNC] Contest matrix refresh note: {c_err}")
-
-        # 6. Recalculate Multi-Level Ranks & Badges
-        try:
-            update_all_rankings_and_badges(db)
-            db.commit()
-        except Exception as r_err:
-            logger.warning(f"[SYNC] Ranking update note: {r_err}")
-
-        # 7. Update SyncJob Summary Record
-        final_status = "COMPLETED" if (error_count == 0 and partial_count == 0) else "PARTIAL"
-        if success_count == 0 and total_students > 0:
-            final_status = "FAILED"
-
+        final_status = "COMPLETED" if summary.get("fetch_failed", 0) == 0 else "PARTIAL"
         job_record = db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
         if job_record:
             job_record.completed_at = datetime.datetime.utcnow()
-            job_record.success_count = success_count
-            job_record.partial_count = partial_count + pending_username_count
-            job_record.error_count = error_count
+            job_record.success_count = summary.get("full_dataset_synced", 0)
+            job_record.partial_count = summary.get("partial_sync", 0) + summary.get("pending_username", 0)
+            job_record.error_count = summary.get("fetch_failed", 0) + summary.get("invalid_username", 0)
             job_record.status = final_status
             db.commit()
 
-        sync_tracker.finish(status=final_status)
+        await broadcast_sync_event({
+            "type": "SYNC_COMPLETED",
+            "job_id": job_id,
+            "status": final_status,
+            "summary": summary
+        })
+
+    except Exception as exc:
+        logger.error(f"[WORKER] Job {job_id} failed: {exc}", exc_info=True)
+        job_record = db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
+        if job_record:
+            job_record.completed_at = datetime.datetime.utcnow()
+            job_record.status = "FAILED"
+            db.commit()
+    finally:
+        db.close()
+
 
         # Invalidate all caches so dashboard and leaderboard immediately serve fresh data
         try:
