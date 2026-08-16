@@ -191,6 +191,7 @@ def send_email_via_brevo(
     sender_email = from_email if (from_email and "@" in from_email and "nandha.edu.in" not in from_email) else "nanthishvaran17@gmail.com"
     payload: Dict[str, Any] = {
         "sender": {"name": "Nandha Engineering College — LeetCode Tracker", "email": sender_email},
+        "replyTo": {"name": "Nandha Admin Support", "email": "nanthishvaran17@gmail.com"},
         "to": [{"email": recipient}],
         "subject": subject,
         "htmlContent": html_body
