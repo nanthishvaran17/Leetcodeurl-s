@@ -106,7 +106,7 @@ export const ComparePage: React.FC = () => {
         departments.forEach(d => {
           list.push({
             key: `${d.id}_${yr}`,
-            label: `${yearLabels[yr]} ${d.code} (${d.name})`
+            label: `${yearLabels[yr]} ${d.code} — ${d.name}`
           });
         });
       });
@@ -136,7 +136,18 @@ export const ComparePage: React.FC = () => {
   }, [groupDimension, departments, students]);
 
   // Default Group A and Group B selection when options change
+  // Always ensure A != B to prevent identical group display
   useEffect(() => {
+    if (groupDimension === 'DEPT_YEAR' && departments.length >= 2) {
+      // Default: II Year CSE(CS) vs II Year CSE(IOT)
+      const dept1 = departments[0];
+      const dept2 = departments[1];
+      if (dept1 && dept2) {
+        setGroupAKey(`${dept1.id}_II`);
+        setGroupBKey(`${dept2.id}_II`);
+        return;
+      }
+    }
     if (groupOptions.length >= 2) {
       setGroupAKey(groupOptions[0].key);
       setGroupBKey(groupOptions[1].key);
@@ -144,7 +155,7 @@ export const ComparePage: React.FC = () => {
       setGroupAKey(groupOptions[0].key);
       setGroupBKey(groupOptions[0].key);
     }
-  }, [groupOptions]);
+  }, [groupDimension, groupOptions]);
 
   // Filtered lists for Student Search
   const filteredStudentsA = useMemo(() => {

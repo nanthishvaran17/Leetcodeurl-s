@@ -354,22 +354,79 @@ def get_normalized_contest_data(
         is_p_verified = bool(lc_p and getattr(lc_p, 'verification_status', None) == "PROFILE_VERIFIED")
 
         # 1. ATTENDANCE STATE MACHINE RESOLUTION
-        # Exactly one state per student: PUBLIC | VIRTUAL | NOT_ATTENDED | UNKNOWN
+        # Exactly one terminal state per student: PUBLIC | VIRTUAL | NOT_ATTENDED | UNKNOWN
         resolved_status = "UNKNOWN"
         data_fetch_st = "DATA_UNAVAILABLE"
         confidence_val = "UNVERIFIED"
-        q1_val = q2_val = q3_val = q4_val = tot_val = score_val = 0
+        q1_val = q2_val = q3_val = q4_val = tot_val = 0
+        score_val = "Data Unavailable"
         rank_val = rating_val = None
         err_re = None
-
-        p_status = getattr(p_res, 'participation_status', None)
-        p_fetch_st = getattr(p_res, 'data_fetch_status', None) or getattr(p_res, 'fetch_status', None)
 
         if not s.username or s.username.strip() in ("", "None", "null") or len(s.username.strip()) < 2:
             resolved_status = "UNKNOWN"
             data_fetch_st = "USERNAME_NOT_FOUND"
             confidence_val = "UNVERIFIED"
             err_re = "Missing or unmapped LeetCode profile handle"
+            score_val = "Data Unavailable"
+        elif p_res is not None:
+            # Authoritative session result record exists in database
+            p_status = str(getattr(p_res, 'participation_status', '') or '').upper().strip()
+            p_fetch_st = str(getattr(p_res, 'data_fetch_status', '') or getattr(p_res, 'fetch_status', '') or '').upper().strip()
+
+            if p_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"):
+                resolved_status = "PUBLIC"
+                data_fetch_st = "SUCCESS"
+                confidence_val = "VERIFIED"
+                q1_val = p_res.q1 or 0
+                q2_val = p_res.q2 or 0
+                q3_val = p_res.q3 or 0
+                q4_val = p_res.q4 or 0
+                tot_val = p_res.total_contest_solved or 0
+                score_val = f"{tot_val} / 4"
+                rank_val = getattr(p_res, 'contest_rank', None)
+                rating_val = getattr(p_res, 'contest_rating', None)
+            elif p_status in ("VIRTUAL", "VIRTUAL_ATTENDED"):
+                resolved_status = "VIRTUAL"
+                data_fetch_st = "SUCCESS"
+                confidence_val = "VERIFIED"
+                q1_val = p_res.q1 or 0
+                q2_val = p_res.q2 or 0
+                q3_val = p_res.q3 or 0
+                q4_val = p_res.q4 or 0
+                tot_val = p_res.total_contest_solved or 0
+                score_val = f"{tot_val} / 4"
+                rank_val = getattr(p_res, 'contest_rank', None)
+                rating_val = getattr(p_res, 'contest_rating', None)
+            elif p_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED"):
+                resolved_status = "NOT_ATTENDED"
+                data_fetch_st = "SUCCESS"
+                confidence_val = "VERIFIED"
+                score_val = "Not Attended"
+            elif p_fetch_st in ("FETCH_FAILED", "FETCH_ERROR", "FAILED"):
+                resolved_status = "UNKNOWN"
+                data_fetch_st = "FETCH_FAILED"
+                confidence_val = "UNVERIFIED"
+                err_re = getattr(p_res, 'error_reason', 'Network timeout or API fetch failure')
+                score_val = "Data Unavailable"
+            elif p_fetch_st == "INVALID_USERNAME":
+                resolved_status = "UNKNOWN"
+                data_fetch_st = "INVALID_USERNAME"
+                confidence_val = "UNVERIFIED"
+                err_re = getattr(p_res, 'error_reason', 'LeetCode profile not found (404)')
+                score_val = "Data Unavailable"
+            elif p_fetch_st == "USERNAME_NOT_FOUND":
+                resolved_status = "UNKNOWN"
+                data_fetch_st = "USERNAME_NOT_FOUND"
+                confidence_val = "UNVERIFIED"
+                err_re = getattr(p_res, 'error_reason', 'Missing or unmapped username')
+                score_val = "Data Unavailable"
+            else:
+                resolved_status = "UNKNOWN"
+                data_fetch_st = p_fetch_st if p_fetch_st else "DATA_UNAVAILABLE"
+                confidence_val = "UNVERIFIED"
+                err_re = getattr(p_res, 'error_reason', 'Contest verification unestablished')
+                score_val = "Data Unavailable"
         elif h_res and h_res.attended:
             resolved_status = "PUBLIC"
             data_fetch_st = "SUCCESS"
@@ -401,39 +458,14 @@ def get_normalized_contest_data(
             q3_val = v_res.q3 or 0
             q4_val = v_res.q4 or 0
             tot_val = v_res.total_contest_solved or 0
-            score_val = v_res.contest_score or 0
-            rank_val = getattr(v_res, 'contest_rank', None)
-            rating_val = getattr(v_res, 'contest_rating', None)
-        elif p_res and p_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"):
-            resolved_status = "PUBLIC"
-            data_fetch_st = "SUCCESS"
-            confidence_val = "VERIFIED"
-            q1_val = p_res.q1 or 0
-            q2_val = p_res.q2 or 0
-            q3_val = p_res.q3 or 0
-            q4_val = p_res.q4 or 0
-            tot_val = p_res.total_contest_solved or 0
-            score_val = p_res.contest_score or 0
-            rank_val = getattr(p_res, 'contest_rank', None)
-            rating_val = getattr(p_res, 'contest_rating', None)
-        elif is_p_verified:
-            resolved_status = "NOT_ATTENDED"
-            data_fetch_st = "SUCCESS"
-            confidence_val = "VERIFIED"
-        elif p_res and p_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED"):
-            if getattr(p_res, 'fetch_status', None) == "FETCH_ERROR" or p_fetch_st == "FETCH_FAILED":
-                resolved_status = "UNKNOWN"
-                data_fetch_st = "FETCH_FAILED"
-                confidence_val = "UNVERIFIED"
-                err_re = getattr(p_res, 'error_reason', 'Network timeout or API fetch failure')
-            else:
-                resolved_status = "NOT_ATTENDED"
-                data_fetch_st = "SUCCESS"
-                confidence_val = "VERIFIED"
+            score_val = f"{tot_val} / 4"
         else:
+            # No session result record or contest history entry exists
             resolved_status = "UNKNOWN"
             data_fetch_st = "DATA_UNAVAILABLE"
             confidence_val = "UNVERIFIED"
+            err_re = "Contest participation data not yet synchronized"
+            score_val = "Data Unavailable"
 
         # Profile fields from canonical relations (backref, may be None)
         c_user = getattr(lc_p, 'canonical_username', None) if is_p_verified else (s.username or s.reg_no)
@@ -490,7 +522,9 @@ def get_normalized_contest_data(
     public_not_attended_cnt = sum(1 for r in dept_year_results if r["participation_status"] == "NOT_ATTENDED")
     unknown_cnt = sum(1 for r in dept_year_results if r["participation_status"] == "UNKNOWN")
     username_missing_cnt = sum(1 for r in dept_year_results if r["data_fetch_status"] == "USERNAME_NOT_FOUND")
+    invalid_username_cnt = sum(1 for r in dept_year_results if r["data_fetch_status"] == "INVALID_USERNAME")
     fetch_failed_cnt = sum(1 for r in dept_year_results if r["data_fetch_status"] == "FETCH_FAILED")
+    data_errors_total = unknown_cnt
 
     # Mathematical Invariant check: Total = Public + Virtual + NotAttended + Unknown
     is_mathematically_sound = (verified_roster_count == (public_attended_cnt + virtual_attended_cnt + public_not_attended_cnt + unknown_cnt))
@@ -521,7 +555,9 @@ def get_normalized_contest_data(
         status_label = "PUBLIC" if r["participation_status"] == "PUBLIC" else (
             "VIRTUAL" if r["participation_status"] == "VIRTUAL" else (
                 "NOT ATTENDED" if is_not_att else (
-                    "USERNAME NOT LINKED" if r["data_fetch_status"] == "USERNAME_NOT_FOUND" else "FETCH ERROR"
+                    "PENDING USERNAME" if r["data_fetch_status"] == "USERNAME_NOT_FOUND" else (
+                        "INVALID USERNAME" if r["data_fetch_status"] == "INVALID_USERNAME" else "FETCH ERROR"
+                    )
                 )
             )
         )
@@ -548,12 +584,12 @@ def get_normalized_contest_data(
             "q3": r["q3"] if is_att else "—",
             "q4": r["q4"] if is_att else "—",
             "total_solved": r["total_contest_solved"] if is_att else ("0" if is_not_att else "—"),
-            "score": r["contest_score"] if is_att else (0 if is_not_att else "—"),
-            "rank": r["contest_rank"] if (is_att and r["contest_rank"] is not None) else "—",
-            "rating": r["contest_rating"] if (is_att and r["contest_rating"] is not None) else "—",
-            "fetch_status": r["data_fetch_status"],
-            "error_reason": r["error_reason"],
-            "attendance_evidence": r.get("attendance_evidence", {})
+            "score": r["contest_score"] if is_att else 0,
+            "rank": r["contest_rank"] if (is_att and r.get("contest_rank")) else "—",
+            "rating": r["contest_rating"] if (is_att and r.get("contest_rating")) else "—",
+            "source_status": "AUTHENTIC_VERIFIED" if r["confidence"] == "VERIFIED" else "UNVERIFIED",
+            "fetch_status": r["fetch_status"],
+            "error_reason": r.get("error_reason")
         })
 
     resp = {
@@ -572,6 +608,7 @@ def get_normalized_contest_data(
         "last_synced": session.last_synced.isoformat() if getattr(session, 'last_synced', None) else None,
         "questionDataSource": "AVAILABLE",
         "cacheKey": f"weekly_matrix:session_{session.id}:{session.contest_id}",
+        "reconciliation": "PASSED" if is_mathematically_sound else "FAILED",
         "metrics": {
             "totalStudents": len(results),
             "verifiedEligibleRoster": verified_roster_count,
@@ -588,9 +625,10 @@ def get_normalized_contest_data(
             "unknown": unknown_cnt,
             "usernameNotFound": username_missing_cnt,
             "unlinkedProfiles": username_missing_cnt,
+            "invalidUsername": invalid_username_cnt,
             "fetchFailed": fetch_failed_cnt,
-            "dataErrors": fetch_failed_cnt,
-            "failedVerification": unknown_cnt,
+            "dataErrors": data_errors_total,
+            "failedVerification": data_errors_total,
             "publicParticipationRate": participation_rate,
             "participationRate": f"{participation_rate:.2f}%",
             "4 Q Solved": sum(1 for r in dept_year_results if r.get("total_contest_solved") == 4 and r.get("participation_status") in ("PUBLIC", "VIRTUAL")),

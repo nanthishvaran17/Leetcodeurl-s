@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Body, Query
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional
 import os
@@ -10,6 +11,7 @@ from backend.models import AdminSettingsModel, AuditLog, AdminAuditLog, WeeklySe
 from backend.routes.auth import get_current_user
 from backend.security import require_security_access
 from backend.backup_manager import (
+    BACKUP_DIR,
     create_db_backup,
     list_backups_detail,
     verify_backup,
@@ -249,10 +251,11 @@ def get_system_health(db: Session = Depends(get_db)):
 
 @router.get("/audit-logs")
 def get_audit_logs(
+    limit: int = Query(200, ge=1, le=1000),
     db: Session = Depends(get_db), 
     current_user=Depends(require_security_access(resource_name="Audit Logs", required_roles=["admin", "super admin"]))
 ):
-    logs = db.query(AuditLog).order_by(AuditLog.timestamp.desc()).limit(50).all()
+    logs = db.query(AuditLog).order_by(AuditLog.timestamp.desc()).limit(limit).all()
     return [
         {
             "id": l.id,
@@ -366,6 +369,21 @@ def restore_backup_api(
         db.commit()
     return res
 
+
+@router.get("/backups/{filename}/download")
+def download_backup_api(
+    filename: str, 
+    current_user=Depends(require_security_access(resource_name="Download Backup", required_roles=["admin", "super admin"]))
+):
+    safe_name = os.path.basename(filename)
+    f_path = os.path.join(BACKUP_DIR, safe_name)
+    if not os.path.exists(f_path):
+        raise HTTPException(status_code=404, detail="Backup snapshot file not found.")
+    return FileResponse(
+        path=f_path,
+        filename=safe_name,
+        media_type="application/x-sqlite3"
+    )
 
 @router.delete("/backups/{filename}")
 def delete_backup_api(

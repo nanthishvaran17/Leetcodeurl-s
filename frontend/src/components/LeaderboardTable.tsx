@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ExternalLink, Trophy, RefreshCw, Wifi, Trash2, AlertCircle, Eye, Edit3, ShieldAlert, X, Clock, Flame, Award, CheckCircle2, TrendingUp, Sparkles, BookOpen, Star } from 'lucide-react';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import api from '../services/api';
@@ -740,21 +741,19 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
       )}
 
       {/* ================================================================
-          STUDENT PROFILE MODAL — Production-Quality Viewport-Safe Dialog
+          STUDENT PROFILE MODAL — Portal-Mounted Viewport-Safe Dialog
           ================================================================ */}
-      {viewingStudent && (
+      {viewingStudent && typeof document !== 'undefined' && createPortal(
         <div
           role="dialog"
           aria-modal="true"
           aria-label={`Student profile for ${viewingStudent.name}`}
-          className="fixed inset-0 z-[10000] flex items-start justify-center bg-black/75 backdrop-blur-sm"
-          style={{ padding: 'max(24px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left))' }}
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 md:p-8 bg-black/80 backdrop-blur-md overflow-hidden animate-modal-backdrop"
           onClick={(e) => { if (e.target === e.currentTarget) setViewingStudent(null); }}
         >
-          {/* Modal panel — flex column, capped to safe viewport height */}
+          {/* Modal panel — centered with safe margins from top & bottom */}
           <div
-            className="relative w-full max-w-2xl flex flex-col bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden"
-            style={{ maxHeight: 'min(calc(100dvh - 48px), calc(100vh - 48px))' }}
+            className="relative w-full max-w-2xl flex flex-col bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden my-auto max-h-[85vh] sm:max-h-[88vh] animate-modal-content"
             onClick={(e) => e.stopPropagation()}
           >
 
@@ -798,10 +797,10 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                 type="button"
                 onClick={() => setViewingStudent(null)}
                 aria-label="Close student profile"
-                className="shrink-0 z-10 p-2 sm:px-3.5 sm:py-1.5 rounded-xl bg-white/10 hover:bg-rose-500 text-white transition-all font-black text-xs flex items-center gap-1 cursor-pointer shadow-sm"
+                className="shrink-0 z-10 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500 text-white transition-all font-black text-xs flex items-center gap-1.5 cursor-pointer shadow-sm"
               >
                 <X className="w-4 h-4" />
-                <span className="hidden sm:inline">Close</span>
+                <span>Close</span>
               </button>
             </div>
 
@@ -936,7 +935,9 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   <div className="flex items-center justify-center space-x-1 text-emerald-500">
                     <TrendingUp className="w-4 h-4" />
                     <span className="text-xs font-black">
-                      {viewingStudent.consistency_score ? `${(viewingStudent.consistency_score * 100).toFixed(0)}%` : '—'}
+                      {viewingStudent.consistency_score !== undefined && viewingStudent.consistency_score !== null
+                        ? `${Math.min(100, Math.round(viewingStudent.consistency_score > 1 ? viewingStudent.consistency_score : viewingStudent.consistency_score * 100))}%`
+                        : '—'}
                     </span>
                   </div>
                   <span className="text-[10px] font-bold text-gray-500 mt-1 block">Consistency</span>
@@ -945,6 +946,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
 
             </div>
             {/* ── END SCROLLABLE CONTENT ───────────────────────────────── */}
+
 
             {/* ── C. STICKY FOOTER ─────────────────────────────────────── */}
             <div className="shrink-0 px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-3">
@@ -977,8 +979,10 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
             {/* ── END FOOTER ───────────────────────────────────────────── */}
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
+
 
     </div>
   );
