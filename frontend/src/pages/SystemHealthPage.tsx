@@ -1438,7 +1438,9 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                       </td>
                       <td className="py-2.5 px-3 text-gray-500">{bk.created_at || 'Just now'}</td>
                       <td className="py-2.5 px-3">{Math.round((bk.size_bytes || 0) / 1024)} KB</td>
-                      <td className="py-2.5 px-3 font-mono text-[10px] text-gray-400">{bk.checksum || 'Verified'}</td>
+                      <td className="py-2.5 px-3 font-mono text-[10px] text-gray-400" title={bk.checksum}>
+                        {bk.checksum ? (bk.checksum.length > 20 ? `${bk.checksum.substring(0, 16)}...` : bk.checksum) : 'Verified'}
+                      </td>
                       <td className="py-2.5 px-3 text-emerald-600 font-black">● {bk.status}</td>
                       <td className="py-2.5 px-3 text-right space-x-2">
                         <button

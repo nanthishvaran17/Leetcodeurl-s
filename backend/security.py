@@ -155,6 +155,12 @@ def evaluate_security_alert_threshold(
         except Exception as email_err:
             logger.warning(f"Security Alert email dispatch notice: {email_err}")
 
+import time
+import threading
+
+_RECENT_ACCESS_LOGS: Dict[tuple, float] = {}
+_RECENT_ACCESS_LOCK = threading.Lock()
+
 def log_security_access_event(
     db: Session,
     request: Request,
@@ -163,20 +169,54 @@ def log_security_access_event(
     resource: str,
     result: str,
     denial_reason: Optional[str] = None,
-    session_id: Optional[str] = None
+    session_id: Optional[str] = None,
+    debounce_seconds: float = 2.0
 ):
     """
     Persists a lightweight security access log into AdminAuditLog without
     logging any credentials, tokens, or sensitive student payload data.
+    Deduplicates identical (admin, action, resource, result) events within debounce window
+    to eliminate duplicate audit logs caused by React StrictMode or concurrent page mounts.
     """
-    hashed_ip = get_hashed_ip(request)
-    ua_category = categorize_user_agent(request.headers.get("User-Agent"))
-    correlation_id = f"req_{uuid.uuid4().hex[:12]}"
-    
     username = user.username if user else "UNKNOWN"
     user_id = user.id if user else None
     user_email = user.email if user else None
     user_role = user.role if user else "UNKNOWN"
+
+    # 1. In-memory debounce check
+    dedup_key = (username, action, resource, result)
+    now_ts = time.time()
+    with _RECENT_ACCESS_LOCK:
+        last_ts = _RECENT_ACCESS_LOGS.get(dedup_key, 0.0)
+        if now_ts - last_ts < debounce_seconds:
+            return
+        _RECENT_ACCESS_LOGS[dedup_key] = now_ts
+
+        # Housekeeping: prune old entries if map grows
+        if len(_RECENT_ACCESS_LOGS) > 500:
+            threshold = now_ts - 60.0
+            expired = [k for k, v in _RECENT_ACCESS_LOGS.items() if v < threshold]
+            for k in expired:
+                _RECENT_ACCESS_LOGS.pop(k, None)
+
+    # 2. Database safety-net debounce check (within last debounce_seconds)
+    try:
+        cutoff = datetime.datetime.utcnow() - datetime.timedelta(seconds=debounce_seconds)
+        existing = db.query(AdminAuditLog.id).filter(
+            AdminAuditLog.admin_name == username,
+            AdminAuditLog.action == action,
+            AdminAuditLog.target_id == resource,
+            AdminAuditLog.status == result,
+            AdminAuditLog.created_at >= cutoff
+        ).first()
+        if existing:
+            return
+    except Exception:
+        pass
+
+    hashed_ip = get_hashed_ip(request)
+    ua_category = categorize_user_agent(request.headers.get("User-Agent"))
+    correlation_id = f"req_{uuid.uuid4().hex[:12]}"
     
     desc = f"{action} on {resource} -> {result}"
     if denial_reason:

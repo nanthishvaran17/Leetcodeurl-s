@@ -75,7 +75,10 @@ export const SettingsPage: React.FC = () => {
     targetFilename?: string;
   }>({ open: false, title: '', description: '', impact: '', actionType: '' });
 
+  const initialFetchRef = useRef(false);
   useEffect(() => {
+    if (initialFetchRef.current) return;
+    initialFetchRef.current = true;
     fetchSettings();
     fetchBackups();
     fetchSystemHealth();
@@ -807,10 +810,12 @@ export const SettingsPage: React.FC = () => {
                       <td className="py-2.5 px-2.5 font-bold text-gray-900 dark:text-white">{b.filename}</td>
                       <td className="py-2.5 px-2.5 text-gray-500">{b.created_at ? b.created_at.substring(0, 19).replace('T', ' ') : '—'}</td>
                       <td className="py-2.5 px-2.5 text-gray-500">{(b.size_bytes / 1024).toFixed(1)} KB</td>
-                      <td className="py-2.5 px-2.5 text-brand-500 font-bold">{b.checksum || 'HEALTHY'}</td>
+                      <td className="py-2.5 px-2.5 text-brand-500 font-bold" title={b.checksum}>
+                        {b.checksum ? (b.checksum.length > 20 ? `${b.checksum.substring(0, 16)}...` : b.checksum) : 'HEALTHY'}
+                      </td>
                       <td className="py-2.5 px-2.5">
                         <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 font-bold text-[10px]">
-                          🟢 Healthy
+                          Healthy
                         </span>
                       </td>
                       <td className="py-2.5 px-2.5 text-right space-x-1.5">

@@ -1,24 +1,32 @@
 import os
 import shutil
 import datetime
+import zoneinfo
+import re
+import hashlib
 from typing import Dict, Any
 from backend.logger import logger
+
+IST_TZ = zoneinfo.ZoneInfo("Asia/Kolkata")
 
 BACKUP_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "backups")
 os.makedirs(BACKUP_DIR, exist_ok=True)
 
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "leetcode_tracker.db")
 
-import hashlib
-
 def create_db_backup(prefix: str = "backup_leetcode_tracker") -> Dict[str, Any]:
     """
-    Creates a timestamped snapshot copy of the SQLite database.
+    Creates a timestamped snapshot copy of the SQLite database using Asia/Kolkata IST.
+    Computes and stores the full 64-character SHA256 checksum.
     """
     if not os.path.exists(DB_PATH):
         return {"status": "ERROR", "message": "Database file not found."}
 
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    # Consistent Asia/Kolkata (IST) datetime object for both filename and created_at metadata
+    now_ist = datetime.datetime.now(IST_TZ)
+    timestamp = now_ist.strftime("%Y%m%d_%H%M%S")
+    created_at = now_ist.strftime("%Y-%m-%d %H:%M:%S")
+    
     filename = f"{prefix}_{timestamp}.db"
     backup_file = os.path.join(BACKUP_DIR, filename)
 
@@ -26,27 +34,30 @@ def create_db_backup(prefix: str = "backup_leetcode_tracker") -> Dict[str, Any]:
         shutil.copy2(DB_PATH, backup_file)
         size_bytes = os.path.getsize(backup_file)
         
-        # Calculate SHA256 checksum
+        # Calculate full 64-character SHA256 checksum
         hasher = hashlib.sha256()
         with open(backup_file, "rb") as f:
             for chunk in iter(lambda: f.read(4096), b""):
                 hasher.update(chunk)
-        checksum = hasher.hexdigest()[:16]
+        checksum = hasher.hexdigest()
 
-        logger.info(f"Database backup created: {backup_file} (checksum={checksum})")
+        logger.info(f"Database backup created: {backup_file} (SHA256={checksum})")
         return {
             "status": "SUCCESS",
             "backup_path": backup_file,
             "filename": filename,
             "size_bytes": size_bytes,
             "checksum": checksum,
-            "created_at": datetime.datetime.now().isoformat()
+            "created_at": created_at
         }
     except Exception as e:
         logger.error(f"Failed to create database backup: {e}")
         return {"status": "ERROR", "message": str(e)}
 
 def list_backups_detail() -> list:
+    """
+    Lists backups with synchronized Asia/Kolkata timestamps and full 64-char SHA256 checksums.
+    """
     if not os.path.exists(BACKUP_DIR):
         return []
     files = [f for f in os.listdir(BACKUP_DIR) if f.endswith(".db")]
@@ -55,16 +66,25 @@ def list_backups_detail() -> list:
     result = []
     for f in files:
         f_path = os.path.join(BACKUP_DIR, f)
-        stat = os.stat(f_path)
-        mtime = datetime.datetime.fromtimestamp(stat.st_mtime).isoformat()
         
-        # Calculate checksum
+        # Parse timestamp from filename (YYYYMMDD_HHMMSS) or fallback to file mtime in IST
+        match = re.search(r"(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})", f)
+        if match:
+            y, m, d, hh, mm, ss = map(int, match.groups())
+            created_at = datetime.datetime(y, m, d, hh, mm, ss, tzinfo=IST_TZ).strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            stat = os.stat(f_path)
+            created_at = datetime.datetime.fromtimestamp(stat.st_mtime, tz=IST_TZ).strftime("%Y-%m-%d %H:%M:%S")
+
+        stat = os.stat(f_path)
+        
+        # Calculate full 64-character SHA256 checksum
         try:
             hasher = hashlib.sha256()
             with open(f_path, "rb") as fp:
                 for chunk in iter(lambda: fp.read(4096), b""):
                     hasher.update(chunk)
-            chk = hasher.hexdigest()[:16]
+            chk = hasher.hexdigest()
             status = "HEALTHY"
         except Exception:
             chk = "UNKNOWN"
@@ -72,7 +92,7 @@ def list_backups_detail() -> list:
 
         result.append({
             "filename": f,
-            "created_at": mtime,
+            "created_at": created_at,
             "size_bytes": stat.st_size,
             "checksum": chk,
             "status": status
@@ -96,13 +116,13 @@ def verify_backup(filename: str) -> Dict[str, Any]:
             with open(f_path, "rb") as f:
                 for chunk in iter(lambda: f.read(4096), b""):
                     hasher.update(chunk)
-            chk = hasher.hexdigest()[:16]
+            chk = hasher.hexdigest()
             return {
                 "status": "SUCCESS",
                 "verified": True,
                 "filename": safe_name,
                 "checksum": chk,
-                "message": "Backup integrity verified cleanly. SQLite header valid."
+                "message": f"Backup integrity verified cleanly. SQLite header valid. SHA256: {chk}"
             }
         else:
             return {"status": "ERROR", "verified": False, "message": "Invalid SQLite header."}

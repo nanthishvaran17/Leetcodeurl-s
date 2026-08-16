@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ShieldCheck, ShieldAlert, AlertTriangle, RefreshCw, Lock, Filter } from 'lucide-react';
 import api from '../services/api';
 
@@ -22,6 +22,7 @@ export const SecurityActivitySection: React.FC = () => {
   const [activities, setActivities] = useState<SecurityItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const lastFetchedFilterRef = useRef<string | null>(null);
 
   const fetchSecurityActivities = async (selectedFilter: string) => {
     setLoading(true);
@@ -37,6 +38,8 @@ export const SecurityActivitySection: React.FC = () => {
   };
 
   useEffect(() => {
+    if (lastFetchedFilterRef.current === filter) return;
+    lastFetchedFilterRef.current = filter;
     fetchSecurityActivities(filter);
   }, [filter]);
 
