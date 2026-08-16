@@ -37,55 +37,99 @@ class RevokeCertificateRequest(BaseModel):
 @router.get("/certificates/verify/{verification_id}")
 def verify_certificate_public(verification_id: str, db: Session = Depends(get_db)):
     """
-    Public verification resolver for QR code scans and certificate validation.
-    Route: /verify/{verification_id}
+    Authoritative public verification resolver for QR code scans and certificate validation.
+    Supports case-insensitive normalization, prefix stripping/padding, and 503 error handling.
     """
-    clean_id = (verification_id or "").strip().upper()
-    cert = db.query(CertificateRecord).filter(CertificateRecord.verification_id == clean_id).first()
-    
-    if not cert:
+    import urllib.parse
+    raw_id = (verification_id or "").strip()
+    if not raw_id:
         return JSONResponse(
-            status_code=404,
+            status_code=400,
             content={
-                "status": "NOT_VERIFIED",
+                "verified": False,
+                "status": "INVALID_FORMAT",
                 "is_valid": False,
-                "verification_id": clean_id,
-                "message": "Certificate verification ID not found or invalid."
+                "reason": "INVALID_CERTIFICATE_ID",
+                "message": "Verification code cannot be empty."
             }
         )
 
-    if cert.status == "REVOKED":
+    clean_id = urllib.parse.unquote(raw_id).strip().upper()
+    variants = set([clean_id])
+    if clean_id.startswith("CERT-"):
+        variants.add(clean_id.replace("CERT-", ""))
+    else:
+        variants.add(f"CERT-{clean_id}")
+
+    try:
+        cert = db.query(CertificateRecord).filter(
+            (CertificateRecord.verification_id.in_(variants)) |
+            (CertificateRecord.certificate_code.in_(variants))
+        ).first()
+
+        logger.info(f"[CERT_VERIFY] id={clean_id} variants={list(variants)} found={bool(cert)} status={cert.status if cert else 'NOT_FOUND'}")
+
+        if not cert:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "verified": False,
+                    "status": "NOT_FOUND",
+                    "is_valid": False,
+                    "reason": "CERTIFICATE_NOT_FOUND",
+                    "verification_id": clean_id,
+                    "message": "The requested certificate identifier does not exist in the official institutional registry."
+                }
+            )
+
+        if cert.status == "REVOKED":
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "verified": False,
+                    "status": "REVOKED",
+                    "is_valid": False,
+                    "verification_id": cert.verification_id,
+                    "certificate_id": cert.verification_id,
+                    "student_name": cert.student_name,
+                    "register_no": cert.register_no,
+                    "department_name": cert.department_name,
+                    "revocation_reason": cert.revocation_reason or "Certificate has been officially revoked by the institution.",
+                    "message": "Certificate Revoked"
+                }
+            )
+
+        return {
+            "verified": True,
+            "status": "VERIFIED",
+            "is_valid": True,
+            "verification_id": cert.verification_id,
+            "certificate_id": cert.verification_id,
+            "student_name": cert.student_name,
+            "register_no": cert.register_no,
+            "department": cert.department,
+            "department_name": cert.department_name,
+            "program": cert.program,
+            "recognition": cert.recognition,
+            "issue_date": cert.issue_date,
+            "certificate_type": cert.certificate_type,
+            "verification_url": cert.verification_url,
+            "institution": "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)",
+            "accreditation": "Approved by AICTE, New Delhi • Affiliated to Anna University, Chennai • Accredited by NAAC with 'A+' Grade",
+            "created_at": cert.created_at.strftime("%Y-%m-%d %H:%M:%S") if cert.created_at else None
+        }
+    except Exception as exc:
+        logger.error(f"[CERT_VERIFY_ERROR] Database query exception for id={clean_id}: {exc}")
         return JSONResponse(
-            status_code=200,
+            status_code=503,
             content={
-                "status": "REVOKED",
+                "verified": False,
+                "status": "SERVER_ERROR",
                 "is_valid": False,
-                "verification_id": cert.verification_id,
-                "student_name": cert.student_name,
-                "register_no": cert.register_no,
-                "department_name": cert.department_name,
-                "revocation_reason": cert.revocation_reason or "Certificate has been officially revoked by the institution.",
-                "message": "Certificate Revoked"
+                "reason": "CERTIFICATE_VERIFICATION_UNAVAILABLE",
+                "message": "Verification Service Temporarily Unavailable. Please check back shortly."
             }
         )
-
-    return {
-        "status": "VERIFIED",
-        "is_valid": True,
-        "verification_id": cert.verification_id,
-        "student_name": cert.student_name,
-        "register_no": cert.register_no,
-        "department": cert.department,
-        "department_name": cert.department_name,
-        "program": cert.program,
-        "recognition": cert.recognition,
-        "issue_date": cert.issue_date,
-        "certificate_type": cert.certificate_type,
-        "verification_url": cert.verification_url,
-        "institution": "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)",
-        "accreditation": "Approved by AICTE, New Delhi • Affiliated to Anna University, Chennai • Accredited by NAAC with 'A+' Grade",
-        "created_at": cert.created_at.strftime("%Y-%m-%d %H:%M:%S") if cert.created_at else None
-    }
 
 
 # ─────────────────────────────────────────────────────────────────────────────

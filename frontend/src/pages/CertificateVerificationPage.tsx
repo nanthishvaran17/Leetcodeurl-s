@@ -38,10 +38,18 @@ interface CertificateVerificationData {
 }
 
 export const CertificateVerificationPage: React.FC<{ verificationId?: string }> = ({ verificationId: propId }) => {
-  const pathId = typeof window !== 'undefined' && window.location.pathname.startsWith('/verify/')
-    ? window.location.pathname.replace('/verify/', '').split('/')[0].trim()
-    : '';
-  const verificationId = propId || pathId;
+  const getPathId = () => {
+    if (typeof window === 'undefined') return '';
+    const path = window.location.pathname;
+    const prefixes = ['/verify/', '/verify-certificate/', '/certificate/verify/', '/certificates/verify/'];
+    const p = prefixes.find(prefix => path.startsWith(prefix));
+    if (p) {
+      return decodeURIComponent(path.replace(p, '')).split('/')[0].split('?')[0].trim();
+    }
+    return '';
+  };
+
+  const verificationId = (propId || getPathId()).trim();
   const [data, setData] = useState<CertificateVerificationData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +57,12 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
   useEffect(() => {
     if (!verificationId) {
       setLoading(false);
-      setError("No verification ID provided.");
+      setData({
+        status: 'NOT_VERIFIED',
+        is_valid: false,
+        verification_id: '',
+        message: 'Invalid Certificate Identifier'
+      });
       return;
     }
     fetchVerification();
@@ -60,12 +73,37 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
     setError(null);
     try {
       // 1. Primary: Authoritative Backend API
-      const res = await api.get(`/certificates/verify/${verificationId}`);
-      if (res.data && res.data.status) {
+      const res = await api.get(`/certificates/verify/${encodeURIComponent(verificationId)}`);
+      if (res.data) {
         setData(res.data);
+        setLoading(false);
         return;
       }
     } catch (err: any) {
+      const status = err.response?.status;
+      if (status === 503 || status === 500) {
+        setData({
+          status: 'NOT_VERIFIED',
+          is_valid: false,
+          verification_id: verificationId,
+          message: 'Verification Service Temporarily Unavailable. Please try again shortly.'
+        });
+        setError('SERVER_ERROR');
+        setLoading(false);
+        return;
+      }
+      if (status === 404) {
+        // Explicit 404 Not Found from backend DB
+        setData({
+          status: 'NOT_VERIFIED',
+          is_valid: false,
+          verification_id: verificationId,
+          message: 'Certificate Not Found in Institutional Registry'
+        });
+        setError('NOT_FOUND');
+        setLoading(false);
+        return;
+      }
       console.debug("Backend lookup note, attempting Cloud Firestore fallback:", err);
     }
 
@@ -74,6 +112,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
       const firestoreCert = await fetchCertificateFromFirestoreWeb(verificationId);
       if (firestoreCert) {
         setData(firestoreCert as CertificateVerificationData);
+        setLoading(false);
         return;
       }
     } catch (firestoreErr) {
@@ -85,8 +124,9 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
       status: 'NOT_VERIFIED',
       is_valid: false,
       verification_id: verificationId,
-      message: 'Verification Code Not Found'
+      message: 'Certificate Not Found in Institutional Registry'
     });
+    setError('NOT_FOUND');
     setLoading(false);
   };
 
@@ -289,8 +329,36 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
             </div>
           )}
 
-          {/* 3. NOT VERIFIED / INVALID ID STATE */}
-          {!loading && (!data || data.status === 'NOT_VERIFIED' || error) && (
+          {/* 3. SERVER ERROR / SERVICE UNAVAILABLE STATE */}
+          {!loading && error === 'SERVER_ERROR' && (
+            <div className="rounded-3xl bg-slate-900 border border-red-500/40 shadow-2xl p-8 space-y-6 text-center">
+              <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/30 text-red-500 flex items-center justify-center mx-auto">
+                <AlertTriangle className="w-8 h-8" />
+              </div>
+
+              <div className="space-y-2">
+                <span className="px-3.5 py-1 rounded-full text-xs font-black bg-red-500/20 text-red-400 border border-red-500/30">
+                  ⚠️ SERVICE TEMPORARILY UNAVAILABLE
+                </span>
+                <h3 className="text-xl font-black text-white">Verification Service Temporarily Unavailable</h3>
+                <p className="text-xs text-slate-400 max-w-md mx-auto">
+                  Unable to connect to the institutional certificate database. Please verify your connection or try again in a few moments.
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  onClick={fetchVerification}
+                  className="px-6 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs rounded-xl inline-flex items-center space-x-2 shadow-lg shadow-brand-600/30 transition-all cursor-pointer"
+                >
+                  <span>Retry Verification</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 4. NOT VERIFIED / NOT FOUND STATE */}
+          {!loading && error !== 'SERVER_ERROR' && (!data || data.status === 'NOT_VERIFIED' || error) && (
             <div className="rounded-3xl bg-slate-900 border border-amber-500/40 shadow-2xl p-8 space-y-6 text-center">
               <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-center justify-center mx-auto">
                 <XCircle className="w-8 h-8" />
@@ -300,9 +368,9 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
                 <span className="px-3.5 py-1 rounded-full text-xs font-black bg-amber-500/20 text-amber-400 border border-amber-500/30">
                   ❌ CERTIFICATE NOT VERIFIED
                 </span>
-                <h3 className="text-xl font-black text-white">Verification Code Not Found</h3>
+                <h3 className="text-xl font-black text-white">Certificate Not Found</h3>
                 <p className="text-xs text-slate-400 max-w-md mx-auto">
-                  The requested certificate identifier <code>{verificationId}</code> does not exist in the institutional registry or is malformed.
+                  The requested certificate identifier <code className="bg-slate-950 px-2 py-0.5 rounded text-amber-300 font-mono">{verificationId || 'N/A'}</code> does not exist in the institutional certificate registry.
                 </p>
               </div>
 
