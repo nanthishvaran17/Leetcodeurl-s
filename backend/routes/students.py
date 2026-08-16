@@ -745,6 +745,8 @@ def update_student(
     if not student:
         raise HTTPException(status_code=404, detail="Student record not found.")
 
+    old_username = student.username
+
     if payload.name and payload.name.strip():
         student.name = payload.name.strip()
     if payload.department_id is not None:
@@ -767,8 +769,32 @@ def update_student(
     if payload.is_active is not None:
         student.is_active = payload.is_active
 
+    # When username changes: align leetcode_url, reset sync_status to pending
+    username_changed = bool(student.username and (old_username != student.username))
+    if username_changed:
+        student.leetcode_url = f"https://leetcode.com/u/{student.username}/"
+        if student.stats:
+            student.stats.sync_status = "pending"
+            student.stats.status = "pending"
+            student.stats.validation_status = "pending"
+
     db.commit()
     db.refresh(student)
+
+    # Trigger immediate sync for the updated handle in background thread
+    if username_changed:
+        try:
+            import threading
+            from backend.database import SessionLocal
+            from backend.services.live_sync_service import sync_single_student
+            threading.Thread(
+                target=sync_single_student,
+                args=(student.id, SessionLocal()),
+                daemon=True
+            ).start()
+            logger.info(f"[USERNAME_CHANGE] Handled username change for student_id={student.id}: '{old_username}' -> '{student.username}'. Immediate background sync started.")
+        except Exception as _sync_start_err:
+            logger.warning(f"[USERNAME_CHANGE_SYNC_NOTE] {_sync_start_err}")
 
     # Sync update to Cloud Firestore
     try:
@@ -789,7 +815,7 @@ def update_student(
         user_id=current_user.id,
         user_name=current_user.username,
         action="UPDATE_STUDENT",
-        details=f"Updated student {student.reg_no} ({student.name})"
+        details=f"Updated student {student.reg_no} ({student.name})" + (f" username: '{old_username}' -> '{student.username}'" if username_changed else "")
     )
     db.add(audit)
     db.commit()

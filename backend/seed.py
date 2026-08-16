@@ -530,10 +530,11 @@ def seed_database():
                     stud.department_id = d_id
                     stud.year_level = yr
                     stud.section_id = s_id
-                    stud.leetcode_url = url
-                    stud.username = username
-                    stud.is_active = True
                     if email: stud.email = email
+                    # Only update username/leetcode_url if student is currently active
+                    if stud.is_active:
+                        stud.leetcode_url = url
+                        stud.username = username
 
                 stats = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id == stud.id).first()
                 if not stats:

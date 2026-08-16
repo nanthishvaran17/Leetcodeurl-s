@@ -470,8 +470,23 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
 def _process_single_student_sync(db: Session, job_id: str, student: Student, res: Any) -> Tuple[bool, bool, bool]:
     """
     Performs field-level merger & data preservation rules for a single student.
+    Enforces SINGLE SOURCE OF TRUTH & RACE CONDITION PROTECTION.
     Returns (is_success, is_partial, is_error).
     """
+    # ── Race Condition & Deletion Protection ───────────────────────────────────
+    curr_student = db.query(Student).filter(Student.id == student.id).first()
+    if not curr_student or not curr_student.is_active:
+        logger.warning(f"[RACE_PROTECTION] Discarding sync result for student_id={student.id}: Student is inactive or deleted.")
+        return (False, False, True)
+
+    # If DB username changed while sync was running, discard old sync result
+    fetched_u = (res.get("username") if isinstance(res, dict) else None)
+    if curr_student.username and fetched_u:
+        if curr_student.username.strip().lower() != fetched_u.strip().lower():
+            logger.warning(f"[RACE_PROTECTION] Discarding stale sync result for student_id={student.id}: DB username is '{curr_student.username}' but sync fetched '{fetched_u}'.")
+            return (False, False, True)
+
+    student = curr_student
     st = student.stats
     if not st:
         st = LeetCodeProfileStats(student_id=student.id)
@@ -503,7 +518,7 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
         db.commit()
         return (False, has_prev_data, not has_prev_data)
 
-    # Case B: Explicit Invalid Username (404 on LeetCode)
+    # Case B: Explicit Invalid Username (404 on LeetCode) — Preserve previous stats
     status_str = res.get("status", "pending")
     if status_str == "INVALID_USERNAME":
         st.status = "INVALID_USERNAME"
@@ -511,15 +526,7 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
         st.validation_status = "invalid_username"
         st.error_message = res.get("error_message") or "LeetCode username does not resolve (404)"
         st.error_code = "INVALID_USERNAME"
-        st.total_solved = None
-        st.easy_solved = None
-        st.medium_solved = None
-        st.hard_solved = None
-        st.contest_rating = None
-        st.contest_global_ranking = None
-        st.public_profile_ranking = None
         st.last_attempt_at = now
-        student.leetcode_url = None
 
         item = SyncJobItem(
             job_id=job_id,
@@ -532,24 +539,16 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
         )
         db.add(item)
         db.commit()
-        return (False, False, True)
+        return (False, old_total is not None and old_total > 0, True)
 
-    # Case C: Identity Mismatch
+    # Case C: Identity Mismatch — Preserve previous stats
     if status_str == "IDENTITY_MISMATCH":
         st.status = "IDENTITY_MISMATCH"
         st.sync_status = "identity_mismatch"
         st.validation_status = "identity_mismatch"
         st.error_message = res.get("error_message") or "Returned LeetCode identity does not match requested identity"
         st.error_code = "IDENTITY_MISMATCH"
-        st.total_solved = None
-        st.easy_solved = None
-        st.medium_solved = None
-        st.hard_solved = None
-        st.contest_rating = None
-        st.contest_global_ranking = None
-        st.public_profile_ranking = None
         st.last_attempt_at = now
-        student.leetcode_url = None
 
         item = SyncJobItem(
             job_id=job_id,
@@ -562,7 +561,7 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
         )
         db.add(item)
         db.commit()
-        return (False, False, True)
+        return (False, old_total is not None and old_total > 0, True)
 
     # Case D: Verified Profile Data
     total_solved = res.get("total_solved")

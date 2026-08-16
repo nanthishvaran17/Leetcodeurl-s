@@ -168,12 +168,20 @@ def on_startup():
                 db_init.commit()
                 logger.info(f"[STARTUP_RECONCILE] Reconciled admin user '{admin_username}' password hash.")
 
-        logger.info("Syncing & seeding student roster definitions...")
-        try:
-            seed_database()
-            logger.info("Database seeding / roster sync completed successfully.")
-        except Exception as _seed_err:
-            logger.error(f"Error seeding database: {_seed_err}")
+        logger.info("Checking student roster count in single source of truth database...")
+        db_check_count = SessionLocal()
+        existing_student_cnt = db_check_count.query(Student).count()
+        db_check_count.close()
+
+        if existing_student_cnt == 0:
+            logger.info("Brand new database detected (0 students). Seeding initial institutional roster...")
+            try:
+                seed_database()
+                logger.info("Initial database seeding completed successfully.")
+            except Exception as _seed_err:
+                logger.error(f"Error seeding database: {_seed_err}")
+        else:
+            logger.info(f"Database contains {existing_student_cnt} existing student records. Preserving database single source of truth (skipping auto-seeding).")
 
         # Check if verified student profile statistics are populated
         db_check = SessionLocal()
