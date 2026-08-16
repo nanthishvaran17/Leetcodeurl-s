@@ -149,10 +149,10 @@ export const GrowthIntelligencePage: React.FC = () => {
               onChange={(e) => setYearFilter(e.target.value)}
               className="px-3.5 py-2 rounded-2xl bg-navy-900/90 text-white text-xs font-bold border border-gray-700/80 backdrop-blur-md shadow-inner outline-none cursor-pointer hover:border-brand-500"
             >
-              <option value="ALL">🎓 All Academic Years</option>
-              <option value="II">🎓 II Year</option>
-              <option value="III">🎓 III Year</option>
-              <option value="IV">🎓 IV Year</option>
+              <option value="ALL">All Academic Years</option>
+              <option value="II">II Year</option>
+              <option value="III">III Year</option>
+              <option value="IV">IV Year</option>
             </select>
 
             <div className="flex items-center space-x-1.5 bg-navy-900/90 p-1.5 rounded-2xl border border-gray-700/80 shadow-inner backdrop-blur-md">
@@ -166,7 +166,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                       : 'text-gray-300 hover:text-white hover:bg-white/10'
                   }`}
                 >
-                  {p === 'today' ? '📅 Today' : p === '7d' ? '⚡ 7 Days' : p === '30d' ? '📊 30 Days' : '🏆 All Time'}
+                  {p === 'today' ? 'Today' : p === '7d' ? 'Last 7 Days' : p === '30d' ? 'Last 30 Days' : 'All Time'}
                 </button>
               ))}
             </div>

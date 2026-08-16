@@ -6,7 +6,7 @@ import datetime
 
 from backend.database import get_db
 from backend.models import Student, LeetCodeProfileStats, Department, Section, AuditLog, WeeklyStudentProgress
-from backend.schemas import StudentOut, StudentCreate, StudentUpdate
+from backend.schemas import StudentOut, StudentCreate, StudentUpdate, ContestResultOut
 from backend.routes.auth import get_current_user
 from backend.security import require_security_access
 from backend.leetcode_client import fetch_leetcode_profile, extract_leetcode_username
@@ -223,64 +223,64 @@ def get_students(
             is_att = pub_res.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED")
             is_not_att = pub_res.participation_status == "NOT_ATTENDED"
             score_disp = f"{tot_solved} / 4" if is_att else ("Not Attended" if is_not_att else "Data Unavailable")
-            st_out.public_contest_result = {
-                "contest_name": pub_res.session.contest_name if pub_res.session else "Weekly Contest",
-                "contest_number": None,
-                "contest_date": pub_res.session.session_date if pub_res.session else None,
-                "questions_solved": tot_solved if is_att else 0,
-                "questions_total": 4,
-                "score_display": score_disp,
-                "contest_rank": pub_res.contest_rank,
-                "contest_rating": pub_res.contest_rating,
-                "top_percentage": None,
-                "status": pub_res.participation_status,
-                "fetched_at": pub_res.last_fetched_at.isoformat() if pub_res.last_fetched_at else None
-            }
+            st_out.public_contest_result = ContestResultOut(
+                contest_name=pub_res.session.contest_name if pub_res.session else "Weekly Contest",
+                contest_number=None,
+                contest_date=pub_res.session.session_date if pub_res.session else None,
+                questions_solved=tot_solved if is_att else 0,
+                questions_total=4,
+                score_display=score_disp,
+                contest_rank=pub_res.contest_rank,
+                contest_rating=pub_res.contest_rating,
+                top_percentage=None,
+                status=pub_res.participation_status or "NOT_ATTENDED",
+                fetched_at=pub_res.last_fetched_at.isoformat() if pub_res.last_fetched_at else None
+            )
         else:
             has_uname = bool(st.username and st.username.strip())
-            st_out.public_contest_result = {
-                "contest_name": "Weekly Contest",
-                "contest_number": None,
-                "contest_date": None,
-                "questions_solved": 0,
-                "questions_total": 4,
-                "score_display": "Not Attended" if has_uname else "Data Unavailable",
-                "contest_rank": None,
-                "contest_rating": None,
-                "top_percentage": None,
-                "status": "NOT_ATTENDED" if has_uname else "UNKNOWN",
-                "fetched_at": None
-            }
+            st_out.public_contest_result = ContestResultOut(
+                contest_name="Weekly Contest",
+                contest_number=None,
+                contest_date=None,
+                questions_solved=0,
+                questions_total=4,
+                score_display="Not Attended" if has_uname else "Data Unavailable",
+                contest_rank=None,
+                contest_rating=None,
+                top_percentage=None,
+                status="NOT_ATTENDED" if has_uname else "UNKNOWN",
+                fetched_at=None
+            )
 
         if vir_res:
             tot_solved_v = vir_res.total_contest_solved or (vir_res.q1 + vir_res.q2 + vir_res.q3 + vir_res.q4)
-            st_out.virtual_contest_result = {
-                "contest_name": vir_res.session.contest_name if vir_res.session else "Weekly Contest",
-                "contest_number": None,
-                "contest_date": vir_res.session.session_date if vir_res.session else None,
-                "questions_solved": tot_solved_v,
-                "questions_total": 4,
-                "score_display": f"{tot_solved_v} / 4" if vir_res.participation_status in ("VIRTUAL_ATTENDED", "VIRTUAL") else "Not Attended",
-                "contest_rank": getattr(vir_res, 'contest_rank', None),
-                "contest_rating": getattr(vir_res, 'contest_rating', None),
-                "top_percentage": getattr(vir_res, 'top_percentage', None),
-                "status": vir_res.participation_status,
-                "fetched_at": getattr(vir_res, 'completed_at', None).isoformat() if getattr(vir_res, 'completed_at', None) else None
-            }
+            st_out.virtual_contest_result = ContestResultOut(
+                contest_name=vir_res.session.contest_name if vir_res.session else "Weekly Contest",
+                contest_number=None,
+                contest_date=vir_res.session.session_date if vir_res.session else None,
+                questions_solved=tot_solved_v,
+                questions_total=4,
+                score_display=f"{tot_solved_v} / 4" if vir_res.participation_status in ("VIRTUAL_ATTENDED", "VIRTUAL") else "Not Attended",
+                contest_rank=getattr(vir_res, 'contest_rank', None),
+                contest_rating=getattr(vir_res, 'contest_rating', None),
+                top_percentage=getattr(vir_res, 'top_percentage', None),
+                status=vir_res.participation_status or "NO_VIRTUAL_RECORD",
+                fetched_at=getattr(vir_res, 'completed_at', None).isoformat() if getattr(vir_res, 'completed_at', None) else None
+            )
         else:
-            st_out.virtual_contest_result = {
-                "contest_name": "Weekly Contest",
-                "contest_number": None,
-                "contest_date": None,
-                "questions_solved": 0,
-                "questions_total": 4,
-                "score_display": "Not Attended",
-                "contest_rank": None,
-                "contest_rating": None,
-                "top_percentage": None,
-                "status": "NO_VIRTUAL_RECORD",
-                "fetched_at": None
-            }
+            st_out.virtual_contest_result = ContestResultOut(
+                contest_name="Weekly Contest",
+                contest_number=None,
+                contest_date=None,
+                questions_solved=0,
+                questions_total=4,
+                score_display="Not Attended",
+                contest_rank=None,
+                contest_rating=None,
+                top_percentage=None,
+                status="NO_VIRTUAL_RECORD",
+                fetched_at=None
+            )
 
         results.append(st_out)
 

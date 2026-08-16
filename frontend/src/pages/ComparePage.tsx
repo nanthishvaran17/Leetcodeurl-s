@@ -151,9 +151,11 @@ export const ComparePage: React.FC = () => {
     if (!searchA.trim()) return students;
     const q = searchA.toLowerCase().trim();
     return students.filter(s =>
-      s.name.toLowerCase().includes(q) ||
-      s.reg_no.toLowerCase().includes(q) ||
-      s.department?.code.toLowerCase().includes(q)
+      (s.name || '').toLowerCase().includes(q) ||
+      (s.reg_no || '').toLowerCase().includes(q) ||
+      (s.username || '').toLowerCase().includes(q) ||
+      (s.department?.code || '').toLowerCase().includes(q) ||
+      (s.department?.name || '').toLowerCase().includes(q)
     );
   }, [students, searchA]);
 
@@ -161,9 +163,11 @@ export const ComparePage: React.FC = () => {
     if (!searchB.trim()) return students;
     const q = searchB.toLowerCase().trim();
     return students.filter(s =>
-      s.name.toLowerCase().includes(q) ||
-      s.reg_no.toLowerCase().includes(q) ||
-      s.department?.code.toLowerCase().includes(q)
+      (s.name || '').toLowerCase().includes(q) ||
+      (s.reg_no || '').toLowerCase().includes(q) ||
+      (s.username || '').toLowerCase().includes(q) ||
+      (s.department?.code || '').toLowerCase().includes(q) ||
+      (s.department?.name || '').toLowerCase().includes(q)
     );
   }, [students, searchB]);
 
@@ -298,26 +302,21 @@ export const ComparePage: React.FC = () => {
             </div>
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight">
-            {compareMode === 'STUDENT' ? (
-              <>Student Head-to-Head <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Comparison Arena</span></>
-            ) : (
-              <>Multi-Level Group <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-brand-300 to-teal-300">Comparison & Batch Battle</span></>
-            )}
-          </h1>
-
-          <p className="text-xs md:text-sm text-gray-300 max-w-2xl leading-relaxed font-medium">
-            {compareMode === 'STUDENT'
-              ? 'Analyze side-by-side performance metrics, total problem counts, difficulty breakdown, contest ratings, and weekly streaks across students.'
-              : 'Compare specific batches (e.g. 2nd Year Cyber Security vs 2nd Year IoT), entire Departments, Academic Years, or Sections side-by-side!'}
-          </p>
+          <div>
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight">
+              {compareMode === 'STUDENT' ? 'Student Head-to-Head Comparison Arena' : 'Group & Batch Aggregate Analytics'}
+            </h1>
+            <p className="text-xs md:text-sm text-gray-300 font-bold mt-1">
+              Analyze side-by-side performance metrics, total problem counts, difficulty breakdown, contest ratings, and weekly streaks across students.
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* STUDENT COMPARISON MODE */}
+      {/* Mode 1: STUDENT VS STUDENT */}
       {compareMode === 'STUDENT' && (
-        <div className="space-y-8">
-
+        <div className="space-y-6">
+          
           {/* Filter Controls Bar */}
           <div className="glass-card p-6 rounded-3xl border space-y-4 shadow-xl">
             <div className="flex items-center justify-between flex-wrap gap-3 border-b border-gray-200 dark:border-gray-800 pb-3">
@@ -340,9 +339,9 @@ export const ComparePage: React.FC = () => {
                   onChange={(e) => setSelectedDept(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-900 text-gray-900 dark:text-white border-gray-200 dark:border-gray-800 focus:ring-2 focus:ring-brand-500 outline-none"
                 >
-                  <option value="ALL">🏢 All Departments (Cyber Security & IoT)</option>
+                  <option value="ALL">All Departments (Cyber Security & IoT)</option>
                   {departments.map((d) => (
-                    <option key={d.id} value={d.id}>🏢 {d.name} ({d.code})</option>
+                    <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
                   ))}
                 </select>
               </div>
@@ -355,10 +354,10 @@ export const ComparePage: React.FC = () => {
                   onChange={(e) => setSelectedYear(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-900 text-gray-900 dark:text-white border-gray-200 dark:border-gray-800 focus:ring-2 focus:ring-brand-500 outline-none"
                 >
-                  <option value="ALL">🎓 All Academic Years (II, III & IV Year)</option>
-                  <option value="II">🎓 II Year (Batch 2025 - 2029)</option>
-                  <option value="III">🎓 III Year (Batch 2024 - 2028)</option>
-                  <option value="IV">🎓 IV Year (Batch 2023 - 2027)</option>
+                  <option value="ALL">All Academic Years (II, III & IV Year)</option>
+                  <option value="II">II Year (Batch 2025 - 2029)</option>
+                  <option value="III">III Year (Batch 2024 - 2028)</option>
+                  <option value="IV">IV Year (Batch 2023 - 2027)</option>
                 </select>
               </div>
 
@@ -380,7 +379,7 @@ export const ComparePage: React.FC = () => {
                 <Search className="w-4 h-4 absolute left-3.5 top-3 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="🔍 Search Student A by Name or Reg No..."
+                  placeholder="Search Student A by Name, Reg No, or Handle..."
                   value={searchA}
                   onChange={(e) => setSearchA(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-900 text-gray-900 dark:text-white border-brand-400/40 focus:ring-2 focus:ring-brand-500 outline-none shadow-inner"
@@ -406,15 +405,15 @@ export const ComparePage: React.FC = () => {
               {/* Quick Select Preset Buttons */}
               <div className="flex items-center space-x-2 pt-1">
                 <span className="text-[10px] text-gray-400 font-bold">Quick Select:</span>
-                <button
-                  onClick={() => {
-                    const top1 = students.find(s => s.reg_no === '732224CI044') || students[0];
-                    if (top1) handleSelectA(top1.id);
-                  }}
-                  className="px-2.5 py-1 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 text-[10px] font-black border border-brand-500/20 hover:bg-brand-500 hover:text-white transition-all"
-                >
-                  🏆 RITHANYA S (#1)
-                </button>
+                {students[0] && (
+                  <button
+                    onClick={() => handleSelectA(students[0].id)}
+                    className="px-2.5 py-1 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 text-[10px] font-black border border-brand-500/20 hover:bg-brand-500 hover:text-white transition-all cursor-pointer flex items-center space-x-1"
+                  >
+                    <Trophy className="w-3 h-3" />
+                    <span>{students[0].name} (#1)</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -430,7 +429,7 @@ export const ComparePage: React.FC = () => {
                 <Search className="w-4 h-4 absolute left-3.5 top-3 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="🔍 Search Student B by Name or Reg No..."
+                  placeholder="Search Student B by Name, Reg No, or Handle..."
                   value={searchB}
                   onChange={(e) => setSearchB(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-900 text-gray-900 dark:text-white border-indigo-400/40 focus:ring-2 focus:ring-indigo-500 outline-none shadow-inner"
@@ -456,15 +455,15 @@ export const ComparePage: React.FC = () => {
               {/* Quick Select Preset Buttons */}
               <div className="flex items-center space-x-2 pt-1">
                 <span className="text-[10px] text-gray-400 font-bold">Quick Select:</span>
-                <button
-                  onClick={() => {
-                    const top2 = students.find(s => s.reg_no === '732224CC031') || (students.length > 1 ? students[1] : null);
-                    if (top2) handleSelectB(top2.id);
-                  }}
-                  className="px-2.5 py-1 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-black border border-indigo-500/20 hover:bg-indigo-500 hover:text-white transition-all"
-                >
-                  ⚡ NANTHISH S (#2)
-                </button>
+                {students.length > 1 && students[1] && (
+                  <button
+                    onClick={() => handleSelectB(students[1].id)}
+                    className="px-2.5 py-1 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-black border border-indigo-500/20 hover:bg-indigo-500 hover:text-white transition-all cursor-pointer flex items-center space-x-1"
+                  >
+                    <Zap className="w-3 h-3" />
+                    <span>{students[1].name} (#2)</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -475,128 +474,178 @@ export const ComparePage: React.FC = () => {
             <div className="space-y-8">
               
               {/* Winner Banner */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-400/20 to-amber-500/10 border border-amber-500/40 text-center space-y-1 shadow-md">
-                <div className="flex items-center justify-center space-x-2 text-amber-600 dark:text-amber-400 font-black text-sm uppercase tracking-wider">
-                  <Trophy className="w-5 h-5 fill-amber-500 text-amber-500 animate-bounce" />
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-amber-500/10 border border-amber-500/30 text-center space-y-1 shadow-sm">
+                <div className="flex items-center justify-center space-x-2 text-amber-600 dark:text-amber-400 font-extrabold text-sm tracking-wide">
+                  <Trophy className="w-5 h-5 text-amber-500 fill-amber-500" />
                   <span>
                     {battleResult?.winner === 'A'
-                      ? `🏆 ${studentA.name} Leads the Battle (+${battleResult.margin} Solved)`
+                      ? `${studentA.name} leads the matchup (+${battleResult.margin} Solved)`
                       : battleResult?.winner === 'B'
-                      ? `🏆 ${studentB.name} Leads the Battle (+${battleResult.margin} Solved)`
-                      : '🤝 Perfect Tie / Equal Solved Count'}
+                      ? `${studentB.name} leads the matchup (+${battleResult.margin} Solved)`
+                      : 'Equal Total Solved Count'}
                   </span>
                 </div>
               </div>
 
               {/* Cards Comparison Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-7 gap-6 items-center">
+              <div className="grid grid-cols-1 lg:grid-cols-7 gap-6 items-stretch">
                 
                 {/* Student A Card (3 cols) */}
-                <div className={`lg:col-span-3 glass-card p-6 rounded-3xl border-2 transition-all space-y-5 ${
+                <div className={`lg:col-span-3 glass-card p-6 rounded-3xl border-2 transition-all space-y-5 flex flex-col justify-between ${
                   battleResult?.winner === 'A'
-                    ? 'border-amber-400 shadow-2xl shadow-amber-500/20 bg-gradient-to-b from-amber-500/10 via-white to-white dark:via-navy-950 dark:to-navy-950'
-                    : 'border-brand-500/30'
+                    ? 'border-amber-400/70 shadow-xl shadow-amber-500/10 bg-gradient-to-b from-amber-500/5 via-white to-white dark:via-navy-950 dark:to-navy-950'
+                    : 'border-gray-200 dark:border-gray-800'
                 }`}>
-                  <div className="flex items-center justify-between">
-                    <span className="px-3 py-1 rounded-full text-xs font-black bg-brand-500 text-white shadow-md">
-                      #{studentA.college_rank || '—'} Rank
-                    </span>
-                    <span className="px-3 py-1 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-300 font-mono font-bold text-xs border border-brand-500/20">
-                      {studentA.department?.code} • {studentA.year_level} Yr
-                    </span>
-                  </div>
-
-                  <div className="text-center space-y-2">
-                    <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white font-black text-2xl flex items-center justify-center shadow-lg border-2 border-white/20">
-                      {studentA.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                  <div className="space-y-5">
+                    <div className="flex items-center justify-between">
+                      <span className="px-3 py-1 rounded-full text-xs font-black bg-brand-600 text-white shadow-sm">
+                        Rank #{studentA.college_rank || '—'}
+                      </span>
+                      <span className="px-3 py-1 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-300 font-mono font-bold text-xs border border-brand-500/20">
+                        {studentA.department?.code} • {studentA.year_level} Year
+                      </span>
                     </div>
-                    <h3 className="font-extrabold text-lg text-gray-900 dark:text-white truncate max-w-[240px] mx-auto">
-                      {studentA.name}
-                    </h3>
-                    <p className="text-xs text-brand-600 dark:text-brand-400 font-mono font-bold">
-                      {studentA.reg_no}
-                    </p>
-                  </div>
 
-                  <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-center">
-                    <p className="text-xs text-emerald-700 dark:text-emerald-300 font-extrabold uppercase tracking-wider">Total Problems Solved</p>
-                    <h4 className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
-                      {studentA.stats?.total_solved || 0}
-                    </h4>
-                  </div>
+                    <div className="text-center space-y-2">
+                      <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white font-black text-2xl flex items-center justify-center shadow-lg border-2 border-white/20">
+                        {studentA.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                      </div>
+                      <h3 className="font-extrabold text-lg text-gray-900 dark:text-white truncate max-w-[260px] mx-auto">
+                        {studentA.name}
+                      </h3>
+                      <p className="text-xs text-brand-600 dark:text-brand-400 font-mono font-bold">
+                        {studentA.reg_no}
+                      </p>
+                      {studentA.username && (
+                        <a
+                          href={`https://leetcode.com/u/${studentA.username}/`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center space-x-1 text-[11px] text-gray-500 hover:text-brand-500 transition-colors font-mono font-semibold"
+                        >
+                          <span>@{studentA.username}</span>
+                          <Sparkles className="w-3 h-3 text-amber-500" />
+                        </a>
+                      )}
+                    </div>
 
-                  {/* Difficulty Stats */}
-                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                    <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-extrabold">
-                      <p className="text-[10px] uppercase">Easy</p>
-                      <p className="text-base font-black mt-0.5">{studentA.stats?.easy_solved || 0}</p>
+                    <div className="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/60 text-center">
+                      <p className="text-[11px] text-emerald-700 dark:text-emerald-300 font-extrabold uppercase tracking-wider">Total Problems Solved</p>
+                      <h4 className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+                        {studentA.stats?.total_solved || 0}
+                      </h4>
                     </div>
-                    <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-extrabold">
-                      <p className="text-[10px] uppercase">Med</p>
-                      <p className="text-base font-black mt-0.5">{studentA.stats?.medium_solved || 0}</p>
+
+                    {/* Difficulty Stats Breakdown */}
+                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                      <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-extrabold">
+                        <p className="text-[10px] uppercase tracking-wider text-gray-500">Easy</p>
+                        <p className="text-base font-black mt-0.5">{studentA.stats?.easy_solved || 0}</p>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-extrabold">
+                        <p className="text-[10px] uppercase tracking-wider text-gray-500">Medium</p>
+                        <p className="text-base font-black mt-0.5">{studentA.stats?.medium_solved || 0}</p>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 font-extrabold">
+                        <p className="text-[10px] uppercase tracking-wider text-gray-500">Hard</p>
+                        <p className="text-base font-black mt-0.5">{studentA.stats?.hard_solved || 0}</p>
+                      </div>
                     </div>
-                    <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 font-extrabold">
-                      <p className="text-[10px] uppercase">Hard</p>
-                      <p className="text-base font-black mt-0.5">{studentA.stats?.hard_solved || 0}</p>
+
+                    {/* Extended Metrics: Contest Rating & Active Streak */}
+                    <div className="grid grid-cols-2 gap-2 text-center text-xs">
+                      <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400">
+                        <p className="text-[10px] uppercase font-bold text-gray-500">Contest Rating</p>
+                        <p className="text-sm font-black mt-0.5">{studentA.stats?.contest_rating ? Math.round(studentA.stats.contest_rating) : 'Unrated'}</p>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400">
+                        <p className="text-[10px] uppercase font-bold text-gray-500">Weekly Progress</p>
+                        <p className="text-sm font-black mt-0.5">+{studentA.weekly_progress || 0}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* VS Emblem (1 col) */}
+                {/* VS Center Emblem (1 col) */}
                 <div className="lg:col-span-1 flex flex-col items-center justify-center space-y-2 py-4">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-r from-brand-600 via-indigo-600 to-amber-500 text-white font-black text-xl flex items-center justify-center shadow-2xl animate-pulse border-4 border-white dark:border-navy-950">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-base flex items-center justify-center shadow-xl border-2 border-white dark:border-navy-900">
                     VS
                   </div>
-                  <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest">BATTLE</span>
+                  <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest">MATCHUP</span>
                 </div>
 
                 {/* Student B Card (3 cols) */}
-                <div className={`lg:col-span-3 glass-card p-6 rounded-3xl border-2 transition-all space-y-5 ${
+                <div className={`lg:col-span-3 glass-card p-6 rounded-3xl border-2 transition-all space-y-5 flex flex-col justify-between ${
                   battleResult?.winner === 'B'
-                    ? 'border-amber-400 shadow-2xl shadow-amber-500/20 bg-gradient-to-b from-amber-500/10 via-white to-white dark:via-navy-950 dark:to-navy-950'
-                    : 'border-indigo-500/30'
+                    ? 'border-amber-400/70 shadow-xl shadow-amber-500/10 bg-gradient-to-b from-amber-500/5 via-white to-white dark:via-navy-950 dark:to-navy-950'
+                    : 'border-gray-200 dark:border-gray-800'
                 }`}>
-                  <div className="flex items-center justify-between">
-                    <span className="px-3 py-1 rounded-full text-xs font-black bg-indigo-600 text-white shadow-md">
-                      #{studentB.college_rank || '—'} Rank
-                    </span>
-                    <span className="px-3 py-1 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 font-mono font-bold text-xs border border-indigo-500/20">
-                      {studentB.department?.code} • {studentB.year_level} Yr
-                    </span>
-                  </div>
-
-                  <div className="text-center space-y-2">
-                    <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-black text-2xl flex items-center justify-center shadow-lg border-2 border-white/20">
-                      {studentB.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                  <div className="space-y-5">
+                    <div className="flex items-center justify-between">
+                      <span className="px-3 py-1 rounded-full text-xs font-black bg-indigo-600 text-white shadow-sm">
+                        Rank #{studentB.college_rank || '—'}
+                      </span>
+                      <span className="px-3 py-1 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 font-mono font-bold text-xs border border-indigo-500/20">
+                        {studentB.department?.code} • {studentB.year_level} Year
+                      </span>
                     </div>
-                    <h3 className="font-extrabold text-lg text-gray-900 dark:text-white truncate max-w-[240px] mx-auto">
-                      {studentB.name}
-                    </h3>
-                    <p className="text-xs text-indigo-600 dark:text-indigo-400 font-mono font-bold">
-                      {studentB.reg_no}
-                    </p>
-                  </div>
 
-                  <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-center">
-                    <p className="text-xs text-emerald-700 dark:text-emerald-300 font-extrabold uppercase tracking-wider">Total Problems Solved</p>
-                    <h4 className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
-                      {studentB.stats?.total_solved || 0}
-                    </h4>
-                  </div>
+                    <div className="text-center space-y-2">
+                      <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-black text-2xl flex items-center justify-center shadow-lg border-2 border-white/20">
+                        {studentB.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                      </div>
+                      <h3 className="font-extrabold text-lg text-gray-900 dark:text-white truncate max-w-[260px] mx-auto">
+                        {studentB.name}
+                      </h3>
+                      <p className="text-xs text-indigo-600 dark:text-indigo-400 font-mono font-bold">
+                        {studentB.reg_no}
+                      </p>
+                      {studentB.username && (
+                        <a
+                          href={`https://leetcode.com/u/${studentB.username}/`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center space-x-1 text-[11px] text-gray-500 hover:text-indigo-500 transition-colors font-mono font-semibold"
+                        >
+                          <span>@{studentB.username}</span>
+                          <Sparkles className="w-3 h-3 text-amber-500" />
+                        </a>
+                      )}
+                    </div>
 
-                  {/* Difficulty Stats */}
-                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                    <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-extrabold">
-                      <p className="text-[10px] uppercase">Easy</p>
-                      <p className="text-base font-black mt-0.5">{studentB.stats?.easy_solved || 0}</p>
+                    <div className="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/60 text-center">
+                      <p className="text-[11px] text-emerald-700 dark:text-emerald-300 font-extrabold uppercase tracking-wider">Total Problems Solved</p>
+                      <h4 className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+                        {studentB.stats?.total_solved || 0}
+                      </h4>
                     </div>
-                    <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-extrabold">
-                      <p className="text-[10px] uppercase">Med</p>
-                      <p className="text-base font-black mt-0.5">{studentB.stats?.medium_solved || 0}</p>
+
+                    {/* Difficulty Stats Breakdown */}
+                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                      <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-extrabold">
+                        <p className="text-[10px] uppercase tracking-wider text-gray-500">Easy</p>
+                        <p className="text-base font-black mt-0.5">{studentB.stats?.easy_solved || 0}</p>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-extrabold">
+                        <p className="text-[10px] uppercase tracking-wider text-gray-500">Medium</p>
+                        <p className="text-base font-black mt-0.5">{studentB.stats?.medium_solved || 0}</p>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 font-extrabold">
+                        <p className="text-[10px] uppercase tracking-wider text-gray-500">Hard</p>
+                        <p className="text-base font-black mt-0.5">{studentB.stats?.hard_solved || 0}</p>
+                      </div>
                     </div>
-                    <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 font-extrabold">
-                      <p className="text-[10px] uppercase">Hard</p>
-                      <p className="text-base font-black mt-0.5">{studentB.stats?.hard_solved || 0}</p>
+
+                    {/* Extended Metrics: Contest Rating & Active Streak */}
+                    <div className="grid grid-cols-2 gap-2 text-center text-xs">
+                      <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400">
+                        <p className="text-[10px] uppercase font-bold text-gray-500">Contest Rating</p>
+                        <p className="text-sm font-black mt-0.5">{studentB.stats?.contest_rating ? Math.round(studentB.stats.contest_rating) : 'Unrated'}</p>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400">
+                        <p className="text-[10px] uppercase font-bold text-gray-500">Weekly Progress</p>
+                        <p className="text-sm font-black mt-0.5">+{studentB.weekly_progress || 0}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -606,8 +655,8 @@ export const ComparePage: React.FC = () => {
               {/* Side-by-Side Metric Comparison Bars */}
               <div className="glass-card p-6 rounded-3xl border space-y-5 shadow-xl">
                 <h3 className="font-extrabold text-base text-gray-900 dark:text-white flex items-center space-x-2">
-                  <Zap className="w-5 h-5 text-amber-500 fill-amber-500" />
-                  <span>Side-by-Side Metric Comparison Bars</span>
+                  <Zap className="w-5 h-5 text-amber-500" />
+                  <span>Head-to-Head Metric Distribution</span>
                 </h3>
 
                 <div className="space-y-4 text-xs font-bold">
@@ -616,7 +665,7 @@ export const ComparePage: React.FC = () => {
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-gray-600 dark:text-gray-300">
                       <span>{studentA.name} ({studentA.stats?.total_solved || 0})</span>
-                      <span className="uppercase text-gray-400 font-extrabold">Total Solved</span>
+                      <span className="uppercase text-gray-400 font-extrabold text-[10px]">Total Solved</span>
                       <span>{studentB.name} ({studentB.stats?.total_solved || 0})</span>
                     </div>
                     <div className="flex h-3 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800">
@@ -635,7 +684,7 @@ export const ComparePage: React.FC = () => {
                   <div className="space-y-1.5 pt-2">
                     <div className="flex justify-between text-gray-600 dark:text-gray-300">
                       <span>Rating: {studentA.stats?.contest_rating ? Math.round(studentA.stats.contest_rating) : 'Unrated'}</span>
-                      <span className="uppercase text-amber-500 font-extrabold">Contest Rating ⭐</span>
+                      <span className="uppercase text-indigo-500 font-extrabold text-[10px]">Contest Rating</span>
                       <span>Rating: {studentB.stats?.contest_rating ? Math.round(studentB.stats.contest_rating) : 'Unrated'}</span>
                     </div>
                     <div className="flex h-3 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800">

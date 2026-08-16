@@ -664,14 +664,13 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
       {/* ── 4. CANONICAL OPERATIONS NAVIGATION BAR ── */}
       <div className="flex items-center space-x-2 overflow-x-auto pb-1 border-b border-gray-200 dark:border-gray-800 no-scrollbar">
         {[
-          { id: 'overview', label: '📊 Operations Overview' },
-          { id: 'integrity', label: '🛡️ Data Integrity Command' },
-          { id: 'forensic', label: '🔍 Forensic Student Trace' },
-          { id: 'lineage', label: '🔗 Data Lineage & Parity' },
-          { id: 'automation', label: '⚡ Autonomous Sunday Session' },
-          { id: 'recovery', label: '💾 Database Recovery & Time Machine' },
-          { id: 'audit', label: '📋 Operations Audit Timeline' },
-          { id: 'copilot', label: '🤖 NEC Operations Copilot' }
+          { id: 'overview', label: 'Operations Overview' },
+          { id: 'integrity', label: 'Data Integrity Command' },
+          { id: 'forensic', label: 'Forensic Student Trace' },
+          { id: 'lineage', label: 'Data Lineage & Parity' },
+          { id: 'automation', label: 'Autonomous Sunday Session' },
+          { id: 'recovery', label: 'Database Recovery & Snapshots' },
+          { id: 'audit', label: 'Operations Audit Timeline' }
         ].map((tab) => (
           <button
             key={tab.id}

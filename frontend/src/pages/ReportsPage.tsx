@@ -383,8 +383,8 @@ export const ReportsPage: React.FC = () => {
               </p>
             </div>
           </div>
-          <div className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-mono font-bold">
-            PREVIEW == EXCEL == PDF == WORD == CSV
+          <div className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-semibold">
+            Institutional Report Engine
           </div>
         </div>
         

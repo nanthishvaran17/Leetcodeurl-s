@@ -166,9 +166,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           </span>
           <span className="font-extrabold text-gray-800 dark:text-gray-200">
             {isConnected ? (
-              <span className="text-emerald-600 dark:text-emerald-400">🟢 Real-Time WebSocket Active</span>
+              <span className="text-emerald-600 dark:text-emerald-400">Live Push Active</span>
             ) : (
-              <span className="text-gray-500 dark:text-gray-400">⚪ Real-Time Updates Standby</span>
+              <span className="text-gray-500 dark:text-gray-400">Standby</span>
             )}
           </span>
         </div>
@@ -178,21 +178,21 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             {loading ? (
               <span className="text-amber-500 flex items-center space-x-1">
                 <RefreshCw className="w-3.5 h-3.5 animate-spin inline mr-1" />
-                <span>⏳ Loading live institutional data...</span>
+                <span>Loading live institutional data...</span>
               </span>
             ) : totalStudents > 0 ? (
               <span className="text-emerald-600 dark:text-emerald-400">
-                🟢 Database Connected ({totalStudents} Student Records Loaded)
+                Verified Roster ({totalStudents} Students Loaded)
               </span>
             ) : (
               <span className="text-rose-500">
-                🔴 Database connection unavailable or unpopulated
+                Database connection unavailable
               </span>
             )}
           </span>
           <button
             onClick={fetchDashboardData}
-            className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-navy-800 text-brand-600 dark:text-brand-400 transition-colors"
+            className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-navy-800 text-brand-600 dark:text-brand-400 transition-colors cursor-pointer"
             title="Refresh Data"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -227,17 +227,17 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 try {
                   const { triggerFullSync } = await import('../services/api');
                   await triggerFullSync('admin');
-                  alert('🔄 Live sync started for all active students! Check status in real-time.');
+                  alert('Live sync started for all active students! Check status in real-time.');
                   fetchDashboardData();
                 } catch (err) {
                   alert('Failed to trigger live sync.');
                 }
               }}
-              className="px-4 py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-black text-xs shadow-lg shadow-brand-600/30 flex items-center space-x-2 transition-all transform hover:scale-105"
+              className="px-4 py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-black text-xs shadow-lg shadow-brand-600/30 flex items-center space-x-2 transition-all transform hover:scale-105 cursor-pointer"
               title="Perform full live synchronization for active student roster"
             >
               <RefreshCw className="w-4 h-4" />
-              <span>🔄 FETCH LIVE DATA</span>
+              <span>Fetch Live Data</span>
             </button>
             <button
               onClick={onOpenImport}

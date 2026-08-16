@@ -1378,8 +1378,8 @@ export const WeeklyContestPage: React.FC = () => {
             <div className="p-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-black flex items-center space-x-2">
-                  <span>👁 Report Live Preview</span>
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-purple-500/30 text-purple-300 border border-purple-400/30 font-mono">PREVIEW == EXCEL == PDF == WORD == ZIP</span>
+                  <span>Report Live Preview</span>
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-medium">Verified Dataset</span>
                 </h3>
                 <p className="text-xs text-gray-300 font-bold mt-1">
                   {activeSessionObj?.contestName || 'Weekly Contest'} ({activeSessionObj?.sessionDate || 'Sunday Session'})
@@ -1470,8 +1470,8 @@ export const WeeklyContestPage: React.FC = () => {
 
             {/* Modal Footer: Direct Export Action Buttons */}
             <div className="p-5 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-4">
-              <span className="text-xs text-gray-500 font-bold">
-                ⚠️ Central Report Dataset: <b>PREVIEW == EXCEL == PDF == WORD == ZIP</b>
+              <span className="text-xs text-gray-500 font-semibold">
+                Official Institutional Dataset
               </span>
               <div className="flex items-center space-x-2">
                 <button onClick={() => downloadReportFile('excel')} className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer">

@@ -13,7 +13,9 @@ def get_public_leaderboard(limit: int = 50, db: Session = Depends(get_db)):
     """
     Public read-only leaderboard route requiring no authentication.
     """
-    students = db.query(Student).filter(Student.is_active == True).all()
+    students = db.query(Student).filter(
+        (Student.is_active == True) | (Student.is_active.is_(None))
+    ).all()
     results = []
     for st in students:
         st_out = StudentOut.from_orm(st)
@@ -27,7 +29,10 @@ def get_public_leaderboard(limit: int = 50, db: Session = Depends(get_db)):
             st_out.badge_list = latest_prog.badge_list or []
         results.append(st_out)
 
-    results.sort(key=lambda x: (x.stats.total_solved if x.stats else 0), reverse=True)
+    results.sort(
+        key=lambda x: (int(x.stats.total_solved) if (x.stats and x.stats.total_solved is not None) else 0),
+        reverse=True
+    )
     return results[:limit]
 
 @router.get("/verify-certificate/{cert_code}")
