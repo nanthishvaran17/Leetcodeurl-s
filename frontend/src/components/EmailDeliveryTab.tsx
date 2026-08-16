@@ -110,20 +110,24 @@ export const EmailDeliveryTab: React.FC = () => {
   };
 
   const handleSendAdminTestReportEmail = async () => {
+    if (!testRecipient.trim()) return;
     setIsTestingSmtp(true);
     setSmtpTestResult(null);
     try {
-      let res;
-      try {
-        res = await api.post('/admin/test-report-email');
-      } catch (_err) {
-        res = await api.post('/settings/test-email', { recipient: testRecipient });
+      const res = await api.post('/email/test', { recipient: testRecipient.trim() });
+      if (res.data.success) {
+        setSmtpTestResult({
+          success: true,
+          message: `🟢 Test report email sent successfully to ${testRecipient}!`,
+          error: undefined,
+        });
+      } else {
+        setSmtpTestResult({
+          success: false,
+          message: '🔴 PRE-FLIGHT TEST FAILED',
+          error: res.data.error || 'Pre-flight test failed',
+        });
       }
-      setSmtpTestResult({
-        success: true,
-        message: res.data?.message || 'Pre-flight test report email dispatched successfully!',
-        error: undefined,
-      });
       await fetchAll();
     } catch (err: any) {
       setSmtpTestResult({

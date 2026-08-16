@@ -117,32 +117,6 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           </div>
 
           <div className="flex items-center space-x-3">
-            {/* View Mode Toggle */}
-            <div className="flex items-center space-x-1 p-1.5 bg-white/10 rounded-2xl border border-white/20 backdrop-blur-md">
-              <button
-                onClick={() => setViewMode('cards')}
-                className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                  viewMode === 'cards'
-                    ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/40'
-                    : 'text-gray-300 hover:text-white'
-                }`}
-              >
-                <LayoutGrid className="w-4 h-4" />
-                <span>Card Grid</span>
-              </button>
-
-              <button
-                onClick={() => setViewMode('table')}
-                className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                  viewMode === 'table'
-                    ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/40'
-                    : 'text-gray-300 hover:text-white'
-                }`}
-              >
-                <List className="w-4 h-4" />
-                <span>Roster Table</span>
-              </button>
-            </div>
             <button
               onClick={handleRefreshAllStats}
               disabled={isRefreshing}
@@ -209,8 +183,8 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           </div>
         </div>
 
-        {/* 4 Separate Dropdown Filter Selects + 1 Name Search */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        {/* 5 Filter & Search Controls — 3-Column Responsive Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
           
           {/* 1. Department Filter */}
           <div className="space-y-1.5">

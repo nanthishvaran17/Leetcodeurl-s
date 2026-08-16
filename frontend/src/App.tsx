@@ -140,7 +140,7 @@ export const App: React.FC = () => {
         setActiveTab={handleTabChange}
       />
 
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex gap-6">
+      <div className="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex gap-6">
         
         {/* Left Sidebar (Only visible for authenticated users when not on landing page) */}
         {isAuthenticated && activeTab !== 'landing' && (
