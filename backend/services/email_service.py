@@ -188,10 +188,10 @@ def send_email_via_brevo(
     attachments: Optional[List[Tuple[str, bytes]]] = None,
     text_body: Optional[str] = None
 ) -> Tuple[bool, Optional[str]]:
-    sender_email = from_email if (from_email and "@" in from_email and "nandha.edu.in" not in from_email) else "nanthishvaran17@gmail.com"
+    sender_email = "nanthishvaran0106@gmail.com"
     payload: Dict[str, Any] = {
         "sender": {"name": "Nandha Engineering College — LeetCode Tracker", "email": sender_email},
-        "replyTo": {"name": "Nandha Admin Support", "email": "nanthishvaran17@gmail.com"},
+        "replyTo": {"name": "Nandha Admin Support", "email": recipient if recipient else "nanthishvaran17@gmail.com"},
         "to": [{"email": recipient}],
         "subject": subject,
         "htmlContent": html_body
