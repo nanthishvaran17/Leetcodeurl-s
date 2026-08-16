@@ -41913,3 +41913,126 @@ Action: Request blocked
 [2026-08-16 17:11:05,881] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
 [2026-08-16 17:11:13,882] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
 [2026-08-16 17:11:13,897] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:11:43,887] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:11:43,891] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:12:03,435] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-16 17:12:03,749] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-16 17:12:05,898] [INFO] [leetcode_tracker]: [SYNC_REQUEST_RECEIVED] Triggered full sync request from: admin
+[2026-08-16 17:12:05,902] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:12:05,916] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:12:05,916] [INFO] [leetcode_tracker]: [SYNC] Creating session: SYNC-20260816-114205
+[2026-08-16 17:12:05,929] [INFO] [leetcode_tracker]: [QUEUE] Job queued: SYNC-20260816-114205
+[2026-08-16 17:12:05,931] [INFO] [leetcode_tracker]: [SYNC_JOB_CREATED] Sync job status: SYNCING | job_id: SYNC-20260816-114205
+[2026-08-16 17:12:05,934] [INFO] [leetcode_tracker]: [WORKER] Worker started for job: SYNC-20260816-114205
+[2026-08-16 17:12:05,956] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Starting streaming per-student sync for 300 students (Job: SYNC-20260816-114205)
+[2026-08-16 17:12:13,872] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:12:13,889] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:12:43,929] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:12:43,941] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:13:02,300] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Recalculating college/department/year rankings post-sync...
+[2026-08-16 17:13:02,301] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-16 17:13:04,203] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-16 17:13:04,210] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Streaming sync completed in 58.27s. Synced=243, Invalid=37, Pending=20, Failed=0
+[2026-08-16 17:13:04,227] [INFO] [leetcode_tracker]: [SYNC] Application cache invalidated post-sync.
+[2026-08-16 17:13:13,878] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:13:13,891] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:13:42,809] [INFO] [leetcode_tracker]: [SYNC_TARGETED_REQUEST] Triggered sync for 3 students from: test
+[2026-08-16 17:13:43,894] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:13:43,898] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:14:13,896] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:14:13,903] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:14:27,588] [INFO] [leetcode_tracker]: [SYNC_TARGETED_REQUEST] Triggered sync for 3 students from: test
+[2026-08-16 17:14:27,596] [INFO] [leetcode_tracker]: [WORKER] Worker started for job: SYNC-TARGET-20260816-114427
+[2026-08-16 17:14:27,599] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Starting streaming per-student sync for 3 students (Job: SYNC-TARGET-20260816-114427)
+[2026-08-16 17:14:30,524] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Recalculating college/department/year rankings post-sync...
+[2026-08-16 17:14:30,525] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-16 17:14:30,895] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-16 17:14:30,896] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Streaming sync completed in 3.3s. Synced=1, Invalid=1, Pending=1, Failed=0
+[2026-08-16 17:14:30,898] [INFO] [leetcode_tracker]: [SYNC] Application cache invalidated post-sync.
+[2026-08-16 17:14:57,894] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:14:57,898] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:15:22,572] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:15:22,583] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:15:24,235] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-16 17:15:24,237] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-16 17:15:25,737] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:15:25,844] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:15:26,180] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:15:26,196] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-16 17:15:26,233] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-16 17:15:26,328] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:15:38,450] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-16 17:15:38,765] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-16 17:15:38,789] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 3
+[2026-08-16 17:15:39,020] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 2
+[2026-08-16 17:15:40,660] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-16 17:15:40,973] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-16 17:15:45,690] [INFO] [leetcode_tracker]: [SYNC_REQUEST_RECEIVED] Triggered full sync request from: admin
+[2026-08-16 17:15:45,697] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:15:45,709] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:15:45,711] [INFO] [leetcode_tracker]: [SYNC] Creating session: SYNC-20260816-114545
+[2026-08-16 17:15:45,725] [INFO] [leetcode_tracker]: [QUEUE] Job queued: SYNC-20260816-114545
+[2026-08-16 17:15:45,727] [INFO] [leetcode_tracker]: [SYNC_JOB_CREATED] Sync job status: SYNCING | job_id: SYNC-20260816-114545
+[2026-08-16 17:15:45,730] [INFO] [leetcode_tracker]: [WORKER] Worker started for job: SYNC-20260816-114545
+[2026-08-16 17:15:45,742] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Starting streaming per-student sync for 300 students (Job: SYNC-20260816-114545)
+[2026-08-16 17:15:55,752] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:15:55,763] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:16:25,889] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:16:25,902] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:16:38,539] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Recalculating college/department/year rankings post-sync...
+[2026-08-16 17:16:38,540] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-16 17:16:38,856] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-16 17:16:38,857] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Streaming sync completed in 53.13s. Synced=243, Invalid=37, Pending=20, Failed=0
+[2026-08-16 17:16:38,859] [INFO] [leetcode_tracker]: [SYNC] Application cache invalidated post-sync.
+[2026-08-16 17:16:55,705] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:16:55,721] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:16:57,333] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-16 17:16:57,657] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-16 17:16:57,688] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 3
+[2026-08-16 17:16:57,915] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 2
+[2026-08-16 17:16:58,914] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-16 17:17:25,893] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:17:25,904] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:17:55,890] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:17:55,898] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:18:25,898] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:18:25,901] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:18:55,894] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:18:55,901] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:19:57,899] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:19:57,914] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:20:57,883] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:20:58,121] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:21:57,892] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:21:57,896] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:22:57,892] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:22:57,909] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:23:36,372] [INFO] [leetcode_tracker]: Successfully sent email to 'nanthishvaran17@gmail.com' via Gmail SMTP
+[2026-08-16 17:23:57,899] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:23:57,908] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:24:04,754] [INFO] [leetcode_tracker]: [OTP_REQUEST] Verification requested for email address: nanthishvaran17@gmail.com
+[2026-08-16 17:24:04,763] [INFO] [leetcode_tracker]: [OTP_REQUEST_CREATED] Created OTP transaction record req_id=req_532c49b66d244006 for email_hash=48c1b560
+[2026-08-16 17:24:04,764] [INFO] [leetcode_tracker]: [EMAIL_PROVIDER] Dispatching OTP email via configured service to recipient: nanthishvaran17@gmail.com
+[2026-08-16 17:24:11,608] [INFO] [leetcode_tracker]: Successfully sent email to 'nanthishvaran17@gmail.com' via Gmail SMTP
+[2026-08-16 17:24:11,608] [INFO] [leetcode_tracker]: [EMAIL_SEND_SUCCESS] Verification OTP delivered successfully to: nanthishvaran17@gmail.com
+[2026-08-16 17:24:11,611] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-97519] OTP_SENT by nanthishvaran17 (nanthishvaran17@gmail.com)
+[2026-08-16 17:24:41,677] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-16 17:24:44,488] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-16 17:24:44,490] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-16 17:24:44,829] [INFO] [leetcode_tracker]: Syncing & seeding student roster definitions...
+[2026-08-16 17:24:45,494] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-16 17:24:45,795] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-16 17:24:45,973] [INFO] [leetcode_tracker]: Database seeding / roster sync completed successfully.
+[2026-08-16 17:24:45,977] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-16 17:24:45,979] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-16 17:24:45,982] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-16 17:24:45,982] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-16 17:24:46,156] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 17:24
+[2026-08-16 17:24:46,156] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-16 17:24:46,335] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 300 students.
+[2026-08-16 17:24:47,354] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-16 17:24:51,993] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:24:52,003] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:24:55,885] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-16 17:24:55,898] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-16 17:24:59,619] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0

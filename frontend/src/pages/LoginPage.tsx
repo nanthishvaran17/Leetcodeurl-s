@@ -105,12 +105,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
         digitRefs[0].current?.focus();
       }, 100);
     } catch (err: any) {
+      const detailMsg = err.response?.data?.detail || err.message;
       if (err.response?.status === 400 || err.response?.status === 404) {
-        setError(err.response?.data?.detail || 'Please enter your registered administrator email.');
+        setError(detailMsg || 'Please enter your registered administrator email.');
       } else if (err.response?.status === 503 || err.response?.status === 500) {
-        setError('Unable to send the verification code. Please try again.');
+        setError(detailMsg || 'Unable to send the verification code. Please check your network and try again.');
       } else {
-        setError('Authentication service is temporarily unavailable. Please try again.');
+        setError(detailMsg || 'Authentication service is temporarily unavailable. Please try again.');
       }
     } finally {
       setLoading(false);

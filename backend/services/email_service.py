@@ -62,13 +62,21 @@ from email.mime.application import MIMEApplication
 from typing import List, Dict, Any, Optional, Tuple
 from sqlalchemy.orm import Session
 
-def connect_and_login_smtp(smtp_host: str, smtp_port: int, smtp_user: str, smtp_pass: str, timeout: int = 15):
+def connect_and_login_smtp(smtp_host: str, smtp_port: int, smtp_user: str, smtp_pass: str, timeout: int = 6):
     """
-    Connects and logs into SMTP server with automatic fallback between 587 (STARTTLS) and 465 (SSL).
+    Connects and logs into SMTP server with fast fallback between 465 (SSL) and 587 (STARTTLS).
     """
     attempts = []
     
-    # 1. Try standard port 587 with STARTTLS
+    # 1. Try port 465 with SSL first (fastest and standard for Gmail)
+    try:
+        server = smtplib.SMTP_SSL(smtp_host, 465, timeout=timeout)
+        server.login(smtp_user, smtp_pass)
+        return server
+    except Exception as exc465:
+        attempts.append(f"Port 465 SSL: {exc465}")
+
+    # 2. Try port 587 with STARTTLS
     try:
         server = smtplib.SMTP(smtp_host, 587, timeout=timeout)
         server.ehlo()
@@ -79,16 +87,8 @@ def connect_and_login_smtp(smtp_host: str, smtp_port: int, smtp_user: str, smtp_
     except Exception as exc587:
         attempts.append(f"Port 587 STARTTLS: {exc587}")
 
-    # 2. Try port 465 with SSL
-    try:
-        server = smtplib.SMTP_SSL(smtp_host, 465, timeout=timeout)
-        server.login(smtp_user, smtp_pass)
-        return server
-    except Exception as exc465:
-        attempts.append(f"Port 465 SSL: {exc465}")
-
     # 3. Try IPv4-enforced fallback
-    for port, is_ssl in [(smtp_port, smtp_port == 465), (465 if smtp_port != 465 else 587, smtp_port != 465)]:
+    for port, is_ssl in [(465, True), (587, False)]:
         try:
             if is_ssl:
                 server = IPv4SMTP_SSL(smtp_host, port, timeout=timeout)
