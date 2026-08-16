@@ -284,13 +284,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
         </div>
       )}
 
-      <div className="flex items-center justify-end px-2">
-        <div className="flex items-center space-x-2 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 shadow-sm">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-          <span>WebSocket Real-Time Live Push Active</span>
-        </div>
-      </div>
-      
+
       <div className="w-full overflow-x-auto rounded-2xl glass-card border border-gray-200 dark:border-gray-800 shadow-lg">
       <table className="w-full text-left border-collapse text-xs">
         <thead>

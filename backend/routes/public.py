@@ -14,7 +14,21 @@ def get_public_leaderboard(limit: int = 50, db: Session = Depends(get_db)):
     Public read-only leaderboard route requiring no authentication.
     """
     from backend.routes.students import get_students
-    results = get_students(limit=limit, db=db)
+    # explicitly pass all kwargs as None to avoid FastAPI Query/Depends objects causing bugs
+    results = get_students(
+        dept_id=None,
+        year_level=None,
+        section_id=None,
+        search=None,
+        session_id=None,
+        sort_by="rating_desc",  # properly sort by contest rating or solved for leaderboard
+        min_solved=None,
+        max_solved=None,
+        verified_only=False,
+        page=1,
+        limit=limit,
+        db=db
+    )
     return results[:limit]
 
 @router.get("/verify-certificate/{cert_code}")

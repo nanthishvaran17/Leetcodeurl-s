@@ -725,11 +725,8 @@ def trigger_weekly_email_dispatch(
     payload: Optional[EmailDispatchPayload] = None,
     db: Session = Depends(get_db)
 ):
-    raw_recipients = payload.recipient_emails if (payload and payload.recipient_emails and payload.recipient_emails.strip()) else settings.REPORT_RECIPIENT_EMAILS
-    if not raw_recipients or not raw_recipients.strip():
-        raw_recipients = "nanthishvaran17@gmail.com, msanthoshkumar@nandhaengg.org"
-
-    recipients = [e.strip() for e in raw_recipients.split(",") if e.strip()]
+    # PRODUCTION LOCK: All automated reports ONLY go to nanthishvaran17@gmail.com
+    recipients = ["nanthishvaran17@gmail.com"]
 
     import datetime
     subject = f"Weekly LeetCode Performance Report - {datetime.date.today().strftime('%d.%m.%Y')}"

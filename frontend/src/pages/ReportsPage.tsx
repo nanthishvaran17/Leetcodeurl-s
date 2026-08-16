@@ -151,7 +151,7 @@ export const ReportsPage: React.FC = () => {
     downloadReportFile('/reports/export-word', 'Executive_Word_Summary.docx');
   };
 
-  const [recipientInput, setRecipientInput] = useState<string>("nanthishvaran17@gmail.com, msanthoshkumar@nandhaengg.org");
+  const [recipientInput, setRecipientInput] = useState<string>("nanthishvaran17@gmail.com");
 
   const handleSendWeeklyEmail = async () => {
     setIsSendingEmail(true);
@@ -543,36 +543,6 @@ export const ReportsPage: React.FC = () => {
                         <div className="text-lg">{snap.metrics?.total_official_participations || 0}</div>
                         <div className="text-[9px] uppercase">Official Parts</div>
                       </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2 border-l border-gray-200 dark:border-gray-800 pl-4">
-                      <button 
-                        onClick={() => setSelectedSnapshotPreview(snap)}
-                        className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-xs font-bold text-gray-700 dark:text-gray-300 transition-colors"
-                      >
-                        👁️ Preview
-                      </button>
-                      <button 
-                        onClick={() => downloadReportFile(`/reports/hod-snapshots/${snap.snapshot_id}/pdf`, `HOD_Snapshot_${snap.snapshot_id}.pdf`)}
-                        title="Download PDF"
-                        className="p-1.5 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 rounded-lg transition-colors"
-                      >
-                        <FileText className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={() => downloadReportFile(`/reports/hod-snapshots/${snap.snapshot_id}/excel`, `HOD_Snapshot_${snap.snapshot_id}.xlsx`)}
-                        title="Download Excel"
-                        className="p-1.5 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-600 rounded-lg transition-colors"
-                      >
-                        <FileSpreadsheet className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={() => downloadReportFile(`/reports/hod-snapshots/${snap.snapshot_id}/word`, `HOD_Snapshot_${snap.snapshot_id}.docx`)}
-                        title="Download Word"
-                        className="p-1.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 rounded-lg transition-colors cursor-pointer"
-                      >
-                        <FileText className="w-4 h-4" />
-                      </button>
                       <button 
                         onClick={() => promptDeleteHodSnapshot(snap)}
                         title="Delete Snapshot"

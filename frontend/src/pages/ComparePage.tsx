@@ -106,16 +106,16 @@ export const ComparePage: React.FC = () => {
         departments.forEach(d => {
           list.push({
             key: `${d.id}_${yr}`,
-            label: `🏢 🎓 ${yearLabels[yr]} ${d.code} (${d.name})`
+            label: `${yearLabels[yr]} ${d.code} (${d.name})`
           });
         });
       });
       return list;
     } else if (groupDimension === 'YEAR') {
       return [
-        { key: 'II', label: '🎓 II Year (Batch 2025 - 2029)' },
-        { key: 'III', label: '🎓 III Year (Batch 2024 - 2028)' },
-        { key: 'IV', label: '🎓 IV Year (Batch 2023 - 2027)' },
+        { key: 'II', label: 'II Year (Batch 2025 - 2029)' },
+        { key: 'III', label: 'III Year (Batch 2024 - 2028)' },
+        { key: 'IV', label: 'IV Year (Batch 2023 - 2027)' },
       ];
     } else {
       // SECTION
@@ -126,7 +126,7 @@ export const ComparePage: React.FC = () => {
         const yr = s.year_level || 'III';
         const secName = s.section?.name || 'A';
         const key = `${dId}_${yr}_${secName}`;
-        const label = `🏫 ${dCode} - ${yr} Year (${secName})`;
+        const label = `${dCode} - ${yr} Year (${secName})`;
         if (!secMap.has(key)) {
           secMap.set(key, label);
         }
@@ -316,17 +316,13 @@ export const ComparePage: React.FC = () => {
       {/* Mode 1: STUDENT VS STUDENT */}
       {compareMode === 'STUDENT' && (
         <div className="space-y-6">
-          
-          {/* Filter Controls Bar */}
+                {/* Filter Controls Bar */}
           <div className="glass-card p-6 rounded-3xl border space-y-4 shadow-xl">
             <div className="flex items-center justify-between flex-wrap gap-3 border-b border-gray-200 dark:border-gray-800 pb-3">
               <h3 className="font-extrabold text-sm text-gray-900 dark:text-white flex items-center space-x-2">
                 <Filter className="w-4 h-4 text-brand-500" />
                 <span>Filter Students by Department & Academic Year</span>
               </h3>
-              <span className="text-xs text-gray-500 font-medium">
-                Found <b className="text-brand-600 dark:text-brand-400 font-bold">{students.length}</b> eligible students for comparison
-              </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -339,7 +335,7 @@ export const ComparePage: React.FC = () => {
                   onChange={(e) => setSelectedDept(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-900 text-gray-900 dark:text-white border-gray-200 dark:border-gray-800 focus:ring-2 focus:ring-brand-500 outline-none"
                 >
-                  <option value="ALL">All Departments (Cyber Security & IoT)</option>
+                  <option value="ALL">All Departments</option>
                   {departments.map((d) => (
                     <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
                   ))}
@@ -354,13 +350,12 @@ export const ComparePage: React.FC = () => {
                   onChange={(e) => setSelectedYear(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-900 text-gray-900 dark:text-white border-gray-200 dark:border-gray-800 focus:ring-2 focus:ring-brand-500 outline-none"
                 >
-                  <option value="ALL">All Academic Years (II, III & IV Year)</option>
+                  <option value="ALL">All Academic Years</option>
                   <option value="II">II Year (Batch 2025 - 2029)</option>
                   <option value="III">III Year (Batch 2024 - 2028)</option>
                   <option value="IV">IV Year (Batch 2023 - 2027)</option>
                 </select>
               </div>
-
             </div>
           </div>
 
@@ -410,7 +405,6 @@ export const ComparePage: React.FC = () => {
                     onClick={() => handleSelectA(students[0].id)}
                     className="px-2.5 py-1 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 text-[10px] font-black border border-brand-500/20 hover:bg-brand-500 hover:text-white transition-all cursor-pointer flex items-center space-x-1"
                   >
-                    <Trophy className="w-3 h-3" />
                     <span>{students[0].name} (#1)</span>
                   </button>
                 )}
@@ -460,7 +454,6 @@ export const ComparePage: React.FC = () => {
                     onClick={() => handleSelectB(students[1].id)}
                     className="px-2.5 py-1 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-black border border-indigo-500/20 hover:bg-indigo-500 hover:text-white transition-all cursor-pointer flex items-center space-x-1"
                   >
-                    <Zap className="w-3 h-3" />
                     <span>{students[1].name} (#2)</span>
                   </button>
                 )}

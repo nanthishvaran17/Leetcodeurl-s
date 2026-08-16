@@ -561,21 +561,21 @@ export const SettingsPage: React.FC = () => {
             </div>
 
             <span className="px-3 py-1 rounded-full bg-emerald-600 text-white font-mono font-black text-[10px] tracking-wider border border-emerald-400/30">
-              🟢 DATA INTEGRITY VERIFIED
+              DATA INTEGRITY VERIFIED
             </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 text-xs">
             {[
-              { label: 'Authentic Contest Data Only', value: '🔒 LOCKED ON', bg: 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300' },
-              { label: 'Synthetic / Mock Data', value: '🔒 LOCKED OFF', bg: 'bg-rose-500/10 text-rose-800 dark:text-rose-300' },
-              { label: 'Question Equality (Q1+Q2+Q3+Q4 = Solved)', value: '🔒 ENFORCED', bg: 'bg-blue-500/10 text-blue-800 dark:text-blue-300' },
-              { label: 'Student + Contest Isolation', value: '🔒 ENFORCED', bg: 'bg-gray-50/50 dark:bg-navy-900/50 text-gray-700 dark:text-gray-300' },
-              { label: 'Session + Contest Isolation', value: '🔒 ENFORCED', bg: 'bg-gray-50/50 dark:bg-navy-900/50 text-gray-700 dark:text-gray-300' },
-              { label: 'Duplicate Result Detection', value: '🔒 ENFORCED', bg: 'bg-gray-50/50 dark:bg-navy-900/50 text-gray-700 dark:text-gray-300' },
-              { label: 'Sentinel Value Detection', value: '🔒 ENFORCED', bg: 'bg-gray-50/50 dark:bg-navy-900/50 text-gray-700 dark:text-gray-300' },
-              { label: 'Cross-Contest Leakage Detection', value: '🔒 ENFORCED', bg: 'bg-gray-50/50 dark:bg-navy-900/50 text-gray-700 dark:text-gray-300' },
-              { label: 'DB → API → UI Parity', value: '🔒 ENFORCED', bg: 'bg-gray-50/50 dark:bg-navy-900/50 text-gray-700 dark:text-gray-300' },
+              { label: 'Authentic Contest Data Only', value: 'LOCKED ON', bg: 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300' },
+              { label: 'Synthetic / Mock Data', value: 'LOCKED OFF', bg: 'bg-rose-500/10 text-rose-800 dark:text-rose-300' },
+              { label: 'Question Equality (Q1+Q2+Q3+Q4 = Solved)', value: 'ENFORCED', bg: 'bg-blue-500/10 text-blue-800 dark:text-blue-300' },
+              { label: 'Student + Contest Isolation', value: 'ENFORCED', bg: 'bg-gray-50/50 dark:bg-navy-900/50 text-gray-700 dark:text-gray-300' },
+              { label: 'Session + Contest Isolation', value: 'ENFORCED', bg: 'bg-gray-50/50 dark:bg-navy-900/50 text-gray-700 dark:text-gray-300' },
+              { label: 'Duplicate Result Detection', value: 'ENFORCED', bg: 'bg-gray-50/50 dark:bg-navy-900/50 text-gray-700 dark:text-gray-300' },
+              { label: 'Sentinel Value Detection', value: 'ENFORCED', bg: 'bg-gray-50/50 dark:bg-navy-900/50 text-gray-700 dark:text-gray-300' },
+              { label: 'Cross-Contest Leakage Detection', value: 'ENFORCED', bg: 'bg-gray-50/50 dark:bg-navy-900/50 text-gray-700 dark:text-gray-300' },
+              { label: 'DB → API → UI Parity', value: 'ENFORCED', bg: 'bg-gray-50/50 dark:bg-navy-900/50 text-gray-700 dark:text-gray-300' },
             ].map(rule => (
               <div key={rule.label} className={`p-2.5 rounded-xl border border-gray-200 dark:border-navy-700 font-bold flex items-center justify-between ${rule.bg}`}>
                 <span>{rule.label}</span>

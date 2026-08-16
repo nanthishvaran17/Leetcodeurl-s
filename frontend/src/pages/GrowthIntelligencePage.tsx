@@ -244,7 +244,7 @@ export const GrowthIntelligencePage: React.FC = () => {
           </div>
 
           <span className="px-4 py-1.5 rounded-2xl bg-gray-100 dark:bg-navy-950 text-gray-800 dark:text-gray-200 font-black text-xs border border-gray-200 dark:border-gray-800 self-start md:self-auto">
-            ⚡ {improvers.length} Active Solvers in Period
+            {improvers.length} Active Solvers in Period
           </span>
         </div>
 
