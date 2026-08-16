@@ -137,9 +137,6 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
 
   const handleOpenProfile = (student: StudentData) => {
     setViewingStudent(student);
-    if (onSelectStudent) {
-      onSelectStudent(student);
-    }
   };
 
   const toggleStudent = (id: number) => {
@@ -316,7 +313,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
             <th className="py-3 px-3 text-center whitespace-nowrap">Contest Rating</th>
             <th className="py-3 px-3 text-center whitespace-nowrap">Contest Rank</th>
             <th className="py-3 px-3 text-center whitespace-nowrap">Profile Rank</th>
-            <th className="py-3 px-3 text-right whitespace-nowrap">Actions</th>
+            <th className="py-3 px-3 text-center whitespace-nowrap">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -518,8 +515,8 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                     {profileRank}
                   </td>
 
-                  <td className="py-3 px-3 text-right whitespace-nowrap">
-                    <div className="flex items-center justify-end space-x-1.5">
+                  <td className="py-3 px-3 text-center whitespace-nowrap">
+                    <div className="flex items-center justify-center space-x-1.5">
                       <button
                         onClick={() => handleOpenProfile(student)}
                         className="p-1.5 rounded-xl text-gray-600 dark:text-gray-300 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition-colors font-bold text-xs flex items-center gap-1 cursor-pointer"
@@ -919,13 +916,27 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
               <div className="text-[11px] text-gray-500 font-bold">
                 Nandha Engineering College • LeetCode Tracker
               </div>
-              <button
-                type="button"
-                onClick={() => setViewingStudent(null)}
-                className="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer"
-              >
-                Done
-              </button>
+              <div className="flex space-x-3">
+                {onSelectStudent && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setViewingStudent(null);
+                      onSelectStudent(viewingStudent);
+                    }}
+                    className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer"
+                  >
+                    View Full Analytics
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setViewingStudent(null)}
+                  className="px-5 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-xl text-xs font-black shadow-sm transition-all cursor-pointer"
+                >
+                  Done
+                </button>
+              </div>
             </div>
           </div>
         </div>
