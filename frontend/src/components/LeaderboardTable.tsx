@@ -139,6 +139,20 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
     setViewingStudent(student);
   };
 
+  // Body scroll lock when modal is open
+  useEffect(() => {
+    if (viewingStudent) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setViewingStudent(null); };
+      window.addEventListener('keydown', onKey);
+      return () => {
+        document.body.style.overflow = prev;
+        window.removeEventListener('keydown', onKey);
+      };
+    }
+  }, [viewingStudent]);
+
   const toggleStudent = (id: number) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
@@ -725,73 +739,92 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
         </div>
       )}
 
-      {/* Viewport-Centered Instant Student Profile Modal */}
+      {/* ================================================================
+          STUDENT PROFILE MODAL — Production-Quality Viewport-Safe Dialog
+          ================================================================ */}
       {viewingStudent && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-fade-in"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setViewingStudent(null);
-          }}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Student profile for ${viewingStudent.name}`}
+          className="fixed inset-0 z-[10000] flex items-start justify-center bg-black/75 backdrop-blur-sm"
+          style={{ padding: 'max(24px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left))' }}
+          onClick={(e) => { if (e.target === e.currentTarget) setViewingStudent(null); }}
         >
+          {/* Modal panel — flex column, capped to safe viewport height */}
           <div
-            className="bg-white dark:bg-navy-900 w-full max-w-2xl max-h-[92vh] rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col my-auto animate-scale-in"
+            className="relative w-full max-w-2xl flex flex-col bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden"
+            style={{ maxHeight: 'min(calc(100dvh - 48px), calc(100vh - 48px))' }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header Gradient */}
-            <div className="p-6 bg-gradient-to-r from-brand-900 via-indigo-900 to-navy-950 text-white flex items-start justify-between relative overflow-hidden shrink-0">
+
+            {/* ── A. STICKY HEADER ─────────────────────────────────────── */}
+            <div className="shrink-0 p-5 sm:p-6 bg-gradient-to-r from-brand-900 via-indigo-900 to-navy-950 text-white flex items-start justify-between relative overflow-hidden">
               <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-brand-500/10 rounded-full blur-2xl pointer-events-none" />
-              
-              <div className="flex items-center space-x-4 z-10">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-indigo-600 text-white font-black text-xl flex items-center justify-center shadow-lg border border-white/20">
+
+              {/* Identity */}
+              <div className="flex items-center space-x-3 sm:space-x-4 z-10 min-w-0 flex-1 pr-3">
+                {/* Avatar */}
+                <div className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-indigo-600 text-white font-black text-lg sm:text-xl flex items-center justify-center shadow-lg border border-white/20">
                   {viewingStudent.name ? viewingStudent.name.charAt(0).toUpperCase() : 'S'}
                 </div>
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <h3 className="text-xl font-black text-white">{viewingStudent.name}</h3>
+
+                {/* Name + meta */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <h2 className="text-base sm:text-xl font-black text-white leading-tight truncate">
+                      {viewingStudent.name}
+                    </h2>
                     {viewingStudent.college_rank && (
-                      <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-400 text-amber-950 shadow-sm">
+                      <span className="shrink-0 px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-400 text-amber-950 shadow-sm">
                         Rank #{viewingStudent.college_rank}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-brand-200 font-mono font-bold mt-1">
-                    {viewingStudent.reg_no} • <span className="text-white font-bold">{viewingStudent.department?.name || viewingStudent.department?.code}</span> • {viewingStudent.year_level} Year
+                  <p className="text-[11px] sm:text-xs text-brand-200 font-mono font-bold truncate">
+                    {viewingStudent.reg_no}
+                    {' • '}
+                    <span className="text-white font-bold">
+                      {viewingStudent.department?.name || viewingStudent.department?.code}
+                    </span>
+                    {' • '}
+                    {viewingStudent.year_level} Year
                   </p>
                 </div>
               </div>
 
+              {/* Close button */}
               <button
                 type="button"
                 onClick={() => setViewingStudent(null)}
-                title="Close"
-                aria-label="Close"
-                className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500 text-white transition-all font-black text-xs flex items-center space-x-1 cursor-pointer z-10 shadow-sm"
+                aria-label="Close student profile"
+                className="shrink-0 z-10 p-2 sm:px-3.5 sm:py-1.5 rounded-xl bg-white/10 hover:bg-rose-500 text-white transition-all font-black text-xs flex items-center gap-1 cursor-pointer shadow-sm"
               >
                 <X className="w-4 h-4" />
-                <span>Close</span>
+                <span className="hidden sm:inline">Close</span>
               </button>
             </div>
 
-            {/* Modal Body */}
-            <div className="p-6 space-y-5 overflow-y-auto max-h-[calc(92vh-160px)]">
-              {/* LeetCode Handle Bar */}
+            {/* ── B. SCROLLABLE CONTENT ─────────────────────────────────── */}
+            <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4">
+
+              {/* LeetCode Handle */}
               <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-brand-50/60 dark:bg-brand-950/30 border border-brand-200/60 dark:border-brand-800/40">
-                <div className="flex items-center space-x-2.5">
-                  <div className="p-2 rounded-xl bg-amber-500 text-white font-black text-xs">LC</div>
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400">LeetCode Username Handle</span>
-                    <p className="font-mono font-bold text-sm text-brand-600 dark:text-brand-400">
+                <div className="flex items-center space-x-2.5 min-w-0">
+                  <div className="shrink-0 p-2 rounded-xl bg-amber-500 text-white font-black text-xs">LC</div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 block">LeetCode Username</span>
+                    <p className="font-mono font-bold text-sm text-brand-600 dark:text-brand-400 truncate">
                       {viewingStudent.username || viewingStudent.canonical_username || 'Not Linked'}
                     </p>
                   </div>
                 </div>
-
                 {viewingStudent.leetcode_url && (
                   <a
                     href={viewingStudent.leetcode_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-md transition-all cursor-pointer"
+                    className="shrink-0 inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-md transition-all cursor-pointer"
                   >
                     <span>View on LeetCode</span>
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -799,29 +832,26 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                 )}
               </div>
 
-              {/* Total Solved & Difficulty Breakdown */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              {/* Problem Stats: Total + Easy + Medium + Hard */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 text-center flex flex-col justify-center">
                   <span className="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400">Total Solved</span>
                   <span className="text-3xl font-black text-gray-900 dark:text-white mt-1">
                     {viewingStudent.stats?.total_solved ?? (viewingStudent.total_solved ?? '—')}
                   </span>
                 </div>
-
                 <div className="p-4 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 text-center">
                   <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400">Easy</span>
                   <span className="text-2xl font-black text-emerald-700 dark:text-emerald-300 block mt-1">
                     {viewingStudent.stats?.easy_solved ?? (viewingStudent.easy_solved ?? '—')}
                   </span>
                 </div>
-
                 <div className="p-4 rounded-2xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-center">
                   <span className="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400">Medium</span>
                   <span className="text-2xl font-black text-amber-700 dark:text-amber-300 block mt-1">
                     {viewingStudent.stats?.medium_solved ?? (viewingStudent.medium_solved ?? '—')}
                   </span>
                 </div>
-
                 <div className="p-4 rounded-2xl bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200/60 dark:border-rose-800/40 text-center">
                   <span className="text-[10px] uppercase font-bold text-rose-600 dark:text-rose-400">Hard</span>
                   <span className="text-2xl font-black text-rose-700 dark:text-rose-300 block mt-1">
@@ -830,52 +860,63 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                 </div>
               </div>
 
-              {/* Contest Performance Section */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-50/60 via-purple-50/30 to-brand-50/60 dark:from-navy-950 dark:via-indigo-950/30 dark:to-navy-950 border border-indigo-200/60 dark:border-indigo-800/40 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Trophy className="w-5 h-5 text-amber-500" />
-                    <h4 className="text-sm font-black text-gray-900 dark:text-white">
+              {/* Contest Performance */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-50/60 via-purple-50/30 to-brand-50/60 dark:from-navy-950 dark:via-indigo-950/30 dark:to-navy-950 border border-indigo-200/60 dark:border-indigo-800/40 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center space-x-2 min-w-0">
+                    <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 shrink-0" />
+                    <h4 className="text-sm font-black text-gray-900 dark:text-white truncate">
                       {viewingStudent.public_contest_result?.contest_name || viewingStudent.stats?.recent_contest_name || 'Weekly Contest'}
                     </h4>
                   </div>
-                  <span className="px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-400/30">
-                    {viewingStudent.public_contest_result?.status === 'PUBLIC_ATTENDED' || viewingStudent.public_contest_result?.status === 'ATTENDED' ? '🟢 Public Attended' : (viewingStudent.public_contest_result?.status === 'VIRTUAL_ATTENDED' ? '🔵 Virtual Attended' : (viewingStudent.public_contest_result?.score_display && !viewingStudent.public_contest_result.score_display.includes('Not Attended') ? '🟢 Public Attended' : '⚪ Not Attended'))}
+                  <span className="shrink-0 px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-400/30">
+                    {viewingStudent.public_contest_result?.status === 'PUBLIC_ATTENDED' || viewingStudent.public_contest_result?.status === 'ATTENDED'
+                      ? 'Public Attended'
+                      : viewingStudent.public_contest_result?.status === 'VIRTUAL_ATTENDED'
+                        ? 'Virtual Attended'
+                        : viewingStudent.public_contest_result?.score_display && !viewingStudent.public_contest_result.score_display.includes('Not Attended')
+                          ? 'Public Attended'
+                          : 'Not Attended'}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                   <div className="p-3 rounded-xl bg-white/80 dark:bg-navy-900/80 border border-gray-200/80 dark:border-gray-800 text-center">
-                    <span className="text-[10px] font-bold text-gray-500">Contest Score</span>
-                    <p className="text-base font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
+                    <span className="text-[10px] font-bold text-gray-500 block">Contest Score</span>
+                    <p className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
                       {viewingStudent.public_contest_result?.score_display || viewingStudent.stats?.recent_contest_score || '—'}
                     </p>
                   </div>
-
                   <div className="p-3 rounded-xl bg-white/80 dark:bg-navy-900/80 border border-gray-200/80 dark:border-gray-800 text-center">
-                    <span className="text-[10px] font-bold text-gray-500">Contest Rating</span>
-                    <p className="text-base font-black text-amber-500 mt-0.5">
-                      {viewingStudent.public_contest_result?.contest_rating ? viewingStudent.public_contest_result.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1 }) : (viewingStudent.stats?.contest_rating ? viewingStudent.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1 }) : '—')}
+                    <span className="text-[10px] font-bold text-gray-500 block">Contest Rating</span>
+                    <p className="text-sm sm:text-base font-black text-amber-500 mt-0.5">
+                      {viewingStudent.public_contest_result?.contest_rating
+                        ? viewingStudent.public_contest_result.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1 })
+                        : viewingStudent.stats?.contest_rating
+                          ? viewingStudent.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1 })
+                          : '—'}
                     </p>
                   </div>
-
                   <div className="p-3 rounded-xl bg-white/80 dark:bg-navy-900/80 border border-gray-200/80 dark:border-gray-800 text-center">
-                    <span className="text-[10px] font-bold text-gray-500">Contest Rank</span>
-                    <p className="text-base font-black text-indigo-600 dark:text-indigo-400 mt-0.5">
-                      {viewingStudent.public_contest_result?.contest_rank ? `#${viewingStudent.public_contest_result.contest_rank.toLocaleString('en-US')}` : '—'}
+                    <span className="text-[10px] font-bold text-gray-500 block">Contest Rank</span>
+                    <p className="text-sm sm:text-base font-black text-indigo-600 dark:text-indigo-400 mt-0.5">
+                      {viewingStudent.public_contest_result?.contest_rank
+                        ? `#${viewingStudent.public_contest_result.contest_rank.toLocaleString('en-US')}`
+                        : '—'}
                     </p>
                   </div>
-
                   <div className="p-3 rounded-xl bg-white/80 dark:bg-navy-900/80 border border-gray-200/80 dark:border-gray-800 text-center">
-                    <span className="text-[10px] font-bold text-gray-500">Profile Global Rank</span>
-                    <p className="text-base font-black text-gray-700 dark:text-gray-300 mt-0.5">
-                      {viewingStudent.stats?.public_profile_ranking ? `#${viewingStudent.stats.public_profile_ranking.toLocaleString('en-US')}` : '—'}
+                    <span className="text-[10px] font-bold text-gray-500 block">Profile Global Rank</span>
+                    <p className="text-sm sm:text-base font-black text-gray-700 dark:text-gray-300 mt-0.5">
+                      {viewingStudent.stats?.public_profile_ranking
+                        ? `#${viewingStudent.stats.public_profile_ranking.toLocaleString('en-US')}`
+                        : '—'}
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Activity & Consistency Highlights */}
+              {/* Activity & Consistency */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 text-center">
                   <div className="flex items-center justify-center space-x-1 text-orange-500">
@@ -884,7 +925,6 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   </div>
                   <span className="text-[10px] font-bold text-gray-500 mt-1 block">Active Streak</span>
                 </div>
-
                 <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 text-center">
                   <div className="flex items-center justify-center space-x-1 text-purple-500">
                     <Award className="w-4 h-4" />
@@ -892,7 +932,6 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   </div>
                   <span className="text-[10px] font-bold text-gray-500 mt-1 block">Longest Streak</span>
                 </div>
-
                 <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 text-center">
                   <div className="flex items-center justify-center space-x-1 text-emerald-500">
                     <TrendingUp className="w-4 h-4" />
@@ -903,22 +942,25 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   <span className="text-[10px] font-bold text-gray-500 mt-1 block">Consistency</span>
                 </div>
               </div>
-            </div>
 
-            {/* Modal Footer */}
-            <div className="p-4 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between shrink-0">
-              <div className="text-[11px] text-gray-500 font-bold">
+            </div>
+            {/* ── END SCROLLABLE CONTENT ───────────────────────────────── */}
+
+            {/* ── C. STICKY FOOTER ─────────────────────────────────────── */}
+            <div className="shrink-0 px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-3">
+              <div className="text-[11px] text-gray-400 font-bold hidden sm:block">
                 Nandha Engineering College • LeetCode Tracker
               </div>
-              <div className="flex space-x-3">
+              <div className="flex flex-wrap gap-2 sm:gap-3 ml-auto">
                 {onSelectStudent && (
                   <button
                     type="button"
                     onClick={() => {
+                      const s = viewingStudent;
                       setViewingStudent(null);
-                      onSelectStudent(viewingStudent);
+                      onSelectStudent(s);
                     }}
-                    className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer"
+                    className="px-4 sm:px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer"
                   >
                     View Full Analytics
                   </button>
@@ -926,15 +968,18 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                 <button
                   type="button"
                   onClick={() => setViewingStudent(null)}
-                  className="px-5 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-xl text-xs font-black shadow-sm transition-all cursor-pointer"
+                  className="px-4 sm:px-5 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-xl text-xs font-black shadow-sm transition-all cursor-pointer"
                 >
                   Done
                 </button>
               </div>
             </div>
+            {/* ── END FOOTER ───────────────────────────────────────────── */}
+
           </div>
         </div>
       )}
+
     </div>
   );
 };
