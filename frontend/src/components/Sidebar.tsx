@@ -37,7 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
   ];
 
   return (
-    <aside className="sticky top-20 w-64 glass-card h-[calc(100vh-6rem)] border border-gray-200/80 dark:border-navy-800/80 rounded-3xl p-4 flex flex-col justify-between shadow-xl backdrop-blur-xl bg-white/80 dark:bg-navy-900/80 hidden md:flex transition-all duration-300">
+    <aside className="sticky top-20 w-60 xl:w-64 shrink-0 glass-card h-[calc(100vh-6rem)] border border-gray-200/80 dark:border-navy-800/80 rounded-3xl p-4 flex flex-col justify-between shadow-xl backdrop-blur-xl bg-white/80 dark:bg-navy-900/80 hidden lg:flex transition-all duration-300">
       
       {/* Navigation Links */}
       <div className="space-y-3 overflow-y-auto pr-1 flex-1 custom-scrollbar">

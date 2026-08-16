@@ -238,3 +238,19 @@
 .row-hover-highlight:hover {
   background-color: rgba(37, 99, 235, 0.04);
 }
+
+/* Mobile Navigation Drawer Slide-In Animation */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slideInLeft {
+  animation: slideInLeft 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

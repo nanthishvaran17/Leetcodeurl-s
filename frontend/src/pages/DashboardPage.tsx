@@ -266,7 +266,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       </div>
 
       {/* Top College Institutional KPIs Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
         <StatCard title="Total Students" value={totalStudents} icon={Users} color="blue" />
         <StatCard title="Active Students" value={activeStudents} icon={CheckCircle2} color="green" />
         <StatCard title="Not Started" value={notStartedStudents} icon={AlertTriangle} color="rose" />

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { Sun, Moon, User, LogOut, Activity } from 'lucide-react';
+import { Sun, Moon, User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp } from 'lucide-react';
 import { CollegeLogo } from './CollegeLogo';
 import { getDataFreshness } from '../services/api';
 import { SyncStatusModal } from './SyncStatusModal';
@@ -15,6 +15,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({
   onOpenLogin,
+  activeTab,
   setActiveTab
 }) => {
   const { theme, toggleTheme } = useTheme();
@@ -22,6 +23,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const [freshness, setFreshness] = useState<any>(null);
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState<boolean>(false);
 
   useEffect(() => {
     loadFreshness();
@@ -44,23 +46,36 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="w-full px-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             
-            {/* Left: Branding & Autonomous Badge */}
-            <div
-              onClick={() => setActiveTab('landing')}
-              className="flex items-center space-x-3 cursor-pointer group"
-            >
-              <CollegeLogo size={40} />
-              <div>
-                <div className="text-sm font-black tracking-tight text-gray-900 dark:text-white flex items-center space-x-2">
-                  <span>NANDHA ENGINEERING COLLEGE</span>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                    AUTONOMOUS
-                  </span>
-                </div>
-                <div className="text-[11px] font-bold text-brand-600 dark:text-brand-400 flex items-center space-x-1.5">
-                  <span>LeetCode Weekly Performance Tracker</span>
-                  <span className="text-gray-300 dark:text-gray-700">•</span>
-                  <span className="text-gray-500 dark:text-gray-400">Institutional Edition</span>
+            {/* Left: Hamburger Button (Mobile/Tablet) + Branding */}
+            <div className="flex items-center space-x-3">
+              {isAuthenticated && (
+                <button
+                  type="button"
+                  onClick={() => setIsMobileDrawerOpen(!isMobileDrawerOpen)}
+                  className="p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-800 lg:hidden transition-colors cursor-pointer"
+                  title="Toggle Mobile Navigation Menu"
+                >
+                  {isMobileDrawerOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                </button>
+              )}
+
+              <div
+                onClick={() => setActiveTab('landing')}
+                className="flex items-center space-x-3 cursor-pointer group"
+              >
+                <CollegeLogo size={40} />
+                <div>
+                  <div className="text-xs sm:text-sm font-black tracking-tight text-gray-900 dark:text-white flex items-center space-x-1.5 sm:space-x-2">
+                    <span className="truncate max-w-[160px] sm:max-w-none">NANDHA ENGINEERING COLLEGE</span>
+                    <span className="px-1 py-0.5 rounded text-[9px] sm:text-[10px] font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                      AUTONOMOUS
+                    </span>
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] font-bold text-brand-600 dark:text-brand-400 flex items-center space-x-1 sm:space-x-1.5">
+                    <span>LeetCode Tracker</span>
+                    <span className="text-gray-300 dark:text-gray-700">•</span>
+                    <span className="text-gray-500 dark:text-gray-400">Institutional Edition</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -142,6 +157,85 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
       </header>
+
+      {/* Mobile / Tablet Responsive Drawer Navigation Overlay */}
+      {isMobileDrawerOpen && isAuthenticated && (
+        <div className="fixed inset-0 z-50 lg:hidden flex">
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity animate-fadeIn"
+            onClick={() => setIsMobileDrawerOpen(false)}
+          />
+          <div className="relative w-4/5 max-w-xs bg-white dark:bg-navy-950 h-full shadow-2xl p-5 flex flex-col justify-between overflow-y-auto z-10 border-r border-gray-200 dark:border-navy-800 animate-slideInLeft">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-navy-800">
+                <div className="flex items-center space-x-2">
+                  <CollegeLogo size={32} />
+                  <span className="font-black text-xs text-gray-900 dark:text-white">Main Navigation</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileDrawerOpen(false)}
+                  className="p-1.5 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-navy-800"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <nav className="space-y-1">
+                {[
+                  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+                  { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
+                  { id: 'departments', label: 'Departments & Sections', icon: Layers },
+                  { id: 'weekly-contest', label: 'Weekly Contest Tracker', icon: Calendar },
+                  { id: 'students', label: 'Student Leaderboard', icon: Users },
+                  { id: 'compare', label: 'Student Comparison', icon: BarChart3 },
+                  { id: 'quality', label: 'Data Quality Board', icon: CheckCircle2 },
+                  { id: 'system-health', label: 'Institutional Operations', icon: Activity },
+                  { id: 'reports', label: 'Reports & Export', icon: FileSpreadsheet },
+                  { id: 'public', label: 'Public Shareable View', icon: Globe },
+                  { id: 'settings', label: 'Admin Settings', icon: Settings },
+                  { id: 'audit', label: 'Audit Log', icon: ShieldAlert },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveTab(item.id);
+                        setIsMobileDrawerOpen(false);
+                      }}
+                      className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl font-bold text-xs text-left transition-all ${
+                        isActive
+                          ? 'bg-brand-600 text-white shadow-md'
+                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-900'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+
+            <div className="pt-4 border-t border-gray-200 dark:border-navy-800">
+              <button
+                type="button"
+                onClick={() => {
+                  logout();
+                  setIsMobileDrawerOpen(false);
+                }}
+                className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold text-xs hover:bg-rose-500/20 transition-all"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Sign Out Portal</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Sync Engine Status Top-Level Portal Modal */}
       <SyncStatusModal

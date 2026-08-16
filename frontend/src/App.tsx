@@ -140,7 +140,11 @@ export const App: React.FC = () => {
         setActiveTab={handleTabChange}
       />
 
-      <div className="flex-1 w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6 flex flex-col md:flex-row gap-6">
+      <div className={`flex-1 w-full py-4 sm:py-6 ${
+        isAuthenticated && activeTab !== 'landing'
+          ? 'lg:grid lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-4 lg:px-3 xl:px-4 px-2 sm:px-4'
+          : 'px-3 sm:px-6 lg:px-8'
+      }`}>
         
         {/* Left Sidebar (Only visible for authenticated users when not on landing page) */}
         {isAuthenticated && activeTab !== 'landing' && (
@@ -148,7 +152,7 @@ export const App: React.FC = () => {
         )}
 
         {/* Main Content View Container */}
-        <main key={activeTab} className="flex-1 w-full min-w-0 animate-fadeIn">
+        <main key={activeTab} className="min-w-0 w-full animate-fadeIn">
 
           
           {activeTab === 'landing' && (
