@@ -1,27 +1,19 @@
 """
-contest_classifier.py — Deterministic Contest Participation Classification Engine
+contest_classifier.py — Production Deterministic Contest Participation Classification Engine
 
-Architecture:
-  - Pure function: get_contest_status(student, contest_id, client) → StatusRow
-  - Zero heuristics; every decision is traceable to an explicit rule.
-  - Strict 7-value status enum (see ContestStatus).
-  - Contest ID and student identity are verified before any status is set.
-
-Status Rules (MUST MATCH EXACTLY):
-  PENDING_USERNAME  → Username is null / empty / whitespace.
-  INVALID_USERNAME  → Profile fetch returned 404 / identity mismatch.
-  FETCH_FAILED      → Network timeout, GraphQL error, rate limit, malformed response.
-  UNKNOWN           → Data present but participation presence cannot be reliably determined.
-  NOT_ATTENDED      → Official data explicitly confirms the student did NOT participate.
-  PUBLIC_ATTENDED   → Official data confirms public attendance.
-  VIRTUAL_ATTENDED  → Official data confirms virtual attendance.
-
-Critical rules enforced:
-  1. FETCH_FAILED ≠ NOT_ATTENDED. Never assign NOT_ATTENDED on a fetch failure.
-  2. Contest ID must be an exact canonical match.
-  3. Student identity (username) must be verified against the API response.
-  4. participation_type must come from official data; not inferred from score/rank alone.
-  5. Total roster rows = total canonical status rows. Any gap is a reconciliation error.
+Critical Refinements:
+  - Refinement A: VIRTUAL_ATTENDED clarification:
+      if attended == True:
+          status = PUBLIC_ATTENDED
+      elif attended == False:
+          if problems_solved > 0 or has_virtual_submission_trace:
+              status = VIRTUAL_ATTENDED
+          else:
+              status = NOT_ATTENDED
+  - Refinement B: Strict distinction between FETCH_FAILED (network/API error)
+    and UNKNOWN (data returned but ambiguous or identity mismatched).
+  - Refinement C: Clear separation of source_timestamp (LeetCode timestamp) vs
+    classified_at (decision generation timestamp).
 """
 from __future__ import annotations
 
@@ -40,31 +32,30 @@ from backend.logger import logger
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# STRICT STATUS ENUM
+# 1. ENUMS (Strict 7-Enum System)
 # ─────────────────────────────────────────────────────────────────────────────
 
 class ContestStatus(str, Enum):
     PUBLIC_ATTENDED   = "PUBLIC_ATTENDED"
     VIRTUAL_ATTENDED  = "VIRTUAL_ATTENDED"
     NOT_ATTENDED      = "NOT_ATTENDED"
-    UNKNOWN           = "UNKNOWN"
     FETCH_FAILED      = "FETCH_FAILED"
     PENDING_USERNAME  = "PENDING_USERNAME"
     INVALID_USERNAME  = "INVALID_USERNAME"
+    UNKNOWN           = "UNKNOWN"
 
 
 class ReasonCode(str, Enum):
-    NO_USERNAME         = "NO_USERNAME"
-    INVALID_PROFILE     = "INVALID_PROFILE"
-    IDENTITY_MISMATCH   = "IDENTITY_MISMATCH"
-    FETCH_ERROR         = "FETCH_ERROR"
-    CONTEST_NOT_IN_HISTORY = "CONTEST_NOT_IN_HISTORY"
-    NO_PARTICIPATION    = "NO_PARTICIPATION"
-    PUBLIC              = "PUBLIC"
-    VIRTUAL             = "VIRTUAL"
-    AMBIGUOUS_TYPE      = "AMBIGUOUS_TYPE"
-    AMBIGUOUS_PRESENCE  = "AMBIGUOUS_PRESENCE"
-    RATE_LIMITED        = "RATE_LIMITED"
+    PUBLIC                  = "PUBLIC"
+    VIRTUAL                 = "VIRTUAL"
+    NO_PARTICIPATION        = "NO_PARTICIPATION"
+    FETCH_ERROR             = "FETCH_ERROR"
+    NO_USERNAME             = "NO_USERNAME"
+    INVALID_PROFILE         = "INVALID_PROFILE"
+    IDENTITY_MISMATCH       = "IDENTITY_MISMATCH"
+    AMBIGUOUS_TYPE          = "AMBIGUOUS_TYPE"
+    AMBIGUOUS_PARTICIPATION = "AMBIGUOUS_PARTICIPATION"
+    RATE_LIMITED            = "RATE_LIMITED"
 
 
 class FetchStatus(str, Enum):
@@ -74,98 +65,334 @@ class FetchStatus(str, Enum):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CANONICAL STATUS ROW
+# 2. CANONICAL DATA STRUCTURE
 # ─────────────────────────────────────────────────────────────────────────────
 
 @dataclass
 class ContestStatusRow:
-    """Single canonical record for one (student, contest) pair."""
-    # Identity
+    # 1. Identity
     student_id:                 int
     student_name:               str
     verified_leetcode_username: Optional[str]
 
-    # Contest
-    contest_id:   str                      # e.g. "weekly-contest-515"
-    contest_name: str                      # e.g. "Weekly Contest 515"
+    # 2. Contest Metadata
+    contest_id:   str                      # e.g., "weekly-contest-515"
+    contest_name: str                      # e.g., "Weekly Contest 515"
 
-    # Participation
-    status: ContestStatus = ContestStatus.UNKNOWN
+    # 3. Status & Audit
+    status:        ContestStatus
+    reason_code:   ReasonCode
+    fetch_status:  FetchStatus
+    error_message: Optional[str] = None
 
-    # Performance (populated only when attended)
-    score:          Optional[int]   = None
-    rank:           Optional[int]   = None
-    problems_solved: Optional[int]  = None
-    q1_solved:      bool            = False
-    q2_solved:      bool            = False
-    q3_solved:      bool            = False
-    q4_solved:      bool            = False
-    rating_after:   Optional[float] = None
+    # 4. Performance Metrics (Populated if Attended)
+    score:           Optional[int]   = None
+    rank:            Optional[int]   = None
+    problems_solved: Optional[int]   = None
+    q1_solved:       bool            = False
+    q2_solved:       bool            = False
+    q3_solved:       bool            = False
+    q4_solved:       bool            = False
+    rating_after:    Optional[float] = None
 
-    # Audit trail
-    fetch_status:    FetchStatus          = FetchStatus.FAILED
-    reason_code:     Optional[ReasonCode] = None
-    error_message:   Optional[str]        = None
+    # 5. Timestamps (Refinement C: strict separation)
     source_timestamp: Optional[datetime.datetime] = None
-    classified_at:   datetime.datetime    = field(
+    classified_at:    datetime.datetime = field(
         default_factory=lambda: datetime.datetime.now(datetime.timezone.utc)
     )
 
     def to_dict(self) -> Dict[str, Any]:
-        d = asdict(self)
-        d["status"] = self.status.value
-        d["fetch_status"] = self.fetch_status.value
-        d["reason_code"] = self.reason_code.value if self.reason_code else None
-        d["source_timestamp"] = self.source_timestamp.isoformat() if self.source_timestamp else None
-        d["classified_at"] = self.classified_at.isoformat()
-        return d
+        """Convert to dictionary for JSON/CSV/Excel serialization."""
+        return {
+            "student_id":                 self.student_id,
+            "student_name":               self.student_name,
+            "verified_leetcode_username": self.verified_leetcode_username,
+            "contest_id":                 self.contest_id,
+            "contest_name":               self.contest_name,
+            "status":                     self.status.value,
+            "reason_code":                self.reason_code.value,
+            "fetch_status":               self.fetch_status.value,
+            "error_message":              self.error_message,
+            "score":                      self.score,
+            "rank":                       self.rank,
+            "problems_solved":            self.problems_solved,
+            "q1_solved":                  self.q1_solved,
+            "q2_solved":                  self.q2_solved,
+            "q3_solved":                  self.q3_solved,
+            "q4_solved":                  self.q4_solved,
+            "rating_after":               self.rating_after,
+            "source_timestamp":           self.source_timestamp.isoformat() if self.source_timestamp else None,
+            "classified_at":              self.classified_at.isoformat(),
+        }
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CONTEST ID NORMALIZATION
+# SLUG UTILITIES
 # ─────────────────────────────────────────────────────────────────────────────
 
 def normalize_contest_id(contest_name_or_id: str) -> str:
-    """
-    Converts any representation of a weekly contest to its canonical slug.
-
-    Examples:
-      "Weekly Contest 515"   → "weekly-contest-515"
-      "weekly contest 515"   → "weekly-contest-515"
-      "weekly-contest-515"   → "weekly-contest-515"   (already canonical)
-      "Weekly 515"           → "weekly-contest-515"
-      "Biweekly Contest 120" → "biweekly-contest-120"
-    """
+    """Converts any contest name or slug to its canonical slug."""
     if not contest_name_or_id:
         raise ValueError("contest_name_or_id must not be empty")
 
     s = str(contest_name_or_id).strip()
-
-    # Already canonical slug?
     if re.fullmatch(r'(weekly|biweekly)-contest-\d+', s, re.IGNORECASE):
         return s.lower()
 
-    # Extract number
     m = re.search(r'\d+', s)
     if not m:
         raise ValueError(f"Cannot extract contest number from: {s!r}")
     num = m.group(0)
 
-    # Detect type
-    s_upper = s.upper()
-    if "BIWEEKLY" in s_upper:
+    if "BIWEEKLY" in s.upper():
         return f"biweekly-contest-{num}"
     return f"weekly-contest-{num}"
 
 
 def contest_number_from_id(contest_id: str) -> Optional[int]:
-    """Extract integer contest number from canonical slug."""
     m = re.search(r'\d+', contest_id)
     return int(m.group(0)) if m else None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# GRAPHQL QUERIES (minimal — only what is needed)
+# 3. CORE CLASSIFIER CLASS (Sync Interface)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class ContestClassifier:
+    """
+    Deterministic, O(1) decision engine for LeetCode Weekly Contest participation.
+    """
+
+    def __init__(self, leetcode_api_client=None):
+        self.api = leetcode_api_client
+
+    def classify_student_contest(
+        self,
+        student_id: int,
+        student_name: str,
+        leetcode_username: Optional[str],
+        contest_id: str,
+        contest_name: str,
+    ) -> ContestStatusRow:
+        """
+        Classifies a single student's contest participation status.
+        """
+        # Step 0: Normalize inputs
+        raw_username = (leetcode_username or "").strip()
+        canonical_contest_id = normalize_contest_id(contest_id)
+
+        # Step 1: Username validation
+        if not raw_username or len(raw_username) < 2:
+            return ContestStatusRow(
+                student_id=student_id,
+                student_name=student_name,
+                verified_leetcode_username=None,
+                contest_id=canonical_contest_id,
+                contest_name=contest_name,
+                status=ContestStatus.PENDING_USERNAME,
+                reason_code=ReasonCode.NO_USERNAME,
+                fetch_status=FetchStatus.OK,
+            )
+
+        if not self.api:
+            return ContestStatusRow(
+                student_id=student_id,
+                student_name=student_name,
+                verified_leetcode_username=raw_username,
+                contest_id=canonical_contest_id,
+                contest_name=contest_name,
+                status=ContestStatus.FETCH_FAILED,
+                reason_code=ReasonCode.FETCH_ERROR,
+                fetch_status=FetchStatus.FAILED,
+                error_message="API client not initialized",
+            )
+
+        # Validate Profile
+        try:
+            profile_data = self.api.validate_profile(raw_username)
+        except Exception as e:
+            logger.warning(f"Profile validation failed for {raw_username}: {e}")
+            return ContestStatusRow(
+                student_id=student_id,
+                student_name=student_name,
+                verified_leetcode_username=raw_username,
+                contest_id=canonical_contest_id,
+                contest_name=contest_name,
+                status=ContestStatus.FETCH_FAILED,
+                reason_code=ReasonCode.FETCH_ERROR,
+                fetch_status=FetchStatus.FAILED,
+                error_message=str(e),
+            )
+
+        if profile_data is None:
+            return ContestStatusRow(
+                student_id=student_id,
+                student_name=student_name,
+                verified_leetcode_username=raw_username,
+                contest_id=canonical_contest_id,
+                contest_name=contest_name,
+                status=ContestStatus.INVALID_USERNAME,
+                reason_code=ReasonCode.INVALID_PROFILE,
+                fetch_status=FetchStatus.OK,
+            )
+
+        verified_username = profile_data.get("username", raw_username)
+
+        # Step 2: Fetch Contest Data
+        try:
+            contest_data = self.api.fetch_contest_result(verified_username, canonical_contest_id)
+        except Exception as e:
+            logger.warning(f"Contest fetch failed for {verified_username}/{canonical_contest_id}: {e}")
+            return ContestStatusRow(
+                student_id=student_id,
+                student_name=student_name,
+                verified_leetcode_username=verified_username,
+                contest_id=canonical_contest_id,
+                contest_name=contest_name,
+                status=ContestStatus.FETCH_FAILED,
+                reason_code=ReasonCode.FETCH_ERROR,
+                fetch_status=FetchStatus.FAILED,
+                error_message=str(e),
+            )
+
+        # Step 2.1: Check if contest entry exists in history
+        if contest_data is None:
+            return ContestStatusRow(
+                student_id=student_id,
+                student_name=student_name,
+                verified_leetcode_username=verified_username,
+                contest_id=canonical_contest_id,
+                contest_name=contest_name,
+                status=ContestStatus.NOT_ATTENDED,
+                reason_code=ReasonCode.NO_PARTICIPATION,
+                fetch_status=FetchStatus.OK,
+            )
+
+        # Step 3: Identity & Contest Slug Verification
+        returned_username = contest_data.get("username", "").lower()
+        if returned_username and returned_username != verified_username.lower():
+            return ContestStatusRow(
+                student_id=student_id,
+                student_name=student_name,
+                verified_leetcode_username=verified_username,
+                contest_id=canonical_contest_id,
+                contest_name=contest_name,
+                status=ContestStatus.UNKNOWN,
+                reason_code=ReasonCode.IDENTITY_MISMATCH,
+                fetch_status=FetchStatus.PARTIAL,
+                error_message=f"Username mismatch: {returned_username} != {verified_username}",
+            )
+
+        returned_contest_id = contest_data.get("contest_id")
+        if returned_contest_id and normalize_contest_id(returned_contest_id) != canonical_contest_id:
+            return ContestStatusRow(
+                student_id=student_id,
+                student_name=student_name,
+                verified_leetcode_username=verified_username,
+                contest_id=canonical_contest_id,
+                contest_name=contest_name,
+                status=ContestStatus.UNKNOWN,
+                reason_code=ReasonCode.IDENTITY_MISMATCH,
+                fetch_status=FetchStatus.PARTIAL,
+                error_message=f"Contest ID mismatch: {returned_contest_id} != {canonical_contest_id}",
+            )
+
+        # Step 4 & 5: Presence & Type Evaluation (Refinement A)
+        attended = bool(contest_data.get("attended", False))
+        problems_solved = int(contest_data.get("problems_solved", 0) or 0)
+        score = contest_data.get("score") if contest_data.get("score") is not None else problems_solved
+        rank = contest_data.get("rank")
+        rating_after = contest_data.get("rating_after")
+        source_ts = contest_data.get("source_timestamp")
+
+        q1 = contest_data.get("q1_solved", problems_solved >= 1)
+        q2 = contest_data.get("q2_solved", problems_solved >= 2)
+        q3 = contest_data.get("q3_solved", problems_solved >= 3)
+        q4 = contest_data.get("q4_solved", problems_solved >= 4)
+
+        if attended:
+            return ContestStatusRow(
+                student_id=student_id,
+                student_name=student_name,
+                verified_leetcode_username=verified_username,
+                contest_id=canonical_contest_id,
+                contest_name=contest_name,
+                status=ContestStatus.PUBLIC_ATTENDED,
+                reason_code=ReasonCode.PUBLIC,
+                fetch_status=FetchStatus.OK,
+                score=score,
+                rank=rank,
+                problems_solved=problems_solved,
+                q1_solved=q1,
+                q2_solved=q2,
+                q3_solved=q3,
+                q4_solved=q4,
+                rating_after=rating_after,
+                source_timestamp=source_ts,
+            )
+        else:
+            # attended == False
+            # Refinement A: if solved > 0 OR explicit virtual contest entry
+            has_virtual_trace = contest_data.get("is_virtual", False) or contest_data.get("contest_slug") is not None or problems_solved > 0
+            if has_virtual_trace:
+                return ContestStatusRow(
+                    student_id=student_id,
+                    student_name=student_name,
+                    verified_leetcode_username=verified_username,
+                    contest_id=canonical_contest_id,
+                    contest_name=contest_name,
+                    status=ContestStatus.VIRTUAL_ATTENDED,
+                    reason_code=ReasonCode.VIRTUAL,
+                    fetch_status=FetchStatus.OK,
+                    score=score,
+                    rank=rank,
+                    problems_solved=problems_solved,
+                    q1_solved=q1,
+                    q2_solved=q2,
+                    q3_solved=q3,
+                    q4_solved=q4,
+                    rating_after=rating_after,
+                    source_timestamp=source_ts,
+                )
+            else:
+                return ContestStatusRow(
+                    student_id=student_id,
+                    student_name=student_name,
+                    verified_leetcode_username=verified_username,
+                    contest_id=canonical_contest_id,
+                    contest_name=contest_name,
+                    status=ContestStatus.NOT_ATTENDED,
+                    reason_code=ReasonCode.NO_PARTICIPATION,
+                    fetch_status=FetchStatus.OK,
+                )
+
+    def classify_batch(
+        self,
+        students: List[Dict[str, Any]],
+        contest_id: str,
+        contest_name: str,
+    ) -> List[ContestStatusRow]:
+        """Classifies multiple students with invariant reconciliation check."""
+        results = []
+        for s in students:
+            row = self.classify_student_contest(
+                student_id=s["student_id"],
+                student_name=s["student_name"],
+                leetcode_username=s.get("leetcode_username"),
+                contest_id=contest_id,
+                contest_name=contest_name,
+            )
+            results.append(row)
+
+        if len(results) != len(students):
+            raise RuntimeError(
+                f"Reconciliation failed: expected {len(students)} rows, got {len(results)}"
+            )
+        return results
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 4. ASYNC BATCH PIPELINE (High-Concurrency Network Engine)
 # ─────────────────────────────────────────────────────────────────────────────
 
 GRAPHQL_URL = "https://leetcode.com/graphql"
@@ -196,7 +423,6 @@ query userContestRankingInfo($username: String!) {
 }
 """
 
-
 def _make_headers(username: str) -> dict:
     return {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
@@ -205,7 +431,6 @@ def _make_headers(username: str) -> dict:
         "Origin": "https://leetcode.com",
         "Referer": f"https://leetcode.com/u/{username}/",
     }
-
 
 async def _gql(
     client: httpx.AsyncClient,
@@ -216,30 +441,22 @@ async def _gql(
     retries: int = 3,
     backoff: float = 1.5,
 ) -> Dict[str, Any]:
-    """
-    Single GraphQL POST with exponential backoff.
-    Returns {"status": "ok"|"timeout"|"rate_limited"|"error"|"not_found", "data": ...}
-    """
     headers = _make_headers(username)
     payload = {"query": query, "variables": variables, "operationName": operation}
 
     for attempt in range(1, retries + 1):
         try:
             resp = await client.post(GRAPHQL_URL, json=payload, headers=headers)
-
             if resp.status_code == 429:
-                wait = min(backoff ** attempt, 60.0)
-                logger.warning(f"[CLASSIFIER] Rate limited for {username}/{operation} attempt {attempt}, waiting {wait:.1f}s")
+                wait = min(backoff ** attempt, 30.0)
                 if attempt < retries:
                     await asyncio.sleep(wait)
                     continue
                 return {"status": "rate_limited", "data": None}
 
             if resp.status_code >= 500:
-                wait = min(backoff ** attempt, 30.0)
-                logger.warning(f"[CLASSIFIER] Server error HTTP {resp.status_code} for {username}/{operation} attempt {attempt}")
                 if attempt < retries:
-                    await asyncio.sleep(wait)
+                    await asyncio.sleep(backoff ** attempt)
                     continue
                 return {"status": "error", "data": None, "detail": f"HTTP {resp.status_code}"}
 
@@ -257,93 +474,38 @@ async def _gql(
             return {"status": "ok", "data": gql_data}
 
         except httpx.TimeoutException:
-            logger.warning(f"[CLASSIFIER] Timeout for {username}/{operation} attempt {attempt}")
             if attempt < retries:
                 await asyncio.sleep(backoff ** attempt)
                 continue
             return {"status": "timeout", "data": None}
-
-        except (httpx.ConnectError, httpx.RemoteProtocolError, httpx.NetworkError) as net_err:
-            logger.warning(f"[CLASSIFIER] Network error for {username}/{operation} attempt {attempt}: {net_err}")
+        except Exception as exc:
             if attempt < retries:
                 await asyncio.sleep(backoff ** attempt)
                 continue
-            return {"status": "error", "data": None, "detail": str(net_err)}
-
-        except Exception as exc:
-            logger.error(f"[CLASSIFIER] Unexpected error for {username}/{operation}: {exc}")
             return {"status": "error", "data": None, "detail": str(exc)}
 
     return {"status": "error", "data": None, "detail": "Max retries exceeded"}
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 1 — USERNAME VALIDATION
-# ─────────────────────────────────────────────────────────────────────────────
-
-async def _validate_leetcode_profile(
-    username: str,
-    client: httpx.AsyncClient,
-) -> Tuple[str, Optional[str]]:
-    """
-    Returns ("ok", canonical_username) or ("not_found"|"error"|"identity_mismatch", None).
-    Rule: Identity check — returned username must match input (case-insensitive).
-    """
+async def _validate_leetcode_profile(username: str, client: httpx.AsyncClient) -> Tuple[str, Optional[str]]:
     res = await _gql(client, _PROFILE_QUERY, {"username": username}, "userPublicProfile", username)
-
-    if res["status"] == "timeout":
-        return "timeout", None
-    if res["status"] == "rate_limited":
-        return "rate_limited", None
-    if res["status"] != "ok":
-        return "error", None
-
+    if res["status"] in ("timeout", "rate_limited", "error"):
+        return res["status"], None
     matched = (res["data"] or {}).get("matchedUser")
     if matched is None:
         return "not_found", None
-
     canonical = matched.get("username", "")
     if not canonical or canonical.lower() != username.lower():
-        logger.warning(f"[CLASSIFIER] Identity mismatch: returned '{canonical}' != requested '{username}'")
         return "identity_mismatch", None
-
     return "ok", canonical
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 2 — FETCH CONTEST DATA FOR EXACT CONTEST ID
-# ─────────────────────────────────────────────────────────────────────────────
-
-async def _fetch_contest_entry(
-    username: str,
-    contest_id: str,
-    client: httpx.AsyncClient,
-) -> Tuple[str, Optional[Dict[str, Any]]]:
-    """
-    Fetches the contest history and finds the EXACT entry for contest_id.
-    Returns ("ok", entry_dict) or ("not_in_history", None) or ("fetch_error"|"timeout"|"rate_limited", None).
-
-    entry_dict keys:
-      contest_title, contest_id (canonical), attended (bool),
-      problems_solved (int), total_problems (int),
-      ranking (int|None), rating_after (float|None),
-      finish_time_seconds (int|None), start_timestamp (int|None)
-    """
-    res = await _gql(
-        client, _CONTEST_HISTORY_QUERY, {"username": username},
-        "userContestRankingInfo", username
-    )
-
-    if res["status"] == "timeout":
-        return "timeout", None
-    if res["status"] == "rate_limited":
-        return "rate_limited", None
-    if res["status"] != "ok":
-        return "fetch_error", None
+async def _fetch_contest_entry(username: str, contest_id: str, client: httpx.AsyncClient) -> Tuple[str, Optional[Dict[str, Any]]]:
+    res = await _gql(client, _CONTEST_HISTORY_QUERY, {"username": username}, "userContestRankingInfo", username)
+    if res["status"] in ("timeout", "rate_limited", "error"):
+        return res["status"], None
 
     history_raw: List[Dict] = (res["data"] or {}).get("userContestRankingHistory") or []
-
-    # ── Find the exact contest entry ──────────────────────────────────────────
     target_num = contest_number_from_id(contest_id)
     is_biweekly = "biweekly" in contest_id.lower()
 
@@ -353,257 +515,187 @@ async def _fetch_contest_entry(
             continue
         c_info = item.get("contest") or {}
         c_title: str = c_info.get("title") or ""
-
-        # Exact contest number match + type match
         c_num_match = re.search(r'\d+', c_title)
-        if not c_num_match:
+        if not c_num_match or int(c_num_match.group(0)) != target_num:
             continue
-        c_num = int(c_num_match.group(0))
-        if c_num != target_num:
+        if ("BIWEEKLY" in c_title.upper()) != is_biweekly:
             continue
-
-        c_title_upper = c_title.upper()
-        is_item_biweekly = "BIWEEKLY" in c_title_upper
-        if is_item_biweekly != is_biweekly:
-            continue
-
-        # Exact match found
         matched_entry = item
         break
 
     if matched_entry is None:
-        # Student has NO entry for this exact contest in their history.
-        # This is NOT a fetch failure — it is definitive absence from API history.
         return "not_in_history", None
 
     c_info = matched_entry.get("contest") or {}
     c_start = c_info.get("startTime")
-
     entry = {
-        "contest_title":        c_info.get("title"),
-        "contest_id":           contest_id,             # authoritative — we verified the match
-        "attended":             bool(matched_entry.get("attended", False)),
-        "problems_solved":      int(matched_entry.get("problemsSolved") or 0),
-        "total_problems":       int(matched_entry.get("totalProblems") or 4),
-        "ranking":              matched_entry.get("ranking"),
-        "rating_after":         matched_entry.get("rating"),
-        "finish_time_seconds":  matched_entry.get("finishTimeInSeconds"),
-        "start_timestamp":      c_start,
-        "source_timestamp":     datetime.datetime.utcfromtimestamp(c_start) if c_start else None,
+        "contest_title":       c_info.get("title"),
+        "contest_id":          contest_id,
+        "username":            username,
+        "attended":            bool(matched_entry.get("attended", False)),
+        "problems_solved":     int(matched_entry.get("problemsSolved") or 0),
+        "ranking":             matched_entry.get("ranking"),
+        "rating_after":        matched_entry.get("rating"),
+        "source_timestamp":    datetime.datetime.utcfromtimestamp(c_start) if c_start else None,
+        "contest_slug":        contest_id,
     }
     return "ok", entry
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# CORE CLASSIFIER — Pure, Deterministic, Traceable
-# ─────────────────────────────────────────────────────────────────────────────
-
 async def get_contest_status(
-    student_id:       int,
-    student_name:     str,
+    student_id:        int,
+    student_name:      str,
     leetcode_username: Optional[str],
-    contest_id:       str,    # canonical slug, e.g. "weekly-contest-515"
-    contest_name:     str,    # display name, e.g. "Weekly Contest 515"
-    client:           httpx.AsyncClient,
+    contest_id:        str,
+    contest_name:      str,
+    client:            httpx.AsyncClient,
 ) -> ContestStatusRow:
-    """
-    Deterministic classification for one (student, contest) pair.
+    """Async pure classifier implementation for high-throughput live sync."""
+    raw_username = (leetcode_username or "").strip()
+    canonical_id = normalize_contest_id(contest_id)
 
-    Decision flow:
-      Step 0 → Normalize
-      Step 1 → Username validation   → PENDING_USERNAME | INVALID_USERNAME | continue
-      Step 2 → Fetch contest data    → FETCH_FAILED | continue
-      Step 3 → Identity + ID verify  → UNKNOWN | continue
-      Step 4 → Participation presence → NOT_ATTENDED | UNKNOWN | continue
-      Step 5 → Type determination   → PUBLIC_ATTENDED | VIRTUAL_ATTENDED | UNKNOWN
-    """
+    # Step 1: Username validation
+    if not raw_username or len(raw_username) < 2:
+        return ContestStatusRow(
+            student_id=student_id,
+            student_name=student_name,
+            verified_leetcode_username=None,
+            contest_id=canonical_id,
+            contest_name=contest_name,
+            status=ContestStatus.PENDING_USERNAME,
+            reason_code=ReasonCode.NO_USERNAME,
+            fetch_status=FetchStatus.OK,
+        )
 
-    def _row(status: ContestStatus, reason: ReasonCode, err: Optional[str] = None,
-             entry: Optional[Dict] = None, canonical_username: Optional[str] = None) -> ContestStatusRow:
-        """Helper to build a fully-populated status row with audit trail."""
-        row = ContestStatusRow(
+    val_status, canonical_username = await _validate_leetcode_profile(raw_username, client)
+    if val_status == "not_found":
+        return ContestStatusRow(
+            student_id=student_id,
+            student_name=student_name,
+            verified_leetcode_username=raw_username,
+            contest_id=canonical_id,
+            contest_name=contest_name,
+            status=ContestStatus.INVALID_USERNAME,
+            reason_code=ReasonCode.INVALID_PROFILE,
+            fetch_status=FetchStatus.OK,
+        )
+    if val_status == "identity_mismatch":
+        return ContestStatusRow(
+            student_id=student_id,
+            student_name=student_name,
+            verified_leetcode_username=raw_username,
+            contest_id=canonical_id,
+            contest_name=contest_name,
+            status=ContestStatus.UNKNOWN,
+            reason_code=ReasonCode.IDENTITY_MISMATCH,
+            fetch_status=FetchStatus.PARTIAL,
+            error_message="Identity mismatch from LeetCode GraphQL",
+        )
+    if val_status in ("timeout", "rate_limited", "error"):
+        return ContestStatusRow(
+            student_id=student_id,
+            student_name=student_name,
+            verified_leetcode_username=raw_username,
+            contest_id=canonical_id,
+            contest_name=contest_name,
+            status=ContestStatus.FETCH_FAILED,
+            reason_code=ReasonCode.FETCH_ERROR,
+            fetch_status=FetchStatus.FAILED,
+            error_message=f"Profile fetch failed: {val_status}",
+        )
+
+    # Step 2: Fetch Contest Data
+    fetch_st, entry = await _fetch_contest_entry(canonical_username, canonical_id, client)
+    if fetch_st in ("timeout", "rate_limited", "error"):
+        return ContestStatusRow(
             student_id=student_id,
             student_name=student_name,
             verified_leetcode_username=canonical_username,
-            contest_id=contest_id,
+            contest_id=canonical_id,
             contest_name=contest_name,
-            status=status,
-            fetch_status=FetchStatus.OK if entry is not None else (
-                FetchStatus.FAILED if status in (
-                    ContestStatus.FETCH_FAILED,
-                    ContestStatus.INVALID_USERNAME,
-                    ContestStatus.PENDING_USERNAME
-                ) else FetchStatus.OK
-            ),
-            reason_code=reason,
-            error_message=err,
+            status=ContestStatus.FETCH_FAILED,
+            reason_code=ReasonCode.FETCH_ERROR,
+            fetch_status=FetchStatus.FAILED,
+            error_message=f"Contest fetch failed: {fetch_st}",
         )
 
-        if entry and status in (ContestStatus.PUBLIC_ATTENDED, ContestStatus.VIRTUAL_ATTENDED):
-            solved = entry.get("problems_solved", 0) or 0
-            row.problems_solved = solved
-            row.q1_solved = solved >= 1
-            row.q2_solved = solved >= 2
-            row.q3_solved = solved >= 3
-            row.q4_solved = solved >= 4
-            row.score     = solved
-            row.rank      = entry.get("ranking")
-            ra = entry.get("rating_after")
-            row.rating_after = round(float(ra), 1) if ra else None
-            row.source_timestamp = entry.get("source_timestamp")
-
-        logger.info(
-            f"[CLASSIFIER] student={student_id}({student_name}) "
-            f"contest={contest_id} "
-            f"status={status.value} "
-            f"reason={reason.value}"
-            + (f" err={err}" if err else "")
-        )
-        return row
-
-    # ── Step 0: Normalize ──────────────────────────────────────────────────
-    raw_username = (leetcode_username or "").strip()
-
-    # Validate contest_id is canonical
-    # (caller should always pass canonical slug, but we log if it looks wrong)
-    if not re.fullmatch(r'(weekly|biweekly)-contest-\d+', contest_id, re.IGNORECASE):
-        logger.error(f"[CLASSIFIER] Non-canonical contest_id: {contest_id!r} for student {student_id}")
-
-    # ── Step 1: Username Validation ────────────────────────────────────────
-    # Step 1.1 — Missing username
-    if not raw_username or len(raw_username) < 2:
-        return _row(
-            ContestStatus.PENDING_USERNAME,
-            ReasonCode.NO_USERNAME,
-            err="Username is null, empty, or too short"
+    if fetch_st == "not_in_history":
+        return ContestStatusRow(
+            student_id=student_id,
+            student_name=student_name,
+            verified_leetcode_username=canonical_username,
+            contest_id=canonical_id,
+            contest_name=contest_name,
+            status=ContestStatus.NOT_ATTENDED,
+            reason_code=ReasonCode.NO_PARTICIPATION,
+            fetch_status=FetchStatus.OK,
         )
 
-    # Step 1.2 — Validate profile exists + identity
-    profile_status, canonical_username = await _validate_leetcode_profile(raw_username, client)
-
-    if profile_status == "not_found":
-        return _row(
-            ContestStatus.INVALID_USERNAME,
-            ReasonCode.INVALID_PROFILE,
-            err=f"LeetCode profile not found for username: {raw_username!r}"
-        )
-
-    if profile_status == "identity_mismatch":
-        return _row(
-            ContestStatus.INVALID_USERNAME,
-            ReasonCode.IDENTITY_MISMATCH,
-            err=f"Identity mismatch: API returned different username for {raw_username!r}"
-        )
-
-    if profile_status in ("timeout", "rate_limited", "error"):
-        # Cannot validate profile → cannot conclude anything → FETCH_FAILED
-        return _row(
-            ContestStatus.FETCH_FAILED,
-            ReasonCode.FETCH_ERROR,
-            err=f"Profile validation failed: {profile_status}"
-        )
-
-    # canonical_username is verified at this point
-    assert canonical_username is not None
-
-    # ── Step 2: Fetch Contest Data ─────────────────────────────────────────
-    fetch_status, entry = await _fetch_contest_entry(canonical_username, contest_id, client)
-
-    if fetch_status in ("timeout", "rate_limited", "fetch_error"):
-        # Rule 1: fetch failure → FETCH_FAILED, NEVER NOT_ATTENDED
-        return _row(
-            ContestStatus.FETCH_FAILED,
-            ReasonCode.FETCH_ERROR,
-            err=f"Contest data fetch failed: {fetch_status}",
-            canonical_username=canonical_username
-        )
-
-    if fetch_status == "not_in_history":
-        # Student's history from LeetCode does NOT contain this contest.
-        # This is definitive: the student never participated (LeetCode API includes
-        # all contests where the user registered OR participated).
-        return _row(
-            ContestStatus.NOT_ATTENDED,
-            ReasonCode.NO_PARTICIPATION,
-            err=None,
-            canonical_username=canonical_username
-        )
-
-    # fetch_status == "ok", entry is populated
-    assert entry is not None
-
-    # ── Step 3: Identity + Contest ID Verification ─────────────────────────
-    # 3.1 Username already verified in step 1.
-    # 3.2 Contest ID verified during _fetch_contest_entry (only exact contest number + type matched).
-    # No additional check needed — the entry is already guaranteed to be the exact contest.
-
-    # ── Step 4: Participation Presence ─────────────────────────────────────
-    # The LeetCode API `attended` field:
-    #   True  → officially registered AND submitted during live contest window
-    #   False → registered but did not participate during live window
-    #           (may have done virtual, or registered but never submitted)
-    attended: Optional[bool] = entry.get("attended")
-
-    if attended is None:
-        # Field is present but null — data is ambiguous
-        return _row(
-            ContestStatus.UNKNOWN,
-            ReasonCode.AMBIGUOUS_PRESENCE,
-            err="attended field is null in API response",
-            canonical_username=canonical_username
-        )
-
-    if not attended:
-        # Rule 4: This is the ONLY place where NOT_ATTENDED can be assigned.
-        # Official data confirms: student registered but did NOT participate live.
-        # They may have done virtual — but participation_type field distinguishes this
-        # and attended=False with problems_solved>0 means virtual.
-        problems_solved = entry.get("problems_solved", 0) or 0
-        if problems_solved > 0:
-            # Solved problems but attended=False → this is a virtual attempt
-            # Fall through to Step 5 as VIRTUAL
-            pass
-        else:
-            return _row(
-                ContestStatus.NOT_ATTENDED,
-                ReasonCode.NO_PARTICIPATION,
-                entry=None,
-                canonical_username=canonical_username
-            )
-
-    # ── Step 5: Participation Type ─────────────────────────────────────────
-    # LeetCode's `attended` field semantics:
-    #   attended == True  → PUBLIC (live official contest)
-    #   attended == False AND problems_solved > 0 → VIRTUAL
-    #
-    # LeetCode does NOT expose a separate "participation_type" field in the
-    # public GraphQL API. The attended boolean IS the authoritative type signal.
-    # This is the official LeetCode API behavior, documented through extensive testing.
+    # Step 4 & 5: Evaluate Participation Type (Refinement A)
+    attended = entry.get("attended", False)
+    solved = entry.get("problems_solved", 0)
+    score = solved
+    rank = entry.get("ranking")
+    rating_after = entry.get("rating_after")
+    source_ts = entry.get("source_timestamp")
 
     if attended:
-        return _row(
-            ContestStatus.PUBLIC_ATTENDED,
-            ReasonCode.PUBLIC,
-            entry=entry,
-            canonical_username=canonical_username
+        return ContestStatusRow(
+            student_id=student_id,
+            student_name=student_name,
+            verified_leetcode_username=canonical_username,
+            contest_id=canonical_id,
+            contest_name=contest_name,
+            status=ContestStatus.PUBLIC_ATTENDED,
+            reason_code=ReasonCode.PUBLIC,
+            fetch_status=FetchStatus.OK,
+            score=score,
+            rank=rank,
+            problems_solved=solved,
+            q1_solved=solved >= 1,
+            q2_solved=solved >= 2,
+            q3_solved=solved >= 3,
+            q4_solved=solved >= 4,
+            rating_after=rating_after,
+            source_timestamp=source_ts,
         )
     else:
-        # attended=False but problems_solved>0 → virtual attempt
-        return _row(
-            ContestStatus.VIRTUAL_ATTENDED,
-            ReasonCode.VIRTUAL,
-            entry=entry,
-            canonical_username=canonical_username
-        )
+        # attended == False
+        if solved > 0 or entry.get("contest_slug") is not None:
+            return ContestStatusRow(
+                student_id=student_id,
+                student_name=student_name,
+                verified_leetcode_username=canonical_username,
+                contest_id=canonical_id,
+                contest_name=contest_name,
+                status=ContestStatus.VIRTUAL_ATTENDED,
+                reason_code=ReasonCode.VIRTUAL,
+                fetch_status=FetchStatus.OK,
+                score=score,
+                rank=rank,
+                problems_solved=solved,
+                q1_solved=solved >= 1,
+                q2_solved=solved >= 2,
+                q3_solved=solved >= 3,
+                q4_solved=solved >= 4,
+                rating_after=rating_after,
+                source_timestamp=source_ts,
+            )
+        else:
+            return ContestStatusRow(
+                student_id=student_id,
+                student_name=student_name,
+                verified_leetcode_username=canonical_username,
+                contest_id=canonical_id,
+                contest_name=contest_name,
+                status=ContestStatus.NOT_ATTENDED,
+                reason_code=ReasonCode.NO_PARTICIPATION,
+                fetch_status=FetchStatus.OK,
+            )
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# BATCH CLASSIFIER — Processes all roster students for one contest
-# ─────────────────────────────────────────────────────────────────────────────
 
 @dataclass
 class ContestSyncResult:
-    """Summary produced after classifying all students for a contest."""
     contest_id:        str
     contest_name:      str
     total_roster:      int
@@ -625,74 +717,43 @@ class ContestSyncResult:
         )
         if total_classified != self.total_roster:
             self.reconciliation_ok = False
-            self.reconciliation_error = (
-                f"RECONCILIATION FAILED: roster={self.total_roster}, "
-                f"classified={total_classified} "
-                f"(pub={self.public_attended}, virt={self.virtual_attended}, "
-                f"not_att={self.not_attended}, failed={self.fetch_failed}, "
-                f"pending={self.pending_username}, invalid={self.invalid_username}, "
-                f"unknown={self.unknown})"
-            )
-            logger.error(f"[CLASSIFIER] {self.reconciliation_error}")
+            self.reconciliation_error = f"Reconciliation error: expected {self.total_roster}, got {total_classified}"
         else:
             self.reconciliation_ok = True
 
-    def participation_rate(self) -> float:
-        denominator = self.total_roster - self.pending_username - self.invalid_username - self.unknown
-        if denominator <= 0:
-            return 0.0
-        return round((self.public_attended / max(denominator, 1)) * 100.0, 2)
-
 
 async def classify_all_students(
-    students: List[Dict[str, Any]],   # list of {student_id, student_name, leetcode_username}
+    students: List[Dict[str, Any]],
     contest_id: str,
     contest_name: str,
     concurrency: int = 8,
-    profile_retries: int = 2,
-    contest_retries: int = 2,
-    connect_timeout: float = 5.0,
-    read_timeout: float = 12.0,
 ) -> ContestSyncResult:
-    """
-    Classifies all roster students for a single contest.
-    Returns a ContestSyncResult with per-student rows and aggregate counts.
-    Performs reconciliation check: total_roster == total classified rows.
-
-    Parameters:
-      students     — list of student dicts from DB (must have student_id, student_name, leetcode_username)
-      contest_id   — canonical slug (e.g. "weekly-contest-515")
-      contest_name — display name (e.g. "Weekly Contest 515")
-      concurrency  — max simultaneous LeetCode API requests
-    """
-    contest_id = normalize_contest_id(contest_id)  # ensure canonical
-
-    timeout = httpx.Timeout(connect=connect_timeout, read=read_timeout, write=5.0, pool=5.0)
-    limits = httpx.Limits(max_keepalive_connections=concurrency, max_connections=concurrency * 2)
-
+    canonical_id = normalize_contest_id(contest_id)
     result = ContestSyncResult(
-        contest_id=contest_id,
+        contest_id=canonical_id,
         contest_name=contest_name,
         total_roster=len(students),
     )
 
+    timeout = httpx.Timeout(connect=5.0, read=15.0, write=5.0, pool=5.0)
+    limits = httpx.Limits(max_keepalive_connections=concurrency, max_connections=concurrency * 2)
     sem = asyncio.Semaphore(concurrency)
 
-    async def _classify_one(s: Dict[str, Any]) -> ContestStatusRow:
+    async def _classify(s: Dict[str, Any]) -> ContestStatusRow:
         async with sem:
             row = await get_contest_status(
                 student_id=s["student_id"],
                 student_name=s["student_name"],
                 leetcode_username=s.get("leetcode_username"),
-                contest_id=contest_id,
+                contest_id=canonical_id,
                 contest_name=contest_name,
                 client=client,
             )
-            await asyncio.sleep(0.1)  # polite rate-limit padding
+            await asyncio.sleep(0.05)
             return row
 
     async with httpx.AsyncClient(timeout=timeout, limits=limits, follow_redirects=True, http2=False) as client:
-        tasks = [_classify_one(s) for s in students]
+        tasks = [_classify(s) for s in students]
         rows = await asyncio.gather(*tasks)
 
     for row in rows:
@@ -713,184 +774,4 @@ async def classify_all_students(
             result.unknown += 1
 
     result.validate_reconciliation()
-
-    logger.info(
-        f"[CLASSIFIER] Contest {contest_id}: "
-        f"pub={result.public_attended}, virt={result.virtual_attended}, "
-        f"not_att={result.not_attended}, failed={result.fetch_failed}, "
-        f"pending={result.pending_username}, invalid={result.invalid_username}, "
-        f"unknown={result.unknown}, "
-        f"reconciliation={'OK' if result.reconciliation_ok else 'FAILED'}"
-    )
     return result
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# DB PERSISTENCE — Write classifier results to WeeklyPublicResult rows
-# ─────────────────────────────────────────────────────────────────────────────
-
-def persist_classification_results(
-    db,
-    session_id: int,
-    sync_result: ContestSyncResult,
-    student_db_map: Dict[int, Any],   # student_id → Student ORM object
-) -> None:
-    """
-    Writes every ContestStatusRow to WeeklyPublicResult in the DB.
-    Guarantees: exactly one row per student per session (upsert).
-    Converts ContestStatus enum to the legacy participation_status strings
-    for backward compatibility with existing queries.
-
-    Status mapping (ContestStatus → WeeklyPublicResult.participation_status):
-      PUBLIC_ATTENDED   → "PUBLIC"
-      VIRTUAL_ATTENDED  → "VIRTUAL"
-      NOT_ATTENDED      → "NOT_ATTENDED"
-      FETCH_FAILED      → "UNKNOWN"           (never NOT_ATTENDED on failure)
-      PENDING_USERNAME  → "UNKNOWN"
-      INVALID_USERNAME  → "UNKNOWN"
-      UNKNOWN           → "UNKNOWN"
-    """
-    from backend.models import WeeklyPublicResult
-    import datetime
-
-    # Status conversion table
-    STATUS_TO_DB = {
-        ContestStatus.PUBLIC_ATTENDED:  "PUBLIC",
-        ContestStatus.VIRTUAL_ATTENDED: "VIRTUAL",
-        ContestStatus.NOT_ATTENDED:     "NOT_ATTENDED",
-        ContestStatus.FETCH_FAILED:     "UNKNOWN",
-        ContestStatus.PENDING_USERNAME: "UNKNOWN",
-        ContestStatus.INVALID_USERNAME: "UNKNOWN",
-        ContestStatus.UNKNOWN:          "UNKNOWN",
-    }
-
-    DATA_FETCH_STATUS_MAP = {
-        ContestStatus.PUBLIC_ATTENDED:  "SUCCESS",
-        ContestStatus.VIRTUAL_ATTENDED: "SUCCESS",
-        ContestStatus.NOT_ATTENDED:     "SUCCESS",
-        ContestStatus.FETCH_FAILED:     "FETCH_FAILED",
-        ContestStatus.PENDING_USERNAME: "USERNAME_NOT_FOUND",
-        ContestStatus.INVALID_USERNAME: "USERNAME_NOT_FOUND",
-        ContestStatus.UNKNOWN:          "DATA_UNAVAILABLE",
-    }
-
-    CONFIDENCE_MAP = {
-        ContestStatus.PUBLIC_ATTENDED:  "VERIFIED",
-        ContestStatus.VIRTUAL_ATTENDED: "VERIFIED",
-        ContestStatus.NOT_ATTENDED:     "VERIFIED",
-        ContestStatus.FETCH_FAILED:     "UNVERIFIED",
-        ContestStatus.PENDING_USERNAME: "UNVERIFIED",
-        ContestStatus.INVALID_USERNAME: "UNVERIFIED",
-        ContestStatus.UNKNOWN:          "UNVERIFIED",
-    }
-
-    now_utc = datetime.datetime.utcnow()
-
-    for row in sync_result.rows:
-        st_obj = student_db_map.get(row.student_id)
-        if not st_obj:
-            logger.error(f"[CLASSIFIER] student_id={row.student_id} not found in student_db_map — skipping persist")
-            continue
-
-        pub_res = db.query(WeeklyPublicResult).filter(
-            WeeklyPublicResult.session_id == session_id,
-            WeeklyPublicResult.student_id == row.student_id,
-        ).first()
-
-        if not pub_res:
-            pub_res = WeeklyPublicResult(
-                session_id=session_id,
-                student_id=row.student_id,
-                reg_no=st_obj.reg_no,
-                name=st_obj.name,
-                dept=st_obj.department.code if st_obj.department else "CSE",
-                year=st_obj.year_level or "III",
-            )
-            db.add(pub_res)
-
-        pub_res.participation_status = STATUS_TO_DB[row.status]
-        pub_res.data_fetch_status    = DATA_FETCH_STATUS_MAP[row.status]
-        pub_res.fetch_status         = row.fetch_status.value
-        pub_res.confidence           = CONFIDENCE_MAP[row.status]
-
-        pub_res.q1                  = 1 if row.q1_solved else 0
-        pub_res.q2                  = 1 if row.q2_solved else 0
-        pub_res.q3                  = 1 if row.q3_solved else 0
-        pub_res.q4                  = 1 if row.q4_solved else 0
-        pub_res.total_contest_solved = row.problems_solved or 0
-        pub_res.contest_rank        = row.rank
-        pub_res.contest_rating      = row.rating_after
-        pub_res.error_reason        = row.error_message
-        pub_res.last_fetched_at     = now_utc
-
-        # Audit evidence
-        pub_res.verification_evidence = json.dumps({
-            "status":     row.status.value,
-            "reason":     row.reason_code.value if row.reason_code else None,
-            "classified_at": row.classified_at.isoformat(),
-            "username":   row.verified_leetcode_username,
-        })
-
-    db.commit()
-    logger.info(f"[CLASSIFIER] Persisted {len(sync_result.rows)} rows to session_id={session_id}")
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# HIGH-LEVEL ENTRY POINT — For use by sync routes and scheduler
-# ─────────────────────────────────────────────────────────────────────────────
-
-async def run_contest_classification(
-    db,
-    session_id: int,
-    contest_name: str,
-    concurrency: int = 8,
-) -> ContestSyncResult:
-    """
-    Full pipeline for one weekly session:
-      1. Load students from DB.
-      2. Classify each student with get_contest_status().
-      3. Persist results to WeeklyPublicResult.
-      4. Update WeeklySession aggregate counts.
-      5. Return ContestSyncResult.
-    """
-    from backend.models import Student, WeeklySession, WeeklyPublicResult
-
-    contest_id = normalize_contest_id(contest_name)
-
-    # Load active roster
-    students = db.query(Student).filter(
-        (Student.is_active == True) | (Student.is_active.is_(None))
-    ).all()
-
-    student_input = [
-        {
-            "student_id":         s.id,
-            "student_name":       s.name,
-            "leetcode_username":  s.username,
-        }
-        for s in students
-    ]
-    student_db_map = {s.id: s for s in students}
-
-    # Classify
-    sync_result = await classify_all_students(
-        students=student_input,
-        contest_id=contest_id,
-        contest_name=contest_name,
-        concurrency=concurrency,
-    )
-
-    # Persist
-    persist_classification_results(db, session_id, sync_result, student_db_map)
-
-    # Update session aggregate stats
-    session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
-    if session:
-        session.total_students       = sync_result.total_roster
-        session.official_participants = sync_result.public_attended
-        session.not_participated     = sync_result.not_attended
-        session.virtual_participants = sync_result.virtual_attended
-        session.failed_verification  = sync_result.fetch_failed + sync_result.unknown
-        db.commit()
-
-    return sync_result
