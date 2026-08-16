@@ -12,7 +12,7 @@ from backend.config import settings
 from backend.models import EmailLog, EmailDelivery, EmailAttachment, ReportRecipient, User
 from backend.services.audit_service import log_admin_action
 from backend.logger import logger
-from backend.services.email_service import connect_and_login_smtp
+from backend.services.email_service import connect_and_login_smtp, send_email
 
 def generate_message_id(trigger_type: str = "AUTOMATED") -> str:
     """Generates unique message ID: MSG-MANUAL-XXXXX or MSG-AUTO-XXXXX"""
@@ -108,32 +108,20 @@ def send_weekly_report_email(
             success_flag = False
             continue
 
-        msg = MIMEMultipart()
-        msg['From'] = settings.SMTP_FROM_EMAIL or settings.SMTP_USERNAME
-        msg['To'] = recipient
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body_html, 'html'))
-
+        attachments = []
         if excel_bytes:
-            excel_part = MIMEApplication(excel_bytes, Name=f"LeetCode_Weekly_Report_{report_date}.xlsx")
-            excel_part['Content-Disposition'] = f'attachment; filename="LeetCode_Weekly_Report_{report_date}.xlsx"'
-            msg.attach(excel_part)
-
+            attachments.append((f"LeetCode_Weekly_Report_{report_date}.xlsx", excel_bytes))
         if pdf_bytes:
-            pdf_part = MIMEApplication(pdf_bytes, Name=f"LeetCode_Performance_Summary_{report_date}.pdf")
-            pdf_part['Content-Disposition'] = f'attachment; filename="LeetCode_Performance_Summary_{report_date}.pdf"'
-            msg.attach(pdf_part)
+            attachments.append((f"LeetCode_Performance_Summary_{report_date}.pdf", pdf_bytes))
 
-        try:
-            server = connect_and_login_smtp(smtp_host, smtp_port, smtp_user, smtp_pass, timeout=15)
-            try:
-                server.sendmail(msg['From'], recipient, msg.as_string())
-            finally:
-                try:
-                    server.quit()
-                except Exception:
-                    pass
+        delivered, err_msg = send_email(
+            recipient=recipient,
+            subject=subject,
+            html_body=body_html,
+            attachments=attachments
+        )
 
+        if delivered:
             delivery.status = "SENT"
             delivery.sent_at = datetime.datetime.utcnow()
             delivery.delivered_at = datetime.datetime.utcnow()
@@ -144,13 +132,11 @@ def send_weekly_report_email(
                 description=f"Weekly report email [{msg_id}] successfully sent to {recipient} with {att_count} attachments",
                 current_user=current_user, target_type="EmailDelivery", target_id=str(delivery.id)
             )
-
-        except Exception as e:
+        else:
             success_flag = False
-            err_msg = str(e)
             delivery.status = "FAILED"
             delivery.failed_at = datetime.datetime.utcnow()
-            delivery.error_message = err_msg
+            delivery.error_message = err_msg or "Failed to deliver email"
             db.commit()
 
             log_admin_action(

@@ -354,10 +354,7 @@ async def execute_scheduled_report_pipeline(
             recipients = [test_recipient]
         else:
             db_recs = db.query(ReportEmailRecipient).filter(ReportEmailRecipient.is_active == True).all()
-            db_emails = [r.email for r in db_recs if r.email]
-            cfg_emails = config.recipients or []
-            combined_emails = list(dict.fromkeys(db_emails + cfg_emails))
-            recipients = combined_emails if combined_emails else ["nanthishvaran17@gmail.com", "msanthoshkumar@nandhaengg.org"]
+            recipients = [r.email for r in db_recs if r.email]
         
         hist.recipients_count = len(recipients)
 

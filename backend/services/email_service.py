@@ -904,84 +904,25 @@ def send_manual_report_email(
         db.add(log)
         db.commit()
 
-        # Build MIME message with all attachments
-        msg = MIMEMultipart()
-        msg['From'] = f"Nandha Engineering College — LeetCode Tracker <{from_email}>"
-        msg['To'] = email
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body_html, 'html'))
-
-        for fname, fbytes in attachments_bundle:
-            part = MIMEApplication(fbytes, Name=fname)
-            part['Content-Disposition'] = f'attachment; filename="{fname}"'
-            msg.attach(part)
-
-        delivered = False
-        err_details = None
-
-        # 1. Try Resend API first if configured
-        if resend_key and not delivered:
-            delivered, err_details = send_email_via_resend(
-                resend_key, from_email, email, subject, body_html,
-                attachments_bundle
-            )
-            if not delivered:
-                logger.warning(f"Resend API dispatch failed ({err_details}), attempting Brevo/SMTP...")
-
-        # 2. Try Brevo API if configured
-        if brevo_key and not delivered:
-            delivered, err_details = send_email_via_brevo(
-                brevo_key, from_email, email, subject, body_html,
-                attachments_bundle
-            )
-            if not delivered:
-                logger.warning(f"Brevo API dispatch failed ({err_details}), attempting SMTP...")
-
-        # 3. Try Gmail SMTP / configured SMTP server
-        if smtp_user and smtp_pass and not delivered:
-            try:
-                server = smtplib.SMTP(smtp_host, 587, timeout=60)
-                server.ehlo()
-                server.starttls()
-                server.ehlo()
-                server.login(smtp_user, smtp_pass)
-                server.sendmail(from_email, email, msg.as_string())
-                try:
-                    server.quit()
-                except Exception:
-                    pass
-                delivered = True
-                err_details = None
-            except Exception as exc:
-                try:
-                    server = smtplib.SMTP_SSL(smtp_host, 465, timeout=60)
-                    server.login(smtp_user, smtp_pass)
-                    server.sendmail(from_email, email, msg.as_string())
-                    try:
-                        server.quit()
-                    except Exception:
-                        pass
-                    delivered = True
-                    err_details = None
-                except Exception as exc2:
-                    err_details = f"SMTP error: {exc} | SSL error: {exc2}"
-
-        if not delivered and not err_details:
-            delivered = True
-            err_details = "Local simulation mode (SMTP not configured)."
+        delivered, err_details = send_email(
+            recipient=email,
+            subject=subject,
+            html_body=body_html,
+            attachments=attachments_bundle
+        )
 
         if delivered:
             log.status = "SENT"
             log.sent_at = datetime.datetime.utcnow()
-            log.error_message = None if not err_details else err_details
+            log.error_message = None
             db.commit()
             dispatched_count += 1
             logger.info(f"[REPORT EMAIL DELIVERED] To: {email} | Files: {len(attachments_bundle)} | Students: {total_students_cnt}")
         else:
             log.status = "FAILED"
-            log.error_message = err_details
+            log.error_message = err_details or "Email delivery failed"
             db.commit()
-            errors.append(f"{email}: {err_details}")
+            errors.append(f"{email}: {err_details or 'Delivery failed'}")
             logger.error(f"[REPORT EMAIL FAILED] To: {email} | Error: {err_details}")
 
     if errors and dispatched_count == 0:

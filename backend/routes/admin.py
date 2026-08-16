@@ -185,26 +185,6 @@ def get_recipients(db: Session = Depends(get_db)):
     """Retrieves all report email recipients directly from database."""
     recipients = db.query(ReportRecipient).order_by(ReportRecipient.id.asc()).all()
 
-    # Auto-seed standard default recipients if DB table is empty
-    if not recipients:
-        defaults = [
-            ("Principal / Management", "management@nandha.edu.in", "MANAGEMENT", "ALL", True, True, True, True),
-            ("HOD Cyber Security", "hod.cs@nandhaengg.org", "HOD", "CSE(CS)", True, True, True, True),
-            ("HOD IoT", "hod.iot@nandhaengg.org", "HOD", "CSE(IoT)", True, True, True, True),
-            ("System Admin", "admin.leetcode@nandhaengg.org", "ADMIN", "ALL", True, True, True, True),
-            ("Nanthishvaran", "nanthishvaran17@gmail.com", "ADMIN", "ALL", True, True, True, True),
-            ("Prof. Santhosh Kumar M", "msanthoshkumar@nandhaengg.org", "MANAGEMENT", "ALL", True, True, True, True),
-        ]
-        for name, email, role, dept, w_en, h_en, err_en, act in defaults:
-            rec = ReportRecipient(
-                name=name, email=email, role=role, department=dept,
-                receive_weekly_reports=w_en, receive_hod_reports=h_en,
-                receive_error_reports=err_en, is_active=act
-            )
-            db.add(rec)
-        db.commit()
-        recipients = db.query(ReportRecipient).order_by(ReportRecipient.id.asc()).all()
-
     return [{
         "id": r.id,
         "name": r.name,

@@ -98,15 +98,22 @@ def create_report_email_recipient(payload: RecipientCreateSchema, db: Session = 
     """
     Creates a new recipient contact for institutional report emails.
     """
-    existing = db.query(ReportEmailRecipient).filter(ReportEmailRecipient.email == payload.email).first()
+    clean_email = payload.email.strip().lower()
+    clean_name = payload.name.strip()
+    if not clean_email or "@" not in clean_email or "." not in clean_email:
+        raise HTTPException(status_code=400, detail="Invalid email address format.")
+    if not clean_name:
+        raise HTTPException(status_code=400, detail="Recipient full name is required.")
+
+    existing = db.query(ReportEmailRecipient).filter(ReportEmailRecipient.email.ilike(clean_email)).first()
     if existing:
-        raise HTTPException(status_code=400, detail=f"Recipient with email '{payload.email}' already exists.")
+        raise HTTPException(status_code=400, detail=f"Recipient with email '{clean_email}' already exists.")
 
     new_rec = ReportEmailRecipient(
-        name=payload.name,
-        email=payload.email,
-        role=payload.role,
-        department=payload.department,
+        name=clean_name,
+        email=clean_email,
+        role=payload.role.strip().upper(),
+        department=payload.department.strip() if payload.department else "ALL",
         receive_weekly_reports=payload.receive_weekly_reports,
         receive_hod_reports=payload.receive_hod_reports,
         receive_error_reports=payload.receive_error_reports
@@ -126,10 +133,25 @@ def update_report_email_recipient(recipient_id: int, payload: RecipientCreateSch
     if not rec:
         raise HTTPException(status_code=404, detail="Recipient not found")
 
-    rec.name = payload.name
-    rec.email = payload.email
-    rec.role = payload.role
-    rec.department = payload.department
+    clean_email = payload.email.strip().lower()
+    clean_name = payload.name.strip()
+    if not clean_email or "@" not in clean_email or "." not in clean_email:
+        raise HTTPException(status_code=400, detail="Invalid email address format.")
+    if not clean_name:
+        raise HTTPException(status_code=400, detail="Recipient full name is required.")
+
+    if clean_email != rec.email.lower():
+        existing = db.query(ReportEmailRecipient).filter(
+            ReportEmailRecipient.email.ilike(clean_email),
+            ReportEmailRecipient.id != recipient_id
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail=f"Recipient with email '{clean_email}' already exists.")
+
+    rec.name = clean_name
+    rec.email = clean_email
+    rec.role = payload.role.strip().upper()
+    rec.department = payload.department.strip() if payload.department else "ALL"
     rec.receive_weekly_reports = payload.receive_weekly_reports
     rec.receive_hod_reports = payload.receive_hod_reports
     rec.receive_error_reports = payload.receive_error_reports

@@ -162,22 +162,6 @@ def run_db_migrations():
             );
         """)
 
-        # Seed default institutional recipients if table is empty or missing key contacts
-        default_recipients = [
-            ("Nanthishvaran", "nanthishvaran17@gmail.com", "ADMIN", "ALL"),
-            ("Prof. Santhosh Kumar M", "msanthoshkumar@nandhaengg.org", "MANAGEMENT", "ALL"),
-            ("HOD Cyber Security", "hod.cs@nandha.edu.in", "HOD", "CSE(CS)"),
-            ("HOD IoT", "hod.iot@nandha.edu.in", "HOD", "CSE(IoT)")
-        ]
-        for name, email, role, dept in default_recipients:
-            try:
-                cursor.execute(
-                    "INSERT OR IGNORE INTO report_email_recipients (name, email, role, department, is_active, receive_weekly_reports, receive_hod_reports, receive_error_reports) VALUES (?, ?, ?, ?, 1, 1, 1, 1);",
-                    (name, email, role, dept)
-                )
-            except Exception:
-                pass
-
         conn.commit()
         conn.close()
         print("Database migration complete.")
