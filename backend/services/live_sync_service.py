@@ -328,6 +328,14 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
             job_record.status = final_status
             db.commit()
 
+        # Invalidate all caches so dashboard and leaderboard immediately serve fresh data
+        try:
+            from backend.cache import cache
+            cache.clear()
+            logger.info("[SYNC] Application cache invalidated post-sync.")
+        except Exception as c_err:
+            logger.warning(f"[SYNC] Cache invalidation note: {c_err}")
+
         await broadcast_sync_event({
             "type": "SYNC_COMPLETED",
             "job_id": job_id,
@@ -342,45 +350,6 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
             job_record.completed_at = datetime.datetime.utcnow()
             job_record.status = "FAILED"
             db.commit()
-    finally:
-        db.close()
-
-
-        # Invalidate all caches so dashboard and leaderboard immediately serve fresh data
-        try:
-            from backend.cache import cache
-            cache.clear()
-            logger.info("[SYNC] Application cache invalidated post-sync.")
-        except Exception as c_err:
-            logger.warning(f"[SYNC] Cache invalidation note: {c_err}")
-
-        # 8. Final Completion WebSocket Broadcast
-        await broadcast_sync_event({
-            "type": "SYNC_COMPLETED",
-            "job_id": job_id,
-            "status": final_status,
-            "total_records": total_students,
-            "total_students": total_students,
-            "students_processed": sync_tracker.students_processed,
-            "profiles_synced": profiles_synced_count,
-            "success_count": success_count,
-            "successful": success_count,
-            "partial_count": partial_count,
-            "pending_usernames": pending_username_count,
-            "error_count": error_count,
-            "failed": error_count,
-            "completed_at": datetime.datetime.utcnow().isoformat()
-        })
-        logger.info(f"[WORKER] Sync completed: Job {job_id}. Total: {total_students}, Successful: {success_count}, Profiles Synced: {profiles_synced_count}, Pending Usernames: {pending_username_count}, Failed: {error_count}")
-
-    except Exception as exc:
-        logger.error(f"[WORKER] Critical error during live sync worker {job_id}: {exc}")
-        job_record = db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
-        if job_record:
-            job_record.status = "FAILED"
-            job_record.completed_at = datetime.datetime.utcnow()
-            db.commit()
-        sync_tracker.finish(status="FAILED", error_summary=str(exc))
     finally:
         db.close()
 
