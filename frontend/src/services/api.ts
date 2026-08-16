@@ -21,7 +21,7 @@ const getApiBaseUrl = () => {
     return cleanUrl.endsWith('/api') ? cleanUrl : `${cleanUrl}/api`;
   }
 
-  return 'https://leetcodeurl-s-1.onrender.com/api';
+  return 'https://leetcodeurl-s.onrender.com/api';
 };
 
 
