@@ -46,9 +46,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = os.environ.get("SMTP_PASSWORD", "xdzzakkpfrhzrfrj")  # App Password (spaces removed)
     SMTP_FROM_EMAIL: str = os.environ.get("SMTP_FROM_EMAIL", os.environ.get("REPORT_FROM_EMAIL", "nanthishvaran17@gmail.com"))
     REPORT_RECIPIENT_EMAILS: str = os.environ.get("REPORT_RECIPIENT_EMAILS", "nanthishvaran17@gmail.com, msanthoshkumar@nandhaengg.org")
-    _b_part1: str = "xkeysib-feeae112732fe49f037db6f45bb8b0d7"
-    _b_part2: str = "57999ee333e7709f204374308170af22-GEFfiQreUdT2jwvt"
-    BREVO_API_KEY: str = os.environ.get("BREVO_API_KEY", "") or ("xkeysib-feeae112732fe49f037db6f45bb8b0d7" + "57999ee333e7709f204374308170af22-GEFfiQreUdT2jwvt")
+    BREVO_API_KEY: str = os.environ.get("BREVO_API_KEY", "")
     
     # Telegram / WhatsApp
     TELEGRAM_BOT_TOKEN: str = ""

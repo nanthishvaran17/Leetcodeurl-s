@@ -170,15 +170,22 @@ def export_word_from_dataset(dataset: dict) -> bytes:
 
         for idx, r in enumerate(contest_rows, start=1):
             row_cells = table_w.rows[idx].cells
-            p_status = r.get("participation_status", "PENDING")
-            attended = p_status in ("PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL_ATTENDED")
+            p_status = r.get("participation_status", "NOT_ATTENDED")
+            attended = p_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL", "VIRTUAL_ATTENDED")
             status_str = STATUS_LABEL.get(p_status, p_status)
             c_name_val = r.get("contest_name") or dataset.get("contestName") or "Weekly Contest"
 
-            q1 = 1 if (r.get("q1") or 0) > 0 else 0
-            q2 = 1 if (r.get("q2") or 0) > 0 else 0
-            q3 = 1 if (r.get("q3") or 0) > 0 else 0
-            q4 = 1 if (r.get("q4") or 0) > 0 else 0
+            def _parse_q(val):
+                if isinstance(val, (int, float)):
+                    return 1 if val > 0 else 0
+                if str(val).strip().isdigit():
+                    return 1 if int(val) > 0 else 0
+                return 0
+
+            q1 = _parse_q(r.get("q1"))
+            q2 = _parse_q(r.get("q2"))
+            q3 = _parse_q(r.get("q3"))
+            q4 = _parse_q(r.get("q4"))
             solved_cnt = q1 + q2 + q3 + q4
 
             r_vals = [

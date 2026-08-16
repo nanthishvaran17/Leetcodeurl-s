@@ -56,33 +56,53 @@ class IPv4SMTP_SSL(smtplib.SMTP_SSL):
             raise err
         raise socket.error("getaddrinfo returned empty list for IPv4")
 
+from fastapi import HTTPException
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
+from typing import List, Dict, Any, Optional, Tuple
+from sqlalchemy.orm import Session
+
 def connect_and_login_smtp(smtp_host: str, smtp_port: int, smtp_user: str, smtp_pass: str, timeout: int = 15):
     """
-    Connects and logs into SMTP server using IPv4-enforced sockets.
-    Tries configured port first, then falls back between 587 (STARTTLS) and 465 (SSL).
+    Connects and logs into SMTP server with automatic fallback between 587 (STARTTLS) and 465 (SSL).
     """
     attempts = []
-    ports_to_try = [
-        (smtp_port, smtp_port == 465),
-        (465 if smtp_port != 465 else 587, smtp_port != 465)
-    ]
+    
+    # 1. Try standard port 587 with STARTTLS
+    try:
+        server = smtplib.SMTP(smtp_host, 587, timeout=timeout)
+        server.ehlo()
+        server.starttls()
+        server.ehlo()
+        server.login(smtp_user, smtp_pass)
+        return server
+    except Exception as exc587:
+        attempts.append(f"Port 587 STARTTLS: {exc587}")
 
-    for port, is_ssl in ports_to_try:
+    # 2. Try port 465 with SSL
+    try:
+        server = smtplib.SMTP_SSL(smtp_host, 465, timeout=timeout)
+        server.login(smtp_user, smtp_pass)
+        return server
+    except Exception as exc465:
+        attempts.append(f"Port 465 SSL: {exc465}")
+
+    # 3. Try IPv4-enforced fallback
+    for port, is_ssl in [(smtp_port, smtp_port == 465), (465 if smtp_port != 465 else 587, smtp_port != 465)]:
         try:
             if is_ssl:
                 server = IPv4SMTP_SSL(smtp_host, port, timeout=timeout)
             else:
                 server = IPv4SMTP(smtp_host, port, timeout=timeout)
+                server.ehlo()
                 server.starttls()
+                server.ehlo()
             server.login(smtp_user, smtp_pass)
             return server
         except Exception as exc:
-            attempts.append(f"Port {port} ({'SSL' if is_ssl else 'STARTTLS'}): {exc}")
+            attempts.append(f"IPv4 Port {port}: {exc}")
 
     raise RuntimeError(" | ".join(attempts))
-from email.mime.text import MIMEText
-from email.mime.application import MIMEApplication
-from typing import List, Dict, Any, Optional, Tuple
 from sqlalchemy.orm import Session
 
 from backend.config import settings
@@ -758,26 +778,37 @@ def send_manual_report_email(
     """
     from backend.routes.reports import _get_dataset_for_id
     from backend.exporters.excel_exporter import export_excel_from_dataset
+    from backend.exporters.pdf_exporter import export_pdf_from_dataset
+    from backend.exporters.word_exporter import export_word_from_dataset
     import openpyxl
 
     report_id_str = f"Session_{session_id}" if session_id else "official"
     dataset, filename_base = _get_dataset_for_id(report_id_str, db, dept=dept, year=year, attendance=attendance)
     
+    # 1. Generate multi-sheet institutional Excel
     excel_bytes = export_excel_from_dataset(dataset)
-    
-    # 1. Validate generated Excel bytes
     if not excel_bytes or len(excel_bytes) < 100:
         raise ValueError("Excel report generation failed: File is empty or corrupted.")
-    
-    try:
-        test_wb = openpyxl.load_workbook(io.BytesIO(excel_bytes))
-        sheet_names = test_wb.sheetnames
-        if "Weekly Contest Summary" not in sheet_names and "Student Performance" not in sheet_names:
-            raise ValueError("Generated Excel is missing standard required sheets.")
-    except Exception as e:
-        raise ValueError(f"Excel report validation error: {e}")
 
     excel_filename = f"{filename_base}.xlsx"
+    attachments_bundle: List[Tuple[str, bytes]] = [(excel_filename, excel_bytes)]
+
+    # 2. Generate PDF report if possible
+    try:
+        pdf_bytes = export_pdf_from_dataset(dataset)
+        if pdf_bytes and len(pdf_bytes) >= 100:
+            attachments_bundle.append((f"{filename_base}.pdf", pdf_bytes))
+    except Exception as _pdf_err:
+        logger.warning(f"PDF attachment note: {_pdf_err}")
+
+    # 3. Generate Word DOCX report if possible
+    try:
+        word_bytes = export_word_from_dataset(dataset)
+        if word_bytes and len(word_bytes) >= 100:
+            attachments_bundle.append((f"{filename_base}.docx", word_bytes))
+    except Exception as _word_err:
+        logger.warning(f"Word attachment note: {_word_err}")
+    
     total_students_cnt = len(dataset.get("rows", []))
     contest_name = dataset.get("contestName") or "Weekly Contest"
     metrics = dataset.get("metrics", {})
@@ -793,6 +824,11 @@ def send_manual_report_email(
 
     custom_block = f"<div style='background: #f0fdf4; border-left: 4px solid #16a34a; padding: 12px; margin: 15px 0; font-style: italic; color: #166534;'>{custom_message}</div>" if custom_message else ""
 
+    attached_docs_html = "".join([
+        f"<li><code style='background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;'>{fname}</code> ({len(fbytes):,} bytes)</li>"
+        for fname, fbytes in attachments_bundle
+    ])
+
     body_html = f"""
     <!DOCTYPE html>
     <html>
@@ -804,7 +840,7 @@ def send_manual_report_email(
 
         <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-top: none; padding: 28px; border-radius: 0 0 12px 12px;">
             <p style="margin-top: 0;">Dear Sir/Madam,</p>
-            <p>Please find attached the official performance report spreadsheet for <strong>{contest_name}</strong>.</p>
+            <p>Please find attached the official performance report for <strong>{contest_name}</strong>.</p>
             
             {custom_block}
 
@@ -815,7 +851,7 @@ def send_manual_report_email(
                     <tr><td style="padding: 6px 0; color: #64748b;">Department:</td><td style="font-weight: bold; text-align: right; color: #0f172a;">{dept_label}</td></tr>
                     <tr><td style="padding: 6px 0; color: #64748b;">Academic Year:</td><td style="font-weight: bold; text-align: right; color: #0f172a;">{year_label}</td></tr>
                     <tr><td style="padding: 6px 0; color: #64748b;">Attendance Scope:</td><td style="font-weight: bold; text-align: right; color: #0f172a;">{att_label}</td></tr>
-                    <tr><td style="padding: 6px 0; color: #64748b;">Filtered Students Count:</td><td style="font-weight: bold; text-align: right; color: #0284c7;">{total_students_cnt} Students</td></tr>
+                    <tr><td style="padding: 6px 0; color: #64748b;">Total Evaluated Students:</td><td style="font-weight: bold; text-align: right; color: #0284c7;">{total_students_cnt} Students</td></tr>
                     <tr><td style="padding: 6px 0; color: #64748b;">Public Attended:</td><td style="font-weight: bold; text-align: right; color: #16a34a;">{metrics.get('officialAttended', 0)}</td></tr>
                     <tr><td style="padding: 6px 0; color: #64748b;">Public Not Attended:</td><td style="font-weight: bold; text-align: right; color: #dc2626;">{metrics.get('notAttended', 0)}</td></tr>
                     <tr><td style="padding: 6px 0; color: #64748b;">Virtual Attended:</td><td style="font-weight: bold; text-align: right; color: #2563eb;">{metrics.get('virtualAttended', '—')}</td></tr>
@@ -824,7 +860,10 @@ def send_manual_report_email(
             </div>
 
             <p style="font-size: 13px; color: #475569;">
-                📎 <strong>Attached Document:</strong> <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">{excel_filename}</code> ({len(excel_bytes):,} bytes)
+                📎 <strong>Attached Documents ({len(attachments_bundle)} files):</strong>
+                <ul style="margin: 6px 0 0 0; padding-left: 20px; font-size: 13px;">
+                    {attached_docs_html}
+                </ul>
             </p>
             
             <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
@@ -838,12 +877,13 @@ def send_manual_report_email(
     smtp_port = int(os.environ.get("SMTP_PORT") or getattr(settings, "SMTP_PORT", 587))
     smtp_user = (os.environ.get("SMTP_USERNAME") or getattr(settings, "SMTP_USERNAME", "")).strip()
     smtp_pass = (os.environ.get("SMTP_PASSWORD") or getattr(settings, "SMTP_PASSWORD", "")).replace(" ", "")
-    from_email = (os.environ.get("REPORT_FROM_EMAIL") or smtp_user or "reports@nandha.edu.in").strip()
+    from_email = (os.environ.get("REPORT_FROM_EMAIL") or smtp_user or "nanthishvaran17@gmail.com").strip()
     resend_key = os.environ.get("RESEND_API_KEY", "").strip()
     brevo_key = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
 
     dispatched_count = 0
     errors = []
+    total_bytes_all = sum(len(b) for _, b in attachments_bundle)
 
     for email in recipient_emails:
         exec_id = f"EXEC-{datetime.datetime.utcnow().strftime('%Y%m%d')}-{int(time.time()*1000) % 100000}"
@@ -858,51 +898,75 @@ def send_manual_report_email(
             role="ADMIN_DISPATCH",
             subject=subject,
             status="SENDING",
-            attachment_count=1,
-            total_attachment_bytes=len(excel_bytes)
+            attachment_count=len(attachments_bundle),
+            total_attachment_bytes=total_bytes_all
         )
         db.add(log)
         db.commit()
 
-        # Build MIME message with attachment
+        # Build MIME message with all attachments
         msg = MIMEMultipart()
-        msg['From'] = from_email
+        msg['From'] = f"Nandha Engineering College — LeetCode Tracker <{from_email}>"
         msg['To'] = email
         msg['Subject'] = subject
         msg.attach(MIMEText(body_html, 'html'))
 
-        excel_part = MIMEApplication(excel_bytes, Name=excel_filename)
-        excel_part['Content-Disposition'] = f'attachment; filename="{excel_filename}"'
-        msg.attach(excel_part)
+        for fname, fbytes in attachments_bundle:
+            part = MIMEApplication(fbytes, Name=fname)
+            part['Content-Disposition'] = f'attachment; filename="{fname}"'
+            msg.attach(part)
 
         delivered = False
         err_details = None
 
-        if resend_key:
+        # 1. Try Resend API first if configured
+        if resend_key and not delivered:
             delivered, err_details = send_email_via_resend(
                 resend_key, from_email, email, subject, body_html,
-                [(excel_filename, excel_bytes)]
+                attachments_bundle
             )
-        elif brevo_key:
+            if not delivered:
+                logger.warning(f"Resend API dispatch failed ({err_details}), attempting Brevo/SMTP...")
+
+        # 2. Try Brevo API if configured
+        if brevo_key and not delivered:
             delivered, err_details = send_email_via_brevo(
                 brevo_key, from_email, email, subject, body_html,
-                [(excel_filename, excel_bytes)]
+                attachments_bundle
             )
-        elif smtp_user and smtp_pass:
+            if not delivered:
+                logger.warning(f"Brevo API dispatch failed ({err_details}), attempting SMTP...")
+
+        # 3. Try Gmail SMTP / configured SMTP server
+        if smtp_user and smtp_pass and not delivered:
             try:
-                server = connect_and_login_smtp(smtp_host, smtp_port, smtp_user, smtp_pass, timeout=15)
+                server = smtplib.SMTP(smtp_host, 587, timeout=60)
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(from_email, email, msg.as_string())
                 try:
+                    server.quit()
+                except Exception:
+                    pass
+                delivered = True
+                err_details = None
+            except Exception as exc:
+                try:
+                    server = smtplib.SMTP_SSL(smtp_host, 465, timeout=60)
+                    server.login(smtp_user, smtp_pass)
                     server.sendmail(from_email, email, msg.as_string())
-                finally:
                     try:
                         server.quit()
                     except Exception:
                         pass
-                delivered = True
-            except Exception as exc:
-                err_details = str(exc)
-        else:
-            # Local simulation fallback
+                    delivered = True
+                    err_details = None
+                except Exception as exc2:
+                    err_details = f"SMTP error: {exc} | SSL error: {exc2}"
+
+        if not delivered and not err_details:
             delivered = True
             err_details = "Local simulation mode (SMTP not configured)."
 
@@ -912,7 +976,7 @@ def send_manual_report_email(
             log.error_message = None if not err_details else err_details
             db.commit()
             dispatched_count += 1
-            logger.info(f"[REPORT EMAIL DELIVERED] To: {email} | File: {excel_filename} ({len(excel_bytes)} B) | Students: {total_students_cnt}")
+            logger.info(f"[REPORT EMAIL DELIVERED] To: {email} | Files: {len(attachments_bundle)} | Students: {total_students_cnt}")
         else:
             log.status = "FAILED"
             log.error_message = err_details
