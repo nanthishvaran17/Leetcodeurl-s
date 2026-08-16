@@ -82,7 +82,7 @@ export const App: React.FC = () => {
   };
 
   const handleTabChange = (tab: string) => {
-    if (!isAuthenticated && tab !== 'landing' && tab !== 'public') {
+    if (!isAuthenticated && tab !== 'landing' && tab !== 'public' && tab !== 'profile') {
       setShowLoginModal(true);
       return;
     }
@@ -91,7 +91,7 @@ export const App: React.FC = () => {
 
   const handleSelectStudent = (student: StudentData) => {
     setSelectedStudent(student);
-    handleTabChange('profile');
+    setActiveTab('profile');
   };
 
   // Determine main dashboard component based on role
@@ -186,7 +186,7 @@ export const App: React.FC = () => {
           {activeTab === 'profile' && selectedStudent && (
             <StudentProfilePage
               student={selectedStudent}
-              onBack={() => setActiveTab('dashboard')}
+              onBack={() => setActiveTab(isAuthenticated ? 'dashboard' : 'landing')}
             />
           )}
 
@@ -215,7 +215,7 @@ export const App: React.FC = () => {
           )}
 
           {activeTab === 'public' && (
-            <PublicLeaderboardPage />
+            <PublicLeaderboardPage onSelectStudent={handleSelectStudent} />
           )}
 
           {activeTab === 'settings' && (

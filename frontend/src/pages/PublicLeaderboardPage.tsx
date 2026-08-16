@@ -3,7 +3,11 @@ import { Globe, Trophy, Shield } from 'lucide-react';
 import api from '../services/api';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 
-export const PublicLeaderboardPage: React.FC = () => {
+interface PublicLeaderboardPageProps {
+  onSelectStudent?: (student: StudentData) => void;
+}
+
+export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ onSelectStudent }) => {
   const [students, setStudents] = useState<StudentData[]>([]);
 
   useEffect(() => {
@@ -34,7 +38,7 @@ export const PublicLeaderboardPage: React.FC = () => {
         </div>
       </div>
 
-      <LeaderboardTable students={students} />
+      <LeaderboardTable students={students} onSelectStudent={onSelectStudent} />
 
     </div>
   );

@@ -115,16 +115,45 @@ def get_students(
             prog_map[p.student_id] = p
 
     # Determine target session ID
-    from backend.models import WeeklyPublicResult, WeeklyVirtualResult, WeeklySession
-    from backend.services.weekly_session_manager import get_or_create_current_weekly_session
+    from backend.models import WeeklyPublicResult, WeeklyVirtualResult, WeeklySession, LeetCodeContestRatingHistory
+    import re
     
     target_session_id = session_id
+    target_session = None
     if not target_session_id:
-        curr_sess = get_or_create_current_weekly_session(db)
-        target_session_id = curr_sess.id if curr_sess else None
+        # Prefer the most recent completed/finalized contest session with results (sorted by contest number)
+        all_sess = db.query(WeeklySession).filter(
+            WeeklySession.status.in_(["FINALIZED", "COMPLETED"])
+        ).all()
+        def get_cnum(s):
+            m = re.search(r'\d+', s.contest_name or '')
+            return int(m.group(0)) if m else s.id
+        fin_sess = sorted(all_sess, key=get_cnum, reverse=True)
+        # Find one that has attendance
+        for fs in fin_sess:
+            att_cnt = db.query(WeeklyPublicResult).filter(
+                WeeklyPublicResult.session_id == fs.id,
+                WeeklyPublicResult.participation_status.in_(["PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"])
+            ).count()
+            if att_cnt > 0:
+                target_session_id = fs.id
+                target_session = fs
+                break
+        if not target_session_id and fin_sess:
+            target_session_id = fin_sess[0].id
+            target_session = fin_sess[0]
+    else:
+        target_session = db.query(WeeklySession).filter(WeeklySession.id == target_session_id).first()
+
+    c_num = None
+    if target_session and target_session.contest_name:
+        m = re.search(r'\d+', target_session.contest_name)
+        if m:
+            c_num = int(m.group(0))
 
     pub_map = {}
     vir_map = {}
+    hist_map = {}
     if target_session_id:
         pub_results = db.query(WeeklyPublicResult).filter(
             WeeklyPublicResult.session_id == target_session_id,
@@ -139,6 +168,14 @@ def get_students(
         ).all()
         for vr in vir_results:
             vir_map[vr.student_id] = vr
+
+    if c_num:
+        hist_rows = db.query(LeetCodeContestRatingHistory).filter(
+            LeetCodeContestRatingHistory.contest_name.ilike(f"%{c_num}%"),
+            LeetCodeContestRatingHistory.student_id.in_(student_ids)
+        ).all()
+        for hr in hist_rows:
+            hist_map[hr.student_id] = hr
 
     results = []
     for st in students:
@@ -207,26 +244,56 @@ def get_students(
 
         pub_res = pub_map.get(st.id)
         vir_res = vir_map.get(st.id)
+        h_res = hist_map.get(st.id)
 
-        pub_status = pub_res.participation_status if pub_res else ("UNKNOWN" if (not st.username or not st.username.strip()) else "NOT_ATTENDED")
-        vir_status = vir_res.participation_status if vir_res else "NO_VIRTUAL_RECORD"
+        target_contest_name = target_session.contest_name if target_session else "Weekly Contest"
+        target_contest_date = target_session.session_date if target_session else None
 
-        if pub_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"):
+        if h_res and h_res.attended:
+            tot_solved = h_res.problems_solved or 0
             st_out.overall_participation_mode = "PUBLIC"
-        elif vir_status in ("VIRTUAL", "VIRTUAL_ATTENDED"):
+            st_out.contest_status = "PUBLIC_ATTENDED"
+            st_out.public_contest_result = ContestResultOut(
+                contest_name=target_contest_name,
+                contest_number=c_num,
+                contest_date=target_contest_date,
+                questions_solved=tot_solved,
+                questions_total=4,
+                score_display=f"{tot_solved} / 4",
+                contest_rank=h_res.contest_rank,
+                contest_rating=round(h_res.rating_after, 1) if h_res.rating_after else None,
+                top_percentage=None,
+                status="PUBLIC_ATTENDED",
+                fetched_at=datetime.datetime.utcnow().isoformat()
+            )
+        elif h_res and not h_res.attended and (h_res.problems_solved or 0) > 0:
+            tot_solved = h_res.problems_solved or 0
             st_out.overall_participation_mode = "VIRTUAL"
-        else:
-            st_out.overall_participation_mode = "NONE"
-
-        if pub_res:
+            st_out.contest_status = "VIRTUAL_ATTENDED"
+            st_out.public_contest_result = ContestResultOut(
+                contest_name=target_contest_name,
+                contest_number=c_num,
+                contest_date=target_contest_date,
+                questions_solved=tot_solved,
+                questions_total=4,
+                score_display=f"{tot_solved} / 4",
+                contest_rank=None,
+                contest_rating=None,
+                top_percentage=None,
+                status="VIRTUAL_ATTENDED",
+                fetched_at=datetime.datetime.utcnow().isoformat()
+            )
+        elif pub_res:
             tot_solved = pub_res.total_contest_solved or (pub_res.q1 + pub_res.q2 + pub_res.q3 + pub_res.q4)
             is_att = pub_res.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED")
-            is_not_att = pub_res.participation_status == "NOT_ATTENDED"
+            is_not_att = pub_res.participation_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED")
             score_disp = f"{tot_solved} / 4" if is_att else ("Not Attended" if is_not_att else "Data Unavailable")
+            st_out.overall_participation_mode = "PUBLIC" if is_att else "NONE"
+            st_out.contest_status = pub_res.participation_status or "NOT_ATTENDED"
             st_out.public_contest_result = ContestResultOut(
-                contest_name=pub_res.session.contest_name if pub_res.session else "Weekly Contest",
-                contest_number=None,
-                contest_date=pub_res.session.session_date if pub_res.session else None,
+                contest_name=pub_res.session.contest_name if pub_res.session else target_contest_name,
+                contest_number=c_num,
+                contest_date=pub_res.session.session_date if pub_res.session else target_contest_date,
                 questions_solved=tot_solved if is_att else 0,
                 questions_total=4,
                 score_display=score_disp,
@@ -238,10 +305,12 @@ def get_students(
             )
         else:
             has_uname = bool(st.username and st.username.strip())
+            st_out.overall_participation_mode = "NONE"
+            st_out.contest_status = "NOT_ATTENDED" if has_uname else "PENDING_USERNAME"
             st_out.public_contest_result = ContestResultOut(
-                contest_name="Weekly Contest",
-                contest_number=None,
-                contest_date=None,
+                contest_name=target_contest_name,
+                contest_number=c_num,
+                contest_date=target_contest_date,
                 questions_solved=0,
                 questions_total=4,
                 score_display="Not Attended" if has_uname else "Data Unavailable",

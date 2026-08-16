@@ -181,6 +181,7 @@ class StudentOut(StudentBase):
     public_contest_result: Optional[ContestResultOut] = None
     virtual_contest_result: Optional[ContestResultOut] = None
     overall_participation_mode: Optional[str] = "NONE"
+    contest_status: Optional[str] = None
 
     class Config:
         from_attributes = True
