@@ -115,7 +115,7 @@ export const DataQualityPage: React.FC = () => {
         </div>
 
         {issuesList.length > 0 ? (
-          <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
+          <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-navy-950 text-white font-black uppercase">
                 <tr>

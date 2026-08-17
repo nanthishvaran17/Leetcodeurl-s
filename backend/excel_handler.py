@@ -13,7 +13,11 @@ from openpyxl.utils import get_column_letter
 from typing import List, Dict, Any, Tuple, Optional
 from sqlalchemy.orm import Session
 
-from backend.models import Student, Department, Section, LeetCodeProfileStats, WeeklyStudentProgress, WeeklySessionSnapshot, WeeklySession
+from backend.models import (
+    Student, Department, Section, LeetCodeProfileStats,
+    WeeklyStudentProgress, WeeklySessionSnapshot, WeeklySession,
+    WeeklyPublicResult, ContestParticipation, HODSnapshot, AuditLog, EmailLog
+)
 from backend.leetcode_client import extract_leetcode_username
 from backend.config import settings
 from backend.logger import logger
@@ -691,6 +695,313 @@ def generate_8_sheet_excel_report(db: Session) -> bytes:
     return output.getvalue()
 
 
+def generate_student_performance_detail_excel(db: Session) -> bytes:
+    """
+    Generates multi-sheet Student Performance Detail Excel:
+      - Cover Sheet
+      - CSE(CS)-IIYr
+      - CSE(CS)-IIIYr
+      - CSE(CS)-IVYr
+      - CSE(IoT)-IIYr
+      - CSE(IoT)-IIIYr
+      - CSE(IoT)-IVYr
+    """
+    wb = openpyxl.Workbook()
+    wb.remove(wb.active)
+
+    logo_path = os.path.join(os.path.dirname(__file__), "assets", "nandha_emblem.png")
+    _add_cover_sheet(wb, logo_path)
+
+    depts = db.query(Department).all()
+    cs_dept = next((d for d in depts if "CS" in (d.code or "").upper() or "CYBER" in (d.name or "").upper()), None)
+    iot_dept = next((d for d in depts if "IOT" in (d.code or "").upper() or "IOT" in (d.name or "").upper()), None)
+
+    dept_tuples = [
+        ("CSE(CS)", cs_dept),
+        ("CSE(IoT)", iot_dept)
+    ]
+    years = ["II", "III", "IV"]
+
+    font_title = Font(name="Times New Roman", size=12, bold=True, color="FFFFFF")
+    title_fill = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
+    font_header = Font(name="Times New Roman", size=10, bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="2E5B88", end_color="2E5B88", fill_type="solid")
+    font_data = Font(name="Times New Roman", size=10)
+    center_align = Alignment(horizontal="center", vertical="center")
+    left_align = Alignment(horizontal="left", vertical="center")
+    right_align = Alignment(horizontal="right", vertical="center")
+    thin_border = Border(
+        left=Side(style='thin', color='C0C0C0'),
+        right=Side(style='thin', color='C0C0C0'),
+        top=Side(style='thin', color='C0C0C0'),
+        bottom=Side(style='thin', color='C0C0C0')
+    )
+
+    headers = [
+        "S.No", "Register No", "Student Name", "Department", "Year",
+        "LeetCode Profile Link", "Username", "Easy", "Medium", "Hard",
+        "Total Solved", "Rating", "Global Rank", "Contest Count", "Last Synced", "Data Status"
+    ]
+
+    for label_code, dept_obj in dept_tuples:
+        for yr in years:
+            sheet_name = f"{label_code}-{yr}Yr"[:31]
+            ws = wb.create_sheet(title=sheet_name)
+            ws.sheet_view.showGridLines = True
+
+            ws.merge_cells("A1:P1")
+            ws["A1"] = f"NANDHA ENGINEERING COLLEGE (AUTONOMOUS) — {label_code} {yr} YEAR PERFORMANCE REPORT"
+            ws["A1"].font = font_title
+            ws["A1"].fill = title_fill
+            ws["A1"].alignment = center_align
+            ws.row_dimensions[1].height = 28
+
+            ws.row_dimensions[3].height = 24
+            for c_idx, h in enumerate(headers, start=1):
+                cell = ws.cell(row=3, column=c_idx, value=h)
+                cell.font = font_header
+                cell.fill = header_fill
+                cell.alignment = center_align
+                cell.border = thin_border
+
+            students_query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+            if dept_obj:
+                students_query = students_query.filter(Student.department_id == dept_obj.id)
+            students_query = students_query.filter(Student.year_level == yr)
+            students = students_query.all()
+
+            students.sort(key=lambda s: (s.stats.total_solved or 0) if s.stats else 0, reverse=True)
+
+            row_idx = 4
+            for s_no, s in enumerate(students, start=1):
+                st = s.stats
+                is_ver = st and st.validation_status == "verified"
+                contest_cnt = db.query(ContestParticipation).filter(ContestParticipation.student_id == s.id).count()
+
+                row_vals = [
+                    s_no,
+                    s.reg_no or "",
+                    s.name or "",
+                    (dept_obj.code if dept_obj else label_code),
+                    s.year_level or yr,
+                    s.leetcode_url or "N/A",
+                    s.username or "N/A",
+                    (st.easy_solved if is_ver and st else 0) if (st and is_ver) else 0,
+                    (st.medium_solved if is_ver and st else 0) if (st and is_ver) else 0,
+                    (st.hard_solved if is_ver and st else 0) if (st and is_ver) else 0,
+                    (st.total_solved if is_ver and st else 0) if (st and is_ver) else 0,
+                    (round(st.contest_rating, 1) if (is_ver and st and st.contest_rating) else "N/A"),
+                    (st.contest_global_ranking if (is_ver and st and st.contest_global_ranking) else "N/A"),
+                    contest_cnt,
+                    (st.last_updated.strftime("%Y-%m-%d %H:%M") if (st and st.last_updated) else "N/A"),
+                    ("VERIFIED" if is_ver else "UNVERIFIED")
+                ]
+
+                ws.row_dimensions[row_idx].height = 20
+                for c_idx, val in enumerate(row_vals, start=1):
+                    cell = ws.cell(row=row_idx, column=c_idx, value=val)
+                    cell.font = font_data
+                    cell.border = thin_border
+                    if c_idx in (1, 4, 5, 14, 16):
+                        cell.alignment = center_align
+                    elif c_idx in (8, 9, 10, 11, 12, 13):
+                        cell.alignment = right_align
+                    else:
+                        cell.alignment = left_align
+                row_idx += 1
+
+            for col in ws.columns:
+                max_len = max(len(str(cell.value or '')) for cell in col)
+                col_letter = get_column_letter(col[0].column)
+                ws.column_dimensions[col_letter].width = max(max_len + 3, 12)
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output.getvalue()
+
+
+def generate_8_sheet_master_tracker(db: Session) -> bytes:
+    """
+    Generates the complete 8-sheet Master Tracker workbook with real DB data:
+      1. Student Master
+      2. Current Statistics
+      3. Session Logs
+      4. College Leaderboard
+      5. Department Leaderboard
+      6. Contest Statistics
+      7. Data Quality
+      8. Audit Error Logs
+    """
+    wb = openpyxl.Workbook()
+    wb.remove(wb.active)
+
+    font_header = Font(name="Times New Roman", size=10, bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
+    font_data = Font(name="Times New Roman", size=10)
+    center_align = Alignment(horizontal="center", vertical="center")
+    left_align = Alignment(horizontal="left", vertical="center")
+    right_align = Alignment(horizontal="right", vertical="center")
+    thin_border = Border(
+        left=Side(style='thin', color='C0C0C0'),
+        right=Side(style='thin', color='C0C0C0'),
+        top=Side(style='thin', color='C0C0C0'),
+        bottom=Side(style='thin', color='C0C0C0')
+    )
+
+    all_students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+
+    # Sheet 1: Student Master
+    ws1 = wb.create_sheet(title="Student Master")
+    ws1.sheet_view.showGridLines = True
+    h1 = ["S.No", "Register No", "Student Name", "Department", "Year", "Section", "Email", "LeetCode URL", "Username", "Status", "Created At"]
+    for c_idx, h in enumerate(h1, start=1):
+        cell = ws1.cell(row=1, column=c_idx, value=h)
+        cell.font = font_header; cell.fill = header_fill; cell.alignment = center_align; cell.border = thin_border
+    for r_idx, s in enumerate(all_students, start=2):
+        row_v = [r_idx - 1, s.reg_no, s.name, s.department.code if s.department else "", s.year_level, s.section.name if s.section else "A", s.email or "N/A", s.leetcode_url or "N/A", s.username or "N/A", "ACTIVE" if s.is_active else "INACTIVE", s.created_at.strftime("%Y-%m-%d") if hasattr(s, 'created_at') and s.created_at else "N/A"]
+        for c_idx, val in enumerate(row_v, start=1):
+            c = ws1.cell(row=r_idx, column=c_idx, value=val)
+            c.font = font_data; c.border = thin_border
+            c.alignment = center_align if c_idx in (1, 4, 5, 6, 10) else left_align
+
+    # Sheet 2: Current Statistics
+    ws2 = wb.create_sheet(title="Current Statistics")
+    ws2.sheet_view.showGridLines = True
+    h2 = ["S.No", "Register No", "Student Name", "Dept", "Year", "Easy", "Medium", "Hard", "Total Solved", "Contest Rating", "Global Rank", "Validation Status", "Last Synced"]
+    for c_idx, h in enumerate(h2, start=1):
+        cell = ws2.cell(row=1, column=c_idx, value=h)
+        cell.font = font_header; cell.fill = header_fill; cell.alignment = center_align; cell.border = thin_border
+    for r_idx, s in enumerate(all_students, start=2):
+        st = s.stats
+        is_v = st and st.validation_status == "verified"
+        row_v = [r_idx - 1, s.reg_no, s.name, s.department.code if s.department else "", s.year_level, (st.easy_solved if is_v and st else 0) if st else 0, (st.medium_solved if is_v and st else 0) if st else 0, (st.hard_solved if is_v and st else 0) if st else 0, (st.total_solved if is_v and st else 0) if st else 0, round(st.contest_rating, 1) if (is_v and st and st.contest_rating) else "N/A", st.contest_global_ranking if (is_v and st and st.contest_global_ranking) else "N/A", "VERIFIED" if is_v else "UNVERIFIED", st.last_updated.strftime("%Y-%m-%d %H:%M") if (st and st.last_updated) else "N/A"]
+        for c_idx, val in enumerate(row_v, start=1):
+            c = ws2.cell(row=r_idx, column=c_idx, value=val)
+            c.font = font_data; c.border = thin_border
+            c.alignment = center_align if c_idx in (1, 4, 5, 12) else (right_align if c_idx in (6,7,8,9,10,11) else left_align)
+
+    # Sheet 3: Session Logs
+    ws3 = wb.create_sheet(title="Session Logs")
+    ws3.sheet_view.showGridLines = True
+    h3 = ["Session ID", "Contest Name", "Session Date", "Status", "Total Participants", "Evaluated At"]
+    for c_idx, h in enumerate(h3, start=1):
+        cell = ws3.cell(row=1, column=c_idx, value=h)
+        cell.font = font_header; cell.fill = header_fill; cell.alignment = center_align; cell.border = thin_border
+    sessions = db.query(WeeklySession).order_by(WeeklySession.id.desc()).all()
+    for r_idx, ws_item in enumerate(sessions, start=2):
+        part_cnt = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == ws_item.id).count()
+        row_v = [ws_item.id, ws_item.contest_name or f"Contest {ws_item.id}", ws_item.session_date or "N/A", ws_item.status or "FINALIZED", part_cnt, ws_item.finalized_at.strftime("%Y-%m-%d %H:%M") if ws_item.finalized_at else "N/A"]
+        for c_idx, val in enumerate(row_v, start=1):
+            c = ws3.cell(row=r_idx, column=c_idx, value=val)
+            c.font = font_data; c.border = thin_border
+            c.alignment = center_align if c_idx in (1, 3, 4, 5) else left_align
+
+    # Sheet 4: College Leaderboard
+    ws4 = wb.create_sheet(title="College Leaderboard")
+    ws4.sheet_view.showGridLines = True
+    h4 = ["College Rank", "Register No", "Student Name", "Dept", "Year", "Total Solved", "Easy", "Medium", "Hard", "Contest Rating"]
+    for c_idx, h in enumerate(h4, start=1):
+        cell = ws4.cell(row=1, column=c_idx, value=h)
+        cell.font = font_header; cell.fill = header_fill; cell.alignment = center_align; cell.border = thin_border
+    sorted_college = sorted(all_students, key=lambda s: (s.stats.total_solved or 0) if s.stats else 0, reverse=True)
+    for r_idx, s in enumerate(sorted_college, start=2):
+        st = s.stats
+        row_v = [r_idx - 1, s.reg_no, s.name, s.department.code if s.department else "", s.year_level, (st.total_solved or 0) if st else 0, (st.easy_solved or 0) if st else 0, (st.medium_solved or 0) if st else 0, (st.hard_solved or 0) if st else 0, round(st.contest_rating, 1) if (st and st.contest_rating) else "N/A"]
+        for c_idx, val in enumerate(row_v, start=1):
+            c = ws4.cell(row=r_idx, column=c_idx, value=val)
+            c.font = font_data; c.border = thin_border
+            c.alignment = center_align if c_idx in (1, 4, 5) else (right_align if c_idx in (6,7,8,9,10) else left_align)
+
+    # Sheet 5: Department Leaderboard
+    ws5 = wb.create_sheet(title="Department Leaderboard")
+    ws5.sheet_view.showGridLines = True
+    h5 = ["Dept Code", "Dept Rank", "Register No", "Student Name", "Year", "Total Solved", "Contest Rating"]
+    for c_idx, h in enumerate(h5, start=1):
+        cell = ws5.cell(row=1, column=c_idx, value=h)
+        cell.font = font_header; cell.fill = header_fill; cell.alignment = center_align; cell.border = thin_border
+    r5_idx = 2
+    for dept in db.query(Department).all():
+        dept_studs = [s for s in all_students if s.department_id == dept.id]
+        dept_studs.sort(key=lambda s: (s.stats.total_solved or 0) if s.stats else 0, reverse=True)
+        for d_rank, s in enumerate(dept_studs, start=1):
+            st = s.stats
+            row_v = [dept.code, d_rank, s.reg_no, s.name, s.year_level, (st.total_solved or 0) if st else 0, round(st.contest_rating, 1) if (st and st.contest_rating) else "N/A"]
+            for c_idx, val in enumerate(row_v, start=1):
+                c = ws5.cell(row=r5_idx, column=c_idx, value=val)
+                c.font = font_data; c.border = thin_border
+                c.alignment = center_align if c_idx in (1, 2, 5) else (right_align if c_idx in (6,7) else left_align)
+            r5_idx += 1
+
+    # Sheet 6: Contest Statistics
+    ws6 = wb.create_sheet(title="Contest Statistics")
+    ws6.sheet_view.showGridLines = True
+    h6 = ["Session ID", "Contest Name", "Date", "Total Participations", "Active Solvers", "Average Problems Solved"]
+    for c_idx, h in enumerate(h6, start=1):
+        cell = ws6.cell(row=1, column=c_idx, value=h)
+        cell.font = font_header; cell.fill = header_fill; cell.alignment = center_align; cell.border = thin_border
+    for r_idx, ws_item in enumerate(sessions, start=2):
+        parts = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == ws_item.id).all()
+        solvers = sum(1 for p in parts if (p.total_contest_solved or 0) > 0)
+        tot_solved = sum((p.total_contest_solved or 0) for p in parts)
+        avg_solved = round(tot_solved / max(len(parts), 1), 1)
+        row_v = [ws_item.id, ws_item.contest_name or f"Contest {ws_item.id}", ws_item.session_date or "N/A", len(parts), solvers, avg_solved]
+        for c_idx, val in enumerate(row_v, start=1):
+            c = ws6.cell(row=r_idx, column=c_idx, value=val)
+            c.font = font_data; c.border = thin_border
+            c.alignment = center_align if c_idx in (1, 3, 4, 5) else (right_align if c_idx == 6 else left_align)
+
+    # Sheet 7: Data Quality
+    ws7 = wb.create_sheet(title="Data Quality")
+    ws7.sheet_view.showGridLines = True
+    h7 = ["Metric", "Value", "Notes"]
+    for c_idx, h in enumerate(h7, start=1):
+        cell = ws7.cell(row=1, column=c_idx, value=h)
+        cell.font = font_header; cell.fill = header_fill; cell.alignment = center_align; cell.border = thin_border
+    total_st_cnt = len(all_students)
+    verified_cnt = sum(1 for s in all_students if s.stats and s.stats.validation_status == "verified")
+    pending_cnt = sum(1 for s in all_students if not s.username)
+    unver_cnt = total_st_cnt - verified_cnt
+    dq_rows = [
+        ("Total Enrolled Students", total_st_cnt, "Source: DB Student Master"),
+        ("Verified Profiles", verified_cnt, "Validated via LeetCode GraphQL API"),
+        ("Unverified / Pending Profiles", unver_cnt, "Awaiting valid handle or sync"),
+        ("Missing Username Handles", pending_cnt, "No handle specified"),
+        ("Last Audit Timestamp", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S IST"), "System Time")
+    ]
+    for r_idx, (m, v, n) in enumerate(dq_rows, start=2):
+        for c_idx, val in enumerate([m, v, n], start=1):
+            c = ws7.cell(row=r_idx, column=c_idx, value=val)
+            c.font = font_data; c.border = thin_border
+            c.alignment = right_align if c_idx == 2 and isinstance(val, (int, float)) else left_align
+
+    # Sheet 8: Audit Error Logs
+    ws8 = wb.create_sheet(title="Audit Error Logs")
+    ws8.sheet_view.showGridLines = True
+    h8 = ["Log ID", "Admin User", "Action / Resource", "IP Address", "Details / Error", "Timestamp"]
+    for c_idx, h in enumerate(h8, start=1):
+        cell = ws8.cell(row=1, column=c_idx, value=h)
+        cell.font = font_header; cell.fill = header_fill; cell.alignment = center_align; cell.border = thin_border
+    audit_logs = db.query(AuditLog).order_by(AuditLog.id.desc()).limit(100).all()
+    for r_idx, al in enumerate(audit_logs, start=2):
+        row_v = [al.id, al.user_name or "SYSTEM", al.action or "OPERATION", al.ip_address or "127.0.0.1", al.details or "N/A", al.timestamp.strftime("%Y-%m-%d %H:%M") if al.timestamp else "N/A"]
+        for c_idx, val in enumerate(row_v, start=1):
+            c = ws8.cell(row=r_idx, column=c_idx, value=val)
+            c.font = font_data; c.border = thin_border
+            c.alignment = center_align if c_idx in (1, 4, 6) else left_align
+
+    for sheet in wb.worksheets:
+        for col in sheet.columns:
+            max_len = max(len(str(cell.value or '')) for cell in col)
+            col_letter = get_column_letter(col[0].column)
+            sheet.column_dimensions[col_letter].width = max(max_len + 3, 12)
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output.getvalue()
+
+
 
 def create_weekly_contest_matrix_sheet(ws, db: Session, batch_label: str, dept_id: Optional[int] = None):
     ws.sheet_view.showGridLines = True
@@ -1041,19 +1352,19 @@ def create_batch_performance_matrix_sheet(ws, db: Session, dept_id: Optional[int
         students = stud_query.all()
         t_cnt = len(students) or (default_cnt if not dept_id else len(students))
 
-        above_500 = sum(1 for s in students if s.stats and s.stats.total_solved > 500)
-        range_250 = sum(1 for s in students if s.stats and 250 <= s.stats.total_solved <= 500)
-        less_250 = sum(1 for s in students if s.stats and 100 <= s.stats.total_solved < 250)
-        less_100 = sum(1 for s in students if s.stats and 0 < s.stats.total_solved < 100)
-        not_start = sum(1 for s in students if not s.stats or s.stats.total_solved == 0)
+        above_500 = sum(1 for s in students if s.stats and (s.stats.total_solved or 0) > 500)
+        range_250 = sum(1 for s in students if s.stats and 250 <= (s.stats.total_solved or 0) <= 500)
+        less_250 = sum(1 for s in students if s.stats and 100 <= (s.stats.total_solved or 0) < 250)
+        less_100 = sum(1 for s in students if s.stats and 0 < (s.stats.total_solved or 0) < 100)
+        not_start = sum(1 for s in students if not s.stats or (s.stats.total_solved or 0) == 0)
 
-        q4 = sum(1 for s in students if s.stats and s.stats.total_solved > 400)
-        q3 = sum(1 for s in students if s.stats and 250 < s.stats.total_solved <= 400)
-        q2 = sum(1 for s in students if s.stats and 100 < s.stats.total_solved <= 250)
-        q1 = sum(1 for s in students if s.stats and 0 < s.stats.total_solved <= 100)
+        q4 = sum(1 for s in students if s.stats and (s.stats.total_solved or 0) > 400)
+        q3 = sum(1 for s in students if s.stats and 250 < (s.stats.total_solved or 0) <= 400)
+        q2 = sum(1 for s in students if s.stats and 100 < (s.stats.total_solved or 0) <= 250)
+        q1 = sum(1 for s in students if s.stats and 0 < (s.stats.total_solved or 0) <= 100)
 
-        r1500 = sum(1 for s in students if s.stats and s.stats.contest_rating and s.stats.contest_rating >= 1500)
-        gr20k = sum(1 for s in students if s.stats and s.stats.contest_global_ranking and 0 < s.stats.contest_global_ranking <= 20000)
+        r1500 = sum(1 for s in students if s.stats and (s.stats.contest_rating or 0) >= 1500)
+        gr20k = sum(1 for s in students if s.stats and 0 < (s.stats.contest_global_ranking or 0) <= 20000)
 
         # Last week row (Filled with non-zero numeric values, NO EMPTY DASHES)
         ws.cell(row=row_idx, column=1, value=f"{label} (Last Week)")

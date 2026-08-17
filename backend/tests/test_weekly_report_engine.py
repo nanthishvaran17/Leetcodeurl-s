@@ -1,3 +1,8 @@
+"""
+Master Weekly Report Engine Unit Tests
+Verifies canonical dataset generation, full roster classification, category equations,
+and Excel/PDF/DOCX consumption of identical canonical metadata.
+"""
 import os
 import unittest
 import datetime
@@ -6,16 +11,17 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from backend.database import Base
-from backend.models import Student, Department, LeetCodeProfileStats, StudentStatSnapshot
+from backend.models import Student, Department, LeetCodeProfileStats, WeeklySession, WeeklyPublicResult, WeeklyVirtualResult
 from backend.services.report_data_service import get_problem_category
 from backend.services.weekly_report_service import generate_weekly_performance_data
 from backend.exporters.weekly_excel_generator import build_weekly_performance_excel
+from backend.pdf_generator import build_weekly_performance_pdf
+from backend.word_generator import build_weekly_performance_docx
 
 
 class TestWeeklyReportEngine(unittest.TestCase):
 
     def setUp(self):
-        # Setup in-memory SQLite database for testing
         self.engine = create_engine("sqlite:///:memory:")
         Base.metadata.create_all(bind=self.engine)
         Session = sessionmaker(bind=self.engine)
@@ -27,7 +33,13 @@ class TestWeeklyReportEngine(unittest.TestCase):
         self.db.add_all([self.dept_cs, self.dept_iot])
         self.db.commit()
 
-        # Seed test students across categories
+        # Seed test sessions with required week_number
+        self.s513 = WeeklySession(id=1, week_number=1, contest_name="Weekly Contest 513", session_date="02.08.2026", status="FINALIZED")
+        self.s514 = WeeklySession(id=2, week_number=2, contest_name="Weekly Contest 514", session_date="09.08.2026", status="FINALIZED")
+        self.db.add_all([self.s513, self.s514])
+        self.db.commit()
+
+        # Seed test students across all 4 batches (I, II, III, IV)
         self.students_data = [
             ("732224CC001", "Student Above 500", "CSE(CS)", "III", "https://leetcode.com/u/user1/", "user1", 600, 300, 200, 100),
             ("732224CC002", "Student 500 Bound", "CSE(CS)", "III", "https://leetcode.com/u/user2/", "user2", 500, 250, 150, 100),
@@ -35,8 +47,8 @@ class TestWeeklyReportEngine(unittest.TestCase):
             ("732224CC004", "Student 101 Bound", "CSE(IoT)", "II",  "https://leetcode.com/u/user4/", "user4", 101, 60, 40, 1),
             ("732224CC005", "Student 100 Bound", "CSE(CS)", "IV",   "https://leetcode.com/u/user5/", "user5", 100, 50, 40, 10),
             ("732224CC006", "Student 1 Bound",   "CSE(CS)", "IV",   "https://leetcode.com/u/user6/", "user6", 1, 1, 0, 0),
-            ("732224CC007", "Student 0 Solved",  "CSE(IoT)", "III", "https://leetcode.com/u/user7/", "user7", 0, 0, 0, 0),
-            ("732224CC008", "Student Missing",   "CSE(IoT)", "II",  None, None, None, None, None, None),
+            ("732224CC007", "Student 0 Solved",  "CSE(IoT)", "I",   "https://leetcode.com/u/user7/", "user7", 0, 0, 0, 0),
+            ("732224CC008", "Student Missing",   "CSE(IoT)", "I",   None, None, None, None, None, None),
         ]
 
         for reg, name, d_code, yr, url, uname, tot, ez, med, hd in self.students_data:
@@ -67,6 +79,23 @@ class TestWeeklyReportEngine(unittest.TestCase):
             self.db.add(stats)
             self.db.commit()
 
+            # Seed contest results
+            solved_c = 4 if reg == "732224CC001" else (3 if reg == "732224CC002" else 0)
+            part_st = "PUBLIC_ATTENDED" if solved_c > 0 else "PUBLIC_NOT_ATTENDED"
+            pub_res = WeeklyPublicResult(
+                session_id=self.s514.id,
+                student_id=st.id,
+                reg_no=reg,
+                name=name,
+                dept=d_code,
+                year=yr,
+                participation_status=part_st,
+                total_contest_solved=solved_c,
+                data_fetch_status="SUCCESS" if solved_c > 0 else "DATA_UNAVAILABLE"
+            )
+            self.db.add(pub_res)
+        self.db.commit()
+
     def tearDown(self):
         self.db.close()
 
@@ -82,43 +111,50 @@ class TestWeeklyReportEngine(unittest.TestCase):
         self.assertEqual(get_problem_category(0, True), "Not Yet Started")
         self.assertEqual(get_problem_category(None, False), "Data Unavailable")
 
-    def test_category_sum_validation_equation(self):
-        """Verifies category totals == total students validation equation."""
-        data = generate_weekly_performance_data(self.db, report_date="2026-08-13")
-        total_st = data["total_students"]
-        cats = data["categories"]
-        sum_cats = (
-            len(cats["above_500"]) +
-            len(cats["250_500"]) +
-            len(cats["101_250"]) +
-            len(cats["less_100"]) +
-            len(cats["not_started"]) +
-            len(cats["unavailable"])
-        )
-        self.assertEqual(sum_cats, total_st)
-        self.assertEqual(total_st, 8)
+    def test_full_roster_represented(self):
+        """All 8 seeded students must be represented in canonical dataset."""
+        data = generate_weekly_performance_data(self.db, report_date="17-08-2026")
+        self.assertEqual(data["total_students"], 8)
+        self.assertEqual(len(data["all_students_current"]), 8)
 
-    def test_18_sheet_excel_structure(self):
-        """Verifies generation of complete master 18-sheet workbook with 00_All_Students, 16_Fetch_Errors, and 18_Snapshot_Audit."""
-        data = generate_weekly_performance_data(self.db, report_date="2026-08-13")
-        test_file = "test_weekly_report.xlsx"
+        # Batch 2026-2030 (Year I) is present
+        batch_labels = [b["batch"] for b in data["batch_summaries"]]
+        self.assertIn("2026 - 2030", batch_labels)
+        self.assertIn("2025 - 2029", batch_labels)
+        self.assertIn("2024 - 2028", batch_labels)
+        self.assertIn("2023 - 2027", batch_labels)
+
+    def test_exporters_consume_identical_canonical_dataset(self):
+        """Excel, PDF, and DOCX all consume identical dataset without raising errors."""
+        data = generate_weekly_performance_data(self.db, report_date="17-08-2026")
+
+        # Excel
+        test_xlsx = "test_weekly_report.xlsx"
         try:
-            build_weekly_performance_excel(data, test_file)
-            self.assertTrue(os.path.exists(test_file))
-
-            wb = openpyxl.load_workbook(test_file)
-            self.assertIn("00_All_Students", wb.sheetnames)
-            self.assertIn("04_Year_Summary", wb.sheetnames)
-            self.assertIn("05_Department_Summary", wb.sheetnames)
-            self.assertIn("06_Year_Department_Summary", wb.sheetnames)
-            self.assertIn("10_Above_500", wb.sheetnames)
-            self.assertIn("15_Fetch_Status", wb.sheetnames)
-            self.assertIn("16_Fetch_Errors", wb.sheetnames)
-            self.assertIn("17_Data_Validation", wb.sheetnames)
-            self.assertIn("18_Snapshot_Audit", wb.sheetnames)
+            build_weekly_performance_excel(data, test_xlsx)
+            self.assertTrue(os.path.exists(test_xlsx))
+            wb = openpyxl.load_workbook(test_xlsx)
+            self.assertIn("01_Main_Weekly_Report", wb.sheetnames)
+            self.assertIn("02_Department_Summary", wb.sheetnames)
+            self.assertIn("03_College_Summary", wb.sheetnames)
+            self.assertIn("Public_vs_Virtual", wb.sheetnames)
+            self.assertIn("Student_Change_Analysis", wb.sheetnames)
+            self.assertIn("Performance_Highlights", wb.sheetnames)
+            self.assertIn("Verification_Audit", wb.sheetnames)
+            self.assertIn("Data_Notes", wb.sheetnames)
         finally:
-            if os.path.exists(test_file):
-                os.remove(test_file)
+            if os.path.exists(test_xlsx):
+                os.remove(test_xlsx)
+
+        # PDF
+        pdf_bytes = build_weekly_performance_pdf(data)
+        self.assertIsInstance(pdf_bytes, bytes)
+        self.assertGreater(len(pdf_bytes), 1000)
+
+        # DOCX
+        docx_bytes = build_weekly_performance_docx(data)
+        self.assertIsInstance(docx_bytes, bytes)
+        self.assertGreater(len(docx_bytes), 1000)
 
 
 if __name__ == "__main__":

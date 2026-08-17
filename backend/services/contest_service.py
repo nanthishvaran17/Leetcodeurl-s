@@ -38,12 +38,18 @@ def record_contest_participation(
     participation_mode: str, # "PUBLIC" or "VIRTUAL"
     contest_number: Optional[int] = None,
     contest_date: Optional[str] = None,
-    questions_solved: int = 0,
+    questions_solved: Optional[int] = None,
     questions_total: int = 4,
+    solved_problems: Optional[List[str]] = None,
+    verification_level: str = "UNVERIFIED",
+    confidence: float = 0.0,
+    source: Optional[str] = None,
+    source_url: Optional[str] = None,
+    verification_evidence: Optional[Dict[str, Any]] = None,
     contest_rank: Optional[int] = None,
     contest_rating: Optional[float] = None,
     top_percentage: Optional[float] = None,
-    status: str = "NOT_ATTENDED",
+    status: str = "UNKNOWN",
     error_message: Optional[str] = None,
     started_at: Optional[datetime.datetime] = None,
     submitted_at: Optional[datetime.datetime] = None
@@ -57,17 +63,20 @@ def record_contest_participation(
         raise ValueError(f"Invalid participation_mode '{participation_mode}'. Must be 'PUBLIC' or 'VIRTUAL'.")
 
     # Format score_display cleanly
-    if status == "ATTENDED":
+    if status in ("PARTICIPATED", "ATTENDED") and questions_solved is not None:
         score_disp = f"{questions_solved} / {questions_total}"
         attended_flag = True
+    elif status in ("NOT_PARTICIPATED", "NOT_ATTENDED"):
+        score_disp = "Not Attended"
+        attended_flag = False
     elif status == "FETCH_FAILED":
         score_disp = "Fetch Failed"
         attended_flag = False
-    elif status == "MODE_UNCERTAIN":
-        score_disp = "Mode Uncertain"
+    elif status == "SOURCE_UNAVAILABLE":
+        score_disp = "Source Unavailable"
         attended_flag = False
     else:
-        score_disp = "Not Attended"
+        score_disp = "Unknown"
         attended_flag = False
 
     # Look up existing record for THIS exact mode only
@@ -90,6 +99,12 @@ def record_contest_participation(
             questions_solved=questions_solved,
             questions_total=questions_total,
             score_display=score_disp,
+            solved_problems=solved_problems or [],
+            verification_level=verification_level,
+            confidence=confidence,
+            source=source,
+            source_url=source_url,
+            verification_evidence=verification_evidence,
             contest_rank=contest_rank,
             contest_rating=contest_rating,
             top_percentage=top_percentage,
@@ -113,6 +128,16 @@ def record_contest_participation(
         rec.questions_solved = questions_solved
         rec.questions_total = questions_total
         rec.score_display = score_disp
+        if solved_problems is not None:
+            rec.solved_problems = solved_problems
+        rec.verification_level = verification_level
+        rec.confidence = confidence
+        if source:
+            rec.source = source
+        if source_url:
+            rec.source_url = source_url
+        if verification_evidence:
+            rec.verification_evidence = verification_evidence
         rec.contest_rank = contest_rank
         rec.contest_rating = contest_rating
         rec.top_percentage = top_percentage

@@ -897,10 +897,6 @@ async def fetch_recent_submissions(
         if not isinstance(s, dict):
             continue
         ts = s.get("timestamp")
-        try:
-            dt = datetime.datetime.utcfromtimestamp(int(ts)) if ts else None
-        except Exception:
-            dt = None
         submissions.append({
             "title_slug":           s.get("titleSlug", ""),
             "title":                s.get("title"),
@@ -912,3 +908,294 @@ async def fetch_recent_submissions(
         })
 
     return {"status": "ok", "data": {"submissions": submissions}}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DYNAMIC CONTEST METADATA & MULTI-STAGE VERIFICATION PIPELINE
+# ─────────────────────────────────────────────────────────────────────────────
+
+CONTEST_METADATA_QUERY = """
+query contestMetadata($vContestSlug: String!) {
+  contest(contestSlug: $vContestSlug) {
+    id
+    title
+    titleSlug
+    startTime
+    duration
+    originStartTime
+    isVirtual
+    containsPremium
+    questions {
+      id
+      questionId
+      title
+      titleSlug
+    }
+  }
+}
+"""
+
+_contest_metadata_cache: Dict[str, Dict[str, Any]] = {}
+
+async def fetch_contest_metadata(
+    contest_slug: str,
+    client: Optional[Any] = None,
+    retries: int = 3
+) -> Dict[str, Any]:
+    """
+    Fetches dynamic contest metadata (start/end times, dynamic problem count, problem slugs).
+    Caches results in-memory to prevent redundant requests across student loops.
+    """
+    slug_clean = str(contest_slug).strip().lower()
+    if slug_clean in _contest_metadata_cache:
+        return _contest_metadata_cache[slug_clean]
+
+    close_client = False
+    if client is None:
+        client = httpx.AsyncClient(timeout=httpx.Timeout(10.0), follow_redirects=True)
+        close_client = True
+
+    try:
+        res = await _gql_post(
+            client, CONTEST_METADATA_QUERY, {"vContestSlug": slug_clean},
+            "contestMetadata", "system", retries=retries
+        )
+        if res.get("status") == "ok" and res.get("data", {}).get("contest"):
+            c_info = res["data"]["contest"]
+            questions = c_info.get("questions") or []
+            prob_ids = [str(q.get("questionId") or q.get("id")) for q in questions if isinstance(q, dict)]
+            prob_slugs = [q.get("titleSlug") for q in questions if isinstance(q, dict) and q.get("titleSlug")]
+            start_ts = c_info.get("startTime") or c_info.get("originStartTime")
+            duration = c_info.get("duration") or 5400  # Default 1.5h if missing
+            end_ts = (start_ts + duration) if start_ts else None
+
+            metadata = {
+                "contestId": slug_clean,
+                "contestSlug": slug_clean,
+                "contestName": c_info.get("title") or f"Weekly Contest {slug_clean.split('-')[-1]}",
+                "contestStartTime": datetime.datetime.utcfromtimestamp(start_ts) if start_ts else None,
+                "contestEndTime": datetime.datetime.utcfromtimestamp(end_ts) if end_ts else None,
+                "problemIds": prob_ids,
+                "problemSlugs": prob_slugs,
+                "totalProblems": len(prob_ids) if prob_ids else 4,
+                "status": "VERIFIED"
+            }
+            _contest_metadata_cache[slug_clean] = metadata
+            return metadata
+    except Exception as exc:
+        logger.warning(f"Failed to fetch contest metadata for {slug_clean}: {exc}")
+    finally:
+        if close_client and client:
+            await client.aclose()
+
+    fallback_num = re.search(r'\d+', slug_clean)
+    num_str = fallback_num.group(0) if fallback_num else ""
+    fallback = {
+        "contestId": slug_clean,
+        "contestSlug": slug_clean,
+        "contestName": f"Weekly Contest {num_str}" if "weekly" in slug_clean else f"Biweekly Contest {num_str}",
+        "contestStartTime": None,
+        "contestEndTime": None,
+        "problemIds": [],
+        "problemSlugs": [],
+        "totalProblems": 4,
+        "status": "FALLBACK"
+    }
+    _contest_metadata_cache[slug_clean] = fallback
+    return fallback
+
+
+async def fetch_verified_student_contest_record(
+    username: str,
+    contest_slug: str,
+    participation_mode: str = "PUBLIC",
+    client: Optional[Any] = None
+) -> Dict[str, Any]:
+    """
+    Multi-stage verification pipeline for student contest participation.
+    STRICT NON-ASSUMPTION POLICY: Never assumes solved count or problem statuses.
+
+    Allowed participationStatus: PARTICIPATED, NOT_PARTICIPATED, SOURCE_UNAVAILABLE, UNKNOWN
+    Allowed participationType: PUBLIC, VIRTUAL, UNKNOWN
+    Allowed verificationLevel: DIRECT, CROSS_VERIFIED, PARTIAL, UNVERIFIED
+    """
+    now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    mode_clean = participation_mode.upper().strip()
+    slug_clean = str(contest_slug).strip().lower()
+
+    base_record = {
+        "username": username,
+        "contestId": slug_clean,
+        "contestName": f"Weekly Contest {slug_clean.split('-')[-1]}",
+        "participationStatus": "UNKNOWN",
+        "participationType": mode_clean if mode_clean in ("PUBLIC", "VIRTUAL") else "UNKNOWN",
+        "solvedCount": None,
+        "totalProblems": 4,
+        "solvedProblems": [],
+        "rank": None,
+        "score": None,
+        "finishTime": None,
+        "source": "leetcode_graphql",
+        "sourceUrl": f"https://leetcode.com/u/{username}/",
+        "verificationLevel": "UNVERIFIED",
+        "confidence": 0.0,
+        "lastChecked": now_iso,
+        "error": None
+    }
+
+    if not username or len(username) < 2:
+        base_record["error"] = "Invalid or empty username"
+        return base_record
+
+    close_client = False
+    if client is None:
+        client = httpx.AsyncClient(timeout=httpx.Timeout(12.0), follow_redirects=True)
+        close_client = True
+
+    try:
+        # Fetch Contest Metadata first (dynamic totalProblems)
+        meta = await fetch_contest_metadata(slug_clean, client=client)
+        total_problems = meta.get("totalProblems", 4)
+        base_record["totalProblems"] = total_problems
+        base_record["contestName"] = meta.get("contestName", base_record["contestName"])
+        prob_slugs = meta.get("problemSlugs", [])
+
+        # Stage 1: Direct Official Contest History
+        contest_res = await fetch_contest_data(username, client=client)
+        if contest_res.get("status") in ("rate_limited", "timeout", "error"):
+            base_record["participationStatus"] = "SOURCE_UNAVAILABLE"
+            base_record["error"] = f"LeetCode GraphQL unavailable: {contest_res.get('status')}"
+            return base_record
+
+        if contest_res.get("status") != "ok" or not contest_res.get("data"):
+            base_record["participationStatus"] = "UNKNOWN"
+            base_record["error"] = f"Contest fetch returned status: {contest_res.get('status')}"
+            return base_record
+
+        history = contest_res["data"].get("history", [])
+        target_num_match = re.search(r'\d+', slug_clean)
+        target_num = int(target_num_match.group(0)) if target_num_match else None
+        is_biweekly = "biweekly" in slug_clean
+
+        matched_entry = None
+        for item in history:
+            c_name = item.get("contest_name", "")
+            num_match = re.search(r'\d+', c_name)
+            if not num_match or int(num_match.group(0)) != target_num:
+                continue
+            if ("Biweekly" in c_name) != is_biweekly:
+                continue
+            matched_entry = item
+            break
+
+        # Process PUBLIC mode
+        if mode_clean == "PUBLIC":
+            if matched_entry is None:
+                # Student profile accessed cleanly, but contest is not in official contest history
+                base_record["participationStatus"] = "NOT_PARTICIPATED"
+                base_record["participationType"] = "PUBLIC"
+                base_record["solvedCount"] = None
+                base_record["verificationLevel"] = "DIRECT"
+                base_record["confidence"] = 1.0
+                return base_record
+
+            attended = matched_entry.get("attended", False)
+            if not attended:
+                base_record["participationStatus"] = "NOT_PARTICIPATED"
+                base_record["participationType"] = "PUBLIC"
+                base_record["solvedCount"] = None
+                base_record["verificationLevel"] = "DIRECT"
+                base_record["confidence"] = 1.0
+                return base_record
+
+            # Student explicitly attended Public Contest
+            solved_count = matched_entry.get("problems_solved")
+            rank = matched_entry.get("contest_rank")
+            finish_secs = matched_entry.get("finish_time_seconds")
+
+            # Stage 2: Submission Verification for individual problem slugs
+            verified_solved_problems = []
+            level2_ran = False
+            if prob_slugs:
+                recent_subs_res = await fetch_recent_submissions(username, client=client, limit=20)
+                if recent_subs_res.get("status") == "ok":
+                    level2_ran = True
+                    user_subs = recent_subs_res.get("data", {}).get("submissions", [])
+                    contest_start = meta.get("contestStartTime")
+                    contest_end = meta.get("contestEndTime")
+
+                    for sub in user_subs:
+                        tslug = sub.get("title_slug")
+                        sub_dt = sub.get("submission_timestamp")
+                        if tslug in prob_slugs and tslug not in verified_solved_problems:
+                            # Check window if timestamps available
+                            if contest_start and contest_end and sub_dt:
+                                if contest_start <= sub_dt <= contest_end:
+                                    verified_solved_problems.append(tslug)
+                            else:
+                                verified_solved_problems.append(tslug)
+
+            # Stage 3: Cross-Verification & Verification Level Assessment
+            base_record["participationStatus"] = "PARTICIPATED"
+            base_record["participationType"] = "PUBLIC"
+            base_record["solvedCount"] = solved_count
+            base_record["rank"] = rank
+            base_record["finishTime"] = finish_secs
+            base_record["score"] = solved_count
+            base_record["solvedProblems"] = verified_solved_problems
+
+            if level2_ran and len(verified_solved_problems) == solved_count:
+                base_record["verificationLevel"] = "CROSS_VERIFIED"
+                base_record["confidence"] = 0.99
+            elif solved_count is not None:
+                base_record["verificationLevel"] = "DIRECT"
+                base_record["confidence"] = 0.95
+            else:
+                base_record["verificationLevel"] = "PARTIAL"
+                base_record["confidence"] = 0.70
+
+            return base_record
+
+        # Process VIRTUAL mode
+        elif mode_clean == "VIRTUAL":
+            # Check if student has explicit virtual participation evidence
+            # Look at recent submissions for contest problems outside regular window or marked virtual
+            recent_subs_res = await fetch_recent_submissions(username, client=client, limit=20)
+            if recent_subs_res.get("status") == "ok" and prob_slugs:
+                user_subs = recent_subs_res.get("data", {}).get("submissions", [])
+                virt_solved = []
+                for sub in user_subs:
+                    tslug = sub.get("title_slug")
+                    if tslug in prob_slugs and tslug not in virt_solved:
+                        virt_solved.append(tslug)
+
+                if virt_solved:
+                    base_record["participationStatus"] = "PARTICIPATED"
+                    base_record["participationType"] = "VIRTUAL"
+                    base_record["solvedCount"] = len(virt_solved)
+                    base_record["solvedProblems"] = virt_solved
+                    base_record["score"] = len(virt_solved)
+                    base_record["verificationLevel"] = "DIRECT"
+                    base_record["confidence"] = 0.90
+                    return base_record
+
+            base_record["participationStatus"] = "NOT_PARTICIPATED"
+            base_record["participationType"] = "VIRTUAL"
+            base_record["solvedCount"] = None
+            base_record["verificationLevel"] = "DIRECT"
+            base_record["confidence"] = 0.90
+            return base_record
+
+    except Exception as exc:
+        logger.error(f"Error in fetch_verified_student_contest_record for {username}/{contest_slug}: {exc}")
+        base_record["participationStatus"] = "UNKNOWN"
+        base_record["error"] = str(exc)
+        base_record["verificationLevel"] = "UNVERIFIED"
+        base_record["confidence"] = 0.0
+        return base_record
+    finally:
+        if close_client and client:
+            await client.aclose()
+
+    return base_record
+

@@ -297,18 +297,19 @@ class ContestClassifier:
                 error_message=f"Contest ID mismatch: {returned_contest_id} != {canonical_contest_id}",
             )
 
-        # Step 4 & 5: Presence & Type Evaluation (Refinement A)
+        # Step 4 & 5: Presence & Type Evaluation (Strict Non-Assumption)
         attended = bool(contest_data.get("attended", False))
-        problems_solved = int(contest_data.get("problems_solved", 0) or 0)
+        problems_solved = contest_data.get("problems_solved")
         score = contest_data.get("score") if contest_data.get("score") is not None else problems_solved
         rank = contest_data.get("rank")
         rating_after = contest_data.get("rating_after")
         source_ts = contest_data.get("source_timestamp")
 
-        q1 = contest_data.get("q1_solved", problems_solved >= 1)
-        q2 = contest_data.get("q2_solved", problems_solved >= 2)
-        q3 = contest_data.get("q3_solved", problems_solved >= 3)
-        q4 = contest_data.get("q4_solved", problems_solved >= 4)
+        # Q1-Q4 flags are strictly set ONLY if explicitly verified in submission evidence, never guessed
+        q1 = bool(contest_data.get("q1_solved", False))
+        q2 = bool(contest_data.get("q2_solved", False))
+        q3 = bool(contest_data.get("q3_solved", False))
+        q4 = bool(contest_data.get("q4_solved", False))
 
         if attended:
             return ContestStatusRow(
@@ -332,9 +333,9 @@ class ContestClassifier:
             )
         else:
             # attended == False
-            # Refinement A: if solved > 0 OR explicit virtual contest entry
-            has_virtual_trace = contest_data.get("is_virtual", False) or contest_data.get("contest_slug") is not None or problems_solved > 0
-            if has_virtual_trace:
+            # Explicit virtual contest trace (is_virtual flag or explicit virtual submission)
+            is_virtual = bool(contest_data.get("is_virtual", False))
+            if is_virtual or (problems_solved is not None and problems_solved > 0 and contest_data.get("virtual_session")):
                 return ContestStatusRow(
                     student_id=student_id,
                     student_name=student_name,
@@ -631,13 +632,18 @@ async def get_contest_status(
             fetch_status=FetchStatus.OK,
         )
 
-    # Step 4 & 5: Evaluate Participation Type (Refinement A)
+    # Step 4 & 5: Evaluate Participation Type (Strict Non-Assumption)
     attended = entry.get("attended", False)
-    solved = entry.get("problems_solved", 0)
-    score = solved
+    solved = entry.get("problems_solved")
+    score = entry.get("score", solved)
     rank = entry.get("ranking")
     rating_after = entry.get("rating_after")
     source_ts = entry.get("source_timestamp")
+
+    q1 = bool(entry.get("q1_solved", False))
+    q2 = bool(entry.get("q2_solved", False))
+    q3 = bool(entry.get("q3_solved", False))
+    q4 = bool(entry.get("q4_solved", False))
 
     if attended:
         return ContestStatusRow(
@@ -652,16 +658,17 @@ async def get_contest_status(
             score=score,
             rank=rank,
             problems_solved=solved,
-            q1_solved=solved >= 1,
-            q2_solved=solved >= 2,
-            q3_solved=solved >= 3,
-            q4_solved=solved >= 4,
+            q1_solved=q1,
+            q2_solved=q2,
+            q3_solved=q3,
+            q4_solved=q4,
             rating_after=rating_after,
             source_timestamp=source_ts,
         )
     else:
         # attended == False
-        if solved > 0 or entry.get("contest_slug") is not None:
+        is_virtual = bool(entry.get("is_virtual", False))
+        if is_virtual or (solved is not None and solved > 0 and entry.get("virtual_session")):
             return ContestStatusRow(
                 student_id=student_id,
                 student_name=student_name,
@@ -674,10 +681,10 @@ async def get_contest_status(
                 score=score,
                 rank=rank,
                 problems_solved=solved,
-                q1_solved=solved >= 1,
-                q2_solved=solved >= 2,
-                q3_solved=solved >= 3,
-                q4_solved=solved >= 4,
+                q1_solved=q1,
+                q2_solved=q2,
+                q3_solved=q3,
+                q4_solved=q4,
                 rating_after=rating_after,
                 source_timestamp=source_ts,
             )

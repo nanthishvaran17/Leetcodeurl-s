@@ -206,7 +206,7 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
         </div>
 
         {/* Modal Body */}
-        <div className="overflow-y-auto flex-1 p-6 space-y-4 text-xs">
+        <div className="overflow-y-auto flex-1 min-h-0 p-6 space-y-4 text-xs">
           
           {loading ? (
             <div className="py-12 text-center space-y-3">

@@ -139,9 +139,9 @@ export const GrowthIntelligencePage: React.FC = () => {
               onChange={(e) => setDeptFilter(e.target.value)}
               className="px-3.5 py-2 rounded-2xl bg-navy-900/90 text-white text-xs font-bold border border-gray-700/80 backdrop-blur-md shadow-inner outline-none cursor-pointer hover:border-brand-500"
             >
-              <option value="ALL">🏢 All Departments (Cyber Security & IoT)</option>
-              <option value="CSE(CS)">🏢 Computer Science & Engg (Cyber Security)</option>
-              <option value="CSE(IoT)">🏢 Computer Science & Engg (IoT)</option>
+              <option value="ALL">All Departments (Cyber Security & IoT)</option>
+              <option value="CSE(CS)">Computer Science & Engg (Cyber Security)</option>
+              <option value="CSE(IoT)">Computer Science & Engg (IoT)</option>
             </select>
 
             <select

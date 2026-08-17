@@ -136,7 +136,7 @@ def fetch_normalized_contests(db: Session, dept_filter: Optional[str] = "ALL", y
             problems_solved=p.problems_solved,
             total_problems=p.total_problems,
             rank=str(p.contest_rank) if p.contest_rank else "-",
-            verified_at=p.verified_at.isoformat() if p.verified_at else None
+            verified_at=p.verified_at.isoformat() if hasattr(p.verified_at, 'isoformat') else (str(p.verified_at) if p.verified_at else None)
         ))
 
     # Fallback to profile stats recent contest info if no ContestParticipation table entries exist
@@ -145,10 +145,13 @@ def fetch_normalized_contests(db: Session, dept_filter: Optional[str] = "ALL", y
         for idx, s in enumerate(students, start=1):
             st = s.stats
             if st and st.recent_contest_name:
+                sync_time = getattr(st, 'last_successful_sync', None) or getattr(st, 'last_updated', None)
+                date_str = sync_time.strftime("%Y-%m-%d") if hasattr(sync_time, 'strftime') else (str(sync_time) if sync_time else "")
+                iso_str = sync_time.isoformat() if hasattr(sync_time, 'isoformat') else (str(sync_time) if sync_time else None)
                 rows.append(ContestRow(
                     s_no=idx,
                     contest_name=st.recent_contest_name,
-                    date=st.last_synced_at.strftime("%Y-%m-%d") if st.last_synced_at else "",
+                    date=date_str,
                     reg_no=s.reg_no,
                     student_name=s.name,
                     dept=s.department.code if s.department else "",
@@ -156,7 +159,7 @@ def fetch_normalized_contests(db: Session, dept_filter: Optional[str] = "ALL", y
                     problems_solved=int(st.recent_contest_score) if (st.recent_contest_score and str(st.recent_contest_score).isdigit()) else 1,
                     total_problems=4,
                     rank=str(st.contest_global_ranking) if st.contest_global_ranking else "-",
-                    verified_at=st.last_synced_at.isoformat() if st.last_synced_at else None
+                    verified_at=iso_str
                 ))
 
     return rows

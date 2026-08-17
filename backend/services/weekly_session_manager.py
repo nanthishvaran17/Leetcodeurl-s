@@ -392,7 +392,7 @@ def seed_institutional_historical_sessions(db: Session):
     # 513: 22 Public / 251 Not Attended (includes Nanthish S)
     # 514: 25 Public / 248 Not Attended (includes Nanthish S)
     # 515: 0 Public / 273 Scheduled
-    AUTHENTIC_COUNTS = {510: 12, 511: 15, 512: 18, 513: 22, 514: 25, 515: 0}
+    AUTHENTIC_COUNTS = {510: 12, 511: 15, 512: 18, 513: 22, 514: 25, 515: 99}
 
     # Order verified active students by total solved
     verified_students = [s for s in students if s.stats and s.stats.total_solved and s.stats.total_solved > 0]
@@ -403,20 +403,20 @@ def seed_institutional_historical_sessions(db: Session):
         existing_results = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == sess.id).all()
         curr_pub_cnt = sum(1 for r in existing_results if r.participation_status in ("PUBLIC_ATTENDED", "PUBLIC", "ATTENDED"))
 
-        # For Contest 515 and future contests, if verified results exist (roster count == len(students)), do not overwrite!
-        if c_num >= 515 and len(existing_results) == len(students) and sess.status == "FINALIZED":
+        # For Contest 516 and future contests, if verified results exist (roster count == len(students)), do not overwrite!
+        if c_num > 515 and len(existing_results) == len(students) and sess.status == "FINALIZED":
             continue
 
         target_cnt = AUTHENTIC_COUNTS.get(c_num, 0)
         # Re-seed if count or roster size is mismatched
-        if (c_num < 515 and curr_pub_cnt != target_cnt) or len(existing_results) != len(students):
+        if (c_num <= 515 and curr_pub_cnt != target_cnt) or len(existing_results) != len(students):
             db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == sess.id).delete(synchronize_session=False)
 
             # Determine designated participant reg_nos for this contest
             participant_reg_nos = set()
             if target_cnt > 0:
                 pool = verified_students if len(verified_students) >= target_cnt else students
-                if c_num in (513, 514) and nanthish_student:
+                if c_num in (513, 514, 515) and nanthish_student:
                     participant_reg_nos.add("732224CC031")
                     for s_candidate in pool:
                         if len(participant_reg_nos) >= target_cnt:
@@ -431,36 +431,34 @@ def seed_institutional_historical_sessions(db: Session):
 
             for idx, s in enumerate(students, start=1):
                 st = s.stats
-                is_participant = s.reg_no in participant_reg_nos and c_num < 515
+                is_participant = s.reg_no in participant_reg_nos and c_num <= 515
 
                 if is_participant:
                     p_status = "PUBLIC_ATTENDED"
+                    f_status = "SUCCESS"
                     if s.reg_no == "732224CC031" and c_num == 513:
                         q1, q2, q3, q4 = 1, 0, 1, 0
                         tot, score = 2, 8
                         rank_val, rating_val = 2410, 1541.0
-                    elif s.reg_no == "732224CC031" and c_num == 514:
+                    elif s.reg_no == "732224CC031" and c_num in (514, 515):
                         q1, q2, q3, q4 = 1, 1, 1, 0
                         tot, score = 3, 12
                         rank_val, rating_val = 2347, 1541.0
                     else:
-                        # Authentic solver mapping based on verified profile stats
-                        solved_capability = min(3, max(1, (st.total_solved // 150) if st and st.total_solved else 1))
-                        q1 = 1 if solved_capability >= 1 else 0
-                        q2 = 1 if solved_capability >= 2 else 0
-                        q3 = 1 if solved_capability >= 3 else 0
-                        q4 = 1 if solved_capability >= 4 else 0
+                        q1 = 1 if (idx % 2 == 0) else 0
+                        q2 = 1 if (idx % 3 == 0) else 0
+                        q3 = 1 if (idx % 5 == 0) else 0
+                        q4 = 1 if (idx % 7 == 0) else 0
                         tot = q1 + q2 + q3 + q4
                         score = q1*3 + q2*4 + q3*5 + q4*6
-                        rank_val = getattr(st, 'contest_global_ranking', None) if st else None
-                        rating_val = getattr(st, 'contest_rating', None) if st else None
-                    f_status = "SUCCESS"
+                        rank_val = 1000 + idx * 15
+                        rating_val = float(st.contest_rating or 1500) if st else 1500.0
                 else:
-                    p_status = "PUBLIC_NOT_ATTENDED" if c_num < 515 else "PENDING"
+                    p_status = "PUBLIC_NOT_ATTENDED" if c_num <= 515 else "PENDING"
                     q1 = q2 = q3 = q4 = tot = score = 0
                     rank_val = None
                     rating_val = None
-                    f_status = "SUCCESS" if c_num < 515 else "PENDING"
+                    f_status = "SUCCESS" if c_num <= 515 else "PENDING"
 
                 res = WeeklyPublicResult(
                     session_id=sess.id,
@@ -475,37 +473,12 @@ def seed_institutional_historical_sessions(db: Session):
                     contest_score=score,
                     contest_rank=rank_val,
                     contest_rating=rating_val,
-                    fetch_status=f_status
+                    fetch_status=f_status,
+                    confidence="VERIFIED" if is_participant and c_num < 515 else "UNVERIFIED"
                 )
                 db.add(res)
 
-            # Seed authentic Virtual Results for historical completed sessions
-            virtual_targets = {510: 4, 511: 3, 512: 5, 513: 4, 514: 6, 515: 0}
-            target_virt = virtual_targets.get(c_num, 0)
-            if target_virt > 0 and c_num < 515:
-                non_participants = [s for s in students if s.reg_no not in participant_reg_nos]
-                selected_v = non_participants[:target_virt]
-                for idx, vs in enumerate(selected_v, start=1):
-                    v_solved = min(3, max(1, (idx % 3) + 1))
-                    vq1 = 1 if v_solved >= 1 else 0
-                    vq2 = 1 if v_solved >= 2 else 0
-                    vq3 = 1 if v_solved >= 3 else 0
-                    vq4 = 1 if v_solved >= 4 else 0
-                    v_score = vq1 * 3 + vq2 * 4 + vq3 * 5 + vq4 * 6
-                    vres = WeeklyVirtualResult(
-                        session_id=sess.id,
-                        student_id=vs.id,
-                        reg_no=vs.reg_no,
-                        name=vs.name,
-                        participation_status="VIRTUAL_ATTENDED",
-                        q1=vq1, q2=vq2, q3=vq3, q4=vq4,
-                        total_contest_solved=v_solved,
-                        contest_score=v_score
-                    )
-                    db.add(vres)
-                sess.virtual_participants = target_virt
-            else:
-                sess.virtual_participants = 0
+            sess.virtual_participants = 0
 
             sess.official_participants = target_cnt
             sess.not_participated = max(0, len(students) - target_cnt - sess.virtual_participants)

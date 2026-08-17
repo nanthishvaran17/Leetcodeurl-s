@@ -582,13 +582,13 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
       {/* Viewport-Centered Student Edit Modal */}
       {editingStudent && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-hidden animate-fade-in"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-fade-in"
           onClick={(e) => {
             if (e.target === e.currentTarget && !isSaving) setEditingStudent(null);
           }}
         >
           <div
-            className="bg-white dark:bg-navy-900 w-full max-w-lg max-h-[90vh] rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col my-auto"
+            className="bg-white dark:bg-navy-900 w-full max-w-lg max-h-[calc(100vh-3rem)] rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -613,7 +613,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
             </div>
 
             {/* Form Content */}
-            <div className="p-6 space-y-4 overflow-y-auto">
+            <div className="p-6 space-y-4 flex-1 min-h-0 overflow-y-auto">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-gray-700 dark:text-gray-300">Student Full Name</label>
                 <input
@@ -675,7 +675,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
             </div>
 
             {/* Footer */}
-            <div className="p-4 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between">
+            <div className="p-4 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between shrink-0">
               <button
                 type="button"
                 onClick={() => setEditingStudent(null)}
@@ -699,13 +699,13 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
       {/* Viewport-Centered Student Delete Confirmation Modal */}
       {deletingStudent && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-hidden animate-fade-in"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-fade-in"
           onClick={(e) => {
             if (e.target === e.currentTarget && !isDeleting) setDeletingStudent(null);
           }}
         >
           <div
-            className="bg-white dark:bg-navy-900 w-full max-w-md max-h-[90vh] rounded-3xl shadow-2xl border border-rose-200 dark:border-rose-900/50 overflow-hidden flex flex-col p-6 space-y-4 my-auto"
+            className="bg-white dark:bg-navy-900 w-full max-w-md max-h-[calc(100vh-3rem)] rounded-3xl shadow-2xl border border-rose-200 dark:border-rose-900/50 overflow-hidden flex flex-col p-6 space-y-4 my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
@@ -757,7 +757,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
         >
           {/* Modal panel — centered with safe margins from top & bottom */}
           <div
-            className="relative w-full max-w-2xl flex flex-col bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden my-auto max-h-[85vh] sm:max-h-[88vh] animate-modal-content"
+            className="relative w-full max-w-2xl flex flex-col bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden my-auto max-h-[calc(100vh-3rem)] animate-modal-content"
             onClick={(e) => e.stopPropagation()}
           >
 
@@ -809,7 +809,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
             </div>
 
             {/* ── B. SCROLLABLE CONTENT ─────────────────────────────────── */}
-            <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4">
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4">
 
               {/* LeetCode Handle */}
               <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-brand-50/60 dark:bg-brand-950/30 border border-brand-200/60 dark:border-brand-800/40">

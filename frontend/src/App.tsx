@@ -152,7 +152,7 @@ export const App: React.FC = () => {
         )}
 
         {/* Main Content View Container */}
-        <main key={activeTab} className="min-w-0 w-full animate-fadeIn">
+        <main key={activeTab} className="min-w-0 w-full animate-page-enter">
 
           
           {activeTab === 'landing' && (
@@ -244,14 +244,14 @@ export const App: React.FC = () => {
       {/* Login Modal */}
       {showLoginModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto animate-fadeIn"
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto animate-fadeIn"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowLoginModal(false);
             }
           }}
         >
-          <div className="w-full max-w-md my-auto">
+          <div className="w-full max-w-md my-auto max-h-[calc(100vh-2rem)] overflow-y-auto">
             <LoginPage
               onClose={() => setShowLoginModal(false)}
               onSuccess={() => { setShowLoginModal(false); setActiveTab('dashboard'); }}

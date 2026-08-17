@@ -329,7 +329,7 @@ export const CertificateManagementModal: React.FC<{
         </div>
 
         {/* Modal Body — Internal Scroll */}
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-6 overscroll-contain">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0 space-y-6 overscroll-contain">
 
           {/* TAB 1: GENERATE & PREVIEW CERTIFICATE */}
           {activeTab === 'generate' && (

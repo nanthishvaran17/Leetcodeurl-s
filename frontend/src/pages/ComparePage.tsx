@@ -90,7 +90,7 @@ export const ComparePage: React.FC = () => {
     if (groupDimension === 'DEPT') {
       return departments.map(d => ({
         key: String(d.id),
-        label: `🏢 ${d.name} (${d.code}) - All Years`
+        label: `${d.name} (${d.code}) - All Years`
       }));
     } else if (groupDimension === 'DEPT_YEAR') {
       // Combined Department & Year Combo e.g. 2nd Year Cyber Security vs 2nd Year IoT
@@ -859,10 +859,10 @@ export const ComparePage: React.FC = () => {
                   <Trophy className="w-6 h-6 fill-amber-500 text-amber-500 animate-bounce" />
                   <span>
                     {groupWinner?.winner === 'A'
-                      ? `🏆 ${groupAData.label} Leads in Average Solved (+${groupWinner.margin} / student)`
+                      ? `${groupAData.label} Leads in Average Solved (+${groupWinner.margin} / student)`
                       : groupWinner?.winner === 'B'
-                      ? `🏆 ${groupBData.label} Leads in Average Solved (+${groupWinner.margin} / student)`
-                      : '🤝 Equal Group Average Solved Performance'}
+                      ? `${groupBData.label} Leads in Average Solved (+${groupWinner.margin} / student)`
+                      : 'Equal Group Average Solved Performance'}
                   </span>
                 </div>
               </div>

@@ -40,7 +40,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
     <aside className="sticky top-20 w-full shrink-0 glass-card h-[calc(100vh-6rem)] border border-gray-200/80 dark:border-navy-800/80 rounded-3xl p-5 flex flex-col justify-between shadow-xl backdrop-blur-xl bg-white/80 dark:bg-navy-900/80 hidden lg:flex transition-all duration-300">
       
       {/* Navigation Links */}
-      <div className="space-y-3 overflow-y-auto pr-1 flex-1 custom-scrollbar">
+      <div className="space-y-3 overflow-y-auto pr-1 flex-1 min-h-0 custom-scrollbar">
         <div className="px-3 py-1.5 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest flex items-center justify-between">
           <span>Main Navigation</span>
           <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-ping"></span>
@@ -103,7 +103,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
       </div>
 
       {/* Bottom Session Info Card */}
-      <div className="pt-4 mt-2 border-t border-gray-100 dark:border-navy-800">
+      <div className="pt-4 mt-2 border-t border-gray-100 dark:border-navy-800 shrink-0">
         <div className="p-3.5 rounded-2xl bg-gradient-to-br from-brand-950 via-navy-950 to-indigo-950 border border-brand-500/30 shadow-lg text-xs space-y-2 relative overflow-hidden group">
           <div className="absolute top-0 right-0 -mt-6 -mr-6 w-20 h-20 bg-brand-500/10 rounded-full blur-xl pointer-events-none group-hover:bg-brand-500/20 transition-all"></div>
           <div className="flex items-center space-x-2 text-amber-400 font-extrabold relative z-10">

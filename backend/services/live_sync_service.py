@@ -259,8 +259,9 @@ def start_full_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, A
         else:
             logger.info(f"[SYNC] Sync job {running_job.job_id} is already RUNNING. Reusing active job.")
             return {
-                "success": False,
-                "status": "SYNC_ALREADY_RUNNING",
+                "success": True,
+                "status": "RUNNING",
+                "already_running": True,
                 "job_id": running_job.job_id,
                 "message": "A synchronization job is already in progress.",
                 "started_at": running_job.started_at.isoformat() if running_job.started_at else None
@@ -296,7 +297,7 @@ def start_full_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, A
     return {
         "success": True,
         "job_id": job_id,
-        "status": "SYNCING",
+        "status": "RUNNING",
         "total_records": total_count,
         "message": f"Started background live sync job for {total_count} active students."
     }
@@ -495,11 +496,19 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
     old_total = st.total_solved
     now = datetime.datetime.utcnow()
 
-    # Case A: Exception or Network Error - PRESERVE PREVIOUS VALID SNAPSHOT
-    if isinstance(res, Exception) or not isinstance(res, dict):
-        err_msg = str(res) if isinstance(res, Exception) else "Unknown fetch error"
+    # Case A: Exception, Network Error, or explicit error-status dict - PRESERVE PREVIOUS VALID SNAPSHOT
+    if isinstance(res, Exception) or not isinstance(res, dict) or res.get("status") == "error":
+        if isinstance(res, Exception):
+            err_msg = str(res)
+            err_code = "NETWORK_ERROR"
+        elif isinstance(res, dict):
+            err_msg = res.get("error_message") or "Fetch error"
+            err_code = res.get("error_code") or "NETWORK_ERROR"
+        else:
+            err_msg = "Unknown fetch error"
+            err_code = "NETWORK_ERROR"
         st.error_message = err_msg
-        st.error_code = "NETWORK_ERROR"
+        st.error_code = err_code
         has_prev_data = (old_total is not None and old_total > 0)
         st.sync_status = "stale" if has_prev_data else "failed"
         st.validation_status = "verified" if has_prev_data else "failed"

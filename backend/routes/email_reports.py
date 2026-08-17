@@ -159,6 +159,26 @@ def update_report_email_recipient(recipient_id: int, payload: RecipientCreateSch
     return {"status": "success", "id": rec.id}
 
 
+@router.patch("/recipients/{recipient_id}/status")
+def toggle_report_email_recipient_status(recipient_id: int, payload: Dict[str, Any], db: Session = Depends(get_db)):
+    """
+    Toggles active/inactive status of a recipient contact.
+    """
+    rec = db.query(ReportEmailRecipient).filter(ReportEmailRecipient.id == recipient_id).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail="Recipient not found")
+
+    if "active" in payload:
+        rec.is_active = bool(payload["active"])
+    elif "is_active" in payload:
+        rec.is_active = bool(payload["is_active"])
+    else:
+        rec.is_active = not rec.is_active
+
+    db.commit()
+    return {"status": "success", "id": rec.id, "is_active": rec.is_active}
+
+
 @router.delete("/recipients/{recipient_id}")
 def delete_report_email_recipient(recipient_id: int, db: Session = Depends(get_db)):
     """
@@ -171,6 +191,26 @@ def delete_report_email_recipient(recipient_id: int, db: Session = Depends(get_d
     db.delete(rec)
     db.commit()
     return {"status": "success", "message": "Recipient deleted"}
+
+
+@router.post("/trigger-weekly")
+def trigger_automated_weekly_email_dispatch(session_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
+    """
+    Triggers automated weekly contest performance report dispatch to all active recipients.
+    """
+    from backend.models import WeeklySession
+    if not session_id:
+        sess = db.query(WeeklySession).filter(WeeklySession.status == "FINALIZED").order_by(WeeklySession.id.desc()).first()
+        if not sess:
+            sess = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+        session_id = sess.id if sess else None
+
+    if not session_id:
+        raise HTTPException(status_code=404, detail="No weekly session available for report email dispatch.")
+
+    res = queue_weekly_report_dispatches(db, session_id=session_id)
+    return res
+
 
 
 @router.get("/logs")

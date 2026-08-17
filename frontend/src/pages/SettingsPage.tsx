@@ -1343,8 +1343,8 @@ export const SettingsPage: React.FC = () => {
 
       {/* Confirmation Modal */}
       {confirmModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl animate-fade-in">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl p-6 max-w-md max-h-[calc(100vh-3rem)] w-full space-y-4 shadow-2xl animate-fade-in my-auto overflow-y-auto">
             <h3 className="text-base font-extrabold text-gray-900 dark:text-white flex items-center space-x-2">
               <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
               <span>{confirmModal.title}</span>

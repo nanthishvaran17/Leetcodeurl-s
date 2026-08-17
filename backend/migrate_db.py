@@ -162,11 +162,20 @@ def run_db_migrations():
             );
         """)
 
+        # contest_participations: source_username audit trail column
+        try:
+            cursor.execute("ALTER TABLE contest_participations ADD COLUMN source_username VARCHAR(100);")
+            print("Added column 'source_username' to contest_participations.")
+        except Exception:
+            pass  # Column already exists — safe to ignore
+
         conn.commit()
         conn.close()
         print("Database migration complete.")
+
     else:
         print("Database file not found for migration.")
+
 
 if __name__ == "__main__":
     run_db_migrations()

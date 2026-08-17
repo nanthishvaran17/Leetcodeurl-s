@@ -49,13 +49,26 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
       link.remove();
     } catch (err: any) {
       console.error(`Failed to download ${format} report:`, err);
-      alert(`Failed to download ${format.toUpperCase()} report. Please try again.`);
+      const statusCode = err.response?.status;
+      if (statusCode === 401) {
+        alert("Authentication required. Please sign in again.");
+      } else if (statusCode === 403) {
+        alert("You do not have permission to generate this institutional report.");
+      } else if (statusCode === 404) {
+        alert("Report resource not found.");
+      } else if (statusCode === 422) {
+        alert("Invalid report parameters.");
+      } else if (statusCode === 500) {
+        alert("Report generation failed on the server. Check server logs.");
+      } else {
+        alert(`Failed to download ${format.toUpperCase()} report. Please try again.`);
+      }
     }
   };
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
         <div className="bg-white dark:bg-navy-900 p-8 rounded-3xl flex flex-col items-center space-y-4 shadow-2xl border border-gray-200 dark:border-gray-800">
           <RefreshCw className="w-8 h-8 animate-spin text-brand-500" />
           <p className="font-bold text-gray-700 dark:text-gray-300">Fetching verified report dataset...</p>
@@ -69,85 +82,69 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
   const dataQuality = report.dataQuality;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-gray-50 dark:bg-navy-950 overflow-hidden animate-fade-in">
-      {/* Toolbar */}
-      <div className="h-16 bg-white dark:bg-navy-900 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6 shrink-0 shadow-sm">
-        <div className="flex items-center space-x-4">
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-500 hover:text-gray-900 dark:hover:text-white">
-            <X className="w-5 h-5" />
-          </button>
-          <h2 className="font-black text-lg text-gray-900 dark:text-white">{report.title}</h2>
-          {report.dataStatus === 'READY' && (
-            <span className="px-3 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-xs font-black rounded-full flex items-center space-x-1">
-              <span>🟢 READY</span>
-            </span>
-          )}
-        </div>
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-md overflow-hidden animate-fade-in"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-white dark:bg-navy-900 w-full max-w-6xl max-h-[calc(100vh-2.5rem)] rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 flex flex-col overflow-hidden my-auto animate-modal-content">
         
-        <div className="flex items-center space-x-2">
-          <button onClick={() => downloadFile('excel')} className="flex items-center space-x-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all shadow-md hover:scale-105">
-            <FileSpreadsheet className="w-4 h-4" />
-            <span>Excel</span>
-          </button>
-          <button onClick={() => downloadFile('pdf')} className="flex items-center space-x-1.5 px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black transition-all shadow-md hover:scale-105">
-            <FileText className="w-4 h-4" />
-            <span>PDF</span>
-          </button>
-          <button onClick={() => downloadFile('word')} className="flex items-center space-x-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black transition-all shadow-md hover:scale-105">
-            <FileText className="w-4 h-4" />
-            <span>Word</span>
-          </button>
-          <button onClick={() => downloadFile('csv')} className="flex items-center space-x-1.5 px-3 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-xl text-xs font-black transition-all shadow-md hover:scale-105">
-            <FileText className="w-4 h-4" />
-            <span>CSV</span>
-          </button>
-          <button onClick={() => downloadFile('zip')} className="flex items-center space-x-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition-all shadow-md hover:scale-105">
-            <Download className="w-4 h-4" />
-            <span>All (.zip)</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Preview Content */}
-      <div className="flex-1 overflow-auto p-4 md:p-8 lg:p-10 space-y-8">
-        <div className="w-full max-w-[96%] xl:max-w-[92%] 2xl:max-w-[1650px] mx-auto bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-2xl p-6 md:p-10 space-y-8">
-          
-          {/* Official Letterhead */}
-          <div className="text-center space-y-2 border-b border-gray-200 dark:border-gray-800 pb-6">
-            <h1 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-wider">
-              NANDHA ENGINEERING COLLEGE (AUTONOMOUS)
-            </h1>
-            <p className="text-xs font-bold text-gray-500 dark:text-gray-400">
-              Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai | Erode - 638 052
-            </p>
-            <h2 className="text-xl font-black text-brand-600 dark:text-brand-400 pt-2">{report.title}</h2>
-            <div className="flex flex-wrap justify-center gap-6 text-xs text-gray-500 dark:text-gray-400 pt-2 font-mono">
-              <p>Generated: <b>{new Date(report.generatedAt).toLocaleString()}</b></p>
-              <p>Status: <b className="text-emerald-600 dark:text-emerald-400">{report.dataStatus}</b></p>
-              <p>ID: <b>{report.reportId}</b></p>
+        {/* ── 1. COMPACT HEADER ── */}
+        <div className="p-4 sm:p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between shrink-0">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 rounded-xl bg-brand-500/20 text-brand-300 border border-brand-400/30">
+              <FileSpreadsheet className="w-5 h-5 text-amber-400" />
+            </div>
+            <div>
+              <h2 className="font-black text-base sm:text-lg text-white flex items-center space-x-2">
+                <span>{report.title}</span>
+                {report.dataStatus === 'READY' && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-extrabold">
+                    🟢 READY
+                  </span>
+                )}
+              </h2>
+              <p className="text-xs text-gray-300 font-bold mt-0.5">
+                Report ID: <span className="font-mono text-amber-300">{report.reportId}</span> • Generated: {new Date(report.generatedAt).toLocaleString()}
+              </p>
             </div>
           </div>
 
-          {/* Data Quality Summary Banner */}
-          {dataQuality && (
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-2">
-              <div className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                <span className="flex items-center space-x-2">
-                  <AlertTriangle className="w-4 h-4 text-amber-500" />
-                  <span>⚠️ Data Quality & Integrity Summary</span>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close report preview"
+            className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500 text-white transition-all font-black text-xs flex items-center space-x-1 cursor-pointer"
+          >
+            <span>✕</span>
+            <span>Close</span>
+          </button>
+        </div>
+
+        {/* ── 2. FILTER / SUMMARY AREA ── */}
+        {dataQuality && (
+          <div className="px-5 py-3 bg-gray-100 dark:bg-navy-950 border-b border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-3 text-xs font-bold shrink-0">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="flex items-center space-x-1.5 text-slate-700 dark:text-slate-300 font-black">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                <span>Roster Integrity:</span>
+              </span>
+              <span className="px-2.5 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-black">
+                Verified: {dataQuality.valid_count} / {dataQuality.total_students}
+              </span>
+              {dataQuality.unverified_count > 0 && (
+                <span className="px-2.5 py-0.5 rounded-lg bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-black">
+                  Unverified: {dataQuality.unverified_count}
                 </span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-mono">
-                  {dataQuality.valid_count} / {dataQuality.total_students} Verified Students
-                </span>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-600 dark:text-slate-400 pt-1">
-                <div>Total Roster: <b>{dataQuality.total_students}</b></div>
-                <div>Verified: <b>{dataQuality.valid_count}</b></div>
-                <div>Unverified: <b className="text-rose-500">{dataQuality.unverified_count}</b></div>
-                <div>Missing Usernames: <b className="text-amber-500">{dataQuality.missing_username_count}</b></div>
-              </div>
+              )}
             </div>
-          )}
+            <span className="text-brand-600 dark:text-brand-400 font-mono font-bold text-[11px]">
+              Nandha Engineering College (Autonomous)
+            </span>
+          </div>
+        )}
+
+        {/* ── 3. SCROLLABLE REPORT CONTENT ── */}
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0 space-y-6">
 
           {report.message && (
             <div className="p-4 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50 rounded-2xl font-bold flex items-center space-x-2 text-xs">
@@ -200,8 +197,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                 <Trophy className="w-4 h-4 text-amber-500" />
                 <span>Top Performers Leaderboard</span>
               </h3>
-              <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm">
-                <table className="w-full text-left text-xs">
+              <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-x-auto shadow-sm">
+                <table className="w-full text-left text-xs min-w-[750px]">
                   <thead className="bg-navy-950 text-white font-black uppercase">
                     <tr>
                       <th className="px-4 py-3 text-center">Rank</th>
@@ -243,8 +240,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
               <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider">
                 Full Student Performance Roster ({report.allStudents.length} Students)
               </h3>
-              <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm max-h-[500px] overflow-y-auto">
-                <table className="w-full text-left text-xs">
+              <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-x-auto shadow-sm max-h-[450px] overflow-y-auto">
+                <table className="w-full text-left text-xs min-w-[800px]">
                   <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10">
                     <tr>
                       <th className="px-4 py-3 text-center">S.No</th>
@@ -291,8 +288,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                 <Award className="w-4 h-4 text-emerald-500" />
                 <span>Official Contest Participation Log ({report.participations.length} Entries)</span>
               </h3>
-              <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm">
-                <table className="w-full text-left text-xs">
+              <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-x-auto shadow-sm">
+                <table className="w-full text-left text-xs min-w-[800px]">
                   <thead className="bg-navy-950 text-white font-black uppercase">
                     <tr>
                       <th className="px-4 py-3 text-center">S.No</th>
@@ -327,8 +324,37 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
           )}
 
         </div>
+
+        {/* ── 4. FOOTER / EXPORT ACTIONS ── */}
+        <div className="p-4 sm:p-5 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
+          <div className="text-xs text-gray-500 font-semibold flex items-center space-x-2">
+            <span>Official Institutional Report Dataset</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <button onClick={() => downloadFile('excel')} className="flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105">
+              <FileSpreadsheet className="w-4 h-4" />
+              <span>Excel</span>
+            </button>
+            <button onClick={() => downloadFile('pdf')} className="flex items-center space-x-1.5 px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105">
+              <FileText className="w-4 h-4" />
+              <span>PDF</span>
+            </button>
+            <button onClick={() => downloadFile('word')} className="flex items-center space-x-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105">
+              <FileText className="w-4 h-4" />
+              <span>Word</span>
+            </button>
+            <button onClick={() => downloadFile('csv')} className="flex items-center space-x-1.5 px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105">
+              <FileText className="w-4 h-4" />
+              <span>CSV</span>
+            </button>
+            <button onClick={() => downloadFile('zip')} className="flex items-center space-x-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105">
+              <Download className="w-4 h-4" />
+              <span>All (.zip)</span>
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   );
 };
-

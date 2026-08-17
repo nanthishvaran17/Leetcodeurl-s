@@ -948,10 +948,14 @@ def send_manual_report_email(
             logger.error(f"[REPORT EMAIL FAILED] To: {email} | Error: {err_details}")
 
     if errors and dispatched_count == 0:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to send email to recipients: {'; '.join(errors)}"
-        )
+        return {
+            "status": "failed",
+            "message": f"Email delivery failed: {'; '.join(errors)}",
+            "excel_filename": excel_filename,
+            "total_students": total_students_cnt,
+            "dispatched_count": 0,
+            "errors": errors
+        }
 
     return {
         "status": "success",

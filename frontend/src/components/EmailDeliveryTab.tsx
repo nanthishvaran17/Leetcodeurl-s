@@ -144,8 +144,8 @@ export const EmailDeliveryTab: React.FC = () => {
     setLoading(true);
     try {
       const [rRes, lRes, sRes] = await Promise.all([
-        api.get('/admin/recipients').catch(() => ({ data: [] })),
-        api.get('/admin/email-deliveries?limit=100').catch(() => ({ data: [] })),
+        api.get('/email/recipients').catch(() => ({ data: [] })),
+        api.get('/email/logs?limit=100').catch(() => ({ data: [] })),
         api.get('/contests/sessions').catch(() => ({ data: [] })),
       ]);
 
@@ -199,7 +199,7 @@ export const EmailDeliveryTab: React.FC = () => {
 
   const handleRetry = async (logId: number) => {
     try {
-      await api.post(`/admin/email-deliveries/retry/${logId}`);
+      await api.post(`/email/retry/${logId}`);
       await fetchAll();
       setNotification({
         isOpen: true,
@@ -269,7 +269,7 @@ export const EmailDeliveryTab: React.FC = () => {
 
     setAddingRecipient(true);
     try {
-      const res = await api.post('/admin/recipients', {
+      const res = await api.post('/email/recipients', {
         name: cleanName,
         email: cleanEmail,
         role: newRole,
@@ -322,7 +322,7 @@ export const EmailDeliveryTab: React.FC = () => {
       cancelText: 'Cancel',
       onConfirm: async () => {
         try {
-          const res = await api.delete(`/admin/recipients/${id}`);
+          const res = await api.delete(`/email/recipients/${id}`);
           await fetchAll();
           setNotification({
             isOpen: true,
@@ -346,7 +346,7 @@ export const EmailDeliveryTab: React.FC = () => {
   const handleToggleRecipient = async (r: any) => {
     try {
       const newStatus = !(r.is_active ?? r.active);
-      await api.patch(`/admin/recipients/${r.id}/status`, { active: newStatus });
+      await api.patch(`/email/recipients/${r.id}/status`, { active: newStatus });
       setRecipients(prev => prev.map(x => x.id === r.id ? { ...x, is_active: newStatus, active: newStatus } : x));
     } catch (err: any) {
       console.error('Toggle error:', err);
@@ -371,12 +371,42 @@ export const EmailDeliveryTab: React.FC = () => {
         recipient_emails: selectedEmails,
         custom_message: customMessage || null
       });
-      setSendResult(res.data.message || 'Report email queued successfully.');
+      if (res.data?.status === 'failed') {
+        setSendResult(res.data.message || 'Email dispatch failed.');
+      } else {
+        setSendResult(res.data?.message || 'Report email sent successfully.');
+      }
       setSendStep('done');
       await fetchAll();
     } catch (err: any) {
-      setSendResult(err.response?.data?.detail || 'Email dispatch failed.');
+      setSendResult(err.response?.data?.detail || 'Email dispatch failed. Please check SMTP settings.');
       setSendStep('done');
+    }
+  };
+
+  const [isTriggeringWeekly, setIsTriggeringWeekly] = useState(false);
+
+  const handleTriggerAutomatedDispatch = async () => {
+    setIsTriggeringWeekly(true);
+    try {
+      const res = await api.post('/email/trigger-weekly');
+      await fetchAll();
+      setNotification({
+        isOpen: true,
+        type: 'success',
+        title: 'Weekly Dispatch Triggered',
+        message: res.data?.message || 'Weekly report email dispatch has been queued successfully for all active recipients.'
+      });
+    } catch (err: any) {
+      console.error('Trigger weekly error:', err);
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Dispatch Trigger Failed',
+        message: err.response?.data?.detail || 'Unable to trigger weekly report emails.'
+      });
+    } finally {
+      setIsTriggeringWeekly(false);
     }
   };
 
@@ -411,7 +441,7 @@ export const EmailDeliveryTab: React.FC = () => {
         ))}
       </div>
 
-      {/* 📧 Test Email Card */}
+      {/* Test Email Card */}
       <div className="glass-card p-5 rounded-3xl border border-indigo-500/30 bg-white dark:bg-navy-900 shadow-xl space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -419,7 +449,7 @@ export const EmailDeliveryTab: React.FC = () => {
               <Mail className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm font-black text-gray-900 dark:text-white">📧 Test Email</h3>
+              <h3 className="text-sm font-black text-gray-900 dark:text-white">Test Email</h3>
               <p className="text-[11px] text-gray-400">Test Gmail SMTP (`smtp.gmail.com:587` + STARTTLS + App Password)</p>
             </div>
           </div>
@@ -459,7 +489,7 @@ export const EmailDeliveryTab: React.FC = () => {
             className="sm:self-end px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center space-x-2"
           >
             <Mail className="w-3.5 h-3.5" />
-            <span>🧪 Send Test Report to Admin Email</span>
+            <span>Send Test Report to Admin Email</span>
           </button>
         </div>
 
@@ -488,7 +518,25 @@ export const EmailDeliveryTab: React.FC = () => {
           className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-brand-600 hover:from-indigo-700 hover:to-brand-700 text-white rounded-2xl text-xs font-black shadow-lg shadow-indigo-500/30 transition-all hover:scale-105"
         >
           <Send className="w-4 h-4" />
-          📧 Send Report by Email
+          <span>Send Report by Email</span>
+        </button>
+
+        <button
+          onClick={handleTriggerAutomatedDispatch}
+          disabled={isTriggeringWeekly}
+          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs font-black shadow-lg shadow-emerald-500/30 transition-all hover:scale-105 disabled:opacity-50"
+        >
+          {isTriggeringWeekly ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Queueing Dispatch...</span>
+            </>
+          ) : (
+            <>
+              <Send className="w-4 h-4" />
+              <span>Trigger Automated Weekly Dispatch Now</span>
+            </>
+          )}
         </button>
 
         <button onClick={fetchAll} className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-navy-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold hover:bg-gray-50 dark:hover:bg-navy-700 transition-all">
@@ -504,7 +552,7 @@ export const EmailDeliveryTab: React.FC = () => {
               onClick={() => setActiveSection(s)}
               className={`px-4 py-2 text-[11px] font-black capitalize transition-all ${activeSection === s ? 'bg-brand-600 text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`}
             >
-              {s === 'status' ? '📊 Status' : s === 'recipients' ? '👥 Recipients' : '📋 History'}
+              {s === 'status' ? 'Status' : s === 'recipients' ? 'Recipients' : 'History'}
             </button>
           ))}
         </div>
@@ -515,7 +563,7 @@ export const EmailDeliveryTab: React.FC = () => {
         <div className="glass-card rounded-3xl border border-gray-200 dark:border-gray-700/50 overflow-hidden">
           <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
             <div>
-              <h2 className="text-base font-black text-gray-900 dark:text-white">📧 Email Delivery Status</h2>
+              <h2 className="text-base font-black text-gray-900 dark:text-white">Email Delivery Status</h2>
               <p className="text-xs text-gray-400 mt-0.5">Recent automated and manual report email deliveries</p>
             </div>
             {totalFailed > 0 && (
@@ -698,8 +746,8 @@ export const EmailDeliveryTab: React.FC = () => {
 
       {/* ── ADD RECIPIENT MODAL ──────────────────────────────────── */}
       {showAddRecipient && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-navy-900 rounded-3xl shadow-2xl w-full max-w-md border border-gray-200 dark:border-gray-700 p-6 space-y-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-navy-900 rounded-3xl shadow-2xl w-full max-w-md max-h-[calc(100vh-3rem)] border border-gray-200 dark:border-gray-700 p-6 space-y-4 my-auto overflow-y-auto">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-black text-gray-900 dark:text-white">Add Email Recipient</h2>
               <button onClick={() => setShowAddRecipient(false)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
@@ -753,15 +801,15 @@ export const EmailDeliveryTab: React.FC = () => {
 
       {/* ── SEND REPORT EMAIL MODAL ─────────────────────────────── */}
       {showSendModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-navy-900 rounded-3xl shadow-2xl w-full max-w-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-navy-900 rounded-3xl shadow-2xl w-full max-w-2xl max-h-[calc(100vh-3rem)] border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col my-auto">
 
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-navy-950 to-indigo-950 text-white">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-navy-950 to-indigo-950 text-white shrink-0">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-white/10 rounded-xl"><Mail className="w-5 h-5" /></div>
                 <div>
-                  <h2 className="font-black text-sm">📧 Send Report by Email</h2>
+                  <h2 className="font-black text-sm">Send Report by Email</h2>
                   <p className="text-[10px] text-blue-300">Select week • Choose recipients • Preview • Send</p>
                 </div>
               </div>
@@ -771,7 +819,7 @@ export const EmailDeliveryTab: React.FC = () => {
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 space-y-5">
+            <div className="p-6 space-y-5 flex-1 min-h-0 overflow-y-auto">
               {/* Step: SELECT */}
               {sendStep === 'select' && (
                 <>
@@ -780,10 +828,10 @@ export const EmailDeliveryTab: React.FC = () => {
                     <label className="block text-xs font-extrabold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2">Select Contest Week</label>
                     <select value={selectedSessionId ?? ''} onChange={e => setSelectedSessionId(e.target.value ? Number(e.target.value) : null)}
                       className="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-navy-800 text-sm font-bold text-gray-900 dark:text-white outline-none focus:border-brand-500">
-                      <option value="">📅 Latest / Current Report</option>
+                      <option value="">Latest / Current Report</option>
                       {sessions.map(s => (
                         <option key={s.sessionId} value={s.sessionId}>
-                          📅 {s.sessionDate} — {s.contestName} ({s.status})
+                          {s.sessionDate} — {s.contestName} ({s.status})
                         </option>
                       ))}
                     </select>
@@ -917,19 +965,46 @@ export const EmailDeliveryTab: React.FC = () => {
 
               {/* Step: DONE */}
               {sendStep === 'done' && (
-                <div className="flex flex-col items-center justify-center py-10 space-y-4">
-                  <div className={`w-16 h-16 rounded-full flex items-center justify-center ${sendResult?.includes('fail') || sendResult?.includes('error') ? 'bg-red-100 dark:bg-red-900/20' : 'bg-emerald-100 dark:bg-emerald-900/20'}`}>
-                    {sendResult?.includes('fail') || sendResult?.includes('error')
+                <div className="flex flex-col items-center justify-center py-8 space-y-4 max-w-lg mx-auto">
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center ${sendResult?.toLowerCase().includes('fail') || sendResult?.toLowerCase().includes('error') ? 'bg-red-100 dark:bg-red-900/20' : 'bg-emerald-100 dark:bg-emerald-900/20'}`}>
+                    {sendResult?.toLowerCase().includes('fail') || sendResult?.toLowerCase().includes('error')
                       ? <XCircle className="w-8 h-8 text-red-500" />
                       : <CheckCircle2 className="w-8 h-8 text-emerald-500" />
                     }
                   </div>
-                  <p className="font-black text-gray-900 dark:text-white text-center">{sendResult}</p>
-                  <p className="text-xs text-gray-400 text-center">Delivery status will appear in the History tab. The email is dispatched by the background worker.</p>
-                  <button onClick={() => setShowSendModal(false)}
-                    className="px-8 py-2.5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-black text-sm transition-all">
-                    Done
-                  </button>
+                  <div className="text-center space-y-1">
+                    <p className="font-black text-sm text-gray-900 dark:text-white leading-relaxed">{sendResult}</p>
+                    <p className="text-xs text-gray-400">
+                      Delivery logs and retry status are available in the Status & History tabs.
+                    </p>
+                  </div>
+
+                  {(sendResult?.toLowerCase().includes('fail') || sendResult?.toLowerCase().includes('error') || sendResult?.toLowerCase().includes('auth')) && (
+                    <div className="p-3.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 rounded-2xl text-[11px] text-amber-800 dark:text-amber-300 text-left space-y-1 w-full">
+                      <div className="font-bold flex items-center gap-1.5">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                        <span>SMTP Configuration Diagnostic</span>
+                      </div>
+                      <p className="text-gray-600 dark:text-gray-400 text-[10.5px] leading-relaxed">
+                        If using Gmail SMTP (`smtp.gmail.com:587`), ensure you are using a <b>16-character Google App Password</b> (generated in myaccount.google.com/apppasswords) rather than your standard Gmail password.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      onClick={() => setSendStep('select')}
+                      className="px-5 py-2.5 rounded-2xl border border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-navy-800 transition-all"
+                    >
+                      ← Try Again
+                    </button>
+                    <button
+                      onClick={() => setShowSendModal(false)}
+                      className="px-6 py-2.5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-black text-xs transition-all shadow-md"
+                    >
+                      Done
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

@@ -72,11 +72,11 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-3xl glass-card rounded-3xl p-6 border border-gray-200 dark:border-gray-800 space-y-6 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto animate-fade-in">
+      <div className="w-full max-w-3xl glass-card rounded-3xl border border-gray-200 dark:border-gray-800 flex flex-col max-h-[calc(100vh-3rem)] overflow-hidden my-auto shadow-2xl">
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b pb-4 border-gray-200 dark:border-gray-800">
+        <div className="flex items-center justify-between border-b p-6 border-gray-200 dark:border-gray-800 shrink-0 bg-gray-50/50 dark:bg-navy-900/50">
           <div className="flex items-center space-x-3">
             <div className="p-2.5 rounded-xl bg-brand-600 text-white">
               <FileSpreadsheet className="w-5 h-5" />
@@ -86,10 +86,13 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
               <p className="text-xs text-gray-500">Upload .xlsx file containing student LeetCode profiles</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">
+          <button onClick={onClose} className="p-2 rounded-xl text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Modal Body */}
+        <div className="p-6 overflow-y-auto flex-1 min-h-0 space-y-6">
 
         {/* Dropzone */}
         {!preview && (
@@ -184,7 +187,9 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
           </div>
         )}
 
+        </div>
       </div>
     </div>
+
   );
 };

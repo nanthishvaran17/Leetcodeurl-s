@@ -1,19 +1,24 @@
+"""
+Master PDF Report Generator
+Generates official landscape A4 PDF performance reports for Nandha Engineering College.
+Consumes ONLY canonical dataset dictionary.
+"""
 import io
-import os
 import datetime
-from typing import Dict, Any, List
-from reportlab.lib.pagesizes import letter, landscape, A4
+from typing import Dict, Any, List, Optional
+from reportlab.lib.pagesizes import landscape, A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
-from reportlab.lib.units import inch
 
-def generate_pdf_report(db, dept_id: int = None, *args, **kwargs) -> bytes:
-    """
-    Generates an official landscape PDF performance report for Nandha Engineering College.
-    """
-    from backend.word_generator import _compute_dept_matrix, BATCH_CONFIG
+from backend.config.report_config import BATCH_CONFIG, DEPARTMENT_COORDINATORS, get_coordinator_for_department
 
+
+def build_weekly_performance_pdf(data: Dict[str, Any], dept_id: Optional[int] = None) -> bytes:
+    """
+    Builds official landscape PDF performance report directly from the canonical dataset.
+    Does NOT query database.
+    """
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -29,8 +34,8 @@ def generate_pdf_report(db, dept_id: int = None, *args, **kwargs) -> bytes:
         'DocTitle',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=13,
-        leading=16,
+        fontSize=12,
+        leading=15,
         alignment=1,
         textColor=colors.HexColor("#0f172a")
     )
@@ -38,8 +43,8 @@ def generate_pdf_report(db, dept_id: int = None, *args, **kwargs) -> bytes:
         'DeptTitle',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=11,
-        leading=14,
+        fontSize=10.5,
+        leading=13,
         alignment=1,
         textColor=colors.HexColor("#1e293b")
     )
@@ -47,55 +52,67 @@ def generate_pdf_report(db, dept_id: int = None, *args, **kwargs) -> bytes:
         'SubTitle',
         parent=styles['Normal'],
         fontName='Helvetica',
-        fontSize=9,
-        leading=12,
+        fontSize=8.5,
+        leading=11,
         alignment=1,
-        textColor=colors.HexColor("#475569")
+        textColor=colors.HexColor("#334155")
     )
     cell_style = ParagraphStyle(
         'TableCell',
         parent=styles['Normal'],
         fontName='Helvetica',
-        fontSize=7.5,
-        leading=9,
+        fontSize=7,
+        leading=8.5,
         alignment=1
     )
     cell_bold = ParagraphStyle(
         'TableCellBold',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=7.5,
-        leading=9,
+        fontSize=7,
+        leading=8.5,
         alignment=1
     )
 
     story = []
+    report_date = data.get("report_date", datetime.date.today().strftime("%d.%m.%Y"))
+    dept_summaries = data.get("dept_summaries", [])
 
-    departments = [
-        (1, "Department of Computer Science and Engineering (Cyber Security)"),
-        (2, "Department of Computer Science and Engineering (IoT)")
-    ]
-    if dept_id:
-        departments = [d for d in departments if d[0] == dept_id]
+    if dept_id is not None:
+        dept_summaries = [d for d in dept_summaries if d.get("department_id") == dept_id]
 
-    for d_idx, (did, dept_name) in enumerate(departments):
+    if not dept_summaries:
+        # Fallback: create empty summary representation
+        dept_summaries = [{
+            "department_id": 1,
+            "department": "CSE(CS)",
+            "department_name": "Department of Computer Science and Engineering (Cyber Security)",
+            "coordinator": DEPARTMENT_COORDINATORS.get("CSE(CS)"),
+            "batches": {}
+        }]
+
+    for d_idx, dept in enumerate(dept_summaries):
         if d_idx > 0:
             story.append(PageBreak())
 
+        dept_code = dept.get("department", "CSE")
+        dept_name_display = dept.get("department_name") or f"Department of {dept_code}"
+        coordinator = dept.get("coordinator") or get_coordinator_for_department(dept_code)
+
         # Header
-        story.append(Paragraph("NANDHA ENGINEERING COLLEGE, ERODE - 638 052.", title_style))
+        story.append(Paragraph("<b>NANDHA ENGINEERING COLLEGE, ERODE - 638 052.</b>", title_style))
         story.append(Paragraph("(An Autonomous Institution, Affiliated to Anna University, Chennai)", sub_style))
         story.append(Spacer(1, 4))
-        story.append(Paragraph(dept_name, dept_style))
+        story.append(Paragraph(f"<b>{dept_name_display}</b>", dept_style))
         story.append(Spacer(1, 4))
-        story.append(Paragraph(f"<b>Date:</b> {datetime.datetime.now().strftime('%d.%m.%Y')} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Leetcode Performance — Weekly Report</b>", sub_style))
-        story.append(Paragraph("<b>Name & Designation of the Academic Coordinator:</b> M. Santhoshkumar, AP / CSE (Cyber Security)", sub_style))
-        story.append(Spacer(1, 10))
+        story.append(Paragraph(
+            f"<b>Date:</b> {report_date} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "
+            f"<b>LeetCode Performance — Weekly Report</b>", sub_style
+        ))
+        story.append(Paragraph(f"<b>Name & Designation of the Academic Coordinator:</b> {coordinator}", sub_style))
+        story.append(Spacer(1, 8))
 
-        # Matrix Data
-        data_cs = _compute_dept_matrix(db, did)
-
-        # Table data
+        # Table Headers
         header_row1 = [
             "Batch", "No. of Students\n(Total Count)",
             "Number of Problems Solved", "", "", "", "",
@@ -114,41 +131,46 @@ def generate_pdf_report(db, dept_id: int = None, *args, **kwargs) -> bytes:
             [Paragraph(f"<b>{c}</b>", cell_bold) for c in header_row2]
         ]
 
-        for b_key in ["2023_2027", "2024_2028", "2025_2029"]:
-            b_info = BATCH_CONFIG[b_key]
-            b_label = b_info["label"]
-            lw = data_cs[b_key]["last_week"]
-            cw = data_cs[b_key]["current_week"]
+        batches_dict = dept.get("batches", {})
+        for b_cfg in BATCH_CONFIG:
+            b_key = b_cfg["key"]
+            b_label = b_cfg["label"]
+            b_metrics = batches_dict.get(b_key, {})
+            lw = b_metrics.get("last_week", {})
+            cw = b_metrics.get("current_week", {})
+            tot_st = b_metrics.get("total_students", 0)
+            if tot_st == 0:
+                continue
 
             row_lw = [
                 Paragraph(f"<b>{b_label}</b>\n(Last Week)", cell_style),
-                Paragraph(str(lw["total_students"]), cell_bold),
-                Paragraph(str(lw["prob_above_500"]), cell_style),
-                Paragraph(str(lw["prob_250_500"]), cell_style),
-                Paragraph(str(lw["prob_100_249"]), cell_style),
-                Paragraph(str(lw["prob_1_99"]), cell_style),
-                Paragraph(str(lw["prob_0"]), cell_style),
-                Paragraph(str(lw["q4"]), cell_style),
-                Paragraph(str(lw["q3"]), cell_style),
-                Paragraph(str(lw["q2"]), cell_style),
-                Paragraph(str(lw["q1"]), cell_style),
-                Paragraph(str(lw["rating_above_1500"]), cell_style),
-                Paragraph(str(lw["rank_below_20k"]), cell_style)
+                Paragraph(str(tot_st), cell_bold),
+                Paragraph(str(lw.get("prob_above_500", 0)), cell_style),
+                Paragraph(str(lw.get("prob_250_500", 0)), cell_style),
+                Paragraph(str(lw.get("prob_100_249", 0)), cell_style),
+                Paragraph(str(lw.get("prob_1_99", 0)), cell_style),
+                Paragraph(str(lw.get("prob_0", 0)), cell_style),
+                Paragraph(str(lw.get("q4", 0)), cell_style),
+                Paragraph(str(lw.get("q3", 0)), cell_style),
+                Paragraph(str(lw.get("q2", 0)), cell_style),
+                Paragraph(str(lw.get("q1", 0)), cell_style),
+                Paragraph(str(lw.get("rating_above_1500", 0)), cell_style),
+                Paragraph(str(lw.get("rank_below_20000", 0)), cell_style)
             ]
             row_cw = [
                 Paragraph(f"<b>{b_label}</b>\n(Current Week)", cell_style),
-                Paragraph(str(cw["total_students"]), cell_bold),
-                Paragraph(str(cw["prob_above_500"]), cell_style),
-                Paragraph(str(cw["prob_250_500"]), cell_style),
-                Paragraph(str(cw["prob_100_249"]), cell_style),
-                Paragraph(str(cw["prob_1_99"]), cell_style),
-                Paragraph(str(cw["prob_0"]), cell_style),
-                Paragraph(str(cw["q4"]), cell_style),
-                Paragraph(str(cw["q3"]), cell_style),
-                Paragraph(str(cw["q2"]), cell_style),
-                Paragraph(str(cw["q1"]), cell_style),
-                Paragraph(str(cw["rating_above_1500"]), cell_style),
-                Paragraph(str(cw["rank_below_20k"]), cell_style)
+                Paragraph(str(tot_st), cell_bold),
+                Paragraph(str(cw.get("prob_above_500", 0)), cell_style),
+                Paragraph(str(cw.get("prob_250_500", 0)), cell_style),
+                Paragraph(str(cw.get("prob_100_249", 0)), cell_style),
+                Paragraph(str(cw.get("prob_1_99", 0)), cell_style),
+                Paragraph(str(cw.get("prob_0", 0)), cell_style),
+                Paragraph(str(cw.get("q4", 0)), cell_style),
+                Paragraph(str(cw.get("q3", 0)), cell_style),
+                Paragraph(str(cw.get("q2", 0)), cell_style),
+                Paragraph(str(cw.get("q1", 0)), cell_style),
+                Paragraph(str(cw.get("rating_above_1500", 0)), cell_style),
+                Paragraph(str(cw.get("rank_below_20000", 0)), cell_style)
             ]
             table_data.append(row_lw)
             table_data.append(row_cw)
@@ -165,17 +187,31 @@ def generate_pdf_report(db, dept_id: int = None, *args, **kwargs) -> bytes:
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#94a3b8")),
-            ('TOPPADDING', (0, 0), (-1, -1), 3),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            ('TOPPADDING', (0, 0), (-1, -1), 2.5),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2.5),
             ('LEFTPADDING', (0, 0), (-1, -1), 2),
             ('RIGHTPADDING', (0, 0), (-1, -1), 2),
         ]))
         story.append(t)
-        story.append(Spacer(1, 20))
-        story.append(Paragraph("<b>Verified Signatures:</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Academic Coordinator</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Head of Department</b>", sub_style))
+        story.append(Spacer(1, 18))
+        story.append(Paragraph(
+            "<b>Verified Signatures:</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "
+            "<b>Academic Coordinator</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "
+            "<b>Head of Department</b>", sub_style
+        ))
 
     doc.build(story)
     return buffer.getvalue()
+
+
+def generate_pdf_report(db, dept_id: Optional[int] = None, *args, **kwargs) -> bytes:
+    """
+    Legacy compatibility wrapper: queries canonical dataset and builds PDF.
+    """
+    from backend.services.weekly_report_service import generate_weekly_performance_data
+    data = generate_weekly_performance_data(db)
+    return build_weekly_performance_pdf(data, dept_id=dept_id)
+
 
 generate_pdf_summary_report = generate_pdf_report
 generate_weekly_pdf_report = generate_pdf_report

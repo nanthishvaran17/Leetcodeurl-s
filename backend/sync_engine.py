@@ -289,13 +289,14 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
 
         # Process Contest Participations (OFFICIAL vs VIRTUAL)
         raw_parts = stats_dict.get("contest_participations") or []
+        fetched_username = stats_dict.get("username") or student.username  # for audit trail
         from backend.models import ContestParticipation
         for p in raw_parts:
             c_name = p.get("contest_name")
             p_type = p.get("participation_type", "UNKNOWN")
             if not c_name:
                 continue
-            
+
             existing_p = db.query(ContestParticipation).filter(
                 ContestParticipation.student_id == student.id,
                 ContestParticipation.contest_name == c_name,
@@ -320,6 +321,13 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
             existing_p.contest_rating_after = p.get("contest_rating_after")
             existing_p.verified_at = now_utc
             existing_p.source = p.get("source", "leetcode_api")
+            # Audit trail: record the LeetCode username used to fetch this data.
+            # Essential for detecting stale data after a LeetCode ID change.
+            try:
+                existing_p.source_username = fetched_username
+            except AttributeError:
+                pass  # Column added by migration; safe to skip on first run
+
 
     else:
         # OLD DATA FALLBACK: DO NOT erase previous total_solved / contest ratings!

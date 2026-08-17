@@ -10,9 +10,10 @@ from backend.models import User, WeeklySession, AdminAuditLog, Department
 from backend.routes.auth import create_access_token, get_password_hash
 from backend.security import BLOCKED_ATTEMPTS, ALERT_COOLDOWN
 
+from sqlalchemy.pool import StaticPool
 # Setup in-memory SQLite database for testing
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}, poolclass=StaticPool)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def override_get_db():

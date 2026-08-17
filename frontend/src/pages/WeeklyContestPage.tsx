@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Trophy, Calendar, RefreshCw, AlertTriangle, Download, FileSpreadsheet,
-  FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Zap, Filter, Trash2, Mail, Send, Sparkles, X, Edit3, UserCheck, UserX
+  FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Zap, Filter, Trash2, Mail, Send, Sparkles, X, Edit3, UserCheck, UserX, Eye
 } from 'lucide-react';
 import api from '../services/api';
 import { StatusNotificationModal, NotificationState } from '../components/StatusNotificationModal';
@@ -620,7 +620,7 @@ export const WeeklyContestPage: React.FC = () => {
             <div className="flex flex-wrap items-center gap-3">
               <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center space-x-1.5 ${statusColor}`}>
                 <Trophy className="w-3.5 h-3.5" />
-                <span>{activeSessionObj?.status === 'LIVE' ? '🟢 LIVE PUBLIC CONTEST' : activeSessionObj?.status === 'FINALIZED' ? '🔒 LOCKED & FINALIZED' : '🔵 SCHEDULED'}</span>
+                <span>{activeSessionObj?.status === 'LIVE' ? 'LIVE PUBLIC CONTEST' : activeSessionObj?.status === 'FINALIZED' ? 'LOCKED & FINALIZED' : 'SCHEDULED'}</span>
               </span>
               <span className="text-xs font-mono font-bold text-gray-400">
                 IST Window: 08:00 AM – 09:30 AM IST
@@ -628,7 +628,7 @@ export const WeeklyContestPage: React.FC = () => {
             </div>
 
             <h1 className="text-3xl md:text-4xl font-black tracking-tight">
-              🏆 {activeSessionObj?.contestName || 'Weekly Contest Tracker'}
+              {activeSessionObj?.contestName || 'Weekly Contest Tracker'}
             </h1>
 
             <p className="text-xs md:text-sm text-gray-300 font-bold tracking-wide">
@@ -639,7 +639,7 @@ export const WeeklyContestPage: React.FC = () => {
           {/* Export Toolbar */}
           <div className="flex flex-wrap items-center gap-2.5">
             <button onClick={() => setShowPreviewModal(true)} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-black transition-all shadow-md hover:scale-105 flex items-center space-x-1.5 cursor-pointer">
-              <span>👁</span>
+              <Eye className="w-3.5 h-3.5" />
               <span>Preview Report</span>
             </button>
             <button onClick={() => downloadReportFile('excel')} className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all shadow-md hover:scale-105">
@@ -690,7 +690,7 @@ export const WeeklyContestPage: React.FC = () => {
               ) : (
                 displaySessions.map((s) => (
                   <option key={s.sessionId} value={s.sessionId}>
-                    📅 {s.sessionDate} — {s.contestName} ({s.status})
+                    {s.sessionDate} — {s.contestName} ({s.status})
                   </option>
                 ))
               )}
@@ -701,8 +701,9 @@ export const WeeklyContestPage: React.FC = () => {
         {/* Quick Week Pill Buttons (Latest completed contest in 7-day window) */}
         <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-100 dark:border-gray-800">
           {displaySessions.length === 0 ? (
-            <p className="text-xs font-bold text-amber-600 dark:text-amber-400 py-1">
-              ⚠️ No recent completed Weekly Contest is available.
+            <p className="text-xs font-bold text-amber-600 dark:text-amber-400 py-1 flex items-center gap-1.5">
+              <AlertTriangle className="w-4 h-4 text-amber-500" />
+              <span>No recent completed Weekly Contest is available.</span>
             </p>
           ) : (
             displaySessions.map((s) => {
@@ -717,7 +718,7 @@ export const WeeklyContestPage: React.FC = () => {
                         : 'bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-navy-700'
                       }`}
                   >
-                    <span>📅 {s.sessionDate}</span>
+                    <span>{s.sessionDate}</span>
                     <span>•</span>
                     <span>{s.contestName}</span>
                     <span className={`px-2 py-0.5 text-[9px] rounded-full font-mono uppercase font-bold ${s.status === 'LIVE' ? 'bg-emerald-400 text-slate-900' : s.status === 'FINALIZED' ? 'bg-indigo-900 text-indigo-200' : 'bg-amber-400 text-slate-900'
@@ -760,7 +761,7 @@ export const WeeklyContestPage: React.FC = () => {
               title="Download Filtered Excel Workbook"
             >
               <FileSpreadsheet className="w-3.5 h-3.5" />
-              <span>📊 Generate Excel</span>
+              <span>Generate Excel</span>
             </button>
 
             <button
@@ -768,7 +769,8 @@ export const WeeklyContestPage: React.FC = () => {
               className="flex items-center space-x-1.5 px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer"
               title="Preview Filtered Table"
             >
-              <span>👁 Report Preview</span>
+              <Eye className="w-3.5 h-3.5" />
+              <span>Report Preview</span>
             </button>
 
             <button
@@ -777,7 +779,7 @@ export const WeeklyContestPage: React.FC = () => {
               title="Send Filtered Report Email"
             >
               <Mail className="w-3.5 h-3.5" />
-              <span>📧 Send Report Email</span>
+              <span>Send Report Email</span>
             </button>
 
             <button
@@ -786,7 +788,7 @@ export const WeeklyContestPage: React.FC = () => {
               className="flex items-center space-x-2 px-3.5 py-2 bg-gray-800 hover:bg-gray-900 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span>{syncStatusStage || (isSyncing ? 'Syncing...' : `↻ Sync Contest`)}</span>
+              <span>{syncStatusStage || (isSyncing ? 'Syncing...' : 'Sync Contest')}</span>
             </button>
           </div>
         </div>
@@ -815,48 +817,30 @@ export const WeeklyContestPage: React.FC = () => {
             <span className="text-[11px] font-black uppercase text-gray-400 tracking-wider">Report & Analytics Scope</span>
             <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">Canonical Dataset: {matrixRows.length} Students</span>
           </div>
-          <div className="flex items-center space-x-2 overflow-x-auto pb-1 no-scrollbar">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
             {[
-              { id: 'EXECUTIVE_SUMMARY', label: '📊 Executive Summary', badge: 'College-Wide' },
-              { id: 'CYBER_SECURITY', label: '🛡️ Cyber Security', badge: 'Department' },
-              { id: 'IOT', label: '🌐 IoT', badge: 'Department' },
-              { id: 'YEAR_II', label: '🎓 II Year (2029)', badge: '2025–2029' },
-              { id: 'YEAR_III', label: '🎓 III Year (2028)', badge: '2024–2028' },
-              { id: 'YEAR_IV', label: '🎓 IV Year (2027)', badge: '2023–2027' },
+              { id: 'EXECUTIVE_SUMMARY', label: 'Executive Summary', badge: 'College-Wide', dept: 'ALL', year: 'ALL' },
+              { id: 'CYBER_SECURITY', label: 'Cyber Security', badge: 'Department', dept: 'CSE(CS)', year: 'ALL' },
+              { id: 'IOT', label: 'IoT', badge: 'Department', dept: 'CSE(IOT)', year: 'ALL' },
+              { id: 'YEAR_II', label: 'II Year (All)', badge: '2025–2029', dept: 'ALL', year: 'II' },
+              { id: 'YEAR_II_CS', label: 'II Year CS', badge: 'Cyber Sec', dept: 'CSE(CS)', year: 'II' },
+              { id: 'YEAR_II_IOT', label: 'II Year IoT', badge: 'IoT', dept: 'CSE(IOT)', year: 'II' },
+              { id: 'YEAR_III', label: 'III Year (All)', badge: '2024–2028', dept: 'ALL', year: 'III' },
+              { id: 'YEAR_III_CS', label: 'III Year CS', badge: 'Cyber Sec', dept: 'CSE(CS)', year: 'III' },
+              { id: 'YEAR_III_IOT', label: 'III Year IoT', badge: 'IoT', dept: 'CSE(IOT)', year: 'III' },
+              { id: 'YEAR_IV', label: 'IV Year (All)', badge: '2023–2027', dept: 'ALL', year: 'IV' },
+              { id: 'YEAR_IV_CS', label: 'IV Year CS', badge: 'Cyber Sec', dept: 'CSE(CS)', year: 'IV' },
+              { id: 'YEAR_IV_IOT', label: 'IV Year IoT', badge: 'IoT', dept: 'CSE(IOT)', year: 'IV' },
             ].map((tab) => {
-              const isActive = (
-                (tab.id === 'EXECUTIVE_SUMMARY' && selectedDeptFilter === 'ALL' && selectedYearFilter === 'ALL') ||
-                (tab.id === 'CYBER_SECURITY' && (selectedDeptFilter === 'CSE(CS)' || selectedDeptFilter === 'Cyber Security') && selectedYearFilter === 'ALL') ||
-                (tab.id === 'IOT' && (selectedDeptFilter === 'CSE(IOT)' || selectedDeptFilter === 'IoT') && selectedYearFilter === 'ALL') ||
-                (tab.id === 'YEAR_II' && selectedYearFilter === 'II' && selectedDeptFilter === 'ALL') ||
-                (tab.id === 'YEAR_III' && selectedYearFilter === 'III' && selectedDeptFilter === 'ALL') ||
-                (tab.id === 'YEAR_IV' && selectedYearFilter === 'IV' && selectedDeptFilter === 'ALL')
-              );
+              const isActive = (selectedDeptFilter === tab.dept || (tab.dept === 'CSE(CS)' && selectedDeptFilter === 'Cyber Security') || (tab.dept === 'CSE(IOT)' && selectedDeptFilter === 'IoT')) && selectedYearFilter === tab.year;
               return (
                 <button
                   key={tab.id}
                   onClick={() => {
-                    if (tab.id === 'EXECUTIVE_SUMMARY') {
-                      setSelectedDeptFilter('ALL');
-                      setSelectedYearFilter('ALL');
-                    } else if (tab.id === 'CYBER_SECURITY') {
-                      setSelectedDeptFilter('CSE(CS)');
-                      setSelectedYearFilter('ALL');
-                    } else if (tab.id === 'IOT') {
-                      setSelectedDeptFilter('CSE(IOT)');
-                      setSelectedYearFilter('ALL');
-                    } else if (tab.id === 'YEAR_II') {
-                      setSelectedDeptFilter('ALL');
-                      setSelectedYearFilter('II');
-                    } else if (tab.id === 'YEAR_III') {
-                      setSelectedDeptFilter('ALL');
-                      setSelectedYearFilter('III');
-                    } else if (tab.id === 'YEAR_IV') {
-                      setSelectedDeptFilter('ALL');
-                      setSelectedYearFilter('IV');
-                    }
+                    setSelectedDeptFilter(tab.dept);
+                    setSelectedYearFilter(tab.year);
                   }}
-                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-2xl text-xs font-black transition-all cursor-pointer whitespace-nowrap shadow-sm ${
+                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-2xl text-xs font-black transition-all cursor-pointer whitespace-nowrap shadow-sm ${
                     isActive
                       ? 'bg-gradient-to-r from-indigo-600 to-brand-600 text-white shadow-lg shadow-indigo-500/25 scale-[1.02]'
                       : 'bg-white dark:bg-navy-900 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-800 border border-gray-200 dark:border-gray-800'
@@ -889,7 +873,7 @@ export const WeeklyContestPage: React.FC = () => {
                       : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
                     }`}
                 >
-                  {dept === 'ALL' ? '🏢 All Depts' : dept}
+                  {dept === 'ALL' ? 'All Depts' : dept}
                 </button>
               ))}
             </div>
@@ -908,7 +892,7 @@ export const WeeklyContestPage: React.FC = () => {
                       : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
                     }`}
                 >
-                  {yr === 'ALL' ? '🎓 All Years' : `${yr} Year`}
+                  {yr === 'ALL' ? 'All Years' : `${yr} Year`}
                 </button>
               ))}
             </div>
@@ -920,9 +904,9 @@ export const WeeklyContestPage: React.FC = () => {
             <div className="flex flex-wrap gap-2">
               {[
                 { code: 'ALL', label: 'All' },
-                { code: 'PUBLIC_ATTENDED', label: '🟢 Public' },
-                { code: 'PUBLIC_NOT_ATTENDED', label: '🔴 Not Attended' },
-                { code: 'VIRTUAL_ATTENDED', label: '🔵 Virtual' }
+                { code: 'PUBLIC_ATTENDED', label: 'Public' },
+                { code: 'PUBLIC_NOT_ATTENDED', label: 'Not Attended' },
+                { code: 'VIRTUAL_ATTENDED', label: 'Virtual' }
               ].map((att) => (
                 <button
                   key={att.code}
@@ -970,7 +954,7 @@ export const WeeklyContestPage: React.FC = () => {
       </div>
 
       {/* Primary Metrics Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3">
         <button
           onClick={() => setSelectedAttendanceFilter('ALL')}
           className={`p-4 rounded-2xl bg-white dark:bg-navy-900 border text-center transition-all cursor-pointer ${selectedAttendanceFilter === 'ALL'
@@ -989,7 +973,7 @@ export const WeeklyContestPage: React.FC = () => {
               : 'border-emerald-500/20 hover:border-emerald-400 shadow-sm'
             }`}
         >
-          <p className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider mb-1">🟢 Public Attended</p>
+          <p className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider mb-1">Public Attended</p>
           <p className="text-2xl font-black text-emerald-700 dark:text-emerald-300">{attendedRows}</p>
         </button>
 
@@ -1000,7 +984,7 @@ export const WeeklyContestPage: React.FC = () => {
               : 'border-blue-500/20 hover:border-blue-400 shadow-sm'
             }`}
         >
-          <p className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider mb-1">🔵 Virtual Attended</p>
+          <p className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider mb-1">Virtual Attended</p>
           <p className="text-2xl font-black text-blue-700 dark:text-blue-300">{virtualRows}</p>
         </button>
 
@@ -1011,17 +995,17 @@ export const WeeklyContestPage: React.FC = () => {
               : 'border-rose-500/20 hover:border-rose-400 shadow-sm'
             }`}
         >
-          <p className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400 tracking-wider mb-1">🔴 Not Attended</p>
+          <p className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400 tracking-wider mb-1">Not Attended</p>
           <p className="text-2xl font-black text-rose-700 dark:text-rose-300">{notAttendedRows}</p>
         </button>
 
         <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center shadow-sm">
-          <p className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider mb-1">⚠️ Data Errors</p>
+          <p className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider mb-1">Data Errors</p>
           <p className="text-2xl font-black text-amber-700 dark:text-amber-300">{errorRows}</p>
         </div>
 
         <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-center shadow-sm">
-          <p className="text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-wider mb-1">📈 Participation %</p>
+          <p className="text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-wider mb-1">Participation %</p>
           <p className="text-2xl font-black text-indigo-700 dark:text-indigo-300">
             {totalRows - errorRows > 0 ? `${((attendedRows / (totalRows - errorRows)) * 100).toFixed(1)}%` : '0.0%'}
           </p>
@@ -1044,13 +1028,14 @@ export const WeeklyContestPage: React.FC = () => {
           <span className="text-[11px] font-bold text-gray-400">Exact Mathematical Aggregation</span>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto -mx-1 px-1">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-800 text-[11px] font-black text-gray-400 uppercase tracking-wider">
                 <th className="py-2.5 px-3">Segment / Category</th>
                 <th className="py-2.5 px-3 text-center">Total Students</th>
                 <th className="py-2.5 px-3 text-center text-emerald-600 dark:text-emerald-400">Public</th>
+                <th className="py-2.5 px-3 text-center text-emerald-500 font-mono">4Q / 3Q / 2Q / 1Q</th>
                 <th className="py-2.5 px-3 text-center text-blue-600 dark:text-blue-400">Virtual</th>
                 <th className="py-2.5 px-3 text-center text-rose-600 dark:text-rose-400">Not Attended</th>
                 <th className="py-2.5 px-3 text-center text-amber-600 dark:text-amber-400">Errors</th>
@@ -1060,23 +1045,30 @@ export const WeeklyContestPage: React.FC = () => {
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800/60 font-bold">
               {/* Department breakdown rows */}
               {['CSE(CS)', 'CSE(IOT)'].map((deptCode) => {
-                const subset = matrixRows.filter(r => (r.dept === deptCode || (deptCode === 'CSE(CS)' ? r.dept === 'Cyber Security' : r.dept === 'IoT')));
+                const subset = matrixRows.filter(r => (r.dept === deptCode || r.dept === (deptCode === 'CSE(CS)' ? 'Cyber Security' : 'IoT') || r.department === deptCode));
                 const tot = subset.length;
-                const pub = subset.filter(r => r.participation_status === 'PUBLIC_ATTENDED').length;
-                const virt = subset.filter(r => r.participation_status === 'VIRTUAL_ATTENDED').length;
-                const notAtt = subset.filter(r => r.participation_status === 'PUBLIC_NOT_ATTENDED').length;
-                const errs = subset.filter(r => r.participation_status === 'DATA_ERROR' || r.fetch_status === 'FAILED').length;
+                const pub = subset.filter(r => r.participation_status === 'PUBLIC' || r.status === 'PUBLIC' || ['4_SOLVED','3_SOLVED','2_SOLVED','1_SOLVED','0_SOLVED'].includes(r.public_result)).length;
+                const virt = subset.filter(r => r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || ['4_SOLVED','3_SOLVED','2_SOLVED','1_SOLVED','0_SOLVED'].includes(r.virtual_result)).length;
+                const notAtt = subset.filter(r => r.participation_status === 'NOT_ATTENDED' || r.status === 'NOT ATTENDED' || r.public_result === 'NOT_PARTICIPATED' || r.public_result === 'NOT_ATTENDED').length;
+                const errs = subset.filter(r => r.participation_status === 'DATA_ERROR' || r.data_fetch_status === 'INVALID_USERNAME' || r.data_fetch_status === 'USERNAME_NOT_FOUND' || r.public_result === 'UNKNOWN' || r.public_result === 'SOURCE_UNAVAILABLE').length;
+                const q4 = subset.filter(r => r.public_result === '4_SOLVED' || Number(r.total_solved) === 4).length;
+                const q3 = subset.filter(r => r.public_result === '3_SOLVED' || Number(r.total_solved) === 3).length;
+                const q2 = subset.filter(r => r.public_result === '2_SOLVED' || Number(r.total_solved) === 2).length;
+                const q1 = subset.filter(r => r.public_result === '1_SOLVED' || Number(r.total_solved) === 1).length;
                 const elig = tot - errs;
                 const pct = elig > 0 ? ((pub / elig) * 100).toFixed(1) : '0.0';
 
                 return (
                   <tr key={deptCode} className="hover:bg-gray-50 dark:hover:bg-navy-800/50">
-                    <td className="py-2.5 px-3 font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
-                      <span>Department: {deptCode === 'CSE(CS)' ? 'Cyber Security' : 'Internet of Things (IoT)'}</span>
+                    <td className="py-2.5 px-3 font-extrabold text-gray-900 dark:text-white">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0"></span>
+                        <span>Department: {deptCode === 'CSE(CS)' ? 'Cyber Security' : 'Internet of Things (IoT)'}</span>
+                      </div>
                     </td>
                     <td className="py-2.5 px-3 text-center text-gray-700 dark:text-gray-300">{tot}</td>
                     <td className="py-2.5 px-3 text-center text-emerald-600 dark:text-emerald-400 font-black">{pub}</td>
+                    <td className="py-2.5 px-3 text-center text-emerald-500 font-mono text-[11px] font-bold">{q4} / {q3} / {q2} / {q1}</td>
                     <td className="py-2.5 px-3 text-center text-blue-600 dark:text-blue-400 font-black">{virt}</td>
                     <td className="py-2.5 px-3 text-center text-rose-600 dark:text-rose-400 font-black">{notAtt}</td>
                     <td className="py-2.5 px-3 text-center text-amber-600 dark:text-amber-400">{errs}</td>
@@ -1087,23 +1079,30 @@ export const WeeklyContestPage: React.FC = () => {
 
               {/* Academic Year breakdown rows */}
               {['II', 'III', 'IV'].map((yr) => {
-                const subset = matrixRows.filter(r => r.year === yr);
+                const subset = matrixRows.filter(r => r.year === yr || r.year_level === yr);
                 const tot = subset.length;
-                const pub = subset.filter(r => r.participation_status === 'PUBLIC_ATTENDED').length;
-                const virt = subset.filter(r => r.participation_status === 'VIRTUAL_ATTENDED').length;
-                const notAtt = subset.filter(r => r.participation_status === 'PUBLIC_NOT_ATTENDED').length;
-                const errs = subset.filter(r => r.participation_status === 'DATA_ERROR' || r.fetch_status === 'FAILED').length;
+                const pub = subset.filter(r => r.participation_status === 'PUBLIC' || r.status === 'PUBLIC' || ['4_SOLVED','3_SOLVED','2_SOLVED','1_SOLVED','0_SOLVED'].includes(r.public_result)).length;
+                const virt = subset.filter(r => r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || ['4_SOLVED','3_SOLVED','2_SOLVED','1_SOLVED','0_SOLVED'].includes(r.virtual_result)).length;
+                const notAtt = subset.filter(r => r.participation_status === 'NOT_ATTENDED' || r.status === 'NOT ATTENDED' || r.public_result === 'NOT_PARTICIPATED' || r.public_result === 'NOT_ATTENDED').length;
+                const errs = subset.filter(r => r.participation_status === 'DATA_ERROR' || r.data_fetch_status === 'INVALID_USERNAME' || r.data_fetch_status === 'USERNAME_NOT_FOUND' || r.public_result === 'UNKNOWN' || r.public_result === 'SOURCE_UNAVAILABLE').length;
+                const q4 = subset.filter(r => r.public_result === '4_SOLVED' || Number(r.total_solved) === 4).length;
+                const q3 = subset.filter(r => r.public_result === '3_SOLVED' || Number(r.total_solved) === 3).length;
+                const q2 = subset.filter(r => r.public_result === '2_SOLVED' || Number(r.total_solved) === 2).length;
+                const q1 = subset.filter(r => r.public_result === '1_SOLVED' || Number(r.total_solved) === 1).length;
                 const elig = tot - errs;
                 const pct = elig > 0 ? ((pub / elig) * 100).toFixed(1) : '0.0';
 
                 return (
                   <tr key={yr} className="hover:bg-gray-50 dark:hover:bg-navy-800/50 bg-gray-50/40 dark:bg-navy-950/20">
-                    <td className="py-2.5 px-3 font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-                      <span>Academic Year: {yr} Year ({yr === 'II' ? '2025–2029' : (yr === 'III' ? '2024–2028' : '2023–2027')})</span>
+                    <td className="py-2.5 px-3 font-extrabold text-gray-900 dark:text-white">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0"></span>
+                        <span>Academic Year: {yr} Year ({yr === 'II' ? '2025–2029' : (yr === 'III' ? '2024–2028' : '2023–2027')})</span>
+                      </div>
                     </td>
                     <td className="py-2.5 px-3 text-center text-gray-700 dark:text-gray-300">{tot}</td>
                     <td className="py-2.5 px-3 text-center text-emerald-600 dark:text-emerald-400 font-black">{pub}</td>
+                    <td className="py-2.5 px-3 text-center text-emerald-500 font-mono text-[11px] font-bold">{q4} / {q3} / {q2} / {q1}</td>
                     <td className="py-2.5 px-3 text-center text-blue-600 dark:text-blue-400 font-black">{virt}</td>
                     <td className="py-2.5 px-3 text-center text-rose-600 dark:text-rose-400 font-black">{notAtt}</td>
                     <td className="py-2.5 px-3 text-center text-amber-600 dark:text-amber-400">{errs}</td>
@@ -1156,7 +1155,7 @@ export const WeeklyContestPage: React.FC = () => {
             onClick={() => setActiveTab('matrix')}
             className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${activeTab === 'matrix' ? 'bg-brand-500 text-white shadow-md' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
           >
-            📊 Live Question-Wise Matrix ({totalRows})
+            Live Question-Wise Matrix ({totalRows})
           </button>
           <button
             onClick={() => setActiveTab('error_board')}
@@ -1174,13 +1173,13 @@ export const WeeklyContestPage: React.FC = () => {
           {/* Legend */}
           <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800 flex flex-wrap items-center gap-x-5 gap-y-1.5 bg-gray-50 dark:bg-navy-950">
             <span className="text-[10px] font-extrabold uppercase text-gray-400 tracking-wider">Legend:</span>
-            <span className="flex items-center gap-1.5 text-[10px] font-bold"><span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">🟢 PUBLIC</span> Public contest attended</span>
-            <span className="flex items-center gap-1.5 text-[10px] font-bold"><span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">🔵 VIRTUAL</span> Virtual attendance</span>
-            <span className="flex items-center gap-1.5 text-[10px] font-bold"><span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">🔴 NOT ATTENDED</span> Did not participate</span>
+            <span className="flex items-center gap-1.5 text-[10px] font-bold"><span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-extrabold">PUBLIC</span> Public contest attended</span>
+            <span className="flex items-center gap-1.5 text-[10px] font-bold"><span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-extrabold">VIRTUAL</span> Virtual attendance</span>
+            <span className="flex items-center gap-1.5 text-[10px] font-bold"><span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-extrabold">NOT ATTENDED</span> Did not participate</span>
             <span className="text-[10px] text-gray-400 font-bold">Q cells: <span className="text-emerald-600 font-black">1</span> = solved &nbsp;|&nbsp; <span className="text-rose-400 font-black">0</span> = not solved &nbsp;|&nbsp; <span className="text-gray-300 font-black">—</span> = not attended</span>
           </div>
-          <div className="max-h-[600px] overflow-y-auto">
-            <table className="w-full text-left text-xs">
+          <div className="max-h-[75vh] overflow-y-auto overflow-x-auto">
+            <table className="w-full min-w-[900px] text-left text-xs">
               <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10">
                 <tr>
                   <th className="px-4 py-3 text-center">S.No</th>
@@ -1239,14 +1238,14 @@ export const WeeklyContestPage: React.FC = () => {
 
                     // Status badge config
                     const statusBadge = isPublicAttended
-                      ? { cls: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300', label: '🟢 PUBLIC' }
+                      ? { cls: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300', label: 'PUBLIC' }
                       : isVirtualAttended
-                        ? { cls: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300', label: '🔵 VIRTUAL' }
+                        ? { cls: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300', label: 'VIRTUAL' }
                         : isNotAttended
-                          ? { cls: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300', label: '🔴 NOT ATTENDED' }
+                          ? { cls: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300', label: 'NOT ATTENDED' }
                           : isError
-                            ? { cls: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300', label: '⚠️ DATA ERROR' }
-                            : { cls: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300', label: '🟡 PENDING' };
+                            ? { cls: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300', label: 'DATA ERROR' }
+                            : { cls: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300', label: 'PENDING' };
 
                     // Q cell renderer:
                     // - Attended + solved → 1 (green)
@@ -1345,7 +1344,7 @@ export const WeeklyContestPage: React.FC = () => {
                   {errorLogs.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="p-8 text-center text-gray-500 font-bold">
-                        🎉 Zero fetch errors! All student data verified cleanly.
+                        Zero fetch errors! All student data verified cleanly.
                       </td>
                     </tr>
                   ) : (
@@ -1372,45 +1371,50 @@ export const WeeklyContestPage: React.FC = () => {
 
       {/* Interactive Report Preview Modal */}
       {showPreviewModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
-          <div className="bg-white dark:bg-navy-900 w-full max-w-6xl max-h-[90vh] rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md overflow-y-auto animate-modal-backdrop">
+          <div className="bg-white dark:bg-navy-900 w-full max-w-6xl max-h-[calc(100vh-3rem)] rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 flex flex-col overflow-hidden my-auto">
             {/* Modal Header */}
-            <div className="p-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-black flex items-center space-x-2">
-                  <span>Report Live Preview</span>
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-medium">Verified Dataset</span>
-                </h3>
-                <p className="text-xs text-gray-300 font-bold mt-1">
-                  {activeSessionObj?.contestName || 'Weekly Contest'} ({activeSessionObj?.sessionDate || 'Sunday Session'})
-                </p>
+            <div className="p-4 sm:p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between shrink-0">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-xl bg-brand-500/20 text-brand-300 border border-brand-400/30">
+                  <FileSpreadsheet className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-black text-white flex items-center space-x-2">
+                    <span>Report Live Preview</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-extrabold">Verified Dataset</span>
+                  </h3>
+                  <p className="text-xs text-gray-300 font-bold mt-0.5">
+                    {activeSessionObj?.contestName || 'Weekly Contest'} ({activeSessionObj?.sessionDate || 'Sunday Session'})
+                  </p>
+                </div>
               </div>
 
-              <div className="flex items-center space-x-3">
-                <button
-                  onClick={() => setShowPreviewModal(false)}
-                  className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all text-xs font-bold cursor-pointer"
-                >
-                  ✕ Close
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowPreviewModal(false)}
+                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500 text-white transition-all text-xs font-bold flex items-center space-x-1 cursor-pointer"
+              >
+                <span>✕</span>
+                <span>Close</span>
+              </button>
             </div>
 
             {/* Filter Metadata Badges Bar */}
-            <div className="px-6 py-3 bg-gray-100 dark:bg-navy-950 border-b border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-4 text-xs font-bold">
+            <div className="px-6 py-3 bg-gray-100 dark:bg-navy-950 border-b border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-4 text-xs font-bold shrink-0">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="text-gray-500">Active Filters:</span>
-                <span className="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 font-black">🏢 Dept: {selectedDeptFilter}</span>
-                <span className="px-2.5 py-1 rounded-lg bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 font-black">🎓 Year: {selectedYearFilter}</span>
-                <span className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-black">📊 Attendance: {selectedAttendanceFilter}</span>
+                <span className="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 font-black">Dept: {selectedDeptFilter}</span>
+                <span className="px-2.5 py-1 rounded-lg bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 font-black">Year: {selectedYearFilter}</span>
+                <span className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-black">Attendance: {selectedAttendanceFilter}</span>
               </div>
               <span className="text-brand-600 dark:text-brand-400 font-black">Showing {matrixRows.length} Roster Students</span>
             </div>
 
             {/* Modal Body: Scrollable Preview Table */}
-            <div className="p-6 overflow-y-auto flex-1">
-              <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-inner">
-                <table className="w-full text-left text-xs">
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0">
+              <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-x-auto shadow-inner">
+                <table className="w-full min-w-[850px] text-left text-xs">
                   <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10">
                     <tr>
                       <th className="px-3 py-2.5 text-center">S.No</th>
@@ -1437,8 +1441,8 @@ export const WeeklyContestPage: React.FC = () => {
                       </tr>
                     ) : (
                       matrixRows.map((r, idx) => {
-                        const isPublicAttended = r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'ATTENDED' || r.status === 'PUBLIC';
-                        const isVirtualAttended = r.participation_status === 'VIRTUAL_ATTENDED' || r.status === 'VIRTUAL';
+                        const isPublicAttended = r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'PUBLIC' || r.status === 'PUBLIC' || ['4_SOLVED','3_SOLVED','2_SOLVED','1_SOLVED','0_SOLVED'].includes(r.public_result);
+                        const isVirtualAttended = r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || ['4_SOLVED','3_SOLVED','2_SOLVED','1_SOLVED','0_SOLVED'].includes(r.virtual_result);
                         const isAttended = isPublicAttended || isVirtualAttended;
                         return (
                           <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-navy-800/50 transition-colors">
@@ -1449,7 +1453,7 @@ export const WeeklyContestPage: React.FC = () => {
                             <td className="px-3 py-2 text-center text-gray-600 dark:text-gray-400 font-bold">{r.year}</td>
                             <td className="px-3 py-2 text-center">
                               <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${isPublicAttended ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : isVirtualAttended ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'}`}>
-                                {isPublicAttended ? '🟢 PUBLIC' : isVirtualAttended ? '🔵 VIRTUAL' : '🔴 NOT ATTENDED'}
+                                {isPublicAttended ? 'PUBLIC' : isVirtualAttended ? 'VIRTUAL' : 'NOT ATTENDED'}
                               </span>
                             </td>
                             <td className="px-3 py-2 text-center font-bold text-gray-600 dark:text-gray-300">{r.contest_name || activeSessionObj?.contestName || 'Weekly Contest'}</td>
@@ -1469,7 +1473,7 @@ export const WeeklyContestPage: React.FC = () => {
             </div>
 
             {/* Modal Footer: Direct Export Action Buttons */}
-            <div className="p-5 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-4">
+            <div className="p-4 sm:p-5 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-4 shrink-0">
               <span className="text-xs text-gray-500 font-semibold">
                 Official Institutional Dataset
               </span>
@@ -1494,10 +1498,10 @@ export const WeeklyContestPage: React.FC = () => {
 
       {/* Interactive Report Email Dispatch Modal */}
       {showEmailModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
-          <div className="bg-white dark:bg-navy-900 w-full max-w-2xl rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md overflow-y-auto animate-modal-backdrop">
+          <div className="bg-white dark:bg-navy-900 w-full max-w-2xl max-h-[calc(100vh-3rem)] rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col my-auto">
             {/* Modal Header */}
-            <div className="p-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between">
+            <div className="p-5 sm:p-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between shrink-0">
               <div>
                 <h3 className="text-lg font-black flex items-center space-x-2">
                   <Mail className="w-5 h-5 text-indigo-400" />
@@ -1516,7 +1520,7 @@ export const WeeklyContestPage: React.FC = () => {
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+            <div className="p-6 space-y-4 flex-1 min-h-0 overflow-y-auto">
               {/* Active Filter Scope Card */}
               <div className="p-4 rounded-2xl bg-indigo-50/50 dark:bg-navy-950 border border-indigo-100 dark:border-indigo-900/50 space-y-2">
                 <div className="text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-300 tracking-wider">
@@ -1524,16 +1528,16 @@ export const WeeklyContestPage: React.FC = () => {
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs">
                   <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 font-bold">
-                    📅 Contest: <b className="text-gray-900 dark:text-white">{activeSessionObj?.contestName || selectedSessionId}</b>
+                    Contest: <b className="text-gray-900 dark:text-white">{activeSessionObj?.contestName || selectedSessionId}</b>
                   </span>
                   <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 font-bold">
-                    🏢 Dept: <b className="text-indigo-600">{selectedDeptFilter}</b>
+                    Dept: <b className="text-indigo-600">{selectedDeptFilter}</b>
                   </span>
                   <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 font-bold">
-                    🎓 Year: <b className="text-purple-600">{selectedYearFilter}</b>
+                    Year: <b className="text-purple-600">{selectedYearFilter}</b>
                   </span>
                   <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 font-bold">
-                    📊 Attendance: <b className="text-emerald-600">{selectedAttendanceFilter}</b>
+                    Attendance: <b className="text-emerald-600">{selectedAttendanceFilter}</b>
                   </span>
                   <span className="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-black">
                     ✓ {matrixRows.length} Students Selected
@@ -1632,7 +1636,7 @@ export const WeeklyContestPage: React.FC = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-5 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between">
+            <div className="p-4 sm:p-5 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between shrink-0">
               <button
                 onClick={() => setShowEmailModal(false)}
                 className="px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-gray-800 cursor-pointer"
@@ -1655,13 +1659,13 @@ export const WeeklyContestPage: React.FC = () => {
       {/* Viewport-Centered Student Edit Modal */}
       {editingStudent && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-hidden animate-fade-in"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-fade-in"
           onClick={(e) => {
             if (e.target === e.currentTarget && !isSavingStudent) setEditingStudent(null);
           }}
         >
           <div
-            className="bg-white dark:bg-navy-900 w-full max-w-lg max-h-[90vh] rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col my-auto"
+            className="bg-white dark:bg-navy-900 w-full max-w-lg max-h-[calc(100vh-3rem)] rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -1686,7 +1690,7 @@ export const WeeklyContestPage: React.FC = () => {
             </div>
 
             {/* Form Content */}
-            <div className="p-6 space-y-4 overflow-y-auto">
+            <div className="p-6 space-y-4 flex-1 min-h-0 overflow-y-auto">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-gray-700 dark:text-gray-300">Student Full Name</label>
                 <input
@@ -1763,7 +1767,7 @@ export const WeeklyContestPage: React.FC = () => {
             </div>
 
             {/* Footer */}
-            <div className="p-4 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between">
+            <div className="p-4 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between shrink-0">
               <button
                 type="button"
                 onClick={() => setEditingStudent(null)}
@@ -1787,13 +1791,13 @@ export const WeeklyContestPage: React.FC = () => {
       {/* Viewport-Centered Student Delete Confirmation Modal */}
       {deletingStudent && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-hidden animate-fade-in"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-fade-in"
           onClick={(e) => {
             if (e.target === e.currentTarget && !isDeletingStudent) setDeletingStudent(null);
           }}
         >
           <div
-            className="bg-white dark:bg-navy-900 w-full max-w-md max-h-[90vh] rounded-3xl shadow-2xl border border-rose-200 dark:border-rose-900/50 overflow-hidden flex flex-col p-6 space-y-4 my-auto"
+            className="bg-white dark:bg-navy-900 w-full max-w-md max-h-[calc(100vh-3rem)] rounded-3xl shadow-2xl border border-rose-200 dark:border-rose-900/50 overflow-hidden flex flex-col p-6 space-y-4 my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
@@ -1840,8 +1844,8 @@ export const WeeklyContestPage: React.FC = () => {
 
       {/* Centered Institutional Authentication Required Modal */}
       {showAuthRequiredModal && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-hidden animate-fade-in">
-          <div className="bg-white dark:bg-navy-900 w-full max-w-md rounded-3xl shadow-2xl border border-amber-300 dark:border-amber-700/60 p-6 space-y-4 my-auto text-center">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-fade-in">
+          <div className="bg-white dark:bg-navy-900 w-full max-w-md max-h-[calc(100vh-3rem)] rounded-3xl shadow-2xl border border-amber-300 dark:border-amber-700/60 p-6 space-y-4 my-auto text-center overflow-y-auto">
             <div className="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-inner">
               <Lock className="w-7 h-7" />
             </div>

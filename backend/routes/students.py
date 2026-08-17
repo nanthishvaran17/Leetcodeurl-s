@@ -655,6 +655,7 @@ def get_student_detail(student_id: int, db: Session = Depends(get_db)):
 @router.post("", response_model=StudentOut)
 def create_student(
     student_in: StudentCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user=Depends(require_security_access(resource_name="Create Student", required_roles=["admin", "super admin", "hod"]))
 ):
@@ -663,6 +664,10 @@ def create_student(
         raise HTTPException(status_code=400, detail=f"Student with Register No '{student_in.reg_no}' already exists.")
 
     username, std_url, url_status = extract_leetcode_username(student_in.leetcode_url)
+    # Normalise username to lowercase for consistent lookup
+    if username:
+        username = username.lower()
+        std_url = f"https://leetcode.com/u/{username}/"
 
     student = Student(
         reg_no=student_in.reg_no.upper(),
@@ -671,7 +676,7 @@ def create_student(
         year_level=student_in.year_level,
         section_id=student_in.section_id,
         email=student_in.email,
-        leetcode_url=student_in.leetcode_url,
+        leetcode_url=std_url if std_url else student_in.leetcode_url,
         username=username,
         codeforces_username=student_in.codeforces_username,
         hackerrank_username=student_in.hackerrank_username
@@ -680,13 +685,41 @@ def create_student(
     db.commit()
     db.refresh(student)
 
-    # Init stats
-    stats = LeetCodeProfileStats(student_id=student.id, status=url_status)
+    # Init stats row — sync_status starts as "pending" until background sync runs
+    stats = LeetCodeProfileStats(
+        student_id=student.id,
+        status=url_status,
+        sync_status="pending" if username else "not_started",
+        validation_status="pending" if username else "not_started",
+    )
     db.add(stats)
 
-    audit = AuditLog(user_id=current_user.id, user_name=current_user.username, action="CREATE_STUDENT", details=f"Created student {student.reg_no} ({student.name})")
+    audit = AuditLog(
+        user_id=current_user.id,
+        user_name=current_user.username,
+        action="CREATE_STUDENT",
+        details=f"Created student {student.reg_no} ({student.name}) username={username or 'none'}"
+    )
     db.add(audit)
     db.commit()
+
+    # Trigger background verification+sync immediately after creation so the profile
+    # is verified without blocking the HTTP response.  The background task opens its
+    # own DB session — it must NEVER reuse the request session.
+    if username:
+        student_id_for_sync = student.id
+        def _bg_sync_new_student():
+            from backend.database import SessionLocal as _SL
+            from backend.services.live_sync_service import sync_single_student as _sss
+            _bg_db = _SL()
+            try:
+                _sss(student_id_for_sync, _bg_db)
+            except Exception as _e:
+                logger.warning(f"[CREATE_STUDENT_SYNC] Background sync note for student_id={student_id_for_sync}: {_e}")
+            finally:
+                _bg_db.close()
+        background_tasks.add_task(_bg_sync_new_student)
+        logger.info(f"[CREATE_STUDENT] Background sync queued for new student {student.reg_no} (username={username})")
 
     return StudentOut.from_orm(student)
 
@@ -738,6 +771,7 @@ class StudentUpdateSchema(BaseModel):
 def update_student(
     student_id: int,
     payload: StudentUpdateSchema,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user=Depends(require_security_access(resource_name="Update Student", required_roles=["admin", "super admin", "hod"]))
 ):
@@ -757,46 +791,83 @@ def update_student(
         student.section_id = payload.section_id
     if payload.email is not None:
         student.email = payload.email.strip().lower() if payload.email else None
+
+    # ── LeetCode URL / username normalisation ─────────────────────────────────
+    # BUG FIX: extract_leetcode_username returns a 3-tuple (username, url, status).
+    # The old code assigned the whole tuple to student.username — now corrected.
     if payload.leetcode_url is not None:
-        student.leetcode_url = payload.leetcode_url.strip() if payload.leetcode_url else None
-        if student.leetcode_url and ("leetcode.com" in student.leetcode_url or "/u/" in student.leetcode_url):
-            from backend.leetcode_fetcher import extract_leetcode_username
-            parsed_u = extract_leetcode_username(student.leetcode_url)
-            if parsed_u:
-                student.username = parsed_u
+        raw_lc = payload.leetcode_url.strip() if payload.leetcode_url else None
+        student.leetcode_url = raw_lc
+        if raw_lc:
+            _parsed_u, _parsed_url, _u_status = extract_leetcode_username(raw_lc)
+            if _parsed_u:
+                # Normalise to lowercase for consistent deduplication
+                student.username = _parsed_u.lower()
+                student.leetcode_url = _parsed_url  # canonical URL
+    # Direct username override (e.g. from the username field in the edit form)
     if payload.username and payload.username.strip():
-        student.username = payload.username.strip()
+        _direct_u = payload.username.strip().lower()
+        student.username = _direct_u
+        student.leetcode_url = f"https://leetcode.com/u/{_direct_u}/"
+
     if payload.is_active is not None:
         student.is_active = payload.is_active
 
-    # When username changes: align leetcode_url, reset sync_status to pending
-    username_changed = bool(student.username and (old_username != student.username))
+    # ── Username change detection & safe reset ────────────────────────────────
+    # Normalise both sides before comparing so "User" == "user" does not
+    # spuriously trigger a re-sync.
+    old_u_norm = (old_username or "").strip().lower()
+    new_u_norm = (student.username or "").strip().lower()
+    username_changed = bool(new_u_norm and old_u_norm != new_u_norm)
+
     if username_changed:
+        # Align canonical URL
         student.leetcode_url = f"https://leetcode.com/u/{student.username}/"
+        # Reset sync metadata BEFORE commit so the DB is immediately consistent:
+        # any reader between now and the background sync completion will see
+        # "pending" rather than stale "verified" data for a different username.
         if student.stats:
             student.stats.sync_status = "pending"
             student.stats.status = "pending"
             student.stats.validation_status = "pending"
+            student.stats.error_message = f"Username changed from '{old_username}' to '{student.username}' — re-verification pending."
+            student.stats.error_code = "USERNAME_CHANGED"
 
     db.commit()
     db.refresh(student)
 
-    # Trigger immediate sync for the updated handle in background thread
+    # ── Background sync — thread-safe session handling ────────────────────────
+    # CRITICAL: The request-scoped `db` session MUST NOT be passed to a background
+    # thread (SQLAlchemy sessions are not thread-safe).  The background function
+    # opens its own independent SessionLocal() and closes it in a finally block.
     if username_changed:
-        try:
-            import threading
-            from backend.database import SessionLocal
-            from backend.services.live_sync_service import sync_single_student
-            threading.Thread(
-                target=sync_single_student,
-                args=(student.id, SessionLocal()),
-                daemon=True
-            ).start()
-            logger.info(f"[USERNAME_CHANGE] Handled username change for student_id={student.id}: '{old_username}' -> '{student.username}'. Immediate background sync started.")
-        except Exception as _sync_start_err:
-            logger.warning(f"[USERNAME_CHANGE_SYNC_NOTE] {_sync_start_err}")
+        student_id_for_sync = student.id
+        new_username_for_log = student.username
 
-    # Sync update to Cloud Firestore
+        def _bg_username_change_sync():
+            from backend.database import SessionLocal as _SL
+            from backend.services.live_sync_service import sync_single_student as _sss
+            _bg_db = _SL()
+            try:
+                _sss(student_id_for_sync, _bg_db)
+                logger.info(
+                    f"[USERNAME_CHANGE] Background sync completed for student_id={student_id_for_sync}: "
+                    f"'{old_username}' -> '{new_username_for_log}'."
+                )
+            except Exception as _e:
+                logger.warning(
+                    f"[USERNAME_CHANGE_SYNC] Background sync note for student_id={student_id_for_sync}: {_e}"
+                )
+            finally:
+                _bg_db.close()
+
+        background_tasks.add_task(_bg_username_change_sync)
+        logger.info(
+            f"[USERNAME_CHANGE] Background sync queued for student_id={student_id_for_sync}: "
+            f"'{old_username}' -> '{new_username_for_log}'."
+        )
+
+    # ── Cloud Firestore sync (best-effort) ────────────────────────────────────
     try:
         from backend.services.firestore_service import update_firestore_doc
         update_firestore_doc("students", student.reg_no, {
@@ -815,7 +886,10 @@ def update_student(
         user_id=current_user.id,
         user_name=current_user.username,
         action="UPDATE_STUDENT",
-        details=f"Updated student {student.reg_no} ({student.name})" + (f" username: '{old_username}' -> '{student.username}'" if username_changed else "")
+        details=(
+            f"Updated student {student.reg_no} ({student.name})"
+            + (f" | username: '{old_username}' -> '{student.username}' (re-sync queued)" if username_changed else "")
+        )
     )
     db.add(audit)
     db.commit()
@@ -965,3 +1039,155 @@ async def refresh_all_students(
         "sync_status_url": f"/api/students/admin/sync/status/{run_id}"
     }
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LEETCODE ACCOUNT VALIDATION ENDPOINT
+# Read-only: validates the account exists + identity matches, no DB writes.
+# ─────────────────────────────────────────────────────────────────────────────
+
+class LeetCodeValidateRequest(BaseModel):
+    leetcode_url: Optional[str] = None
+    username: Optional[str] = None
+
+@router.post("/{student_id}/validate-leetcode")
+async def validate_leetcode_account(
+    student_id: int,
+    payload: LeetCodeValidateRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(
+        resource_name="Validate LeetCode Account",
+        required_roles=["admin", "super admin", "hod", "faculty"]
+    ))
+):
+    """
+    Validates a LeetCode username/URL against the live LeetCode API.
+
+    Flow:
+      1. Normalise + validate the format.
+      2. Fetch the public profile via LeetCode GraphQL (same as the sync engine).
+      3. Verify the returned canonical username matches the requested one.
+      4. Return a structured validation status — does NOT write to the database.
+
+    Use this before saving a new/changed LeetCode username so the UI can surface
+    'Validating → Fetching → Verified ✓' / 'Username not found' feedback without
+    waiting for a full background sync to complete.
+    """
+    # student_id=0 is a sentinel for "validate a new account before creation" —
+    # no student lookup is needed in that case.  For any real student_id (>0),
+    # we confirm the student exists so we can log context.
+    if student_id > 0:
+        student = db.query(Student).filter(Student.id == student_id).first()
+        if not student:
+            raise HTTPException(status_code=404, detail="Student record not found.")
+
+    # Resolve input: explicit username takes precedence over URL
+    raw_input = (payload.username or "").strip() or (payload.leetcode_url or "").strip()
+    if not raw_input:
+        return {
+            "validation_status": "INVALID_FORMAT",
+            "message": "No username or LeetCode URL provided.",
+            "username": None,
+            "canonical_url": None,
+            "can_save": False,
+        }
+
+    # Step 1 — Format validation (no network call yet)
+    parsed_username, parsed_url, u_status = extract_leetcode_username(raw_input)
+    if u_status != "OK" or not parsed_username:
+        return {
+            "validation_status": "INVALID_FORMAT",
+            "message": f"Invalid LeetCode username or URL format: {u_status}",
+            "username": None,
+            "canonical_url": None,
+            "can_save": False,
+        }
+
+    parsed_username = parsed_username.lower()
+
+    # Step 2 — Live LeetCode fetch (identity-checked inside fetch_leetcode_profile)
+    try:
+        result = await asyncio.wait_for(
+            fetch_leetcode_profile(parsed_username, force_refresh=True, timeout=20.0, max_retries=2),
+            timeout=25.0
+        )
+    except asyncio.TimeoutError:
+        return {
+            "validation_status": "NETWORK_ERROR",
+            "message": "LeetCode API did not respond in time. Please try again.",
+            "username": parsed_username,
+            "canonical_url": parsed_url,
+            "can_save": False,
+        }
+    except Exception as exc:
+        logger.warning(f"[VALIDATE_LC] Unexpected error for '{parsed_username}': {exc}")
+        return {
+            "validation_status": "FETCH_FAILED",
+            "message": f"Could not reach LeetCode API: {exc}",
+            "username": parsed_username,
+            "canonical_url": parsed_url,
+            "can_save": False,
+        }
+
+    # Step 3 — Map fetcher status to structured validation status
+    fetcher_status = result.get("status", "")
+
+    if fetcher_status in ("success", "OK"):
+        canonical = result.get("username", parsed_username)
+        return {
+            "validation_status": "VALID",
+            "message": f"LeetCode account '{canonical}' verified successfully.",
+            "username": canonical,
+            "canonical_url": f"https://leetcode.com/u/{canonical}/",
+            "can_save": True,
+            "profile_data": {
+                "total_solved": result.get("total_solved"),
+                "contest_rating": result.get("contest_rating"),
+                "recent_contest": result.get("recent_contest_name"),
+            }
+        }
+
+    elif fetcher_status == "INVALID_USERNAME":
+        return {
+            "validation_status": "ACCOUNT_NOT_FOUND",
+            "message": f"No LeetCode account found for username '{parsed_username}'.",
+            "username": parsed_username,
+            "canonical_url": None,
+            "can_save": False,
+        }
+
+    elif fetcher_status == "IDENTITY_MISMATCH":
+        return {
+            "validation_status": "IDENTITY_MISMATCH",
+            "message": result.get("error_message") or "LeetCode returned a different username than requested.",
+            "username": parsed_username,
+            "canonical_url": None,
+            "can_save": False,
+        }
+
+    elif fetcher_status == "FETCH_FAILED":
+        err = result.get("error_message") or "Profile fetch failed."
+        # Distinguish rate-limit from generic failure
+        if "429" in err or "rate" in err.lower():
+            return {
+                "validation_status": "RATE_LIMITED",
+                "message": "LeetCode is temporarily rate-limiting requests. Please wait a minute and try again.",
+                "username": parsed_username,
+                "canonical_url": None,
+                "can_save": False,
+            }
+        return {
+            "validation_status": "FETCH_FAILED",
+            "message": err,
+            "username": parsed_username,
+            "canonical_url": None,
+            "can_save": False,
+        }
+
+    else:
+        return {
+            "validation_status": "FETCH_FAILED",
+            "message": result.get("error_message") or f"Unexpected fetch status: {fetcher_status}",
+            "username": parsed_username,
+            "canonical_url": None,
+            "can_save": False,
+        }

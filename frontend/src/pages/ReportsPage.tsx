@@ -104,6 +104,7 @@ export const ReportsPage: React.FC = () => {
     }
   };
   const downloadReportFile = async (endpoint: string, filename: string) => {
+    setToastMessage("⏳ Generating report dataset from database...");
     try {
       const res = await api.get(endpoint, { responseType: 'blob' });
       const blobUrl = window.URL.createObjectURL(new Blob([res.data]));
@@ -114,13 +115,36 @@ export const ReportsPage: React.FC = () => {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(blobUrl);
-    } catch (err) {
+      setToastMessage(`✓ ${filename} downloaded successfully.`);
+      setTimeout(() => setToastMessage(null), 4000);
+    } catch (err: any) {
       console.error('Download error:', err);
-      const baseUrl = api.defaults.baseURL || 'https://leetcodeurl-s.onrender.com/api';
-      const fallbackUrl = `${baseUrl}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
-      window.open(fallbackUrl, '_blank');
-    }
+      let statusCode = err.response?.status;
+      let errMsg = 'Failed to generate report.';
 
+      if (err.response?.data instanceof Blob) {
+        try {
+          const text = await err.response.data.text();
+          const parsed = JSON.parse(text);
+          if (parsed.detail) errMsg = parsed.detail;
+        } catch (_e) {}
+      } else if (err.response?.data?.detail) {
+        errMsg = err.response.data.detail;
+      }
+
+      setToastMessage(`⚠ ${errMsg}`);
+      setTimeout(() => setToastMessage(null), 5000);
+
+      if (statusCode === 401) {
+        alert("Authentication required. Please sign in again.");
+      } else if (statusCode === 403) {
+        alert("You do not have permission to generate this institutional report.");
+      } else if (statusCode === 404) {
+        alert("Report resource not found.");
+      } else if (statusCode === 422) {
+        alert("Invalid report parameters.");
+      }
+    }
   };
 
   const handleDownloadOfficialSummary = () => {
@@ -128,7 +152,7 @@ export const ReportsPage: React.FC = () => {
   };
 
   const handleDownloadStudentDetail = () => {
-    downloadReportFile('/reports/export-official-college-summary', 'Nandha_Student_Performance_Detail.xlsx');
+    downloadReportFile('/reports/export-student-performance-detail', 'Nandha_Student_Performance_Detail.xlsx');
   };
 
   const handleDownloadMatrix2028 = () => {
@@ -183,9 +207,23 @@ export const ReportsPage: React.FC = () => {
         output_scope: output_scope,
         filters: overrideFilters || {}
       });
-      setActiveUniversalPreviewId(res.data.reportId);
+      setActiveUniversalPreviewId(res.data.reportId || res.data.report_id);
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Failed to generate report.");
+      const statusCode = err.response?.status;
+      const detailMsg = err.response?.data?.detail;
+      if (statusCode === 401) {
+        alert("Authentication required. Please sign in again.");
+      } else if (statusCode === 403) {
+        alert("You do not have permission to generate this institutional report.");
+      } else if (statusCode === 404) {
+        alert("Report resource not found.");
+      } else if (statusCode === 422) {
+        alert("Invalid report parameters.");
+      } else if (statusCode === 500) {
+        alert("Report generation failed on the server. Check server logs.");
+      } else {
+        alert(detailMsg || "Failed to generate report.");
+      }
     } finally {
       setIsGeneratingUniversal(false);
     }
@@ -199,7 +237,7 @@ export const ReportsPage: React.FC = () => {
     {
       id: 'student-detail',
       title: 'Student Performance Detail Excel',
-      badge: '📊 LOGO + PER-DEPT/YEAR SHEETS',
+      badge: 'LOGO + PER-DEPT/YEAR SHEETS',
       badgeColor: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
       description: 'Multi-sheet workbook: Cover sheet with college logo, separate sheets for CSE(CS)-IIYr, CSE(CS)-IIIYr, CSE(CS)-IVYr, CSE(IoT)-IIYr, CSE(IoT)-IIIYr, CSE(IoT)-IVYr. Contains S.No, Name, Reg No, Dept, Year, LeetCode Profile Link, Username, Easy, Medium, Hard, Total Solved, Contest Rating & Global Rank + Category Summary (Above 500, 250-500, etc.).',
       filename: 'Nandha_Student_Performance_Detail.xlsx',
@@ -582,7 +620,7 @@ export const ReportsPage: React.FC = () => {
             className="flex items-center space-x-2 px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 text-white rounded-2xl text-xs font-black shadow-lg shadow-emerald-500/30 transition-all transform hover:scale-105"
           >
             <Send className={`w-4 h-4 ${isSendingEmail ? 'animate-bounce' : ''}`} />
-            <span>{isSendingEmail ? 'Dispatching...' : '📧 Send Report to Management Now'}</span>
+            <span>{isSendingEmail ? 'Dispatching...' : 'Send Report to Management Now'}</span>
           </button>
         </div>
 
@@ -712,10 +750,10 @@ export const ReportsPage: React.FC = () => {
       </div>
       {/* Preview Modal */}
       {selectedSnapshotPreview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-navy-950 w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col border border-gray-200 dark:border-gray-800 overflow-hidden">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto animate-fade-in">
+          <div className="bg-white dark:bg-navy-950 w-full max-w-4xl max-h-[calc(100vh-3rem)] rounded-3xl shadow-2xl flex flex-col border border-gray-200 dark:border-gray-800 overflow-hidden my-auto">
             {/* Modal Header */}
-            <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-navy-900/50">
+            <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-navy-900/50 shrink-0">
               <div className="space-y-1">
                 <h2 className="text-xl font-black text-gray-900 dark:text-white">
                   {selectedSnapshotPreview.title}
@@ -728,14 +766,14 @@ export const ReportsPage: React.FC = () => {
               </div>
               <button 
                 onClick={() => setSelectedSnapshotPreview(null)}
-                className="p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-500 hover:text-gray-900 dark:hover:text-white"
+                className="p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-500 hover:text-gray-900 dark:hover:text-white cursor-pointer"
               >
                 ✕
               </button>
             </div>
             
             {/* Modal Body */}
-            <div className="p-6 overflow-y-auto flex-1 space-y-6">
+            <div className="p-6 overflow-y-auto flex-1 min-h-0 space-y-6">
               {/* Top Level Metrics */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="p-4 rounded-2xl bg-purple-50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900/30">

@@ -116,10 +116,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       link.click();
       link.remove();
       window.URL.revokeObjectURL(blobUrl);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Report generation failed", err);
-      const baseUrl = api.defaults.baseURL || 'https://leetcodeurl-s.onrender.com/api';
-      window.open(`${baseUrl}/reports/export-pdf`, '_blank');
+      const statusCode = err.response?.status;
+      if (statusCode === 401) {
+        alert("Authentication required. Please sign in again.");
+      } else if (statusCode === 403) {
+        alert("You do not have permission to generate this institutional report.");
+      } else {
+        alert("Failed to generate PDF report.");
+      }
     } finally {
       setGeneratingReport(false);
     }
@@ -136,10 +142,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       link.click();
       link.remove();
       window.URL.revokeObjectURL(blobUrl);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Excel export failed", err);
-      const baseUrl = api.defaults.baseURL || 'https://leetcodeurl-s.onrender.com/api';
-      window.open(`${baseUrl}/reports/export-excel`, '_blank');
+      const statusCode = err.response?.status;
+      if (statusCode === 401) {
+        alert("Authentication required. Please sign in again.");
+      } else if (statusCode === 403) {
+        alert("You do not have permission to generate this institutional report.");
+      } else {
+        alert("Failed to generate Excel report.");
+      }
     }
   };
 

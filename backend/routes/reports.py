@@ -9,12 +9,18 @@ from pydantic import BaseModel
 
 from backend.config import settings
 from backend.database import get_db
-from backend.models import Student, CertificateRecord, EmailLog
-from backend.excel_handler import generate_8_sheet_excel_report, generate_weekly_contest_matrix_excel, generate_single_week_matrix_excel
+from backend.models import Student, CertificateRecord, EmailLog, ContestParticipation
+from backend.excel_handler import (
+    generate_8_sheet_excel_report,
+    generate_student_performance_detail_excel,
+    generate_8_sheet_master_tracker,
+    generate_weekly_contest_matrix_excel,
+    generate_single_week_matrix_excel
+)
 from backend.pdf_generator import generate_pdf_summary_report
 from backend.certificate_generator import generate_student_certificate
 from backend.email_service import send_weekly_report_email
-
+from backend.logger import logger
 from backend.security import require_security_access
 
 router = APIRouter(prefix="/api/reports", tags=["Reports"])
@@ -39,30 +45,54 @@ def trigger_virtual_contest_workflow_endpoint(
     result = run_sunday_2200_virtual_contest_workflow(db)
     return result
 
+@router.get("/export-student-performance-detail")
+def download_student_performance_detail_excel(
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Export Student Performance Detail Excel", dept_scoped=True))
+):
+    try:
+        excel_bytes = generate_student_performance_detail_excel(db)
+        return Response(
+            content=excel_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=Nandha_Student_Performance_Detail.xlsx"}
+        )
+    except Exception as e:
+        logger.error(f"[EXPORT ERROR] /export-student-performance-detail: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to generate Student Performance Detail Excel: {str(e)}")
+
 @router.get("/export-excel")
 @router.get("/export-official-college-summary")
 def download_official_college_summary_excel(
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export Excel Summary Report", dept_scoped=True))
 ):
-    excel_bytes = generate_8_sheet_excel_report(db)
-    return Response(
-        content=excel_bytes,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=Nandha_College_Official_Weekly_Report.xlsx"}
-    )
+    try:
+        excel_bytes = generate_8_sheet_excel_report(db)
+        return Response(
+            content=excel_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=Nandha_College_Official_Weekly_Report.xlsx"}
+        )
+    except Exception as e:
+        logger.error(f"[EXPORT ERROR] /export-official-college-summary: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to generate Official College Weekly Excel: {str(e)}")
 
 @router.get("/export-master-tracker")
 def download_master_tracker_excel(
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export Master Tracker Excel", dept_scoped=True))
 ):
-    excel_bytes = generate_8_sheet_excel_report(db)
-    return Response(
-        content=excel_bytes,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=LeetCode_Full_8_Sheet_Master_Tracker.xlsx"}
-    )
+    try:
+        excel_bytes = generate_8_sheet_master_tracker(db)
+        return Response(
+            content=excel_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=Full_8_Sheet_Master_Tracker.xlsx"}
+        )
+    except Exception as e:
+        logger.error(f"[EXPORT ERROR] /export-master-tracker: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to generate 8-Sheet Master Tracker Excel: {str(e)}")
 
 @router.get("/export-weekly-contest-matrix")
 def download_weekly_contest_matrix_excel(
@@ -202,7 +232,11 @@ class GenerateReportPayload(BaseModel):
     filters: Optional[Dict[str, Any]] = {}
 
 @router.post("/generate")
-def generate_report(payload: GenerateReportPayload, db: Session = Depends(get_db)):
+def generate_report(
+    payload: GenerateReportPayload, 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Generate Universal Report", dept_scoped=True))
+):
     """
     UNIVERSAL CENTRAL REPORT GENERATION ENDPOINT
     Consumes ReportConfig, generates snapshot via report_engine, and returns normalized dataset.
@@ -224,7 +258,10 @@ def generate_report(payload: GenerateReportPayload, db: Session = Depends(get_db
     return dataset
 
 @router.get("/history")
-def get_report_history(db: Session = Depends(get_db)):
+def get_report_history(
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="View Report History", dept_scoped=True))
+):
     """Retrieves all generated reports (without full dataset payload for fast loading)."""
     reports = db.query(ReportHistory).order_by(ReportHistory.created_at.desc()).all()
     return [{
@@ -240,7 +277,14 @@ def get_report_history(db: Session = Depends(get_db)):
     } for r in reports]
 
 @router.get("/{report_id}/preview")
-def get_report_preview(report_id: str, dept: str = "ALL", year: str = "ALL", attendance: str = "ALL", db: Session = Depends(get_db)):
+def get_report_preview(
+    report_id: str, 
+    dept: str = "ALL", 
+    year: str = "ALL", 
+    attendance: str = "ALL", 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="View Report Preview", dept_scoped=True))
+):
     """Fetches the full JSON dataset snapshot for a specific report ID or session ID."""
     dataset, _ = _get_dataset_for_id(report_id, db, dept=dept, year=year, attendance=attendance)
     return dataset
@@ -324,11 +368,17 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
             session_date = ws.session_date or ""
             r_filename = get_contest_filename_base(contest_name, dept=dept, year=year, attendance=attendance)
 
-            # Fetch rows via session matrix logic to ensure strict consistency and data isolation
-            from backend.routes.weekly_contests import get_session_matrix
-            mat = get_session_matrix(session_id=session_id, dept=dept, year=year, attendance=attendance, db=db)
-            raw_rows = mat.get("rows", [])
-            matrix_metrics = mat.get("metrics", {})
+            from backend.services.canonical_contest_engine import build_canonical_contest_dataset
+            canonical_data = build_canonical_contest_dataset(
+                session_id=session_id,
+                db=db,
+                dept=dept or "ALL",
+                year=year or "ALL",
+                attendance=attendance or "ALL"
+            )
+
+            raw_rows = canonical_data.get("rows", [])
+            matrix_metrics = canonical_data.get("metrics", {})
 
             if len(raw_rows) == 0:
                 raise HTTPException(
@@ -336,79 +386,20 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
                     detail="No students match the selected filter criteria."
                 )
 
-            normalized_rows = []
             all_students = []
             top_students = []
-            q4_count = q3_count = q2_count = q1_count = 0
 
-            for idx, r in enumerate(raw_rows, start=1):
-                p_status = r.get("participation_status", "NOT_ATTENDED")
-                # Canonical statuses: PUBLIC, VIRTUAL, NOT_ATTENDED, UNKNOWN
-                # Legacy statuses: PUBLIC_ATTENDED, ATTENDED, VIRTUAL_ATTENDED, PUBLIC_NOT_ATTENDED
-                attended = p_status in ("PUBLIC", "VIRTUAL", "PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL_ATTENDED")
-                is_virtual = p_status in ("VIRTUAL", "VIRTUAL_ATTENDED")
-
-                v_q1 = r.get("q1", 0)
-                v_q2 = r.get("q2", 0)
-                v_q3 = r.get("q3", 0)
-                v_q4 = r.get("q4", 0)
-
-                # Raw rows use "total_solved", "rating", "rank" as keys from get_session_matrix
-                solved_total = r.get("total_solved") or r.get("total_contest_solved")
-                c_rank = r.get("rank") or r.get("contest_rank")
-                c_rating = r.get("rating") or r.get("contest_rating")
-                solved_val = solved_total if attended else "—"
-                rank_val = c_rank if attended else "—"
-                rating_val = c_rating if attended else "—"
-
-                if attended:
-                    q_sum = (1 if (v_q1 or 0) >= 1 else 0) + (1 if (v_q2 or 0) >= 1 else 0) + (1 if (v_q3 or 0) >= 1 else 0) + (1 if (v_q4 or 0) >= 1 else 0)
-                    if q_sum == 4: q4_count += 1
-                    elif q_sum == 3: q3_count += 1
-                    elif q_sum == 2: q2_count += 1
-                    elif q_sum == 1: q1_count += 1
-
-                status_display = (
-                    "PUBLIC" if p_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED")
-                    else "VIRTUAL" if p_status in ("VIRTUAL", "VIRTUAL_ATTENDED")
-                    else "NOT ATTENDED" if p_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED")
-                    else "DATA ERROR"
-                )
-
-                row_dict = {
-                    "s_no": idx,
-                    "reg_no": r.get("reg_no", ""),
-                    "name": r.get("name", ""),
-                    "dept": r.get("dept", ""),
-                    "year": r.get("year", ""),
-                    "username": r.get("username", ""),
-                    "profile_url": r.get("profile_url", ""),
-                    "profile_rank": r.get("profile_rank", "—"),
-                    "profile_total_solved": r.get("profile_total_solved", 0),
-                    "easy_solved": r.get("easy_solved", "—"),
-                    "medium_solved": r.get("medium_solved", "—"),
-                    "hard_solved": r.get("hard_solved", "—"),
-                    "status": status_display,
-                    "participation_status": p_status,
-                    "contest_name": contest_name,
-                    "q1": v_q1 if attended else "—",
-                    "q2": v_q2 if attended else "—",
-                    "q3": v_q3 if attended else "—",
-                    "q4": v_q4 if attended else "—",
-                    "total_solved": solved_val,
-                    "total_contest_solved": solved_val,
-                    "rank": rank_val,
-                    "contest_rank": rank_val,
-                    "score": r.get("contest_score") or r.get("score") or (solved_total if attended else 0) or 0,
-                    "rating": rating_val,
-                    "contest_rating": rating_val,
-                    "sync_status": r.get("sync_status", "—"),
-                    "last_verified": r.get("last_verified", "—"),
-                    "data_fetch_status": r.get("data_fetch_status", "—"),
-                    "confidence": r.get("confidence", "—"),
-                    "error_reason": r.get("error_reason", ""),
-                }
-                normalized_rows.append(row_dict)
+            for r in raw_rows:
+                status_str = r.get("status", "NOT_ATTENDED")
+                attended = status_str in ("PUBLIC", "VIRTUAL")
+                v_q1 = r.get("q1")
+                v_q2 = r.get("q2")
+                v_q3 = r.get("q3")
+                v_q4 = r.get("q4")
+                solved_val = r.get("total_solved")
+                rank_val = r.get("rank")
+                rating_val = r.get("rating")
+                score_val = r.get("score") or 0
 
                 entry = {
                     "reg_no": r.get("reg_no", ""),
@@ -417,38 +408,20 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
                     "year": r.get("year", ""),
                     "username": r.get("username", ""),
                     "profile_rank": r.get("profile_rank", "—"),
-                    "easy": int(v_q1) if (v_q1 not in (None, "—") and str(v_q1).isdigit()) else 0,
-                    "medium": int(v_q2) if (v_q2 not in (None, "—") and str(v_q2).isdigit()) else 0,
-                    "hard": int(v_q3) if (v_q3 not in (None, "—") and str(v_q3).isdigit()) else 0,
-                    "total_solved": int(solved_val) if (attended and str(solved_val).isdigit()) else None,
-                    "status": row_dict["status"],
-                    "rank": rank_val,
-                    "score": row_dict["score"],
-                    "rating": float(rating_val) if (rating_val not in (None, "—") and str(rating_val).replace(".", "", 1).isdigit()) else None
+                    "easy": v_q1 if (v_q1 is not None) else 0,
+                    "medium": v_q2 if (v_q2 is not None) else 0,
+                    "hard": v_q3 if (v_q3 is not None) else 0,
+                    "total_solved": solved_val if (attended and solved_val is not None) else None,
+                    "status": status_str,
+                    "rank": rank_val if attended else "—",
+                    "score": score_val if attended else 0,
+                    "rating": rating_val if attended else None
                 }
                 all_students.append(entry)
                 if attended:
                     top_students.append(entry)
 
-            def _extract_score_num(x):
-                s_val = x.get("score")
-                if isinstance(s_val, (int, float)):
-                    return float(s_val)
-                if isinstance(s_val, str):
-                    m_val = re.search(r'\d+', s_val)
-                    if m_val:
-                        return float(m_val.group(0))
-                return 0.0
-
-            top_students.sort(key=_extract_score_num, reverse=True)
-            pub_attended_cnt = matrix_metrics.get("publicAttended", matrix_metrics.get("officialParticipants", sum(1 for r in normalized_rows if r.get("status") == "PUBLIC")))
-            virt_attended_cnt = matrix_metrics.get("virtualAttended", matrix_metrics.get("virtualParticipants", sum(1 for r in normalized_rows if r.get("status") == "VIRTUAL")))
-            not_attended_cnt = matrix_metrics.get("notAttended", matrix_metrics.get("notParticipated", sum(1 for r in normalized_rows if r.get("status") == "NOT ATTENDED")))
-            error_cnt = matrix_metrics.get("unknown", matrix_metrics.get("failedVerification", sum(1 for r in normalized_rows if r.get("participation_status") == "UNKNOWN")))
-            total_roster_cnt = matrix_metrics.get("totalStudents", len(normalized_rows))
-
-            now_ist = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
-            ist_formatted = now_ist.strftime("%d %b %Y, %I:%M %p IST")
+            top_students.sort(key=lambda x: float(x.get("score") or 0), reverse=True)
 
             dataset = {
                 "report_id": f"Session_{session_id}",
@@ -459,10 +432,10 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
                 "sessionDate": session_date,
                 "contestDate": session_date,
                 "title": f"NANDHA ENGINEERING COLLEGE\n{contest_name.upper()}\nSTUDENT PERFORMANCE REPORT",
-                "generated_at": now_ist.isoformat(),
-                "generatedAt": now_ist.isoformat(),
-                "generatedAtIST": ist_formatted,
-                "verified_at": ws.finalized_at.isoformat() if ws.finalized_at else now_ist.isoformat(),
+                "generated_at": canonical_data.get("generatedAtIST"),
+                "generatedAt": canonical_data.get("generatedAtIST"),
+                "generatedAtIST": canonical_data.get("generatedAtIST"),
+                "verified_at": ws.finalized_at.isoformat() if ws.finalized_at else canonical_data.get("generatedAtIST"),
                 "data_status": ws.status,
                 "dataStatus": ws.status,
                 "istWindow": "08:00 AM – 09:30 AM IST",
@@ -470,30 +443,36 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
                 "yearFilter": year or "ALL",
                 "attendanceFilter": attendance or "ALL",
                 "metrics": {
-                    "totalStudents": total_roster_cnt,
-                    "officialAttended": pub_attended_cnt,
-                    "notAttended": not_attended_cnt,
-                    "virtualAttended": virt_attended_cnt,
-                    "dataErrors": error_cnt,
+                    "totalStudents": matrix_metrics.get("totalStudents", len(raw_rows)),
+                    "officialAttended": matrix_metrics.get("officialAttended", 0),
+                    "notAttended": matrix_metrics.get("notAttended", 0),
+                    "virtualAttended": matrix_metrics.get("virtualAttended", 0),
+                    "dataErrors": matrix_metrics.get("errors", 0),
                     "contestName": contest_name,
                     "sessionDate": session_date,
-                    "participationRate": f"{round(((pub_attended_cnt + virt_attended_cnt) / max(total_roster_cnt, 1)) * 100, 1)}%",
-                    "4 Q Solved": q4_count,
-                    "3 Q Solved": q3_count,
-                    "2 Q Solved": q2_count,
-                    "1 Q Solved": q1_count,
+                    "participationRate": f"{matrix_metrics.get('participationPercentage', 0)}%",
+                    "4 Q Solved": matrix_metrics.get("q4Count", 0),
+                    "3 Q Solved": matrix_metrics.get("q3Count", 0),
+                    "2 Q Solved": matrix_metrics.get("q2Count", 0),
+                    "1 Q Solved": matrix_metrics.get("q1Count", 0),
                 },
                 "distribution": {},
                 "allStudents": all_students,
                 "topStudents": top_students[:50],
                 "data_quality": {
-                    "total_students": total_roster_cnt,
-                    "valid_count": pub_attended_cnt + virt_attended_cnt,
-                    "unverified_count": not_attended_cnt,
-                    "error_count": error_cnt,
+                    "total_students": matrix_metrics.get("totalStudents", len(raw_rows)),
+                    "valid_count": matrix_metrics.get("officialAttended", 0) + matrix_metrics.get("virtualAttended", 0),
+                    "unverified_count": matrix_metrics.get("notAttended", 0),
+                    "error_count": matrix_metrics.get("errors", 0),
                     "warnings": []
                 },
-                "rows": normalized_rows,
+                "rows": raw_rows,
+                "all_rows": canonical_data.get("all_rows", raw_rows),
+                "departmentStats": canonical_data.get("departmentStats", {}),
+                "yearStats": canonical_data.get("yearStats", {}),
+                "statusCounts": canonical_data.get("statusCounts", {}),
+                "dataQualityIssues": canonical_data.get("dataQualityIssues", []),
+                "reconciliation": canonical_data.get("reconciliation", {})
             }
 
     if not dataset:
@@ -506,7 +485,14 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
 
 
 @router.get("/{report_id}/excel")
-def download_universal_excel(report_id: str, dept: str = "ALL", year: str = "ALL", attendance: str = "ALL", db: Session = Depends(get_db)):
+def download_universal_excel(
+    report_id: str, 
+    dept: str = "ALL", 
+    year: str = "ALL", 
+    attendance: str = "ALL", 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Download Report Excel", dept_scoped=True))
+):
     try:
         dataset, r_filename = _get_dataset_for_id(report_id, db, dept=dept, year=year, attendance=attendance)
         excel_bytes = export_excel_from_dataset(dataset)
@@ -530,7 +516,14 @@ def download_universal_excel(report_id: str, dept: str = "ALL", year: str = "ALL
         raise HTTPException(status_code=500, detail=f"Failed to generate Excel report: {str(e)}")
 
 @router.get("/{report_id}/pdf")
-def download_universal_pdf(report_id: str, dept: str = "ALL", year: str = "ALL", attendance: str = "ALL", db: Session = Depends(get_db)):
+def download_universal_pdf(
+    report_id: str, 
+    dept: str = "ALL", 
+    year: str = "ALL", 
+    attendance: str = "ALL", 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Download Report PDF", dept_scoped=True))
+):
     try:
         dataset, r_filename = _get_dataset_for_id(report_id, db, dept=dept, year=year, attendance=attendance)
         pdf_bytes = export_pdf_from_dataset(dataset)
@@ -544,7 +537,14 @@ def download_universal_pdf(report_id: str, dept: str = "ALL", year: str = "ALL",
         raise HTTPException(status_code=500, detail=f"Failed to generate PDF report: {str(e)}")
 
 @router.get("/{report_id}/word")
-def download_universal_word(report_id: str, dept: str = "ALL", year: str = "ALL", attendance: str = "ALL", db: Session = Depends(get_db)):
+def download_universal_word(
+    report_id: str, 
+    dept: str = "ALL", 
+    year: str = "ALL", 
+    attendance: str = "ALL", 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Download Report Word", dept_scoped=True))
+):
     dataset, r_filename = _get_dataset_for_id(report_id, db, dept=dept, year=year, attendance=attendance)
     word_bytes = export_word_from_dataset(dataset)
     return Response(
@@ -554,7 +554,14 @@ def download_universal_word(report_id: str, dept: str = "ALL", year: str = "ALL"
     )
 
 @router.get("/{report_id}/csv")
-def download_universal_csv_by_id(report_id: str, dept: str = "ALL", year: str = "ALL", attendance: str = "ALL", db: Session = Depends(get_db)):
+def download_universal_csv_by_id(
+    report_id: str, 
+    dept: str = "ALL", 
+    year: str = "ALL", 
+    attendance: str = "ALL", 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Download Report CSV", dept_scoped=True))
+):
     dataset, r_filename = _get_dataset_for_id(report_id, db, dept=dept, year=year, attendance=attendance)
     csv_bytes = export_csv_from_dataset(dataset)
     return Response(
@@ -564,7 +571,14 @@ def download_universal_csv_by_id(report_id: str, dept: str = "ALL", year: str = 
     )
 
 @router.get("/{report_id}/zip")
-def download_universal_zip_by_id(report_id: str, dept: str = "ALL", year: str = "ALL", attendance: str = "ALL", db: Session = Depends(get_db)):
+def download_universal_zip_by_id(
+    report_id: str, 
+    dept: str = "ALL", 
+    year: str = "ALL", 
+    attendance: str = "ALL", 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Download Report ZIP", dept_scoped=True))
+):
     dataset, r_filename = _get_dataset_for_id(report_id, db, dept=dept, year=year, attendance=attendance)
     zip_bytes = export_zip_bundle_from_dataset(dataset)
     return Response(
@@ -582,7 +596,11 @@ class HODSnapshotPayload(BaseModel):
     title: Optional[str] = None
 
 @router.post("/generate-hod-snapshot")
-def create_hod_snapshot(payload: Optional[HODSnapshotPayload] = None, db: Session = Depends(get_db)):
+def create_hod_snapshot(
+    payload: Optional[HODSnapshotPayload] = None, 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Generate HOD Snapshot", required_roles=["admin", "super admin"]))
+):
     """
     Generates a new executive HOD snapshot.
     """
@@ -606,7 +624,10 @@ def create_hod_snapshot(payload: Optional[HODSnapshotPayload] = None, db: Sessio
         }
 
 @router.get("/hod-snapshots")
-def get_hod_snapshots(db: Session = Depends(get_db)):
+def get_hod_snapshots(
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="View HOD Snapshots", dept_scoped=True))
+):
     """
     Retrieves all executive HOD snapshots.
     If none exist, auto-generates initial baseline snapshot.
@@ -632,7 +653,11 @@ from backend.excel_handler import generate_snapshot_excel_report
 from backend.word_generator import generate_snapshot_word_report
 
 @router.get("/hod-snapshots/{snapshot_id}/pdf")
-def download_snapshot_pdf(snapshot_id: str, db: Session = Depends(get_db)):
+def download_snapshot_pdf(
+    snapshot_id: str, 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Download Snapshot PDF", dept_scoped=True))
+):
     try:
         pdf_bytes = generate_snapshot_pdf_report(db, snapshot_id)
         return Response(
@@ -644,7 +669,11 @@ def download_snapshot_pdf(snapshot_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail=str(e))
 
 @router.get("/hod-snapshots/{snapshot_id}/excel")
-def download_snapshot_excel(snapshot_id: str, db: Session = Depends(get_db)):
+def download_snapshot_excel(
+    snapshot_id: str, 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Download Snapshot Excel", dept_scoped=True))
+):
     try:
         excel_bytes = generate_snapshot_excel_report(db, snapshot_id)
         return Response(
@@ -655,8 +684,28 @@ def download_snapshot_excel(snapshot_id: str, db: Session = Depends(get_db)):
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
+@router.get("/hod-snapshots/{snapshot_id}/word")
+def download_snapshot_word(
+    snapshot_id: str, 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Download Snapshot Word", dept_scoped=True))
+):
+    try:
+        word_bytes = generate_snapshot_word_report(db, snapshot_id)
+        return Response(
+            content=word_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": f"attachment; filename=HOD_Snapshot_{snapshot_id}.docx"}
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
 @router.delete("/hod-snapshots/{snapshot_id}")
-def delete_hod_snapshot(snapshot_id: str, db: Session = Depends(get_db)):
+def delete_hod_snapshot(
+    snapshot_id: str, 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Delete HOD Snapshot", required_roles=["admin", "super admin"]))
+):
     """Deletes an executive HOD snapshot by ID."""
     snap = db.query(HODSnapshot).filter(HODSnapshot.snapshot_id == snapshot_id).first()
     if not snap:
@@ -781,14 +830,14 @@ def get_email_logs(db: Session = Depends(get_db)):
 
 @router.get("/weekly-performance")
 def get_weekly_performance_report_json(
-    last_week_contest: int = Query(513),
-    current_week_contest: int = Query(514),
+    last_week_contest: Optional[int] = Query(None),
+    current_week_contest: Optional[int] = Query(None),
     report_date: Optional[str] = Query(None),
     save_snapshot: bool = Query(False),
     db: Session = Depends(get_db)
 ):
     """
-    Returns weekly performance dataset including Last vs Current Week metrics,
+    Returns canonical weekly performance dataset including Last vs Current Week metrics,
     movement tracking, category student lists, and data validation issues.
     """
     from backend.services.weekly_report_service import generate_weekly_performance_data
@@ -804,10 +853,12 @@ def get_weekly_performance_report_json(
 @router.get("/weekly-performance/download")
 def download_weekly_performance_19_sheet_excel(
     report_date: Optional[str] = Query(None),
+    last_week_contest: Optional[int] = Query(None),
+    current_week_contest: Optional[int] = Query(None),
     db: Session = Depends(get_db)
 ):
     """
-    Generates and downloads the official 19-sheet institutional Excel workbook.
+    Generates and downloads the official institutional Excel workbook.
     """
     import os
     import tempfile
@@ -815,7 +866,13 @@ def download_weekly_performance_19_sheet_excel(
     from backend.exporters.weekly_excel_generator import build_weekly_performance_excel
 
     date_str = report_date or datetime.date.today().strftime("%d-%m-%Y")
-    data = generate_weekly_performance_data(db, report_date=date_str, save_snapshot=False)
+    data = generate_weekly_performance_data(
+        db,
+        last_week_contest=last_week_contest,
+        current_week_contest=current_week_contest,
+        report_date=date_str,
+        save_snapshot=False
+    )
 
     temp_dir = tempfile.gettempdir()
     file_path = os.path.join(temp_dir, f"LeetCode_Weekly_Report_{date_str}.xlsx")

@@ -126,15 +126,19 @@ class ContestParticipation(Base):
     
     verified_at = Column(DateTime, default=datetime.datetime.utcnow)
     source = Column(String(100), default="leetcode_api")
+    # Audit trail: which LeetCode username was used to fetch this record.
+    # Remains stable even if student.username changes — enables forensic diff.
+    source_username = Column(String(100), nullable=True, index=True)
 
     student = relationship("Student", back_populates="contest_participations")
+
 
 class WeeklySession(Base):
     __tablename__ = "weekly_sessions"
     
     id = Column(Integer, primary_key=True, index=True)
     academic_year = Column(String(20), default="2026-27")
-    week_number = Column(Integer, nullable=False)
+    week_number = Column(Integer, default=1, nullable=True)
     session_code = Column(String(50), unique=True, index=True, nullable=True) # e.g. WEEK-2026-08-16
     session_date = Column(String(20), nullable=False, index=True) # YYYY-MM-DD
     contest_id = Column(String(100), nullable=True) # e.g. weekly-contest-470
@@ -573,16 +577,23 @@ class StudentContestParticipation(Base):
 
     participation_mode = Column(String(20), nullable=False, index=True) # PUBLIC or VIRTUAL
 
-    questions_solved = Column(Integer, default=0)
+    questions_solved = Column(Integer, nullable=True, default=None)
     questions_total = Column(Integer, default=4)
-    score_display = Column(String(20), nullable=True) # e.g. "3 / 4" or "Not Attended"
+    score_display = Column(String(50), nullable=True) # e.g. "3 / 4" or "Not Attended" or "UNKNOWN"
+
+    solved_problems = Column(JSON, nullable=True) # Array of verified problem slugs/IDs
+    verification_level = Column(String(30), default="UNVERIFIED", index=True) # DIRECT, CROSS_VERIFIED, PARTIAL, UNVERIFIED
+    confidence = Column(Float, default=0.0) # 0.0 to 1.0
+    source = Column(String(100), nullable=True) # e.g. leetcode_official_contest_result
+    source_url = Column(String(255), nullable=True)
+    verification_evidence = Column(JSON, nullable=True)
 
     contest_rank = Column(Integer, nullable=True)
     contest_rating = Column(Float, nullable=True)
     top_percentage = Column(Float, nullable=True)
 
     attended = Column(Boolean, default=False)
-    status = Column(String(30), default="NOT_ATTENDED", index=True) # ATTENDED, NOT_ATTENDED, FETCH_FAILED, PARSER_ERROR, DATA_MISMATCH, MODE_UNCERTAIN, PROFILE_NOT_FOUND
+    status = Column(String(30), default="UNKNOWN", index=True) # PARTICIPATED, NOT_PARTICIPATED, SOURCE_UNAVAILABLE, UNKNOWN, FETCH_FAILED
 
     started_at = Column(DateTime, nullable=True)
     submitted_at = Column(DateTime, nullable=True)
