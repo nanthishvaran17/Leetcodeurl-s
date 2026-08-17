@@ -22,6 +22,9 @@ interface CertificateVerificationData {
   status: 'VERIFIED' | 'REVOKED' | 'NOT_VERIFIED';
   is_valid: boolean;
   verification_id: string;
+  verified?: boolean;
+  certificate_id?: string;
+  achievement_level?: string;
   student_name?: string;
   register_no?: string;
   department?: string;

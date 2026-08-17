@@ -47832,3 +47832,12 @@ Action: Request blocked
 [2026-08-18 00:41:48,803] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
 [2026-08-18 00:41:48,804] [INFO] [leetcode_tracker]: Backend Application ready and listening!
 [2026-08-18 00:41:49,028] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 00:41
+[2026-08-18 00:44:25,180] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 00:44:25,182] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-18 00:44:25,522] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-18 00:44:25,525] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth (skipping auto-seeding).
+[2026-08-18 00:44:25,533] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-18 00:44:25,536] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-18 00:44:25,541] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-18 00:44:25,542] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-18 00:44:25,861] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 00:44
