@@ -237,3 +237,179 @@ def get_student_pipeline_audit(
         },
         "audited_at": now.isoformat()
     }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# INSTITUTIONAL FORENSIC AUDIT ENDPOINTS (300 Students × 100 Contests)
+# ─────────────────────────────────────────────────────────────────────────────
+
+from backend.models import ForensicAuditJob, ForensicAuditRecord, ForensicStudentIngestStatus
+from backend.services.forensic_audit_service import run_forensic_audit_job, get_canonical_100_contests
+import asyncio
+
+
+@router.post("/forensic/run")
+async def trigger_forensic_audit(
+    background_tasks: bool = True,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Data Quality Board"))
+) -> Dict[str, Any]:
+    """
+    Triggers a 300 Students × 100 Contests Institutional Forensic Audit run.
+    Applies all 15 mandatory corrections using direct LeetCode GraphQL evidence.
+    """
+    now_str = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    job_id = f"FAJ-{now_str}"
+
+    if background_tasks:
+        asyncio.create_task(run_forensic_audit_job(job_id=job_id, triggered_by=current_user.username if hasattr(current_user, 'username') else "admin"))
+        return {
+            "message": "Institutional Forensic Audit job launched in background",
+            "job_id": job_id,
+            "status": "RUNNING",
+            "phase": "INGEST"
+        }
+    else:
+        job = await run_forensic_audit_job(job_id=job_id, triggered_by=current_user.username if hasattr(current_user, 'username') else "admin")
+        return {
+            "message": "Institutional Forensic Audit job completed",
+            "job_id": job.job_id,
+            "status": job.status,
+            "phase": job.phase,
+            "total_matrix_cells": job.total_matrix_cells,
+            "integrity_pass": job.integrity_pass
+        }
+
+
+@router.get("/forensic/jobs")
+def list_forensic_jobs(
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Data Quality Board"))
+) -> List[Dict[str, Any]]:
+    """Returns list of all historical forensic audit jobs."""
+    jobs = db.query(ForensicAuditJob).order_by(ForensicAuditJob.id.desc()).all()
+    return [
+        {
+            "id": j.id,
+            "job_id": j.job_id,
+            "status": j.status,
+            "phase": j.phase,
+            "total_students": j.total_students,
+            "students_ingested": j.students_ingested,
+            "total_matrix_cells": j.total_matrix_cells,
+            "cells_processed": j.cells_processed,
+            "verified_attended": j.verified_attended,
+            "verified_absent": j.verified_absent,
+            "not_found": j.not_found_count,
+            "pending_username": j.pending_username_count,
+            "source_unavailable": j.source_unavailable,
+            "integrity_pass": j.integrity_pass,
+            "started_at": j.started_at.isoformat() if j.started_at else None,
+            "completed_at": j.completed_at.isoformat() if j.completed_at else None
+        }
+        for j in jobs
+    ]
+
+
+@router.get("/forensic/job/{job_id}")
+def get_forensic_job_status(
+    job_id: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Data Quality Board"))
+) -> Dict[str, Any]:
+    """Returns current status and counter metrics for a specific forensic audit job."""
+    job = db.query(ForensicAuditJob).filter(ForensicAuditJob.job_id == job_id).first()
+    if not job:
+        return {"error": f"Forensic Audit Job {job_id} not found"}
+
+    return {
+        "job_id": job.job_id,
+        "status": job.status,
+        "phase": job.phase,
+        "total_students": job.total_students,
+        "students_ingested": job.students_ingested,
+        "students_succeeded": job.students_succeeded,
+        "students_failed": job.students_failed,
+        "students_no_username": job.students_no_username,
+        "total_matrix_cells": job.total_matrix_cells,
+        "cells_processed": job.cells_processed,
+        "verified_attended": job.verified_attended,
+        "verified_absent": job.verified_absent,
+        "pending_username": job.pending_username_count,
+        "not_found": job.not_found_count,
+        "source_unavailable": job.source_unavailable,
+        "data_pending": job.data_pending,
+        "duplicate_records": job.duplicate_records,
+        "fabricated_records": job.fabricated_records,
+        "integrity_pass": job.integrity_pass,
+        "started_at": job.started_at.isoformat() if job.started_at else None,
+        "completed_at": job.completed_at.isoformat() if job.completed_at else None
+    }
+
+
+@router.get("/forensic/matrix/{job_id}")
+def get_forensic_matrix(
+    job_id: str,
+    status_filter: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Data Quality Board"))
+) -> Dict[str, Any]:
+    """Retrieves paginated 300 × 100 matrix records for a forensic audit job."""
+    query = db.query(ForensicAuditRecord).filter(ForensicAuditRecord.job_id == job_id)
+
+    if status_filter:
+        query = query.filter(ForensicAuditRecord.verification_status == status_filter)
+
+    total_matching = query.count()
+    records = query.order_by(ForensicAuditRecord.student_id.asc(), ForensicAuditRecord.contest_number.asc()).offset(offset).limit(limit).all()
+
+    return {
+        "job_id": job_id,
+        "total_matching": total_matching,
+        "limit": limit,
+        "offset": offset,
+        "records": [
+            {
+                "id": r.id,
+                "student_id": r.student_id,
+                "contest_id": r.contest_id,
+                "contest_name": r.contest_name,
+                "contest_number": r.contest_number,
+                "verification_status": r.verification_status,
+                "attended": r.attended,
+                "problems_solved": r.problems_solved,
+                "score": r.score,
+                "contest_rank": r.contest_rank,
+                "contest_rating": r.contest_rating,
+                "q1_solved": r.q1_solved,
+                "q2_solved": r.q2_solved,
+                "q3_solved": r.q3_solved,
+                "q4_solved": r.q4_solved,
+                "evidence_hash": r.evidence_hash,
+                "source_evidence": r.source_evidence,
+                "resolved_at": r.resolved_at.isoformat() if r.resolved_at else None
+            }
+            for r in records
+        ]
+    }
+
+
+@router.get("/forensic/report/{job_id}")
+def get_forensic_report(
+    job_id: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Data Quality Board"))
+) -> Dict[str, Any]:
+    """Returns the complete formatted forensic audit report text for a job."""
+    job = db.query(ForensicAuditJob).filter(ForensicAuditJob.job_id == job_id).first()
+    if not job:
+        return {"error": f"Forensic Audit Job {job_id} not found"}
+
+    return {
+        "job_id": job.job_id,
+        "report_text": job.report_text,
+        "integrity_pass": job.integrity_pass
+    }
+

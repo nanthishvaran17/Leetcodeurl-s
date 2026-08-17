@@ -1068,8 +1068,163 @@ class LeetCodeSubmission(Base):
 
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# FORENSIC AUDIT — 300 STUDENTS × 100 CONTESTS
+# ─────────────────────────────────────────────────────────────────────────────
+
+class ForensicAuditJob(Base):
+    """
+    Tracks a bulk forensic audit run covering 300 students × 100 canonical contests.
+    One row per initiated audit job. Multiple jobs may exist; each is independent.
+    Checkpoint index enables safe resume after interruption.
+    """
+    __tablename__ = "forensic_audit_jobs"
+
+    id      = Column(Integer, primary_key=True, index=True)
+    job_id  = Column(String(100), unique=True, index=True, nullable=False)  # FAJ-YYYYMMDD-XXXX
+
+    # Job lifecycle
+    status  = Column(String(30), default="PENDING", index=True)   # PENDING/RUNNING/COMPLETED/PARTIAL/FAILED
+    phase   = Column(String(20), default="INGEST", index=True)    # INGEST / MATRIX / REPORT / DONE
+
+    # Student ingest counters (Phase 1)
+    total_students       = Column(Integer, default=0)
+    students_ingested    = Column(Integer, default=0)   # history fetch attempted
+    students_succeeded   = Column(Integer, default=0)   # fetch status = SUCCESS
+    students_failed      = Column(Integer, default=0)   # NOT_FOUND or SOURCE_UNAVAILABLE
+    students_no_username = Column(Integer, default=0)   # PENDING_USERNAME
+
+    # Matrix counters (Phase 2)
+    total_matrix_cells   = Column(Integer, default=0)   # expected = students × contests
+    cells_processed      = Column(Integer, default=0)
+    checkpoint_index     = Column(Integer, default=0)   # resume point
+
+    # Per-status counts (Phase 2 results)
+    verified_attended    = Column(Integer, default=0)
+    verified_absent      = Column(Integer, default=0)
+    data_pending         = Column(Integer, default=0)
+    source_unavailable   = Column(Integer, default=0)
+    not_found_count      = Column(Integer, default=0)
+    pending_username_count = Column(Integer, default=0)
+
+    # Integrity counters (must remain 0 for PASS)
+    duplicate_records    = Column(Integer, default=0)
+    fabricated_records   = Column(Integer, default=0)   # always 0 — verified by design
+
+    # Canonical contest info
+    contest_range_start  = Column(Integer, nullable=True)   # e.g. 416
+    contest_range_end    = Column(Integer, nullable=True)   # e.g. 515
+    total_contests       = Column(Integer, default=0)
+
+    # Timestamps
+    started_at           = Column(DateTime, default=datetime.datetime.utcnow)
+    phase1_completed_at  = Column(DateTime, nullable=True)
+    phase2_completed_at  = Column(DateTime, nullable=True)
+    completed_at         = Column(DateTime, nullable=True)
+    report_generated_at  = Column(DateTime, nullable=True)
+
+    # Final report
+    report_text          = Column(Text, nullable=True)
+    integrity_pass       = Column(Boolean, nullable=True)   # True=PASS, False=FAIL, None=PARTIAL
+    triggered_by         = Column(String(100), default="admin")
 
 
+class ForensicStudentIngestStatus(Base):
+    """
+    Phase 1 result: full userContestRankingHistory fetch status per student per job.
+    Only students with ingest_status='SUCCESS' can have VERIFIED_ABSENT determinations.
+
+    ingest_status values:
+      SUCCESS          - history fully fetched; absence can be determined for any contest
+      NOT_FOUND        - LeetCode profile does not exist for this username
+      SOURCE_UNAVAILABLE - API timeout / error after all retries
+      PENDING_USERNAME - student has no username configured
+    """
+    __tablename__ = "forensic_student_ingest_status"
+    __table_args__ = (
+        UniqueConstraint("job_id", "student_id", name="uix_forensic_ingest_student"),
+    )
+
+    id                    = Column(Integer, primary_key=True, index=True)
+    job_id                = Column(String(100), index=True, nullable=False)
+    student_id            = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+
+    raw_username          = Column(String(100), nullable=True)   # from Student.username
+    canonical_username    = Column(String(100), nullable=True)   # confirmed by LeetCode response
+
+    ingest_status         = Column(String(30), default="PENDING_USERNAME", index=True)
+    history_entries_count = Column(Integer, default=0)   # rows written to lc_contest_rating_history
+
+    error_message         = Column(Text, nullable=True)
+    retry_count           = Column(Integer, default=0)
+    ingest_started_at     = Column(DateTime, nullable=True)
+    ingest_completed_at   = Column(DateTime, nullable=True)
+
+    student = relationship("Student", backref="forensic_ingest_statuses")
+
+
+class ForensicAuditRecord(Base):
+    """
+    Single cell of the 300×100 forensic audit matrix.
+    Exactly one record per (student_id, contest_id) — guaranteed by unique constraint.
+
+    verification_status values:
+      VERIFIED_ATTENDED   - LeetCode history entry present with attended=True
+      VERIFIED_ABSENT     - Full history fetched; contest absent OR attended=False
+      NOT_FOUND           - LeetCode profile does not exist for this username
+      SOURCE_UNAVAILABLE  - API error/timeout; absence cannot be determined
+      DATA_PENDING        - History fetch not yet attempted for this student
+      PENDING_USERNAME    - Student has no LeetCode username configured
+
+    CRITICAL DATA INTEGRITY RULES:
+    - Q1-Q4 are always NULL: LeetCode history API does not return per-question results.
+      Never inferred from problems_solved. Never fabricated.
+    - contest_rank: stored directly from LeetCode 'ranking' field. NULL if not returned.
+    - contest_rating: stored directly from LeetCode 'rating' field. NULL if not returned.
+    - VERIFIED_ABSENT requires: ingest_status=SUCCESS AND contest not in history (or attended=False).
+    - SOURCE_UNAVAILABLE/TIMEOUT can NEVER become VERIFIED_ABSENT.
+    """
+    __tablename__ = "forensic_audit_records"
+    __table_args__ = (
+        UniqueConstraint("student_id", "contest_id", name="uix_forensic_student_contest"),
+    )
+
+    id              = Column(Integer, primary_key=True, index=True)
+    job_id          = Column(String(100), index=True, nullable=False)
+    student_id      = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+
+    # Canonical contest identity
+    contest_id      = Column(String(100), nullable=False, index=True)   # weekly-contest-515
+    contest_name    = Column(String(150), nullable=False)                # Weekly Contest 515
+    contest_number  = Column(Integer, nullable=False, index=True)        # 515
+    contest_date    = Column(String(20), nullable=True)                  # YYYY-MM-DD (Sunday)
+
+    # Honest audit status
+    verification_status = Column(String(30), nullable=False, index=True)
+
+    # Source-derived performance data — NULL when absent/unavailable; NEVER inferred
+    attended        = Column(Boolean, nullable=True)    # direct from LeetCode attended field
+    problems_solved = Column(Integer, nullable=True)    # direct from problemsSolved
+    score           = Column(Integer, nullable=True)    # direct from problemsSolved (no separate score in history API)
+    contest_rank    = Column(Integer, nullable=True)    # direct from ranking; NULL if not returned
+    contest_rating  = Column(Float, nullable=True)      # direct from rating; NULL if not returned
+    # Q1–Q4 are ALWAYS NULL — LeetCode history API does not provide per-question breakdown
+    q1_solved       = Column(Boolean, nullable=True)    # NULL = not available from source
+    q2_solved       = Column(Boolean, nullable=True)
+    q3_solved       = Column(Boolean, nullable=True)
+    q4_solved       = Column(Boolean, nullable=True)
+
+    # Forensic evidence chain
+    source_evidence = Column(JSON, nullable=True)        # raw LeetCode response fields
+    trace_id        = Column(String(100), nullable=True)
+    evidence_hash   = Column(String(64), nullable=True)  # SHA-256 of source_evidence JSON
+
+    # Timestamps
+    source_timestamp = Column(DateTime, nullable=True)  # LeetCode contest.startTime
+    resolved_at      = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    updated_at       = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    student = relationship("Student", backref="forensic_audit_records")
 
 
 

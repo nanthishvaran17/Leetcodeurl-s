@@ -509,12 +509,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
         </div>
 
-        {/* 5 Filter & Search Controls — Auto-Fitting Responsive Grid */}
+        {/* 5 Filter & Search Controls — Pixel-Perfect Uniform Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5 sm:gap-4">
           
           {/* 1. Department Filter */}
-          <div className="space-y-1.5">
-            <label htmlFor="department-filter" className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <div className="space-y-1.5 min-w-0">
+            <label htmlFor="department-filter" className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">
               Select Department Filter
             </label>
             <div className="relative">
@@ -525,21 +525,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   setSelectedDept(e.target.value);
                   setDisplayCount(32);
                 }}
-                className="w-full appearance-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-xs font-bold py-3 pl-3.5 pr-9 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 cursor-pointer"
+                className="w-full h-11 appearance-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-xs font-bold py-2.5 pl-3 pr-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 cursor-pointer truncate"
               >
                 <option value="all">All Departments</option>
                 <option value="cyber_security">Computer Science and Engineering (Cyber Security)</option>
                 <option value="iot">Computer Science and Engineering (IoT)</option>
               </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
-                <ChevronDown className="w-4 h-4" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-gray-400">
+                <ChevronDown className="w-3.5 h-3.5" />
               </div>
             </div>
           </div>
 
           {/* 2. Academic Year Filter */}
-          <div className="space-y-1.5">
-            <label htmlFor="academic-year-filter" className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <div className="space-y-1.5 min-w-0">
+            <label htmlFor="academic-year-filter" className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">
               Select Academic Year
             </label>
             <div className="relative">
@@ -550,22 +550,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   setYearLevel(e.target.value);
                   setDisplayCount(32);
                 }}
-                className="w-full appearance-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-sm font-bold py-3.5 pl-3.5 pr-9 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 cursor-pointer"
+                className="w-full h-11 appearance-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-xs font-bold py-2.5 pl-3 pr-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 cursor-pointer truncate"
               >
                 <option value="all">All Years</option>
                 <option value="II">II Year</option>
                 <option value="III">III Year</option>
                 <option value="IV">IV Year</option>
               </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
-                <ChevronDown className="w-4 h-4" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-gray-400">
+                <ChevronDown className="w-3.5 h-3.5" />
               </div>
             </div>
           </div>
 
           {/* 3. Name Search */}
-          <div className="space-y-1.5">
-            <label htmlFor="landing-name-search" className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <div className="space-y-1.5 min-w-0">
+            <label htmlFor="landing-name-search" className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">
               Search Student Name
             </label>
             <div className="relative">
@@ -580,13 +580,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   setNameSearch(e.target.value);
                   setDisplayCount(32);
                 }}
-                placeholder="Search by name, reg no, handle..."
-                className="w-full bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-sm font-bold py-3.5 pl-9 pr-9 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+                placeholder="Search name, reg no..."
+                className="w-full h-11 bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-xs font-bold py-2.5 pl-8 pr-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 truncate"
               />
               {nameSearch && (
                 <button
                   onClick={() => { setNameSearch(''); setDisplayCount(32); }}
-                  className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer"
+                  className="absolute inset-y-0 right-0 flex items-center px-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer"
                   title="Clear search"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -596,8 +596,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
 
           {/* 4. Performance Range Filter */}
-          <div className="space-y-1.5">
-            <label htmlFor="performance-range-filter" className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <div className="space-y-1.5 min-w-0">
+            <label htmlFor="performance-range-filter" className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">
               Performance Range
             </label>
             <div className="relative">
@@ -608,7 +608,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   setSolvedFilter(e.target.value);
                   setDisplayCount(32);
                 }}
-                className="w-full appearance-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-sm font-bold py-3.5 pl-3.5 pr-9 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 cursor-pointer"
+                className="w-full h-11 appearance-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-xs font-bold py-2.5 pl-3 pr-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 cursor-pointer truncate"
               >
                 <option value="all">All Students ({performanceCounts.total})</option>
                 <option value="500_plus">500+ ({performanceCounts.above500})</option>
@@ -617,15 +617,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <option value="1_100">1–100 ({performanceCounts.between1And100})</option>
                 <option value="not_started">Not Started ({performanceCounts.notStarted})</option>
               </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
-                <ChevronDown className="w-4 h-4" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-gray-400">
+                <ChevronDown className="w-3.5 h-3.5" />
               </div>
             </div>
           </div>
 
           {/* 5. Sort Students */}
-          <div className="space-y-1.5">
-            <label htmlFor="sort-students-filter" className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <div className="space-y-1.5 min-w-0">
+            <label htmlFor="sort-students-filter" className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">
               Sort Students
             </label>
             <div className="relative">
@@ -633,7 +633,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 id="sort-students-filter"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="w-full appearance-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-sm font-bold py-3.5 pl-3.5 pr-9 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 cursor-pointer"
+                className="w-full h-11 appearance-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-xs font-bold py-2.5 pl-3 pr-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 cursor-pointer truncate"
               >
                 <option value="top_solved">Top Solvers</option>
                 <option value="low_solved">Low Solvers</option>
