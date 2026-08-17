@@ -44,6 +44,35 @@ def generate_forensic_audit_pdf(db: Session, student_id: int, session_id: int, t
     if not trace_id:
         trace_id = f"trace_{hashlib.md5(f'{student.reg_no}:{session_id}:{datetime.datetime.utcnow().isoformat()}'.encode()).hexdigest()[:12]}"
 
+    # Auto-register CertificateRecord in Database for instant verification resolution
+    try:
+        from backend.models import CertificateRecord
+        existing_cert = db.query(CertificateRecord).filter(CertificateRecord.verification_id == trace_id).first()
+        if not existing_cert:
+            dept_name_str = student.department.name if student.department else "Computer Science and Engineering"
+            dept_code_str = student.department.code if student.department else "CSE"
+            c_record = CertificateRecord(
+                verification_id=trace_id,
+                certificate_code=trace_id,
+                certificate_type="Official Forensic Contest Verification",
+                student_id=student.id,
+                student_name=student.name,
+                register_no=student.reg_no,
+                department=dept_code_str,
+                department_name=dept_name_str,
+                program=f"B.E. {dept_name_str}",
+                recognition=f"Official Contest Verification: {session_obj.contest_name or 'Weekly Contest'}",
+                issue_date=session_obj.session_date or "16.08.2026",
+                status="VALID",
+                verification_url=f"https://leetcode-student-data.web.app/verify/{trace_id}",
+                created_by="Automated Forensic Engine"
+            )
+            db.add(c_record)
+            db.commit()
+    except Exception as db_err:
+        logger.warning(f"Note on CertificateRecord auto-registration: {db_err}")
+        db.rollback()
+
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer,
