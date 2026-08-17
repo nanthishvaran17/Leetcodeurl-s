@@ -1369,23 +1369,34 @@ export const WeeklyContestPage: React.FC = () => {
           </div>
         )}
 
-      {/* Interactive Report Preview Modal */}
+      {/* Interactive Report Preview Modal — Auto-fitted Viewport Card (Matches Student Modal) */}
       {showPreviewModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md overflow-y-auto animate-modal-backdrop">
-          <div className="bg-white dark:bg-navy-900 w-full max-w-6xl max-h-[calc(100vh-3rem)] rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 flex flex-col overflow-hidden my-auto">
-            {/* Modal Header */}
-            <div className="p-4 sm:p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between shrink-0">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-xl bg-brand-500/20 text-brand-300 border border-brand-400/30">
-                  <FileSpreadsheet className="w-5 h-5 text-amber-400" />
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md overflow-hidden animate-modal-backdrop"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowPreviewModal(false); }}
+        >
+          <div className="bg-white dark:bg-navy-900 w-full max-w-5xl max-h-[88vh] rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 flex flex-col overflow-hidden my-auto animate-modal-content">
+            
+            {/* ── A. SLEEK GRADIENT HEADER (Matches Image 2) ── */}
+            <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-950 text-white flex items-center justify-between shrink-0">
+              <div className="flex items-center space-x-3 min-w-0">
+                <div className="shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-black text-white text-base shadow-lg shadow-blue-500/30">
+                  <FileSpreadsheet className="w-5 h-5 text-white" />
                 </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-black text-white flex items-center space-x-2">
-                    <span>Report Live Preview</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-extrabold">Verified Dataset</span>
-                  </h3>
-                  <p className="text-xs text-gray-300 font-bold mt-0.5">
-                    {activeSessionObj?.contestName || 'Weekly Contest'} ({activeSessionObj?.sessionDate || 'Sunday Session'})
+                <div className="min-w-0">
+                  <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                    <h3 className="text-base sm:text-lg font-black text-white tracking-tight truncate">
+                      Report Live Preview
+                    </h3>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                      Verified Dataset
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-400/30 font-mono">
+                      {activeSessionObj?.contestName || 'Weekly Contest'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-blue-200/80 font-medium truncate mt-0.5">
+                    Nandha Engineering College • Session Date: {activeSessionObj?.sessionDate || 'Sunday Session'} • Showing {matrixRows.length} Students
                   </p>
                 </div>
               </div>
@@ -1393,76 +1404,96 @@ export const WeeklyContestPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowPreviewModal(false)}
-                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500 text-white transition-all text-xs font-bold flex items-center space-x-1 cursor-pointer"
+                aria-label="Close report preview"
+                className="shrink-0 ml-2 px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500 text-white transition-all font-bold text-xs flex items-center space-x-1.5 cursor-pointer shadow-sm"
               >
-                <span>✕</span>
+                <X className="w-4 h-4" />
                 <span>Close</span>
               </button>
             </div>
 
-            {/* Filter Metadata Badges Bar */}
-            <div className="px-6 py-3 bg-gray-100 dark:bg-navy-950 border-b border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-4 text-xs font-bold shrink-0">
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="text-gray-500">Active Filters:</span>
-                <span className="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 font-black">Dept: {selectedDeptFilter}</span>
-                <span className="px-2.5 py-1 rounded-lg bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 font-black">Year: {selectedYearFilter}</span>
-                <span className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-black">Attendance: {selectedAttendanceFilter}</span>
+            {/* ── B. COMPACT METRICS & FILTER SUMMARY BAR ── */}
+            <div className="px-4 py-2.5 bg-slate-50 dark:bg-navy-950 border-b border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-2.5 text-xs shrink-0">
+              {/* Quick Metrics Badges */}
+              <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                <span className="px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50 font-black text-[11px]">
+                  Roster: {matrixRows.length}
+                </span>
+                <span className="px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50 font-black text-[11px]">
+                  Public: {matrixRows.filter(r => r.participation_status === 'PUBLIC' || r.status === 'PUBLIC').length}
+                </span>
+                <span className="px-2.5 py-1 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50 font-black text-[11px]">
+                  Not Attended: {matrixRows.filter(r => r.participation_status === 'NOT_ATTENDED' || r.status === 'NOT_ATTENDED').length}
+                </span>
               </div>
-              <span className="text-brand-600 dark:text-brand-400 font-black">Showing {matrixRows.length} Roster Students</span>
+
+              {/* Active Filter Badges */}
+              <div className="flex items-center space-x-1.5 flex-wrap gap-y-1 text-[11px] font-bold text-gray-500">
+                <span>Filters:</span>
+                <span className="px-2 py-0.5 rounded-lg bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 font-bold">{selectedDeptFilter}</span>
+                <span className="px-2 py-0.5 rounded-lg bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 font-bold">{selectedYearFilter}</span>
+                <span className="px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold">{selectedAttendanceFilter}</span>
+              </div>
             </div>
 
-            {/* Modal Body: Scrollable Preview Table */}
-            <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0">
-              <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-x-auto shadow-inner">
-                <table className="w-full min-w-[850px] text-left text-xs">
-                  <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10">
+            {/* ── C. SCROLLABLE PREVIEW TABLE ── */}
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-4">
+              <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-x-auto shadow-sm">
+                <table className="w-full min-w-[780px] text-left text-xs">
+                  <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10 text-[11px]">
                     <tr>
-                      <th className="px-3 py-2.5 text-center">S.No</th>
-                      <th className="px-3 py-2.5">Reg No</th>
-                      <th className="px-3 py-2.5">Student Name</th>
-                      <th className="px-3 py-2.5 text-center">Dept</th>
-                      <th className="px-3 py-2.5 text-center">Year</th>
-                      <th className="px-3 py-2.5 text-center">Status</th>
-                      <th className="px-3 py-2.5 text-center">Contest Name</th>
-                      <th className="px-3 py-2.5 text-center">Q1</th>
-                      <th className="px-3 py-2.5 text-center">Q2</th>
-                      <th className="px-3 py-2.5 text-center">Q3</th>
-                      <th className="px-3 py-2.5 text-center">Q4</th>
-                      <th className="px-3 py-2.5 text-right">Contest Solved</th>
-                      <th className="px-3 py-2.5 text-right">Rank</th>
+                      <th className="px-3 py-2 text-center w-12">S.No</th>
+                      <th className="px-3 py-2">Reg No</th>
+                      <th className="px-3 py-2">Student Name</th>
+                      <th className="px-3 py-2 text-center">Dept</th>
+                      <th className="px-3 py-2 text-center">Year</th>
+                      <th className="px-3 py-2 text-center">Status</th>
+                      <th className="px-2 py-2 text-center w-10">Q1</th>
+                      <th className="px-2 py-2 text-center w-10">Q2</th>
+                      <th className="px-2 py-2 text-center w-10">Q3</th>
+                      <th className="px-2 py-2 text-center w-10">Q4</th>
+                      <th className="px-3 py-2 text-right">Contest Solved</th>
+                      <th className="px-3 py-2 text-right">Global Rank</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800/80">
                     {matrixRows.length === 0 ? (
                       <tr>
-                        <td colSpan={13} className="p-8 text-center text-gray-500 font-bold">
+                        <td colSpan={12} className="p-8 text-center text-gray-500 font-bold">
                           No matching student records found for the active filter selection.
                         </td>
                       </tr>
                     ) : (
                       matrixRows.map((r, idx) => {
-                        const isPublicAttended = r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'PUBLIC' || r.status === 'PUBLIC' || ['4_SOLVED','3_SOLVED','2_SOLVED','1_SOLVED','0_SOLVED'].includes(r.public_result);
-                        const isVirtualAttended = r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || ['4_SOLVED','3_SOLVED','2_SOLVED','1_SOLVED','0_SOLVED'].includes(r.virtual_result);
+                        const isPublicAttended = r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'PUBLIC' || r.status === 'PUBLIC';
+                        const isVirtualAttended = r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL';
                         const isAttended = isPublicAttended || isVirtualAttended;
                         return (
-                          <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-navy-800/50 transition-colors">
-                            <td className="px-3 py-2 text-center text-gray-400 font-mono">{idx + 1}</td>
-                            <td className="px-3 py-2 font-bold font-mono text-gray-900 dark:text-white">{r.reg_no}</td>
-                            <td className="px-3 py-2 font-semibold text-gray-800 dark:text-gray-200">{r.name}</td>
-                            <td className="px-3 py-2 text-center font-bold text-indigo-600 dark:text-indigo-400">{r.dept}</td>
-                            <td className="px-3 py-2 text-center text-gray-600 dark:text-gray-400 font-bold">{r.year}</td>
-                            <td className="px-3 py-2 text-center">
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${isPublicAttended ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : isVirtualAttended ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'}`}>
-                                {isPublicAttended ? 'PUBLIC' : isVirtualAttended ? 'VIRTUAL' : 'NOT ATTENDED'}
+                          <tr key={idx} className="hover:bg-blue-50/40 dark:hover:bg-navy-800/40 transition-colors">
+                            <td className="px-3 py-1.5 text-center text-gray-400 font-mono text-[11px]">{idx + 1}</td>
+                            <td className="px-3 py-1.5 font-bold font-mono text-gray-900 dark:text-white text-[11px]">{r.reg_no}</td>
+                            <td className="px-3 py-1.5 font-semibold text-gray-800 dark:text-gray-200">{r.name}</td>
+                            <td className="px-3 py-1.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{r.dept}</td>
+                            <td className="px-3 py-1.5 text-center text-gray-600 dark:text-gray-400 font-bold">{r.year}</td>
+                            <td className="px-3 py-1.5 text-center">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                                isPublicAttended 
+                                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' 
+                                  : isVirtualAttended 
+                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300' 
+                                    : r.status === 'USERNAME_NOT_FOUND'
+                                      ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                                      : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                              }`}>
+                                {isPublicAttended ? 'PUBLIC' : isVirtualAttended ? 'VIRTUAL' : r.status === 'USERNAME_NOT_FOUND' ? 'UNLINKED' : 'NOT ATTENDED'}
                               </span>
                             </td>
-                            <td className="px-3 py-2 text-center font-bold text-gray-600 dark:text-gray-300">{r.contest_name || activeSessionObj?.contestName || 'Weekly Contest'}</td>
-                            <td className="px-3 py-2 text-center font-bold">{isAttended ? (r.q1 === 1 || r.q1 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-gray-300 font-normal">—</span>}</td>
-                            <td className="px-3 py-2 text-center font-bold">{isAttended ? (r.q2 === 1 || r.q2 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-gray-300 font-normal">—</span>}</td>
-                            <td className="px-3 py-2 text-center font-bold">{isAttended ? (r.q3 === 1 || r.q3 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-gray-300 font-normal">—</span>}</td>
-                            <td className="px-3 py-2 text-center font-bold">{isAttended ? (r.q4 === 1 || r.q4 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-gray-300 font-normal">—</span>}</td>
-                            <td className="px-3 py-2 text-right font-black text-emerald-600 dark:text-emerald-400">{isAttended ? (r.total_solved ?? '—') : '—'}</td>
-                            <td className="px-3 py-2 text-right font-bold text-gray-600 dark:text-gray-400">{isAttended ? (r.rank || r.contest_rank || '—') : '—'}</td>
+                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q1 === 1 || r.q1 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-gray-300 font-normal">—</span>}</td>
+                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q2 === 1 || r.q2 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-gray-300 font-normal">—</span>}</td>
+                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q3 === 1 || r.q3 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-gray-300 font-normal">—</span>}</td>
+                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q4 === 1 || r.q4 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-gray-300 font-normal">—</span>}</td>
+                            <td className="px-3 py-1.5 text-right font-black text-emerald-600 dark:text-emerald-400">{isAttended ? (r.total_solved ?? '—') : '—'}</td>
+                            <td className="px-3 py-1.5 text-right font-bold text-gray-600 dark:text-gray-400">{isAttended ? (r.rank || r.contest_rank || '—') : '—'}</td>
                           </tr>
                         );
                       })
@@ -1472,23 +1503,43 @@ export const WeeklyContestPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Modal Footer: Direct Export Action Buttons */}
-            <div className="p-4 sm:p-5 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-4 shrink-0">
-              <span className="text-xs text-gray-500 font-semibold">
-                Official Institutional Dataset
+            {/* ── D. CLEAN COMPACT ACTION FOOTER (Matches Image 2) ── */}
+            <div className="p-3.5 sm:p-4 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
+              <span className="text-[11px] text-gray-500 font-bold font-mono">
+                Nandha Engineering College • LeetCode Tracker
               </span>
-              <div className="flex items-center space-x-2">
-                <button onClick={() => downloadReportFile('excel')} className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer">
-                  Export Excel (.xlsx)
+              <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                <button 
+                  onClick={() => downloadReportFile('excel')} 
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm flex items-center space-x-1"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5" />
+                  <span>Excel (.xlsx)</span>
                 </button>
-                <button onClick={() => downloadReportFile('pdf')} className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer">
-                  Export PDF (.pdf)
+                <button 
+                  onClick={() => downloadReportFile('pdf')} 
+                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm flex items-center space-x-1"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>PDF (.pdf)</span>
                 </button>
-                <button onClick={() => downloadReportFile('word')} className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer">
-                  Export Word (.docx)
+                <button 
+                  onClick={() => downloadReportFile('word')} 
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm flex items-center space-x-1"
+                >
+                  <span>Word (.docx)</span>
                 </button>
-                <button onClick={() => downloadReportFile('zip')} className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer">
-                  Export All (.zip)
+                <button 
+                  onClick={() => downloadReportFile('zip')} 
+                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm"
+                >
+                  <span>All (.zip)</span>
+                </button>
+                <button 
+                  onClick={() => setShowPreviewModal(false)} 
+                  className="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-black transition-all cursor-pointer"
+                >
+                  Done
                 </button>
               </div>
             </div>

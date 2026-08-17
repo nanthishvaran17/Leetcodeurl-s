@@ -83,27 +83,27 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-md overflow-hidden animate-fade-in"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md overflow-hidden animate-fade-in"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-white dark:bg-navy-900 w-full max-w-6xl max-h-[calc(100vh-2.5rem)] rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 flex flex-col overflow-hidden my-auto animate-modal-content">
+      <div className="bg-white dark:bg-navy-900 w-full max-w-5xl max-h-[88vh] rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 flex flex-col overflow-hidden my-auto animate-modal-content">
         
-        {/* ── 1. COMPACT HEADER ── */}
-        <div className="p-4 sm:p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between shrink-0">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-xl bg-brand-500/20 text-brand-300 border border-brand-400/30">
-              <FileSpreadsheet className="w-5 h-5 text-amber-400" />
+        {/* ── 1. SLEEK GRADIENT HEADER (Matches Image 2) ── */}
+        <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-950 text-white flex items-center justify-between shrink-0">
+          <div className="flex items-center space-x-3 min-w-0">
+            <div className="shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-black text-white text-base shadow-lg shadow-blue-500/30">
+              <FileSpreadsheet className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <h2 className="font-black text-base sm:text-lg text-white flex items-center space-x-2">
-                <span>{report.title}</span>
+            <div className="min-w-0">
+              <h2 className="font-black text-base sm:text-lg text-white flex items-center space-x-2 truncate">
+                <span className="truncate">{report.title}</span>
                 {report.dataStatus === 'READY' && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-extrabold">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-extrabold shrink-0">
                     🟢 READY
                   </span>
                 )}
               </h2>
-              <p className="text-xs text-gray-300 font-bold mt-0.5">
+              <p className="text-xs text-blue-200/80 font-medium mt-0.5 truncate">
                 Report ID: <span className="font-mono text-amber-300">{report.reportId}</span> • Generated: {new Date(report.generatedAt).toLocaleString()}
               </p>
             </div>
@@ -113,9 +113,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
             type="button"
             onClick={onClose}
             aria-label="Close report preview"
-            className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500 text-white transition-all font-black text-xs flex items-center space-x-1 cursor-pointer"
+            className="shrink-0 ml-2 px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500 text-white transition-all font-bold text-xs flex items-center space-x-1.5 cursor-pointer shadow-sm"
           >
-            <span>✕</span>
+            <X className="w-4 h-4" />
             <span>Close</span>
           </button>
         </div>
