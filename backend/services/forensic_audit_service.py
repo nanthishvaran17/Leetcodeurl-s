@@ -99,11 +99,22 @@ def clean_student_username(student: Student) -> Optional[str]:
     return raw
 
 
+def get_checked_out_connections() -> int:
+    """Returns number of currently checked-out DB connections from engine pool."""
+    try:
+        if hasattr(engine.pool, "checkedout"):
+            return engine.pool.checkedout()
+        return 0
+    except Exception:
+        return 0
+
+
 async def execute_phase1_ingest(job_id: str, db: Session) -> Dict[str, Any]:
     """
     Phase 1 — Student History Ingest (via LeetCode GraphQL).
     Fetches full userContestRankingHistory for every active student.
-    Upserts into lc_contest_rating_history and records ForensicStudentIngestStatus.
+    Separates HTTP concurrency (6) from DB write concurrency (3).
+    Zero DB connection checkout during network fetches.
     """
     job = db.query(ForensicAuditJob).filter(ForensicAuditJob.job_id == job_id).first()
     if not job:
@@ -120,7 +131,9 @@ async def execute_phase1_ingest(job_id: str, db: Session) -> Dict[str, Any]:
     job.total_students = len(students)
     db.commit()
 
-    sem = asyncio.Semaphore(6)
+    http_sem = asyncio.Semaphore(6)
+    db_sem = asyncio.Semaphore(3)
+
     limits = httpx.Limits(max_connections=20, max_keepalive_connections=10)
     timeout = httpx.Timeout(15.0, connect=5.0)
 
@@ -134,11 +147,69 @@ async def execute_phase1_ingest(job_id: str, db: Session) -> Dict[str, Any]:
 
     async with httpx.AsyncClient(headers=HEADERS, limits=limits, timeout=timeout, follow_redirects=True) as client:
 
-        async def _ingest_student(student: Student):
-            async with sem:
-                clean_u = clean_student_username(student)
+        async def _ingest_student(student: Student) -> str:
+            clean_u = clean_student_username(student)
 
-                # Local DB session per worker (max 6 concurrent)
+            # Checkpoint check: short DB read
+            async with db_sem:
+                local_db = SessionLocal()
+                try:
+                    existing_st = local_db.query(ForensicStudentIngestStatus).filter(
+                        ForensicStudentIngestStatus.job_id == job_id,
+                        ForensicStudentIngestStatus.student_id == student.id,
+                    ).first()
+                    if existing_st and existing_st.ingest_status == "SUCCESS":
+                        return "SUCCESS"
+                finally:
+                    local_db.close()
+
+            if not clean_u:
+                async with db_sem:
+                    local_db = SessionLocal()
+                    try:
+                        ingest_st = local_db.query(ForensicStudentIngestStatus).filter(
+                            ForensicStudentIngestStatus.job_id == job_id,
+                            ForensicStudentIngestStatus.student_id == student.id,
+                        ).first()
+                        if not ingest_st:
+                            ingest_st = ForensicStudentIngestStatus(
+                                job_id=job_id,
+                                student_id=student.id,
+                                raw_username=student.username,
+                            )
+                            local_db.add(ingest_st)
+                        ingest_st.ingest_status = "PENDING_USERNAME"
+                        ingest_st.error_message = "No valid LeetCode username configured"
+                        ingest_st.ingest_completed_at = datetime.datetime.utcnow()
+                        local_db.commit()
+                        return "PENDING_USERNAME"
+                    finally:
+                        local_db.close()
+
+            # 1. NETWORK FETCH (HTTP Semaphore = 6, NO DB CONNECTION HELD)
+            response_json = None
+            fetch_success = False
+            error_reason = None
+
+            async with http_sem:
+                await asyncio.sleep(0.15)  # 150ms rate limit delay
+                for attempt in range(3):
+                    try:
+                        resp = await client.post(
+                            GRAPHQL_URL,
+                            json={"query": COMPREHENSIVE_QUERY, "variables": {"username": clean_u}},
+                        )
+                        if resp.status_code == 200:
+                            response_json = resp.json()
+                            fetch_success = True
+                            break
+                    except Exception as ex:
+                        error_reason = str(ex)
+                        logger.warning(f"[INGEST_RETRY] Student {student.id} ({clean_u}) attempt {attempt+1} failed: {ex}")
+                        await asyncio.sleep(0.5 * (2 ** attempt))
+
+            # 2. DATABASE WRITE (DB Semaphore = 3, SHORT-LIVED TRANSACTION)
+            async with db_sem:
                 local_db = SessionLocal()
                 try:
                     ingest_st = local_db.query(ForensicStudentIngestStatus).filter(
@@ -155,35 +226,9 @@ async def execute_phase1_ingest(job_id: str, db: Session) -> Dict[str, Any]:
 
                     ingest_st.ingest_started_at = datetime.datetime.utcnow()
 
-                    if not clean_u:
-                        ingest_st.ingest_status = "PENDING_USERNAME"
-                        ingest_st.error_message = "No valid LeetCode username configured"
-                        ingest_st.ingest_completed_at = datetime.datetime.utcnow()
-                        local_db.commit()
-                        return "PENDING_USERNAME"
-
-                    await asyncio.sleep(0.15)  # 150ms delay per student
-                    response_json = None
-                    fetch_success = False
-
-                    for attempt in range(3):
-                        ingest_st.retry_count = attempt
-                        try:
-                            resp = await client.post(
-                                GRAPHQL_URL,
-                                json={"query": COMPREHENSIVE_QUERY, "variables": {"username": clean_u}},
-                            )
-                            if resp.status_code == 200:
-                                response_json = resp.json()
-                                fetch_success = True
-                                break
-                        except Exception as ex:
-                            logger.warning(f"[INGEST_RETRY] Student {student.id} ({clean_u}) attempt {attempt+1} failed: {ex}")
-                            await asyncio.sleep(0.5 * (2 ** attempt))
-
                     if not fetch_success or not response_json:
                         ingest_st.ingest_status = "SOURCE_UNAVAILABLE"
-                        ingest_st.error_message = "GraphQL network fetch failed after 3 retries"
+                        ingest_st.error_message = error_reason or "GraphQL network fetch failed after 3 retries"
                         ingest_st.ingest_completed_at = datetime.datetime.utcnow()
                         local_db.commit()
                         return "SOURCE_UNAVAILABLE"
@@ -203,7 +248,6 @@ async def execute_phase1_ingest(job_id: str, db: Session) -> Dict[str, Any]:
                     history_entries = data.get("userContestRankingHistory") or []
                     ingest_st.history_entries_count = len(history_entries)
 
-                    # Upsert ALL history entries into lc_contest_rating_history
                     for h in history_entries:
                         c_info = h.get("contest") or {}
                         c_title = c_info.get("title")
@@ -265,9 +309,10 @@ async def execute_phase1_ingest(job_id: str, db: Session) -> Dict[str, Any]:
                 finally:
                     local_db.close()
 
-        # Run all student ingests
+        # Run all student ingests using return_exceptions=True to prevent asyncio.gather crash
         tasks = [_ingest_student(s) for s in students]
-        results = await asyncio.gather(*tasks)
+        raw_results = await asyncio.gather(*tasks, return_exceptions=True)
+        results = [r if isinstance(r, str) else "SOURCE_UNAVAILABLE" for r in raw_results]
 
         # Update Job Counters
         succeeded = results.count("SUCCESS")

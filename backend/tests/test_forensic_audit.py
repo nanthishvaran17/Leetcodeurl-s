@@ -132,6 +132,23 @@ class TestForensicAuditEngine(unittest.TestCase):
         self.assertEqual(att_rec.contest_rank, 1250)
         self.assertEqual(att_rec.contest_rating, 1650.5)
 
+    def test_database_connection_stress_and_session_leak_prevention(self):
+        import asyncio
+        from backend.services.forensic_audit_service import execute_phase1_ingest, get_checked_out_connections
+
+        job_id = "STRESS-FAJ-001"
+        job = ForensicAuditJob(job_id=job_id, status="RUNNING", phase="INGEST")
+        self.session.add(job)
+        self.session.commit()
+
+        # Run Phase 1 on memory DB
+        asyncio.run(execute_phase1_ingest(job_id, self.session))
+
+        # Check checked out connections is 0
+        checked_out = get_checked_out_connections()
+        self.assertEqual(checked_out, 0, f"Expected 0 checked out DB connections, found {checked_out}")
+
 
 if __name__ == "__main__":
     unittest.main()
+

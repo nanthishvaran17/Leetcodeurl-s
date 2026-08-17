@@ -43419,3 +43419,57 @@ Action: Request blocked
 [2026-08-17 07:56:19,494] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
 [2026-08-17 07:56:19,499] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
 [2026-08-17 07:56:20,987] [ERROR] [leetcode_tracker]: [INGEST_ERROR] Student 86 ingest failed: QueuePool limit of size 5 overflow 10 reached, connection timed out, timeout 30.00 (Background on this error at: https://sqlalche.me/e/20/3o7r)
+[2026-08-17 07:56:49,497] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-17 07:56:49,502] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-17 07:56:50,997] [ERROR] [leetcode_tracker]: [INGEST_ERROR] Student 87 ingest failed: QueuePool limit of size 5 overflow 10 reached, connection timed out, timeout 30.00 (Background on this error at: https://sqlalche.me/e/20/3o7r)
+[2026-08-17 07:57:19,506] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-17 07:57:19,509] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-17 07:57:21,007] [ERROR] [leetcode_tracker]: [INGEST_ERROR] Student 88 ingest failed: QueuePool limit of size 5 overflow 10 reached, connection timed out, timeout 30.00 (Background on this error at: https://sqlalche.me/e/20/3o7r)
+[2026-08-17 07:57:35,132] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-17 07:57:35,132] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-17 07:57:38,345] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-17 07:57:38,347] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-17 07:57:38,703] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-17 07:57:38,705] [INFO] [leetcode_tracker]: Database contains 300 existing student records. Preserving database single source of truth (skipping auto-seeding).
+[2026-08-17 07:57:38,714] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-17 07:57:38,717] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-17 07:57:38,722] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-17 07:57:38,723] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-17 07:57:38,948] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 07:57
+[2026-08-17 07:57:40,620] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-17 07:57:40,644] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-17 07:57:49,505] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-17 07:57:49,515] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-17 07:57:50,846] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-17 07:57:50,847] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-17 07:57:51,015] [ERROR] [leetcode_tracker]: [INGEST_ERROR] Student 89 ingest failed: QueuePool limit of size 5 overflow 10 reached, connection timed out, timeout 30.00 (Background on this error at: https://sqlalche.me/e/20/3o7r)
+[2026-08-17 07:58:21,021] [ERROR] [leetcode_tracker]: [INGEST_ERROR] Student 90 ingest failed: QueuePool limit of size 5 overflow 10 reached, connection timed out, timeout 30.00 (Background on this error at: https://sqlalche.me/e/20/3o7r)
+[2026-08-17 07:58:21,214] [INFO] [leetcode_tracker]: Starting Forensic Audit Job FAJ-20260817-075821 (Phase 1 Ingest)...
+[2026-08-17 07:58:45,194] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-17 07:58:45,199] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-17 07:58:45,547] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-17 07:58:45,550] [INFO] [leetcode_tracker]: Database contains 300 existing student records. Preserving database single source of truth (skipping auto-seeding).
+[2026-08-17 07:58:45,557] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-17 07:58:45,561] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-17 07:58:45,566] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-17 07:58:45,566] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-17 07:58:46,305] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 07:58
+[2026-08-17 07:58:47,533] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-17 07:58:47,545] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-17 07:58:47,585] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-17 07:58:47,601] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-17 07:58:47,647] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-17 07:58:47,734] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-17 07:58:47,988] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-17 07:58:48,074] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-17 07:58:49,953] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-17 07:58:50,116] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-17 07:58:51,035] [ERROR] [leetcode_tracker]: [INGEST_ERROR] Student 91 ingest failed: QueuePool limit of size 5 overflow 10 reached, connection timed out, timeout 30.00 (Background on this error at: https://sqlalche.me/e/20/3o7r)
+[2026-08-17 07:59:05,125] [INFO] [leetcode_tracker]: Forensic Audit Job FAJ-20260817-075821 Phase 1 complete. Starting Phase 2 Matrix Resolution...
+[2026-08-17 07:59:19,514] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-17 07:59:19,535] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-17 07:59:21,041] [ERROR] [leetcode_tracker]: [INGEST_ERROR] Student 92 ingest failed: QueuePool limit of size 5 overflow 10 reached, connection timed out, timeout 30.00 (Background on this error at: https://sqlalche.me/e/20/3o7r)
+[2026-08-17 07:59:35,352] [INFO] [leetcode_tracker]: Forensic Audit Job FAJ-20260817-075821 completed successfully!
+[2026-08-17 07:59:49,499] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-17 07:59:49,502] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-17 07:59:51,057] [ERROR] [leetcode_tracker]: [INGEST_ERROR] Student 93 ingest failed: QueuePool limit of size 5 overflow 10 reached, connection timed out, timeout 30.00 (Background on this error at: https://sqlalche.me/e/20/3o7r)
