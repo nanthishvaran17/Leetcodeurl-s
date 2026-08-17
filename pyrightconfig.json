@@ -1,0 +1,21 @@
+{
+  "include": [
+    "backend"
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    ".venv",
+    "venv",
+    "data",
+    "dist",
+    "logs",
+    "reports",
+    "frontend"
+  ],
+  "reportMissingImports": false,
+  "reportMissingTypeStubs": false,
+  "reportUnknownVariableType": false,
+  "reportUnknownMemberType": false,
+  "reportGeneralTypeIssues": false
+}
