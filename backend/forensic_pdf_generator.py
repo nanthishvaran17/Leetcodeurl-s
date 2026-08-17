@@ -350,7 +350,7 @@ def generate_forensic_audit_pdf(db: Session, student_id: int, session_id: int, t
 
     # 7. Institutional Signatures & QR Code
     qr = qrcode.QRCode(box_size=2, border=1)
-    qr.add_data(f"https://nandhaengg.org/verify-contest/{trace_id}?reg_no={student.reg_no}&contest={session_id}")
+    qr.add_data(f"https://leetcode-student-data.web.app/verify/{trace_id}?reg={student.reg_no}&contest={session_id}")
     qr.make(fit=True)
     qr_img = qr.make_image(fill_color="#0F172A", back_color="white")
     qr_buf = io.BytesIO()

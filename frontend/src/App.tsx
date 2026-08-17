@@ -30,7 +30,7 @@ import { useAuth } from './context/AuthContext';
 export const App: React.FC = () => {
   // Direct Public Certificate Verification Route Interceptor
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
-  const verifyPrefixes = ['/verify/', '/verify-certificate/', '/certificate/verify/', '/certificates/verify/'];
+  const verifyPrefixes = ['/verify/', '/verify-certificate/', '/certificate/verify/', '/certificates/verify/', '/verify-contest/'];
   const matchedPrefix = verifyPrefixes.find(p => pathname.startsWith(p));
   if (matchedPrefix) {
     const rawCode = pathname.replace(matchedPrefix, '');
