@@ -13,7 +13,8 @@ from backend.services.weekly_session_manager import (
     seed_institutional_historical_sessions,
     trigger_start_snapshot_0800,
     trigger_final_snapshot_0930,
-    sunday_live_engine
+    sunday_live_engine,
+    get_active_verification_windows
 )
 from backend.services.contest_merger import retry_failed_student_fetches
 from backend.services.contest_discovery import (
@@ -42,6 +43,14 @@ def parse_session_date(date_str: str) -> Optional[datetime.date]:
         except ValueError:
             pass
     return None
+
+@router.get("/verification-windows")
+def list_verification_windows(db: Session = Depends(get_db)):
+    """
+    Returns active bounded verification windows (3-day duration per contest).
+    Observability endpoint satisfying Addendum Spec #4.
+    """
+    return get_active_verification_windows(db)
 
 @router.get("/upcoming-session")
 def get_upcoming_session_info(db: Session = Depends(get_db)):

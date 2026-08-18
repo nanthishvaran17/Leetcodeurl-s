@@ -204,8 +204,22 @@ def build_canonical_contest_dataset(
             rank_val = None
             rating_val = None
 
+        # Confidence tier based on evidence path
+        if canon_status == "PUBLIC" and rank_val is not None:
+            confidence_val = "HIGH"
+        elif canon_status == "VIRTUAL" and solved_val is not None and solved_val > 0:
+            confidence_val = "HIGH"
+        elif canon_status == "NOT_ATTENDED":
+            confidence_val = "HIGH"
+        elif canon_status in ("NOT_VERIFIED", "PENDING"):
+            confidence_val = "MEDIUM"
+        elif canon_status == "NOT_VERIFIED_FINAL":
+            confidence_val = "LOW"
+        else:
+            confidence_val = "LOW"
+
         # Track quality issues for non-standard statuses
-        if canon_status in ("SOURCE_UNAVAILABLE", "AUTH_REQUIRED", "USERNAME_NOT_FOUND", "FETCH_ERROR", "DATA_MISMATCH"):
+        if canon_status in ("SOURCE_ERROR", "CONFLICT", "SOURCE_UNAVAILABLE", "AUTH_REQUIRED", "USERNAME_NOT_FOUND", "FETCH_ERROR", "DATA_MISMATCH"):
             data_quality_issues.append({
                 "reg_no": reg_no,
                 "name": name,
@@ -232,7 +246,7 @@ def build_canonical_contest_dataset(
             if canon_status == "PUBLIC": dept_stats_map[dept_norm]["public"] += 1
             elif canon_status == "VIRTUAL": dept_stats_map[dept_norm]["virtual"] += 1
             elif canon_status == "NOT_ATTENDED": dept_stats_map[dept_norm]["not_attended"] += 1
-            elif canon_status == "PENDING": dept_stats_map[dept_norm]["pending"] += 1
+            elif canon_status in ("NOT_VERIFIED", "NOT_VERIFIED_FINAL", "PENDING"): dept_stats_map[dept_norm]["pending"] += 1
             else: dept_stats_map[dept_norm]["errors"] += 1
 
             if is_participant and solved_val:
@@ -257,7 +271,7 @@ def build_canonical_contest_dataset(
             if canon_status == "PUBLIC": year_stats_map[yr_norm]["public"] += 1
             elif canon_status == "VIRTUAL": year_stats_map[yr_norm]["virtual"] += 1
             elif canon_status == "NOT_ATTENDED": year_stats_map[yr_norm]["not_attended"] += 1
-            elif canon_status == "PENDING": year_stats_map[yr_norm]["pending"] += 1
+            elif canon_status in ("NOT_VERIFIED", "NOT_VERIFIED_FINAL", "PENDING"): year_stats_map[yr_norm]["pending"] += 1
             else: year_stats_map[yr_norm]["errors"] += 1
 
             if is_participant and solved_val:
@@ -288,6 +302,7 @@ def build_canonical_contest_dataset(
             "hard_solved": student.stats.hard_solved if student.stats else None,
             "status": canon_status,
             "participation_status": canon_status,
+            "confidence": confidence_val,
             "contest_id": session_obj.contest_id,
             "contest_name": session_obj.contest_name,
             "session_date": session_obj.session_date,
@@ -333,8 +348,12 @@ def build_canonical_contest_dataset(
             filtered_rows = [r for r in filtered_rows if r["status"] == "VIRTUAL"]
         elif attendance in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED"):
             filtered_rows = [r for r in filtered_rows if r["status"] == "NOT_ATTENDED"]
+        elif attendance in ("NOT_VERIFIED", "PENDING"):
+            filtered_rows = [r for r in filtered_rows if r["status"] in ("NOT_VERIFIED", "PENDING")]
+        elif attendance in ("NOT_VERIFIED_FINAL", "FINAL_UNVERIFIED"):
+            filtered_rows = [r for r in filtered_rows if r["status"] == "NOT_VERIFIED_FINAL"]
         elif attendance in ("UNKNOWN", "DATA_ERROR", "ERROR"):
-            filtered_rows = [r for r in filtered_rows if r["status"] not in ("PUBLIC", "VIRTUAL", "NOT_ATTENDED")]
+            filtered_rows = [r for r in filtered_rows if r["status"] not in ("PUBLIC", "VIRTUAL", "NOT_ATTENDED", "NOT_VERIFIED", "NOT_VERIFIED_FINAL")]
         else:
             filtered_rows = [r for r in filtered_rows if r["status"] == attendance]
 
@@ -360,18 +379,24 @@ def build_canonical_contest_dataset(
             f"YearSum: {sum_year_totals} | StatusSum: {sum_status_totals}"
         )
 
-    # 5. Global Metrics & Participation Percentage
-    public_cnt = status_counts["PUBLIC"]
-    virtual_cnt = status_counts["VIRTUAL"]
-    not_att_cnt = status_counts["NOT_ATTENDED"]
-    pending_cnt = status_counts["PENDING"]
-    total_errors_cnt = (
-        status_counts["SOURCE_UNAVAILABLE"] + 
-        status_counts["AUTH_REQUIRED"] + 
-        status_counts["USERNAME_NOT_FOUND"] + 
-        status_counts["FETCH_ERROR"] + 
-        status_counts["DATA_MISMATCH"]
+    # 5. Global Metrics & Explicit Data Errors Contract
+    public_cnt = status_counts.get("PUBLIC", 0)
+    virtual_cnt = status_counts.get("VIRTUAL", 0)
+    not_att_cnt = status_counts.get("NOT_ATTENDED", 0)
+    not_verified_cnt = status_counts.get("NOT_VERIFIED", 0) + status_counts.get("PENDING", 0)
+    not_verified_final_cnt = status_counts.get("NOT_VERIFIED_FINAL", 0)
+    conflict_cnt = status_counts.get("CONFLICT", 0)
+    source_error_cnt = (
+        status_counts.get("SOURCE_ERROR", 0) +
+        status_counts.get("SOURCE_UNAVAILABLE", 0) + 
+        status_counts.get("AUTH_REQUIRED", 0) + 
+        status_counts.get("USERNAME_NOT_FOUND", 0) + 
+        status_counts.get("FETCH_ERROR", 0) + 
+        status_counts.get("DATA_MISMATCH", 0)
     )
+
+    # STRICT ADDENDUM CONTRACT: Data Errors (dashboard) = count(CONFLICT) + count(SOURCE_ERROR)
+    total_errors_cnt = conflict_cnt + source_error_cnt
 
     # EXACT MANDATORY PARTICIPATION FORMULA: ((PUBLIC + VIRTUAL) / TOTAL) * 100
     part_pct = round(((public_cnt + virtual_cnt) / total_master_count * 100), 2) if total_master_count > 0 else 0.0
@@ -390,13 +415,19 @@ def build_canonical_contest_dataset(
         "totalStudents": total_master_count,
         "totalCount": total_master_count,
         "officialAttended": public_cnt,
+        "actual": public_cnt,
         "public": public_cnt,
         "virtualAttended": virtual_cnt,
         "virtual": virtual_cnt,
         "notAttended": not_att_cnt,
-        "pending": pending_cnt,
+        "notVerified": not_verified_cnt,
+        "notVerifiedFinal": not_verified_final_cnt,
+        "conflict": conflict_cnt,
+        "sourceError": source_error_cnt,
+        "pending": not_verified_cnt,
         "errors": total_errors_cnt,
         "totalErrors": total_errors_cnt,
+        "dataErrors": total_errors_cnt,
         "participationPercentage": part_pct,
         "participation_pct": part_pct,
         "isProvisional": is_provisional,

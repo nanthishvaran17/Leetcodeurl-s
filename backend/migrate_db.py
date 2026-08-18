@@ -18,6 +18,57 @@ def run_db_migrations():
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
+        # Migrate official_weekly_snapshots if unique constraint exists
+        try:
+            cursor.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='official_weekly_snapshots'")
+            row = cursor.fetchone()
+            if row and ("UNIQUE (session_id)" in row[0] or "UNIQUE(session_id)" in row[0] or "session_id INTEGER UNIQUE" in row[0]):
+                cursor.execute("ALTER TABLE official_weekly_snapshots RENAME TO official_weekly_snapshots_old")
+                cursor.execute("""
+                CREATE TABLE official_weekly_snapshots (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    session_id INTEGER NOT NULL,
+                    contest_id VARCHAR(100) NOT NULL,
+                    contest_name VARCHAR(150) NOT NULL,
+                    contest_date VARCHAR(20) NOT NULL,
+                    finalized_at DATETIME,
+                    dataset JSON NOT NULL,
+                    dataset_hash VARCHAR(100) NOT NULL,
+                    student_count INTEGER DEFAULT 273,
+                    error_count INTEGER DEFAULT 0,
+                    is_superseded BOOLEAN DEFAULT 0,
+                    superseded_by_id INTEGER,
+                    FOREIGN KEY(session_id) REFERENCES weekly_sessions (id)
+                )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_official_weekly_snapshots_session_id ON official_weekly_snapshots (session_id)")
+                cursor.execute("""
+                INSERT INTO official_weekly_snapshots (id, session_id, contest_id, contest_name, contest_date, finalized_at, dataset, dataset_hash, student_count, error_count, is_superseded, superseded_by_id)
+                SELECT id, session_id, contest_id, contest_name, contest_date, finalized_at, dataset, dataset_hash, student_count, error_count, 0, NULL
+                FROM official_weekly_snapshots_old
+                """)
+                cursor.execute("DROP TABLE official_weekly_snapshots_old")
+                conn.commit()
+                print("[DB Migration] Rebuilt official_weekly_snapshots without unique constraint for versioning.")
+        except Exception as _snap_err:
+            print(f"[DB Migration] Snapshot migration note: {_snap_err}")
+
+        # Register Database-level Snapshot Immutability Trigger
+        try:
+            cursor.execute("""
+            CREATE TRIGGER IF NOT EXISTS trg_prevent_snapshot_mutation
+            BEFORE UPDATE OF dataset, dataset_hash, student_count, error_count ON official_weekly_snapshots
+            FOR EACH ROW
+            WHEN OLD.dataset_hash IS NOT NULL AND NEW.is_superseded = OLD.is_superseded AND NEW.superseded_by_id IS OLD.superseded_by_id
+            BEGIN
+                SELECT RAISE(ABORT, 'SNAPSHOT_IMMUTABLE: Finalized snapshot cannot be modified in-place. Use snapshot_supersedes() instead.');
+            END;
+            """)
+            conn.commit()
+            print("[DB Migration] Registered SQLite snapshot immutability trigger in migrate_db.py.")
+        except Exception as _trg_e:
+            print(f"[DB Migration] Trigger note: {_trg_e}")
+
         try:
             cursor.execute("ALTER TABLE email_otp_records ADD COLUMN request_ip_hash VARCHAR(128);")
         except Exception:

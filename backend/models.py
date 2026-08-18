@@ -264,7 +264,7 @@ class OfficialWeeklySnapshot(Base):
     __tablename__ = "official_weekly_snapshots"
 
     id = Column(Integer, primary_key=True, index=True)
-    session_id = Column(Integer, ForeignKey("weekly_sessions.id"), unique=True, nullable=False)
+    session_id = Column(Integer, ForeignKey("weekly_sessions.id"), index=True, nullable=False)
     contest_id = Column(String(100), nullable=False)
     contest_name = Column(String(150), nullable=False)
     contest_date = Column(String(20), nullable=False)
@@ -273,6 +273,8 @@ class OfficialWeeklySnapshot(Base):
     dataset_hash = Column(String(100), nullable=False)
     student_count = Column(Integer, default=273)
     error_count = Column(Integer, default=0)
+    is_superseded = Column(Boolean, default=False)
+    superseded_by_id = Column(Integer, nullable=True)
 
 
 class WeeklyStudentProgress(Base):

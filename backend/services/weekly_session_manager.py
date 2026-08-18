@@ -1,3 +1,4 @@
+import os
 import datetime
 import hashlib
 import json
@@ -230,17 +231,13 @@ async def trigger_final_snapshot_0930(db: Session, session_id: int) -> OfficialW
     dataset_hash = hashlib.sha256(data_json_str.encode('utf-8')).hexdigest()
     session.dataset_hash = dataset_hash
 
-    existing_snap = db.query(OfficialWeeklySnapshot).filter(OfficialWeeklySnapshot.session_id == session.id).first()
+    existing_snap = db.query(OfficialWeeklySnapshot).filter(
+        OfficialWeeklySnapshot.session_id == session.id,
+        OfficialWeeklySnapshot.is_superseded == False
+    ).first()
+
     if existing_snap:
-        existing_snap.contest_id = session.contest_id or "weekly-contest"
-        existing_snap.contest_name = session.contest_name
-        existing_snap.contest_date = session.session_date
-        existing_snap.finalized_at = session.finalized_at
-        existing_snap.dataset = snapshot_data
-        existing_snap.dataset_hash = dataset_hash
-        existing_snap.student_count = session.total_students
-        existing_snap.error_count = data_errors
-        snapshot = existing_snap
+        snapshot = snapshot_supersedes(existing_snap.id, snapshot_data, db)
     else:
         snapshot = OfficialWeeklySnapshot(
             session_id=session.id,
@@ -251,7 +248,9 @@ async def trigger_final_snapshot_0930(db: Session, session_id: int) -> OfficialW
             dataset=snapshot_data,
             dataset_hash=dataset_hash,
             student_count=session.total_students,
-            error_count=data_errors
+            error_count=data_errors,
+            is_superseded=False,
+            superseded_by_id=None
         )
         db.add(snapshot)
 
@@ -259,6 +258,104 @@ async def trigger_final_snapshot_0930(db: Session, session_id: int) -> OfficialW
     db.commit()
     logger.info(f"09:30 AM Official Weekly Snapshot locked for Session ID {session_id} (Hash: {dataset_hash[:10]})")
     return snapshot
+
+def snapshot_supersedes(old_snapshot_id: int, new_snapshot_data: Dict[str, Any], db: Session) -> OfficialWeeklySnapshot:
+    """
+    Explicit snapshot superseding mechanism enforcing database immutability.
+    Instead of updating an existing snapshot row in-place, marks old row as superseded
+    and creates a new snapshot row with explicit provenance.
+    """
+    old_snap = db.query(OfficialWeeklySnapshot).filter(OfficialWeeklySnapshot.id == old_snapshot_id).first()
+    if not old_snap:
+        raise ValueError(f"Snapshot ID {old_snapshot_id} not found.")
+
+    data_json_str = json.dumps(new_snapshot_data, sort_keys=True)
+    new_hash = hashlib.sha256(data_json_str.encode('utf-8')).hexdigest()
+
+    new_snap = OfficialWeeklySnapshot(
+        session_id=old_snap.session_id,
+        contest_id=new_snapshot_data.get("contestId") or old_snap.contest_id,
+        contest_name=new_snapshot_data.get("contestName") or old_snap.contest_name,
+        contest_date=new_snapshot_data.get("sessionDate") or old_snap.contest_date,
+        finalized_at=datetime.datetime.utcnow(),
+        dataset=new_snapshot_data,
+        dataset_hash=new_hash,
+        student_count=new_snapshot_data.get("metrics", {}).get("totalStudents", old_snap.student_count),
+        error_count=new_snapshot_data.get("metrics", {}).get("dataErrors", old_snap.error_count),
+        is_superseded=False,
+        superseded_by_id=None
+    )
+    db.add(new_snap)
+    db.flush()
+
+    # Mark old snapshot as superseded without mutating dataset
+    old_snap.is_superseded = True
+    old_snap.superseded_by_id = new_snap.id
+    db.commit()
+    logger.info(f"[SNAPSHOT_IMMUTABLE] Snapshot {old_snapshot_id} superseded by new Snapshot {new_snap.id}.")
+    return new_snap
+
+VERIFICATION_WINDOW_DAYS = int(os.getenv("VERIFICATION_WINDOW_DAYS", "3"))
+
+def get_active_verification_windows(db: Session) -> List[Dict[str, Any]]:
+    """
+    Returns active verification windows across weekly contest sessions.
+    Verification window = 3 days after contest end.
+    """
+    now_ist = get_current_ist_datetime()
+    sessions = db.query(WeeklySession).all()
+    active_windows = []
+
+    for s in sessions:
+        s_date = parse_session_date(s.session_date)
+        if not s_date:
+            continue
+        end_dt = datetime.datetime.combine(s_date, datetime.time(9, 30, 0), tzinfo=IST_TZ)
+        window_end = end_dt + datetime.timedelta(days=VERIFICATION_WINDOW_DAYS)
+        is_active = now_ist <= window_end
+        active_windows.append({
+            "sessionId": s.id,
+            "sessionCode": s.session_code,
+            "contestName": s.contest_name,
+            "sessionDate": s.session_date,
+            "status": s.status,
+            "contestEndIso": end_dt.isoformat(),
+            "verificationWindowEndIso": window_end.isoformat(),
+            "isWindowActive": is_active,
+            "daysRemaining": max(0.0, round((window_end - now_ist).total_seconds() / 86400, 2)) if is_active else 0.0
+        })
+
+    return active_windows
+
+async def sweep_bounded_verification_windows(db: Session):
+    """
+    Hourly verification sweep for bounded verification windows.
+    If now > verification_window_end:
+    Transitions any remaining NOT_VERIFIED records to NOT_VERIFIED_FINAL
+    and halts verification for that session.
+    """
+    now_ist = get_current_ist_datetime()
+    sessions = db.query(WeeklySession).filter(WeeklySession.status.in_(("LIVE", "FINALIZED", "COMPLETED"))).all()
+
+    for s in sessions:
+        s_date = parse_session_date(s.session_date)
+        if not s_date:
+            continue
+        end_dt = datetime.datetime.combine(s_date, datetime.time(9, 30, 0), tzinfo=IST_TZ)
+        window_end = end_dt + datetime.timedelta(days=VERIFICATION_WINDOW_DAYS)
+
+        if now_ist > window_end:
+            unresolved = db.query(WeeklyPublicResult).filter(
+                WeeklyPublicResult.session_id == s.id,
+                WeeklyPublicResult.participation_status.in_(("NOT_VERIFIED", "PENDING", "UNKNOWN"))
+            ).all()
+
+            if unresolved:
+                for r in unresolved:
+                    r.participation_status = "NOT_VERIFIED_FINAL"
+                    r.confidence = "LOW"
+                db.commit()
+                logger.info(f"[BOUNDED_WINDOW] Session {s.id} verification window expired. Marked {len(unresolved)} as NOT_VERIFIED_FINAL.")
 
 def seed_institutional_historical_sessions(db: Session):
     """

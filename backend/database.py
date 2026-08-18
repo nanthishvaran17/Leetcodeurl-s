@@ -219,6 +219,39 @@ def run_migrations():
                 conn.commit()
                 print("[DB Migration] Created Admin User account for nanthishvaran17@gmail.com.")
 
+            # Check official_weekly_snapshots columns
+            result_snaps = conn.execute(
+                __import__('sqlalchemy').text("PRAGMA table_info(official_weekly_snapshots)")
+            )
+            snap_cols = {row[1] for row in result_snaps}
+            if snap_cols:
+                snap_migrations = [
+                    ("is_superseded", "ALTER TABLE official_weekly_snapshots ADD COLUMN is_superseded BOOLEAN DEFAULT 0"),
+                    ("superseded_by_id", "ALTER TABLE official_weekly_snapshots ADD COLUMN superseded_by_id INTEGER"),
+                ]
+                for col_name, sql in snap_migrations:
+                    if col_name not in snap_cols:
+                        conn.execute(__import__('sqlalchemy').text(sql))
+                        conn.commit()
+                        print(f"[DB Migration] Added official_weekly_snapshots column: {col_name}")
+
+            # Database-Level Snapshot Immutability Trigger (Prevents direct in-place mutation of dataset)
+            try:
+                trigger_sql = """
+                CREATE TRIGGER IF NOT EXISTS trg_prevent_snapshot_mutation
+                BEFORE UPDATE OF dataset, dataset_hash, student_count, error_count ON official_weekly_snapshots
+                FOR EACH ROW
+                WHEN OLD.dataset_hash IS NOT NULL AND NEW.is_superseded = OLD.is_superseded AND NEW.superseded_by_id IS OLD.superseded_by_id
+                BEGIN
+                    SELECT RAISE(ABORT, 'SNAPSHOT_IMMUTABLE: Finalized snapshot cannot be modified in-place. Use snapshot_supersedes() instead.');
+                END;
+                """
+                conn.execute(__import__('sqlalchemy').text(trigger_sql))
+                conn.commit()
+                print("[DB Migration] Registered SQLite snapshot immutability trigger.")
+            except Exception as _trg_err:
+                print(f"[DB Migration] Trigger registration note: {_trg_err}")
+
             # Performance Indexes Creation
             indexes = [
                 ("idx_students_dept_year", "CREATE INDEX IF NOT EXISTS idx_students_dept_year ON students(department_id, year_level)"),

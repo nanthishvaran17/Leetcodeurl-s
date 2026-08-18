@@ -1735,7 +1735,9 @@ export const WeeklyContestPage: React.FC = () => {
                         const isVirtualAttended = r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL';
                         const isAttended = isPublicAttended || isVirtualAttended;
                         const isNotAttended = r.participation_status === 'PUBLIC_NOT_ATTENDED' || r.participation_status === 'NOT_ATTENDED' || r.status === 'NOT_ATTENDED' || r.status === 'NOT ATTENDED';
-                        const isError = r.participation_status === 'DATA_ERROR' || r.status === 'USERNAME_NOT_FOUND' || r.status === 'FETCH_ERROR';
+                        const isNotVerified = r.participation_status === 'NOT_VERIFIED' || r.status === 'NOT_VERIFIED' || r.participation_status === 'PENDING';
+                        const isNotVerifiedFinal = r.participation_status === 'NOT_VERIFIED_FINAL' || r.status === 'NOT_VERIFIED_FINAL';
+                        const isError = r.participation_status === 'DATA_ERROR' || r.participation_status === 'SOURCE_ERROR' || r.participation_status === 'CONFLICT' || r.status === 'USERNAME_NOT_FOUND' || r.status === 'FETCH_ERROR';
 
                         const statusBadge = isPublicAttended
                           ? { cls: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 ring-1 ring-emerald-400/30', label: 'PUBLIC 🟢' }
@@ -1743,9 +1745,13 @@ export const WeeklyContestPage: React.FC = () => {
                             ? { cls: 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 ring-1 ring-purple-400/40', label: 'VIRTUAL 🟣' }
                             : isNotAttended
                               ? { cls: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300', label: 'NOT ATTENDED' }
-                              : isError
-                                ? { cls: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300', label: 'DATA ERROR' }
-                                : { cls: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300', label: 'PENDING' };
+                              : isNotVerifiedFinal
+                                ? { cls: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-400/30', label: 'NOT VERIFIED (FINAL)' }
+                                : isNotVerified
+                                  ? { cls: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-400/30', label: 'NOT VERIFIED 🟡' }
+                                  : isError
+                                    ? { cls: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300', label: 'DATA ERROR ⚠️' }
+                                    : { cls: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300', label: 'PENDING' };
 
                         const renderQ = (val: any) => {
                           if (!isAttended || val === '—' || val === null || val === undefined) return <span className="text-gray-300 dark:text-gray-600 font-normal">—</span>;
@@ -1753,6 +1759,12 @@ export const WeeklyContestPage: React.FC = () => {
                             ? <span className="inline-block w-5 h-5 leading-5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-black text-center">1</span>
                             : <span className="inline-block w-5 h-5 leading-5 rounded bg-rose-500/10 text-rose-400 dark:text-rose-500 font-bold text-center">0</span>;
                         };
+
+                        const confBadgeCls = r.confidence === 'HIGH'
+                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                          : r.confidence === 'MEDIUM'
+                            ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30'
+                            : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30';
 
                         return (
                           <tr
@@ -1769,9 +1781,16 @@ export const WeeklyContestPage: React.FC = () => {
                             </td>
                             <td className="px-4 py-2.5 text-center text-gray-600 dark:text-gray-400 font-bold">{r.year}</td>
                             <td className="px-4 py-2.5 text-center">
-                              <span className={`px-2 py-0.5 text-[9px] font-extrabold rounded-full whitespace-nowrap ${statusBadge.cls}`}>
-                                {statusBadge.label}
-                              </span>
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span className={`px-2 py-0.5 text-[9px] font-extrabold rounded-full whitespace-nowrap ${statusBadge.cls}`}>
+                                  {statusBadge.label}
+                                </span>
+                                {r.confidence && (
+                                  <span className={`px-1.5 py-0.5 text-[8px] font-mono font-black rounded border ${confBadgeCls}`}>
+                                    {r.confidence}
+                                  </span>
+                                )}
+                              </div>
                             </td>
                             <td className="px-4 py-2.5 text-center">{renderQ(r.q1)}</td>
                             <td className="px-4 py-2.5 text-center">{renderQ(r.q2)}</td>
