@@ -895,6 +895,7 @@ def update_student(
     db.commit()
 
     update_all_rankings_and_badges(db)
+    cache.clear()
 
     return StudentOut.from_orm(student)
 
@@ -943,6 +944,7 @@ def delete_student(
     db.commit()
 
     update_all_rankings_and_badges(db)
+    cache.clear()
 
     return {"message": f"Successfully deactivated student roster record {reg_no} ({name})", "reg_no": reg_no}
 
