@@ -730,12 +730,27 @@ export const WeeklyContestPage: React.FC = () => {
 
   // ── Memoized Dynamic Statistics Calculation (Hook MUST run before any early return) ──
   const stats = useMemo(() => {
-    const totalRows = sessionMetrics?.totalStudents ?? matrixRows.length;
-    const attendedRows = sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? matrixRows.filter(r => r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'ATTENDED' || r.status === 'PUBLIC' || r.participation_status === 'PUBLIC').length;
-    const notAttendedRows = sessionMetrics?.notAttended ?? sessionMetrics?.notParticipated ?? matrixRows.filter(r => r.participation_status === 'PUBLIC_NOT_ATTENDED' || r.participation_status === 'NOT_ATTENDED' || r.status === 'NOT_ATTENDED' || r.status === 'NOT ATTENDED').length;
-    const virtualRows = sessionMetrics?.virtualAttended ?? sessionMetrics?.virtualParticipants ?? matrixRows.filter(r => r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL').length;
+    const isFiltered = selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL';
+    const totalRows = isFiltered ? matrixRows.length : (sessionMetrics?.totalStudents ?? matrixRows.length);
+    const attendedRows = isFiltered
+      ? matrixRows.filter(r => r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'ATTENDED' || r.status === 'PUBLIC' || r.participation_status === 'PUBLIC').length
+      : (sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? matrixRows.filter(r => r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'ATTENDED' || r.status === 'PUBLIC' || r.participation_status === 'PUBLIC').length);
+    const notAttendedRows = isFiltered
+      ? matrixRows.filter(r => r.participation_status === 'PUBLIC_NOT_ATTENDED' || r.participation_status === 'NOT_ATTENDED' || r.status === 'NOT_ATTENDED' || r.status === 'NOT ATTENDED').length
+      : (sessionMetrics?.notAttended ?? sessionMetrics?.notParticipated ?? matrixRows.filter(r => r.participation_status === 'PUBLIC_NOT_ATTENDED' || r.participation_status === 'NOT_ATTENDED' || r.status === 'NOT_ATTENDED' || r.status === 'NOT ATTENDED').length);
+    const virtualRows = isFiltered
+      ? matrixRows.filter(r => r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL').length
+      : (sessionMetrics?.virtualAttended ?? sessionMetrics?.virtualParticipants ?? matrixRows.filter(r => r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL').length);
     const isVirtualAvailable = sessionMetrics?.virtualDataStatus === 'AVAILABLE' || virtualRows > 0;
-    const errorRows = sessionMetrics?.dataErrors ?? sessionMetrics?.failedVerification ?? matrixRows.filter(r => r.participation_status === 'DATA_ERROR' || r.status === 'USERNAME_NOT_FOUND' || r.participation_status === 'USERNAME_NOT_FOUND' || r.status === 'FETCH_ERROR').length;
+    const errorRows = isFiltered
+      ? matrixRows.filter(r => r.participation_status === 'DATA_ERROR' || r.participation_status === 'SOURCE_ERROR' || r.participation_status === 'CONFLICT' || r.status === 'USERNAME_NOT_FOUND' || r.participation_status === 'USERNAME_NOT_FOUND' || r.status === 'FETCH_ERROR').length
+      : (sessionMetrics?.dataErrors ?? sessionMetrics?.failedVerification ?? matrixRows.filter(r => r.participation_status === 'DATA_ERROR' || r.participation_status === 'SOURCE_ERROR' || r.participation_status === 'CONFLICT' || r.status === 'USERNAME_NOT_FOUND' || r.participation_status === 'USERNAME_NOT_FOUND' || r.status === 'FETCH_ERROR').length);
+
+    // Active cohort total solve breakdown (4/4, 3/4, 2/4, 1/4 Solved)
+    const q4Solved = matrixRows.filter(r => (r.participation_status === 'PUBLIC' || r.status === 'PUBLIC' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) >= 4 || Number(r.total_contest_solved) >= 4)).length;
+    const q3Solved = matrixRows.filter(r => (r.participation_status === 'PUBLIC' || r.status === 'PUBLIC' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) === 3 || Number(r.total_contest_solved) === 3)).length;
+    const q2Solved = matrixRows.filter(r => (r.participation_status === 'PUBLIC' || r.status === 'PUBLIC' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) === 2 || Number(r.total_contest_solved) === 2)).length;
+    const q1Solved = matrixRows.filter(r => (r.participation_status === 'PUBLIC' || r.status === 'PUBLIC' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) === 1 || Number(r.total_contest_solved) === 1)).length;
 
     const virtual4Solved = matrixRows.filter(r => (r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) === 4 || Number(r.total_contest_solved) === 4)).length;
     const virtual3Solved = matrixRows.filter(r => (r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) === 3 || Number(r.total_contest_solved) === 3)).length;
@@ -745,7 +760,7 @@ export const WeeklyContestPage: React.FC = () => {
     const publicPct = totalRows > 0 ? ((attendedRows / totalRows) * 100).toFixed(1) : '0.0';
     const virtualPct = totalRows > 0 ? ((virtualRows / totalRows) * 100).toFixed(1) : '0.0';
     const notAttendedPct = totalRows > 0 ? ((notAttendedRows / totalRows) * 100).toFixed(1) : '0.0';
-    // EXACT MANDATORY FORMULA: ((PUBLIC + VIRTUAL) / TOTAL) * 100 (e.g. (99 + 14)/302 = 37.4%)
+    // EXACT MANDATORY FORMULA: ((PUBLIC + VIRTUAL) / TOTAL) * 100
     const totalParticipationPct = totalRows > 0 ? (((attendedRows + virtualRows) / totalRows) * 100).toFixed(1) : '0.0';
 
     const topPerformers = matrixRows
@@ -760,6 +775,10 @@ export const WeeklyContestPage: React.FC = () => {
       virtualRows,
       isVirtualAvailable,
       errorRows,
+      q4Solved,
+      q3Solved,
+      q2Solved,
+      q1Solved,
       virtual4Solved,
       virtual3Solved,
       virtual2Solved,
@@ -770,7 +789,7 @@ export const WeeklyContestPage: React.FC = () => {
       totalParticipationPct,
       topPerformers
     };
-  }, [sessionMetrics, matrixRows]);
+  }, [sessionMetrics, matrixRows, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter]);
 
   // Memoized Debounced Filtered Rows for Detailed View
   const filteredMatrixRows = useMemo(() => {
@@ -1618,6 +1637,42 @@ export const WeeklyContestPage: React.FC = () => {
               No virtual attendees recorded for this contest session yet.
             </span>
           )}
+        </div>
+
+        {/* ── Active Cohort Problem-Wise Solve Distribution (Dynamic for Selected Department/Year) ── */}
+        <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-lg flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center space-x-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800/60 text-brand-600 dark:text-brand-400 flex items-center justify-center shadow-inner shrink-0">
+              <Award className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-2.5 py-0.5 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 font-black text-[10px] uppercase tracking-wider border border-brand-300 dark:border-brand-800">
+                  {selectedDeptFilter === 'ALL' ? 'College-Wide' : selectedDeptFilter} • {selectedYearFilter === 'ALL' ? 'All Years' : `${selectedYearFilter} Year`}
+                </span>
+                <span className="text-xs font-black text-gray-900 dark:text-white">
+                  {stats.attendedRows + stats.virtualRows} Total Solved Participants ({stats.totalRows} Students in Scope)
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5">
+                Breakdown of students solving 4/4, 3/4, 2/4, or 1/4 contest problems in the selected scope.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 flex-wrap">
+            {[
+              { label: '4/4 Solved', count: stats.q4Solved, color: 'text-emerald-700 dark:text-emerald-300', bg: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800' },
+              { label: '3/4 Solved', count: stats.q3Solved, color: 'text-purple-700 dark:text-purple-300', bg: 'bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800' },
+              { label: '2/4 Solved', count: stats.q2Solved, color: 'text-indigo-700 dark:text-indigo-300', bg: 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800' },
+              { label: '1/4 Solved', count: stats.q1Solved, color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800' },
+            ].map((item, idx) => (
+              <div key={idx} className={`px-4 py-2 rounded-2xl border text-center min-w-[90px] shadow-sm transition-transform hover:scale-105 ${item.bg}`}>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider block opacity-80">{item.label}</span>
+                <span className={`text-xl font-black font-mono ${item.color}`}>{item.count}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* ── TOGGLE CTA BUTTON: QUICK VIEW ↔ DETAILED VIEW ── */}

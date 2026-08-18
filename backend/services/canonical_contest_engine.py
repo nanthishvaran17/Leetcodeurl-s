@@ -379,73 +379,137 @@ def build_canonical_contest_dataset(
             f"YearSum: {sum_year_totals} | StatusSum: {sum_status_totals}"
         )
 
-    # 5. Global Metrics & Explicit Data Errors Contract
-    public_cnt = status_counts.get("PUBLIC", 0)
-    virtual_cnt = status_counts.get("VIRTUAL", 0)
-    not_att_cnt = status_counts.get("NOT_ATTENDED", 0)
-    not_verified_cnt = status_counts.get("NOT_VERIFIED", 0) + status_counts.get("PENDING", 0)
-    not_verified_final_cnt = status_counts.get("NOT_VERIFIED_FINAL", 0)
-    conflict_cnt = status_counts.get("CONFLICT", 0)
-    source_error_cnt = (
-        status_counts.get("SOURCE_ERROR", 0) +
-        status_counts.get("SOURCE_UNAVAILABLE", 0) + 
-        status_counts.get("AUTH_REQUIRED", 0) + 
-        status_counts.get("USERNAME_NOT_FOUND", 0) + 
-        status_counts.get("FETCH_ERROR", 0) + 
-        status_counts.get("DATA_MISMATCH", 0)
-    )
+    # 5. Global & Filtered Scope Metrics
+    is_filtered = bool((dept and dept != "ALL") or (year and year != "ALL") or (attendance and attendance != "ALL"))
 
-    # STRICT ADDENDUM CONTRACT: Data Errors (dashboard) = count(CONFLICT) + count(SOURCE_ERROR)
-    total_errors_cnt = conflict_cnt + source_error_cnt
+    if is_filtered:
+        scope_total = len(filtered_rows)
+        scope_public = sum(1 for r in filtered_rows if r.get("status") == "PUBLIC")
+        scope_virtual = sum(1 for r in filtered_rows if r.get("status") == "VIRTUAL")
+        scope_not_att = sum(1 for r in filtered_rows if r.get("status") == "NOT_ATTENDED")
+        scope_not_ver = sum(1 for r in filtered_rows if r.get("status") in ("NOT_VERIFIED", "PENDING"))
+        scope_not_ver_final = sum(1 for r in filtered_rows if r.get("status") == "NOT_VERIFIED_FINAL")
+        scope_conflict = sum(1 for r in filtered_rows if r.get("status") == "CONFLICT")
+        scope_source_err = sum(1 for r in filtered_rows if r.get("status") in ("SOURCE_ERROR", "SOURCE_UNAVAILABLE", "AUTH_REQUIRED", "USERNAME_NOT_FOUND", "FETCH_ERROR", "DATA_MISMATCH"))
+        scope_errors = scope_conflict + scope_source_err
+        scope_part_pct = round(((scope_public + scope_virtual) / scope_total * 100), 2) if scope_total > 0 else 0.0
 
-    # EXACT MANDATORY PARTICIPATION FORMULA: ((PUBLIC + VIRTUAL) / TOTAL) * 100
-    part_pct = round(((public_cnt + virtual_cnt) / total_master_count * 100), 2) if total_master_count > 0 else 0.0
+        scope_q4 = sum(1 for r in filtered_rows if (r.get("total_solved") or 0) >= 4 and r.get("status") in ("PUBLIC", "VIRTUAL"))
+        scope_q3 = sum(1 for r in filtered_rows if (r.get("total_solved") or 0) == 3 and r.get("status") in ("PUBLIC", "VIRTUAL"))
+        scope_q2 = sum(1 for r in filtered_rows if (r.get("total_solved") or 0) == 2 and r.get("status") in ("PUBLIC", "VIRTUAL"))
+        scope_q1 = sum(1 for r in filtered_rows if (r.get("total_solved") or 0) == 1 and r.get("status") in ("PUBLIC", "VIRTUAL"))
 
-    # Question-specific aggregate solve counts (e.g. Q1: 72, Q2: 51, Q3: 23, Q4: 8)
-    q1_total_solved = sum(1 for r in canonical_rows if r.get("q1") == 1)
-    q2_total_solved = sum(1 for r in canonical_rows if r.get("q2") == 1)
-    q3_total_solved = sum(1 for r in canonical_rows if r.get("q3") == 1)
-    q4_total_solved = sum(1 for r in canonical_rows if r.get("q4") == 1)
-    total_questions_solved = q1_total_solved + q2_total_solved + q3_total_solved + q4_total_solved
-    avg_questions_solved = round(total_questions_solved / max(1, public_cnt + virtual_cnt), 2) if (public_cnt + virtual_cnt) > 0 else 0.0
+        q1_scope_solved = sum(1 for r in filtered_rows if r.get("q1") == 1)
+        q2_scope_solved = sum(1 for r in filtered_rows if r.get("q2") == 1)
+        q3_scope_solved = sum(1 for r in filtered_rows if r.get("q3") == 1)
+        q4_scope_solved = sum(1 for r in filtered_rows if r.get("q4") == 1)
+        total_scope_solved = q1_scope_solved + q2_scope_solved + q3_scope_solved + q4_scope_solved
+        avg_scope_solved = round(total_scope_solved / max(1, scope_public + scope_virtual), 2) if (scope_public + scope_virtual) > 0 else 0.0
 
-    is_provisional = session_obj.status in ("LIVE", "SCHEDULED", "FINALIZING", "ACTIVE")
+        is_provisional = session_obj.status in ("LIVE", "SCHEDULED", "FINALIZING", "ACTIVE")
 
-    metrics = {
-        "totalStudents": total_master_count,
-        "totalCount": total_master_count,
-        "officialAttended": public_cnt,
-        "actual": public_cnt,
-        "public": public_cnt,
-        "virtualAttended": virtual_cnt,
-        "virtual": virtual_cnt,
-        "notAttended": not_att_cnt,
-        "notVerified": not_verified_cnt,
-        "notVerifiedFinal": not_verified_final_cnt,
-        "conflict": conflict_cnt,
-        "sourceError": source_error_cnt,
-        "pending": not_verified_cnt,
-        "errors": total_errors_cnt,
-        "totalErrors": total_errors_cnt,
-        "dataErrors": total_errors_cnt,
-        "participationPercentage": part_pct,
-        "participation_pct": part_pct,
-        "isProvisional": is_provisional,
-        "participationLabel": "Provisional Participation" if is_provisional else "Finalized Participation",
-        "q4Count": q4_all,
-        "q3Count": q3_all,
-        "q2Count": q2_all,
-        "q1Count": q1_all,
-        "questionProgress": {
-            "q1": q1_total_solved,
-            "q2": q2_total_solved,
-            "q3": q3_total_solved,
-            "q4": q4_total_solved,
-            "totalSolved": total_questions_solved,
-            "avgSolved": avg_questions_solved
-        },
-        "reconciliationPassed": reconciliation_passed
-    }
+        metrics = {
+            "totalStudents": scope_total,
+            "totalCount": scope_total,
+            "officialAttended": scope_public,
+            "actual": scope_public,
+            "public": scope_public,
+            "virtualAttended": scope_virtual,
+            "virtual": scope_virtual,
+            "notAttended": scope_not_att,
+            "notVerified": scope_not_ver,
+            "notVerifiedFinal": scope_not_ver_final,
+            "conflict": scope_conflict,
+            "sourceError": scope_source_err,
+            "pending": scope_not_ver,
+            "errors": scope_errors,
+            "totalErrors": scope_errors,
+            "dataErrors": scope_errors,
+            "participationPercentage": scope_part_pct,
+            "participation_pct": scope_part_pct,
+            "isProvisional": is_provisional,
+            "participationLabel": "Provisional Participation" if is_provisional else "Finalized Participation",
+            "q4Count": scope_q4,
+            "q3Count": scope_q3,
+            "q2Count": scope_q2,
+            "q1Count": scope_q1,
+            "questionProgress": {
+                "q1": q1_scope_solved,
+                "q2": q2_scope_solved,
+                "q3": q3_scope_solved,
+                "q4": q4_scope_solved,
+                "totalSolved": total_scope_solved,
+                "avgSolved": avg_scope_solved
+            },
+            "reconciliationPassed": reconciliation_passed
+        }
+    else:
+        public_cnt = status_counts.get("PUBLIC", 0)
+        virtual_cnt = status_counts.get("VIRTUAL", 0)
+        not_att_cnt = status_counts.get("NOT_ATTENDED", 0)
+        not_verified_cnt = status_counts.get("NOT_VERIFIED", 0) + status_counts.get("PENDING", 0)
+        not_verified_final_cnt = status_counts.get("NOT_VERIFIED_FINAL", 0)
+        conflict_cnt = status_counts.get("CONFLICT", 0)
+        source_error_cnt = (
+            status_counts.get("SOURCE_ERROR", 0) +
+            status_counts.get("SOURCE_UNAVAILABLE", 0) + 
+            status_counts.get("AUTH_REQUIRED", 0) + 
+            status_counts.get("USERNAME_NOT_FOUND", 0) + 
+            status_counts.get("FETCH_ERROR", 0) + 
+            status_counts.get("DATA_MISMATCH", 0)
+        )
+
+        # STRICT ADDENDUM CONTRACT: Data Errors (dashboard) = count(CONFLICT) + count(SOURCE_ERROR)
+        total_errors_cnt = conflict_cnt + source_error_cnt
+
+        # EXACT MANDATORY PARTICIPATION FORMULA: ((PUBLIC + VIRTUAL) / TOTAL) * 100
+        part_pct = round(((public_cnt + virtual_cnt) / total_master_count * 100), 2) if total_master_count > 0 else 0.0
+
+        # Question-specific aggregate solve counts (e.g. Q1: 72, Q2: 51, Q3: 23, Q4: 8)
+        q1_total_solved = sum(1 for r in canonical_rows if r.get("q1") == 1)
+        q2_total_solved = sum(1 for r in canonical_rows if r.get("q2") == 1)
+        q3_total_solved = sum(1 for r in canonical_rows if r.get("q3") == 1)
+        q4_total_solved = sum(1 for r in canonical_rows if r.get("q4") == 1)
+        total_questions_solved = q1_total_solved + q2_total_solved + q3_total_solved + q4_total_solved
+        avg_questions_solved = round(total_questions_solved / max(1, public_cnt + virtual_cnt), 2) if (public_cnt + virtual_cnt) > 0 else 0.0
+
+        is_provisional = session_obj.status in ("LIVE", "SCHEDULED", "FINALIZING", "ACTIVE")
+
+        metrics = {
+            "totalStudents": total_master_count,
+            "totalCount": total_master_count,
+            "officialAttended": public_cnt,
+            "actual": public_cnt,
+            "public": public_cnt,
+            "virtualAttended": virtual_cnt,
+            "virtual": virtual_cnt,
+            "notAttended": not_att_cnt,
+            "notVerified": not_verified_cnt,
+            "notVerifiedFinal": not_verified_final_cnt,
+            "conflict": conflict_cnt,
+            "sourceError": source_error_cnt,
+            "pending": not_verified_cnt,
+            "errors": total_errors_cnt,
+            "totalErrors": total_errors_cnt,
+            "dataErrors": total_errors_cnt,
+            "participationPercentage": part_pct,
+            "participation_pct": part_pct,
+            "isProvisional": is_provisional,
+            "participationLabel": "Provisional Participation" if is_provisional else "Finalized Participation",
+            "q4Count": q4_all,
+            "q3Count": q3_all,
+            "q2Count": q2_all,
+            "q1Count": q1_all,
+            "questionProgress": {
+                "q1": q1_total_solved,
+                "q2": q2_total_solved,
+                "q3": q3_total_solved,
+                "q4": q4_total_solved,
+                "totalSolved": total_questions_solved,
+                "avgSolved": avg_questions_solved
+            },
+            "reconciliationPassed": reconciliation_passed
+        }
 
     # Department and Year percentages
     for d in dept_stats_map.values():
