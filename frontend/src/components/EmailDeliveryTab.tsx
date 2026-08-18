@@ -82,10 +82,21 @@ export const EmailDeliveryTab: React.FC = () => {
   const [addingRecipient, setAddingRecipient] = useState(false);
   const [notification, setNotification] = useState<NotificationState | null>(null);
 
-  // SMTP Test state
+  // Active Email Provider Diagnostics State
+  const [providerInfo, setProviderInfo] = useState<{
+    status: string;
+    active_provider: string;
+    transport: string;
+    is_configured: boolean;
+    sender_email: string;
+    timeout_seconds: number;
+    max_retries: number;
+  } | null>(null);
+
+  // SMTP / Provider Test state
   const [testRecipient, setTestRecipient] = useState('nanthishvaran17@gmail.com');
   const [isTestingSmtp, setIsTestingSmtp] = useState(false);
-  const [smtpTestResult, setSmtpTestResult] = useState<{ success: boolean; message: string; error?: string } | null>(null);
+  const [smtpTestResult, setSmtpTestResult] = useState<{ success: boolean; message: string; error?: string; provider?: string } | null>(null);
 
   const handleSendSmtpTest = async () => {
     if (!testRecipient.trim()) return;
@@ -96,12 +107,13 @@ export const EmailDeliveryTab: React.FC = () => {
       setSmtpTestResult({
         success: res.data.success,
         message: res.data.message,
-        error: res.data.error
+        error: res.data.error,
+        provider: res.data.provider
       });
     } catch (err: any) {
       setSmtpTestResult({
         success: false,
-        message: '🔴 SMTP TEST FAILED',
+        message: '🔴 EMAIL DISPATCH TEST FAILED',
         error: err.response?.data?.detail || err.message || 'Connection or authentication error'
       });
     } finally {
@@ -118,14 +130,16 @@ export const EmailDeliveryTab: React.FC = () => {
       if (res.data.success) {
         setSmtpTestResult({
           success: true,
-          message: `🟢 Test report email sent successfully to ${testRecipient}!`,
+          message: `🟢 Test report email accepted and sent successfully to ${testRecipient}!`,
           error: undefined,
+          provider: res.data.provider
         });
       } else {
         setSmtpTestResult({
           success: false,
-          message: '🔴 PRE-FLIGHT TEST FAILED',
-          error: res.data.error || 'Pre-flight test failed',
+          message: '🔴 EMAIL TEST FAILED',
+          error: res.data.error || 'Email dispatch failed',
+          provider: res.data.provider
         });
       }
       await fetchAll();
@@ -143,11 +157,16 @@ export const EmailDeliveryTab: React.FC = () => {
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [rRes, lRes, sRes] = await Promise.all([
+      const [rRes, lRes, sRes, pRes] = await Promise.all([
         api.get('/email/recipients').catch(() => ({ data: [] })),
         api.get('/email/logs?limit=100').catch(() => ({ data: [] })),
         api.get('/contests/sessions').catch(() => ({ data: [] })),
+        api.get('/email/provider-diagnostics').catch(() => ({ data: null })),
       ]);
+
+      if (pRes?.data) {
+        setProviderInfo(pRes.data);
+      }
 
       const rData = Array.isArray(rRes.data) ? rRes.data : (rRes.data?.recipients || []);
       const lData = Array.isArray(lRes.data) ? lRes.data : (lRes.data?.deliveries || lRes.data?.items || []);
@@ -441,17 +460,24 @@ export const EmailDeliveryTab: React.FC = () => {
         ))}
       </div>
 
-      {/* Test Email Card */}
+      {/* Active Provider & Test Email Card */}
       <div className="glass-card p-5 rounded-3xl border border-indigo-500/30 bg-white dark:bg-navy-900 shadow-xl space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center space-x-2">
             <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
               <Mail className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm font-black text-gray-900 dark:text-white">Test Email</h3>
-              <p className="text-[11px] text-gray-400">Test Gmail SMTP (`smtp.gmail.com:587` + STARTTLS + App Password)</p>
+              <h3 className="text-sm font-black text-gray-900 dark:text-white">Email Delivery &amp; Provider Diagnostics</h3>
+              <p className="text-[11px] text-gray-400">
+                Active Provider: <strong className="text-indigo-600 dark:text-indigo-400">{providerInfo?.active_provider === 'BREVO_API' ? 'Brevo Official API (Port 443 HTTPS)' : (providerInfo?.active_provider === 'RESEND_API' ? 'Resend API (HTTPS)' : 'Gmail SMTP (Port 587)')}</strong> • Timeout: {providerInfo?.timeout_seconds || 90}s (Auto-Retry Enabled)
+              </p>
             </div>
+          </div>
+          <div className="flex items-center gap-1.5 self-start sm:self-auto">
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+              🟢 {providerInfo?.active_provider === 'BREVO_API' ? 'Brevo v3 API Active' : 'Provider Ready'}
+            </span>
           </div>
         </div>
 
@@ -983,11 +1009,22 @@ export const EmailDeliveryTab: React.FC = () => {
                     <div className="p-3.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 rounded-2xl text-[11px] text-amber-800 dark:text-amber-300 text-left space-y-1 w-full">
                       <div className="font-bold flex items-center gap-1.5">
                         <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                        <span>SMTP Configuration Diagnostic</span>
+                        <span>{providerInfo?.active_provider === 'BREVO_API' ? 'Brevo API Delivery Diagnostics' : 'SMTP Configuration Diagnostic'}</span>
                       </div>
-                      <p className="text-gray-600 dark:text-gray-400 text-[10.5px] leading-relaxed">
-                        If using Gmail SMTP (`smtp.gmail.com:587`), ensure you are using a <b>16-character Google App Password</b> (generated in myaccount.google.com/apppasswords) rather than your standard Gmail password.
-                      </p>
+                      {providerInfo?.active_provider === 'BREVO_API' ? (
+                        <div className="text-gray-600 dark:text-gray-400 text-[10.5px] leading-relaxed space-y-0.5">
+                          <p>✓ <strong>Provider:</strong> Brevo v3 Transactional API (HTTPS Port 443)</p>
+                          <p>✓ <strong>Timeout:</strong> {providerInfo?.timeout_seconds || 90}s with 3 exponential backoff retries</p>
+                          <p>✓ <strong>Sender:</strong> {providerInfo?.sender_email || 'nanthishvaran0106@gmail.com'}</p>
+                          <p className="text-amber-700 dark:text-amber-400 font-medium pt-1">
+                            If write timeout occurred, the request is automatically retried without duplicating emails. Check the Status &amp; History tab.
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-gray-600 dark:text-gray-400 text-[10.5px] leading-relaxed">
+                          If using Gmail SMTP (`smtp.gmail.com:587`), ensure you are using a <b>16-character Google App Password</b> (generated in myaccount.google.com/apppasswords) rather than your standard Gmail password.
+                        </p>
+                      )}
                     </div>
                   )}
 

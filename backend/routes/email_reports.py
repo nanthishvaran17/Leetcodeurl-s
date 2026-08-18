@@ -1,3 +1,4 @@
+import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
@@ -35,29 +36,52 @@ class TestEmailSchema(BaseModel):
     recipient: str
 
 
-@router.post("/test")
-def send_smtp_test_email(payload: TestEmailSchema):
+@router.get("/provider-diagnostics")
+def get_email_provider_diagnostics():
     """
-    Sends a test email via Gmail SMTP (STARTTLS port 587) without attachments.
+    Returns active email provider configuration, connectivity status, and health metrics.
+    """
+    from backend.services.email_service import get_active_email_provider
+    provider_info = get_active_email_provider()
+    return {
+        "status": "healthy" if provider_info["configured"] else "unconfigured",
+        "active_provider": provider_info["provider"],
+        "transport": provider_info["transport"],
+        "is_configured": provider_info["configured"],
+        "sender_email": provider_info["sender"],
+        "timeout_seconds": provider_info["timeout_seconds"],
+        "max_retries": provider_info["max_retries"],
+        "timestamp_ist": datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=5, minutes=30))).isoformat()
+    }
+
+
+@router.post("/test")
+def send_provider_test_email(payload: TestEmailSchema):
+    """
+    Sends a test email via the active email provider (Brevo API or SMTP) without attachments.
     Tests credential validity and network connectivity.
     """
-    from backend.services.email_service import send_email
+    from backend.services.email_service import send_email, get_active_email_provider
 
     if not payload.recipient or "@" not in payload.recipient:
         raise HTTPException(status_code=400, detail="Invalid test email recipient address.")
 
-    subject = "Nandha Engineering College - SMTP Test"
-    body_html = """
+    provider_info = get_active_email_provider()
+    provider_name = "Brevo Official API (Port 443 HTTPS)" if provider_info["provider"] == "BREVO_API" else "Gmail SMTP"
+
+    subject = f"Nandha Engineering College — Email Provider Test ({provider_info['provider']})"
+    body_html = f"""
     <!DOCTYPE html>
     <html>
     <body style="font-family: Arial, sans-serif; color: #1e293b; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background-color: #0f172a; color: #ffffff; padding: 16px 20px; text-align: center; border-radius: 12px 12px 0 0;">
             <h3 style="margin: 0;">NANDHA ENGINEERING COLLEGE</h3>
-            <p style="margin: 4px 0 0 0; font-size: 12px; color: #38bdf8;">LeetCode System — Gmail SMTP Verification</p>
+            <p style="margin: 4px 0 0 0; font-size: 12px; color: #38bdf8;">LeetCode System — Email Delivery Verification</p>
         </div>
         <div style="border: 1px solid #e2e8f0; border-top: none; padding: 24px; border-radius: 0 0 12px 12px;">
-            <p>This is a test email from the <strong>Nandha Engineering College LeetCode system</strong>.</p>
-            <p style="color: #16a34a; font-weight: bold;">🟢 Gmail SMTP connection & authentication verified successfully!</p>
+            <p>This is a verified test dispatch from the <strong>Nandha Engineering College LeetCode system</strong>.</p>
+            <p style="color: #16a34a; font-weight: bold;">🟢 Active Provider: {provider_name} verified successfully!</p>
+            <p style="font-size: 12px; color: #64748b;">Timeout: {provider_info['timeout_seconds']}s • Max Retries: {provider_info['max_retries']}</p>
             <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
             <p style="font-size: 11px; color: #94a3b8; margin: 0;">Nandha Engineering College • LeetCode Institutional Tracking Platform</p>
         </div>
@@ -68,9 +92,9 @@ def send_smtp_test_email(payload: TestEmailSchema):
     success, err_msg = send_email(payload.recipient, subject, body_html)
 
     if success:
-        return {"success": True, "message": "🟢 SMTP TEST SUCCESS"}
+        return {"success": True, "message": f"🟢 {provider_name} TEST SUCCESS", "provider": provider_info["provider"]}
     else:
-        return {"success": False, "message": "🔴 SMTP TEST FAILED", "error": err_msg or "Unknown SMTP authentication or connection error."}
+        return {"success": False, "message": f"🔴 {provider_name} TEST FAILED", "error": err_msg or "Unknown email delivery error.", "provider": provider_info["provider"]}
 
 
 @router.get("/recipients")
