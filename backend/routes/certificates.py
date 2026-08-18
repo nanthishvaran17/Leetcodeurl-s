@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from backend.database import get_db
-from backend.models import Student, CertificateRecord, AuthorizedSignature, User, WeeklyPublicResult
+from backend.models import Student, CertificateRecord, AuthorizedSignature, User, WeeklyPublicResult, WeeklyVirtualResult, WeeklySession
 from backend.certificate_generator import (
     generate_student_certificate,
     build_certificate_pdf_from_record,
@@ -87,11 +87,50 @@ def resolve_certificate_record(
     if student_obj:
         dept_code = student_obj.department.code if student_obj.department else "CSE(CS)"
         dept_full = resolve_department_name(dept_code)
-        p_res = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.student_id == student_obj.id).order_by(WeeklyPublicResult.id.desc()).first()
-        contest_name = p_res.session.contest_name if (p_res and p_res.session) else (f"Weekly Contest {contest}" if contest else "Weekly Contest 515")
+
+        # 1. Authoritative Contest Resolution (Single source of truth)
+        q_p = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.student_id == student_obj.id)
+        if contest:
+            clean_c = str(contest).strip()
+            c_slug = clean_c if "weekly" in clean_c.lower() else f"weekly-contest-{clean_c}"
+            q_p = q_p.join(WeeklySession, WeeklyPublicResult.session_id == WeeklySession.id).filter(
+                (WeeklySession.contest_id == c_slug) |
+                (WeeklySession.contest_name.ilike(f"%{clean_c}%"))
+            )
         
+        p_res = q_p.order_by(WeeklyPublicResult.id.desc()).first()
+
+        # If not public attended, check virtual participation
+        v_res = None
+        if not p_res or p_res.participation_status not in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"):
+            q_v = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.student_id == student_obj.id)
+            if contest:
+                clean_c = str(contest).strip()
+                c_slug = clean_c if "weekly" in clean_c.lower() else f"weekly-contest-{clean_c}"
+                q_v = q_v.join(WeeklySession, WeeklyVirtualResult.session_id == WeeklySession.id).filter(
+                    (WeeklySession.contest_id == c_slug) |
+                    (WeeklySession.contest_name.ilike(f"%{clean_c}%"))
+                )
+            v_res = q_v.order_by(WeeklyVirtualResult.id.desc()).first()
+
+        active_res = p_res if (p_res and p_res.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED")) else v_res
+        
+        # If student did not participate in the requested contest, do NOT fabricate certificate
+        if contest and not active_res:
+            logger.warning(f"[CERT_MISMATCH] Student {student_obj.reg_no} has no verified participation in contest {contest}")
+            return None
+
+        if active_res and active_res.session:
+            contest_name = active_res.session.contest_name
+            contest_date = active_res.session.session_date or "16.08.2026"
+        else:
+            # Fallback to latest finalized session
+            latest_sess = db.query(WeeklySession).filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED"])).order_by(WeeklySession.id.desc()).first()
+            contest_name = latest_sess.contest_name if latest_sess else "Weekly Contest 515"
+            contest_date = latest_sess.session_date if (latest_sess and latest_sess.session_date) else "16.08.2026"
+
         target_v_id = clean_id if clean_id.startswith("CERT-") else (raw_id if raw_id.lower().startswith("trace_") else f"CERT-{clean_id}")
-        
+
         cert = CertificateRecord(
             verification_id=target_v_id,
             certificate_code=raw_id,
@@ -103,7 +142,7 @@ def resolve_certificate_record(
             department_name=dept_full,
             program=f"B.E. {dept_full}",
             recognition=f"Official Contest Forensic Verification: {contest_name}",
-            issue_date="16.08.2026",
+            issue_date=contest_date,
             status="VALID",
             verification_url=f"https://leetcode-student-data.web.app/verify/{raw_id}",
             created_by="Automated Forensic Engine"

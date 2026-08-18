@@ -106,34 +106,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
       console.debug("Firestore lookup error:", firestoreErr);
     }
 
-    // 3. Fallback for Forensic Trace or Student Register Number
-    const isTrace = verificationId.toLowerCase().startsWith('trace_') || verificationId.toUpperCase().startsWith('TRACE') || verificationId.includes('7322');
-    if (isTrace) {
-      setData({
-        verified: true,
-        status: 'VERIFIED',
-        is_valid: true,
-        verification_id: verificationId,
-        certificate_id: verificationId,
-        student_name: nameParam || 'NANTHISH S',
-        register_no: regParam || '732224CC031',
-        department: 'CSE(CS)',
-        department_name: 'Computer Science and Engineering (Cyber Security)',
-        program: 'B.E. Computer Science and Engineering (Cyber Security)',
-        recognition: `Official Contest Forensic Verification: ${contestParam ? 'Weekly Contest ' + contestParam : 'Weekly Contest 515'}`,
-        achievement_level: 'Solved 3 / 4 Problems (Global Rank: #2,347 • Rating: 1541.0)',
-        issue_date: '16.08.2026',
-        certificate_type: 'Official Contest Forensic Verification',
-        verification_url: `https://leetcode-student-data.web.app/verify/${verificationId}`,
-        institution: 'NANDHA ENGINEERING COLLEGE (AUTONOMOUS)',
-        accreditation: 'Approved by AICTE, New Delhi • Affiliated to Anna University, Chennai • Accredited by NAAC with \'A+\' Grade',
-        message: 'Official Institutional Forensic Verification Authentic and Sealed'
-      });
-      setLoading(false);
-      return;
-    }
-
-    // Default Not Found State
+    // Default Not Found State (No hardcoded or fabricated fallbacks allowed)
     setData({
       status: 'NOT_VERIFIED',
       is_valid: false,
