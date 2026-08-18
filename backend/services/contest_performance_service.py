@@ -37,36 +37,43 @@ def normalize_year_filter(target_year: Optional[str]) -> Optional[str]:
     return t
 
 
+def normalize_dept_val(code_raw: Optional[str], name_raw: Optional[str] = "") -> str:
+    c = str(code_raw or "").upper().strip()
+    n = str(name_raw or "").upper().strip()
+    if "IOT" in c or "IOT" in n or "CI" in c:
+        return "CSE(IoT)"
+    if "CYBER" in c or "CYBER" in n or "CC" in c or ("CS" in c and "IOT" not in c):
+        return "CSE(CS)"
+    return str(code_raw or "CSE(CS)")
+
+
 def matches_dept(r_dept_code: str, r_dept_name: str, target_dept: Optional[str]) -> bool:
     norm_target = normalize_department_filter(target_dept)
     if norm_target is None:
         return True
-    code_up = str(r_dept_code or "").upper().strip()
-    name_up = str(r_dept_name or "").upper().strip()
-    target_clean = norm_target.replace("🏢", "").strip()
+    student_norm = normalize_dept_val(r_dept_code, r_dept_name)
+    target_norm = normalize_dept_val(norm_target, norm_target)
+    return student_norm == target_norm
 
-    if "CS" in target_clean and "IOT" not in target_clean:
-        return ("CS" in code_up or "CYBER" in code_up or "CYBER" in name_up) and ("IOT" not in code_up and "IOT" not in name_up)
-    elif "IOT" in target_clean or "CI" in target_clean:
-        return "IOT" in code_up or "IOT" in name_up or "CI" in code_up
-    else:
-        return target_clean in code_up or target_clean in name_up
+
+def normalize_year_val(year_raw: Optional[str]) -> str:
+    y = str(year_raw or "").upper().replace("YEAR", "").replace("🎓", "").strip()
+    if "III" in y or "3" in y:
+        return "III"
+    if "IV" in y or "4" in y:
+        return "IV"
+    if "II" in y or "2" in y:
+        return "II"
+    if "I" in y or "1" in y:
+        return "I"
+    return "III"
 
 
 def matches_year(r_year: Optional[str], target_year: Optional[str]) -> bool:
     norm_target = normalize_year_filter(target_year)
     if norm_target is None:
         return True
-    r_y = str(r_year or "").upper().replace("YEAR", "").replace("🎓", "").strip()
-    t_y = norm_target.replace("YEAR", "").replace("🎓", "").strip()
-
-    if t_y in ["III", "3", "3RD"]:
-        return r_y in ["III", "3", "3RD"]
-    elif t_y in ["II", "2", "2ND"]:
-        return r_y in ["II", "2", "2ND"]
-    elif t_y in ["IV", "4", "4TH"]:
-        return r_y in ["IV", "4", "4TH"]
-    return t_y in r_y
+    return normalize_year_val(r_year) == normalize_year_val(norm_target)
 
 
 def build_contest_performance_report(db: Session, config: ReportConfig) -> Dict[str, Any]:
@@ -162,9 +169,9 @@ def build_contest_performance_report(db: Session, config: ReportConfig) -> Dict[
         reg_no = s.reg_no
         name = s.name
         dept_code = s.department.code if s.department else "CSE"
-        dept_norm = "CSE(CS)" if ("CS" in dept_code.upper() or "CYBER" in dept_code.upper()) else ("CSE(IoT)" if "IOT" in dept_code.upper() else dept_code)
+        dept_norm = normalize_dept_val(dept_code, s.department.name if s.department else "")
         year_level = s.year_level or "III"
-        yr_norm = "II" if ("II" in year_level or "2" in year_level) else ("IV" if ("IV" in year_level or "4" in year_level) else "III")
+        yr_norm = normalize_year_val(year_level)
         username = (s.username or "").strip()
 
         p_res = public_map.get(s_id)
