@@ -815,6 +815,7 @@ def sync_single_historical_session(db: Session, session_id: int):
 
     # Clear existing session results and write verified records
     db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session.id).delete(synchronize_session=False)
+    db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == session.id).delete(synchronize_session=False)
 
     counts = {
         "PUBLIC_ATTENDED": 0,
@@ -873,6 +874,20 @@ def sync_single_historical_session(db: Session, session_id: int):
             last_fetched_at=now_dt
         )
         db.add(pub_res)
+
+        if cls_type == "VIRTUAL_ATTENDED" or r["participation_status"] == "VIRTUAL":
+            vir_res = WeeklyVirtualResult(
+                session_id=session.id,
+                student_id=r["student_id"],
+                reg_no=r["reg_no"],
+                name=r["name"],
+                participation_status="VIRTUAL_ATTENDED",
+                q1=q1, q2=q2, q3=q3, q4=q4,
+                total_contest_solved=solved,
+                contest_score=score,
+                completed_at=now_dt
+            )
+            db.add(vir_res)
 
         # Also store / update in LeetCodeContestRatingHistory if official contest result
         if cls_type == "PUBLIC_ATTENDED":

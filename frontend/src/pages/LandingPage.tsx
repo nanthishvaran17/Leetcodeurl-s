@@ -108,6 +108,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       }
     } else if (data.type === 'SYNC_COMPLETED') {
       const tot = data.summary?.total_students || 300;
+      const formattedTime = data.summary?.completed_at_ist || (data.summary?.completed_at ? new Date(data.summary.completed_at.endsWith('Z') ? data.summary.completed_at : data.summary.completed_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) + ' IST' : new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) + ' IST');
       setSyncProgress({
         total: tot,
         processed: tot,
@@ -115,7 +116,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         failed: data.summary?.fetch_failed ?? 0,
         pending_usernames: data.summary?.pending_username ?? 0,
         is_running: false,
-        last_sync_time: data.summary?.completed_at || new Date().toLocaleTimeString()
+        last_sync_time: formattedTime
       });
       setRefreshing(false);
       fetchFilteredStudents();

@@ -415,6 +415,7 @@ async def run_full_pipeline(
 
         from backend.services.live_sync_service import sync_tracker
 
+        from backend.time_utils import format_ist
         summary = {
             "job_id": effective_job_id,
             "total_students": total_students,
@@ -425,7 +426,8 @@ async def run_full_pipeline(
             "invalid_username": sync_tracker.invalid,
             "fetch_failed": sync_tracker.failed,
             "duration_seconds": duration_sec,
-            "completed_at": end_time.isoformat()
+            "completed_at": end_time.isoformat(),
+            "completed_at_ist": format_ist(end_time, "%d %b %Y, %I:%M %p IST")
         }
 
         if progress_callback and hasattr(progress_callback, "finish"):

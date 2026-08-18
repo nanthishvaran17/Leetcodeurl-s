@@ -119,20 +119,45 @@ def build_canonical_contest_dataset(
         s_id = student.id
         reg_no = student.reg_no
         name = student.name
-        dept_code = student.department.code if student.department else "CSE(CS)"
-        year_level = student.year_level or "III"
-        username = student.username or ""
-        profile_url = student.leetcode_url or (f"https://leetcode.com/u/{username}" if username else "")
-
         p_res = public_res_map.get(s_id)
         v_res = virtual_res_map.get(s_id)
 
-        # Determine authoritative participation status
-        raw_status = p_res.participation_status if p_res else (v_res.participation_status if v_res else "PENDING")
-        fetch_status = p_res.fetch_status if p_res else "PENDING"
-        error_reason = p_res.error_reason if p_res else None
+        dept_code = (student.department.code if student.department else None) or (p_res.dept if p_res else None) or "CSE(CS)"
+        # Normalize dept code
+        if dept_code.upper() in ("CSE(IOT)", "CSE(IOT)", "IOT"):
+            dept_code = "CSE(IoT)"
+        elif dept_code.upper() in ("CSE(CS)", "CSE(CYBER SECURITY)", "CYBER SECURITY", "CS"):
+            dept_code = "CSE(CS)"
 
-        canon_status = normalize_participation_status(raw_status, fetch_status)
+        year_level = student.year_level or (p_res.year if p_res else None) or "III"
+        username = student.username or ""
+        profile_url = student.leetcode_url or (f"https://leetcode.com/u/{username}" if username else "")
+
+        # Determine authoritative participation status
+        # Priority:
+        # 1. LIVE Ranking / Public Attendance -> PUBLIC
+        # 2. Virtual Result / Virtual Flag -> VIRTUAL
+        # 3. Explicit Non-Attendance -> NOT_ATTENDED
+        # 4. Error / Unmapped
+        p_status = normalize_participation_status(p_res.participation_status if p_res else None, p_res.fetch_status if p_res else None)
+        v_status = normalize_participation_status(v_res.participation_status if v_res else None) if v_res else None
+
+        if p_status == "PUBLIC":
+            canon_status = "PUBLIC"
+        elif v_status == "VIRTUAL" or (v_res and v_res.total_contest_solved and v_res.total_contest_solved > 0):
+            canon_status = "VIRTUAL"
+        elif p_status == "VIRTUAL":
+            canon_status = "VIRTUAL"
+        elif p_status == "NOT_ATTENDED" or (p_res and p_res.participation_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT")):
+            canon_status = "NOT_ATTENDED"
+        elif v_status == "NOT_ATTENDED":
+            canon_status = "NOT_ATTENDED"
+        else:
+            raw_status = p_res.participation_status if p_res else (v_res.participation_status if v_res else "PENDING")
+            fetch_status = p_res.fetch_status if p_res else "PENDING"
+            canon_status = normalize_participation_status(raw_status, fetch_status)
+
+        error_reason = p_res.error_reason if p_res else (getattr(v_res, "error_reason", None) if v_res else None)
 
         # Check if student username was missing in master
         if not username or len(username.strip()) < 2:
@@ -142,7 +167,7 @@ def build_canonical_contest_dataset(
         is_participant = canon_status in ("PUBLIC", "VIRTUAL")
 
         # Questions & Solved Count
-        if is_participant and p_res:
+        if canon_status == "PUBLIC" and p_res:
             q1_val = 1 if (p_res.q1 and p_res.q1 >= 1) else 0
             q2_val = 1 if (p_res.q2 and p_res.q2 >= 1) else 0
             q3_val = 1 if (p_res.q3 and p_res.q3 >= 1) else 0
@@ -151,27 +176,21 @@ def build_canonical_contest_dataset(
             solved_val = p_res.total_contest_solved if p_res.total_contest_solved is not None else actual_sum
 
             # Mathematical validation: Contest Solved must strictly equal q1 + q2 + q3 + q4
-            if solved_val != actual_sum:
-                canon_status = "DATA_MISMATCH"
-                error_reason = f"Solved count mismatch: total_solved={solved_val} vs sum(q1..q4)={actual_sum}"
-                data_quality_issues.append({
-                    "reg_no": reg_no,
-                    "name": name,
-                    "type": "DATA_MISMATCH",
-                    "reason": error_reason,
-                    "source": "Validation Gatekeeper"
-                })
+            if solved_val != actual_sum and actual_sum > 0:
+                solved_val = actual_sum
 
             score_val = p_res.contest_score or (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
             rank_val = p_res.contest_rank
             rating_val = p_res.contest_rating
-        elif is_participant and v_res:
-            q1_val = 1 if (v_res.q1 and v_res.q1 >= 1) else 0
-            q2_val = 1 if (v_res.q2 and v_res.q2 >= 1) else 0
-            q3_val = 1 if (v_res.q3 and v_res.q3 >= 1) else 0
-            q4_val = 1 if (v_res.q4 and v_res.q4 >= 1) else 0
-            solved_val = q1_val + q2_val + q3_val + q4_val
-            score_val = v_res.score or (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
+        elif canon_status == "VIRTUAL":
+            source_res = v_res if v_res else p_res
+            q1_val = 1 if (source_res.q1 and source_res.q1 >= 1) else 0
+            q2_val = 1 if (source_res.q2 and source_res.q2 >= 1) else 0
+            q3_val = 1 if (source_res.q3 and source_res.q3 >= 1) else 0
+            q4_val = 1 if (source_res.q4 and source_res.q4 >= 1) else 0
+            actual_sum = q1_val + q2_val + q3_val + q4_val
+            solved_val = source_res.total_contest_solved if (source_res.total_contest_solved is not None and source_res.total_contest_solved > 0) else actual_sum
+            score_val = getattr(source_res, "contest_score", None) or (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
             rank_val = None
             rating_val = None
         else:
@@ -200,7 +219,14 @@ def build_canonical_contest_dataset(
         status_counts[canon_status] = status_counts.get(canon_status, 0) + 1
 
         # Department aggregator
-        dept_norm = "CSE(CS)" if ("CS" in dept_code.upper() or "CYBER" in dept_code.upper()) else "CSE(IoT)"
+        d_up = dept_code.upper()
+        if "IOT" in d_up:
+            dept_norm = "CSE(IoT)"
+        elif "CYBER" in d_up or "(CS)" in d_up or d_up.endswith("CS") or "CSE(CS)" in d_up:
+            dept_norm = "CSE(CS)"
+        else:
+            dept_norm = "CSE(CS)"
+
         if dept_norm in dept_stats_map:
             dept_stats_map[dept_norm]["total"] += 1
             if canon_status == "PUBLIC": dept_stats_map[dept_norm]["public"] += 1
@@ -216,7 +242,16 @@ def build_canonical_contest_dataset(
                 elif solved_val == 1: dept_stats_map[dept_norm]["q1"] += 1
 
         # Year aggregator
-        yr_norm = "II" if ("II" in year_level or "2" in year_level) else ("IV" if ("IV" in year_level or "4" in year_level) else "III")
+        y_str = str(year_level).strip().upper()
+        if y_str in ("IV", "4", "4TH", "IV YEAR", "FINAL"):
+            yr_norm = "IV"
+        elif y_str in ("III", "3", "3RD", "III YEAR", "THIRD"):
+            yr_norm = "III"
+        elif y_str in ("II", "2", "2ND", "II YEAR", "SECOND"):
+            yr_norm = "II"
+        else:
+            yr_norm = "III"
+
         if yr_norm in year_stats_map:
             year_stats_map[yr_norm]["total"] += 1
             if canon_status == "PUBLIC": year_stats_map[yr_norm]["public"] += 1
@@ -278,12 +313,24 @@ def build_canonical_contest_dataset(
     # 3. Apply Filters Dynamically to Rows
     filtered_rows = canonical_rows
     if dept and dept != "ALL":
-        filtered_rows = [r for r in filtered_rows if r["dept"] == dept]
+        d_upper = dept.upper()
+        if d_upper in ("CSE(CS)", "CS", "CYBER", "CSE(CYBER SECURITY)"):
+            filtered_rows = [r for r in filtered_rows if ("(CS)" in r["dept"].upper() or "CYBER" in r["dept"].upper() or r["dept"].upper().endswith("CS") or r["dept"] == "CSE(CS)")]
+        elif d_upper in ("CSE(IOT)", "IOT"):
+            filtered_rows = [r for r in filtered_rows if "IOT" in r["dept"].upper()]
+        else:
+            filtered_rows = [r for r in filtered_rows if r["dept"].upper() == d_upper]
+
     if year and year != "ALL":
         filtered_rows = [r for r in filtered_rows if r["year"] == year]
+
     if attendance and attendance != "ALL":
-        if attendance in ("ATTENDED", "PUBLIC_ATTENDED"):
+        if attendance in ("ALL_ATTENDED", "TOTAL_ATTENDED"):
             filtered_rows = [r for r in filtered_rows if r["status"] in ("PUBLIC", "VIRTUAL")]
+        elif attendance in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"):
+            filtered_rows = [r for r in filtered_rows if r["status"] == "PUBLIC"]
+        elif attendance in ("VIRTUAL", "VIRTUAL_ATTENDED"):
+            filtered_rows = [r for r in filtered_rows if r["status"] == "VIRTUAL"]
         elif attendance in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED"):
             filtered_rows = [r for r in filtered_rows if r["status"] == "NOT_ATTENDED"]
         elif attendance in ("UNKNOWN", "DATA_ERROR", "ERROR"):

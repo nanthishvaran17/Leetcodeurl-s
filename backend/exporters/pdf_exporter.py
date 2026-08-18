@@ -195,12 +195,15 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
         story.append(Spacer(1, 4))
 
         STATUS_LABEL = {
-            "PUBLIC_ATTENDED":     "PUBLIC",
-            "ATTENDED":            "PUBLIC",
-            "VIRTUAL_ATTENDED":    "VIRTUAL",
+            "PUBLIC":              "PUBLIC 🟢",
+            "PUBLIC_ATTENDED":     "PUBLIC 🟢",
+            "ATTENDED":            "PUBLIC 🟢",
+            "VIRTUAL":             "VIRTUAL 🟣",
+            "VIRTUAL_ATTENDED":    "VIRTUAL 🟣",
             "PUBLIC_NOT_ATTENDED": "NOT ATTENDED",
             "NOT_ATTENDED":        "NOT ATTENDED",
             "DATA_ERROR":          "DATA ERROR",
+            "USERNAME_NOT_FOUND":  "DATA ERROR",
             "PENDING":             "PENDING",
         }
 
@@ -230,8 +233,8 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
 
         for idx, r in enumerate(contest_rows, 1):
             p_status  = r.get("participation_status", "PENDING")
-            attended  = p_status in ("PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL_ATTENDED")
-            is_virtual = p_status == "VIRTUAL_ATTENDED"
+            is_virtual = p_status in ("VIRTUAL", "VIRTUAL_ATTENDED")
+            attended  = is_virtual or p_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED")
             status_label = STATUS_LABEL.get(p_status, p_status)
             c_name_val = r.get("contest_name") or dataset.get("contestName") or "Weekly Contest"
 
@@ -253,7 +256,7 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
             q3_p = Paragraph(str(v_q3) if attended else "—", cell_bold_style if attended else cell_style)
             q4_p = Paragraph(str(v_q4) if attended else "—", cell_bold_style if attended else cell_style)
 
-            status_color = '#065F46' if (attended and not is_virtual) else ('#1E40AF' if is_virtual else '#991B1B')
+            status_color = '#065F46' if (attended and not is_virtual) else ('#7C3AED' if is_virtual else '#991B1B')
             status_para = Paragraph(
                 f"<font color='{status_color}'><b>{status_label}</b></font>",
                 ParagraphStyle('sc', fontName='Times-Bold', fontSize=6.5, alignment=1)

@@ -158,12 +158,14 @@ def get_current_sync_status(db: Session = Depends(get_db)):
         current_username = None
         progress_pct = 0.0
 
+    from backend.time_utils import format_ist, now_utc as get_now_utc, ensure_utc
+
     if last_completed_job and last_completed_job.completed_at:
-        last_sync_time = last_completed_job.completed_at.strftime("%d %b %Y, %I:%M %p IST")
-        last_successful_sync_iso = last_completed_job.completed_at.isoformat()
+        last_sync_time = format_ist(last_completed_job.completed_at, "%d %b %Y, %I:%M %p IST")
+        last_successful_sync_iso = ensure_utc(last_completed_job.completed_at).isoformat()
     elif verified_cnt > 0:
-        last_sync_time = now_utc.strftime("%d %b %Y, %I:%M %p IST")
-        last_successful_sync_iso = now_utc.isoformat()
+        last_sync_time = format_ist(get_now_utc(), "%d %b %Y, %I:%M %p IST")
+        last_successful_sync_iso = get_now_utc().isoformat()
     else:
         last_sync_time = "Never completed"
         last_successful_sync_iso = None

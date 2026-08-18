@@ -402,7 +402,8 @@ def get_admin_control_center_data(db: Session = Depends(get_db)):
     failed_count = sync_tracker.failed if sync_tracker.is_running else (latest_job.error_count if latest_job else 0)
     pending_count = max(0, targets_count - processed_count) if sync_tracker.is_running else 0
 
-    last_sync_time_str = latest_job.completed_at.strftime("%d %b %Y %H:%M IST") if (latest_job and latest_job.completed_at) else now_ist_str
+    from backend.time_utils import format_ist
+    last_sync_time_str = format_ist(latest_job.completed_at, "%d %b %Y %H:%M IST") if (latest_job and latest_job.completed_at) else now_ist_str
     last_sync_duration_str = f"{round((latest_job.completed_at - latest_job.started_at).total_seconds(), 1)}s" if (latest_job and latest_job.completed_at and latest_job.started_at) else "4.2s"
 
     leetcode_sync_data = {
