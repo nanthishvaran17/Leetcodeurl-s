@@ -2,6 +2,7 @@ import os
 import time
 import random
 import asyncio
+import inspect
 from typing import Optional, Callable, Any, Dict
 from backend.logger import logger
 
@@ -98,7 +99,7 @@ class TokenBucketRateLimiter:
 
             async with self._semaphore:
                 try:
-                    if asyncio.iscoroutinefunction(request_func):
+                    if inspect.iscoroutinefunction(request_func):
                         result = await request_func()
                     else:
                         result = request_func()
