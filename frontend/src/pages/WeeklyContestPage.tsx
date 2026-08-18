@@ -1156,7 +1156,7 @@ export const WeeklyContestPage: React.FC = () => {
       )}
 
       {/* ── 2. UNIFIED COHESIVE FILTER & ACTION COMMAND BAR ── */}
-      <div className="sticky top-2 z-20 p-4 sm:p-5 rounded-3xl bg-white/95 dark:bg-navy-900/95 backdrop-blur-md border border-gray-200 dark:border-gray-800 shadow-xl space-y-4">
+      <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-xl space-y-4">
         {/* Row 1: Search Input + Full Consolidated Action Toolbar */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           {/* Real-time Search Input */}
