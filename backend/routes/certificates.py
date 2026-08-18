@@ -350,6 +350,7 @@ def generate_certificate_endpoint(
 
 
 @router.get("/certificates/{verification_id}/download-pdf")
+@router.get("/certificates/download/{verification_id}")
 def download_certificate_pdf(
     verification_id: str,
     reg: Optional[str] = None,
