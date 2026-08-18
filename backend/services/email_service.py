@@ -905,12 +905,14 @@ def send_manual_report_email(
 
     dispatched_count = 0
     errors = []
+    queued_log_ids = []
     total_bytes_all = sum(len(b) for _, b in attachments_bundle)
 
     for email in recipient_emails:
         exec_id = f"EXEC-{datetime.datetime.utcnow().strftime('%Y%m%d')}-{int(time.time()*1000) % 100000}"
         idempotency_key = f"SAFE-TEST-{email}-{int(time.time())}" if is_safe_test else f"CONTEST_PUBLIC_{session_id}_{email}_{dept}_{year}_{attendance}_{int(time.time())}"
-        
+        queued_log_ids.append(exec_id)
+
         log = EmailDispatchLog(
             email_id=exec_id,
             report_id=f"REP-SESSION-{session_id or 'OFFICIAL'}",
@@ -919,7 +921,7 @@ def send_manual_report_email(
             recipient=email,
             role="ADMIN_DISPATCH",
             subject=subject,
-            status="SENDING",
+            status="QUEUED",
             attachment_count=len(attachments_bundle),
             total_attachment_bytes=total_bytes_all
         )
@@ -940,7 +942,7 @@ def send_manual_report_email(
             db.commit()
             dispatched_count += 1
             logger.info(f"[REPORT EMAIL DELIVERED] To: {email} | Files: {len(attachments_bundle)} | Students: {total_students_cnt}")
-        else:
+        elif err_details:
             log.status = "FAILED"
             log.error_message = err_details or "Email delivery failed"
             db.commit()
@@ -954,6 +956,7 @@ def send_manual_report_email(
             "excel_filename": excel_filename,
             "total_students": total_students_cnt,
             "dispatched_count": 0,
+            "queued_log_ids": queued_log_ids,
             "errors": errors
         }
 
@@ -963,5 +966,6 @@ def send_manual_report_email(
         "excel_filename": excel_filename,
         "total_students": total_students_cnt,
         "dispatched_count": dispatched_count,
+        "queued_log_ids": queued_log_ids,
         "errors": errors if errors else None
     }

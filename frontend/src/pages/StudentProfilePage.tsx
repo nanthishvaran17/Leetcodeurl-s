@@ -54,8 +54,28 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         throw new Error("No certificate verification ID returned.");
       }
 
-      const baseApi = import.meta.env.VITE_API_URL || '';
-      window.open(`${baseApi}/api/certificates/${certId}/download-pdf`, '_blank');
+      const response = await api.get(`/certificates/${encodeURIComponent(certId)}/download-pdf`, {
+        responseType: 'blob'
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      let filename = `Certificate_${certId}.pdf`;
+      const disposition = response.headers['content-disposition'] || response.headers['Content-Disposition'];
+      if (disposition && disposition.includes('filename=')) {
+        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+        if (matches != null && matches[1]) {
+          filename = matches[1].replace(/['"]/g, '').trim();
+        }
+      }
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => {
+        window.URL.revokeObjectURL(blobUrl);
+      }, 2000);
     } catch (err: any) {
       console.error("Certificate error:", err);
       const detailMsg = err.response?.data?.detail || err.message || "Failed to generate certificate.";

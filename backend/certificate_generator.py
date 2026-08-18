@@ -98,38 +98,53 @@ def get_active_signature(db: Session, sig_type: str, department_code: Optional[s
     return query.order_by(AuthorizedSignature.id.desc()).first()
 
 
-def generate_student_certificate(
+def _load_signature_cell(sig: Optional[AuthorizedSignature]):
+    """Loads signature image from disk or base64 image_data fallback."""
+    if not sig:
+        return Spacer(1, 0.55 * inch)
+    if sig.image_path and os.path.exists(sig.image_path):
+        try:
+            img = Image(sig.image_path, width=1.6 * inch, height=0.55 * inch, kind='proportional')
+            img.hAlign = 'CENTER'
+            return img
+        except Exception as e:
+            logger.warning(f"Error loading signature from path: {e}")
+    if sig.image_data and "base64," in sig.image_data:
+        try:
+            b64_data = sig.image_data.split("base64,")[1]
+            raw_bytes = base64.b64decode(b64_data)
+            buf = io.BytesIO(raw_bytes)
+            img = Image(buf, width=1.6 * inch, height=0.55 * inch, kind='proportional')
+            img.hAlign = 'CENTER'
+            return img
+        except Exception as e:
+            logger.warning(f"Error loading signature from base64 data: {e}")
+    return Spacer(1, 0.55 * inch)
+
+
+def render_certificate_pdf_bytes(
+    student_name: str,
+    register_no: str,
+    department_code: str,
+    department_name: str,
+    program: str,
+    recognition: str,
+    issue_date_display: str,
+    verification_id: str,
+    verification_url: str,
     db: Session,
-    student: Student,
-    cert_type: str = "Top Performer",
-    custom_date_str: Optional[str] = None,
-    created_by: str = "Admin"
-) -> Dict[str, Any]:
+    target_path: Optional[str] = None
+) -> bytes:
     """
-    Generates a high-resolution, print-ready A4 Landscape PDF certificate with scannable QR verification,
-    official college emblem, dynamic student metadata, and authorized signatures.
+    Renders an authoritative print-ready A4 landscape PDF certificate in memory.
+    Optionally saves to target_path for local caching.
     """
-    # 1. Authoritative Student & Department Validation
-    raw_dept = student.department.code if student.department else "CSE(CS)"
-    dept_full_title = resolve_department_name(raw_dept)
-    
-    # 2. Unique Verification ID & Production Verification URL
-    cert_id = f"CERT-{uuid.uuid4().hex[:8].upper()}"
-    verification_url = f"https://leetcode-student-data.web.app/verify/{cert_id}"
-    
-    # Date Display
-    today_dt = datetime.date.today()
-    issue_date_display = custom_date_str or today_dt.strftime("%b %d, %Y")
-
-    # 3. Lookup Signatures
+    # 1. Signatures
     principal_sig = get_active_signature(db, "PRINCIPAL")
-    dept_sig_type = "HOD_CSE_IOT" if ("IOT" in raw_dept.upper()) else "HOD_CSE_CS"
-    hod_sig = get_active_signature(db, dept_sig_type, raw_dept)
+    dept_sig_type = "HOD_CSE_IOT" if ("IOT" in (department_code or "").upper()) else "HOD_CSE_CS"
+    hod_sig = get_active_signature(db, dept_sig_type, department_code)
 
-    principal_ver = principal_sig.version if principal_sig else "v1"
-    hod_ver = hod_sig.version if hod_sig else "v1"
-
-    # 4. Generate QR Code linking directly to production verification page
+    # 2. QR Code (in-memory)
     qr = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_M,
@@ -139,43 +154,26 @@ def generate_student_certificate(
     qr.add_data(verification_url)
     qr.make(fit=True)
     qr_img = qr.make_image(fill_color="#0B192C", back_color="white")
-    
-    qr_filename = f"{cert_id}_qr.png"
-    qr_path = os.path.join(CERT_DIR, qr_filename)
-    qr_img.save(qr_path)
 
-    # 5. Persist Certificate Record in Database
-    cert_record = CertificateRecord(
-        verification_id=cert_id,
-        certificate_type=cert_type,
-        student_id=student.id,
-        student_name=student.name,
-        register_no=student.reg_no,
-        department=raw_dept,
-        department_name=dept_full_title,
-        program="Institutional LeetCode Continuous Performance Tracking System",
-        recognition="Top Performer",
-        issue_date=issue_date_display,
-        status="VALID",
-        principal_signature_version=principal_ver,
-        hod_signature_version=hod_ver,
-        verification_url=verification_url,
-        qr_path=qr_path,
-        created_by=created_by
-    )
-    db.add(cert_record)
-    db.commit()
-    db.refresh(cert_record)
+    qr_buf = io.BytesIO()
+    qr_img.save(qr_buf, format="PNG")
+    qr_buf.seek(0)
+    qr_img_cell = Image(qr_buf, width=0.85 * inch, height=0.85 * inch)
+    qr_img_cell.hAlign = 'CENTER'
 
-    # 6. Build High-Resolution A4 Landscape Document
-    pdf_filename = f"{student.reg_no}_{cert_id}.pdf"
-    pdf_path = os.path.join(CERT_DIR, pdf_filename)
-    cert_record.pdf_path = pdf_path
-    db.commit()
+    # Cache QR to disk if possible
+    try:
+        qr_filename = f"{verification_id}_qr.png"
+        qr_path = os.path.join(CERT_DIR, qr_filename)
+        qr_img.save(qr_path)
+    except Exception:
+        pass
 
+    # 3. Build Story
+    pdf_buffer = io.BytesIO()
     doc = SimpleDocTemplate(
-        pdf_path,
-        pagesize=landscape(A4), # 841.89 pt x 595.27 pt (297mm x 210mm)
+        pdf_buffer,
+        pagesize=landscape(A4),
         rightMargin=36,
         leftMargin=36,
         topMargin=32,
@@ -276,14 +274,16 @@ def generate_student_certificate(
     )
 
     clean_college = html.escape(settings.COLLEGE_NAME or "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)").upper()
-    clean_name = html.escape(student.name or "").upper()
-    clean_reg = html.escape(student.reg_no or "").upper()
-    clean_dept_full = html.escape(dept_full_title)
+    clean_name = html.escape(student_name or "").upper()
+    clean_reg = html.escape(register_no or "").upper()
+    clean_dept_full = html.escape(department_name or resolve_department_name(department_code))
+    clean_recognition = html.escape(recognition or "Top Performer")
+    clean_program = html.escape(program or "Institutional LeetCode Continuous Performance Tracking System")
 
     # ─── HEADER: Logo & College Accreditation ───
     if os.path.exists(COLLEGE_LOGO_PATH):
         try:
-            emblem_img = Image(COLLEGE_LOGO_PATH, width=0.85*inch, height=0.85*inch)
+            emblem_img = Image(COLLEGE_LOGO_PATH, width=0.85 * inch, height=0.85 * inch)
             emblem_img.hAlign = 'CENTER'
             story.append(emblem_img)
             story.append(Spacer(1, 4))
@@ -311,39 +311,27 @@ def generate_student_certificate(
 
     # ─── CITATION & RECOGNITION ───
     cert_msg = (
-        "For exceptional algorithmic problem-solving competence, dedication, "
-        "and achieving <b>Top Performer</b> distinction in the Institutional LeetCode "
-        "Continuous Performance Tracking System during the academic session."
+        f"For exceptional algorithmic problem-solving competence, dedication, "
+        f"and achieving <b>{clean_recognition}</b> distinction in the {clean_program} "
+        f"during the academic session."
     )
     story.append(Paragraph(cert_msg, body_style))
     story.append(Spacer(1, 6))
 
     # Recognition Badge
-    story.append(Paragraph("<b>★ TOP PERFORMER &nbsp;•&nbsp; WEEKLY LEETCODE PROGRAM ★</b>", badge_style))
+    story.append(Paragraph(f"<b>★ {clean_recognition.upper()} &nbsp;•&nbsp; WEEKLY LEETCODE PROGRAM ★</b>", badge_style))
     story.append(Spacer(1, 14))
 
     # ─── BOTTOM 3-COLUMN LAYOUT: Left (Principal), Center (QR + Verification), Right (HOD) ───
-    # 1. Left Subtable: Principal Signature Image + Line
-    principal_img_cell = None
-    if principal_sig and principal_sig.image_path and os.path.exists(principal_sig.image_path):
-        try:
-            p_img = Image(principal_sig.image_path, width=1.6*inch, height=0.55*inch, kind='proportional')
-            p_img.hAlign = 'CENTER'
-            principal_img_cell = p_img
-        except Exception as e:
-            logger.warning(f"Error loading principal signature: {e}")
-            principal_img_cell = Spacer(1, 0.55*inch)
-    else:
-        principal_img_cell = Spacer(1, 0.55*inch)
-
+    # 1. Left Subtable: Principal Signature
+    principal_img_cell = _load_signature_cell(principal_sig)
     principal_text_cell = Paragraph(
         "____________________________<br/>"
         "<b>PRINCIPAL</b><br/>"
         "<font size='7.5' color='#475569'>Nandha Engineering College</font>",
         sig_style
     )
-
-    left_subtable = Table([[principal_img_cell], [principal_text_cell]], colWidths=[3.0*inch])
+    left_subtable = Table([[principal_img_cell], [principal_text_cell]], colWidths=[3.0 * inch])
     left_subtable.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, 0), 'BOTTOM'),
@@ -355,16 +343,14 @@ def generate_student_certificate(
     ]))
 
     # 2. Center Subtable: Verification QR Code + Details
-    qr_img_cell = Image(qr_path, width=0.85*inch, height=0.85*inch)
-    qr_img_cell.hAlign = 'CENTER'
     center_text_cell = Paragraph(
         f"<b>CERTIFICATE VERIFICATION</b><br/>"
-        f"Verification Code: <b>{cert_id}</b><br/>"
+        f"Verification Code: <b>{verification_id}</b><br/>"
         f"Issue Date: {issue_date_display}<br/>"
         f"<font color='#64748B' size='7'>Scan QR to verify authenticity</font>",
         sig_style
     )
-    center_subtable = Table([[qr_img_cell], [center_text_cell]], colWidths=[2.8*inch])
+    center_subtable = Table([[qr_img_cell], [center_text_cell]], colWidths=[2.8 * inch])
     center_subtable.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -374,27 +360,15 @@ def generate_student_certificate(
         ('RIGHTPADDING', (0, 0), (-1, -1), 0),
     ]))
 
-    # 3. Right Subtable: HOD / Coordinator Signature Image + Line
-    hod_img_cell = None
-    if hod_sig and hod_sig.image_path and os.path.exists(hod_sig.image_path):
-        try:
-            h_img = Image(hod_sig.image_path, width=1.6*inch, height=0.55*inch, kind='proportional')
-            h_img.hAlign = 'CENTER'
-            hod_img_cell = h_img
-        except Exception as e:
-            logger.warning(f"Error loading HOD signature: {e}")
-            hod_img_cell = Spacer(1, 0.55*inch)
-    else:
-        hod_img_cell = Spacer(1, 0.55*inch)
-
+    # 3. Right Subtable: HOD / Coordinator Signature
+    hod_img_cell = _load_signature_cell(hod_sig)
     hod_text_cell = Paragraph(
         "____________________________<br/>"
         "<b>HOD / COORDINATOR</b><br/>"
         f"<font size='7.5' color='#475569'>{clean_dept_full}</font>",
         sig_style
     )
-
-    right_subtable = Table([[hod_img_cell], [hod_text_cell]], colWidths=[3.0*inch])
+    right_subtable = Table([[hod_img_cell], [hod_text_cell]], colWidths=[3.0 * inch])
     right_subtable.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, 0), 'BOTTOM'),
@@ -406,7 +380,7 @@ def generate_student_certificate(
     ]))
 
     # 4. Main 3-column table
-    main_footer_table = Table([[left_subtable, center_subtable, right_subtable]], colWidths=[3.1*inch, 2.8*inch, 3.1*inch])
+    main_footer_table = Table([[left_subtable, center_subtable, right_subtable]], colWidths=[3.1 * inch, 2.8 * inch, 3.1 * inch])
     main_footer_table.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
@@ -418,9 +392,139 @@ def generate_student_certificate(
 
     story.append(main_footer_table)
 
-    # 7. Build PDF with custom ornate border on first page
+    # 4. Build Document
     doc.build(story, onFirstPage=draw_ornate_border)
-    logger.info(f"[CERTIFICATE_GENERATED] Verification ID: {cert_id} for Student: {student.name} ({student.reg_no})")
+    pdf_bytes = pdf_buffer.getvalue()
+
+    if target_path:
+        try:
+            os.makedirs(os.path.dirname(target_path), exist_ok=True)
+            with open(target_path, "wb") as f:
+                f.write(pdf_bytes)
+        except Exception as e:
+            logger.warning(f"Note saving certificate cache to {target_path}: {e}")
+
+    logger.info(f"[CERTIFICATE_GENERATED] Verification ID: {verification_id} for Student: {student_name} ({register_no})")
+    return pdf_bytes
+
+
+def build_certificate_pdf_from_record(
+    cert: CertificateRecord,
+    db: Session,
+    target_path: Optional[str] = None
+) -> bytes:
+    """
+    Generates authoritative PDF bytes for an existing verified CertificateRecord.
+    Guarantees that missing disk PDFs are instantly reconstructed from verified DB records.
+    """
+    dept_code = cert.department or "CSE(CS)"
+    dept_name = cert.department_name or resolve_department_name(dept_code)
+    ver_url = cert.verification_url or f"https://leetcode-student-data.web.app/verify/{cert.verification_id}"
+
+    if not target_path and cert.pdf_path:
+        target_path = cert.pdf_path
+    elif not target_path:
+        target_path = os.path.join(CERT_DIR, f"{cert.register_no}_{cert.verification_id}.pdf")
+
+    pdf_bytes = render_certificate_pdf_bytes(
+        student_name=cert.student_name,
+        register_no=cert.register_no,
+        department_code=dept_code,
+        department_name=dept_name,
+        program=cert.program or "Institutional LeetCode Continuous Performance Tracking System",
+        recognition=cert.recognition or "Top Performer",
+        issue_date_display=cert.issue_date or datetime.date.today().strftime("%b %d, %Y"),
+        verification_id=cert.verification_id,
+        verification_url=ver_url,
+        db=db,
+        target_path=target_path
+    )
+
+    if cert.pdf_path != target_path:
+        cert.pdf_path = target_path
+        try:
+            db.commit()
+        except Exception:
+            db.rollback()
+
+    return pdf_bytes
+
+
+def generate_student_certificate(
+    db: Session,
+    student: Student,
+    cert_type: str = "Top Performer",
+    custom_date_str: Optional[str] = None,
+    created_by: str = "Admin"
+) -> Dict[str, Any]:
+    """
+    Generates a high-resolution, print-ready A4 Landscape PDF certificate with scannable QR verification,
+    official college emblem, dynamic student metadata, and authorized signatures.
+    """
+    # 1. Authoritative Student & Department Validation
+    raw_dept = student.department.code if student.department else "CSE(CS)"
+    dept_full_title = resolve_department_name(raw_dept)
+    
+    # 2. Unique Verification ID & Production Verification URL
+    cert_id = f"CERT-{uuid.uuid4().hex[:8].upper()}"
+    verification_url = f"https://leetcode-student-data.web.app/verify/{cert_id}"
+    
+    # Date Display
+    today_dt = datetime.date.today()
+    issue_date_display = custom_date_str or today_dt.strftime("%b %d, %Y")
+
+    # 3. Lookup Signatures
+    principal_sig = get_active_signature(db, "PRINCIPAL")
+    dept_sig_type = "HOD_CSE_IOT" if ("IOT" in raw_dept.upper()) else "HOD_CSE_CS"
+    hod_sig = get_active_signature(db, dept_sig_type, raw_dept)
+
+    principal_ver = principal_sig.version if principal_sig else "v1"
+    hod_ver = hod_sig.version if hod_sig else "v1"
+
+    # Paths
+    pdf_filename = f"{student.reg_no}_{cert_id}.pdf"
+    pdf_path = os.path.join(CERT_DIR, pdf_filename)
+    qr_filename = f"{cert_id}_qr.png"
+    qr_path = os.path.join(CERT_DIR, qr_filename)
+
+    # 4. Persist Certificate Record in Database
+    cert_record = CertificateRecord(
+        verification_id=cert_id,
+        certificate_type=cert_type,
+        student_id=student.id,
+        student_name=student.name,
+        register_no=student.reg_no,
+        department=raw_dept,
+        department_name=dept_full_title,
+        program="Institutional LeetCode Continuous Performance Tracking System",
+        recognition="Top Performer",
+        issue_date=issue_date_display,
+        status="VALID",
+        principal_signature_version=principal_ver,
+        hod_signature_version=hod_ver,
+        verification_url=verification_url,
+        qr_path=qr_path,
+        pdf_path=pdf_path,
+        created_by=created_by
+    )
+    db.add(cert_record)
+    db.commit()
+    db.refresh(cert_record)
+
+    # 5. Render Document and Cache to Disk
+    render_certificate_pdf_bytes(
+        student_name=student.name,
+        register_no=student.reg_no,
+        department_code=raw_dept,
+        department_name=dept_full_title,
+        program="Institutional LeetCode Continuous Performance Tracking System",
+        recognition="Top Performer",
+        issue_date_display=issue_date_display,
+        verification_id=cert_id,
+        verification_url=verification_url,
+        db=db,
+        target_path=pdf_path
+    )
 
     return {
         "success": True,
@@ -437,3 +541,4 @@ def generate_student_certificate(
         "qr_path": qr_path,
         "status": "VALID"
     }
+

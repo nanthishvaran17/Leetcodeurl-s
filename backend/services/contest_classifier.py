@@ -3,13 +3,12 @@ contest_classifier.py — Production Deterministic Contest Participation Classif
 
 Critical Refinements:
   - Refinement A: VIRTUAL_ATTENDED clarification:
-      if attended == True:
+      if contest_data is None:
+          status = NOT_ATTENDED
+      elif attended == True:
           status = PUBLIC_ATTENDED
       elif attended == False:
-          if problems_solved > 0 or has_virtual_submission_trace:
-              status = VIRTUAL_ATTENDED
-          else:
-              status = NOT_ATTENDED
+          status = VIRTUAL_ATTENDED (irrespective of problems_solved count)
   - Refinement B: Strict distinction between FETCH_FAILED (network/API error)
     and UNKNOWN (data returned but ambiguous or identity mismatched).
   - Refinement C: Clear separation of source_timestamp (LeetCode timestamp) vs
@@ -332,40 +331,26 @@ class ContestClassifier:
                 source_timestamp=source_ts,
             )
         else:
-            # attended == False
-            # Explicit virtual contest trace (is_virtual flag or explicit virtual submission)
-            is_virtual = bool(contest_data.get("is_virtual", False))
-            if is_virtual or (problems_solved is not None and problems_solved > 0 and contest_data.get("virtual_session")):
-                return ContestStatusRow(
-                    student_id=student_id,
-                    student_name=student_name,
-                    verified_leetcode_username=verified_username,
-                    contest_id=canonical_contest_id,
-                    contest_name=contest_name,
-                    status=ContestStatus.VIRTUAL_ATTENDED,
-                    reason_code=ReasonCode.VIRTUAL,
-                    fetch_status=FetchStatus.OK,
-                    score=score,
-                    rank=rank,
-                    problems_solved=problems_solved,
-                    q1_solved=q1,
-                    q2_solved=q2,
-                    q3_solved=q3,
-                    q4_solved=q4,
-                    rating_after=rating_after,
-                    source_timestamp=source_ts,
-                )
-            else:
-                return ContestStatusRow(
-                    student_id=student_id,
-                    student_name=student_name,
-                    verified_leetcode_username=verified_username,
-                    contest_id=canonical_contest_id,
-                    contest_name=contest_name,
-                    status=ContestStatus.NOT_ATTENDED,
-                    reason_code=ReasonCode.NO_PARTICIPATION,
-                    fetch_status=FetchStatus.OK,
-                )
+            # attended == False -> Confirmed virtual participation
+            return ContestStatusRow(
+                student_id=student_id,
+                student_name=student_name,
+                verified_leetcode_username=verified_username,
+                contest_id=canonical_contest_id,
+                contest_name=contest_name,
+                status=ContestStatus.VIRTUAL_ATTENDED,
+                reason_code=ReasonCode.VIRTUAL,
+                fetch_status=FetchStatus.OK,
+                score=score,
+                rank=rank,
+                problems_solved=problems_solved,
+                q1_solved=q1,
+                q2_solved=q2,
+                q3_solved=q3,
+                q4_solved=q4,
+                rating_after=rating_after,
+                source_timestamp=source_ts,
+            )
 
     def classify_batch(
         self,
@@ -666,39 +651,26 @@ async def get_contest_status(
             source_timestamp=source_ts,
         )
     else:
-        # attended == False
-        is_virtual = bool(entry.get("is_virtual", False))
-        if is_virtual or (solved is not None and solved > 0 and entry.get("virtual_session")):
-            return ContestStatusRow(
-                student_id=student_id,
-                student_name=student_name,
-                verified_leetcode_username=canonical_username,
-                contest_id=canonical_id,
-                contest_name=contest_name,
-                status=ContestStatus.VIRTUAL_ATTENDED,
-                reason_code=ReasonCode.VIRTUAL,
-                fetch_status=FetchStatus.OK,
-                score=score,
-                rank=rank,
-                problems_solved=solved,
-                q1_solved=q1,
-                q2_solved=q2,
-                q3_solved=q3,
-                q4_solved=q4,
-                rating_after=rating_after,
-                source_timestamp=source_ts,
-            )
-        else:
-            return ContestStatusRow(
-                student_id=student_id,
-                student_name=student_name,
-                verified_leetcode_username=canonical_username,
-                contest_id=canonical_id,
-                contest_name=contest_name,
-                status=ContestStatus.NOT_ATTENDED,
-                reason_code=ReasonCode.NO_PARTICIPATION,
-                fetch_status=FetchStatus.OK,
-            )
+        # attended == False -> Confirmed virtual participation
+        return ContestStatusRow(
+            student_id=student_id,
+            student_name=student_name,
+            verified_leetcode_username=canonical_username,
+            contest_id=canonical_id,
+            contest_name=contest_name,
+            status=ContestStatus.VIRTUAL_ATTENDED,
+            reason_code=ReasonCode.VIRTUAL,
+            fetch_status=FetchStatus.OK,
+            score=score,
+            rank=rank,
+            problems_solved=solved,
+            q1_solved=q1,
+            q2_solved=q2,
+            q3_solved=q3,
+            q4_solved=q4,
+            rating_after=rating_after,
+            source_timestamp=source_ts,
+        )
 
 
 @dataclass

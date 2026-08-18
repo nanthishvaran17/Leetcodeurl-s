@@ -6,12 +6,16 @@ from backend.models import Student, Department, Section, HODSnapshot, ReportHist
 from backend.services.report_models import ReportConfig, ReportDataset, DataQualitySummary
 from backend.services.report_data_service import fetch_normalized_students, fetch_normalized_contests, get_problem_category
 from backend.services.report_validators import validate_data_quality
+from backend.services.contest_performance_service import build_contest_performance_report
 
 def build_universal_report(db: Session, config: ReportConfig) -> Dict[str, Any]:
     """
     UNIVERSAL REPORT ENGINE
     Single Source of Truth generator that creates normalized datasets for all report types.
     """
+    if config.report_type in ("CONTEST_PERFORMANCE", "OFFICIAL_CONTEST", "WEEKLY_CONTEST"):
+        return build_contest_performance_report(db, config)
+
     raw_students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
     data_quality = validate_data_quality(raw_students)
 

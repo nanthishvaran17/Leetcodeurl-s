@@ -56,6 +56,8 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
   const [data, setData] = useState<CertificateVerificationData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState<boolean>(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!verificationId) {
@@ -142,10 +144,70 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
     setLoading(false);
   };
 
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
     if (!verificationId) return;
-    const baseApi = import.meta.env.VITE_API_URL || '';
-    window.open(`${baseApi}/api/certificates/${verificationId}/download-pdf`, '_blank');
+    setDownloading(true);
+    setDownloadError(null);
+
+    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+    const regParam = searchParams.get('reg') || searchParams.get('reg_no') || data?.register_no || '';
+    const contestParam = searchParams.get('contest') || '';
+    const nameParam = searchParams.get('name') || data?.student_name || '';
+
+    const queryParams = new URLSearchParams();
+    if (regParam) queryParams.set('reg', regParam);
+    if (contestParam) queryParams.set('contest', contestParam);
+    if (nameParam) queryParams.set('name', nameParam);
+    const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+
+    try {
+      const response = await api.get(`/certificates/${encodeURIComponent(verificationId)}/download-pdf${queryStr}`, {
+        responseType: 'blob'
+      });
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const cleanStudentName = (data?.student_name || 'Student').replace(/[^A-Za-z0-9_]+/g, '_').toUpperCase();
+      const cleanReg = (data?.register_no || verificationId).replace(/[^A-Za-z0-9_]+/g, '_').toUpperCase();
+      let filename = `Certificate_${cleanStudentName}_${cleanReg}.pdf`;
+
+      const disposition = response.headers['content-disposition'] || response.headers['Content-Disposition'];
+      if (disposition && disposition.includes('filename=')) {
+        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+        if (matches != null && matches[1]) {
+          filename = matches[1].replace(/['"]/g, '').trim();
+        }
+      }
+
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setTimeout(() => {
+        window.URL.revokeObjectURL(blobUrl);
+      }, 2000);
+    } catch (err: any) {
+      console.error("Certificate PDF Download error:", err);
+      let errorMsg = "Unable to download certificate PDF. Please verify your connection or try again.";
+      if (err.response && err.response.data) {
+        if (err.response.data instanceof Blob) {
+          try {
+            const text = await err.response.data.text();
+            const parsed = JSON.parse(text);
+            if (parsed.detail) errorMsg = parsed.detail;
+          } catch (_) {}
+        } else if (err.response.data.detail) {
+          errorMsg = err.response.data.detail;
+        }
+      }
+      setDownloadError(errorMsg);
+      alert(`Download Error: ${errorMsg}`);
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -304,14 +366,27 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
               </div>
 
               {/* Actions */}
-              <div className="flex items-center justify-center space-x-3 pt-2">
+              <div className="flex flex-col items-center justify-center space-y-2 pt-2">
                 <button
                   onClick={handleDownloadPdf}
-                  className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs rounded-xl shadow-xl shadow-emerald-600/30 flex items-center space-x-2 transition-all transform hover:scale-105 cursor-pointer"
+                  disabled={downloading}
+                  className={`px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs rounded-xl shadow-xl shadow-emerald-600/30 flex items-center space-x-2 transition-all transform hover:scale-105 cursor-pointer ${downloading ? 'opacity-75 cursor-not-allowed' : ''}`}
                 >
-                  <Download className="w-4 h-4" />
-                  <span>Download Official PDF Certificate</span>
+                  {downloading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <span>Generating &amp; Downloading PDF...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4" />
+                      <span>Download Official PDF Certificate</span>
+                    </>
+                  )}
                 </button>
+                {downloadError && (
+                  <p className="text-[11px] text-rose-400 font-medium">{downloadError}</p>
+                )}
               </div>
 
             </div>

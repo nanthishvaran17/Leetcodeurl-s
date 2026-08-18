@@ -187,9 +187,34 @@ export const CertificateManagementModal: React.FC<{
     }
   };
 
-  const handleDownloadPdf = (verificationId: string) => {
-    const baseApi = import.meta.env.VITE_API_URL || '';
-    window.open(`${baseApi}/api/certificates/${verificationId}/download-pdf`, '_blank');
+  const handleDownloadPdf = async (verificationId: string) => {
+    try {
+      const response = await api.get(`/certificates/${encodeURIComponent(verificationId)}/download-pdf`, {
+        responseType: 'blob'
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      let filename = `Certificate_${verificationId}.pdf`;
+      const disposition = response.headers['content-disposition'] || response.headers['Content-Disposition'];
+      if (disposition && disposition.includes('filename=')) {
+        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+        if (matches != null && matches[1]) {
+          filename = matches[1].replace(/['"]/g, '').trim();
+        }
+      }
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => {
+        window.URL.revokeObjectURL(blobUrl);
+      }, 2000);
+    } catch (err: any) {
+      console.error("Download error:", err);
+      alert("Failed to download certificate PDF.");
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

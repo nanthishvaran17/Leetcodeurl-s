@@ -47841,3 +47841,1149 @@ Action: Request blocked
 [2026-08-18 00:44:25,541] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
 [2026-08-18 00:44:25,542] [INFO] [leetcode_tracker]: Backend Application ready and listening!
 [2026-08-18 00:44:25,861] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 00:44
+[2026-08-18 07:06:13,825] [WARNING] [leetcode_tracker]: Profile validation failed for error_user: Network timeout
+[2026-08-18 07:06:13,828] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,829] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,829] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,829] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,829] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,829] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,829] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,829] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,829] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,829] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,829] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,829] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,830] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,830] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,831] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,831] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,831] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,831] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,831] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,831] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,831] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,831] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,831] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:06:13,831] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:07:27,799] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:07:28,542] [INFO] [leetcode_tracker]: Duplicate email prevented for hod@test.nec.in under key 1-hod@test.nec.in-WEEKLY_CONTEST.
+[2026-08-18 07:07:28,885] [WARNING] [leetcode_tracker]: Session 1 is 'SCHEDULED'. Auto-email dispatch skipped until FINALIZED.
+[2026-08-18 07:07:28,889] [WARNING] [leetcode_tracker]: Session 2 is 'PENDING'. Auto-email dispatch skipped until FINALIZED.
+[2026-08-18 07:07:29,017] [WARNING] [leetcode_tracker]: Session 1 is 'LIVE'. Auto-email dispatch skipped until FINALIZED.
+[2026-08-18 07:07:33,434] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:07:33,437] [INFO] [leetcode_tracker]: [SYNC] Loaded 2 active students
+[2026-08-18 07:07:33,439] [INFO] [leetcode_tracker]: [SYNC] Creating session: SYNC-20260818-013733
+[2026-08-18 07:07:33,444] [INFO] [leetcode_tracker]: [QUEUE] Job queued: SYNC-20260818-013733
+[2026-08-18 07:07:33,447] [INFO] [leetcode_tracker]: [SYNC] Sync job SYNC-20260818-013733 is already RUNNING. Reusing active job.
+[2026-08-18 07:07:33,450] [INFO] [leetcode_tracker]: [WORKER] Worker started for job: SYNC-20260818-013733
+[2026-08-18 07:07:33,469] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Starting streaming per-student sync for 302 students (Job: SYNC-20260818-013733)
+[2026-08-18 07:07:33,796] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:07:33,797] [INFO] [leetcode_tracker]: [SYNC] Loaded 2 active students
+[2026-08-18 07:07:40,253] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST732201
+[2026-08-18 07:07:47,135] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 514 (Session ID 2), Last: Contest 513 (Session ID 1)
+[2026-08-18 07:07:47,478] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 514 (Session ID 2), Last: Contest 513 (Session ID 1)
+[2026-08-18 07:07:47,742] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: insufficient, Current: Contest None (Session ID None), Last: Contest None (Session ID None)
+[2026-08-18 07:07:47,810] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-18 07:07:47,872] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 3), Last: Contest 514 (Session ID 2)
+[2026-08-18 07:08:41,925] [WARNING] [leetcode_tracker]: Profile validation failed for error_user: Network timeout
+[2026-08-18 07:08:41,926] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,926] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,926] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,927] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,927] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,927] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,927] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,927] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,927] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,927] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,927] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,927] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,929] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,929] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,929] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,929] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,929] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,929] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,929] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,929] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,929] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,929] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,929] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:08:41,929] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,059] [WARNING] [leetcode_tracker]: Profile validation failed for error_user: Network timeout
+[2026-08-18 07:09:06,061] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,061] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,061] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,061] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,061] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,061] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,061] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,061] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,061] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,061] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,061] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,061] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,062] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,063] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,063] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,063] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,063] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,063] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,063] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,063] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,063] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,063] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,063] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:09:06,063] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,774] [WARNING] [leetcode_tracker]: Profile validation failed for error_user: Network timeout
+[2026-08-18 07:10:52,779] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,779] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,779] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,780] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,780] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,780] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,780] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,780] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,780] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,781] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,781] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,781] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,785] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,785] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,785] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,785] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,785] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,785] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,786] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,786] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,786] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,787] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,787] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:10:52,787] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:02,615] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:24:03,764] [WARNING] [leetcode_tracker]: Profile validation failed for error_user: Network timeout
+[2026-08-18 07:24:03,770] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,770] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,771] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,771] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,771] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,771] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,772] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,772] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,772] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,773] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,773] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,773] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,778] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,779] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,779] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,779] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,780] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,780] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,780] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,781] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,781] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,781] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,781] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:03,782] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:54,639] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:24:55,139] [WARNING] [leetcode_tracker]: Profile validation failed for error_user: Network timeout
+[2026-08-18 07:24:55,146] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,146] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,146] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,147] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,147] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,147] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,147] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,148] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,148] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,148] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,148] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,148] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,152] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,152] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,152] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,152] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,152] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,152] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,153] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,153] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,153] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,153] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,153] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:24:55,153] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:53,547] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:25:54,538] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-DOESNOTEXIST999, reg=None
+[2026-08-18 07:25:54,661] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REVOKED01, reg=None
+[2026-08-18 07:25:54,724] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REGEN001, reg=None
+[2026-08-18 07:25:54,770] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=cert-variant1, reg=None
+[2026-08-18 07:25:54,814] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=732224CC031, reg=None
+[2026-08-18 07:25:55,115] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-TEST1234 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:25:55,144] [ERROR] [leetcode_tracker]: [CERT_VERIFY_ERROR] Database query exception for id=CERT-MATCHING01: (sqlite3.OperationalError) no such table: certificate_records
+[SQL: SELECT certificate_records.id AS certificate_records_id, certificate_records.verification_id AS certificate_records_verification_id, certificate_records.certificate_code AS certificate_records_certificate_code, certificate_records.certificate_type AS certificate_records_certificate_type, certificate_records.student_id AS certificate_records_student_id, certificate_records.student_name AS certificate_records_student_name, certificate_records.register_no AS certificate_records_register_no, certificate_records.department AS certificate_records_department, certificate_records.department_name AS certificate_records_department_name, certificate_records.program AS certificate_records_program, certificate_records.recognition AS certificate_records_recognition, certificate_records.issue_date AS certificate_records_issue_date, certificate_records.status AS certificate_records_status, certificate_records.principal_signature_version AS certificate_records_principal_signature_version, certificate_records.hod_signature_version AS certificate_records_hod_signature_version, certificate_records.verification_url AS certificate_records_verification_url, certificate_records.pdf_path AS certificate_records_pdf_path, certificate_records.qr_path AS certificate_records_qr_path, certificate_records.qr_code_path AS certificate_records_qr_code_path, certificate_records.created_by AS certificate_records_created_by, certificate_records.created_at AS certificate_records_created_at, certificate_records.revoked_at AS certificate_records_revoked_at, certificate_records.revocation_reason AS certificate_records_revocation_reason 
+FROM certificate_records 
+WHERE certificate_records.verification_id IN (?, ?, ?) OR certificate_records.certificate_code IN (?, ?, ?) OR lower(certificate_records.verification_id) LIKE lower(?)
+ LIMIT ? OFFSET ?]
+[parameters: ('CERT-MATCHING01', 'MATCHING01', 'cert-matching01', 'CERT-MATCHING01', 'MATCHING01', 'cert-matching01', '%CERT-MATCHING01%', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2026-08-18 07:25:55,208] [WARNING] [leetcode_tracker]: Profile validation failed for error_user: Network timeout
+[2026-08-18 07:25:55,214] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,214] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,214] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,214] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,215] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,215] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,215] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,215] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,215] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,215] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,216] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,216] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,220] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,221] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,221] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,221] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,221] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,222] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,222] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,222] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,222] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,222] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,223] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:25:55,223] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:17,652] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:26:18,608] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-DOESNOTEXIST999, reg=None
+[2026-08-18 07:26:18,621] [WARNING] [leetcode_tracker]: [certificate_pdf_resolve_failed] Certificate not found for id=CERT-DOESNOTEXIST999
+[2026-08-18 07:26:18,655] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REVOKED01, reg=None
+[2026-08-18 07:26:18,658] [WARNING] [leetcode_tracker]: [certificate_pdf_revoked] Attempt to download revoked certificate CERT-REVOKED01
+[2026-08-18 07:26:18,697] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REGEN001, reg=None
+[2026-08-18 07:26:18,704] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-REGEN001 (NANTHISH S)
+[2026-08-18 07:26:18,857] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-REGEN001 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:26:18,858] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57315 bytes for CERT-REGEN001
+[2026-08-18 07:26:18,858] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57315 bytes)
+[2026-08-18 07:26:18,891] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=cert-variant1, reg=None
+[2026-08-18 07:26:18,893] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-VARIANT1 (NANTHISH S)
+[2026-08-18 07:26:19,006] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-VARIANT1 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:26:19,011] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57305 bytes for CERT-VARIANT1
+[2026-08-18 07:26:19,011] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57305 bytes)
+[2026-08-18 07:26:19,025] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=VARIANT1, reg=None
+[2026-08-18 07:26:19,037] [INFO] [leetcode_tracker]: [certificate_pdf_resolved_from_cache] Size=57305 bytes for CERT-VARIANT1
+[2026-08-18 07:26:19,038] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57305 bytes)
+[2026-08-18 07:26:19,060] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=732224CC031, reg=None
+[2026-08-18 07:26:19,097] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-732224CC031 (NANTHISH S)
+[2026-08-18 07:26:19,203] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-732224CC031 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:26:19,205] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57294 bytes for CERT-732224CC031
+[2026-08-18 07:26:19,205] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57294 bytes)
+[2026-08-18 07:26:19,358] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-TEST1234 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:26:19,396] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-MATCHING01 found=True status=VALID
+[2026-08-18 07:26:19,411] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-MATCHING01, reg=None
+[2026-08-18 07:26:19,415] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-MATCHING01 (PRIYA DHARSHINI)
+[2026-08-18 07:26:19,510] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-MATCHING01 for Student: PRIYA DHARSHINI (732224CC045)
+[2026-08-18 07:26:19,514] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57297 bytes for CERT-MATCHING01
+[2026-08-18 07:26:19,515] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_PRIYA_DHARSHINI_732224CC045.pdf (57297 bytes)
+[2026-08-18 07:26:19,595] [WARNING] [leetcode_tracker]: Profile validation failed for error_user: Network timeout
+[2026-08-18 07:26:19,602] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,602] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,603] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,603] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,603] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,603] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,603] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,604] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,604] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,604] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,604] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,604] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,610] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,621] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,622] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,622] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,623] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,623] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,623] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,623] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,623] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,624] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,624] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:26:19,624] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:12,293] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:28:13,129] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-DOESNOTEXIST999, reg=None
+[2026-08-18 07:28:13,139] [WARNING] [leetcode_tracker]: [certificate_pdf_resolve_failed] Certificate not found for id=CERT-DOESNOTEXIST999
+[2026-08-18 07:28:13,163] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REVOKED01, reg=None
+[2026-08-18 07:28:13,165] [WARNING] [leetcode_tracker]: [certificate_pdf_revoked] Attempt to download revoked certificate CERT-REVOKED01
+[2026-08-18 07:28:13,199] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REGEN001, reg=None
+[2026-08-18 07:28:13,202] [INFO] [leetcode_tracker]: [certificate_pdf_resolved_from_cache] Size=57315 bytes for CERT-REGEN001
+[2026-08-18 07:28:13,203] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57315 bytes)
+[2026-08-18 07:28:13,223] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=cert-variant1, reg=None
+[2026-08-18 07:28:13,225] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-VARIANT1 (NANTHISH S)
+[2026-08-18 07:28:13,393] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-VARIANT1 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:28:13,402] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57305 bytes for CERT-VARIANT1
+[2026-08-18 07:28:13,403] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57305 bytes)
+[2026-08-18 07:28:13,419] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=VARIANT1, reg=None
+[2026-08-18 07:28:13,424] [INFO] [leetcode_tracker]: [certificate_pdf_resolved_from_cache] Size=57305 bytes for CERT-VARIANT1
+[2026-08-18 07:28:13,425] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57305 bytes)
+[2026-08-18 07:28:13,444] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=732224CC031, reg=None
+[2026-08-18 07:28:13,457] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-732224CC031 (NANTHISH S)
+[2026-08-18 07:28:13,563] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-732224CC031 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:28:13,566] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57294 bytes for CERT-732224CC031
+[2026-08-18 07:28:13,567] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57294 bytes)
+[2026-08-18 07:28:13,680] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-TEST1234 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:28:13,700] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-MATCHING01 found=True status=VALID
+[2026-08-18 07:28:13,715] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-MATCHING01, reg=None
+[2026-08-18 07:28:13,717] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-MATCHING01 (PRIYA DHARSHINI)
+[2026-08-18 07:28:13,809] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-MATCHING01 for Student: PRIYA DHARSHINI (732224CC045)
+[2026-08-18 07:28:13,811] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57297 bytes for CERT-MATCHING01
+[2026-08-18 07:28:13,811] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_PRIYA_DHARSHINI_732224CC045.pdf (57297 bytes)
+[2026-08-18 07:28:13,863] [WARNING] [leetcode_tracker]: Profile validation failed for error_user: Network timeout
+[2026-08-18 07:28:13,868] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,868] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,868] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,868] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,868] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,869] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,869] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,869] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,869] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,869] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,869] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,870] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,875] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,875] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,875] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,875] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,876] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,876] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,876] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,876] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,876] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,877] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,877] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:28:13,877] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:28,527] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:38:28,925] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-DOESNOTEXIST999, reg=None
+[2026-08-18 07:38:28,930] [WARNING] [leetcode_tracker]: [certificate_pdf_resolve_failed] Certificate not found for id=CERT-DOESNOTEXIST999
+[2026-08-18 07:38:28,942] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REVOKED01, reg=None
+[2026-08-18 07:38:28,943] [WARNING] [leetcode_tracker]: [certificate_pdf_revoked] Attempt to download revoked certificate CERT-REVOKED01
+[2026-08-18 07:38:28,952] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REGEN001, reg=None
+[2026-08-18 07:38:28,954] [INFO] [leetcode_tracker]: [certificate_pdf_resolved_from_cache] Size=57315 bytes for CERT-REGEN001
+[2026-08-18 07:38:28,955] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57315 bytes)
+[2026-08-18 07:38:28,964] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=cert-variant1, reg=None
+[2026-08-18 07:38:28,965] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-VARIANT1 (NANTHISH S)
+[2026-08-18 07:38:29,017] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-VARIANT1 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:38:29,020] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57305 bytes for CERT-VARIANT1
+[2026-08-18 07:38:29,020] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57305 bytes)
+[2026-08-18 07:38:29,025] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=VARIANT1, reg=None
+[2026-08-18 07:38:29,027] [INFO] [leetcode_tracker]: [certificate_pdf_resolved_from_cache] Size=57305 bytes for CERT-VARIANT1
+[2026-08-18 07:38:29,027] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57305 bytes)
+[2026-08-18 07:38:29,035] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=732224CC031, reg=None
+[2026-08-18 07:38:29,042] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-732224CC031 (NANTHISH S)
+[2026-08-18 07:38:29,083] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-732224CC031 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:38:29,085] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57294 bytes for CERT-732224CC031
+[2026-08-18 07:38:29,085] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57294 bytes)
+[2026-08-18 07:38:29,138] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-TEST1234 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:38:29,171] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-MATCHING01 found=True status=VALID
+[2026-08-18 07:38:29,176] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-MATCHING01, reg=None
+[2026-08-18 07:38:29,177] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-MATCHING01 (PRIYA DHARSHINI)
+[2026-08-18 07:38:29,213] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-MATCHING01 for Student: PRIYA DHARSHINI (732224CC045)
+[2026-08-18 07:38:29,215] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57297 bytes for CERT-MATCHING01
+[2026-08-18 07:38:29,215] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_PRIYA_DHARSHINI_732224CC045.pdf (57297 bytes)
+[2026-08-18 07:38:29,236] [WARNING] [leetcode_tracker]: Profile validation failed for error_user: Network timeout
+[2026-08-18 07:38:29,239] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,240] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,240] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,240] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,240] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,240] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,240] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,240] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,240] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,240] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,240] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,240] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,242] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,242] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,242] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,242] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,242] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,242] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,242] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,242] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,242] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,242] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,242] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:38:29,242] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:39:59,096] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:39:59,097] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-18 07:39:59,412] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-18 07:39:59,423] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth (skipping auto-seeding).
+[2026-08-18 07:39:59,431] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-18 07:39:59,432] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-18 07:39:59,436] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-18 07:39:59,437] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-18 07:39:59,658] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 07:39
+[2026-08-18 07:40:03,147] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-18 07:40:04,396] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-18 07:40:04,605] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:40:04,865] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 3
+[2026-08-18 07:40:04,880] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:40:04,893] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 4
+[2026-08-18 07:40:05,599] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:40:05,974] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:40:09,977] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:40:09,997] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:40:34,564] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:40:34,578] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:40:39,974] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:40:40,000] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:40:49,348] [INFO] [leetcode_tracker]: [ADMIN_LOGIN_SUCCESS] Administrator admin logged in successfully.
+[2026-08-18 07:40:49,368] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-33730] ADMIN_LOGIN by admin (admin@college.edu)
+[2026-08-18 07:40:50,408] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 3
+[2026-08-18 07:40:50,765] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 4
+[2026-08-18 07:40:53,736] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 3
+[2026-08-18 07:41:04,831] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:41:04,843] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:41:09,962] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:41:09,967] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:41:23,016] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 4
+[2026-08-18 07:41:34,566] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:41:34,575] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:41:39,964] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:41:39,974] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:42:04,888] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:42:04,899] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:42:09,962] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:42:09,967] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:42:34,566] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:42:34,583] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:42:39,969] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:42:39,986] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:43:04,561] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:43:04,572] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:43:09,967] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:43:09,978] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:43:30,751] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 3
+[2026-08-18 07:43:31,076] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 4
+[2026-08-18 07:43:31,092] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 5
+[2026-08-18 07:43:31,449] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 4
+[2026-08-18 07:43:33,496] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 3
+[2026-08-18 07:43:34,558] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:43:34,844] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:43:40,013] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:43:40,051] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:44:01,409] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 4
+[2026-08-18 07:44:01,432] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 5
+[2026-08-18 07:44:01,674] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 4
+[2026-08-18 07:44:02,985] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 3
+[2026-08-18 07:44:03,314] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 4
+[2026-08-18 07:44:04,560] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:44:04,576] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:44:09,965] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:44:09,979] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:44:34,888] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:44:34,904] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:44:39,965] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:44:39,981] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:45:04,898] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:45:04,907] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:45:09,963] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:45:09,972] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:45:39,971] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:45:39,986] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:45:43,689] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:45:43,695] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:45:48,430] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 3
+[2026-08-18 07:45:48,741] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 4
+[2026-08-18 07:45:48,760] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 5
+[2026-08-18 07:45:49,052] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 4
+[2026-08-18 07:45:52,242] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 3
+[2026-08-18 07:46:04,561] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:46:04,582] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:46:09,983] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:46:10,018] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:46:34,889] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:46:34,905] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:46:36,410] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 2
+[2026-08-18 07:46:36,413] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-18 07:46:36,416] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-18 07:46:40,695] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:46:40,707] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-18 07:46:41,033] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-18 07:46:41,038] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth (skipping auto-seeding).
+[2026-08-18 07:46:41,045] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-18 07:46:41,049] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-18 07:46:41,053] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-18 07:46:41,053] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-18 07:46:41,750] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 07:46
+[2026-08-18 07:46:42,670] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-18 07:46:42,711] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-18 07:46:42,725] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 3
+[2026-08-18 07:46:42,737] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:46:42,805] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:47:04,565] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:47:04,579] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:47:09,973] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:47:09,985] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:47:34,888] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:47:34,892] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:47:39,973] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:47:39,978] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:48:04,881] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:48:04,889] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:48:09,976] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:48:09,981] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:48:25,072] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 2
+[2026-08-18 07:48:25,073] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-18 07:48:25,073] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-18 07:48:28,024] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:48:28,025] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-18 07:48:28,339] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-18 07:48:28,344] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth (skipping auto-seeding).
+[2026-08-18 07:48:28,354] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-18 07:48:28,356] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-18 07:48:28,362] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-18 07:48:28,363] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-18 07:48:28,580] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 07:48
+[2026-08-18 07:48:30,595] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-18 07:48:30,618] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-18 07:48:31,196] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 3
+[2026-08-18 07:48:34,902] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:48:34,910] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:48:39,971] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:48:39,974] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:48:49,347] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 2
+[2026-08-18 07:48:49,348] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-18 07:48:49,349] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-18 07:49:48,043] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:49:48,045] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-18 07:49:48,329] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-18 07:49:48,332] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth (skipping auto-seeding).
+[2026-08-18 07:49:48,338] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-18 07:49:48,339] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-18 07:49:48,342] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-18 07:49:48,343] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-18 07:49:48,542] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 07:49
+[2026-08-18 07:50:36,096] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:50:36,492] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-DOESNOTEXIST999, reg=None
+[2026-08-18 07:50:36,496] [WARNING] [leetcode_tracker]: [certificate_pdf_resolve_failed] Certificate not found for id=CERT-DOESNOTEXIST999
+[2026-08-18 07:50:36,507] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REVOKED01, reg=None
+[2026-08-18 07:50:36,508] [WARNING] [leetcode_tracker]: [certificate_pdf_revoked] Attempt to download revoked certificate CERT-REVOKED01
+[2026-08-18 07:50:36,523] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REGEN001, reg=None
+[2026-08-18 07:50:36,525] [INFO] [leetcode_tracker]: [certificate_pdf_resolved_from_cache] Size=57315 bytes for CERT-REGEN001
+[2026-08-18 07:50:36,525] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57315 bytes)
+[2026-08-18 07:50:36,537] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=cert-variant1, reg=None
+[2026-08-18 07:50:36,538] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-VARIANT1 (NANTHISH S)
+[2026-08-18 07:50:36,589] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-VARIANT1 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:50:36,592] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57305 bytes for CERT-VARIANT1
+[2026-08-18 07:50:36,592] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57305 bytes)
+[2026-08-18 07:50:36,597] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=VARIANT1, reg=None
+[2026-08-18 07:50:36,598] [INFO] [leetcode_tracker]: [certificate_pdf_resolved_from_cache] Size=57305 bytes for CERT-VARIANT1
+[2026-08-18 07:50:36,598] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57305 bytes)
+[2026-08-18 07:50:36,608] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=732224CC031, reg=None
+[2026-08-18 07:50:36,616] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-732224CC031 (NANTHISH S)
+[2026-08-18 07:50:36,649] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-732224CC031 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:50:36,650] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57294 bytes for CERT-732224CC031
+[2026-08-18 07:50:36,650] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57294 bytes)
+[2026-08-18 07:50:36,695] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-TEST1234 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:50:36,705] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-MATCHING01 found=True status=VALID
+[2026-08-18 07:50:36,710] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-MATCHING01, reg=None
+[2026-08-18 07:50:36,711] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-MATCHING01 (PRIYA DHARSHINI)
+[2026-08-18 07:50:36,753] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-MATCHING01 for Student: PRIYA DHARSHINI (732224CC045)
+[2026-08-18 07:50:36,755] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57297 bytes for CERT-MATCHING01
+[2026-08-18 07:50:36,755] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_PRIYA_DHARSHINI_732224CC045.pdf (57297 bytes)
+[2026-08-18 07:50:36,777] [WARNING] [leetcode_tracker]: Profile validation failed for error_user: Network timeout
+[2026-08-18 07:50:37,081] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,081] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,081] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,081] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,081] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,081] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,081] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,081] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,082] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,082] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,082] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,082] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,083] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,084] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,084] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,084] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,084] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,084] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,084] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,084] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,084] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,084] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,084] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:37,084] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:52,639] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:50:53,110] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-DOESNOTEXIST999, reg=None
+[2026-08-18 07:50:53,114] [WARNING] [leetcode_tracker]: [certificate_pdf_resolve_failed] Certificate not found for id=CERT-DOESNOTEXIST999
+[2026-08-18 07:50:53,128] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REVOKED01, reg=None
+[2026-08-18 07:50:53,129] [WARNING] [leetcode_tracker]: [certificate_pdf_revoked] Attempt to download revoked certificate CERT-REVOKED01
+[2026-08-18 07:50:53,142] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REGEN001, reg=None
+[2026-08-18 07:50:53,144] [INFO] [leetcode_tracker]: [certificate_pdf_resolved_from_cache] Size=57315 bytes for CERT-REGEN001
+[2026-08-18 07:50:53,144] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57315 bytes)
+[2026-08-18 07:50:53,157] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=cert-variant1, reg=None
+[2026-08-18 07:50:53,158] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-VARIANT1 (NANTHISH S)
+[2026-08-18 07:50:53,220] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-VARIANT1 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:50:53,224] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57305 bytes for CERT-VARIANT1
+[2026-08-18 07:50:53,224] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57305 bytes)
+[2026-08-18 07:50:53,230] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=VARIANT1, reg=None
+[2026-08-18 07:50:53,231] [INFO] [leetcode_tracker]: [certificate_pdf_resolved_from_cache] Size=57305 bytes for CERT-VARIANT1
+[2026-08-18 07:50:53,231] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57305 bytes)
+[2026-08-18 07:50:53,244] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=732224CC031, reg=None
+[2026-08-18 07:50:53,250] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-732224CC031 (NANTHISH S)
+[2026-08-18 07:50:53,293] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-732224CC031 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:50:53,295] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57294 bytes for CERT-732224CC031
+[2026-08-18 07:50:53,295] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57294 bytes)
+[2026-08-18 07:50:53,347] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-TEST1234 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:50:53,361] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-MATCHING01 found=True status=VALID
+[2026-08-18 07:50:53,366] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-MATCHING01, reg=None
+[2026-08-18 07:50:53,368] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-MATCHING01 (PRIYA DHARSHINI)
+[2026-08-18 07:50:53,410] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-MATCHING01 for Student: PRIYA DHARSHINI (732224CC045)
+[2026-08-18 07:50:53,412] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57297 bytes for CERT-MATCHING01
+[2026-08-18 07:50:53,412] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_PRIYA_DHARSHINI_732224CC045.pdf (57297 bytes)
+[2026-08-18 07:50:53,448] [WARNING] [leetcode_tracker]: Profile validation failed for error_user: Network timeout
+[2026-08-18 07:50:54,911] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,912] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,912] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,913] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,913] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,913] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,914] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,915] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,916] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,917] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,918] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,919] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,927] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,928] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,928] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,929] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,930] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,930] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,931] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,931] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,932] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,932] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,932] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:50:54,933] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:22,864] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:51:22,866] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-18 07:51:23,209] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-18 07:51:23,211] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth (skipping auto-seeding).
+[2026-08-18 07:51:23,218] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-18 07:51:23,220] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-18 07:51:23,224] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-18 07:51:23,224] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-18 07:51:23,462] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 07:51
+[2026-08-18 07:51:24,162] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:51:24,488] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-DOESNOTEXIST999, reg=None
+[2026-08-18 07:51:24,493] [WARNING] [leetcode_tracker]: [certificate_pdf_resolve_failed] Certificate not found for id=CERT-DOESNOTEXIST999
+[2026-08-18 07:51:24,502] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REVOKED01, reg=None
+[2026-08-18 07:51:24,503] [WARNING] [leetcode_tracker]: [certificate_pdf_revoked] Attempt to download revoked certificate CERT-REVOKED01
+[2026-08-18 07:51:24,513] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REGEN001, reg=None
+[2026-08-18 07:51:24,514] [INFO] [leetcode_tracker]: [certificate_pdf_resolved_from_cache] Size=57315 bytes for CERT-REGEN001
+[2026-08-18 07:51:24,514] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57315 bytes)
+[2026-08-18 07:51:24,526] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=cert-variant1, reg=None
+[2026-08-18 07:51:24,527] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-VARIANT1 (NANTHISH S)
+[2026-08-18 07:51:24,583] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-VARIANT1 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:51:24,586] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57305 bytes for CERT-VARIANT1
+[2026-08-18 07:51:24,586] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57305 bytes)
+[2026-08-18 07:51:24,591] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=VARIANT1, reg=None
+[2026-08-18 07:51:24,592] [INFO] [leetcode_tracker]: [certificate_pdf_resolved_from_cache] Size=57305 bytes for CERT-VARIANT1
+[2026-08-18 07:51:24,592] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57305 bytes)
+[2026-08-18 07:51:24,602] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=732224CC031, reg=None
+[2026-08-18 07:51:24,608] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-732224CC031 (NANTHISH S)
+[2026-08-18 07:51:24,654] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-732224CC031 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:51:24,655] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57294 bytes for CERT-732224CC031
+[2026-08-18 07:51:24,655] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57294 bytes)
+[2026-08-18 07:51:24,706] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-TEST1234 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:51:24,718] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-MATCHING01 found=True status=VALID
+[2026-08-18 07:51:24,723] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-MATCHING01, reg=None
+[2026-08-18 07:51:24,724] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-MATCHING01 (PRIYA DHARSHINI)
+[2026-08-18 07:51:24,763] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-MATCHING01 for Student: PRIYA DHARSHINI (732224CC045)
+[2026-08-18 07:51:24,765] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57297 bytes for CERT-MATCHING01
+[2026-08-18 07:51:24,765] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_PRIYA_DHARSHINI_732224CC045.pdf (57297 bytes)
+[2026-08-18 07:51:24,790] [WARNING] [leetcode_tracker]: Profile validation failed for error_user: Network timeout
+[2026-08-18 07:51:25,186] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,187] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,187] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,187] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,187] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,187] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,187] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,187] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,187] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,187] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,187] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,187] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,189] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,189] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,189] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,189] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,189] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,190] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,190] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,190] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,190] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,190] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,190] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:25,190] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:48,812] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:51:49,171] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-DOESNOTEXIST999, reg=None
+[2026-08-18 07:51:49,175] [WARNING] [leetcode_tracker]: [certificate_pdf_resolve_failed] Certificate not found for id=CERT-DOESNOTEXIST999
+[2026-08-18 07:51:49,185] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REVOKED01, reg=None
+[2026-08-18 07:51:49,187] [WARNING] [leetcode_tracker]: [certificate_pdf_revoked] Attempt to download revoked certificate CERT-REVOKED01
+[2026-08-18 07:51:49,195] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REGEN001, reg=None
+[2026-08-18 07:51:49,197] [INFO] [leetcode_tracker]: [certificate_pdf_resolved_from_cache] Size=57315 bytes for CERT-REGEN001
+[2026-08-18 07:51:49,197] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57315 bytes)
+[2026-08-18 07:51:49,206] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=cert-variant1, reg=None
+[2026-08-18 07:51:49,207] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-VARIANT1 (NANTHISH S)
+[2026-08-18 07:51:49,264] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-VARIANT1 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:51:49,266] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57305 bytes for CERT-VARIANT1
+[2026-08-18 07:51:49,267] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57305 bytes)
+[2026-08-18 07:51:49,271] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=VARIANT1, reg=None
+[2026-08-18 07:51:49,272] [INFO] [leetcode_tracker]: [certificate_pdf_resolved_from_cache] Size=57305 bytes for CERT-VARIANT1
+[2026-08-18 07:51:49,272] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57305 bytes)
+[2026-08-18 07:51:49,280] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=732224CC031, reg=None
+[2026-08-18 07:51:49,288] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-732224CC031 (NANTHISH S)
+[2026-08-18 07:51:49,326] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-732224CC031 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:51:49,328] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57294 bytes for CERT-732224CC031
+[2026-08-18 07:51:49,328] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57294 bytes)
+[2026-08-18 07:51:49,372] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-TEST1234 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:51:49,392] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-MATCHING01 found=True status=VALID
+[2026-08-18 07:51:49,397] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-MATCHING01, reg=None
+[2026-08-18 07:51:49,398] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-MATCHING01 (PRIYA DHARSHINI)
+[2026-08-18 07:51:49,437] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-MATCHING01 for Student: PRIYA DHARSHINI (732224CC045)
+[2026-08-18 07:51:49,439] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57297 bytes for CERT-MATCHING01
+[2026-08-18 07:51:49,439] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_PRIYA_DHARSHINI_732224CC045.pdf (57297 bytes)
+[2026-08-18 07:51:49,461] [WARNING] [leetcode_tracker]: Profile validation failed for error_user: Network timeout
+[2026-08-18 07:51:49,921] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,922] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,922] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,922] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,922] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,922] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,922] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,922] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,922] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,922] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,922] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,922] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,924] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,924] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,924] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,925] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,925] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,925] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,925] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,925] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,925] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,925] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,925] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:51:49,925] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:52:29,218] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:52:29,220] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-18 07:52:29,538] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-18 07:52:29,541] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth (skipping auto-seeding).
+[2026-08-18 07:52:29,555] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-18 07:52:29,559] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-18 07:52:29,564] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-18 07:52:29,567] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-18 07:52:29,786] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 07:52
+[2026-08-18 07:53:26,359] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:53:26,361] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-18 07:53:26,699] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-18 07:53:26,702] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth (skipping auto-seeding).
+[2026-08-18 07:53:26,708] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-18 07:53:26,710] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-18 07:53:26,715] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-18 07:53:26,715] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-18 07:53:26,921] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 07:53
+[2026-08-18 07:53:27,156] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-18 07:53:27,159] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-18 07:53:27,163] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 3
+[2026-08-18 07:53:27,170] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 4
+[2026-08-18 07:53:27,177] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 3
+[2026-08-18 07:53:27,178] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 2
+[2026-08-18 07:53:27,193] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 3
+[2026-08-18 07:53:27,195] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:53:27,197] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:53:27,197] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:53:27,198] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:53:27,198] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:53:27,198] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:53:27,238] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 4
+[2026-08-18 07:53:27,248] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:53:27,256] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:53:27,523] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:53:27,535] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:53:27,546] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:53:27,554] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:53:27,558] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:53:27,566] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:53:27,573] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:53:27,617] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:53:30,370] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 3
+[2026-08-18 07:53:30,371] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 2
+[2026-08-18 07:53:30,372] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-18 07:53:30,373] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-18 07:54:33,848] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:54:33,850] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-18 07:54:34,726] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-18 07:54:34,740] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth (skipping auto-seeding).
+[2026-08-18 07:54:34,783] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-18 07:54:34,802] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-18 07:54:34,829] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-18 07:54:34,831] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-18 07:54:35,999] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 07:54
+[2026-08-18 07:54:36,630] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-18 07:54:36,640] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-18 07:54:36,644] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 3
+[2026-08-18 07:54:36,650] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 4
+[2026-08-18 07:54:36,718] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 3
+[2026-08-18 07:54:36,777] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 4
+[2026-08-18 07:54:36,786] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 5
+[2026-08-18 07:54:36,792] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:54:36,803] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:54:36,806] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:54:36,804] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:54:36,807] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:54:36,807] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:54:36,963] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:54:37,038] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:54:37,362] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:54:37,390] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:54:37,397] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:54:37,440] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:54:38,234] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:54:38,285] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:54:38,289] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:54:40,742] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:54:41,731] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:54:42,163] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:55:00,887] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:55:00,898] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:55:02,028] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:55:02,045] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:55:03,887] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:55:03,902] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:55:30,887] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:55:30,906] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:55:32,019] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:55:32,023] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:55:33,904] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:55:33,922] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:56:00,882] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:56:00,894] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:56:02,036] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:56:02,055] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:56:03,899] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:56:03,907] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:56:30,889] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:56:30,907] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:56:32,031] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:56:32,044] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:56:33,892] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:56:33,910] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:57:00,894] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:57:00,904] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:57:02,024] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:57:02,029] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:57:03,910] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:57:03,915] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:57:30,896] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:57:30,905] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:57:32,032] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:57:32,038] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:57:33,904] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:57:33,911] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:57:40,354] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 4
+[2026-08-18 07:57:40,355] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 3
+[2026-08-18 07:57:40,355] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 2
+[2026-08-18 07:57:40,355] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-18 07:57:40,356] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-18 07:57:43,152] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:57:43,153] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-18 07:57:43,451] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-18 07:57:43,466] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth (skipping auto-seeding).
+[2026-08-18 07:57:43,474] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-18 07:57:43,476] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-18 07:57:43,482] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-18 07:57:43,483] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-18 07:57:43,651] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 07:57
+[2026-08-18 07:57:45,850] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-18 07:57:45,889] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-18 07:57:46,194] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 3
+[2026-08-18 07:57:46,196] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 4
+[2026-08-18 07:57:46,213] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 5
+[2026-08-18 07:57:57,482] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 4
+[2026-08-18 07:57:57,482] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 3
+[2026-08-18 07:57:57,483] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 2
+[2026-08-18 07:57:57,483] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-18 07:57:57,484] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-18 07:58:52,623] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:58:52,624] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-18 07:58:52,918] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-18 07:58:52,920] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth (skipping auto-seeding).
+[2026-08-18 07:58:52,926] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-18 07:58:52,928] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-18 07:58:52,932] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-18 07:58:52,932] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-18 07:58:53,121] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 07:58
+[2026-08-18 07:58:53,318] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-18 07:58:53,321] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-18 07:58:53,325] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 3
+[2026-08-18 07:58:53,332] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:58:53,332] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:58:53,332] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:58:53,333] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:58:53,333] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:58:53,346] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 4
+[2026-08-18 07:58:53,351] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 5
+[2026-08-18 07:58:53,378] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:58:53,446] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 4
+[2026-08-18 07:58:53,453] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 3
+[2026-08-18 07:58:53,457] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 2
+[2026-08-18 07:58:53,456] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:58:53,458] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-18 07:58:53,461] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-18 07:58:53,480] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:58:53,494] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:58:53,523] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 07:59:08,163] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:59:08,529] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-DOESNOTEXIST999, reg=None
+[2026-08-18 07:59:08,533] [WARNING] [leetcode_tracker]: [certificate_pdf_resolve_failed] Certificate not found for id=CERT-DOESNOTEXIST999
+[2026-08-18 07:59:08,546] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REVOKED01, reg=None
+[2026-08-18 07:59:08,547] [WARNING] [leetcode_tracker]: [certificate_pdf_revoked] Attempt to download revoked certificate CERT-REVOKED01
+[2026-08-18 07:59:08,558] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REGEN001, reg=None
+[2026-08-18 07:59:08,560] [INFO] [leetcode_tracker]: [certificate_pdf_resolved_from_cache] Size=57315 bytes for CERT-REGEN001
+[2026-08-18 07:59:08,560] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57315 bytes)
+[2026-08-18 07:59:08,570] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=cert-variant1, reg=None
+[2026-08-18 07:59:08,572] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-VARIANT1 (NANTHISH S)
+[2026-08-18 07:59:08,630] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-VARIANT1 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:59:08,635] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57305 bytes for CERT-VARIANT1
+[2026-08-18 07:59:08,635] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57305 bytes)
+[2026-08-18 07:59:08,641] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=VARIANT1, reg=None
+[2026-08-18 07:59:08,642] [INFO] [leetcode_tracker]: [certificate_pdf_resolved_from_cache] Size=57305 bytes for CERT-VARIANT1
+[2026-08-18 07:59:08,642] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57305 bytes)
+[2026-08-18 07:59:08,654] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=732224CC031, reg=None
+[2026-08-18 07:59:08,661] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-732224CC031 (NANTHISH S)
+[2026-08-18 07:59:08,705] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-732224CC031 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:59:08,706] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57294 bytes for CERT-732224CC031
+[2026-08-18 07:59:08,706] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57294 bytes)
+[2026-08-18 07:59:08,755] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-TEST1234 for Student: NANTHISH S (732224CC031)
+[2026-08-18 07:59:08,764] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-MATCHING01 found=True status=VALID
+[2026-08-18 07:59:08,770] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-MATCHING01, reg=None
+[2026-08-18 07:59:08,771] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-MATCHING01 (PRIYA DHARSHINI)
+[2026-08-18 07:59:08,811] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-MATCHING01 for Student: PRIYA DHARSHINI (732224CC045)
+[2026-08-18 07:59:08,813] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57297 bytes for CERT-MATCHING01
+[2026-08-18 07:59:08,813] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_PRIYA_DHARSHINI_732224CC045.pdf (57297 bytes)
+[2026-08-18 07:59:08,844] [WARNING] [leetcode_tracker]: Profile validation failed for error_user: Network timeout
+[2026-08-18 07:59:08,889] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-18 07:59:08,903] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-18 07:59:08,907] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-18 07:59:08,910] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-18 07:59:08,921] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-18 07:59:09,068] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-18 07:59:09,072] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 516 (Session ID 2), Last: Contest 515 (Session ID 1)
+[2026-08-18 07:59:09,086] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-18 07:59:09,104] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,104] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,104] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,104] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,104] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,104] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,104] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,104] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,104] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,105] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,105] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,105] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,106] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,106] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,106] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,107] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,107] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,107] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,107] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,107] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,107] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,108] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,108] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:09,108] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 07:59:22,204] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 07:59:22,561] [INFO] [leetcode_tracker]: Duplicate email prevented for hod@test.nec.in under key 1-hod@test.nec.in-WEEKLY_CONTEST.
+[2026-08-18 07:59:22,732] [WARNING] [leetcode_tracker]: Session 1 is 'SCHEDULED'. Auto-email dispatch skipped until FINALIZED.
+[2026-08-18 07:59:22,734] [WARNING] [leetcode_tracker]: Session 2 is 'PENDING'. Auto-email dispatch skipped until FINALIZED.
+[2026-08-18 07:59:22,778] [WARNING] [leetcode_tracker]: Session 1 is 'LIVE'. Auto-email dispatch skipped until FINALIZED.
+[2026-08-18 07:59:25,609] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:59:25,611] [INFO] [leetcode_tracker]: [SYNC] Loaded 2 active students
+[2026-08-18 07:59:25,612] [INFO] [leetcode_tracker]: [SYNC] Creating session: SYNC-20260818-022925
+[2026-08-18 07:59:25,614] [INFO] [leetcode_tracker]: [QUEUE] Job queued: SYNC-20260818-022925
+[2026-08-18 07:59:25,616] [INFO] [leetcode_tracker]: [SYNC] Sync job SYNC-20260818-022925 is already RUNNING. Reusing active job.
+[2026-08-18 07:59:25,618] [INFO] [leetcode_tracker]: [WORKER] Worker started for job: SYNC-20260818-022925
+[2026-08-18 07:59:25,648] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Starting streaming per-student sync for 302 students (Job: SYNC-20260818-022925)
+[2026-08-18 07:59:25,787] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 07:59:25,788] [INFO] [leetcode_tracker]: [SYNC] Loaded 2 active students
+[2026-08-18 07:59:27,337] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST732201
+[2026-08-18 07:59:28,803] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 514 (Session ID 2), Last: Contest 513 (Session ID 1)
+[2026-08-18 07:59:28,956] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 514 (Session ID 2), Last: Contest 513 (Session ID 1)
+[2026-08-18 07:59:29,101] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: insufficient, Current: Contest None (Session ID None), Last: Contest None (Session ID None)
+[2026-08-18 07:59:29,146] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-18 07:59:29,187] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 3), Last: Contest 514 (Session ID 2)
+[2026-08-18 08:00:02,277] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 08:00:02,280] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-18 08:00:02,620] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-18 08:00:02,622] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth (skipping auto-seeding).
+[2026-08-18 08:00:02,629] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-18 08:00:02,630] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-18 08:00:02,635] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-18 08:00:02,635] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-18 08:00:02,835] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 08:00
+[2026-08-18 08:00:02,835] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-18 08:00:03,051] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 302 students.
+[2026-08-18 08:00:03,227] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-18 08:00:03,229] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-18 08:00:03,231] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 3
+[2026-08-18 08:00:03,235] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 08:00:03,236] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 08:00:03,235] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 08:00:03,235] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 08:00:03,246] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 08:00:03,252] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 4
+[2026-08-18 08:00:03,255] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 5
+[2026-08-18 08:00:03,273] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 08:00:03,350] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 08:00:03,366] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 08:00:03,591] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 08:00:03,680] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 08:00:32,039] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 08:00:32,061] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 08:00:33,891] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 08:00:33,904] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 08:00:40,969] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 4
+[2026-08-18 08:00:40,971] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 3
+[2026-08-18 08:00:40,973] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 2
+[2026-08-18 08:00:40,978] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-18 08:00:40,981] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-18 08:01:02,616] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 08:01:02,978] [INFO] [leetcode_tracker]: Duplicate email prevented for hod@test.nec.in under key 1-hod@test.nec.in-WEEKLY_CONTEST.
+[2026-08-18 08:01:08,290] [INFO] [leetcode_tracker]: OTP_EMAIL_PROVIDER=BREVO_API OTP_EMAIL_TRANSPORT=HTTPS_443 OTP_PROVIDER_ACCEPTED=true RECIPIENT_MASKED=s*****f@test.nec.in
+[2026-08-18 08:01:08,294] [INFO] [leetcode_tracker]: [REPORT EMAIL DELIVERED] To: staff@test.nec.in | Files: 3 | Students: 0
+[2026-08-18 08:01:08,333] [WARNING] [leetcode_tracker]: Session 1 is 'SCHEDULED'. Auto-email dispatch skipped until FINALIZED.
+[2026-08-18 08:01:08,335] [WARNING] [leetcode_tracker]: Session 2 is 'PENDING'. Auto-email dispatch skipped until FINALIZED.
+[2026-08-18 08:01:08,376] [WARNING] [leetcode_tracker]: Session 1 is 'LIVE'. Auto-email dispatch skipped until FINALIZED.
+[2026-08-18 08:01:10,240] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 08:01:10,241] [INFO] [leetcode_tracker]: [SYNC] Loaded 2 active students
+[2026-08-18 08:01:10,242] [INFO] [leetcode_tracker]: [SYNC] Creating session: SYNC-20260818-023110
+[2026-08-18 08:01:10,244] [INFO] [leetcode_tracker]: [QUEUE] Job queued: SYNC-20260818-023110
+[2026-08-18 08:01:10,246] [INFO] [leetcode_tracker]: [SYNC] Sync job SYNC-20260818-023110 is already RUNNING. Reusing active job.
+[2026-08-18 08:01:10,247] [INFO] [leetcode_tracker]: [WORKER] Worker started for job: SYNC-20260818-023110
+[2026-08-18 08:01:10,265] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Starting streaming per-student sync for 302 students (Job: SYNC-20260818-023110)
+[2026-08-18 08:01:10,463] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 08:01:10,464] [INFO] [leetcode_tracker]: [SYNC] Loaded 2 active students
+[2026-08-18 08:01:12,595] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST732201
+[2026-08-18 08:01:15,607] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 514 (Session ID 2), Last: Contest 513 (Session ID 1)
+[2026-08-18 08:01:16,250] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 514 (Session ID 2), Last: Contest 513 (Session ID 1)
+[2026-08-18 08:01:16,308] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: insufficient, Current: Contest None (Session ID None), Last: Contest None (Session ID None)
+[2026-08-18 08:01:16,374] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-18 08:01:16,401] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 3), Last: Contest 514 (Session ID 2)
+[2026-08-18 08:01:21,209] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 08:01:21,211] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-18 08:01:21,512] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-18 08:01:21,516] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth (skipping auto-seeding).
+[2026-08-18 08:01:21,526] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-18 08:01:21,529] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.
+[2026-08-18 08:01:21,535] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-18 08:01:21,536] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-18 08:01:21,846] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 08:01
+[2026-08-18 08:01:21,847] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-18 08:01:22,061] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 302 students.
+[2026-08-18 08:01:22,257] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-18 08:01:22,266] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-18 08:01:22,270] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 3
+[2026-08-18 08:01:22,275] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 08:01:22,275] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 08:01:22,275] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 08:01:22,296] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 4
+[2026-08-18 08:01:22,300] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 5
+[2026-08-18 08:01:22,312] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 08:01:22,319] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 08:01:22,341] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 08:01:30,892] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 08:01:30,897] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 08:01:32,018] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 08:01:32,021] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 08:01:51,891] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 08:01:51,895] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 08:02:02,033] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-18 08:02:02,039] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-18 08:02:09,762] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 4
+[2026-08-18 08:02:09,763] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 3
+[2026-08-18 08:02:09,763] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 2
+[2026-08-18 08:02:09,763] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-18 08:02:09,764] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-18 08:02:18,621] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-18 08:02:18,951] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-DOESNOTEXIST999, reg=None
+[2026-08-18 08:02:18,956] [WARNING] [leetcode_tracker]: [certificate_pdf_resolve_failed] Certificate not found for id=CERT-DOESNOTEXIST999
+[2026-08-18 08:02:18,981] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REVOKED01, reg=None
+[2026-08-18 08:02:18,983] [WARNING] [leetcode_tracker]: [certificate_pdf_revoked] Attempt to download revoked certificate CERT-REVOKED01
+[2026-08-18 08:02:18,991] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REGEN001, reg=None
+[2026-08-18 08:02:18,993] [INFO] [leetcode_tracker]: [certificate_pdf_resolved_from_cache] Size=57315 bytes for CERT-REGEN001
+[2026-08-18 08:02:18,993] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57315 bytes)
+[2026-08-18 08:02:19,003] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=cert-variant1, reg=None
+[2026-08-18 08:02:19,004] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-VARIANT1 (NANTHISH S)
+[2026-08-18 08:02:19,052] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-VARIANT1 for Student: NANTHISH S (732224CC031)
+[2026-08-18 08:02:19,055] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57305 bytes for CERT-VARIANT1
+[2026-08-18 08:02:19,055] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57305 bytes)
+[2026-08-18 08:02:19,060] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=VARIANT1, reg=None
+[2026-08-18 08:02:19,062] [INFO] [leetcode_tracker]: [certificate_pdf_resolved_from_cache] Size=57305 bytes for CERT-VARIANT1
+[2026-08-18 08:02:19,062] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57305 bytes)
+[2026-08-18 08:02:19,072] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=732224CC031, reg=None
+[2026-08-18 08:02:19,079] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-732224CC031 (NANTHISH S)
+[2026-08-18 08:02:19,121] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-732224CC031 for Student: NANTHISH S (732224CC031)
+[2026-08-18 08:02:19,122] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57294 bytes for CERT-732224CC031
+[2026-08-18 08:02:19,122] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_NANTHISH_S_732224CC031.pdf (57294 bytes)
+[2026-08-18 08:02:19,171] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-TEST1234 for Student: NANTHISH S (732224CC031)
+[2026-08-18 08:02:19,184] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-MATCHING01 found=True status=VALID
+[2026-08-18 08:02:19,190] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-MATCHING01, reg=None
+[2026-08-18 08:02:19,192] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-MATCHING01 (PRIYA DHARSHINI)
+[2026-08-18 08:02:19,226] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-MATCHING01 for Student: PRIYA DHARSHINI (732224CC045)
+[2026-08-18 08:02:19,228] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57297 bytes for CERT-MATCHING01
+[2026-08-18 08:02:19,228] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched Certificate_PRIYA_DHARSHINI_732224CC045.pdf (57297 bytes)
+[2026-08-18 08:02:19,255] [WARNING] [leetcode_tracker]: Profile validation failed for error_user: Network timeout
+[2026-08-18 08:02:19,307] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-18 08:02:19,319] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-18 08:02:19,322] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-18 08:02:19,325] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-18 08:02:19,336] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-18 08:02:19,455] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-18 08:02:19,458] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 516 (Session ID 2), Last: Contest 515 (Session ID 1)
+[2026-08-18 08:02:19,473] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-18 08:02:19,485] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,485] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,485] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,485] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,485] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,485] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,485] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,486] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,486] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,486] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,486] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,486] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,488] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,488] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,488] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,488] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,489] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,489] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,489] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,489] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,489] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,489] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,489] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-18 08:02:19,490] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout

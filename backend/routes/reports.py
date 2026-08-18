@@ -380,12 +380,6 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
             raw_rows = canonical_data.get("rows", [])
             matrix_metrics = canonical_data.get("metrics", {})
 
-            if len(raw_rows) == 0:
-                raise HTTPException(
-                    status_code=400,
-                    detail="No students match the selected filter criteria."
-                )
-
             all_students = []
             top_students = []
 
@@ -752,18 +746,49 @@ def generate_certificate_for_student(
 @router.get("/certificate/{cert_code}/pdf")
 def download_student_certificate_pdf(cert_code: str, db: Session = Depends(get_db)):
     """
-    Downloads generated student certificate as a PDF file.
+    Downloads generated student certificate as a PDF file with automatic regeneration fallback.
     """
-    from fastapi.responses import FileResponse
-    cert = db.query(CertificateRecord).filter(CertificateRecord.certificate_code == cert_code).first()
-    if not cert or not cert.pdf_path or not os.path.exists(cert.pdf_path):
+    import re
+    from backend.certificate_generator import build_certificate_pdf_from_record
+
+    raw_code = (cert_code or "").strip()
+    cert = db.query(CertificateRecord).filter(
+        (CertificateRecord.certificate_code == raw_code) |
+        (CertificateRecord.verification_id == raw_code) |
+        (CertificateRecord.verification_id.ilike(f"%{raw_code}%"))
+    ).first()
+    if not cert:
         raise HTTPException(status_code=404, detail="Certificate PDF file not found")
 
-    filename = f"Certificate_{cert_code}.pdf"
-    return FileResponse(
-        path=cert.pdf_path,
+    pdf_bytes = None
+    if cert.pdf_path and os.path.exists(cert.pdf_path) and os.path.getsize(cert.pdf_path) > 0:
+        try:
+            with open(cert.pdf_path, "rb") as f:
+                data = f.read()
+                if data.startswith(b"%PDF-"):
+                    pdf_bytes = data
+        except Exception:
+            pdf_bytes = None
+
+    if not pdf_bytes:
+        try:
+            pdf_bytes = build_certificate_pdf_from_record(cert, db)
+        except Exception as e:
+            logger.error(f"Failed to regenerate certificate PDF for {cert_code}: {e}")
+            raise HTTPException(status_code=500, detail="Failed to generate certificate PDF.")
+
+    clean_name = re.sub(r'[^A-Za-z0-9_]+', '_', (cert.student_name or "STUDENT").strip().upper())
+    clean_reg = re.sub(r'[^A-Za-z0-9_]+', '_', (cert.register_no or "").strip().upper())
+    filename = f"Certificate_{clean_name}_{clean_reg}.pdf" if clean_reg else f"Certificate_{cert_code}.pdf"
+
+    return Response(
+        content=pdf_bytes,
         media_type="application/pdf",
-        filename=filename
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Type": "application/pdf",
+            "Content-Length": str(len(pdf_bytes))
+        }
     )
 
 class EmailDispatchPayload(BaseModel):

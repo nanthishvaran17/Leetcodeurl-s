@@ -53,9 +53,7 @@ def classify_public_contest_outcome(result: Any) -> str:
       * Never convert missing data to zero.
     """
     if result is None:
-        # No result row in DB for this student — no evidence of participation.
-        # NOT_PARTICIPATED is the correct sentinel; UNKNOWN is reserved for fetch errors.
-        return "NOT_PARTICIPATED"
+        return "UNKNOWN"
 
     # Extract statuses
     part_status = _get_val(result, "participation_status", "status")
