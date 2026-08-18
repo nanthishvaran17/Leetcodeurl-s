@@ -10,7 +10,7 @@ from backend.models import Student, LeetCodeProfileStats, WeeklyStudentProgress,
 from backend.ranking import update_all_rankings_and_badges
 from backend.assets.sync_firestore import sync_database_to_firestore
 
-def reseed_all_student_stats():
+def reseed_all_student_stats(sync_firestore: bool = True):
     """
     100% Generic 273-Student Database Reseed Engine.
     Zero Hardcoding. Evaluates realistic LeetCode profile stats, difficulty breakdowns,
@@ -106,8 +106,9 @@ def reseed_all_student_stats():
     finally:
         db.close()
 
-    # Now trigger sync to Firestore
-    sync_database_to_firestore()
+    # Now trigger sync to Firestore (optional / backgroundable)
+    if sync_firestore:
+        sync_database_to_firestore()
 
 if __name__ == "__main__":
     reseed_all_student_stats()

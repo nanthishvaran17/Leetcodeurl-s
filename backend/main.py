@@ -138,92 +138,81 @@ def on_startup():
         from backend.models import Student, User, LeetCodeProfileStats
         from backend.routes.auth import get_password_hash, verify_password
 
-        db_init = SessionLocal()
-        student_cnt = db_init.query(Student).count()
+        with SessionLocal() as db_init:
+            # Reconcile Admin Credentials on Startup
+            admin_username = getattr(settings, "ADMIN_USERNAME", "admin").strip()
+            admin_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
+            admin_pass = getattr(settings, "ADMIN_PASSWORD", "admin123").strip() or "admin123"
 
-        # Reconcile Admin Credentials on Startup
-        admin_username = getattr(settings, "ADMIN_USERNAME", "admin").strip()
-        admin_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
-        admin_pass = getattr(settings, "ADMIN_PASSWORD", "admin123").strip() or "admin123"
+            admin_user = db_init.query(User).filter(
+                (User.username.ilike(admin_username)) | (User.email.ilike(admin_email))
+            ).first()
 
-        admin_user = db_init.query(User).filter(
-            (User.username.ilike(admin_username)) | (User.email.ilike(admin_email))
-        ).first()
-
-        if not admin_user:
-            admin_user = User(
-                username=admin_username,
-                email=admin_email,
-                hashed_password=get_password_hash(admin_pass),
-                role="Admin",
-                is_active=True
-            )
-            db_init.add(admin_user)
-            db_init.commit()
-            logger.info(f"[STARTUP_RECONCILE] Created admin user '{admin_username}' with secure password hash.")
-        else:
-            admin_user.role = "Admin"
-            admin_user.is_active = True
-            if not verify_password(admin_pass, admin_user.hashed_password):
-                admin_user.hashed_password = get_password_hash(admin_pass)
+            if not admin_user:
+                admin_user = User(
+                    username=admin_username,
+                    email=admin_email,
+                    hashed_password=get_password_hash(admin_pass),
+                    role="Admin",
+                    is_active=True
+                )
+                db_init.add(admin_user)
                 db_init.commit()
-                logger.info(f"[STARTUP_RECONCILE] Reconciled admin user '{admin_username}' password hash.")
+                logger.info(f"[STARTUP_RECONCILE] Created admin user '{admin_username}' with secure password hash.")
+            else:
+                admin_user.role = "Admin"
+                admin_user.is_active = True
+                if not verify_password(admin_pass, admin_user.hashed_password):
+                    admin_user.hashed_password = get_password_hash(admin_pass)
+                    db_init.commit()
+                    logger.info(f"[STARTUP_RECONCILE] Reconciled admin user '{admin_username}' password hash.")
 
-        logger.info("Checking student roster count in single source of truth database...")
-        db_check_count = SessionLocal()
-        existing_student_cnt = db_check_count.query(Student).count()
-        db_check_count.close()
+            logger.info("Checking student roster count in single source of truth database...")
+            existing_student_cnt = db_init.query(Student).count()
 
-        if existing_student_cnt == 0:
-            logger.info("Brand new database detected (0 students). Seeding initial institutional roster...")
-            try:
-                seed_database()
-                logger.info("Initial database seeding completed successfully.")
-            except Exception as _seed_err:
-                logger.error(f"Error seeding database: {_seed_err}")
-        else:
-            logger.info(f"Database contains {existing_student_cnt} existing student records. Preserving database single source of truth (skipping auto-seeding).")
+            if existing_student_cnt == 0:
+                logger.info("Brand new database detected (0 students). Seeding initial institutional roster...")
+                try:
+                    seed_database()
+                    logger.info("Initial database seeding completed successfully.")
+                except Exception as _seed_err:
+                    logger.error(f"Error seeding database: {_seed_err}")
+            else:
+                logger.info(f"Database contains {existing_student_cnt} existing student records. Preserving database single source of truth.")
 
-        # Check if verified student profile statistics are populated
-        db_check = SessionLocal()
-        verified_stats_cnt = db_check.query(LeetCodeProfileStats).filter(
-            (LeetCodeProfileStats.status.in_(["verified", "success"])) | (LeetCodeProfileStats.total_solved > 0)
-        ).count()
-        db_check.close()
+            # Check if verified student profile statistics are populated
+            verified_stats_cnt = db_init.query(LeetCodeProfileStats).filter(
+                (LeetCodeProfileStats.status.in_(["verified", "success"])) | (LeetCodeProfileStats.total_solved > 0)
+            ).count()
 
-        if verified_stats_cnt == 0:
-            logger.info("Unseeded or pending profile stats detected (0 verified profiles). Initializing student profile statistics roster...")
-            try:
-                from backend.assets.reseed_all_stats import reseed_all_student_stats
-                reseed_all_student_stats()
-            except Exception as _reseed_err:
-                logger.warning(f"Reseed all stats note: {_reseed_err}")
+            if verified_stats_cnt == 0:
+                logger.info("Unseeded or pending profile stats detected (0 verified profiles). Initializing student profile statistics roster...")
+                try:
+                    from backend.assets.reseed_all_stats import reseed_all_student_stats
+                    reseed_all_student_stats(sync_firestore=False)
+                    from backend.assets.sync_firestore import sync_database_to_firestore
+                    asyncio.create_task(asyncio.to_thread(sync_database_to_firestore))
+                except Exception as _reseed_err:
+                    logger.warning(f"Reseed all stats note: {_reseed_err}")
     except Exception as e:
         logger.warning(f"Database seed/reseed skipped or noted: {e}")
-
-
-
 
     try:
         from backend.database import SessionLocal
         from backend.models import SyncJob
         from backend.services.weekly_session_manager import resume_active_weekly_session
-        db = SessionLocal()
-        try:
+        with SessionLocal() as db_recovery:
             # Clean up any zombie sync locks from previous server restarts
-            stale_jobs = db.query(SyncJob).filter(SyncJob.status == "RUNNING").all()
+            stale_jobs = db_recovery.query(SyncJob).filter(SyncJob.status == "RUNNING").all()
             if stale_jobs:
                 for sj in stale_jobs:
                     sj.status = "INTERRUPTED"
-                db.commit()
-            asyncio.create_task(resume_active_weekly_session(db))
-        except Exception as _rec_err:
-            logger.warning(f"Session recovery note: {_rec_err}")
+                db_recovery.commit()
+            asyncio.create_task(resume_active_weekly_session(db_recovery))
     except Exception as _db_err:
         logger.warning(f"Database session recovery skipped: {_db_err}")
 
-    # Ensure all 273 students have a Firestore document with syncStatus:pending
-    # so the frontend never shows "0 Solved / Verified just now" for unfetched students.
+    # Ensure all 273 students have a Firestore document with syncStatus:pending in background
     try:
         from backend.assets.sync_firestore import initialize_pending_records
         asyncio.create_task(asyncio.to_thread(initialize_pending_records))
@@ -234,18 +223,14 @@ def on_startup():
         logger.info("Starting background scheduler...")
         try:
             start_scheduler()
-            # Register administrator-configured report schedule with APScheduler
             from backend.services.schedule_service import get_or_create_default_schedule, register_apscheduler_job
-            _sched_db = SessionLocal()
-            try:
+            with SessionLocal() as _sched_db:
                 _cfg = get_or_create_default_schedule(_sched_db)
                 register_apscheduler_job(_cfg)
-            finally:
-                _sched_db.close()
         except Exception as e:
             logger.warning(f"Scheduler initialization note: {e}")
     elif not SCHEDULER_AVAILABLE:
-        logger.warning("Scheduler skipped — pandas/numpy not available (Application Control policy).")
+        logger.warning("Scheduler skipped — pandas/numpy not available.")
     logger.info("Backend Application ready and listening!")
 
 

@@ -12,6 +12,10 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
+# Ensure standard output and error streams are unbuffered (logs stream immediately to Render)
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -36,13 +40,13 @@ COPY --from=frontend-builder /frontend/dist ./frontend/dist/
 # Copy Firebase service account key if present
 COPY serviceAccountKey.json* ./
 
-# Expose port
+# Expose port (Render sets $PORT dynamically)
 ENV PORT=8000
 EXPOSE 8000
 
 # Healthcheck
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD curl -f http://localhost:8000/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+  CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
 # Start server
-CMD ["sh", "-c", "python -m uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "exec uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
