@@ -1135,7 +1135,12 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => setShowCertPreviewModal(true)}
+                    onClick={() => {
+                      const contestQuery = forensicResult.contest.contestName || forensicResult.contest.contestId || '515';
+                      const vId = forensicResult.traceId || `trace_${forensicResult.student.reg_no}`;
+                      const url = `/verify/${vId}?reg=${encodeURIComponent(forensicResult.student.reg_no)}&contest=${encodeURIComponent(contestQuery)}&name=${encodeURIComponent(forensicResult.student.name)}`;
+                      window.open(url, '_blank');
+                    }}
                     className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition-all shadow-md hover:scale-105 flex items-center gap-1.5 cursor-pointer"
                   >
                     <FileText className="w-3.5 h-3.5" />
