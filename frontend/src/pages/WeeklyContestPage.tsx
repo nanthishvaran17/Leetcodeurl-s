@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Trophy, Calendar, RefreshCw, AlertTriangle, Download, FileSpreadsheet,
-  FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Zap, Filter, Trash2, Mail, Send, Sparkles, X, Edit3, UserCheck, UserX, Eye, Users, TrendingUp, Award, ChevronDown, ChevronUp
+  FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Zap, Filter, Trash2, Mail, Send, Sparkles, X, Edit3, UserCheck, UserX, Eye, Users, TrendingUp, Award, ChevronDown, ChevronUp,
+  Building2, GraduationCap, RotateCcw, Search
 } from 'lucide-react';
 import api from '../services/api';
 import { StatusNotificationModal, NotificationState } from '../components/StatusNotificationModal';
@@ -814,49 +815,36 @@ export const WeeklyContestPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── 2. SINGLE CONSOLIDATED STICKY FILTER & ACTION BAR ── */}
-      <div className="sticky top-2 z-20 p-4 sm:p-5 rounded-3xl bg-white/95 dark:bg-navy-900/95 backdrop-blur-md border border-gray-200 dark:border-gray-800 shadow-xl space-y-3.5">
-        {/* Row 1: Quick Scope Presets & Single Action Toolbar */}
+      {/* ── 2. UNIFIED COHESIVE FILTER & ACTION COMMAND BAR ── */}
+      <div className="sticky top-2 z-20 p-4 sm:p-5 rounded-3xl bg-white/95 dark:bg-navy-900/95 backdrop-blur-md border border-gray-200 dark:border-gray-800 shadow-xl space-y-4">
+        {/* Row 1: Search Input + Full Consolidated Action Toolbar */}
         <div className="flex items-center justify-between flex-wrap gap-3">
-          {/* Quick Scope Preset Pills */}
-          <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 no-scrollbar">
-            <span className="text-[11px] font-black uppercase text-gray-400 mr-1 flex items-center gap-1">
-              <Filter className="w-3.5 h-3.5 text-indigo-500" />
-              <span>Scope:</span>
-            </span>
-            {[
-              { label: 'College-Wide', dept: 'ALL', year: 'ALL' },
-              { label: 'Cyber Security', dept: 'CSE(CS)', year: 'ALL' },
-              { label: 'IoT', dept: 'CSE(IOT)', year: 'ALL' },
-              { label: 'II Year', dept: 'ALL', year: 'II' },
-              { label: 'III Year', dept: 'ALL', year: 'III' },
-              { label: 'IV Year', dept: 'ALL', year: 'IV' },
-            ].map((preset) => {
-              const isActive = selectedDeptFilter === preset.dept && selectedYearFilter === preset.year;
-              return (
-                <button
-                  key={preset.label}
-                  onClick={() => {
-                    setSelectedDeptFilter(preset.dept);
-                    setSelectedYearFilter(preset.year);
-                  }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap active:scale-95 ${
-                    isActive
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25 scale-[1.02]'
-                      : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-navy-700'
-                  }`}
-                >
-                  {preset.label}
-                </button>
-              );
-            })}
+          {/* Real-time Search Input */}
+          <div className="flex-1 min-w-[260px] max-w-md relative flex items-center bg-gray-50 dark:bg-navy-950 px-3.5 py-2 rounded-2xl border border-gray-200 dark:border-gray-800 focus-within:ring-2 focus-within:ring-brand-500/40 focus-within:border-brand-500 transition-all shadow-inner">
+            <Search className="w-4 h-4 text-gray-400 mr-2 shrink-0" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search student by name, reg no, or LeetCode handle..."
+              className="w-full bg-transparent text-xs font-bold text-gray-900 dark:text-white placeholder-gray-400 outline-none"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="w-5 h-5 rounded-full bg-gray-200 dark:bg-navy-800 text-gray-600 dark:text-gray-300 flex items-center justify-center text-[10px] hover:bg-gray-300 cursor-pointer shrink-0 ml-1"
+                title="Clear Search"
+              >
+                ✕
+              </button>
+            )}
           </div>
 
-          {/* Consolidated Action Toolbar (No duplicates) */}
+          {/* Consolidated Action Toolbar */}
           <div className="flex items-center flex-wrap gap-2">
             <button
               onClick={() => setShowPreviewModal(true)}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
+              className="flex items-center space-x-1.5 px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
               title="Preview Filtered Table"
             >
               <Eye className="w-3.5 h-3.5" />
@@ -865,7 +853,7 @@ export const WeeklyContestPage: React.FC = () => {
 
             <button
               onClick={() => downloadReportFile('excel')}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
+              className="flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
               title="Download Filtered Excel Workbook"
             >
               <FileSpreadsheet className="w-3.5 h-3.5" />
@@ -874,7 +862,7 @@ export const WeeklyContestPage: React.FC = () => {
 
             <button
               onClick={() => downloadReportFile('pdf')}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
+              className="flex items-center space-x-1.5 px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
               title="Download Filtered PDF"
             >
               <FileText className="w-3.5 h-3.5" />
@@ -883,7 +871,7 @@ export const WeeklyContestPage: React.FC = () => {
 
             <button
               onClick={() => downloadReportFile('word')}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
+              className="flex items-center space-x-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
               title="Download Filtered Word Document"
             >
               <FileText className="w-3.5 h-3.5" />
@@ -892,7 +880,7 @@ export const WeeklyContestPage: React.FC = () => {
 
             <button
               onClick={() => downloadReportFile('zip')}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-700 hover:bg-slate-800 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
+              className="flex items-center space-x-1.5 px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
               title="Download Complete ZIP Package"
             >
               <Download className="w-3.5 h-3.5" />
@@ -901,7 +889,7 @@ export const WeeklyContestPage: React.FC = () => {
 
             <button
               onClick={() => setShowEmailModal(true)}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
+              className="flex items-center space-x-1.5 px-3.5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
               title="Send Filtered Report Email"
             >
               <Mail className="w-3.5 h-3.5" />
@@ -911,7 +899,7 @@ export const WeeklyContestPage: React.FC = () => {
             <button
               onClick={handleFetchSelectedContest}
               disabled={isSyncing || !selectedSessionId}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-900 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50 active:scale-95"
+              className="flex items-center space-x-1.5 px-3.5 py-2 bg-gray-900 hover:bg-black text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50 active:scale-95 border border-gray-700/50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
               <span>{syncStatusStage || (isSyncing ? 'Syncing...' : 'Sync Contest')}</span>
@@ -919,65 +907,85 @@ export const WeeklyContestPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Row 2: Orthogonal Dropdowns & Real-Time Debounced Search Input */}
+        {/* Row 2: Clean 3-Column Dropdowns + 1-Click Reset Control */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-gray-100 dark:border-gray-800">
           {/* Department Select */}
-          <div className="flex items-center space-x-2 bg-gray-50 dark:bg-navy-950 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-800">
-            <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Dept:</span>
-            <select
-              value={selectedDeptFilter}
-              onChange={(e) => setSelectedDeptFilter(e.target.value)}
-              className="w-full bg-transparent text-xs font-bold text-gray-800 dark:text-gray-200 outline-none cursor-pointer"
-            >
-              <option value="ALL">All Departments</option>
-              <option value="CSE(CS)">CSE (Cyber Security)</option>
-              <option value="CSE(IOT)">CSE (Internet of Things)</option>
-            </select>
+          <div className="relative flex items-center bg-gray-50 dark:bg-navy-950 px-3.5 py-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
+            <Building2 className="w-4 h-4 text-indigo-500 mr-2 shrink-0" />
+            <div className="flex-1">
+              <label className="block text-[9px] font-black uppercase text-gray-400 tracking-wider">Department</label>
+              <select
+                value={selectedDeptFilter}
+                onChange={(e) => setSelectedDeptFilter(e.target.value)}
+                className="w-full bg-transparent text-xs font-bold text-gray-800 dark:text-gray-200 outline-none cursor-pointer"
+              >
+                <option value="ALL">All Departments</option>
+                <option value="CSE(CS)">CSE (Cyber Security)</option>
+                <option value="CSE(IOT)">CSE (Internet of Things)</option>
+              </select>
+            </div>
+            <ChevronDown className="w-3.5 h-3.5 text-gray-400 pointer-events-none" />
           </div>
 
-          {/* Year Select */}
-          <div className="flex items-center space-x-2 bg-gray-50 dark:bg-navy-950 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-800">
-            <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Year:</span>
-            <select
-              value={selectedYearFilter}
-              onChange={(e) => setSelectedYearFilter(e.target.value)}
-              className="w-full bg-transparent text-xs font-bold text-gray-800 dark:text-gray-200 outline-none cursor-pointer"
-            >
-              <option value="ALL">All Academic Years</option>
-              <option value="II">II Year (2025–2029)</option>
-              <option value="III">III Year (2024–2028)</option>
-              <option value="IV">IV Year (2023–2027)</option>
-            </select>
+          {/* Academic Year Select */}
+          <div className="relative flex items-center bg-gray-50 dark:bg-navy-950 px-3.5 py-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
+            <GraduationCap className="w-4 h-4 text-brand-500 mr-2 shrink-0" />
+            <div className="flex-1">
+              <label className="block text-[9px] font-black uppercase text-gray-400 tracking-wider">Academic Year</label>
+              <select
+                value={selectedYearFilter}
+                onChange={(e) => setSelectedYearFilter(e.target.value)}
+                className="w-full bg-transparent text-xs font-bold text-gray-800 dark:text-gray-200 outline-none cursor-pointer"
+              >
+                <option value="ALL">All Academic Years</option>
+                <option value="II">II Year (2025–2029)</option>
+                <option value="III">III Year (2024–2028)</option>
+                <option value="IV">IV Year (2023–2027)</option>
+              </select>
+            </div>
+            <ChevronDown className="w-3.5 h-3.5 text-gray-400 pointer-events-none" />
           </div>
 
           {/* Attendance Status Select */}
-          <div className="flex items-center space-x-2 bg-gray-50 dark:bg-navy-950 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-800">
-            <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Status:</span>
-            <select
-              value={selectedAttendanceFilter}
-              onChange={(e) => setSelectedAttendanceFilter(e.target.value)}
-              className="w-full bg-transparent text-xs font-bold text-gray-800 dark:text-gray-200 outline-none cursor-pointer"
-            >
-              <option value="ALL">All Statuses</option>
-              <option value="PUBLIC_ATTENDED">🟢 Public Attended</option>
-              <option value="VIRTUAL_ATTENDED">🟣 Virtual Attended</option>
-              <option value="PUBLIC_NOT_ATTENDED">⚪ Not Attended</option>
-              <option value="DATA_ERROR">⚠️ Data Errors</option>
-            </select>
+          <div className="relative flex items-center bg-gray-50 dark:bg-navy-950 px-3.5 py-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 mr-2 shrink-0" />
+            <div className="flex-1">
+              <label className="block text-[9px] font-black uppercase text-gray-400 tracking-wider">Attendance Status</label>
+              <select
+                value={selectedAttendanceFilter}
+                onChange={(e) => setSelectedAttendanceFilter(e.target.value)}
+                className="w-full bg-transparent text-xs font-bold text-gray-800 dark:text-gray-200 outline-none cursor-pointer"
+              >
+                <option value="ALL">All Statuses</option>
+                <option value="PUBLIC_ATTENDED">🟢 Public Attended</option>
+                <option value="VIRTUAL_ATTENDED">🟣 Virtual Attended</option>
+                <option value="PUBLIC_NOT_ATTENDED">⚪ Not Attended</option>
+                <option value="DATA_ERROR">⚠️ Data Errors</option>
+              </select>
+            </div>
+            <ChevronDown className="w-3.5 h-3.5 text-gray-400 pointer-events-none" />
           </div>
 
-          {/* Debounced Search Box */}
-          <div className="flex items-center space-x-2 bg-gray-50 dark:bg-navy-950 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-800">
-            <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Search:</span>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Name, Reg No, Handle..."
-              className="w-full bg-transparent text-xs font-medium text-gray-800 dark:text-gray-200 outline-none"
-            />
-            {searchTerm && (
-              <button onClick={() => setSearchTerm('')} className="text-gray-400 hover:text-gray-600 text-xs">✕</button>
+          {/* Reset Filters / Active Filter Summary Button */}
+          <div className="flex items-center justify-between sm:justify-end gap-2">
+            {(selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL' || searchTerm !== '') ? (
+              <button
+                onClick={() => {
+                  setSelectedDeptFilter('ALL');
+                  setSelectedYearFilter('ALL');
+                  setSelectedAttendanceFilter('ALL');
+                  setSearchTerm('');
+                }}
+                className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 text-xs font-black border border-rose-200 dark:border-rose-800/60 transition-all cursor-pointer active:scale-95 shadow-sm"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset All Filters</span>
+              </button>
+            ) : (
+              <div className="w-full flex items-center justify-center space-x-1.5 px-4 py-3 rounded-2xl bg-gray-50 dark:bg-navy-950 text-gray-400 text-xs font-bold border border-gray-100 dark:border-gray-800">
+                <Filter className="w-3.5 h-3.5 text-gray-400" />
+                <span>All 302 Students Active</span>
+              </div>
             )}
           </div>
         </div>
