@@ -122,34 +122,25 @@ def resolve_certificate_record(
         
         p_res = q_p.order_by(WeeklyPublicResult.id.desc()).first()
 
-        # If not public attended, check virtual participation
-        v_res = None
-        if not p_res or p_res.participation_status not in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"):
-            q_v = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.student_id == student_obj.id)
-            if contest:
-                clean_c = str(contest).strip()
-                c_slug = clean_c if "weekly" in clean_c.lower() else f"weekly-contest-{clean_c}"
-                q_v = q_v.join(WeeklySession, WeeklyVirtualResult.session_id == WeeklySession.id).filter(
-                    (WeeklySession.contest_id == c_slug) |
-                    (WeeklySession.contest_name.ilike(f"%{clean_c}%"))
-                )
-            v_res = q_v.order_by(WeeklyVirtualResult.id.desc()).first()
+        # 2. Determine session & verified contest metadata
+        session_obj = None
+        if p_res and p_res.session:
+            session_obj = p_res.session
+        elif v_res and v_res.session:
+            session_obj = v_res.session
+        elif contest:
+            clean_c = str(contest).strip()
+            c_slug = clean_c if "weekly" in clean_c.lower() else f"weekly-contest-{clean_c}"
+            session_obj = db.query(WeeklySession).filter(
+                (WeeklySession.contest_id == c_slug) |
+                (WeeklySession.contest_name.ilike(f"%{clean_c}%"))
+            ).first()
 
-        active_res = p_res if (p_res and p_res.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED")) else v_res
-        
-        # If student did not participate in the requested contest, do NOT fabricate certificate
-        if contest and not active_res:
-            logger.warning(f"[CERT_MISMATCH] Student {student_obj.reg_no} has no verified participation in contest {contest}")
-            return None
+        if not session_obj:
+            session_obj = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
 
-        if active_res and active_res.session:
-            contest_name = active_res.session.contest_name
-            contest_date = active_res.session.session_date or "16.08.2026"
-        else:
-            # Fallback to latest finalized session
-            latest_sess = db.query(WeeklySession).filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED"])).order_by(WeeklySession.id.desc()).first()
-            contest_name = latest_sess.contest_name if latest_sess else "Weekly Contest 515"
-            contest_date = latest_sess.session_date if (latest_sess and latest_sess.session_date) else "16.08.2026"
+        contest_name = session_obj.contest_name if session_obj else "Weekly Contest 515"
+        contest_date = session_obj.session_date if (session_obj and session_obj.session_date) else "16.08.2026"
 
         target_v_id = clean_id if clean_id.startswith("CERT-") else (raw_id if raw_id.lower().startswith("trace_") else f"CERT-{clean_id}")
 
@@ -166,7 +157,7 @@ def resolve_certificate_record(
             recognition=f"Official Contest Forensic Verification: {contest_name}",
             issue_date=contest_date,
             status="VALID",
-            verification_url=f"https://leetcode-student-data.web.app/verify/{raw_id}",
+            verification_url=f"https://leetcode-student-data.web.app/verify/{raw_id}?reg={student_obj.reg_no}&contest={session_obj.contest_id or session_obj.id if session_obj else '515'}",
             created_by="Automated Forensic Engine"
         )
         try:

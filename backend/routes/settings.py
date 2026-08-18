@@ -675,6 +675,35 @@ def get_student_forensic_trace(
     if not session_obj:
         raise HTTPException(status_code=404, detail=f"Contest Session ID {session_id} not found.")
 
+    # Auto-provision CertificateRecord for instant QR code verification resolution
+    from backend.models import CertificateRecord
+    try:
+        dept_code_str = student.department.code if student.department else "CSE(CS)"
+        dept_name_str = student.department.name if student.department else "Computer Science and Engineering (Cyber Security)"
+        existing_cert = db.query(CertificateRecord).filter(CertificateRecord.verification_id == trace_id).first()
+        if not existing_cert:
+            c_record = CertificateRecord(
+                verification_id=trace_id,
+                certificate_code=trace_id,
+                certificate_type="Official Forensic Contest Verification",
+                student_id=student.id,
+                student_name=student.name,
+                register_no=student.reg_no,
+                department=dept_code_str,
+                department_name=dept_name_str,
+                program=f"B.E. {dept_name_str}",
+                recognition=f"Official Contest Forensic Verification: {session_obj.contest_name or 'Weekly Contest 515'}",
+                issue_date=session_obj.session_date or "16.08.2026",
+                status="VALID",
+                verification_url=f"https://leetcode-student-data.web.app/verify/{trace_id}?reg={student.reg_no}&contest={session_obj.contest_id or session_id}",
+                created_by="Automated Forensic Engine"
+            )
+            db.add(c_record)
+            db.commit()
+    except Exception as db_err:
+        logger.warning(f"Note on CertificateRecord registration in forensic-trace: {db_err}")
+        db.rollback()
+
     contest_result = db.query(WeeklyPublicResult).filter(
         WeeklyPublicResult.student_id == student.id,
         WeeklyPublicResult.session_id == session_id
