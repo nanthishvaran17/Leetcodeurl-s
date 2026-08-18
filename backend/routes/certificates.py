@@ -69,6 +69,23 @@ def resolve_certificate_record(
     ).first()
 
     if cert:
+        # If a specific contest was requested and the existing record has a different contest, update it to the requested contest
+        if contest:
+            clean_c = str(contest).strip()
+            if clean_c.lower() not in (cert.recognition or "").lower():
+                c_slug = clean_c if "weekly" in clean_c.lower() else f"weekly-contest-{clean_c}"
+                sess_match = db.query(WeeklySession).filter(
+                    (WeeklySession.contest_id == c_slug) |
+                    (WeeklySession.contest_name.ilike(f"%{clean_c}%"))
+                ).first()
+                if sess_match:
+                    cert.recognition = f"Official Contest Forensic Verification: {sess_match.contest_name}"
+                    cert.issue_date = sess_match.session_date or cert.issue_date
+                    try:
+                        db.commit()
+                        db.refresh(cert)
+                    except Exception:
+                        db.rollback()
         return cert
 
     # Dynamic lookup for student register numbers or forensic contest traces
