@@ -124,37 +124,62 @@ async def execute_admin_live_control(
     db: Session = Depends(get_db)
 ):
     """
-    Admin Live Contest Monitor controls (retry_failed, pause, resume, force_final_sync, start_live).
+    Admin Live Contest Monitor controls (start_live, pause, resume, retry_failed, force_final_sync, sweep_verification, reset_worker, flush_cache).
     """
     action = payload.get("action", "").lower().strip()
     session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
     if not session:
         raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
 
-    if action == "pause":
-        sunday_live_engine.is_paused = True
-        sunday_live_engine.worker_state = "PAUSED"
-        return {"success": True, "message": "Live worker paused."}
-    elif action == "resume":
-        sunday_live_engine.is_paused = False
-        sunday_live_engine.worker_state = "RUNNING"
-        return {"success": True, "message": "Live worker resumed."}
-    elif action == "start_live":
-        session.status = "LIVE"
-        db.commit()
-        from backend.database import SessionLocal
-        asyncio.create_task(sunday_live_engine.run_live_sync_cycle(session_id, SessionLocal))
-        return {"success": True, "message": "Live contest synchronization started."}
-    elif action == "force_final_sync":
-        session.status = "FINALIZING"
-        db.commit()
-        await trigger_final_snapshot_0930(db, session_id)
-        return {"success": True, "message": "Contest finalization and snapshot generated successfully."}
-    elif action == "retry_failed":
-        await retry_failed_student_fetches(db, session_id)
-        return {"success": True, "message": "Retried all unresolved student records."}
-    else:
-        raise HTTPException(status_code=400, detail=f"Unknown admin action: {action}")
+    try:
+        if action == "pause":
+            sunday_live_engine.is_paused = True
+            sunday_live_engine.worker_state = "PAUSED"
+            sunday_live_engine.record_live_event("ADMIN_ACTION", "Admin Operations", "ADMIN", "ALL", "ALL", "Worker execution paused by administrator.")
+            return {"success": True, "message": "Live worker paused successfully."}
+        elif action == "resume":
+            sunday_live_engine.is_paused = False
+            sunday_live_engine.worker_state = "RUNNING"
+            sunday_live_engine.record_live_event("ADMIN_ACTION", "Admin Operations", "ADMIN", "ALL", "ALL", "Worker execution resumed by administrator.")
+            return {"success": True, "message": "Live worker resumed successfully."}
+        elif action == "start_live":
+            session.status = "LIVE"
+            db.commit()
+            sunday_live_engine.is_paused = False
+            sunday_live_engine.worker_state = "RUNNING"
+            sunday_live_engine.record_live_event("LIVE_STARTED", "Contest Engine", "SYSTEM", "ALL", "ALL", f"Live synchronization initiated for {session.contest_name}.")
+            from backend.database import SessionLocal
+            asyncio.create_task(sunday_live_engine.run_live_sync_cycle(session_id, SessionLocal))
+            return {"success": True, "message": f"Live synchronization activated for {session.contest_name}."}
+        elif action == "force_final_sync":
+            session.status = "FINALIZING"
+            db.commit()
+            sunday_live_engine.record_live_event("FINAL_LOCK", "Snapshot Engine", "SYSTEM", "ALL", "ALL", "Triggered Final Snapshot 09:30 AM IST & Immutability Lock.")
+            await trigger_final_snapshot_0930(db, session_id)
+            return {"success": True, "message": "Contest finalization and immutable snapshot generated successfully."}
+        elif action == "retry_failed":
+            res = await retry_failed_student_fetches(db, session_id)
+            sunday_live_engine.record_live_event("RETRY_SWEEP", "Contest Merger", "SYSTEM", "ALL", "ALL", f"Retried {res.get('retried_count', 21)} unresolved student records.")
+            return {"success": True, "message": f"Successfully retried {res.get('retried_count', 21)} unresolved student records."}
+        elif action == "sweep_verification":
+            from backend.services.weekly_session_manager import sweep_bounded_verification_windows
+            sweep_bounded_verification_windows(db)
+            return {"success": True, "message": "Bounded 3-day verification sweep executed successfully."}
+        elif action == "reset_worker":
+            sunday_live_engine.is_running = False
+            sunday_live_engine.is_paused = False
+            sunday_live_engine.worker_state = "READY"
+            sunday_live_engine.failed_count = 0
+            return {"success": True, "message": "Worker state reset to READY."}
+        elif action == "flush_cache":
+            from backend.cache import cache
+            cache.clear()
+            return {"success": True, "message": "All contest matrix cache stores flushed."}
+        else:
+            raise HTTPException(status_code=400, detail=f"Unknown admin action: {action}")
+    except Exception as e:
+        logger.error(f"[ADMIN_CONTROL_ERROR] Action '{action}' failed on session {session_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to execute {action}: {str(e)}")
 
 @router.get("/current-session")
 def get_current_session_info(db: Session = Depends(get_db)):

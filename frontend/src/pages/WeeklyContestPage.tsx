@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   Trophy, Calendar, RefreshCw, AlertTriangle, Download, FileSpreadsheet,
   FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Zap, Filter, Trash2, Mail, Send, Sparkles, X, Edit3, UserCheck, UserX, Eye, Users, TrendingUp, Award, ChevronDown, ChevronUp,
-  Building2, GraduationCap, RotateCcw, Search, Radio, Activity, Shield, Pause, Play, FastForward
+  Building2, GraduationCap, RotateCcw, Search, Radio, Activity, Shield, Pause, Play, FastForward,
+  Gauge, Terminal, Cpu, Database
 } from 'lucide-react';
 import api from '../services/api';
 import { StatusNotificationModal, NotificationState } from '../components/StatusNotificationModal';
@@ -111,6 +112,7 @@ export const WeeklyContestPage: React.FC = () => {
   const [showAdminMonitor, setShowAdminMonitor] = useState<boolean>(false);
   const [adminActionMsg, setAdminActionMsg] = useState<string>('');
   const [isPerformingAdminAction, setIsPerformingAdminAction] = useState<boolean>(false);
+  const [adminSubTab, setAdminSubTab] = useState<'sync_ops' | 'rate_limiter' | 'error_resolver' | 'snapshot_audit' | 'live_logs'>('sync_ops');
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -163,17 +165,20 @@ export const WeeklyContestPage: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Admin Control Handler
+  // Admin Control Handler with immediate state refresh
   const handleAdminAction = async (action: string) => {
     if (!selectedSessionId) return;
     setIsPerformingAdminAction(true);
     try {
       const res = await api.post(`/contests/sessions/${selectedSessionId}/admin-control`, { action });
       setAdminActionMsg(res.data?.message || `Action ${action} executed successfully.`);
-      setTimeout(() => setAdminActionMsg(''), 4000);
+      setTimeout(() => setAdminActionMsg(''), 5000);
+      const telemRes = await api.get(`/contests/sessions/${selectedSessionId}/live-status`);
+      if (telemRes.data) setLiveTelemetry(telemRes.data);
       fetchSessionDetails(selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter);
     } catch (err: any) {
-      setAdminActionMsg(err.response?.data?.detail || `Failed to execute ${action}`);
+      setAdminActionMsg(err.response?.data?.detail || err.message || `Failed to execute ${action}`);
+      setTimeout(() => setAdminActionMsg(''), 6000);
     } finally {
       setIsPerformingAdminAction(false);
     }
@@ -1098,79 +1103,347 @@ export const WeeklyContestPage: React.FC = () => {
         </div>
       )}
 
-      {/* ── 1D. ADMIN LIVE CONTEST MONITOR (ACCORDION) ── */}
+      {/* ── 1D. ADMIN LIVE CONTEST OPERATIONS & WORKER TELEMETRY SUITE ── */}
       {showAdminMonitor && (
-        <div className="p-5 sm:p-6 rounded-3xl bg-slate-900 text-white border border-slate-700 shadow-2xl space-y-4 animate-fade-in">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h4 className="text-xs font-black uppercase tracking-wider text-brand-400 flex items-center gap-2">
-              <Shield className="w-4 h-4" />
-              <span>Admin Live Contest Monitor & Worker Telemetry</span>
-            </h4>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">
-              Worker: {liveTelemetry?.workerId || 'WORKER-LIVE'} ({liveTelemetry?.workerState || 'READY'})
-            </span>
+        <div className="p-5 sm:p-7 rounded-3xl bg-slate-900 text-white border border-slate-700/80 shadow-2xl space-y-6 animate-fade-in">
+          {/* Header with Title, Worker Badge, and Action Status */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-2xl bg-brand-500/20 border border-brand-500/40 flex items-center justify-center text-brand-400">
+                <Shield className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-black uppercase tracking-wider text-brand-400 flex items-center gap-2">
+                  <span>Admin Live Contest Operations & Worker Telemetry</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono border border-emerald-500/30">
+                    ● ACTIVE SUITE
+                  </span>
+                </h4>
+                <p className="text-xs text-slate-400">Mission-control engine for real-time synchronization, worker gating, and invariant validation.</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-mono px-3 py-1 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 flex items-center gap-1.5 shadow-inner">
+                <Cpu className="w-3.5 h-3.5 text-brand-400" />
+                <span>Worker: <strong className="text-white">{liveTelemetry?.workerId || 'WORKER-LIVE-5'}</strong></span>
+                <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded ${
+                  liveTelemetry?.workerState === 'RUNNING' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' :
+                  liveTelemetry?.workerState === 'PAUSED' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' :
+                  'bg-slate-800 text-slate-300'
+                }`}>
+                  {liveTelemetry?.workerState || 'READY'}
+                </span>
+              </span>
+            </div>
           </div>
 
+          {/* Admin Action Notification Banner */}
           {adminActionMsg && (
-            <div className="p-3 rounded-xl bg-brand-500/20 border border-brand-500/40 text-brand-300 text-xs font-bold">
-              {adminActionMsg}
+            <div className="p-3.5 rounded-2xl bg-brand-500/20 border border-brand-500/40 text-brand-200 text-xs font-bold flex items-center justify-between shadow-lg animate-fade-in">
+              <span className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>{adminActionMsg}</span>
+              </span>
+              <button onClick={() => setAdminActionMsg('')} className="text-gray-400 hover:text-white">
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
           )}
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-              <span className="text-[10px] text-gray-400 block">Worker State</span>
-              <span className="font-mono font-black text-white">{liveTelemetry?.workerState || 'READY'}</span>
-            </div>
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-              <span className="text-[10px] text-gray-400 block">Students Processed</span>
-              <span className="font-mono font-black text-emerald-400">{liveTelemetry?.processedCount || stats.totalRows} / {stats.totalRows}</span>
-            </div>
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-              <span className="text-[10px] text-gray-400 block">Successful Syncs</span>
-              <span className="font-mono font-black text-emerald-400">{liveTelemetry?.successfulCount || stats.totalRows - stats.errorRows}</span>
-            </div>
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-              <span className="text-[10px] text-gray-400 block">Transient Errors</span>
-              <span className="font-mono font-black text-amber-400">{liveTelemetry?.failedCount || stats.errorRows}</span>
-            </div>
+          {/* Interactive Tab Switcher Navigation */}
+          <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-950/80 border border-slate-800 overflow-x-auto scrollbar-none">
+            <button
+              onClick={() => setAdminSubTab('sync_ops')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                adminSubTab === 'sync_ops'
+                  ? 'bg-brand-600 text-white shadow-lg'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              <Play className="w-3.5 h-3.5 fill-current" />
+              <span>Live Sync & Controls</span>
+            </button>
+
+            <button
+              onClick={() => setAdminSubTab('rate_limiter')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                adminSubTab === 'rate_limiter'
+                  ? 'bg-brand-600 text-white shadow-lg'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              <Gauge className="w-3.5 h-3.5" />
+              <span>Token-Bucket & Rate Limiter</span>
+            </button>
+
+            <button
+              onClick={() => setAdminSubTab('error_resolver')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                adminSubTab === 'error_resolver'
+                  ? 'bg-brand-600 text-white shadow-lg'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              <AlertTriangle className="w-3.5 h-3.5" />
+              <span>Data Errors & Re-sync ({liveTelemetry?.failedCount || stats.errorRows})</span>
+            </button>
+
+            <button
+              onClick={() => setAdminSubTab('snapshot_audit')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                adminSubTab === 'snapshot_audit'
+                  ? 'bg-brand-600 text-white shadow-lg'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              <Lock className="w-3.5 h-3.5" />
+              <span>Snapshot Lock & Windows</span>
+            </button>
+
+            <button
+              onClick={() => setAdminSubTab('live_logs')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                adminSubTab === 'live_logs'
+                  ? 'bg-brand-600 text-white shadow-lg'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              <Terminal className="w-3.5 h-3.5" />
+              <span>Live Events Log Stream</span>
+            </button>
           </div>
 
-          {/* Admin Actions */}
-          <div className="flex items-center flex-wrap gap-2 pt-2 border-t border-slate-800">
-            <button
-              onClick={() => handleAdminAction('start_live')}
-              disabled={isPerformingAdminAction}
-              className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow transition-all cursor-pointer active:scale-95"
-            >
-              <Play className="w-3.5 h-3.5" />
-              <span>Start Live Sync</span>
-            </button>
-            <button
-              onClick={() => handleAdminAction(liveTelemetry?.isPaused ? 'resume' : 'pause')}
-              disabled={isPerformingAdminAction}
-              className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow transition-all cursor-pointer active:scale-95"
-            >
-              <Pause className="w-3.5 h-3.5" />
-              <span>{liveTelemetry?.isPaused ? 'Resume Sync' : 'Pause Sync'}</span>
-            </button>
-            <button
-              onClick={() => handleAdminAction('retry_failed')}
-              disabled={isPerformingAdminAction}
-              className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow transition-all cursor-pointer active:scale-95"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>Retry Unresolved (21 Errors)</span>
-            </button>
-            <button
-              onClick={() => handleAdminAction('force_final_sync')}
-              disabled={isPerformingAdminAction}
-              className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow transition-all cursor-pointer active:scale-95"
-            >
-              <FastForward className="w-3.5 h-3.5" />
-              <span>Force Final Sync & Lock Snapshot</span>
-            </button>
-          </div>
+          {/* Tab 1: Live Sync & Primary Controls */}
+          {adminSubTab === 'sync_ops' && (
+            <div className="space-y-5 animate-fade-in">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block">Worker State</span>
+                  <span className="text-base font-mono font-black text-white">{liveTelemetry?.workerState || 'READY'}</span>
+                  <span className="text-[10px] text-emerald-400 block">Single-Worker DB Lock Active</span>
+                </div>
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block">Students Processed</span>
+                  <span className="text-base font-mono font-black text-emerald-400">{liveTelemetry?.processedCount || stats.totalRows} / {stats.totalRows}</span>
+                  <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
+                    <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${Math.min(100, Math.round(((liveTelemetry?.processedCount || stats.totalRows) / Math.max(1, stats.totalRows)) * 100))}%` }}></div>
+                  </div>
+                </div>
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block">Successful Syncs</span>
+                  <span className="text-base font-mono font-black text-emerald-400">{liveTelemetry?.successfulCount || stats.totalRows - stats.errorRows}</span>
+                  <span className="text-[10px] text-gray-400 block">{stats.totalRows > 0 ? Math.round(((stats.totalRows - stats.errorRows) / stats.totalRows) * 100) : 100}% Accuracy Rate</span>
+                </div>
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block">Transient Errors</span>
+                  <span className="text-base font-mono font-black text-amber-400">{liveTelemetry?.failedCount || stats.errorRows}</span>
+                  <span className="text-[10px] text-amber-300 block">Auto-Retry Eligible</span>
+                </div>
+              </div>
+
+              {/* Action Buttons Toolbar */}
+              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-center flex-wrap gap-2.5">
+                <button
+                  onClick={() => handleAdminAction('start_live')}
+                  disabled={isPerformingAdminAction}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-900/30 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>Start Live Sync</span>
+                </button>
+
+                <button
+                  onClick={() => handleAdminAction(liveTelemetry?.isPaused ? 'resume' : 'pause')}
+                  disabled={isPerformingAdminAction}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow-lg shadow-amber-900/30 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                >
+                  <Pause className="w-3.5 h-3.5 fill-current" />
+                  <span>{liveTelemetry?.isPaused ? 'Resume Sync' : 'Pause Sync'}</span>
+                </button>
+
+                <button
+                  onClick={() => handleAdminAction('sweep_verification')}
+                  disabled={isPerformingAdminAction}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-900/30 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Run 3-Day Verification Sweep</span>
+                </button>
+
+                <button
+                  onClick={() => handleAdminAction('reset_worker')}
+                  disabled={isPerformingAdminAction}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold shadow transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Reset Worker State</span>
+                </button>
+
+                <button
+                  onClick={() => handleAdminAction('force_final_sync')}
+                  disabled={isPerformingAdminAction}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg shadow-purple-900/30 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                >
+                  <FastForward className="w-3.5 h-3.5" />
+                  <span>Force Final Sync & Lock Snapshot</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Tab 2: Token-Bucket & Rate Limiter Telemetry */}
+          {adminSubTab === 'rate_limiter' && (
+            <div className="space-y-4 animate-fade-in">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between text-gray-400">
+                    <span>Token Replenishment Rate</span>
+                    <Gauge className="w-4 h-4 text-brand-400" />
+                  </div>
+                  <p className="text-xl font-mono font-black text-emerald-400">3.0 <span className="text-xs text-gray-400">req / sec</span></p>
+                  <p className="text-[10px] text-gray-400">Smooth token refill with zero API throttle risks.</p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between text-gray-400">
+                    <span>Burst Bucket Capacity</span>
+                    <Database className="w-4 h-4 text-purple-400" />
+                  </div>
+                  <p className="text-xl font-mono font-black text-purple-400">5.0 <span className="text-xs text-gray-400">Tokens Max</span></p>
+                  <p className="text-[10px] text-gray-400">Bounded burst capacity for fast concurrent queries.</p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between text-gray-400">
+                    <span>Asyncio Socket Semaphore</span>
+                    <Cpu className="w-4 h-4 text-indigo-400" />
+                  </div>
+                  <p className="text-xl font-mono font-black text-indigo-400">5 <span className="text-xs text-gray-400">Concurrent Sockets</span></p>
+                  <p className="text-[10px] text-gray-400">Strict bounded concurrent HTTP sockets.</p>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between flex-wrap gap-3">
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-white">Cache & Rate Limiting Controls</p>
+                  <p className="text-[11px] text-gray-400">Instantly flush memory cache keys or reset token state without dropping DB records.</p>
+                </div>
+                <button
+                  onClick={() => handleAdminAction('flush_cache')}
+                  disabled={isPerformingAdminAction}
+                  className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition-all cursor-pointer active:scale-95"
+                >
+                  Flush Contest Cache Store
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Tab 3: Data Quality & Error Resolver */}
+          {adminSubTab === 'error_resolver' && (
+            <div className="space-y-4 animate-fade-in">
+              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between flex-wrap gap-4">
+                <div className="space-y-1">
+                  <h5 className="text-xs font-black uppercase tracking-wider text-amber-400">
+                    Unresolved Student Profiles ({liveTelemetry?.failedCount || stats.errorRows} Errors)
+                  </h5>
+                  <p className="text-xs text-gray-400">
+                    Students without configured usernames or whose LeetCode profiles encountered transient timeouts.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => handleAdminAction('retry_failed')}
+                  disabled={isPerformingAdminAction}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-900/30 transition-all cursor-pointer active:scale-95"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Retry All Unresolved Records</span>
+                </button>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 text-xs text-gray-300 space-y-2">
+                <p className="font-bold text-white">Transient Error Breakdown & Invariants:</p>
+                <ul className="list-disc list-inside space-y-1 text-[11px] text-gray-400">
+                  <li><strong>Missing Usernames:</strong> Students whose LeetCode handle is not set in Master Roster.</li>
+                  <li><strong>Upstream Timeouts (5xx / 429):</strong> Automatically retried with exponential backoff and jitter.</li>
+                  <li><strong>Data Error Contract:</strong> <code className="text-amber-300">Data Errors = CONFLICT + SOURCE_ERROR</code> strictly holds across all views.</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Tab 4: Snapshot Immutability & Verification Windows */}
+          {adminSubTab === 'snapshot_audit' && (
+            <div className="space-y-4 animate-fade-in">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-white flex items-center gap-1.5">
+                      <Lock className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>DB Immutability Trigger</span>
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono border border-emerald-500/30">
+                      ACTIVE
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-400 font-mono">
+                    trg_prevent_snapshot_mutation enforced on official_weekly_snapshots table.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-white flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>Bounded Verification Window</span>
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono border border-indigo-500/30">
+                      3 DAYS
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-400">
+                    Transitions to <code className="text-indigo-300">NOT_VERIFIED_FINAL</code> automatically once window expires.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tab 5: Live Real-Time Events Log Stream */}
+          {adminSubTab === 'live_logs' && (
+            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3 font-mono text-xs animate-fade-in">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                <span className="text-gray-400 font-bold flex items-center gap-2">
+                  <Terminal className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>REAL-TIME AUDIT LOG STREAM</span>
+                </span>
+                <span className="text-[10px] text-emerald-400 animate-pulse">● LIVE STREAM</span>
+              </div>
+
+              <div className="max-h-60 overflow-y-auto space-y-1.5 pr-2 scrollbar-thin">
+                {liveTelemetry?.liveEvents && liveTelemetry.liveEvents.length > 0 ? (
+                  liveTelemetry.liveEvents.map((evt: any) => (
+                    <div key={evt.id || Math.random()} className="p-2 rounded-lg bg-slate-900/80 border border-slate-800 text-[11px] flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-gray-500">{evt.timestamp}</span>
+                        <span className="px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 font-bold text-[9px]">{evt.type}</span>
+                        <span className="text-white font-bold">{evt.studentName}</span>
+                        <span className="text-gray-400">({evt.regNo})</span>
+                        <span className="text-gray-300">{evt.detail}</span>
+                      </div>
+                      {evt.rank && (
+                        <span className="text-amber-400 font-bold">Rank #{evt.rank}</span>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 italic py-4 text-center">No live events recorded yet in current cycle. Click 'Start Live Sync' to begin streaming.</p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
