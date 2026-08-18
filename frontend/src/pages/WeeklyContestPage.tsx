@@ -773,8 +773,19 @@ export const WeeklyContestPage: React.FC = () => {
     const totalParticipationPct = totalRows > 0 ? (((attendedRows + virtualRows) / totalRows) * 100).toFixed(1) : '0.0';
 
     const topPerformers = matrixRows
-      .filter(r => (r.participation_status === 'PUBLIC' || r.participation_status === 'PUBLIC_ATTENDED' || r.status === 'PUBLIC') && r.rank)
-      .sort((a, b) => (Number(a.rank) || 999999) - (Number(b.rank) || 999999))
+      .filter(r => {
+        const isAttended = r.participation_status === 'PUBLIC' || r.participation_status === 'PUBLIC_ATTENDED' || r.status === 'PUBLIC' || r.participation_status === 'VIRTUAL' || r.participation_status === 'VIRTUAL_ATTENDED';
+        const solved = Number(r.total_solved ?? r.total_contest_solved ?? ((r.q1 || 0) + (r.q2 || 0) + (r.q3 || 0) + (r.q4 || 0))) || 0;
+        return isAttended && solved > 0;
+      })
+      .sort((a, b) => {
+        const solvedA = Number(a.total_solved ?? a.total_contest_solved ?? ((a.q1 || 0) + (a.q2 || 0) + (a.q3 || 0) + (a.q4 || 0))) || 0;
+        const solvedB = Number(b.total_solved ?? b.total_contest_solved ?? ((b.q1 || 0) + (b.q2 || 0) + (b.q3 || 0) + (b.q4 || 0))) || 0;
+        if (solvedB !== solvedA) return solvedB - solvedA;
+        const rankA = Number(a.rank ?? a.contest_rank) || 999999;
+        const rankB = Number(b.rank ?? b.contest_rank) || 999999;
+        return rankA - rankB;
+      })
       .slice(0, 3);
 
     return {
@@ -1956,9 +1967,11 @@ export const WeeklyContestPage: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className="font-mono text-[11px] text-gray-500 font-bold">#{p.rank}</span>
+                      <span className="font-mono text-[11px] text-gray-500 font-bold">
+                        {p.rank || p.contest_rank ? `#${p.rank || p.contest_rank}` : (p.participation_status?.includes('VIRTUAL') ? 'Virtual' : '—')}
+                      </span>
                       <span className="px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-mono font-black text-xs border border-emerald-200 dark:border-emerald-800">
-                        {p.total_solved}/4
+                        {Number(p.total_solved ?? p.total_contest_solved ?? ((p.q1 || 0) + (p.q2 || 0) + (p.q3 || 0) + (p.q4 || 0))) || 0}/4
                       </span>
                     </div>
                   </div>
