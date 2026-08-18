@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     SMTP_HOST: str = os.environ.get("SMTP_HOST", "smtp.gmail.com")
     SMTP_PORT: int = int(os.environ.get("SMTP_PORT", 587))
     SMTP_USERNAME: str = os.environ.get("SMTP_USERNAME", "nanthishvaran17@gmail.com")
-    SMTP_PASSWORD: str = os.environ.get("SMTP_PASSWORD", "ytgxsrdxnslsqtjie")  # App Password (spaces removed)
+    SMTP_PASSWORD: str = os.environ.get("SMTP_PASSWORD", "oscublnwtvuwuwlx")  # App Password (spaces removed)
     SMTP_FROM_EMAIL: str = os.environ.get("SMTP_FROM_EMAIL", os.environ.get("REPORT_FROM_EMAIL", "nanthishvaran17@gmail.com"))
     BREVO_API_KEY: str = os.environ.get("BREVO_API_KEY", "").strip()
     RESEND_API_KEY: str = os.environ.get("RESEND_API_KEY", "").strip()

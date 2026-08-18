@@ -347,25 +347,27 @@ def send_email(
         except Exception:
             pass
 
+    last_error = None
+
     # Priority 1: RESEND_API_KEY (HTTPS Port 443)
     if resend_key:
         ok, err = send_email_via_resend(resend_key, from_email, recipient, subject, html_body, attachments, text_body)
         if ok:
             return True, None
-        logger.error(f"[EMAIL_ROUTING] Resend HTTPS API request failed: {err}. Fast-failing (no SMTP fallback allowed when API key is configured).")
-        return False, err
+        last_error = err
+        logger.warning(f"[EMAIL_ROUTING] Resend HTTPS API failed: {err}. Attempting fallback...")
 
     # Priority 2: BREVO_API_KEY (HTTPS Port 443)
     if brevo_key:
         ok, err = send_email_via_brevo(brevo_key, from_email, recipient, subject, html_body, attachments, text_body)
         if ok:
             return True, None
-        logger.error(f"[EMAIL_ROUTING] Brevo HTTPS API request failed: {err}. Fast-failing (no SMTP fallback allowed when API key is configured).")
-        return False, err
+        last_error = err
+        logger.warning(f"[EMAIL_ROUTING] Brevo HTTPS API failed: {err}. Falling back to Gmail SMTP...")
 
-    # Priority 3: Local / Development SMTP fallback ONLY if no HTTPS API key is configured
+    # Priority 3: Gmail SMTP fallback (Port 587 + STARTTLS)
     if not smtp_user or not smtp_pass:
-        return False, "OTP_EMAIL_PROVIDER_NOT_CONFIGURED: Set RESEND_API_KEY or BREVO_API_KEY in environment variables."
+        return False, last_error or "EMAIL_PROVIDER_NOT_CONFIGURED: Set BREVO_API_KEY or SMTP_PASSWORD in environment variables."
 
     msg = MIMEMultipart('alternative')
     msg['From'] = f"Nandha Engineering College — LeetCode Tracker <{from_email}>"
