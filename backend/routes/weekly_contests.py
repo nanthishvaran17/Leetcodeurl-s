@@ -240,6 +240,26 @@ async def execute_admin_live_control(
         logger.error(f"[ADMIN_CONTROL_ERROR] Action '{action}' failed on session {session_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to execute {action}: {str(e)}")
 
+@router.post("/historical-resync")
+def execute_historical_resync(db: Session = Depends(get_db)):
+    """
+    Executes complete sequential historical re-sync from Contest 510 to 515.
+    Audits 302 students x 6 contests (~1812 pairs) with zero guessing or duplicates.
+    """
+    from backend.services.historical_resync_engine import historical_resync_engine
+    return historical_resync_engine.run_historical_resync(db)
+
+@router.get("/historical-completeness-report")
+def get_historical_completeness_report(
+    contest_slug: str = Query("weekly-contest-515", description="Contest slug e.g. weekly-contest-515"),
+    db: Session = Depends(get_db)
+):
+    """
+    Generates Section 21 300-Student Completeness Dashboard Report.
+    """
+    from backend.services.historical_resync_engine import historical_resync_engine
+    return historical_resync_engine.generate_completeness_report(db, contest_slug=contest_slug)
+
 @router.get("/current-session")
 def get_current_session_info(db: Session = Depends(get_db)):
     """
