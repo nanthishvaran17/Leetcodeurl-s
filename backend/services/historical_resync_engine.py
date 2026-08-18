@@ -182,6 +182,12 @@ class HistoricalResyncAndAccuracyEngine:
                 db.add(session)
                 db.flush()
 
+            # CRITICAL SUNDAY LIVE CONTEST SAFETY GUARD:
+            # Historical engine must NEVER touch or overwrite LIVE or SCHEDULED contests
+            if session.status in ("LIVE", "SCHEDULED"):
+                logger.warning(f"[HISTORICAL_RESYNC_PROTECTED] Contest {slug} is {session.status} — skipping historical mutation to protect live engine.")
+                continue
+
             contest_stats = {
                 "contest_number": c_num,
                 "contest_name": c_name,

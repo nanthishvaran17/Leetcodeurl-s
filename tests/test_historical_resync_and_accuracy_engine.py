@@ -125,3 +125,26 @@ def test_completeness_report_generation(resync_db):
     assert report["students_configured"] == 10
     assert "coverage_pct" in report
     assert "verification_confidence" in report
+
+
+def test_historical_resync_strictly_protects_live_and_scheduled_contests(resync_db):
+    """Guarantees that historical resync engine NEVER modifies LIVE or SCHEDULED contests."""
+    # Create an active LIVE contest session (e.g. WC-515 currently LIVE on Sunday morning)
+    live_session = WeeklySession(
+        contest_id="weekly-contest-515",
+        contest_name="Weekly Contest 515",
+        session_date="2026-08-16",
+        status="LIVE"
+    )
+    resync_db.add(live_session)
+    resync_db.commit()
+
+    engine = HistoricalResyncAndAccuracyEngine()
+    summary = engine.run_historical_resync(resync_db)
+
+    # Verify that WC-515 was protected and NOT included in historical mutations
+    assert "weekly-contest-515" not in summary["contests_breakdown"]
+    
+    # Status remains untouched as LIVE
+    refreshed_live = resync_db.query(WeeklySession).filter(WeeklySession.contest_id == "weekly-contest-515").first()
+    assert refreshed_live.status == "LIVE"
