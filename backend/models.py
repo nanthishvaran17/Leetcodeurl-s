@@ -500,11 +500,15 @@ class SyncJob(Base):
     job_type = Column(String(50), default="FULL_SYNC") # FULL_SYNC, SINGLE_STUDENT, CONTEST_SYNC
     started_at = Column(DateTime, default=datetime.datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)
+    last_synced_at = Column(DateTime, nullable=True)
     status = Column(String(30), default="RUNNING") # RUNNING, COMPLETED, COMPLETED_WITH_WARNINGS, FAILED
+    progress = Column(Float, default=0.0)
     total_records = Column(Integer, default=0)
+    processed_count = Column(Integer, default=0)
     success_count = Column(Integer, default=0)
     partial_count = Column(Integer, default=0)
     error_count = Column(Integer, default=0)
+    error_message = Column(Text, nullable=True)
     triggered_by = Column(String(100), default="admin")
 
 
@@ -1236,6 +1240,157 @@ class ForensicAuditRecord(Base):
     updated_at       = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
     student = relationship("Student", backref="forensic_audit_records")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PRODUCTION LEETCODE CONTEST TRACKING SYSTEM (FINAL SCHEMA)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class Contest(Base):
+    """
+    Contest table: Primary Identity = (platform, contest_slug)
+    All timestamps stored in UTC.
+    """
+    __tablename__ = "contests"
+    __table_args__ = (
+        UniqueConstraint("platform", "contest_slug", name="uix_contests_platform_slug"),
+        {"extend_existing": True},
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    platform = Column(String(50), nullable=False, default="leetcode")
+    contest_slug = Column(String(200), nullable=False, index=True)
+    contest_title = Column(String(200), nullable=True)
+    contest_number = Column(Integer, nullable=True)  # DISPLAY ONLY, NOT identity
+    contest_type = Column(String(50), nullable=True, default="weekly")
+    start_time = Column(DateTime(timezone=True), nullable=False, index=True)  # UTC
+    end_time = Column(DateTime(timezone=True), nullable=False)    # UTC
+    duration = Column(Integer, nullable=False, default=5400)      # seconds
+    status = Column(String(50), default="upcoming", index=True)   # upcoming, live, finalized, completed
+    problem_list = Column(JSON, nullable=True)
+    metadata_json = Column("metadata", JSON, nullable=True)
+    discovered_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+
+class LeetCodeAccount(Base):
+    """
+    Normalized LeetCode accounts linked to students.
+    """
+    __tablename__ = "leetcode_accounts"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), unique=True, nullable=False)
+    leetcode_username = Column(String(100), unique=True, nullable=False, index=True)
+    normalized_username = Column(String(100), nullable=True, index=True)
+    profile_url = Column(String(500), nullable=True)
+    is_verified = Column(Boolean, default=False)
+    profile_data = Column(JSON, nullable=True)
+    updated_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    student = relationship("Student", backref=backref("leetcode_account", uselist=False))
+
+
+class ContestParticipationRecord(Base):
+    """
+    Core normalized contest participation table.
+    - 3 User-Facing States: ACTUAL, VIRTUAL, NOT_VERIFIED
+    - 5 Internal Verification States: VERIFIED, PENDING, CONFLICT, INSUFFICIENT_EVIDENCE, SOURCE_ERROR
+    - Immutable 09:58 / 10:00 Snapshot preservation
+    """
+    __tablename__ = "contest_participation"
+    __table_args__ = (
+        UniqueConstraint("contest_id", "student_id", name="uix_contest_part_student"),
+        {"extend_existing": True},
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    contest_id = Column(Integer, ForeignKey("contests.id"), nullable=False, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    leetcode_username = Column(String(100), nullable=False)
+
+    # USER-FACING STATE (3 states only)
+    participation_status = Column(String(50), nullable=False, default="NOT_VERIFIED", index=True)
+
+    # INTERNAL VERIFICATION STATE (5 states)
+    verification_status = Column(String(50), default="PENDING", index=True)
+
+    # Contest Results (NULL if unavailable)
+    rank = Column(Integer, nullable=True)
+    score = Column(Integer, nullable=True)
+    solved_count = Column(Integer, nullable=True)
+    finish_time = Column(Integer, nullable=True)  # seconds
+
+    # Question-level data
+    questions = Column(JSON, nullable=True)
+
+    # Evidence Tracking (Source only, NOT raw payload)
+    evidence_source = Column(String(200), nullable=True)
+    evidence_metadata = Column(JSON, nullable=True)
+    confidence = Column(String(20), default="NONE")  # HIGH, MEDIUM, UNKNOWN, NONE
+
+    # Timelines
+    first_fetched_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow)
+    last_fetched_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow)
+    verified_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Rating (Separate Lifecycle)
+    rating = Column(Integer, nullable=True)
+    rating_change = Column(Integer, nullable=True)
+    global_ranking = Column(Integer, nullable=True)
+    rating_updated_at = Column(DateTime(timezone=True), nullable=True)
+
+    # 10 AM Snapshot (Immutable)
+    snapshot_rank = Column(Integer, nullable=True)
+    snapshot_score = Column(Integer, nullable=True)
+    snapshot_solved = Column(Integer, nullable=True)
+    snapshot_at = Column(DateTime(timezone=True), nullable=True, index=True)
+
+    contest = relationship("Contest", backref="participations")
+    student = relationship("Student", backref="contest_tracking_records")
+
+
+class SnapshotRecord(Base):
+    """
+    Live tracking snapshot history.
+    """
+    __tablename__ = "snapshots"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    contest_id = Column(Integer, ForeignKey("contests.id"), nullable=False, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    rank = Column(Integer, nullable=True)
+    score = Column(Integer, nullable=True)
+    solved_count = Column(Integer, nullable=True)
+    captured_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, index=True)
+
+    contest = relationship("Contest", backref="live_snapshots")
+    student = relationship("Student", backref="contest_snapshots_history")
+
+
+class RawDataRecord(Base):
+    """
+    Audit table: Raw API responses stored separately from normalized data.
+    """
+    __tablename__ = "raw_data"
+    __table_args__ = (
+        UniqueConstraint("contest_id", "username", "operation_name", "captured_at", name="uix_raw_data_audit"),
+        {"extend_existing": True},
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    contest_id = Column(Integer, ForeignKey("contests.id"), nullable=True, index=True)
+    username = Column(String(100), nullable=True)
+    endpoint = Column(String(200), nullable=True)
+    operation_name = Column(String(200), nullable=True)
+    http_status = Column(Integer, nullable=True)
+    graphql_errors = Column(JSON, nullable=True)
+    payload = Column(JSON, nullable=True)  # Full raw response
+    is_critical = Column(Boolean, default=False)
+    captured_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, index=True)
+
 
 
 

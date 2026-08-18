@@ -62,6 +62,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     current_student?: string;
     current_username?: string;
     is_running: boolean;
+    last_sync_time?: string;
   } | null>(null);
   const pollTimerRef = useRef<any>(null);
 
@@ -106,7 +107,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         }));
       }
     } else if (data.type === 'SYNC_COMPLETED') {
-      setSyncProgress(prev => prev ? { ...prev, is_running: false, processed: prev.total } : null);
+      const tot = data.summary?.total_students || 300;
+      setSyncProgress({
+        total: tot,
+        processed: tot,
+        successful: data.summary?.profile_verified ?? data.summary?.full_dataset_synced ?? tot,
+        failed: data.summary?.fetch_failed ?? 0,
+        pending_usernames: data.summary?.pending_username ?? 0,
+        is_running: false,
+        last_sync_time: data.summary?.completed_at || new Date().toLocaleTimeString()
+      });
       setRefreshing(false);
       fetchFilteredStudents();
     }
@@ -116,22 +126,37 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     fetchDepartments();
     fetchFilteredStudents();
 
-    // Check if sync is already running on mount
+    // Check if sync is already running or completed on mount
     const checkInitialSync = async () => {
       try {
         const statusData = await getSyncStatus();
+        const totalCount = statusData.total_students || statusData.total || 300;
         if (statusData.is_running) {
           setSyncProgress({
-            total: statusData.total_students || statusData.total || (students.length > 0 ? students.length : 300),
+            total: totalCount,
             processed: statusData.students_processed ?? statusData.completed ?? 0,
             successful: statusData.successful ?? statusData.success ?? 0,
             failed: statusData.failed ?? 0,
             pending_usernames: statusData.pending_usernames ?? 0,
             current_student: statusData.current_student,
             current_username: statusData.current_username,
-            is_running: true
+            is_running: true,
+            last_sync_time: statusData.last_sync_timestamp
           });
           startPollingProgress();
+        } else if (statusData.status === 'COMPLETED' || statusData.operation === 'COMPLETED') {
+          const compProcessed = statusData.students_processed ?? statusData.completed ?? totalCount;
+          setSyncProgress({
+            total: totalCount,
+            processed: compProcessed,
+            successful: statusData.successful ?? statusData.success ?? totalCount,
+            failed: statusData.failed ?? 0,
+            pending_usernames: statusData.pending_usernames ?? 0,
+            current_student: undefined,
+            current_username: undefined,
+            is_running: false,
+            last_sync_time: statusData.last_sync_timestamp
+          });
         }
       } catch (err) {
         console.warn("Initial sync status check error:", err);
@@ -160,7 +185,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         consecutiveErrors = 0;
 
         const rawComp = statusData.students_processed ?? statusData.completed ?? statusData.processed ?? 0;
-        const totalCount = statusData.total_students || statusData.total || (students.length > 0 ? students.length : 300);
+        const totalCount = statusData.total_students || statusData.total || 300;
         const currentProcessed = Math.min(totalCount, Math.max(0, rawComp));
 
         setSyncProgress({
@@ -171,7 +196,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           pending_usernames: statusData.pending_usernames ?? 0,
           current_student: statusData.current_student,
           current_username: statusData.current_username,
-          is_running: statusData.is_running
+          is_running: statusData.is_running,
+          last_sync_time: statusData.last_sync_timestamp
         });
 
         // Re-fetch student roster every 2 seconds during polling so cards update LIVE on screen
@@ -184,9 +210,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           pollTimerRef.current = null;
           setRefreshing(false);
           await fetchFilteredStudents();
-          setTimeout(() => {
-            setSyncProgress(prev => prev ? { ...prev, is_running: false, processed: prev.total } : null);
-          }, 5000);
+          setSyncProgress({
+            total: totalCount,
+            processed: totalCount,
+            successful: statusData.successful ?? statusData.success ?? totalCount,
+            failed: statusData.failed ?? 0,
+            pending_usernames: statusData.pending_usernames ?? 0,
+            current_student: undefined,
+            current_username: undefined,
+            is_running: false,
+            last_sync_time: statusData.last_sync_timestamp
+          });
         }
       } catch (err) {
         consecutiveErrors += 1;
@@ -714,7 +748,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <p className="text-xs font-bold text-gray-500 dark:text-gray-400">
                   {syncProgress.is_running 
                     ? `Processing Profile: ${syncProgress.current_student || 'Initializing...'}`
-                    : 'All student statistics are up to date'
+                    : `All student statistics are up to date${syncProgress.last_sync_time ? ` • Last synced: ${syncProgress.last_sync_time}` : ''}`
                   }
                 </p>
               </div>

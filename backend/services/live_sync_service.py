@@ -435,10 +435,14 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
         final_status = "COMPLETED" if summary.get("fetch_failed", 0) == 0 else "PARTIAL"
         job_record = db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
         if job_record:
-            job_record.completed_at = datetime.datetime.utcnow()
+            now_t = datetime.datetime.utcnow()
+            job_record.completed_at = now_t
+            job_record.last_synced_at = now_t
             job_record.success_count = summary.get("full_dataset_synced", 0)
             job_record.partial_count = summary.get("partial_sync", 0) + summary.get("pending_username", 0)
             job_record.error_count = summary.get("fetch_failed", 0) + summary.get("invalid_username", 0)
+            job_record.processed_count = job_record.total_records
+            job_record.progress = 100.0
             job_record.status = final_status
             db.commit()
 
@@ -461,8 +465,10 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
         logger.error(f"[WORKER] Job {job_id} failed: {exc}", exc_info=True)
         job_record = db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
         if job_record:
-            job_record.completed_at = datetime.datetime.utcnow()
+            now_t = datetime.datetime.utcnow()
+            job_record.completed_at = now_t
             job_record.status = "FAILED"
+            job_record.error_message = str(exc)
             db.commit()
     finally:
         db.close()

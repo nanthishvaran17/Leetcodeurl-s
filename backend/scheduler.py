@@ -1,15 +1,10 @@
+import asyncio
+from zoneinfo import ZoneInfo
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
-import asyncio
+from apscheduler.triggers.interval import IntervalTrigger
 
-try:
-    from zoneinfo import ZoneInfo
-    def get_tz(tz_name):
-        return ZoneInfo(tz_name)
-except ImportError:
-    import pytz
-    def get_tz(tz_name):
-        return pytz.timezone(tz_name)
+from backend.time_utils import IST, UTC
 
 from backend.config import settings
 from backend.database import SessionLocal
@@ -40,8 +35,8 @@ from backend.services.weekly_session_manager import (
     resume_active_weekly_session
 )
 
-tz = get_tz(settings.TIMEZONE)
-scheduler = AsyncIOScheduler(timezone=tz)
+tz = IST
+scheduler = AsyncIOScheduler(timezone=IST)
 
 async def sunday_start_job():
     """
@@ -263,15 +258,75 @@ def start_scheduler():
         replace_existing=True
     )
 
-    # Cron for Sunday 10:00 PM IST — Virtual Contest Fetch + Combined Final Email Dispatch
+    # Cron for Sunday 10:00 AM IST — Official Sunday Report Generation
+    async def sunday_1000_report_job():
+        logger.info("[SCHEDULER] Sunday 10:00 AM IST: Triggering Official Weekly Report generation...")
+        try:
+            from backend.services.sunday_lifecycle import SundayLifecycle
+            lifecycle = SundayLifecycle(db_session_factory=SessionLocal, scheduler=scheduler)
+            contest = await lifecycle.discover_current_weekly()
+            await lifecycle.generate_sunday_report(contest)
+            logger.info("[SCHEDULER] Sunday 10:00 AM Report successfully generated.")
+        except Exception as e:
+            logger.error(f"[SCHEDULER] Sunday 10:00 AM Report generation error: {e}")
+
     scheduler.add_job(
-        sunday_2200_virtual_contest_job,
-        CronTrigger(day_of_week='sun', hour=22, minute=0, timezone=tz),
-        id='sunday_virtual_contest_2200',
+        sunday_1000_report_job,
+        CronTrigger(day_of_week='sun', hour=10, minute=0, timezone=IST),
+        id='sunday_report',
+        replace_existing=True
+    )
+
+    # Job: Contest Discovery (Every 5 minutes)
+    async def contest_discovery_job():
+        try:
+            from backend.services.sunday_lifecycle import SundayLifecycle
+            lifecycle = SundayLifecycle(db_session_factory=SessionLocal, scheduler=scheduler)
+            await lifecycle.discover_current_weekly()
+        except Exception as e:
+            logger.debug(f"[SCHEDULER] Contest discovery check error: {e}")
+
+    scheduler.add_job(
+        contest_discovery_job,
+        IntervalTrigger(minutes=5, timezone=IST),
+        id='contest_discovery',
+        replace_existing=True
+    )
+
+    # Job: Hourly Verification Worker
+    async def hourly_verification_job():
+        try:
+            from backend.services.sunday_lifecycle import SundayLifecycle
+            lifecycle = SundayLifecycle(db_session_factory=SessionLocal, scheduler=scheduler)
+            contest = await lifecycle.discover_current_weekly()
+            await lifecycle.collect_and_classify_participants(contest)
+        except Exception as e:
+            logger.debug(f"[SCHEDULER] Hourly verification error: {e}")
+
+    scheduler.add_job(
+        hourly_verification_job,
+        IntervalTrigger(hours=1, timezone=IST),
+        id='verification_worker',
+        replace_existing=True
+    )
+
+    # Job: Daily Rating Updater (2:00 AM IST)
+    async def daily_rating_update_job():
+        logger.info("[SCHEDULER] 02:00 AM IST: Running daily rating updater...")
+        try:
+            await run_batch_sync()
+        except Exception as e:
+            logger.error(f"[SCHEDULER] Daily rating update error: {e}")
+
+    scheduler.add_job(
+        daily_rating_update_job,
+        CronTrigger(hour=2, minute=0, timezone=IST),
+        id='rating_updater',
         replace_existing=True
     )
 
     scheduler.start()
-    logger.info("APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 PM Virtual Final Report registered.")
+    logger.info("APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.")
+
 
 

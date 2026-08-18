@@ -912,3 +912,78 @@ def download_weekly_performance_19_sheet_excel(
         headers={"Content-Disposition": f"attachment; filename=LeetCode_Weekly_Report_{date_str}.xlsx"}
     )
 
+
+@router.get("/college-weekly-format")
+@router.get("/export-college-format")
+async def download_college_weekly_format_excel(
+    contest_id: Optional[int] = Query(None),
+    db: Session = Depends(get_db)
+):
+    """
+    Generates and downloads the exact 2-Sheet Nandha Engineering College Report
+    (Sheet 1: Management Summary, Sheet 2: Student Details) with openpyxl styling.
+    """
+    from backend.database import SessionLocal
+    from backend.models import Contest
+    from backend.report_generator import CollegeReportGenerator
+
+    if not contest_id:
+        latest_c = db.query(Contest).order_by(Contest.id.desc()).first()
+        contest_id = latest_c.id if latest_c else 1
+
+    report_gen = CollegeReportGenerator(SessionLocal)
+    res = await report_gen.generate_complete_report(contest_id)
+
+    return Response(
+        content=res["excel_bytes"],
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={res['filename']}"}
+    )
+
+
+@router.post("/dispatch-college-report")
+async def dispatch_college_report_email(
+    contest_id: Optional[int] = Query(None),
+    recipients: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
+    """
+    Generates the exact Nandha College LeetCode Performance Report (Management Summary + Student Details)
+    and dispatches HTML email preview with Excel attachment to Academic Coordinator & HODs.
+    """
+    from backend.database import SessionLocal
+    from backend.models import Contest
+    from backend.report_generator import CollegeReportGenerator
+    from backend.email_service import send_weekly_report_email
+
+    if not contest_id:
+        latest_c = db.query(Contest).order_by(Contest.id.desc()).first()
+        contest_id = latest_c.id if latest_c else 1
+
+    report_gen = CollegeReportGenerator(SessionLocal)
+    res = await report_gen.generate_complete_report(contest_id)
+
+    target_recipients = [e.strip() for e in recipients.split(",") if e.strip()] if recipients else ["nanthishvaran17@gmail.com"]
+
+    send_weekly_report_email(
+        db=db,
+        recipient_emails=target_recipients,
+        subject=f"NANDHA ENGINEERING COLLEGE — LeetCode Weekly Performance Report ({res['contest_title']})",
+        body_html=res["email_html"],
+        excel_bytes=res["excel_bytes"],
+        trigger_type="MANUAL"
+    )
+
+    return {
+        "success": True,
+        "message": f"College weekly report email successfully dispatched to {len(target_recipients)} recipient(s): {', '.join(target_recipients)}",
+        "contest": res["contest_title"],
+        "filename": res["filename"],
+        "total_students": res["total_students"],
+        "actual_count": res["actual_count"],
+        "virtual_count": res["virtual_count"],
+        "not_attended_count": res["not_attended_count"],
+        "top_rankers_count": len(res["top_rankers"])
+    }
+
+

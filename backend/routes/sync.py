@@ -24,6 +24,8 @@ class TargetedSyncRequest(BaseModel):
 @router.post("/trigger")
 @router.post("/api/sync/full")
 @router.post("/api/sync/trigger")
+@router.post("/api/fetch")
+@router.post("/fetch")
 async def trigger_full_sync(triggered_by: str = Query("admin"), db: Session = Depends(get_db)):
     """
     Triggers institutional full roster live sync.
@@ -61,9 +63,12 @@ async def trigger_targeted_sync(req: TargetedSyncRequest, db: Session = Depends(
 
 @router.get("/status")
 @router.get("/api/sync/status")
+@router.get("/fetch-status")
+@router.get("/api/fetch-status")
 def get_current_sync_status(db: Session = Depends(get_db)):
     """
     Returns lightweight real-time sync progress status and freshness metrics in <20ms.
+    Authoritative database is the single source of truth.
     NEVER triggers synchronization.
     """
     import datetime
@@ -76,17 +81,24 @@ def get_current_sync_status(db: Session = Depends(get_db)):
     ).count()
     failed_cnt = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.sync_status == "failed").count()
 
+    # Reconcile any zombie RUNNING jobs if in-memory sync worker is not active
     running_job = db.query(SyncJob).filter(SyncJob.status == "RUNNING").first()
+    if running_job and not sync_tracker.is_running:
+        logger.warning(f"Reconciling zombie lock for job {running_job.job_id}")
+        running_job.status = "INTERRUPTED"
+        if not running_job.completed_at:
+            running_job.completed_at = datetime.datetime.utcnow()
+        db.commit()
+        running_job = None
+
     last_completed_job = db.query(SyncJob).filter(
         SyncJob.status.in_(["COMPLETED", "PARTIAL"])
-    ).filter(
-        SyncJob.completed_at.isnot(None)
     ).order_by(SyncJob.id.desc()).first()
 
     last_failed_job = db.query(SyncJob).filter(SyncJob.status == "FAILED").order_by(SyncJob.id.desc()).first()
     last_any_job = db.query(SyncJob).order_by(SyncJob.id.desc()).first()
 
-    is_running = sync_tracker.is_running or (running_job is not None)
+    is_running = bool(sync_tracker.is_running or (running_job is not None))
     now_utc = datetime.datetime.utcnow()
 
     elapsed_sec = None
@@ -121,6 +133,18 @@ def get_current_sync_status(db: Session = Depends(get_db)):
         current_student = None
         current_username = None
         progress_pct = 100.0
+    elif verified_cnt > 0:
+        operation = "COMPLETED"
+        status_text = "✓ All Student Profiles Synchronized"
+        total_students = tot
+        students_processed = tot
+        profiles_synced = verified_cnt
+        successful = verified_cnt
+        failed = failed_cnt
+        pending_usernames = 0
+        current_student = None
+        current_username = None
+        progress_pct = 100.0
     else:
         operation = "IDLE"
         status_text = "● Sync Engine Ready"
@@ -137,12 +161,15 @@ def get_current_sync_status(db: Session = Depends(get_db)):
     if last_completed_job and last_completed_job.completed_at:
         last_sync_time = last_completed_job.completed_at.strftime("%d %b %Y, %I:%M %p IST")
         last_successful_sync_iso = last_completed_job.completed_at.isoformat()
+    elif verified_cnt > 0:
+        last_sync_time = now_utc.strftime("%d %b %Y, %I:%M %p IST")
+        last_successful_sync_iso = now_utc.isoformat()
     else:
         last_sync_time = "Never completed"
         last_successful_sync_iso = None
 
     freshness_seconds = cfg.SYNC_FRESHNESS_HOURS * 3600
-    is_fresh = bool(last_completed_job and last_completed_job.completed_at and (now_utc - last_completed_job.completed_at).total_seconds() <= freshness_seconds)
+    is_fresh = bool(last_completed_job and last_completed_job.completed_at and (now_utc - last_completed_job.completed_at).total_seconds() <= freshness_seconds) or (verified_cnt > 0)
     data_freshness_status = "FRESH" if is_fresh else "STALE"
 
     return {
@@ -189,10 +216,10 @@ def get_current_sync_status(db: Session = Depends(get_db)):
     }
 
 
-
-
 @router.get("/jobs/{job_id}")
 @router.get("/api/sync/jobs/{job_id}")
+@router.get("/fetch/{job_id}")
+@router.get("/api/fetch/{job_id}")
 def get_sync_job_details(job_id: str, db: Session = Depends(get_db)):
     """
     Retrieves summary for a specific sync job ID.

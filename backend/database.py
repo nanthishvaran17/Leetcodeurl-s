@@ -78,6 +78,12 @@ def get_db():
 
 def run_migrations():
     """Apply any missing column migrations and performance indexes to the existing SQLite database."""
+    try:
+        from backend.models import Base as ModelsBase
+        ModelsBase.metadata.create_all(bind=engine)
+    except Exception as _t_err:
+        pass
+
     if "sqlite" not in db_url:
         return  # Only needed for local SQLite
     try:
@@ -166,6 +172,30 @@ def run_migrations():
                         conn.execute(__import__('sqlalchemy').text(sql))
                         conn.commit()
                         print(f"[DB Migration] Added weekly_public_results column: {col_name}")
+
+            # Check sync_jobs columns
+            result_jobs = conn.execute(
+                __import__('sqlalchemy').text("PRAGMA table_info(sync_jobs)")
+            )
+            job_cols = {row[1] for row in result_jobs}
+            if job_cols:
+                job_migrations = [
+                    ("progress",        "ALTER TABLE sync_jobs ADD COLUMN progress FLOAT DEFAULT 0.0"),
+                    ("processed_count", "ALTER TABLE sync_jobs ADD COLUMN processed_count INTEGER DEFAULT 0"),
+                    ("last_synced_at",  "ALTER TABLE sync_jobs ADD COLUMN last_synced_at DATETIME"),
+                    ("error_message",   "ALTER TABLE sync_jobs ADD COLUMN error_message TEXT"),
+                ]
+                for col_name, sql in job_migrations:
+                    if col_name not in job_cols:
+                        conn.execute(__import__('sqlalchemy').text(sql))
+                        conn.commit()
+                        print(f"[DB Migration] Added sync_jobs column: {col_name}")
+
+                # Clean up any stale zombie RUNNING jobs on startup
+                conn.execute(
+                    __import__('sqlalchemy').text("UPDATE sync_jobs SET status = 'INTERRUPTED', completed_at = started_at WHERE status = 'RUNNING'")
+                )
+                conn.commit()
 
             # Promote nanthishvaran17@gmail.com to Admin role
             admin_check = conn.execute(
