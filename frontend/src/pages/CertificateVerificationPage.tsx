@@ -135,13 +135,14 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
 
     try {
       const response = await api.get(`/certificates/${encodeURIComponent(verificationId)}/download-pdf${queryStr}`, {
-        responseType: 'blob'
+        responseType: 'blob',
+        timeout: 60000
       });
 
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const cleanStudentName = (data?.student_name || 'Student').replace(/[^A-Za-z0-9_]+/g, '_').toUpperCase();
-      const cleanReg = (data?.register_no || verificationId).replace(/[^A-Za-z0-9_]+/g, '_').toUpperCase();
-      let filename = `Certificate_${cleanStudentName}_${cleanReg}.pdf`;
+      const cleanContest = (data?.recognition || 'Weekly_Contest_515').match(/Weekly\s*Contest\s*\d+/i)?.[0]?.replace(/\s+/g, '_') || 'Weekly_Contest_515';
+      let filename = `${cleanStudentName}_${cleanContest}_Certificate.pdf`;
 
       const disposition = response.headers['content-disposition'] || response.headers['Content-Disposition'];
       if (disposition && disposition.includes('filename=')) {
@@ -153,31 +154,41 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
 
       const blobUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
+      link.style.display = 'none';
       link.href = blobUrl;
-      link.download = filename;
+      link.setAttribute('download', filename);
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
 
       setTimeout(() => {
+        if (document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
         window.URL.revokeObjectURL(blobUrl);
-      }, 2000);
+      }, 3000);
     } catch (err: any) {
       console.error("Certificate PDF Download error:", err);
       let errorMsg = "Unable to download certificate PDF. Please verify your connection or try again.";
-      if (err.response && err.response.data) {
-        if (err.response.data instanceof Blob) {
+      if (err.response) {
+        if (err.response.status === 404) {
+          errorMsg = "Certificate record not found in official institutional registry.";
+        } else if (err.response.status === 400) {
+          errorMsg = "Certificate record is revoked or mismatch detected.";
+        } else if (err.response.status === 500) {
+          errorMsg = "Institutional certificate generation encountered an issue. Please try again.";
+        } else if (err.response.data instanceof Blob) {
           try {
             const text = await err.response.data.text();
             const parsed = JSON.parse(text);
             if (parsed.detail) errorMsg = parsed.detail;
           } catch (_) {}
-        } else if (err.response.data.detail) {
+        } else if (err.response.data && err.response.data.detail) {
           errorMsg = err.response.data.detail;
         }
+      } else if (err.code === 'ECONNABORTED') {
+        errorMsg = "Connection timed out while generating certificate. Please retry.";
       }
       setDownloadError(errorMsg);
-      alert(`Download Error: ${errorMsg}`);
     } finally {
       setDownloading(false);
     }

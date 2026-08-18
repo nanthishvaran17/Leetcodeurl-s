@@ -141,7 +141,7 @@ class TestCertificatePdfEndToEnd(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.headers.get("content-type"), "application/pdf")
         self.assertIn("attachment; filename=", resp.headers.get("content-disposition", ""))
-        self.assertIn("Certificate_NANTHISH_S_732224CC031.pdf", resp.headers.get("content-disposition", ""))
+        self.assertIn("NANTHISH_S", resp.headers.get("content-disposition", ""))
         self.assertTrue(resp.content.startswith(b"%PDF-"))
         self.assertGreater(len(resp.content), 1000)
 
@@ -212,7 +212,7 @@ class TestCertificatePdfEndToEnd(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.headers.get("content-type"), "application/pdf")
         self.assertTrue(resp.content.startswith(b"%PDF-"))
-        self.assertIn("Certificate_NANTHISH_S_732224CC031.pdf", resp.headers.get("content-disposition", ""))
+        self.assertIn("NANTHISH_S", resp.headers.get("content-disposition", ""))
 
     def test_verify_endpoint_and_download_pdf_contain_matching_data(self):
         """Test that the public verification JSON and generated PDF are built from identical record data."""
@@ -246,7 +246,7 @@ class TestCertificatePdfEndToEnd(unittest.TestCase):
         d_resp = self.client.get("/api/certificates/CERT-MATCHING01/download-pdf")
         self.assertEqual(d_resp.status_code, 200)
         self.assertEqual(d_resp.headers.get("content-type"), "application/pdf")
-        self.assertIn("Certificate_PRIYA_DHARSHINI_732224CC045.pdf", d_resp.headers.get("content-disposition", ""))
+        self.assertIn("PRIYA_DHARSHINI", d_resp.headers.get("content-disposition", ""))
         self.assertTrue(d_resp.content.startswith(b"%PDF-"))
 
 

@@ -76,6 +76,11 @@ def resolve_certificate_record(
     if reg:
         student_obj = db.query(Student).filter(Student.reg_no.ilike(f"%{reg.strip()}%")).first()
 
+    if not student_obj:
+        reg_match = re.search(r'7322[0-9A-Za-z]+', clean_id)
+        if reg_match:
+            student_obj = db.query(Student).filter(Student.reg_no.ilike(f"%{reg_match.group(0)}%")).first()
+
     if not student_obj and ("7322" in clean_id or len(clean_id) >= 8):
         student_obj = db.query(Student).filter(Student.reg_no.ilike(f"%{clean_id}%")).first()
 
@@ -389,10 +394,17 @@ def download_certificate_pdf(
         logger.error(f"[certificate_pdf_invalid] Generated PDF for {cert.verification_id} is invalid or 0 bytes")
         raise HTTPException(status_code=500, detail="Generated certificate PDF is corrupt or invalid.")
 
-    # 4. Safe sanitized filename matching institutional standard: Certificate_NAME_REGNO.pdf
+    # 4. Safe sanitized filename matching institutional standard: NANTHISH_S_Weekly_Contest_515_Certificate.pdf
     clean_name = re.sub(r'[^A-Za-z0-9_]+', '_', (cert.student_name or "STUDENT").strip().upper())
     clean_reg = re.sub(r'[^A-Za-z0-9_]+', '_', (cert.register_no or "").strip().upper())
-    safe_filename = f"Certificate_{clean_name}_{clean_reg}.pdf" if clean_reg else f"Certificate_{clean_name}_{cert.verification_id}.pdf"
+    
+    contest_label = "Weekly_Contest_515"
+    if cert.recognition:
+        c_m = re.search(r'Weekly\s*Contest\s*\d+', cert.recognition, re.IGNORECASE)
+        if c_m:
+            contest_label = re.sub(r'\s+', '_', c_m.group(0).strip())
+    
+    safe_filename = f"{clean_name}_{contest_label}_Certificate.pdf"
 
     logger.info(f"[certificate_pdf_download_success] Dispatched {safe_filename} ({len(pdf_bytes)} bytes)")
     return Response(
@@ -402,6 +414,7 @@ def download_certificate_pdf(
             "Content-Disposition": f'attachment; filename="{safe_filename}"',
             "Content-Type": "application/pdf",
             "Content-Length": str(len(pdf_bytes)),
+            "Access-Control-Expose-Headers": "Content-Disposition, Content-Length, Content-Type",
             "Cache-Control": "public, max-age=3600"
         }
     )
