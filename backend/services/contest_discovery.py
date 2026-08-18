@@ -1,6 +1,6 @@
 import datetime
 import zoneinfo
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 IST_TZ = zoneinfo.ZoneInfo("Asia/Kolkata")
 
@@ -20,6 +20,26 @@ def get_most_recent_sunday_date(target_dt: datetime.datetime = None) -> datetime
     days_since_sunday = (target_dt.weekday() + 1) % 7
     sunday_dt = target_dt - datetime.timedelta(days=days_since_sunday)
     return sunday_dt.date()
+
+def get_upcoming_sunday_date(target_dt: datetime.datetime = None) -> datetime.date:
+    """
+    Returns the date of the next upcoming Sunday in IST.
+    If today is Sunday and before 09:30 AM IST, returns today.
+    Otherwise returns the next Sunday.
+    """
+    if target_dt is None:
+        target_dt = get_current_ist_datetime()
+    
+    weekday = target_dt.weekday() # Monday=0 ... Sunday=6
+    if weekday == 6: # Sunday
+        cutoff = target_dt.replace(hour=9, minute=30, second=0, microsecond=0)
+        if target_dt <= cutoff:
+            return target_dt.date()
+        else:
+            return (target_dt + datetime.timedelta(days=7)).date()
+    else:
+        days_until_sunday = (6 - weekday)
+        return (target_dt + datetime.timedelta(days=days_until_sunday)).date()
 
 def calculate_contest_number(contest_date: datetime.date) -> int:
     """
@@ -80,6 +100,9 @@ def discover_contest_metadata(target_date: datetime.date = None) -> Dict[str, An
     contest_name = f"Weekly Contest {contest_num}"
     status = calculate_contest_status(target_date)
 
+    start_dt = datetime.datetime.combine(target_date, datetime.time(8, 0, 0), tzinfo=IST_TZ)
+    end_dt = datetime.datetime.combine(target_date, datetime.time(9, 30, 0), tzinfo=IST_TZ)
+
     problems = [
         {"problem_index": 1, "title": "Q1 (Easy)", "difficulty": "Easy", "max_score": 3},
         {"problem_index": 2, "title": "Q2 (Medium)", "difficulty": "Medium", "max_score": 4},
@@ -97,6 +120,10 @@ def discover_contest_metadata(target_date: datetime.date = None) -> Dict[str, An
         "status": status,
         "start_time_ist": "08:00 AM IST",
         "end_time_ist": "09:30 AM IST",
+        "start_iso": start_dt.isoformat(),
+        "end_iso": end_dt.isoformat(),
+        "start_epoch_ms": int(start_dt.timestamp() * 1000),
+        "end_epoch_ms": int(end_dt.timestamp() * 1000),
         "problems": problems
     }
 

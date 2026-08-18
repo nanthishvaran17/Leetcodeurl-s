@@ -373,7 +373,18 @@ def build_canonical_contest_dataset(
         status_counts["DATA_MISMATCH"]
     )
 
+    # EXACT MANDATORY PARTICIPATION FORMULA: ((PUBLIC + VIRTUAL) / TOTAL) * 100
     part_pct = round(((public_cnt + virtual_cnt) / total_master_count * 100), 2) if total_master_count > 0 else 0.0
+
+    # Question-specific aggregate solve counts (e.g. Q1: 72, Q2: 51, Q3: 23, Q4: 8)
+    q1_total_solved = sum(1 for r in canonical_rows if r.get("q1") == 1)
+    q2_total_solved = sum(1 for r in canonical_rows if r.get("q2") == 1)
+    q3_total_solved = sum(1 for r in canonical_rows if r.get("q3") == 1)
+    q4_total_solved = sum(1 for r in canonical_rows if r.get("q4") == 1)
+    total_questions_solved = q1_total_solved + q2_total_solved + q3_total_solved + q4_total_solved
+    avg_questions_solved = round(total_questions_solved / max(1, public_cnt + virtual_cnt), 2) if (public_cnt + virtual_cnt) > 0 else 0.0
+
+    is_provisional = session_obj.status in ("LIVE", "SCHEDULED", "FINALIZING", "ACTIVE")
 
     metrics = {
         "totalStudents": total_master_count,
@@ -388,10 +399,20 @@ def build_canonical_contest_dataset(
         "totalErrors": total_errors_cnt,
         "participationPercentage": part_pct,
         "participation_pct": part_pct,
+        "isProvisional": is_provisional,
+        "participationLabel": "Provisional Participation" if is_provisional else "Finalized Participation",
         "q4Count": q4_all,
         "q3Count": q3_all,
         "q2Count": q2_all,
         "q1Count": q1_all,
+        "questionProgress": {
+            "q1": q1_total_solved,
+            "q2": q2_total_solved,
+            "q3": q3_total_solved,
+            "q4": q4_total_solved,
+            "totalSolved": total_questions_solved,
+            "avgSolved": avg_questions_solved
+        },
         "reconciliationPassed": reconciliation_passed
     }
 
@@ -406,6 +427,10 @@ def build_canonical_contest_dataset(
         "contestId": session_obj.contest_id,
         "contestName": session_obj.contest_name,
         "sessionDate": session_obj.session_date,
+        "status": session_obj.status,
+        "isLive": session_obj.status == "LIVE",
+        "isScheduled": session_obj.status == "SCHEDULED",
+        "isFinalized": session_obj.status == "FINALIZED",
         "generatedAtIST": datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST"),
         "rows": filtered_rows,
         "all_rows": canonical_rows,

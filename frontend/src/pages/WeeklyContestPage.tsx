@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   Trophy, Calendar, RefreshCw, AlertTriangle, Download, FileSpreadsheet,
   FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Zap, Filter, Trash2, Mail, Send, Sparkles, X, Edit3, UserCheck, UserX, Eye, Users, TrendingUp, Award, ChevronDown, ChevronUp,
-  Building2, GraduationCap, RotateCcw, Search
+  Building2, GraduationCap, RotateCcw, Search, Radio, Activity, Shield, Pause, Play, FastForward
 } from 'lucide-react';
 import api from '../services/api';
 import { StatusNotificationModal, NotificationState } from '../components/StatusNotificationModal';
@@ -65,26 +65,28 @@ const Sparkline: React.FC<{ data: number[]; color?: string }> = ({ data, color =
       {data.map((val, idx) => {
         const x = padding + (idx / (data.length - 1)) * effectiveWidth;
         const y = height - padding - ((val - min) / range) * effectiveHeight;
-        return (
-          <circle
-            key={idx}
-            cx={x}
-            cy={y}
-            r={idx === data.length - 1 ? "3.5" : "2"}
-            fill={idx === data.length - 1 ? "#10b981" : color}
-            stroke="#ffffff"
-            strokeWidth="1"
-          />
-        );
+        if (idx === data.length - 1) {
+          return (
+            <circle
+              key={idx}
+              cx={x}
+              cy={y}
+              r="4"
+              fill={color}
+              className="animate-ping origin-center"
+            />
+          );
+        }
+        return null;
       })}
     </svg>
   );
 };
 
 export const WeeklyContestPage: React.FC = () => {
-  const [currentSession, setCurrentSession] = useState<any>(null);
   const [sessionsList, setSessionsList] = useState<any[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
+  const [currentSession, setCurrentSession] = useState<any>(null);
   const [selectedDeptFilter, setSelectedDeptFilter] = useState<string>('ALL');
   const [selectedYearFilter, setSelectedYearFilter] = useState<string>('ALL');
   const [selectedAttendanceFilter, setSelectedAttendanceFilter] = useState<string>('ALL');
@@ -101,6 +103,15 @@ export const WeeklyContestPage: React.FC = () => {
   const [isRetrying, setIsRetrying] = useState<boolean>(false);
   const [deletingSessionId, setDeletingSessionId] = useState<number | null>(null);
 
+  // Live Contest Engine Real-Time State
+  const [liveTelemetry, setLiveTelemetry] = useState<any>(null);
+  const [countdownSec, setCountdownSec] = useState<number>(0);
+  const [timeRemainingSec, setTimeRemainingSec] = useState<number>(0);
+  const [nextUpdateTicker, setNextUpdateTicker] = useState<number>(20);
+  const [showAdminMonitor, setShowAdminMonitor] = useState<boolean>(false);
+  const [adminActionMsg, setAdminActionMsg] = useState<string>('');
+  const [isPerformingAdminAction, setIsPerformingAdminAction] = useState<boolean>(false);
+
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
@@ -111,6 +122,62 @@ export const WeeklyContestPage: React.FC = () => {
   const [showPreviewModal, setShowPreviewModal] = useState<boolean>(false);
   const [showEmailModal, setShowEmailModal] = useState<boolean>(false);
   const [notification, setNotification] = useState<NotificationState | null>(null);
+
+  // Live Telemetry Polling Effect (every 10s during SCHEDULED or LIVE)
+  useEffect(() => {
+    let isMounted = true;
+    const pollTelemetry = async () => {
+      if (!selectedSessionId) return;
+      try {
+        const res = await api.get(`/contests/sessions/${selectedSessionId}/live-status`);
+        if (isMounted && res.data) {
+          setLiveTelemetry(res.data);
+          if (res.data.countdownSec !== undefined) setCountdownSec(res.data.countdownSec);
+          if (res.data.timeRemainingSec !== undefined) setTimeRemainingSec(res.data.timeRemainingSec);
+          if (res.data.nextUpdateSec !== undefined) setNextUpdateTicker(res.data.nextUpdateSec);
+
+          if (res.data.status && currentSession?.status !== res.data.status) {
+            setCurrentSession((prev: any) => prev ? { ...prev, status: res.data.status } : prev);
+          }
+        }
+      } catch (_err) {
+        // Silent retry
+      }
+    };
+
+    pollTelemetry();
+    const interval = setInterval(pollTelemetry, 10000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [selectedSessionId]);
+
+  // 1-second Countdown & Time Remaining Ticker
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdownSec(prev => Math.max(0, prev - 1));
+      setTimeRemainingSec(prev => Math.max(0, prev - 1));
+      setNextUpdateTicker(prev => (prev <= 1 ? 20 : prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Admin Control Handler
+  const handleAdminAction = async (action: string) => {
+    if (!selectedSessionId) return;
+    setIsPerformingAdminAction(true);
+    try {
+      const res = await api.post(`/contests/sessions/${selectedSessionId}/admin-control`, { action });
+      setAdminActionMsg(res.data?.message || `Action ${action} executed successfully.`);
+      setTimeout(() => setAdminActionMsg(''), 4000);
+      fetchSessionDetails(selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter);
+    } catch (err: any) {
+      setAdminActionMsg(err.response?.data?.detail || `Failed to execute ${action}`);
+    } finally {
+      setIsPerformingAdminAction(false);
+    }
+  };
 
   // Student Edit / Delete state
   const [editingStudent, setEditingStudent] = useState<any | null>(null);
@@ -678,7 +745,8 @@ export const WeeklyContestPage: React.FC = () => {
     const publicPct = totalRows > 0 ? ((attendedRows / totalRows) * 100).toFixed(1) : '0.0';
     const virtualPct = totalRows > 0 ? ((virtualRows / totalRows) * 100).toFixed(1) : '0.0';
     const notAttendedPct = totalRows > 0 ? ((notAttendedRows / totalRows) * 100).toFixed(1) : '0.0';
-    const totalParticipationPct = totalRows - errorRows > 0 ? (((attendedRows + virtualRows) / (totalRows - errorRows)) * 100).toFixed(1) : '0.0';
+    // EXACT MANDATORY FORMULA: ((PUBLIC + VIRTUAL) / TOTAL) * 100 (e.g. (99 + 14)/302 = 37.4%)
+    const totalParticipationPct = totalRows > 0 ? (((attendedRows + virtualRows) / totalRows) * 100).toFixed(1) : '0.0';
 
     const topPerformers = matrixRows
       .filter(r => (r.participation_status === 'PUBLIC' || r.participation_status === 'PUBLIC_ATTENDED' || r.status === 'PUBLIC') && r.rank)
@@ -739,11 +807,42 @@ export const WeeklyContestPage: React.FC = () => {
     }
   };
 
+  // ── Helper Time Formatters ──
+  const formatCountdown = (totalSec: number) => {
+    const days = Math.floor(totalSec / 86400);
+    const hours = Math.floor((totalSec % 86400) / 3600);
+    const minutes = Math.floor((totalSec % 3600) / 60);
+    const seconds = totalSec % 60;
+    return {
+      days: String(days).padStart(2, '0'),
+      hours: String(hours).padStart(2, '0'),
+      minutes: String(minutes).padStart(2, '0'),
+      seconds: String(seconds).padStart(2, '0')
+    };
+  };
+
+  const formatTimeRemaining = (totalSec: number) => {
+    const hours = Math.floor(totalSec / 3600);
+    const minutes = Math.floor((totalSec % 3600) / 60);
+    const seconds = totalSec % 60;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  };
+
+  const cd = formatCountdown(countdownSec);
+  const liveTimerFormatted = formatTimeRemaining(timeRemainingSec);
+  const isLive = activeSessionObj?.status === 'LIVE';
+  const isScheduled = activeSessionObj?.status === 'SCHEDULED';
+  const isFinalizing = activeSessionObj?.status === 'FINALIZING';
+
   return (
     <div className="space-y-6 animate-fade-in pb-12">
 
       {/* ── 1. SLEEK INSTITUTIONAL HERO HEADER ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-2xl border border-brand-500/30">
+      <div className={`relative overflow-hidden rounded-3xl text-white p-6 sm:p-8 shadow-2xl border transition-all duration-300 ${
+        isLive
+          ? 'bg-gradient-to-r from-rose-950 via-slate-900 to-indigo-950 border-rose-500/40 shadow-rose-500/10'
+          : 'bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 border-brand-500/30'
+      }`}>
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute bottom-0 left-1/3 -mb-10 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -751,13 +850,27 @@ export const WeeklyContestPage: React.FC = () => {
           {/* Left Context Info */}
           <div className="space-y-3 max-w-2xl">
             <div className="flex flex-wrap items-center gap-2.5">
-              <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center space-x-1.5 shadow-sm ${
-                activeSessionObj?.status === 'LIVE' ? 'bg-emerald-500 text-white animate-pulse' :
-                activeSessionObj?.status === 'FINALIZED' ? 'bg-indigo-600/90 text-white border border-indigo-400/30' : 'bg-amber-500 text-slate-950 font-black'
-              }`}>
-                <Trophy className="w-3.5 h-3.5" />
-                <span>{activeSessionObj?.status === 'LIVE' ? 'LIVE PUBLIC CONTEST' : activeSessionObj?.status === 'FINALIZED' ? 'LOCKED & FINALIZED' : 'SCHEDULED CONTEST'}</span>
-              </span>
+              {isLive ? (
+                <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center space-x-1.5 shadow-md bg-rose-600 text-white animate-pulse">
+                  <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
+                  <span>🔴 LIVE NOW • CONTEST WINDOW</span>
+                </span>
+              ) : isScheduled ? (
+                <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center space-x-1.5 shadow-sm bg-amber-500 text-slate-950">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>🟡 SCHEDULED CONTEST</span>
+                </span>
+              ) : isFinalizing ? (
+                <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center space-x-1.5 shadow-sm bg-blue-600 text-white animate-pulse">
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <span>⏳ FINALIZING SNAPSHOT</span>
+                </span>
+              ) : (
+                <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center space-x-1.5 shadow-sm bg-indigo-600/90 text-white border border-indigo-400/30">
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>🔒 LOCKED & FINALIZED</span>
+                </span>
+              )}
 
               <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
                 <Layers className="w-3.5 h-3.5 text-amber-400" />
@@ -768,20 +881,29 @@ export const WeeklyContestPage: React.FC = () => {
                 <Clock className="w-3.5 h-3.5 text-brand-400" />
                 <span>08:00 AM – 09:30 AM IST</span>
               </span>
+
+              {isLive && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-mono font-bold">
+                  <Radio className="w-3 h-3 text-emerald-400 animate-pulse" />
+                  <span>● LIVE CONNECTED</span>
+                </span>
+              )}
             </div>
 
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
               {activeSessionObj?.contestName || 'Weekly Contest 515'} <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300 font-extrabold">Dashboard</span>
             </h1>
 
-            <p className="text-xs sm:text-sm text-gray-300 font-bold tracking-wide flex items-center gap-2">
+            <div className="flex items-center flex-wrap gap-2 text-xs sm:text-sm text-gray-300 font-bold tracking-wide">
               <span>NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</span>
               <span className="text-gray-500">•</span>
-              <span className="text-indigo-300">Filter students by Department, Academic Year, Name & Status</span>
-            </p>
+              <span className="text-indigo-300">
+                {isLive ? `Last Updated: ${liveTelemetry?.lastUpdatedIst || '08:42:17 AM IST'} (Next in ${nextUpdateTicker}s)` : 'Filter students by Department, Academic Year, Name & Status'}
+              </span>
+            </div>
           </div>
 
-          {/* Right Controls: Unified Session Selector & Date Picker */}
+          {/* Right Controls: Unified Session Selector, Date Picker & Admin Monitor Toggle */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 bg-white/10 dark:bg-navy-900/80 p-2.5 rounded-2xl border border-white/15 backdrop-blur-md shadow-lg">
             {/* Calendar Date Picker */}
             <div className="flex items-center space-x-2 bg-navy-950/90 px-3.5 py-2.5 rounded-xl border border-gray-700/80 shadow-inner">
@@ -811,9 +933,227 @@ export const WeeklyContestPage: React.FC = () => {
                 ))
               )}
             </select>
+
+            {/* Admin Live Monitor Toggle */}
+            <button
+              onClick={() => setShowAdminMonitor(!showAdminMonitor)}
+              className="flex items-center space-x-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl border border-slate-600 transition-all cursor-pointer"
+              title="Toggle Live Contest Monitor"
+            >
+              <Activity className="w-3.5 h-3.5 text-brand-400" />
+              <span>{showAdminMonitor ? 'Hide Monitor' : 'Live Monitor'}</span>
+            </button>
           </div>
         </div>
       </div>
+
+      {/* ── 1B. SCHEDULED MODE COUNTDOWN BANNER (BEFORE SUNDAY 08:00 AM IST) ── */}
+      {isScheduled && (
+        <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-amber-950/90 via-slate-900 to-navy-950 border border-amber-500/30 text-white shadow-2xl space-y-4 animate-fade-in">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs font-black">
+              <Clock className="w-3.5 h-3.5 text-amber-400" />
+              <span>🟡 NEXT UPCOMING WEEKLY CONTEST</span>
+            </div>
+            <span className="text-xs font-mono font-bold text-gray-300">
+              Official Window: 08:00 AM – 09:30 AM IST (Asia/Kolkata)
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between flex-wrap gap-6">
+            <div className="space-y-1">
+              <h2 className="text-2xl sm:text-3xl font-black text-white">{activeSessionObj.contestName}</h2>
+              <p className="text-sm font-bold text-amber-200">{activeSessionObj.sessionDate} • Nandha Engineering College Cohorts</p>
+              <p className="text-xs text-gray-400 mt-1">Automatic live activation starts Sunday at 08:00 AM IST without manual refresh.</p>
+            </div>
+
+            {/* Dynamic Countdown Clock */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
+                <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{cd.days}</span>
+                <span className="text-[9px] uppercase font-bold text-gray-400 block">Days</span>
+              </div>
+              <span className="text-2xl font-mono font-black text-amber-500">:</span>
+              <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
+                <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{cd.hours}</span>
+                <span className="text-[9px] uppercase font-bold text-gray-400 block">Hours</span>
+              </div>
+              <span className="text-2xl font-mono font-black text-amber-500">:</span>
+              <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
+                <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{cd.minutes}</span>
+                <span className="text-[9px] uppercase font-bold text-gray-400 block">Minutes</span>
+              </div>
+              <span className="text-2xl font-mono font-black text-amber-500">:</span>
+              <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
+                <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{cd.seconds}</span>
+                <span className="text-[9px] uppercase font-bold text-gray-400 block">Seconds</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 1C. LIVE MODE TELEMETRY, QUESTION PROGRESS & LIVE ACTIVITY FEED ── */}
+      {isLive && (
+        <div className="space-y-4 animate-fade-in">
+          {/* Live Timer Bar */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-rose-900/60 via-slate-900 to-indigo-950 border border-rose-500/30 text-white flex flex-wrap items-center justify-between gap-4 shadow-lg">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400">
+                <Clock className="w-5 h-5 animate-spin" />
+              </div>
+              <div>
+                <p className="text-xs font-black uppercase text-rose-300 tracking-wider">CONTEST TIME REMAINING</p>
+                <p className="text-2xl font-mono font-black text-white">{liveTimerFormatted}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-6">
+              <div className="text-right">
+                <p className="text-[10px] font-bold text-gray-400 uppercase">Contest Ends At</p>
+                <p className="text-sm font-mono font-black text-rose-200">09:30:00 AM IST</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] font-bold text-gray-400 uppercase">Next Sync In</p>
+                <p className="text-sm font-mono font-black text-emerald-400">{nextUpdateTicker}s</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Live Question Progress (Q1..Q4) */}
+          <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-md space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white flex items-center gap-2">
+                <Layers className="w-4 h-4 text-brand-500" />
+                <span>Live Question Solved Progress</span>
+              </h4>
+              <span className="text-[10px] font-mono font-bold text-gray-400">
+                Total Solves: {liveTelemetry?.questionProgress?.totalSolved || 0} • Avg: {liveTelemetry?.questionProgress?.avgSolved || 0.0}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { q: 'Q1 (Easy)', count: liveTelemetry?.questionProgress?.q1 || 0, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800' },
+                { q: 'Q2 (Medium)', count: liveTelemetry?.questionProgress?.q2 || 0, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800' },
+                { q: 'Q3 (Med/Hard)', count: liveTelemetry?.questionProgress?.q3 || 0, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800' },
+                { q: 'Q4 (Hard)', count: liveTelemetry?.questionProgress?.q4 || 0, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800' }
+              ].map((item, idx) => (
+                <div key={idx} className={`p-3 rounded-2xl border ${item.bg} text-center shadow-sm`}>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider block opacity-75">{item.q}</span>
+                  <span className={`text-xl font-black font-mono ${item.color}`}>{item.count}</span>
+                  <span className="text-[9px] text-gray-400 block font-medium">solved</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Live Verified Activity Feed */}
+          {liveTelemetry?.liveEvents && liveTelemetry.liveEvents.length > 0 && (
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-navy-950 to-indigo-950 text-white border border-gray-700 shadow-md space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black uppercase text-brand-300 flex items-center gap-1.5">
+                  <Activity className="w-3.5 h-3.5 text-brand-400 animate-pulse" />
+                  <span>Live Activity Feed (Verified Events)</span>
+                </span>
+                <span className="text-[10px] text-gray-400">Real-time solve stream</span>
+              </div>
+              <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1 no-scrollbar">
+                {liveTelemetry.liveEvents.map((evt: any) => (
+                  <div key={evt.id} className="flex items-center justify-between text-xs py-1 px-2.5 rounded-lg bg-white/5 border border-white/5">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-mono text-[10px] text-gray-400">{evt.timestamp}</span>
+                      <span className="font-bold text-white">{evt.studentName}</span>
+                      <span className="text-emerald-400 font-bold">{evt.detail}</span>
+                    </div>
+                    {evt.rank && (
+                      <span className="font-mono text-[11px] text-indigo-300">
+                        Rank #{evt.rank} {evt.rankChange ? `(↑ +${evt.rankChange})` : ''}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── 1D. ADMIN LIVE CONTEST MONITOR (ACCORDION) ── */}
+      {showAdminMonitor && (
+        <div className="p-5 sm:p-6 rounded-3xl bg-slate-900 text-white border border-slate-700 shadow-2xl space-y-4 animate-fade-in">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h4 className="text-xs font-black uppercase tracking-wider text-brand-400 flex items-center gap-2">
+              <Shield className="w-4 h-4" />
+              <span>Admin Live Contest Monitor & Worker Telemetry</span>
+            </h4>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+              Worker: {liveTelemetry?.workerId || 'WORKER-LIVE'} ({liveTelemetry?.workerState || 'READY'})
+            </span>
+          </div>
+
+          {adminActionMsg && (
+            <div className="p-3 rounded-xl bg-brand-500/20 border border-brand-500/40 text-brand-300 text-xs font-bold">
+              {adminActionMsg}
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+              <span className="text-[10px] text-gray-400 block">Worker State</span>
+              <span className="font-mono font-black text-white">{liveTelemetry?.workerState || 'READY'}</span>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+              <span className="text-[10px] text-gray-400 block">Students Processed</span>
+              <span className="font-mono font-black text-emerald-400">{liveTelemetry?.processedCount || stats.totalRows} / {stats.totalRows}</span>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+              <span className="text-[10px] text-gray-400 block">Successful Syncs</span>
+              <span className="font-mono font-black text-emerald-400">{liveTelemetry?.successfulCount || stats.totalRows - stats.errorRows}</span>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+              <span className="text-[10px] text-gray-400 block">Transient Errors</span>
+              <span className="font-mono font-black text-amber-400">{liveTelemetry?.failedCount || stats.errorRows}</span>
+            </div>
+          </div>
+
+          {/* Admin Actions */}
+          <div className="flex items-center flex-wrap gap-2 pt-2 border-t border-slate-800">
+            <button
+              onClick={() => handleAdminAction('start_live')}
+              disabled={isPerformingAdminAction}
+              className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow transition-all cursor-pointer active:scale-95"
+            >
+              <Play className="w-3.5 h-3.5" />
+              <span>Start Live Sync</span>
+            </button>
+            <button
+              onClick={() => handleAdminAction(liveTelemetry?.isPaused ? 'resume' : 'pause')}
+              disabled={isPerformingAdminAction}
+              className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow transition-all cursor-pointer active:scale-95"
+            >
+              <Pause className="w-3.5 h-3.5" />
+              <span>{liveTelemetry?.isPaused ? 'Resume Sync' : 'Pause Sync'}</span>
+            </button>
+            <button
+              onClick={() => handleAdminAction('retry_failed')}
+              disabled={isPerformingAdminAction}
+              className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow transition-all cursor-pointer active:scale-95"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Retry Unresolved (21 Errors)</span>
+            </button>
+            <button
+              onClick={() => handleAdminAction('force_final_sync')}
+              disabled={isPerformingAdminAction}
+              className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow transition-all cursor-pointer active:scale-95"
+            >
+              <FastForward className="w-3.5 h-3.5" />
+              <span>Force Final Sync & Lock Snapshot</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── 2. UNIFIED COHESIVE FILTER & ACTION COMMAND BAR ── */}
       <div className="sticky top-2 z-20 p-4 sm:p-5 rounded-3xl bg-white/95 dark:bg-navy-900/95 backdrop-blur-md border border-gray-200 dark:border-gray-800 shadow-xl space-y-4">

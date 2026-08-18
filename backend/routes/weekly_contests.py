@@ -12,10 +12,15 @@ from backend.services.weekly_session_manager import (
     get_or_create_current_weekly_session,
     seed_institutional_historical_sessions,
     trigger_start_snapshot_0800,
-    trigger_final_snapshot_0930
+    trigger_final_snapshot_0930,
+    sunday_live_engine
 )
 from backend.services.contest_merger import retry_failed_student_fetches
-from backend.services.contest_discovery import discover_contest_metadata, get_current_ist_datetime
+from backend.services.contest_discovery import (
+    discover_contest_metadata, get_current_ist_datetime,
+    get_upcoming_sunday_date, get_most_recent_sunday_date,
+    IST_TZ
+)
 from backend.services.attendance_classifier import get_attendance_status
 from backend.exporters.excel_exporter import export_excel_from_dataset
 from backend.exporters.pdf_exporter import export_pdf_from_dataset
@@ -37,6 +42,110 @@ def parse_session_date(date_str: str) -> Optional[datetime.date]:
         except ValueError:
             pass
     return None
+
+@router.get("/upcoming-session")
+def get_upcoming_session_info(db: Session = Depends(get_db)):
+    """
+    Returns the next upcoming Sunday Weekly Contest session (or active live session).
+    Calculates dynamic countdown to 08:00 AM IST and time remaining to 09:30 AM IST.
+    """
+    now_ist = get_current_ist_datetime()
+    upcoming_sunday = get_upcoming_sunday_date(now_ist)
+    meta = discover_contest_metadata(upcoming_sunday)
+
+    # Check if DB has a session for this date
+    session = db.query(WeeklySession).filter(WeeklySession.session_code == meta["session_code"]).first()
+    if not session:
+        session = WeeklySession(
+            academic_year="2026-27",
+            week_number=upcoming_sunday.isocalendar()[1],
+            session_code=meta["session_code"],
+            session_date=meta["session_date"],
+            contest_id=meta["contest_id"],
+            contest_name=meta["contest_name"],
+            start_time="08:00",
+            end_time="09:30",
+            status=meta["status"],
+            total_students=302
+        )
+        db.add(session)
+        db.commit()
+        db.refresh(session)
+    else:
+        # Sync dynamic status if needed
+        if session.status != meta["status"] and session.status not in ("FINALIZED", "COMPLETED"):
+            session.status = meta["status"]
+            db.commit()
+
+    start_dt = datetime.datetime.combine(upcoming_sunday, datetime.time(8, 0, 0), tzinfo=IST_TZ)
+    end_dt = datetime.datetime.combine(upcoming_sunday, datetime.time(9, 30, 0), tzinfo=IST_TZ)
+
+    countdown_sec = max(0, int((start_dt - now_ist).total_seconds())) if now_ist < start_dt else 0
+    time_remaining_sec = max(0, int((end_dt - now_ist).total_seconds())) if (now_ist >= start_dt and now_ist < end_dt) else 0
+
+    return {
+        "sessionId": session.id,
+        "sessionCode": session.session_code,
+        "contestId": session.contest_id,
+        "contestName": session.contest_name,
+        "sessionDate": session.session_date,
+        "status": session.status,
+        "countdownSec": countdown_sec,
+        "timeRemainingSec": time_remaining_sec,
+        "startIso": start_dt.isoformat(),
+        "endIso": end_dt.isoformat(),
+        "startEpochMs": int(start_dt.timestamp() * 1000),
+        "endEpochMs": int(end_dt.timestamp() * 1000),
+        "startFormattedIst": "08:00 AM IST",
+        "endFormattedIst": "09:30 AM IST",
+        "totalStudents": session.total_students or 302
+    }
+
+@router.get("/sessions/{session_id}/live-status")
+def get_session_live_telemetry(session_id: int, db: Session = Depends(get_db)):
+    """
+    Returns real-time live telemetry, countdown, question progress, and verified events.
+    """
+    return sunday_live_engine.get_telemetry(session_id, db)
+
+@router.post("/sessions/{session_id}/admin-control")
+async def execute_admin_live_control(
+    session_id: int,
+    payload: Dict[str, Any],
+    db: Session = Depends(get_db)
+):
+    """
+    Admin Live Contest Monitor controls (retry_failed, pause, resume, force_final_sync, start_live).
+    """
+    action = payload.get("action", "").lower().strip()
+    session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
+
+    if action == "pause":
+        sunday_live_engine.is_paused = True
+        sunday_live_engine.worker_state = "PAUSED"
+        return {"success": True, "message": "Live worker paused."}
+    elif action == "resume":
+        sunday_live_engine.is_paused = False
+        sunday_live_engine.worker_state = "RUNNING"
+        return {"success": True, "message": "Live worker resumed."}
+    elif action == "start_live":
+        session.status = "LIVE"
+        db.commit()
+        from backend.database import SessionLocal
+        asyncio.create_task(sunday_live_engine.run_live_sync_cycle(session_id, SessionLocal))
+        return {"success": True, "message": "Live contest synchronization started."}
+    elif action == "force_final_sync":
+        session.status = "FINALIZING"
+        db.commit()
+        await trigger_final_snapshot_0930(db, session_id)
+        return {"success": True, "message": "Contest finalization and snapshot generated successfully."}
+    elif action == "retry_failed":
+        await retry_failed_student_fetches(db, session_id)
+        return {"success": True, "message": "Retried all unresolved student records."}
+    else:
+        raise HTTPException(status_code=400, detail=f"Unknown admin action: {action}")
 
 @router.get("/current-session")
 def get_current_session_info(db: Session = Depends(get_db)):
