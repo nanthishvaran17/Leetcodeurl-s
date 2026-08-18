@@ -122,6 +122,18 @@ def resolve_certificate_record(
         
         p_res = q_p.order_by(WeeklyPublicResult.id.desc()).first()
 
+        v_res = None
+        if not p_res:
+            q_v = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.student_id == student_obj.id)
+            if contest:
+                clean_c = str(contest).strip()
+                c_slug = clean_c if "weekly" in clean_c.lower() else f"weekly-contest-{clean_c}"
+                q_v = q_v.join(WeeklySession, WeeklyVirtualResult.session_id == WeeklySession.id).filter(
+                    (WeeklySession.contest_id == c_slug) |
+                    (WeeklySession.contest_name.ilike(f"%{clean_c}%"))
+                )
+            v_res = q_v.order_by(WeeklyVirtualResult.id.desc()).first()
+
         # 2. Determine session & verified contest metadata
         session_obj = None
         if p_res and p_res.session:
@@ -135,6 +147,10 @@ def resolve_certificate_record(
                 (WeeklySession.contest_id == c_slug) |
                 (WeeklySession.contest_name.ilike(f"%{clean_c}%"))
             ).first()
+            if not session_obj:
+                # Requested contest does not exist in ledger -> do NOT fabricate
+                logger.warning(f"[CERT_CONTEST_NOT_FOUND] Contest {contest} not found in database session registry.")
+                return None
 
         if not session_obj:
             session_obj = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
