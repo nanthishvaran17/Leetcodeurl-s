@@ -454,7 +454,7 @@ def main():
         (excel_file, excel_bytes)
     ]
 
-    recipients = ["nanthishvaran17@gmail.com", "msanthoshkumar@nandhaengg.org"]
+    recipients = ["nanthishvaran17@gmail.com"]
     subject = f"LeetCode Performance - Weekly Report — {report_data['department']}"
 
     print(f"\n📧 Dispatching Department Report Emails to: {recipients}...")
