@@ -26,8 +26,19 @@ MAX_RETRIES = 2
 RETRY_DELAY = 2.0  # seconds between retries
 
 # ============================================
-# LEETCODE API - GRAPHQL QUERY
+# LEETCODE API - GRAPHQL QUERIES
 # ============================================
+
+ALL_CONTESTS_QUERY = """
+query getContestList {
+  allContests {
+    title
+    titleSlug
+    startTime
+    duration
+  }
+}
+"""
 
 USER_CONTEST_RANKING_QUERY = """
 query userContestRankingInfo($username: String!) {
@@ -59,6 +70,24 @@ query userContestRankingInfo($username: String!) {
 # ============================================
 # FETCH FUNCTIONS
 # ============================================
+
+def get_all_contests():
+    """
+    Fetch master list of all contests from LeetCode GraphQL API.
+    Returns: list of dicts with title, titleSlug, startTime, duration
+    """
+    try:
+        payload = {"query": ALL_CONTESTS_QUERY}
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+        res = requests.post(LEETCODE_GRAPHQL_URL, json=payload, headers=headers, timeout=15)
+        if res.status_code == 200:
+            return res.json().get("data", {}).get("allContests", [])
+    except Exception as e:
+        print(f"  ⚠️ Warning: Failed to fetch master contest list from LeetCode: {e}")
+    return []
 
 def fetch_contest_data(username, contest_slug, retry_count=0):
     """
@@ -96,12 +125,18 @@ def fetch_contest_data(username, contest_slug, retry_count=0):
             history = []
         
         slug_clean = contest_slug.lower().strip()
+        slug_num = ''.join(filter(str.isdigit, slug_clean))
         
         for contest in history:
             contest_title = contest.get("contest", {}).get("title", "")
             title_slug = contest_title.replace(" ", "-").lower()
+            title_num = ''.join(filter(str.isdigit, contest_title))
             
-            if slug_clean in contest_title.lower() or slug_clean in title_slug or contest_slug.lower() in contest_title.lower():
+            # Match by slug, title substring, or exact contest number
+            if (slug_clean in contest_title.lower() or 
+                slug_clean in title_slug or 
+                (slug_num and slug_num == title_num)):
+                
                 attended = contest.get("attended", False)
                 problems_solved = contest.get("problemsSolved", 0)
                 finish_time_seconds = contest.get("finishTimeInSeconds", 0)
@@ -109,12 +144,13 @@ def fetch_contest_data(username, contest_slug, retry_count=0):
                 
                 return {
                     "attended": attended,
-                    "problems_solved": problems_solved,
+                    "problems_solved": problems_solved if attended else 0,
                     "finish_time": finish_time_seconds,
                     "rank": ranking,
                     "status": "FOUND"
                 }
         
+        # Contest exists on LeetCode but user did not attend
         return {
             "attended": False,
             "problems_solved": 0,
@@ -610,6 +646,21 @@ def main():
         print(f"❌ Error loading students file: {e}")
         sys.exit(1)
     
+    print("\n🌐 Verifying contest with LeetCode Master Contest List...")
+    all_contests = get_all_contests()
+    if all_contests:
+        matched_contest = None
+        for c in all_contests:
+            slug = c.get("titleSlug", "")
+            title = c.get("title", "")
+            if args.contest.lower() in slug.lower() or args.contest.lower() in title.lower() or ''.join(filter(str.isdigit, args.contest)) == ''.join(filter(str.isdigit, title)):
+                matched_contest = c
+                break
+        if matched_contest:
+            print(f"  ✅ Verified Contest: {matched_contest['title']} (Slug: {matched_contest['titleSlug']})")
+        else:
+            print(f"  ℹ️ Contest '{args.contest}' not in top recent master list; proceeding with student history scan...")
+
     contest_date = datetime.strptime(args.date, "%Y-%m-%d")
     results_df = process_student_data(student_df, args.contest, contest_date)
     
