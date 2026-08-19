@@ -7,22 +7,50 @@
     scrollbar-gutter: stable;
   }
   body {
-    @apply antialiased font-sans selection:bg-brand-500 selection:text-white;
+    @apply antialiased font-sans selection:bg-brand-500 selection:text-white bg-slate-50 text-slate-900 dark:bg-navy-950 dark:text-slate-100 transition-colors duration-300;
+    background-image: radial-gradient(rgba(14, 165, 233, 0.04) 1px, transparent 1px),
+                      radial-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+    background-position: 0 0, 16px 16px;
   }
 }
 
+.dark body {
+  background-image: radial-gradient(rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+                    radial-gradient(rgba(129, 140, 248, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: 0 0, 16px 16px;
+}
+
 .glass-card {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(229, 231, 235, 0.8);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
 }
 
 .dark .glass-card {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(11, 15, 25, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.35);
+}
+
+.card-ai-control {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-ai-control:hover {
+  transform: translateY(-3px);
+  border-color: rgba(14, 165, 233, 0.35);
+  box-shadow: 0 16px 32px -8px rgba(14, 165, 233, 0.12);
+}
+.dark .card-ai-control:hover {
+  border-color: rgba(56, 189, 248, 0.35);
+  box-shadow: 0 20px 36px -8px rgba(0, 0, 0, 0.6), 0 0 20px -4px rgba(56, 189, 248, 0.15);
 }
 
 .gradient-heading {
@@ -292,6 +320,82 @@
   background-color: rgba(37, 99, 235, 0.04);
 }
 
+/* Staggered Content Entrance System */
+@keyframes stagedEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stagger-1 { animation: stagedEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both; }
+.stagger-2 { animation: stagedEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.10s both; }
+.stagger-3 { animation: stagedEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; }
+.stagger-4 { animation: stagedEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.20s both; }
+.stagger-5 { animation: stagedEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both; }
+.stagger-6 { animation: stagedEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.30s both; }
+.stagger-7 { animation: stagedEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both; }
+.stagger-8 { animation: stagedEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.40s both; }
+
+/* Control Center Status Indicators */
+@keyframes pulseLiveDot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6);
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.85;
+    box-shadow: 0 0 0 5px rgba(16, 185, 129, 0);
+  }
+}
+
+.pulse-live-indicator {
+  animation: pulseLiveDot 2.4s ease-in-out infinite;
+}
+
+@keyframes syncRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-sync-spin {
+  animation: syncRotate 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Skeleton Shimmer Loading */
+@keyframes skeletonShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, 
+    rgba(226, 232, 240, 0.6) 25%, 
+    rgba(241, 245, 249, 0.9) 50%, 
+    rgba(226, 232, 240, 0.6) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.8s ease-in-out infinite;
+}
+
+.dark .skeleton-shimmer {
+  background: linear-gradient(90deg, 
+    rgba(30, 41, 59, 0.6) 25%, 
+    rgba(51, 65, 85, 0.9) 50%, 
+    rgba(30, 41, 59, 0.6) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.8s ease-in-out infinite;
+}
+
 /* Mobile Navigation Drawer Slide-In Animation */
 @keyframes slideInLeft {
   from {
@@ -315,4 +419,23 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Accessibility: prefers-reduced-motion override */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .pulse-live-indicator,
+  .animate-sync-spin,
+  .skeleton-shimmer,
+  .animate-float,
+  .animate-pulseGlow {
+    animation: none !important;
+  }
 }

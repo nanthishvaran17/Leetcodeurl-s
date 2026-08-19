@@ -51,7 +51,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
         </div>
 
         <nav className="space-y-1">
-          {menuItems.map((item) => {
+          {menuItems.map((item, idx) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
@@ -61,22 +61,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
                 onClick={() => setActiveTab(item.id)}
                 className={`relative w-full flex items-center justify-between px-2.5 py-2 sm:px-3 sm:py-2.5 rounded-2xl font-bold text-xs text-left transition-all duration-200 group cursor-pointer ${
                   isActive
-                    ? 'bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 text-white shadow-md shadow-brand-600/30 font-extrabold'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-brand-50/80 dark:hover:bg-navy-800/80 hover:text-brand-600 dark:hover:text-brand-300'
+                    ? 'bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 text-white shadow-md shadow-brand-600/30 font-extrabold border border-white/10'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100/90 dark:hover:bg-navy-800/90 hover:text-brand-600 dark:hover:text-brand-300 border border-transparent hover:border-slate-200/50 dark:hover:border-navy-700/50'
                 }`}
               >
                 {/* Active Indicator Bar */}
                 {isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-amber-400 rounded-r-full shadow-[0_0_8px_#fbbf24] animate-pulse"></span>
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-amber-400 rounded-r-full shadow-[0_0_10px_#fbbf24] animate-pulse"></span>
                 )}
 
                 <div className="flex items-center space-x-2.5 min-w-0 flex-1 pr-1">
                   <div className={`p-1.5 rounded-xl transition-all duration-200 shrink-0 ${
                     isActive 
                       ? 'bg-white/20 text-white shadow-sm' 
-                      : 'bg-gray-100 dark:bg-navy-800 text-gray-500 dark:text-gray-400 group-hover:bg-brand-100 dark:group-hover:bg-navy-700 group-hover:text-brand-600 dark:group-hover:text-brand-300'
+                      : 'bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 group-hover:bg-brand-100 dark:group-hover:bg-navy-700 group-hover:text-brand-600 dark:group-hover:text-brand-300 group-hover:scale-105'
                   }`}>
-                    <Icon className="w-4 h-4 shrink-0" />
+                    <Icon className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" />
                   </div>
                   <span className="text-xs font-bold leading-tight tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">{item.label}</span>
                 </div>
@@ -91,13 +91,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
                   )}
                   {item.badge && (
                     <span className={`px-1.5 py-0.5 text-[9px] font-black rounded-md uppercase tracking-wider ${
-                      isActive ? 'bg-amber-400 text-slate-900' : 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20'
+                      isActive ? 'bg-amber-400 text-slate-900 shadow-sm' : 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20'
                     }`}>
                       {item.badge}
                     </span>
                   )}
                   <ChevronRight className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                    isActive ? 'text-amber-300 opacity-100 translate-x-0.5' : 'opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 text-gray-400'
+                    isActive ? 'text-amber-300 opacity-100 translate-x-0.5' : 'opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 text-slate-400'
                   }`} />
                 </div>
               </button>

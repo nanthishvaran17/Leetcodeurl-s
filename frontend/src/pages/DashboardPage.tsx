@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { StatCard } from '../components/StatCard';
 import { CountdownTimer } from '../components/CountdownTimer';
+import { AutomationStatusPanel } from '../components/AutomationStatusPanel';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { SyncHistoryModal } from '../components/SyncHistoryModal';
 import { FailedSyncModal } from '../components/FailedSyncModal';
@@ -258,44 +259,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const isDbHealthy = (systemHealth?.database === 'healthy') || (systemHealth?.status !== 'unhealthy');
 
   return (
-    <div className="space-y-6 py-2">
+    <div className="space-y-6 py-2 animate-page-enter">
       
-      {/* 1. TOP INSTITUTIONAL STATUS BAR */}
-      <div className="flex flex-wrap items-center justify-between px-5 py-2.5 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm text-xs gap-3">
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center space-x-2 font-black text-gray-900 dark:text-white">
-            <Cpu className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-            <span>LEETCODE DATA OPERATIONS</span>
-          </div>
-          <span className="text-gray-300 dark:text-gray-700">|</span>
-          <span className="flex items-center space-x-1.5 font-bold text-emerald-600 dark:text-emerald-400">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span>LIVE SYSTEM</span>
-          </span>
-        </div>
-
-        <div className="flex items-center space-x-4 text-gray-600 dark:text-gray-400 text-[11px] font-bold flex-wrap">
-          <span>Last Update: <strong className="text-gray-900 dark:text-white">{absoluteLastFetchFormatted}</strong></span>
-          <span className="text-gray-300 dark:text-gray-700">•</span>
-          <span>Database: <strong className="text-emerald-600 dark:text-emerald-400">HEALTHY</strong></span>
-          <span className="text-gray-300 dark:text-gray-700">•</span>
-          <span>Sync: <strong className="text-indigo-600 dark:text-indigo-400">{isWorkerRunning ? 'SYNCING' : 'COMPLETED'}</strong></span>
-          
-          <button
-            onClick={fetchDashboardData}
-            className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-navy-800 text-brand-600 dark:text-brand-400 transition-colors cursor-pointer ml-1"
-            title="Refresh Dashboard Telemetry"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
+      {/* 1. TOP INSTITUTIONAL STATUS BAR & AUTOMATION PANEL */}
+      <div className="stagger-1">
+        <AutomationStatusPanel onTriggerSync={handleStartSync} isSyncing={syncStarting || isWorkerRunning} />
       </div>
 
       {/* 2. MAIN EXECUTIVE BANNER */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-2xl border border-brand-500/30">
+      <div className="stagger-2 relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-2xl border border-brand-500/30 card-ai-control">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
@@ -551,7 +523,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       </div>
 
       {/* 4. Top College Institutional KPIs Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5 sm:gap-4">
+      <div className="stagger-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5 sm:gap-4">
         <StatCard title="Total Students" value={totalStudents} icon={Users} color="blue" />
         <StatCard title="Active Students" value={activeStudents} icon={CheckCircle2} color="green" />
         <StatCard title="Not Started" value={notStartedStudents} icon={AlertTriangle} color="rose" />
@@ -560,7 +532,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       </div>
 
       {/* 5. Weekly Session Monitoring & Countdown Controls (Preserved Sunday Engine) */}
-      <div className="glass-card p-6 rounded-3xl border border-brand-500/30 space-y-4 shadow-xl">
+      <div className="stagger-4 glass-card p-6 rounded-3xl border border-brand-500/30 space-y-4 shadow-xl card-ai-control">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-4">
           <div className="space-y-1">
             <div className="flex items-center space-x-2">

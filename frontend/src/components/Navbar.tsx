@@ -83,16 +83,19 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Middle: Quick Status Indicator */}
             <div className="hidden md:flex items-center space-x-4">
-              <div className="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-navy-950/80 border border-gray-200 dark:border-navy-800 text-xs">
+              <div className="flex items-center space-x-2.5 px-3.5 py-1.5 rounded-2xl bg-slate-100/90 dark:bg-navy-950/90 border border-slate-200 dark:border-navy-800 text-xs shadow-inner">
                 <div className={`w-2.5 h-2.5 rounded-full ${
                   currentSessionStatus === 'ACTIVE'
-                    ? 'bg-emerald-500 animate-pulse'
+                    ? 'bg-emerald-500 pulse-live-indicator'
                     : currentSessionStatus === 'FINALIZED'
                     ? 'bg-blue-500'
                     : 'bg-amber-500'
                 }`} />
-                <span className="font-bold text-gray-700 dark:text-gray-300">
-                  Sync Engine: <span className="text-gray-900 dark:text-white uppercase font-black">{currentSessionStatus}</span>
+                <span className="font-extrabold text-slate-700 dark:text-slate-300 tracking-tight flex items-center space-x-1.5">
+                  <span>Sync Engine:</span>
+                  <span className="text-slate-900 dark:text-white uppercase font-black tracking-wider px-1.5 py-0.5 rounded-md bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-[10px]">
+                    {currentSessionStatus}
+                  </span>
                 </span>
               </div>
             </div>
@@ -104,9 +107,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={() => setShowSyncModal(true)}
-                className="hidden lg:flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-xs font-semibold text-gray-700 dark:text-gray-200 transition-all border border-gray-200 dark:border-navy-700 cursor-pointer"
+                className="hidden lg:flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-xs font-bold text-slate-700 dark:text-slate-200 transition-all duration-200 border border-slate-200 dark:border-navy-700 cursor-pointer active:scale-95"
               >
-                <Activity className="w-3.5 h-3.5 text-brand-500" />
+                <Activity className={`w-3.5 h-3.5 ${currentSessionStatus === 'ACTIVE' ? 'text-emerald-500 animate-sync-spin' : 'text-brand-500'}`} />
                 <span>Sync Engine Status</span>
               </button>
 
@@ -114,13 +117,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={toggleTheme}
-                className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-navy-800 transition-colors cursor-pointer"
+                className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-navy-800 transition-all duration-200 cursor-pointer active:scale-90"
                 title="Toggle Dark / Light Mode"
               >
                 {theme === 'dark' ? (
-                  <Sun className="w-4 h-4 text-amber-400" />
+                  <Sun className="w-4 h-4 text-amber-400 transition-transform duration-300 hover:rotate-90" />
                 ) : (
-                  <Moon className="w-4 h-4 text-navy-700" />
+                  <Moon className="w-4 h-4 text-navy-700 transition-transform duration-300 hover:-rotate-12" />
                 )}
               </button>
 
