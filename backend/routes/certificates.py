@@ -404,17 +404,19 @@ def download_certificate_pdf(
         logger.error(f"[certificate_pdf_invalid] Generated PDF for {cert.verification_id} is invalid or 0 bytes")
         raise HTTPException(status_code=500, detail="Generated certificate PDF is corrupt or invalid.")
 
-    # 4. Safe sanitized filename matching institutional standard: NANTHISH_S_Weekly_Contest_515_Certificate.pdf
-    clean_name = re.sub(r'[^A-Za-z0-9_]+', '_', (cert.student_name or "STUDENT").strip().upper())
-    clean_reg = re.sub(r'[^A-Za-z0-9_]+', '_', (cert.register_no or "").strip().upper())
+    # 4. Safe sanitized filename matching institutional standard: NAME_REGNO_DEPT_Certificate.pdf
+    clean_name = re.sub(r'[^A-Za-z0-9]+', '_', (cert.student_name or "STUDENT").strip().upper()).strip('_')
+    clean_reg = re.sub(r'[^A-Za-z0-9]+', '_', (cert.register_no or "").strip().upper()).strip('_')
+    clean_dept = re.sub(r'[^A-Za-z0-9]+', '_', (cert.department or "CSE").strip().upper()).strip('_')
     
-    contest_label = "Weekly_Contest_515"
-    if cert.recognition:
-        c_m = re.search(r'Weekly\s*Contest\s*\d+', cert.recognition, re.IGNORECASE)
-        if c_m:
-            contest_label = re.sub(r'\s+', '_', c_m.group(0).strip())
+    parts = [clean_name]
+    if clean_reg:
+        parts.append(clean_reg)
+    if clean_dept:
+        parts.append(clean_dept)
+    parts.append("Certificate.pdf")
     
-    safe_filename = f"{clean_name}_{contest_label}_Certificate.pdf"
+    safe_filename = "_".join(parts)
 
     logger.info(f"[certificate_pdf_download_success] Dispatched {safe_filename} ({len(pdf_bytes)} bytes)")
     return Response(
@@ -468,8 +470,19 @@ def download_forensic_contest_pdf(
 
     pdf_bytes = generate_forensic_audit_pdf(db, student.id, session_obj.id, trace_id=f"CERT-{raw_id.upper()[:8]}")
 
-    clean_name = re.sub(r'[^A-Za-z0-9_]+', '_', (student.name or "STUDENT").strip().upper())
-    safe_filename = f"{clean_name}_Forensic_Verification_Audit_Report.pdf"
+    clean_name = re.sub(r'[^A-Za-z0-9]+', '_', (student.name or "STUDENT").strip().upper()).strip('_')
+    clean_reg = re.sub(r'[^A-Za-z0-9]+', '_', (student.reg_no or "").strip().upper()).strip('_')
+    dept_code_str = student.department.code if student.department else "CSE"
+    clean_dept = re.sub(r'[^A-Za-z0-9]+', '_', dept_code_str.strip().upper()).strip('_')
+
+    f_parts = [clean_name]
+    if clean_reg:
+        f_parts.append(clean_reg)
+    if clean_dept:
+        f_parts.append(clean_dept)
+    f_parts.append("Forensic_Audit_Report.pdf")
+
+    safe_filename = "_".join(f_parts)
 
     return Response(
         content=pdf_bytes,

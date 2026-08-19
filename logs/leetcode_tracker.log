@@ -59818,3 +59818,67 @@ NameError: name 'RLImage' is not defined. Did you mean: 'Image'?
 [2026-08-19 16:19:06,742] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci008 (Official Certificate of Excellence) for Student: BHARATH K (732224CI008)
 [2026-08-19 16:19:06,743] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 62869 bytes for trace_732224ci008
 [2026-08-19 16:19:06,743] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched BHARATH_K_Weekly_Contest_515_Certificate.pdf (62869 bytes)
+[2026-08-19 16:19:15,803] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 16:19:15,805] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 16:19:16,180] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 16:19:16,185] [INFO] [leetcode_tracker]: Database contains 303 existing student records. Preserving database single source of truth.
+[2026-08-19 16:19:16,195] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 16:19:16,197] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 16:19:16,200] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 16:19:16,200] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 16:19:16,484] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 16:19
+[2026-08-19 16:19:16,485] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 16:19:16,744] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 303 students.
+[2026-08-19 16:19:16,975] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 16:19:28,975] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 16:19:28,984] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 16:20:07,959] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 16:20:07,973] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 16:20:31,976] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 16:20:31,984] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 16:20:37,298] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-CBD23ABB (Official Certificate of Excellence) for Student: BHARATH K (732224CI008)
+[2026-08-19 16:20:37,332] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-CBD23ABB, reg=None
+[2026-08-19 16:20:37,519] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-CBD23ABB (Official Certificate of Excellence) for Student: BHARATH K (732224CI008)
+[2026-08-19 16:20:37,521] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 62401 bytes for CERT-CBD23ABB
+[2026-08-19 16:20:37,522] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched BHARATH_K_Weekly_Contest_515_Certificate.pdf (62401 bytes)
+[2026-08-19 16:20:40,256] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=732224CI008, reg=None
+[2026-08-19 16:20:40,617] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci008 (Official Certificate of Excellence) for Student: BHARATH K (732224CI008)
+[2026-08-19 16:20:40,618] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 62869 bytes for trace_732224ci008
+[2026-08-19 16:20:40,619] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched BHARATH_K_Weekly_Contest_515_Certificate.pdf (62869 bytes)
+[2026-08-19 16:20:47,430] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 16:20:47,709] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 16:20:48,126] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 16:20:48,157] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 16:20:48,171] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 16:20:49,155] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 16:20:49,430] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 16:20:54,127] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 16:20:58,858] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 16:21:04,562] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 16:21:07,302] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-7A183512 (Official Certificate of Excellence) for Student: RITHANYA S (732224CI044)
+[2026-08-19 16:21:07,325] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-7A183512, reg=None
+[2026-08-19 16:21:07,507] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-7A183512 (Official Certificate of Excellence) for Student: RITHANYA S (732224CI044)
+[2026-08-19 16:21:07,509] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 62334 bytes for CERT-7A183512
+[2026-08-19 16:21:07,511] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched RITHANYA_S_Weekly_Contest_515_Certificate.pdf (62334 bytes)
+[2026-08-19 16:21:17,707] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 16:21:17,730] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 16:21:47,955] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 16:21:47,960] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 16:22:17,961] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 16:22:17,981] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 16:22:20,910] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 16:22:50,778] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 16:22:50,782] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 16:22:51,097] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 16:22:51,102] [INFO] [leetcode_tracker]: Database contains 303 existing student records. Preserving database single source of truth.
+[2026-08-19 16:22:51,109] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 16:22:51,111] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 16:22:51,114] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 16:22:51,115] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 16:22:51,339] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 16:22
+[2026-08-19 16:22:51,340] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 16:22:51,535] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 303 students.
+[2026-08-19 16:22:53,262] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=732224CI008, reg=None
+[2026-08-19 16:22:53,418] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci008 (Official Certificate of Excellence) for Student: BHARATH K (732224CI008)
+[2026-08-19 16:22:53,418] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 62869 bytes for trace_732224ci008
+[2026-08-19 16:22:53,419] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched BHARATH_K_732224CI008_CSE_IOT_Certificate.pdf (62869 bytes)
