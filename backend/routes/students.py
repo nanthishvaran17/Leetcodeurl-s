@@ -48,16 +48,35 @@ def get_leaderboard_fast(
     )
     import re
 
-    # --- Step 1: Find target session ordered by numeric contest number ---
-    sessions = db.query(WeeklySession).filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED", "LIVE", "ACTIVE"])).all()
-    def _get_c_num(s):
+    # --- Step 1: Find active target session (excludes future upcoming sessions until contest day) ---
+    def _parse_session_date(d_str):
+        if not d_str:
+            return datetime.date.min
+        try:
+            parts = str(d_str).strip().split('.')
+            if len(parts) == 3:
+                return datetime.date(int(parts[2]), int(parts[1]), int(parts[0]))
+        except Exception:
+            pass
+        return datetime.date.min
+
+    today = datetime.datetime.utcnow().date()
+    sessions = db.query(WeeklySession).all()
+    eligible = []
+    for s in sessions:
+        s_date = _parse_session_date(s.session_date)
+        if s.status in ["FINALIZED", "COMPLETED"]:
+            eligible.append((s, s_date))
+        elif s.status in ["LIVE", "ACTIVE"] and s_date <= today:
+            eligible.append((s, s_date))
+
+    def _get_c_num(item):
+        s = item[0]
         m = re.search(r'\d+', s.contest_name or '')
         return int(m.group(0)) if m else (s.id or 0)
 
-    sorted_sessions = sorted(sessions, key=_get_c_num, reverse=True)
-    target_session = next((s for s in sorted_sessions if s.status in ["FINALIZED", "COMPLETED"]), None)
-    if not target_session and sorted_sessions:
-        target_session = sorted_sessions[0]
+    eligible_sorted = sorted(eligible, key=_get_c_num, reverse=True)
+    target_session = eligible_sorted[0][0] if eligible_sorted else db.query(WeeklySession).filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED"])).order_by(WeeklySession.id.desc()).first()
 
     target_session_id = target_session.id if target_session else None
     target_contest_name = target_session.contest_name if target_session else "Weekly Contest"
@@ -318,16 +337,34 @@ def get_students(
     target_session_id = session_id
     target_session = None
     if not target_session_id:
-        sessions = db.query(WeeklySession).filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED", "LIVE", "ACTIVE"])).all()
-        def _get_c_num(s):
+        def _parse_session_date(d_str):
+            if not d_str:
+                return datetime.date.min
+            try:
+                parts = str(d_str).strip().split('.')
+                if len(parts) == 3:
+                    return datetime.date(int(parts[2]), int(parts[1]), int(parts[0]))
+            except Exception:
+                pass
+            return datetime.date.min
+
+        today = datetime.datetime.utcnow().date()
+        sessions = db.query(WeeklySession).all()
+        eligible = []
+        for s in sessions:
+            s_date = _parse_session_date(s.session_date)
+            if s.status in ["FINALIZED", "COMPLETED"]:
+                eligible.append((s, s_date))
+            elif s.status in ["LIVE", "ACTIVE"] and s_date <= today:
+                eligible.append((s, s_date))
+
+        def _get_c_num(item):
+            s = item[0]
             m = re.search(r'\d+', s.contest_name or '')
             return int(m.group(0)) if m else (s.id or 0)
 
-        sorted_sessions = sorted(sessions, key=_get_c_num, reverse=True)
-        # Prefer completed/finalized sessions first, or latest live session
-        target_session = next((s for s in sorted_sessions if s.status in ["FINALIZED", "COMPLETED"]), None)
-        if not target_session and sorted_sessions:
-            target_session = sorted_sessions[0]
+        eligible_sorted = sorted(eligible, key=_get_c_num, reverse=True)
+        target_session = eligible_sorted[0][0] if eligible_sorted else db.query(WeeklySession).filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED"])).order_by(WeeklySession.id.desc()).first()
         if target_session:
             target_session_id = target_session.id
     else:
