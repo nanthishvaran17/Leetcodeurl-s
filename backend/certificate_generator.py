@@ -57,7 +57,7 @@ def resolve_department_name(dept_raw: Optional[str]) -> str:
 def draw_ornate_border(canvas, doc):
     """Draws an executive academic double navy & gold ornate certificate border for A4 landscape."""
     canvas.saveState()
-    width, height = doc.pagesize # A4 landscape: 841.89 pt x 595.27 pt (297mm x 210mm)
+    width, height = landscape(A4) # Force exact A4 landscape dimensions: 841.89 pt x 595.27 pt (297mm x 210mm)
 
     # 1. Background Warm Ivory tint
     canvas.setFillColor(colors.HexColor('#FCFCFA'))
@@ -195,7 +195,7 @@ def render_certificate_pdf_bytes(
         onPage=draw_ornate_border
     )
 
-    doc = BaseDocTemplate(pdf_buffer, pageTemplates=[tmpl_landscape])
+    doc = BaseDocTemplate(pdf_buffer, pagesize=landscape(A4), pageTemplates=[tmpl_landscape])
 
     story = []
 
