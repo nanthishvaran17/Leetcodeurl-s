@@ -235,6 +235,53 @@ export const CertificateManagementModal: React.FC<{
     }
   };
 
+  const handleDownloadForensicPdf = async (targetId?: string) => {
+    const idToUse = targetId || generatedCert?.verification_id || selectedStudent?.reg_no || (selectedStudent ? String(selectedStudent.id) : null);
+    if (!idToUse) {
+      alert("Please select a student recipient first to download Forensic Audit Report.");
+      return;
+    }
+
+    try {
+      const response = await api.get(`/certificates/${encodeURIComponent(idToUse)}/download-forensic-pdf`, {
+        responseType: 'blob'
+      });
+
+      if (response.data && response.data.type === 'application/json') {
+        const text = await response.data.text();
+        try {
+          const errJson = JSON.parse(text);
+          alert(`Forensic Report Error: ${errJson.detail || 'Could not generate report.'}`);
+          return;
+        } catch (e) {}
+      }
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      let filename = `Forensic_Audit_Report_${idToUse}.pdf`;
+      const disposition = response.headers['content-disposition'] || response.headers['Content-Disposition'];
+      if (disposition && disposition.includes('filename=')) {
+        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+        if (matches != null && matches[1]) {
+          filename = matches[1].replace(/['"]/g, '').trim();
+        }
+      }
+
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => {
+        window.URL.revokeObjectURL(blobUrl);
+      }, 2000);
+    } catch (err: any) {
+      console.error("Forensic Download error:", err);
+      alert("Failed to download Official LeetCode Contest Forensic Verification Audit Report.");
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -508,7 +555,16 @@ export const CertificateManagementModal: React.FC<{
                         className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-2 shadow-md cursor-pointer transition-all"
                       >
                         <Download className="w-3.5 h-3.5" />
-                        <span>Download Official PDF</span>
+                        <span>Download Official Certificate PDF</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleDownloadForensicPdf(generatedCert?.verification_id || selectedStudent?.reg_no)}
+                        disabled={!selectedStudent}
+                        className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-2 shadow-md cursor-pointer transition-all"
+                      >
+                        <FileText className="w-3.5 h-3.5 text-indigo-200" />
+                        <span>Download Forensic Audit Report PDF</span>
                       </button>
 
                       <a

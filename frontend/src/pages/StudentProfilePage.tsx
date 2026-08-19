@@ -5,7 +5,6 @@ import api from '../services/api';
 import { SkillRadarChart } from '../components/SkillRadarChart';
 import { BadgeShelf } from '../components/BadgeShelf';
 import { IDCardGenerator } from '../components/IDCardGenerator';
-import { CertificateManagementModal } from '../components/CertificateManagementModal';
 
 interface StudentProfilePageProps {
   student: any;
@@ -17,7 +16,6 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   const [insights, setInsights] = useState<any>(null);
   const [isLiveFetching, setIsLiveFetching] = useState(false);
   const [liveFetchError, setLiveFetchError] = useState<string | null>(null);
-  const [showCertModal, setShowCertModal] = useState<boolean>(false);
 
   useEffect(() => {
     if (student?.id) {
@@ -168,11 +166,12 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             </button>
 
             <button
-              onClick={() => setShowCertModal(true)}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs flex items-center space-x-1.5 shadow-md shadow-amber-500/20 transition-all hover:scale-105 cursor-pointer"
+              onClick={handleGenerateCert}
+              disabled={downloadingCert}
+              className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md shadow-amber-600/30 transition-all hover:scale-105 disabled:opacity-50"
             >
-              <Award className="w-4 h-4" />
-              <span>Issue Certificate</span>
+              <Award className="w-3.5 h-3.5" />
+              <span>{downloadingCert ? 'Downloading PDF...' : 'Issue Certificate'}</span>
             </button>
           </div>
 
@@ -343,12 +342,6 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
 
       </div>
 
-      {/* Certificate Management Modal with A4 Landscape Live Preview */}
-      <CertificateManagementModal
-        isOpen={showCertModal}
-        onClose={() => setShowCertModal(false)}
-        preselectedStudent={detail || student}
-      />
     </div>
   );
 };

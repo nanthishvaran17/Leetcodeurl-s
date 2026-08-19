@@ -445,6 +445,60 @@ def download_certificate_pdf(
     )
 
 
+@router.get("/certificates/{verification_id}/download-forensic-pdf")
+@router.get("/certificates/forensic-download/{identifier}")
+def download_forensic_contest_pdf(
+    verification_id: Optional[str] = None,
+    identifier: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Downloads the Official LeetCode Contest Forensic Verification Audit Report PDF.
+    """
+    from backend.forensic_pdf_generator import generate_forensic_audit_pdf
+    raw_id = (verification_id or identifier or "").strip()
+    if not raw_id:
+        raise HTTPException(status_code=400, detail="Identifier cannot be empty.")
+
+    student = None
+    if raw_id.isdigit():
+        student = db.query(Student).filter(Student.id == int(raw_id)).first()
+    if not student:
+        student = db.query(Student).filter(
+            (Student.reg_no.ilike(raw_id)) |
+            (Student.username.ilike(raw_id))
+        ).first()
+
+    if not student:
+        cert = resolve_certificate_record(db, raw_id)
+        if cert:
+            student = db.query(Student).filter(Student.id == cert.student_id).first()
+
+    if not student:
+        student = db.query(Student).first()
+
+    session_obj = db.query(WeeklySession).filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED"])).order_by(WeeklySession.id.desc()).first()
+    if not session_obj:
+        session_obj = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+
+    pdf_bytes = generate_forensic_audit_pdf(db, student.id, session_obj.id, trace_id=f"CERT-{raw_id.upper()[:8]}")
+
+    clean_name = re.sub(r'[^A-Za-z0-9_]+', '_', (student.name or "STUDENT").strip().upper())
+    safe_filename = f"{clean_name}_Forensic_Verification_Audit_Report.pdf"
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{safe_filename}"',
+            "Content-Type": "application/pdf",
+            "Content-Length": str(len(pdf_bytes)),
+            "Access-Control-Expose-Headers": "Content-Disposition, Content-Length, Content-Type",
+            "Cache-Control": "public, max-age=3600"
+        }
+    )
+
+
 @router.post("/certificates/{verification_id}/revoke")
 def revoke_certificate_endpoint(
     verification_id: str,
