@@ -5,6 +5,7 @@ import api from '../services/api';
 import { SkillRadarChart } from '../components/SkillRadarChart';
 import { BadgeShelf } from '../components/BadgeShelf';
 import { IDCardGenerator } from '../components/IDCardGenerator';
+import { CertificateManagementModal } from '../components/CertificateManagementModal';
 
 interface StudentProfilePageProps {
   student: any;
@@ -38,17 +39,24 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
     }
   };
 
+  const [isCertModalOpen, setIsCertModalOpen] = useState(false);
   const [downloadingCert, setDownloadingCert] = useState(false);
 
   const handleGenerateCert = async () => {
-    if (!student?.id) return;
+    const st = detail || student;
+    if (!st || (!st.id && !st.reg_no)) {
+      alert("Student profile is still loading. Please try again in a moment.");
+      return;
+    }
+
     setDownloadingCert(true);
     try {
       const res = await api.post('/certificates/generate', {
-        student_id: student.id,
+        student_id: st.id,
+        register_no: st.reg_no,
         cert_type: "Top Performer"
       });
-      const certId = res.data.verification_id;
+      const certId = res.data?.verification_id || st.reg_no;
 
       if (!certId) {
         throw new Error("No certificate verification ID returned.");
@@ -57,8 +65,18 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       const response = await api.get(`/certificates/${encodeURIComponent(certId)}/download-pdf`, {
         responseType: 'blob'
       });
+
+      if (response.data && response.data.type === 'application/json') {
+        const text = await response.data.text();
+        try {
+          const errJson = JSON.parse(text);
+          alert(`Certificate Error: ${errJson.detail || 'Could not generate PDF.'}`);
+          return;
+        } catch (e) {}
+      }
+
       const blob = new Blob([response.data], { type: 'application/pdf' });
-      let filename = `Certificate_${certId}.pdf`;
+      let filename = `Certificate_${st.name ? st.name.replace(/\s+/g, '_') : certId}.pdf`;
       const disposition = response.headers['content-disposition'] || response.headers['Content-Disposition'];
       if (disposition && disposition.includes('filename=')) {
         const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
@@ -66,6 +84,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           filename = matches[1].replace(/['"]/g, '').trim();
         }
       }
+
       const blobUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = blobUrl;
@@ -165,14 +184,25 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               <span>{isLiveFetching ? 'Fetching...' : 'Live Sync'}</span>
             </button>
 
-            <button
-              onClick={handleGenerateCert}
-              disabled={downloadingCert}
-              className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md shadow-amber-600/30 transition-all hover:scale-105 disabled:opacity-50"
-            >
-              <Award className="w-3.5 h-3.5" />
-              <span>{downloadingCert ? 'Downloading PDF...' : 'Issue Certificate'}</span>
-            </button>
+            <div className="flex items-center space-x-1.5">
+              <button
+                onClick={handleGenerateCert}
+                disabled={downloadingCert}
+                className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md shadow-amber-600/30 transition-all hover:scale-105 disabled:opacity-50 cursor-pointer"
+                title="Download PDF Certificate Directly for Current Student"
+              >
+                <Award className="w-3.5 h-3.5" />
+                <span>{downloadingCert ? 'Downloading PDF...' : 'Issue Certificate'}</span>
+              </button>
+
+              <button
+                onClick={() => setIsCertModalOpen(true)}
+                className="p-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold text-xs transition-all cursor-pointer"
+                title="Open Official Certificate Hub with Current Student Pre-selected"
+              >
+                <FileText className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
         </div>
@@ -341,6 +371,15 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         </div>
 
       </div>
+
+      {/* Certificate Management Modal Pre-Selected for current Student */}
+      {isCertModalOpen && (
+        <CertificateManagementModal
+          isOpen={isCertModalOpen}
+          onClose={() => setIsCertModalOpen(false)}
+          preselectedStudent={detail || student}
+        />
+      )}
 
     </div>
   );

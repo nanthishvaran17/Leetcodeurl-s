@@ -59500,3 +59500,17 @@ NameError: name 'RLImage' is not defined. Did you mean: 'Image'?
 [2026-08-19 15:45:03,396] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
 [2026-08-19 15:45:33,957] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
 [2026-08-19 15:45:33,960] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:46:03,368] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:46:03,388] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:46:06,580] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 15:46:31,492] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 15:46:33,367] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:46:33,386] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:46:34,687] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-B2FF104F (Official Forensic Verification Audit Report) for Student: BHARATH K (732224CI008)
+[2026-08-19 15:46:34,723] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-B2FF104F, reg=None
+[2026-08-19 15:46:34,752] [INFO] [leetcode_tracker]: [certificate_pdf_resolved_from_cache] Size=57935 bytes for CERT-B2FF104F
+[2026-08-19 15:46:34,759] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched BHARATH_K_Weekly_Contest_515_Certificate.pdf (57935 bytes)
+[2026-08-19 15:47:03,957] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:47:03,974] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:47:33,368] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:47:33,384] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
