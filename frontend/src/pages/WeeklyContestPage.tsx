@@ -813,14 +813,46 @@ export const WeeklyContestPage: React.FC = () => {
 
   // Memoized Debounced Filtered Rows for Detailed View
   const filteredMatrixRows = useMemo(() => {
-    if (!debouncedSearchTerm) return matrixRows;
-    const term = debouncedSearchTerm.toLowerCase();
-    return matrixRows.filter(r =>
-      r.name?.toLowerCase().includes(term) ||
-      r.reg_no?.toLowerCase().includes(term) ||
-      r.username?.toLowerCase().includes(term)
-    );
-  }, [matrixRows, debouncedSearchTerm]);
+    let rows = matrixRows;
+
+    if (selectedDeptFilter !== 'ALL') {
+      rows = rows.filter(r => {
+        const d = (r.dept || r.department || '').toString().toUpperCase();
+        if (selectedDeptFilter === 'CSE(CS)') return d.includes('CS') || d.includes('CYBER');
+        if (selectedDeptFilter === 'CSE(IOT)') return d.includes('IOT') || d.includes('INTERNET');
+        return d === selectedDeptFilter.toUpperCase();
+      });
+    }
+
+    if (selectedYearFilter !== 'ALL') {
+      rows = rows.filter(r => {
+        const y = (r.year || r.year_level || '').toString().toUpperCase();
+        return y === selectedYearFilter.toUpperCase();
+      });
+    }
+
+    if (selectedAttendanceFilter !== 'ALL') {
+      rows = rows.filter(r => {
+        const st = (r.participation_status || r.status || '').toString().toUpperCase();
+        if (selectedAttendanceFilter === 'PUBLIC') return st.includes('PUBLIC');
+        if (selectedAttendanceFilter === 'VIRTUAL') return st.includes('VIRTUAL');
+        if (selectedAttendanceFilter === 'NOT_ATTENDED') return st.includes('NOT_ATTENDED') || st.includes('NOT ATTENDED');
+        return true;
+      });
+    }
+
+    if (debouncedSearchTerm && debouncedSearchTerm.trim()) {
+      const term = debouncedSearchTerm.trim().toLowerCase();
+      rows = rows.filter(r =>
+        (r.name && r.name.toLowerCase().includes(term)) ||
+        (r.reg_no && r.reg_no.toLowerCase().includes(term)) ||
+        (r.username && r.username.toLowerCase().includes(term)) ||
+        (r.leetcode_url && r.leetcode_url.toLowerCase().includes(term))
+      );
+    }
+
+    return rows;
+  }, [matrixRows, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, debouncedSearchTerm]);
 
   if (loading) {
     const loadingSession = sessionsList.find(s => s.sessionId === selectedSessionId);
@@ -2460,7 +2492,7 @@ export const WeeklyContestPage: React.FC = () => {
                     </span>
                   </div>
                   <p className="text-xs text-blue-200/80 font-medium truncate mt-0.5">
-                    Nandha Engineering College • Session Date: {activeSessionObj?.sessionDate || 'Sunday Session'} • Showing {matrixRows.length} Students
+                    Nandha Engineering College • Session Date: {activeSessionObj?.sessionDate || 'Sunday Session'} • Showing {filteredMatrixRows.length} Students
                   </p>
                 </div>
               </div>
@@ -2481,13 +2513,13 @@ export const WeeklyContestPage: React.FC = () => {
               {/* Quick Metrics Badges */}
               <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                 <span className="px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50 font-black text-[11px]">
-                  Roster: {matrixRows.length}
+                  Roster: {filteredMatrixRows.length}
                 </span>
                 <span className="px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50 font-black text-[11px]">
-                  Public: {matrixRows.filter(r => r.participation_status === 'PUBLIC' || r.status === 'PUBLIC').length}
+                  Public: {filteredMatrixRows.filter(r => r.participation_status === 'PUBLIC' || r.status === 'PUBLIC' || r.participation_status === 'PUBLIC_ATTENDED').length}
                 </span>
                 <span className="px-2.5 py-1 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50 font-black text-[11px]">
-                  Not Attended: {matrixRows.filter(r => r.participation_status === 'NOT_ATTENDED' || r.status === 'NOT_ATTENDED').length}
+                  Not Attended: {filteredMatrixRows.filter(r => r.participation_status === 'NOT_ATTENDED' || r.status === 'NOT_ATTENDED' || r.participation_status === 'PUBLIC_NOT_ATTENDED').length}
                 </span>
               </div>
 
@@ -2521,14 +2553,14 @@ export const WeeklyContestPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800/80">
-                    {matrixRows.length === 0 ? (
+                    {filteredMatrixRows.length === 0 ? (
                       <tr>
                         <td colSpan={12} className="p-8 text-center text-gray-500 font-bold">
                           No matching student records found for the active filter selection.
                         </td>
                       </tr>
                     ) : (
-                      matrixRows.map((r, idx) => {
+                      filteredMatrixRows.map((r, idx) => {
                         const isPublicAttended = r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'PUBLIC' || r.status === 'PUBLIC';
                         const isVirtualAttended = r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL';
                         const isAttended = isPublicAttended || isVirtualAttended;
