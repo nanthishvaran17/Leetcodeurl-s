@@ -32,13 +32,29 @@ def handle_ai_control_request(
     if not req.message or not req.message.strip():
         raise HTTPException(status_code=400, detail="Request message cannot be empty.")
 
-    return AIControlEngine.process_request(
+    res = AIControlEngine.process_request(
         db=db,
         message=req.message,
         user=current_user,
         context=req.context,
         history=req.history
     )
+
+    try:
+        from backend.models import AIChatHistory
+        chat_log = AIChatHistory(
+            session_id=res.get("requestId"),
+            user_query=req.message,
+            ai_response=res.get("answer", ""),
+            mode="operations",
+            data_status=res.get("dataStatus", "VERIFIED")
+        )
+        db.add(chat_log)
+        db.commit()
+    except Exception:
+        pass
+
+    return res
 
 @router.post("/confirm")
 def confirm_ai_control_action(

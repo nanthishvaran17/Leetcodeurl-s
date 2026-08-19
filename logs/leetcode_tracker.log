@@ -58066,3 +58066,1326 @@ NameError: name 'RLImage' is not defined. Did you mean: 'Image'?
 [2026-08-18 22:10:00,937] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
 [2026-08-18 22:10:00,949] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
 [2026-08-18 22:51:33,455] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 07:58:35,365] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-54407] ADD_RECIPIENT by admin (admin@college.edu)
+[2026-08-19 07:58:35,370] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-58509] DELETE_RECIPIENT by admin (admin@college.edu)
+[2026-08-19 07:58:37,171] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 07:58:48,358] [INFO] [leetcode_tracker]: [WORKER] Worker started for job: SYNC-TEST-1787106528
+[2026-08-19 07:58:48,364] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Starting streaming per-student sync for 302 students (Job: SYNC-TEST-1787106528)
+[2026-08-19 07:59:56,869] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-2533FCED (Official Forensic Verification Audit Report) for Student: JEEVITHA S (732225CC022)
+[2026-08-19 08:00:01,165] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Recalculating college/department/year rankings post-sync...
+[2026-08-19 08:00:01,165] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-19 08:00:01,488] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 08:00:01,489] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Streaming sync completed in 73.13s. Synced=237, Invalid=44, Pending=21, Failed=0
+[2026-08-19 08:00:01,493] [INFO] [leetcode_tracker]: [SYNC] Application cache invalidated post-sync.
+[2026-08-19 08:00:02,436] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-2533FCED (Official Forensic Verification Audit Report) for Student: JEEVITHA S (732225CC022)
+[2026-08-19 08:00:02,473] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-5D69C32A (Official Forensic Verification Audit Report) for Student: JEEVITHA S (732225CC022)
+[2026-08-19 08:00:02,512] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-87FA8DFA (Official Forensic Verification Audit Report) for Student: JEEVITHA S (732225CC022)
+[2026-08-19 08:00:02,550] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-FA5823C5 (Official Forensic Verification Audit Report) for Student: AJAY A (732224CC001)
+[2026-08-19 08:00:02,589] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-ADDDCED2 (Official Forensic Verification Audit Report) for Student: AMRUTHA M (732224CC002)
+[2026-08-19 08:00:02,630] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-7D1CF78E (Official Forensic Verification Audit Report) for Student: ANUSHKUMAR R (732224CC003)
+[2026-08-19 08:00:02,670] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-B36E0C6F (Official Forensic Verification Audit Report) for Student: BHARATH G (732224CC004)
+[2026-08-19 08:00:02,707] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-25FA8198 (Official Forensic Verification Audit Report) for Student: DHANUSHYA G K (732224CC005)
+[2026-08-19 08:00:02,746] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-EFD9BF92 (Official Forensic Verification Audit Report) for Student: DHARSHINI A M (732224CC006)
+[2026-08-19 08:00:02,785] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-3895DCA3 (Official Forensic Verification Audit Report) for Student: DHARSHINI S M (732224CC007)
+[2026-08-19 08:00:02,824] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-A5A05572 (Official Forensic Verification Audit Report) for Student: DHARUNRAJ K P (732224CC008)
+[2026-08-19 08:00:02,864] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-FE0E57B2 (Official Forensic Verification Audit Report) for Student: GIRIPATHI K (732224CC009)
+[2026-08-19 08:00:02,902] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-3E2764AA (Official Forensic Verification Audit Report) for Student: GOKUL P (732224CC010)
+[2026-08-19 08:00:02,945] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-44D93BD1 (Official Forensic Verification Audit Report) for Student: JEEVITHA S (732225CC022)
+[2026-08-19 08:00:02,986] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-9285E2DF (Official Forensic Verification Audit Report) for Student: AARTHI R S (732225CI001)
+[2026-08-19 08:00:03,041] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-3B58D9B0 (Official Forensic Verification Audit Report) for Student: NANTHISH S (732224CC031)
+[2026-08-19 08:00:03,094] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-1EC28D3E (Official Forensic Verification Audit Report) for Student: NANTHISH S (732224CC031)
+[2026-08-19 08:00:03,150] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-26F7A458 (Official Forensic Verification Audit Report) for Student: SAJAN VENKAT M (732225CC046)
+[2026-08-19 08:00:03,199] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-FC02B526 (Official Forensic Verification Audit Report) for Student: AJAY A (732224CC001)
+[2026-08-19 08:00:03,245] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-TEST-001 (Official Forensic Verification Audit Report) for Student: AJAY A (732224CC001)
+[2026-08-19 08:00:03,299] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_9a54565ec682 (Official Forensic Verification Audit Report) for Student: NANTHISH S (732224CC031)
+[2026-08-19 08:00:03,357] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_518997bfb498 (Official Forensic Verification Audit Report) for Student: NANTHISH S (732224CC031)
+[2026-08-19 08:00:03,408] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_ff5e1b0ab2b4 (Official Forensic Verification Audit Report) for Student: NANTHISH S (732224CC031)
+[2026-08-19 08:00:03,466] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_f5c57d1b49fb (Official Forensic Verification Audit Report) for Student: NANTHISH S (732224CC031)
+[2026-08-19 08:00:03,524] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_07faaf2c36d0 (Official Forensic Verification Audit Report) for Student: NANTHISH S (732224CC031)
+[2026-08-19 08:00:03,576] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_0c80fac9b7ac (Official Forensic Verification Audit Report) for Student: NANTHISH S (732224CC031)
+[2026-08-19 08:00:03,628] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_eec01ddfb9fa (Official Forensic Verification Audit Report) for Student: SAJAN VENKAT M (732225CC046)
+[2026-08-19 08:00:03,684] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc001 (Official Forensic Verification Audit Report) for Student: AJAY A (732224CC001)
+[2026-08-19 08:00:03,736] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc002 (Official Forensic Verification Audit Report) for Student: AMRUTHA M (732224CC002)
+[2026-08-19 08:00:03,792] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc003 (Official Forensic Verification Audit Report) for Student: ANUSHKUMAR R (732224CC003)
+[2026-08-19 08:00:03,844] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc004 (Official Forensic Verification Audit Report) for Student: BHARATH G (732224CC004)
+[2026-08-19 08:00:03,892] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc005 (Official Forensic Verification Audit Report) for Student: DHANUSHYA G K (732224CC005)
+[2026-08-19 08:00:03,938] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc006 (Official Forensic Verification Audit Report) for Student: DHARSHINI A M (732224CC006)
+[2026-08-19 08:00:03,989] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc007 (Official Forensic Verification Audit Report) for Student: DHARSHINI S M (732224CC007)
+[2026-08-19 08:00:04,035] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc008 (Official Forensic Verification Audit Report) for Student: DHARUNRAJ K P (732224CC008)
+[2026-08-19 08:00:04,079] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc009 (Official Forensic Verification Audit Report) for Student: GIRIPATHI K (732224CC009)
+[2026-08-19 08:00:04,123] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc010 (Official Forensic Verification Audit Report) for Student: GOKUL P (732224CC010)
+[2026-08-19 08:00:04,172] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc011 (Official Forensic Verification Audit Report) for Student: HARDIKA M (732224CC011)
+[2026-08-19 08:00:04,216] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc012 (Official Forensic Verification Audit Report) for Student: HARIHARAN S V (732224CC012)
+[2026-08-19 08:00:04,261] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc013 (Official Forensic Verification Audit Report) for Student: HARISH K (732224CC013)
+[2026-08-19 08:00:04,307] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc014 (Official Forensic Verification Audit Report) for Student: HARISH KUMAAR S (732224CC014)
+[2026-08-19 08:00:04,351] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc015 (Official Forensic Verification Audit Report) for Student: HARISH N (732224CC015)
+[2026-08-19 08:00:04,392] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc016 (Official Forensic Verification Audit Report) for Student: INIYA K (732224CC016)
+[2026-08-19 08:00:04,437] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc017 (Official Forensic Verification Audit Report) for Student: JANANI S (732224CC017)
+[2026-08-19 08:00:04,482] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc018 (Official Forensic Verification Audit Report) for Student: JAYAPRAKASH S (732224CC018)
+[2026-08-19 08:00:04,529] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc019 (Official Forensic Verification Audit Report) for Student: JAYASURYA S (732224CC019)
+[2026-08-19 08:00:04,577] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc020 (Official Forensic Verification Audit Report) for Student: KARTHIKEYAN V (732224CC020)
+[2026-08-19 08:00:04,624] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc021 (Official Forensic Verification Audit Report) for Student: KIRUTHIKAA P T (732224CC021)
+[2026-08-19 08:00:04,689] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc022 (Official Forensic Verification Audit Report) for Student: KISHORE C (732224CC022)
+[2026-08-19 08:00:04,737] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc023 (Official Forensic Verification Audit Report) for Student: LAKSANA S (732224CC023)
+[2026-08-19 08:00:04,782] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc024 (Official Forensic Verification Audit Report) for Student: MADAN PRASATH G (732224CC024)
+[2026-08-19 08:00:04,825] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc025 (Official Forensic Verification Audit Report) for Student: MAGUDAPATHI S (732224CC025)
+[2026-08-19 08:00:04,869] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc026 (Official Forensic Verification Audit Report) for Student: MAHILNETHRA S K (732224CC026)
+[2026-08-19 08:00:04,916] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc027 (Official Forensic Verification Audit Report) for Student: MANJUNATH D (732224CC027)
+[2026-08-19 08:00:04,963] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc028 (Official Forensic Verification Audit Report) for Student: MANOJ KUMAR C (732224CC028)
+[2026-08-19 08:00:05,006] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc029 (Official Forensic Verification Audit Report) for Student: MOHAMED THARIQ J (732224CC029)
+[2026-08-19 08:00:05,052] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc031 (Official Forensic Verification Audit Report) for Student: NANTHISH S (732224CC031)
+[2026-08-19 08:00:05,093] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc032 (Official Forensic Verification Audit Report) for Student: NISHANTH J S (732224CC032)
+[2026-08-19 08:00:05,136] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc033 (Official Forensic Verification Audit Report) for Student: NITHIN S (732224CC033)
+[2026-08-19 08:00:05,181] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc034 (Official Forensic Verification Audit Report) for Student: NIVETHYTHA JR R (732224CC034)
+[2026-08-19 08:00:05,236] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc035 (Official Forensic Verification Audit Report) for Student: POOMITHA KS (732224CC035)
+[2026-08-19 08:00:05,281] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc036 (Official Forensic Verification Audit Report) for Student: PRASATH R (732224CC036)
+[2026-08-19 08:00:05,325] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc037 (Official Forensic Verification Audit Report) for Student: PRITHIKA P (732224CC037)
+[2026-08-19 08:00:05,367] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc038 (Official Forensic Verification Audit Report) for Student: RADHISRI N (732224CC038)
+[2026-08-19 08:00:05,412] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc039 (Official Forensic Verification Audit Report) for Student: RAJESH R (732224CC039)
+[2026-08-19 08:00:05,459] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc040 (Official Forensic Verification Audit Report) for Student: RITHANIKA V (732224CC040)
+[2026-08-19 08:00:05,501] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc041 (Official Forensic Verification Audit Report) for Student: RITHIKA J (732224CC041)
+[2026-08-19 08:00:05,546] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc042 (Official Forensic Verification Audit Report) for Student: ROHITH R (732224CC042)
+[2026-08-19 08:00:05,586] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc043 (Official Forensic Verification Audit Report) for Student: SABARI N (732224CC043)
+[2026-08-19 08:00:05,631] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc044 (Official Forensic Verification Audit Report) for Student: SAKTHI S (732224CC044)
+[2026-08-19 08:00:05,673] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc045 (Official Forensic Verification Audit Report) for Student: SHANDEESH R P (732224CC045)
+[2026-08-19 08:00:05,716] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc046 (Official Forensic Verification Audit Report) for Student: SHANMUGA PRIYA J (732224CC046)
+[2026-08-19 08:00:05,761] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc047 (Official Forensic Verification Audit Report) for Student: SHARMILA P (732224CC047)
+[2026-08-19 08:00:05,803] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc048 (Official Forensic Verification Audit Report) for Student: SOWMIYA S (732224CC048)
+[2026-08-19 08:00:05,852] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc049 (Official Forensic Verification Audit Report) for Student: SRISELVAN P (732224CC049)
+[2026-08-19 08:00:05,897] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc050 (Official Forensic Verification Audit Report) for Student: SUBA SRI B (732224CC050)
+[2026-08-19 08:00:05,943] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc051 (Official Forensic Verification Audit Report) for Student: SUBASH MURUGAN S (732224CC051)
+[2026-08-19 08:00:05,990] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc052 (Official Forensic Verification Audit Report) for Student: SUPRIYA K (732224CC052)
+[2026-08-19 08:00:06,033] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc053 (Official Forensic Verification Audit Report) for Student: SURESH S (732224CC053)
+[2026-08-19 08:00:06,079] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc054 (Official Forensic Verification Audit Report) for Student: VARSHINI DEVI K (732224CC054)
+[2026-08-19 08:00:06,125] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc055 (Official Forensic Verification Audit Report) for Student: VEDHASREE P (732224CC055)
+[2026-08-19 08:00:06,168] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc056 (Official Forensic Verification Audit Report) for Student: VIGNESH T (732224CC056)
+[2026-08-19 08:00:06,214] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc057 (Official Forensic Verification Audit Report) for Student: VISHAANTH M B (732224CC057)
+[2026-08-19 08:00:06,287] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc058 (Official Forensic Verification Audit Report) for Student: YAZHINI SHREE A (732224CC058)
+[2026-08-19 08:00:06,330] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc059 (Official Forensic Verification Audit Report) for Student: YURJEEN J (732224CC059)
+[2026-08-19 08:00:06,374] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cc060 (Official Forensic Verification Audit Report) for Student: YUVANESH S (732224CC060)
+[2026-08-19 08:00:06,418] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ccl01 (Official Forensic Verification Audit Report) for Student: MOHAMMED AFFAN.JA (732224CCL01)
+[2026-08-19 08:00:06,464] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ccl02 (Official Forensic Verification Audit Report) for Student: SARAN.R (732224CCL02)
+[2026-08-19 08:00:06,507] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ccl03 (Official Forensic Verification Audit Report) for Student: SHREE SANJAY U K (732224CCL03)
+[2026-08-19 08:00:06,551] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ccl04 (Official Forensic Verification Audit Report) for Student: SRIDHAR S (732224CCL04)
+[2026-08-19 08:00:06,596] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc001 (Official Forensic Verification Audit Report) for Student: AARATHANA L (732225CC001)
+[2026-08-19 08:00:06,640] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc002 (Official Forensic Verification Audit Report) for Student: AARSIKA M (732225CC002)
+[2026-08-19 08:00:06,684] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc003 (Official Forensic Verification Audit Report) for Student: ABHISHEK M (732225CC003)
+[2026-08-19 08:00:06,726] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc004 (Official Forensic Verification Audit Report) for Student: ABINAYA S (732225CC004)
+[2026-08-19 08:00:06,768] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc005 (Official Forensic Verification Audit Report) for Student: ASHVIK AKHIL RAJAN R (732225CC005)
+[2026-08-19 08:00:06,813] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc006 (Official Forensic Verification Audit Report) for Student: DEEPAK T (732225CC006)
+[2026-08-19 08:00:06,856] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc007 (Official Forensic Verification Audit Report) for Student: DEEPIKA G L (732225CC007)
+[2026-08-19 08:00:06,901] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc008 (Official Forensic Verification Audit Report) for Student: DHARANEESH SABARI N (732225CC008)
+[2026-08-19 08:00:06,944] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc009 (Official Forensic Verification Audit Report) for Student: DHARSHAN G (732225CC009)
+[2026-08-19 08:00:06,988] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc010 (Official Forensic Verification Audit Report) for Student: DIVYANAND G R (732225CC010)
+[2026-08-19 08:00:07,035] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc011 (Official Forensic Verification Audit Report) for Student: FARVAESH MUSHRAF M (732225CC011)
+[2026-08-19 08:00:07,079] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc012 (Official Forensic Verification Audit Report) for Student: GAYATHIRIDEVI P (732225CC012)
+[2026-08-19 08:00:07,122] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc013 (Official Forensic Verification Audit Report) for Student: GIBSON KENLEY S (732225CC013)
+[2026-08-19 08:00:07,169] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc014 (Official Forensic Verification Audit Report) for Student: GOKULRAJ R (732225CC014)
+[2026-08-19 08:00:07,215] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc015 (Official Forensic Verification Audit Report) for Student: GOWRIPRIYA M (732225CC015)
+[2026-08-19 08:00:07,258] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc016 (Official Forensic Verification Audit Report) for Student: HARISH B (732225CC016)
+[2026-08-19 08:00:07,302] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc017 (Official Forensic Verification Audit Report) for Student: HARISH M S (732225CC017)
+[2026-08-19 08:00:07,348] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc018 (Official Forensic Verification Audit Report) for Student: JANARTHANAN R (732225CC018)
+[2026-08-19 08:00:07,392] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc019 (Official Forensic Verification Audit Report) for Student: JAYASRI R (732225CC019)
+[2026-08-19 08:00:07,437] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc020 (Official Forensic Verification Audit Report) for Student: JAYEL CHRISTINA SCUDD (732225CC020)
+[2026-08-19 08:00:07,483] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc021 (Official Forensic Verification Audit Report) for Student: JEBARSON K (732225CC021)
+[2026-08-19 08:00:07,527] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc022 (Official Forensic Verification Audit Report) for Student: JEEVITHA S (732225CC022)
+[2026-08-19 08:00:07,567] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc023 (Official Forensic Verification Audit Report) for Student: KARMUGIL V (732225CC023)
+[2026-08-19 08:00:07,612] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc024 (Official Forensic Verification Audit Report) for Student: KAVI PRIYA T (732225CC024)
+[2026-08-19 08:00:07,656] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc025 (Official Forensic Verification Audit Report) for Student: KAVIN B (732225CC025)
+[2026-08-19 08:00:07,699] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc026 (Official Forensic Verification Audit Report) for Student: KEERTHEESH K R (732225CC026)
+[2026-08-19 08:00:07,741] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc027 (Official Forensic Verification Audit Report) for Student: KEERTHI RAJA S (732225CC027)
+[2026-08-19 08:00:07,788] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc028 (Official Forensic Verification Audit Report) for Student: LALITHKUMAR B V (732225CC028)
+[2026-08-19 08:00:07,833] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc029 (Official Forensic Verification Audit Report) for Student: LIGITH SANJAY G (732225CC029)
+[2026-08-19 08:00:07,877] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc030 (Official Forensic Verification Audit Report) for Student: MIDESH K P (732225CC030)
+[2026-08-19 08:00:07,921] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc031 (Official Forensic Verification Audit Report) for Student: MOUNESH G (732225CC031)
+[2026-08-19 08:00:07,967] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc032 (Official Forensic Verification Audit Report) for Student: MUKESH S (732225CC032)
+[2026-08-19 08:00:08,012] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc033 (Official Forensic Verification Audit Report) for Student: NAVASAKTHI K K (732225CC033)
+[2026-08-19 08:00:08,056] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc034 (Official Forensic Verification Audit Report) for Student: NAVEEN R (732225CC034)
+[2026-08-19 08:00:08,099] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc035 (Official Forensic Verification Audit Report) for Student: NIVETHAA S B (732225CC035)
+[2026-08-19 08:00:08,144] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc036 (Official Forensic Verification Audit Report) for Student: POOVARASU A (732225CC036)
+[2026-08-19 08:00:08,193] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc037 (Official Forensic Verification Audit Report) for Student: PRADEEPA M (732225CC037)
+[2026-08-19 08:00:08,237] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc038 (Official Forensic Verification Audit Report) for Student: PRIYADHARSHINI D (732225CC038)
+[2026-08-19 08:00:08,283] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc039 (Official Forensic Verification Audit Report) for Student: PRIYADHARSHINI G (732225CC039)
+[2026-08-19 08:00:08,333] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc040 (Official Forensic Verification Audit Report) for Student: PRIYADHARSHINI P (732225CC040)
+[2026-08-19 08:00:08,377] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc041 (Official Forensic Verification Audit Report) for Student: RAJABALAN B (732225CC041)
+[2026-08-19 08:00:08,425] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc042 (Official Forensic Verification Audit Report) for Student: RAVIBHARATHI R (732225CC042)
+[2026-08-19 08:00:08,468] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc043 (Official Forensic Verification Audit Report) for Student: ROKITHKISHOR R S (732225CC043)
+[2026-08-19 08:00:08,511] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc044 (Official Forensic Verification Audit Report) for Student: SABARI T (732225CC044)
+[2026-08-19 08:00:08,553] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc045 (Official Forensic Verification Audit Report) for Student: SAHANAJ BANU M (732225CC045)
+[2026-08-19 08:00:08,602] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc046 (Official Forensic Verification Audit Report) for Student: SAJAN VENKAT M (732225CC046)
+[2026-08-19 08:00:08,646] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc047 (Official Forensic Verification Audit Report) for Student: SANTHOSH M (732225CC047)
+[2026-08-19 08:00:08,688] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc048 (Official Forensic Verification Audit Report) for Student: SARATHY S (732225CC048)
+[2026-08-19 08:00:08,736] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc049 (Official Forensic Verification Audit Report) for Student: SASINESAN T (732225CC049)
+[2026-08-19 08:00:08,779] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc050 (Official Forensic Verification Audit Report) for Student: SHRUTI S (732225CC050)
+[2026-08-19 08:00:08,827] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc051 (Official Forensic Verification Audit Report) for Student: SIDDHDEV V R (732225CC051)
+[2026-08-19 08:00:08,870] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc052 (Official Forensic Verification Audit Report) for Student: STALIN A (732225CC052)
+[2026-08-19 08:00:08,917] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc053 (Official Forensic Verification Audit Report) for Student: SUBILNATH G (732225CC053)
+[2026-08-19 08:00:08,970] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc054 (Official Forensic Verification Audit Report) for Student: SUJITH A (732225CC054)
+[2026-08-19 08:00:09,016] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc055 (Official Forensic Verification Audit Report) for Student: SURUTHI S (732225CC055)
+[2026-08-19 08:00:09,058] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc056 (Official Forensic Verification Audit Report) for Student: SUSITHA U (732225CC056)
+[2026-08-19 08:00:09,105] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc057 (Official Forensic Verification Audit Report) for Student: SUVATHI V (732225CC057)
+[2026-08-19 08:00:09,152] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc058 (Official Forensic Verification Audit Report) for Student: SWETHA JAYASIKA P (732225CC058)
+[2026-08-19 08:00:09,173] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'nanthishvaran_07' (Attempt 1/3)
+[2026-08-19 08:00:09,195] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc059 (Official Forensic Verification Audit Report) for Student: TAMILARASAN S (732225CC059)
+[2026-08-19 08:00:09,239] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc060 (Official Forensic Verification Audit Report) for Student: THARANYA L (732225CC060)
+[2026-08-19 08:00:09,307] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc061 (Official Forensic Verification Audit Report) for Student: VETRIVEL G (732225CC061)
+[2026-08-19 08:00:09,352] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225cc062 (Official Forensic Verification Audit Report) for Student: YOGESH P (732225CC062)
+[2026-08-19 08:00:09,398] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ccl01 (Official Forensic Verification Audit Report) for Student: ANVAR AHAMED S (732225CCL01)
+[2026-08-19 08:00:09,441] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ccl02 (Official Forensic Verification Audit Report) for Student: JEEVADHARSAN M (732225CCL02)
+[2026-08-19 08:00:09,486] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ccl03 (Official Forensic Verification Audit Report) for Student: KATHIR V (732225CCL03)
+[2026-08-19 08:00:09,532] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ccl04 (Official Forensic Verification Audit Report) for Student: LINGESWARAN M (732225CCL04)
+[2026-08-19 08:00:09,577] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ccl05 (Official Forensic Verification Audit Report) for Student: MOHAMMED HAROON M (732225CCL05)
+[2026-08-19 08:00:09,624] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ccl06 (Official Forensic Verification Audit Report) for Student: SHYNTH ABRAHAM C (732225CCL06)
+[2026-08-19 08:00:09,671] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci001 (Official Forensic Verification Audit Report) for Student: AARTHI R S (732225CI001)
+[2026-08-19 08:00:09,719] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci002 (Official Forensic Verification Audit Report) for Student: BHARANITHARAN R (732225CI002)
+[2026-08-19 08:00:09,762] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci003 (Official Forensic Verification Audit Report) for Student: BHUPESH S A (732225CI003)
+[2026-08-19 08:00:09,809] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci004 (Official Forensic Verification Audit Report) for Student: DEVI SHREE M (732225CI004)
+[2026-08-19 08:00:09,856] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci005 (Official Forensic Verification Audit Report) for Student: DHANYA J (732225CI005)
+[2026-08-19 08:00:09,902] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci006 (Official Forensic Verification Audit Report) for Student: DHARANI I (732225CI006)
+[2026-08-19 08:00:09,949] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci007 (Official Forensic Verification Audit Report) for Student: DHARSHAN S (732225CI007)
+[2026-08-19 08:00:09,994] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci008 (Official Forensic Verification Audit Report) for Student: DHARSHINI G (732225CI008)
+[2026-08-19 08:00:10,040] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci009 (Official Forensic Verification Audit Report) for Student: GAYATHRI R (732225CI009)
+[2026-08-19 08:00:10,086] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci010 (Official Forensic Verification Audit Report) for Student: GEERTHANA A S (732225CI010)
+[2026-08-19 08:00:10,138] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci011 (Official Forensic Verification Audit Report) for Student: GOBIKRISHNA M (732225CI011)
+[2026-08-19 08:00:10,184] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci012 (Official Forensic Verification Audit Report) for Student: GOKULKRISHNA M (732225CI012)
+[2026-08-19 08:00:10,234] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci013 (Official Forensic Verification Audit Report) for Student: GOKUL P S (732225CI013)
+[2026-08-19 08:00:10,286] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci014 (Official Forensic Verification Audit Report) for Student: HARIPRIYA S (732225CI014)
+[2026-08-19 08:00:10,344] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci015 (Official Forensic Verification Audit Report) for Student: HARSHINI R (732225CI015)
+[2026-08-19 08:00:10,392] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci016 (Official Forensic Verification Audit Report) for Student: INIYA A (732225CI016)
+[2026-08-19 08:00:10,442] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci017 (Official Forensic Verification Audit Report) for Student: JANANI D (732225CI017)
+[2026-08-19 08:00:10,493] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci018 (Official Forensic Verification Audit Report) for Student: JAYASURIYA V (732225CI018)
+[2026-08-19 08:00:10,544] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci019 (Official Forensic Verification Audit Report) for Student: KARUPPUSAMYDEEPAK P (732225CI019)
+[2026-08-19 08:00:10,598] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci020 (Official Forensic Verification Audit Report) for Student: KAVIYA JAYA CHITRA A (732225CI020)
+[2026-08-19 08:00:10,655] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci021 (Official Forensic Verification Audit Report) for Student: KIRAN CHANTH T L (732225CI021)
+[2026-08-19 08:00:10,706] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci022 (Official Forensic Verification Audit Report) for Student: KISHORE KANNA S (732225CI022)
+[2026-08-19 08:00:10,759] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci023 (Official Forensic Verification Audit Report) for Student: MADHU BALA P (732225CI023)
+[2026-08-19 08:00:10,821] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci024 (Official Forensic Verification Audit Report) for Student: MALAVIKA G (732225CI024)
+[2026-08-19 08:00:10,871] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci025 (Official Forensic Verification Audit Report) for Student: MOHAMMED YUNUS A (732225CI025)
+[2026-08-19 08:00:10,927] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci026 (Official Forensic Verification Audit Report) for Student: MONISHA C (732225CI026)
+[2026-08-19 08:00:10,981] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci027 (Official Forensic Verification Audit Report) for Student: NANTHEES N S (732225CI027)
+[2026-08-19 08:00:11,032] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci028 (Official Forensic Verification Audit Report) for Student: NAVIN V (732225CI028)
+[2026-08-19 08:00:11,085] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci029 (Official Forensic Verification Audit Report) for Student: NIKILAN S (732225CI029)
+[2026-08-19 08:00:11,141] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci030 (Official Forensic Verification Audit Report) for Student: NISHA C (732225CI030)
+[2026-08-19 08:00:11,196] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci031 (Official Forensic Verification Audit Report) for Student: NITHISH KUMAR B (732225CI031)
+[2026-08-19 08:00:11,249] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci032 (Official Forensic Verification Audit Report) for Student: NOUSHAL HASHIM A (732225CI032)
+[2026-08-19 08:00:11,299] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci033 (Official Forensic Verification Audit Report) for Student: POOJANA R (732225CI033)
+[2026-08-19 08:00:11,351] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci034 (Official Forensic Verification Audit Report) for Student: PRAVEENA S (732225CI034)
+[2026-08-19 08:00:11,407] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci035 (Official Forensic Verification Audit Report) for Student: PRIYADHARSHINI K M (732225CI035)
+[2026-08-19 08:00:11,464] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci036 (Official Forensic Verification Audit Report) for Student: PUGAZHENTHI G (732225CI036)
+[2026-08-19 08:00:11,517] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci037 (Official Forensic Verification Audit Report) for Student: RAGUL T (732225CI037)
+[2026-08-19 08:00:11,564] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci038 (Official Forensic Verification Audit Report) for Student: RAGULRAAJ M (732225CI038)
+[2026-08-19 08:00:11,611] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci039 (Official Forensic Verification Audit Report) for Student: ROHITH P (732225CI039)
+[2026-08-19 08:00:11,658] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci040 (Official Forensic Verification Audit Report) for Student: ROSHAN AKTHAR K (732225CI040)
+[2026-08-19 08:00:11,705] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci041 (Official Forensic Verification Audit Report) for Student: SAHA N (732225CI041)
+[2026-08-19 08:00:11,752] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci042 (Official Forensic Verification Audit Report) for Student: SALINI S (732225CI042)
+[2026-08-19 08:00:11,804] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci043 (Official Forensic Verification Audit Report) for Student: SANJAI B (732225CI043)
+[2026-08-19 08:00:11,849] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci044 (Official Forensic Verification Audit Report) for Student: SANJAY KUMAR M (732225CI044)
+[2026-08-19 08:00:11,898] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci045 (Official Forensic Verification Audit Report) for Student: SANJEEV R T (732225CI045)
+[2026-08-19 08:00:11,943] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci046 (Official Forensic Verification Audit Report) for Student: SANTHOSH KUMAR S (732225CI046)
+[2026-08-19 08:00:11,993] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci047 (Official Forensic Verification Audit Report) for Student: SATHISH M (732225CI047)
+[2026-08-19 08:00:12,039] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci048 (Official Forensic Verification Audit Report) for Student: SHARMATHA K (732225CI048)
+[2026-08-19 08:00:12,088] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci049 (Official Forensic Verification Audit Report) for Student: SHIVAN SUNDAR V (732225CI049)
+[2026-08-19 08:00:12,133] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci050 (Official Forensic Verification Audit Report) for Student: SHREEDHARSHAN S (732225CI050)
+[2026-08-19 08:00:12,177] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci051 (Official Forensic Verification Audit Report) for Student: SMITHA M (732225CI051)
+[2026-08-19 08:00:12,223] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci052 (Official Forensic Verification Audit Report) for Student: SORNA RIYAS J (732225CI052)
+[2026-08-19 08:00:12,272] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci053 (Official Forensic Verification Audit Report) for Student: SUDHARSHAN E (732225CI053)
+[2026-08-19 08:00:12,325] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci054 (Official Forensic Verification Audit Report) for Student: SURYAKUMAR J (732225CI054)
+[2026-08-19 08:00:12,372] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci055 (Official Forensic Verification Audit Report) for Student: SWEDHAN S (732225CI055)
+[2026-08-19 08:00:12,420] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci056 (Official Forensic Verification Audit Report) for Student: THAMARAIKANNAN M R (732225CI056)
+[2026-08-19 08:00:12,468] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci057 (Official Forensic Verification Audit Report) for Student: THIVYASRUTHI G D (732225CI057)
+[2026-08-19 08:00:12,515] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci058 (Official Forensic Verification Audit Report) for Student: THIYA S (732225CI058)
+[2026-08-19 08:00:12,561] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci059 (Official Forensic Verification Audit Report) for Student: VANITHA E (732225CI059)
+[2026-08-19 08:00:12,605] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci060 (Official Forensic Verification Audit Report) for Student: VANITHA S (732225CI060)
+[2026-08-19 08:00:12,652] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci061 (Official Forensic Verification Audit Report) for Student: YALENEY POOFSIN C (732225CI061)
+[2026-08-19 08:00:12,698] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732225ci062 (Official Forensic Verification Audit Report) for Student: YAZHINI M P (732225CI062)
+[2026-08-19 08:00:12,746] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc001 (Official Forensic Verification Audit Report) for Student: AATHAVAN T (23CC001)
+[2026-08-19 08:00:12,791] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc002 (Official Forensic Verification Audit Report) for Student: S.ABIRAMI (23CC002)
+[2026-08-19 08:00:12,837] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc003 (Official Forensic Verification Audit Report) for Student: ASWIN P (23CC003)
+[2026-08-19 08:00:12,884] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc005 (Official Forensic Verification Audit Report) for Student: BHARATH I (23CC005)
+[2026-08-19 08:00:12,935] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc007 (Official Forensic Verification Audit Report) for Student: DEEPADHARSHINI C (23CC007)
+[2026-08-19 08:00:12,983] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc009 (Official Forensic Verification Audit Report) for Student: DEEPAKKUMAR E (23CC009)
+[2026-08-19 08:00:13,039] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc010 (Official Forensic Verification Audit Report) for Student: DEEPAKKUMAR M (23CC010)
+[2026-08-19 08:00:13,084] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc013 (Official Forensic Verification Audit Report) for Student: ENIYAVAN R (23CC013)
+[2026-08-19 08:00:13,132] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc017 (Official Forensic Verification Audit Report) for Student: JANARANSHINI P (23CC017)
+[2026-08-19 08:00:13,185] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc020 (Official Forensic Verification Audit Report) for Student: KANISHAA.K.S (23CC020)
+[2026-08-19 08:00:13,239] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc021 (Official Forensic Verification Audit Report) for Student: KANISKA N J (23CC021)
+[2026-08-19 08:00:13,294] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc023 (Official Forensic Verification Audit Report) for Student: KAVINRAJAN K (23CC023)
+[2026-08-19 08:00:13,345] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc025 (Official Forensic Verification Audit Report) for Student: KEERTHANA B (23CC025)
+[2026-08-19 08:00:13,393] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc031 (Official Forensic Verification Audit Report) for Student: MOWNAVARTHINI A L (23CC031)
+[2026-08-19 08:00:13,440] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc038 (Official Forensic Verification Audit Report) for Student: PRAVEEN KUMAR J (23CC038)
+[2026-08-19 08:00:13,489] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc039 (Official Forensic Verification Audit Report) for Student: PRAVEEN VENKATESH A (23CC039)
+[2026-08-19 08:00:13,537] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc042 (Official Forensic Verification Audit Report) for Student: PRIYADHARSHINI K (23CC042)
+[2026-08-19 08:00:13,587] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc043 (Official Forensic Verification Audit Report) for Student: RAGAVAN S (23CC043)
+[2026-08-19 08:00:13,636] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc044 (Official Forensic Verification Audit Report) for Student: RAM PRAKASH S (23CC044)
+[2026-08-19 08:00:13,692] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc045 (Official Forensic Verification Audit Report) for Student: RATHEESH S (23CC045)
+[2026-08-19 08:00:13,742] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc046 (Official Forensic Verification Audit Report) for Student: RITHIKA P (23CC046)
+[2026-08-19 08:00:13,793] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc047 (Official Forensic Verification Audit Report) for Student: SARAVANAN R (23CC047)
+[2026-08-19 08:00:13,845] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc050 (Official Forensic Verification Audit Report) for Student: SRIVIDHYA S (23CC050)
+[2026-08-19 08:00:13,894] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc051 (Official Forensic Verification Audit Report) for Student: SRIRAM.S (23CC051)
+[2026-08-19 08:00:13,940] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc052 (Official Forensic Verification Audit Report) for Student: STEFFY MARTINA P (23CC052)
+[2026-08-19 08:00:13,992] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc053 (Official Forensic Verification Audit Report) for Student: SUBITHA P S (23CC053)
+[2026-08-19 08:00:14,042] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc056 (Official Forensic Verification Audit Report) for Student: VIGNESH J (23CC056)
+[2026-08-19 08:00:14,089] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23cc059 (Official Forensic Verification Audit Report) for Student: WASIM M (23CC059)
+[2026-08-19 08:00:14,137] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci001 (Official Forensic Verification Audit Report) for Student: AADHISH S B (732224CI001)
+[2026-08-19 08:00:14,187] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci004 (Official Forensic Verification Audit Report) for Student: ABISHEK C (732224CI004)
+[2026-08-19 08:00:14,238] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci005 (Official Forensic Verification Audit Report) for Student: AISHWARYA E (732224CI005)
+[2026-08-19 08:00:14,289] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci006 (Official Forensic Verification Audit Report) for Student: AKKSHAYAA K (732224CI006)
+[2026-08-19 08:00:14,338] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci007 (Official Forensic Verification Audit Report) for Student: ANU SRI S (732224CI007)
+[2026-08-19 08:00:14,413] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci008 (Official Forensic Verification Audit Report) for Student: BHARATH K (732224CI008)
+[2026-08-19 08:00:14,469] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci010 (Official Forensic Verification Audit Report) for Student: DIVYA S (732224CI010)
+[2026-08-19 08:00:14,522] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci011 (Official Forensic Verification Audit Report) for Student: ELAVARASAN B (732224CI011)
+[2026-08-19 08:00:14,573] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci012 (Official Forensic Verification Audit Report) for Student: GUHAN D (732224CI012)
+[2026-08-19 08:00:14,623] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci013 (Official Forensic Verification Audit Report) for Student: HARISH S (732224CI013)
+[2026-08-19 08:00:14,667] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci014 (Official Forensic Verification Audit Report) for Student: JANANI PRIYA V (732224CI014)
+[2026-08-19 08:00:14,716] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci015 (Official Forensic Verification Audit Report) for Student: JESRA BEGAM ABDUL RAHUMAN (732224CI015)
+[2026-08-19 08:00:14,763] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci016 (Official Forensic Verification Audit Report) for Student: KABILESH R (732224CI016)
+[2026-08-19 08:00:14,808] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci017 (Official Forensic Verification Audit Report) for Student: KANNIGA PARAMESWARI S B (732224CI017)
+[2026-08-19 08:00:14,852] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci018 (Official Forensic Verification Audit Report) for Student: KARTHEESHWAR T (732224CI018)
+[2026-08-19 08:00:14,906] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci019 (Official Forensic Verification Audit Report) for Student: KAVINRAJ R (732224CI019)
+[2026-08-19 08:00:14,958] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci021 (Official Forensic Verification Audit Report) for Student: LASHMEE SRI C B (732224CI021)
+[2026-08-19 08:00:15,019] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci022 (Official Forensic Verification Audit Report) for Student: LOGESH M S (732224CI022)
+[2026-08-19 08:00:15,077] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci023 (Official Forensic Verification Audit Report) for Student: MADHANKUMAR K (732224CI023)
+[2026-08-19 08:00:15,133] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci024 (Official Forensic Verification Audit Report) for Student: MADHANRAJ A (732224CI024)
+[2026-08-19 08:00:15,194] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci025 (Official Forensic Verification Audit Report) for Student: MADHESWARAN P (732224CI025)
+[2026-08-19 08:00:15,251] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci026 (Official Forensic Verification Audit Report) for Student: MEENA E (732224CI026)
+[2026-08-19 08:00:15,303] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci028 (Official Forensic Verification Audit Report) for Student: MOHANA PRASATH S (732224CI028)
+[2026-08-19 08:00:15,360] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci029 (Official Forensic Verification Audit Report) for Student: MYTHREYAN K (732224CI029)
+[2026-08-19 08:00:15,417] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci030 (Official Forensic Verification Audit Report) for Student: NANDHINI G (732224CI030)
+[2026-08-19 08:00:15,469] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci031 (Official Forensic Verification Audit Report) for Student: NAVANITH S R (732224CI031)
+[2026-08-19 08:00:15,525] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci032 (Official Forensic Verification Audit Report) for Student: NAVEEN KUMAR D (732224CI032)
+[2026-08-19 08:00:15,578] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci033 (Official Forensic Verification Audit Report) for Student: NAVEEN R (732224CI033)
+[2026-08-19 08:00:15,631] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci034 (Official Forensic Verification Audit Report) for Student: NISHA S (732224CI034)
+[2026-08-19 08:00:15,684] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci035 (Official Forensic Verification Audit Report) for Student: NISHANTH S (732224CI035)
+[2026-08-19 08:00:15,736] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci036 (Official Forensic Verification Audit Report) for Student: PAVITHRAA M (732224CI036)
+[2026-08-19 08:00:15,787] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci037 (Official Forensic Verification Audit Report) for Student: PRAJIN SANKAR A U (732224CI037)
+[2026-08-19 08:00:15,837] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci038 (Official Forensic Verification Audit Report) for Student: PRAVEEN S (732224CI038)
+[2026-08-19 08:00:15,889] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci039 (Official Forensic Verification Audit Report) for Student: PREMKUMAR K (732224CI039)
+[2026-08-19 08:00:15,940] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci040 (Official Forensic Verification Audit Report) for Student: RAGHAVAN G (732224CI040)
+[2026-08-19 08:00:15,990] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci041 (Official Forensic Verification Audit Report) for Student: RAGUL J M (732224CI041)
+[2026-08-19 08:00:16,047] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci042 (Official Forensic Verification Audit Report) for Student: RAHUL KUMAR L (732224CI042)
+[2026-08-19 08:00:16,084] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 5), Last: Contest 514 (Session ID 16)
+[2026-08-19 08:00:16,099] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci043 (Official Forensic Verification Audit Report) for Student: RANJITH KUMAR C (732224CI043)
+[2026-08-19 08:00:16,152] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci044 (Official Forensic Verification Audit Report) for Student: RITHANYA S (732224CI044)
+[2026-08-19 08:00:16,216] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci045 (Official Forensic Verification Audit Report) for Student: ROHITH S (732224CI045)
+[2026-08-19 08:00:16,270] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci046 (Official Forensic Verification Audit Report) for Student: ROJASRI S (732224CI046)
+[2026-08-19 08:00:16,305] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 5), Last: Contest 514 (Session ID 16)
+[2026-08-19 08:00:16,318] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci047 (Official Forensic Verification Audit Report) for Student: RUPESH S NAIR (732224CI047)
+[2026-08-19 08:00:16,384] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci048 (Official Forensic Verification Audit Report) for Student: SAI SIDDHARDH S (732224CI048)
+[2026-08-19 08:00:16,463] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci049 (Official Forensic Verification Audit Report) for Student: SANJAY G (732224CI049)
+[2026-08-19 08:00:16,530] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci050 (Official Forensic Verification Audit Report) for Student: SATHYANARAYANAN R (732224CI050)
+[2026-08-19 08:00:16,588] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci051 (Official Forensic Verification Audit Report) for Student: SIDDAESHWAR K (732224CI051)
+[2026-08-19 08:00:16,642] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci052 (Official Forensic Verification Audit Report) for Student: SUDHARSAN B (732224CI052)
+[2026-08-19 08:00:16,697] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci053 (Official Forensic Verification Audit Report) for Student: SUDHARSHAN J (732224CI053)
+[2026-08-19 08:00:16,751] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci054 (Official Forensic Verification Audit Report) for Student: SUSIDHARAN S (732224CI054)
+[2026-08-19 08:00:16,807] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci055 (Official Forensic Verification Audit Report) for Student: VELMURUGAN T (732224CI055)
+[2026-08-19 08:00:16,859] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224ci056 (Official Forensic Verification Audit Report) for Student: VIJAY PRABHU.M (732224CI056)
+[2026-08-19 08:00:16,914] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224cir01 (Official Forensic Verification Audit Report) for Student: SOWMIYA K (732224CIR01)
+[2026-08-19 08:00:16,964] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci002 (Official Forensic Verification Audit Report) for Student: AJAY VISHALESWAR (23CI002)
+[2026-08-19 08:00:17,020] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci004 (Official Forensic Verification Audit Report) for Student: BHUVANADHARSHINI C (23CI004)
+[2026-08-19 08:00:17,101] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci006 (Official Forensic Verification Audit Report) for Student: DHARNEESH P (23CI006)
+[2026-08-19 08:00:17,175] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci007 (Official Forensic Verification Audit Report) for Student: DIVYA A (23CI007)
+[2026-08-19 08:00:17,240] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci010 (Official Forensic Verification Audit Report) for Student: GOKILA.G (23CI010)
+[2026-08-19 08:00:17,289] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci012 (Official Forensic Verification Audit Report) for Student: GOWCIKA U (23CI012)
+[2026-08-19 08:00:17,342] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci013 (Official Forensic Verification Audit Report) for Student: HAMSHA N (23CI013)
+[2026-08-19 08:00:17,397] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci014 (Official Forensic Verification Audit Report) for Student: HAREE D (23CI014)
+[2026-08-19 08:00:17,447] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci015 (Official Forensic Verification Audit Report) for Student: HARINI S (23CI015)
+[2026-08-19 08:00:17,496] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci018 (Official Forensic Verification Audit Report) for Student: JAYASURYA P (23CI018)
+[2026-08-19 08:00:17,546] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci021 (Official Forensic Verification Audit Report) for Student: KAMALA VISHNU G (23CI021)
+[2026-08-19 08:00:17,596] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci022 (Official Forensic Verification Audit Report) for Student: KARMUKILAN A (23CI022)
+[2026-08-19 08:00:17,650] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci023 (Official Forensic Verification Audit Report) for Student: KARTHIK.V (23CI023)
+[2026-08-19 08:00:17,706] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci025 (Official Forensic Verification Audit Report) for Student: KARUNYA C (23CI025)
+[2026-08-19 08:00:17,754] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci027 (Official Forensic Verification Audit Report) for Student: KAVI ISHWARRYA S K (23CI027)
+[2026-08-19 08:00:17,807] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci028 (Official Forensic Verification Audit Report) for Student: KAVIN V (23CI028)
+[2026-08-19 08:00:17,858] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci029 (Official Forensic Verification Audit Report) for Student: KAVIYARASU S (23CI029)
+[2026-08-19 08:00:17,915] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci030 (Official Forensic Verification Audit Report) for Student: KEERTHANA.K (23CI030)
+[2026-08-19 08:00:17,971] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci034 (Official Forensic Verification Audit Report) for Student: MOHAMED AQDHAS U (23CI034)
+[2026-08-19 08:00:18,038] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci038 (Official Forensic Verification Audit Report) for Student: PRABHAKARAN . S (23CI038)
+[2026-08-19 08:00:18,096] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci044 (Official Forensic Verification Audit Report) for Student: RAVI BHARATHI.J (23CI044)
+[2026-08-19 08:00:18,149] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci046 (Official Forensic Verification Audit Report) for Student: ROHITH T (23CI046)
+[2026-08-19 08:00:18,221] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci050 (Official Forensic Verification Audit Report) for Student: SATHISHKUMAR.S (23CI050)
+[2026-08-19 08:00:18,276] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci053 (Official Forensic Verification Audit Report) for Student: SUJITH K (23CI053)
+[2026-08-19 08:00:18,330] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci055 (Official Forensic Verification Audit Report) for Student: G THEJASWINI (23CI055)
+[2026-08-19 08:00:18,378] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci058 (Official Forensic Verification Audit Report) for Student: VICHITHRA.V (23CI058)
+[2026-08-19 08:00:18,423] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_23ci001 (Official Forensic Verification Audit Report) for Student: AAKASH SHIVA KB (23CI001)
+[2026-08-19 08:00:18,476] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224aitest (Official Forensic Verification Audit Report) for Student: AI Test Student (732224AITEST)
+[2026-08-19 08:00:18,527] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_732224test01 (Official Forensic Verification Audit Report) for Student: OTP Test Student (732224TEST01)
+[2026-08-19 08:00:22,301] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 08:00:22,701] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-DOESNOTEXIST999, reg=None
+[2026-08-19 08:00:22,706] [WARNING] [leetcode_tracker]: [certificate_pdf_resolve_failed] Certificate not found for id=CERT-DOESNOTEXIST999
+[2026-08-19 08:00:22,716] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REVOKED01, reg=None
+[2026-08-19 08:00:22,717] [WARNING] [leetcode_tracker]: [certificate_pdf_revoked] Attempt to download revoked certificate CERT-REVOKED01
+[2026-08-19 08:00:22,725] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REGEN001, reg=None
+[2026-08-19 08:00:22,728] [INFO] [leetcode_tracker]: [certificate_pdf_resolved_from_cache] Size=57315 bytes for CERT-REGEN001
+[2026-08-19 08:00:22,729] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched NANTHISH_S_Weekly_Contest_515_Certificate.pdf (57315 bytes)
+[2026-08-19 08:00:22,737] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=cert-variant1, reg=None
+[2026-08-19 08:00:22,739] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-VARIANT1 (NANTHISH S)
+[2026-08-19 08:00:22,802] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-VARIANT1 (Official Forensic Verification Audit Report) for Student: NANTHISH S (732224CC031)
+[2026-08-19 08:00:22,805] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 58154 bytes for CERT-VARIANT1
+[2026-08-19 08:00:22,806] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched NANTHISH_S_Weekly_Contest_515_Certificate.pdf (58154 bytes)
+[2026-08-19 08:00:22,810] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=VARIANT1, reg=None
+[2026-08-19 08:00:22,812] [INFO] [leetcode_tracker]: [certificate_pdf_resolved_from_cache] Size=58154 bytes for CERT-VARIANT1
+[2026-08-19 08:00:22,812] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched NANTHISH_S_Weekly_Contest_515_Certificate.pdf (58154 bytes)
+[2026-08-19 08:00:22,820] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=732224CC031, reg=None
+[2026-08-19 08:00:22,828] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-732224CC031 (NANTHISH S)
+[2026-08-19 08:00:22,882] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-732224CC031 (Official Forensic Verification Audit Report) for Student: NANTHISH S (732224CC031)
+[2026-08-19 08:00:22,883] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 58429 bytes for CERT-732224CC031
+[2026-08-19 08:00:22,883] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched NANTHISH_S_Weekly_Contest_515_Certificate.pdf (58429 bytes)
+[2026-08-19 08:00:22,935] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-TEST1234 (Official Forensic Verification Audit Report) for Student: NANTHISH S (732224CC031)
+[2026-08-19 08:00:22,946] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-MATCHING01 found=True status=VALID
+[2026-08-19 08:00:22,951] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-MATCHING01, reg=None
+[2026-08-19 08:00:22,952] [INFO] [leetcode_tracker]: [certificate_pdf_missing_regenerating] Re-rendering official PDF for CERT-MATCHING01 (PRIYA DHARSHINI)
+[2026-08-19 08:00:23,003] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-MATCHING01 (Official Forensic Verification Audit Report) for Student: PRIYA DHARSHINI (732224CC045)
+[2026-08-19 08:00:23,004] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 58173 bytes for CERT-MATCHING01
+[2026-08-19 08:00:23,005] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched PRIYA_DHARSHINI_Weekly_Contest_515_Certificate.pdf (58173 bytes)
+[2026-08-19 08:07:08,808] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 08:07:42,823] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 08:08:14,962] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 08:19:30,909] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 08:19:30,910] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 08:19:31,207] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 08:19:31,210] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth.
+[2026-08-19 08:19:31,216] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 08:19:31,237] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 08:19:31,239] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 08:19:31,239] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 08:19:31,425] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 08:19
+[2026-08-19 08:19:31,425] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 08:19:31,627] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 302 students.
+[2026-08-19 08:19:43,690] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 08:19:44,116] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 08:19:44,138] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 08:19:44,189] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 08:19:44,771] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 08:19:44,991] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 08:20:13,882] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 08:20:13,885] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 08:20:43,890] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 08:20:43,897] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 08:21:13,889] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 08:21:13,892] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 08:21:43,885] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 08:21:43,888] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 08:22:13,888] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 08:22:13,894] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 08:22:43,884] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 08:22:43,888] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 08:24:11,878] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 08:24:11,881] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 08:25:12,896] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 08:25:12,899] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 08:26:12,887] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 08:26:12,891] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 08:27:12,889] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 08:27:12,895] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 08:28:12,890] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 08:28:12,893] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 08:29:12,896] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 08:29:12,902] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 08:30:12,894] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 08:30:12,900] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 08:30:55,421] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 08:30:55,427] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 08:30:57,930] [INFO] [leetcode_tracker]: [SYNC_REQUEST_RECEIVED] Triggered full sync request from: admin
+[2026-08-19 08:30:57,931] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 08:30:57,940] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 08:30:57,941] [INFO] [leetcode_tracker]: [SYNC] Creating session: SYNC-20260819-030057
+[2026-08-19 08:30:57,950] [INFO] [leetcode_tracker]: [QUEUE] Job queued: SYNC-20260819-030057
+[2026-08-19 08:30:57,951] [INFO] [leetcode_tracker]: [SYNC_JOB_CREATED] Sync job status: RUNNING | job_id: SYNC-20260819-030057
+[2026-08-19 08:30:57,952] [INFO] [leetcode_tracker]: [WORKER] Worker started for job: SYNC-20260819-030057
+[2026-08-19 08:30:57,959] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Starting streaming per-student sync for 302 students (Job: SYNC-20260819-030057)
+[2026-08-19 08:31:13,467] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 08:31:13,482] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 08:31:39,454] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Recalculating college/department/year rankings post-sync...
+[2026-08-19 08:31:39,454] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-19 08:31:40,572] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 08:31:40,576] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Streaming sync completed in 42.62s. Synced=237, Invalid=44, Pending=21, Failed=0
+[2026-08-19 08:31:40,592] [INFO] [leetcode_tracker]: [SYNC] Application cache invalidated post-sync.
+[2026-08-19 08:31:43,469] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 08:31:43,487] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 08:31:45,819] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 08:31:45,820] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 08:31:46,078] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 08:31:46,098] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 08:31:46,381] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 08:31:46,397] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 08:31:46,456] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 08:31:46,481] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 08:31:49,626] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 08:31:49,628] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 10:14:25,785] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 1 (2026-27)...
+[2026-08-19 10:14:26,078] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 10:21:09,245] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 33 (2026-27)...
+[2026-08-19 10:21:09,664] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 10:33:42,930] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 10:33:43,281] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 10:42:25,975] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-89572] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 10:42:25,984] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-47916] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 10:42:36,425] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-44600] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 10:42:36,431] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-53138] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 10:42:36,441] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-79632] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 10:42:36,449] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-36452] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 10:42:36,456] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-60650] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 10:42:36,463] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-37371] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 10:42:36,474] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-35137] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 10:42:36,481] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-44493] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 10:42:36,487] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-72385] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 10:42:36,492] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-11007] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 10:42:36,496] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-44145] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 10:42:36,499] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-51800] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 10:42:36,504] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-21102] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 10:42:36,507] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-55069] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 11:04:00,851] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST_URL_001
+[2026-08-19 11:04:02,106] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:04:03,939] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:04:03,947] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_001 | Old URL: 'https://leetcode.com/u/bharath_k/' | New URL: 'https://leetcode.com/u/bharath_k/' | Old Username: 'bharath_k' | New Username: 'bharath_k' | Fetch Started: 2026-08-19T05:33:50.597421Z | Fetch Completed: 2026-08-19T05:34:03.945285Z | Fetched Username: 'bharath_k' | Result Status: SUCCESS | Error: 'None' | Timestamp: 2026-08-19T05:34:03.945285Z
+[2026-08-19 11:04:06,473] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:04:07,829] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:04:07,835] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_002 | Old URL: 'https://leetcode.com/u/nanthish_s/' | New URL: 'https://leetcode.com/u/nanthish_s/' | Old Username: 'nanthish_s' | New Username: 'nanthish_s' | Fetch Started: 2026-08-19T05:34:03.970539Z | Fetch Completed: 2026-08-19T05:34:07.834241Z | Fetched Username: 'nanthish_s' | Result Status: INVALID_USERNAME | Error: 'LeetCode profile not found (404)' | Timestamp: 2026-08-19T05:34:07.834241Z
+[2026-08-19 11:04:12,263] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST_URL_003
+[2026-08-19 11:04:12,776] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:04:14,217] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:04:14,222] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_003 | Old URL: 'https://invalid-website.com/not_leetcode' | New URL: 'https://leetcode.com/u/HTTPs/' | Old Username: 'None' | New Username: 'HTTPs' | Fetch Started: 2026-08-19T05:34:07.856659Z | Fetch Completed: 2026-08-19T05:34:14.221622Z | Fetched Username: 'HTTPs' | Result Status: SUCCESS | Error: 'None' | Timestamp: 2026-08-19T05:34:14.221622Z
+[2026-08-19 11:04:18,869] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:04:19,265] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:04:19,268] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_004 | Old URL: 'https://leetcode.com/u/this_user_definitely_does_not_exist_99999/' | New URL: 'https://leetcode.com/u/this_user_definitely_does_not_exist/' | Old Username: 'this_user_definitely_does_not_exist_99999' | New Username: 'this_user_definitely_does_not_exist' | Fetch Started: 2026-08-19T05:34:14.241243Z | Fetch Completed: 2026-08-19T05:34:19.267656Z | Fetched Username: 'this_user_definitely_does_not_exist' | Result Status: INVALID_USERNAME | Error: 'LeetCode profile not found (404)' | Timestamp: 2026-08-19T05:34:19.267656Z
+[2026-08-19 11:04:26,684] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST_URL_006
+[2026-08-19 11:04:30,889] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:04:32,736] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:04:32,744] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_006 | Old URL: 'https://leetcode.com/u/bharath_k/' | New URL: 'https://leetcode.com/u/bharath_k/' | Old Username: 'bharath_k' | New Username: 'bharath_k' | Fetch Started: 2026-08-19T05:34:19.278036Z | Fetch Completed: 2026-08-19T05:34:32.742906Z | Fetched Username: 'bharath_k' | Result Status: SUCCESS | Error: 'None' | Timestamp: 2026-08-19T05:34:32.742906Z
+[2026-08-19 11:04:38,324] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST_URL_006
+[2026-08-19 11:04:38,762] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:04:40,588] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:04:40,596] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_006 | Old URL: 'https://leetcode.com/u/bharath_k/' | New URL: 'https://leetcode.com/u/bharath_k/' | Old Username: 'bharath_k' | New Username: 'bharath_k' | Fetch Started: 2026-08-19T05:34:32.748163Z | Fetch Completed: 2026-08-19T05:34:40.594729Z | Fetched Username: 'bharath_k' | Result Status: SUCCESS | Error: 'None' | Timestamp: 2026-08-19T05:34:40.594729Z
+[2026-08-19 11:04:40,621] [WARNING] [leetcode_tracker]: [SINGLE_SYNC_LOCKED] Fetch already in progress for student_id=311
+[2026-08-19 11:04:50,559] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST_URL_009
+[2026-08-19 11:04:51,062] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:04:52,469] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:04:52,475] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_009 | Old URL: 'https://leetcode.com/u/bharath_k/' | New URL: 'https://leetcode.com/u/bharath_k/' | Old Username: 'bharath_k' | New Username: 'bharath_k' | Fetch Started: 2026-08-19T05:34:40.662327Z | Fetch Completed: 2026-08-19T05:34:52.473835Z | Fetched Username: 'bharath_k' | Result Status: SUCCESS | Error: 'None' | Timestamp: 2026-08-19T05:34:52.473835Z
+[2026-08-19 11:04:57,737] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'bharath_k' (Attempt 1/3)
+[2026-08-19 11:05:08,691] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST_URL_001
+[2026-08-19 11:05:09,995] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:05:11,655] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:05:11,664] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_001 | Old URL: 'https://leetcode.com/u/bharath_k/' | New URL: 'https://leetcode.com/u/bharath_k/' | Old Username: 'bharath_k' | New Username: 'bharath_k' | Fetch Started: 2026-08-19T05:34:52.654457Z | Fetch Completed: 2026-08-19T05:35:11.661537Z | Fetched Username: 'bharath_k' | Result Status: SUCCESS | Error: 'None' | Timestamp: 2026-08-19T05:35:11.661537Z
+[2026-08-19 11:05:13,806] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:05:15,404] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:05:15,409] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_002 | Old URL: 'https://leetcode.com/u/nanthish_s/' | New URL: 'https://leetcode.com/u/nanthish_s/' | Old Username: 'nanthish_s' | New Username: 'nanthish_s' | Fetch Started: 2026-08-19T05:35:11.693494Z | Fetch Completed: 2026-08-19T05:35:15.407736Z | Fetched Username: 'nanthish_s' | Result Status: INVALID_USERNAME | Error: 'LeetCode profile not found (404)' | Timestamp: 2026-08-19T05:35:15.407736Z
+[2026-08-19 11:05:15,436] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_003 | Old URL: 'https://invalid-website.com/not_leetcode' | New URL: 'https://invalid-website.com/not_leetcode' | Old Username: 'None' | New Username: None | Fetch Started: 2026-08-19T05:35:15.427801Z | Fetch Completed: 2026-08-19T05:35:15.434276Z | Fetched Username: None | Result Status: URL_INVALID | Error: 'Invalid LeetCode URL format: 'https://invalid-website.com/not_leetcode'' | Timestamp: 2026-08-19T05:35:15.435964Z
+[2026-08-19 11:05:19,678] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:05:21,486] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:05:21,494] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_004 | Old URL: 'https://leetcode.com/u/this_user_definitely_does_not_exist_99999/' | New URL: 'https://leetcode.com/u/this_user_definitely_does_not_exist/' | Old Username: 'this_user_definitely_does_not_exist_99999' | New Username: 'this_user_definitely_does_not_exist' | Fetch Started: 2026-08-19T05:35:15.454487Z | Fetch Completed: 2026-08-19T05:35:21.492599Z | Fetched Username: 'this_user_definitely_does_not_exist' | Result Status: INVALID_USERNAME | Error: 'LeetCode profile not found (404)' | Timestamp: 2026-08-19T05:35:21.492599Z
+[2026-08-19 11:05:30,069] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST_URL_006
+[2026-08-19 11:05:30,478] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:05:32,362] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:05:32,369] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_006 | Old URL: 'https://leetcode.com/u/bharath_k/' | New URL: 'https://leetcode.com/u/bharath_k/' | Old Username: 'bharath_k' | New Username: 'bharath_k' | Fetch Started: 2026-08-19T05:35:21.533323Z | Fetch Completed: 2026-08-19T05:35:32.367800Z | Fetched Username: 'bharath_k' | Result Status: SUCCESS | Error: 'None' | Timestamp: 2026-08-19T05:35:32.367800Z
+[2026-08-19 11:05:36,996] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST_URL_006
+[2026-08-19 11:05:45,122] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:05:46,626] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:05:46,630] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_001 | Old URL: 'https://leetcode.com/u/bharath_k/' | New URL: 'https://leetcode.com/u/bharath_k/' | Old Username: 'bharath_k' | New Username: 'bharath_k' | Fetch Started: 2026-08-19T05:35:32.371937Z | Fetch Completed: 2026-08-19T05:35:46.629544Z | Fetched Username: 'bharath_k' | Result Status: SUCCESS | Error: 'None' | Timestamp: 2026-08-19T05:35:46.629544Z
+[2026-08-19 11:05:46,644] [WARNING] [leetcode_tracker]: [SINGLE_SYNC_LOCKED] Fetch already in progress for student_id=311
+[2026-08-19 11:05:49,013] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST_URL_009
+[2026-08-19 11:05:49,424] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:05:50,973] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST_URL_009
+[2026-08-19 11:05:51,281] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:05:51,296] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_009 | Old URL: 'https://leetcode.com/u/bharath_k/' | New URL: 'https://leetcode.com/u/bharath_k/' | Old Username: 'bharath_k' | New Username: 'bharath_k' | Fetch Started: 2026-08-19T05:35:46.674749Z | Fetch Completed: 2026-08-19T05:35:51.295103Z | Fetched Username: 'bharath_k' | Result Status: SUCCESS | Error: 'None' | Timestamp: 2026-08-19T05:35:51.295103Z
+[2026-08-19 11:05:52,145] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:05:54,018] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:06:03,231] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:06:04,601] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:06:04,610] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_002 | Old URL: 'https://leetcode.com/u/nanthish_s/' | New URL: 'https://leetcode.com/u/nanthish_s/' | Old Username: 'nanthish_s' | New Username: 'nanthish_s' | Fetch Started: 2026-08-19T05:35:54.078969Z | Fetch Completed: 2026-08-19T05:36:04.608615Z | Fetched Username: 'nanthish_s' | Result Status: INVALID_USERNAME | Error: 'LeetCode profile not found (404)' | Timestamp: 2026-08-19T05:36:04.608615Z
+[2026-08-19 11:06:04,646] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_003 | Old URL: 'https://invalid-website.com/not_leetcode' | New URL: 'https://invalid-website.com/not_leetcode' | Old Username: 'None' | New Username: None | Fetch Started: 2026-08-19T05:36:04.637200Z | Fetch Completed: 2026-08-19T05:36:04.645003Z | Fetched Username: None | Result Status: URL_INVALID | Error: 'Invalid LeetCode URL format: 'https://invalid-website.com/not_leetcode'' | Timestamp: 2026-08-19T05:36:04.646559Z
+[2026-08-19 11:06:05,923] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:06:07,646] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:06:07,654] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_004 | Old URL: 'https://leetcode.com/u/no_exist_profile_xyz_999/' | New URL: 'https://leetcode.com/u/no_exist_profile_xyz_999/' | Old Username: 'no_exist_profile_xyz_999' | New Username: 'no_exist_profile_xyz_999' | Fetch Started: 2026-08-19T05:36:04.666123Z | Fetch Completed: 2026-08-19T05:36:07.652082Z | Fetched Username: 'no_exist_profile_xyz_999' | Result Status: INVALID_USERNAME | Error: 'LeetCode profile not found (404)' | Timestamp: 2026-08-19T05:36:07.652082Z
+[2026-08-19 11:06:13,024] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'bharath_k' (Attempt 1/3)
+[2026-08-19 11:06:14,825] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST_URL_006
+[2026-08-19 11:06:15,275] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:06:15,627] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:06:15,629] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_006 | Old URL: 'https://leetcode.com/u/bharath_k/' | New URL: 'https://leetcode.com/u/bharath_k/' | Old Username: 'bharath_k' | New Username: 'bharath_k' | Fetch Started: 2026-08-19T05:36:07.691417Z | Fetch Completed: 2026-08-19T05:36:15.629373Z | Fetched Username: 'bharath_k' | Result Status: SUCCESS | Error: 'None' | Timestamp: 2026-08-19T05:36:15.629373Z
+[2026-08-19 11:06:25,573] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST_URL_006
+[2026-08-19 11:06:28,159] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:06:28,469] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:06:28,471] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_006 | Old URL: 'https://leetcode.com/u/bharath_k/' | New URL: 'https://leetcode.com/u/bharath_k/' | Old Username: 'bharath_k' | New Username: 'bharath_k' | Fetch Started: 2026-08-19T05:36:15.630520Z | Fetch Completed: 2026-08-19T05:36:28.470981Z | Fetched Username: 'bharath_k' | Result Status: SUCCESS | Error: 'None' | Timestamp: 2026-08-19T05:36:28.470981Z
+[2026-08-19 11:06:28,476] [WARNING] [leetcode_tracker]: [SINGLE_SYNC_LOCKED] Fetch already in progress for student_id=311
+[2026-08-19 11:06:32,323] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST_URL_009
+[2026-08-19 11:06:32,898] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:06:33,204] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:06:33,207] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_009 | Old URL: 'https://leetcode.com/u/bharath_k/' | New URL: 'https://leetcode.com/u/bharath_k/' | Old Username: 'bharath_k' | New Username: 'bharath_k' | Fetch Started: 2026-08-19T05:36:28.508254Z | Fetch Completed: 2026-08-19T05:36:33.207159Z | Fetched Username: 'bharath_k' | Result Status: SUCCESS | Error: 'None' | Timestamp: 2026-08-19T05:36:33.207159Z
+[2026-08-19 11:07:32,129] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST_URL_001
+[2026-08-19 11:07:35,165] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:07:37,145] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:07:37,154] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_001 | Old URL: 'https://leetcode.com/u/bharath_k/' | New URL: 'https://leetcode.com/u/bharath_k/' | Old Username: 'bharath_k' | New Username: 'bharath_k' | Fetch Started: 2026-08-19T05:37:08.116986Z | Fetch Completed: 2026-08-19T05:37:37.152518Z | Fetched Username: 'bharath_k' | Result Status: SUCCESS | Error: 'None' | Timestamp: 2026-08-19T05:37:37.152518Z
+[2026-08-19 11:07:42,281] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:07:44,262] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:07:44,269] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_002 | Old URL: 'https://leetcode.com/u/nanthish_s/' | New URL: 'https://leetcode.com/u/nanthish_s/' | Old Username: 'nanthish_s' | New Username: 'nanthish_s' | Fetch Started: 2026-08-19T05:37:37.187876Z | Fetch Completed: 2026-08-19T05:37:44.267604Z | Fetched Username: 'nanthish_s' | Result Status: INVALID_USERNAME | Error: 'LeetCode profile not found (404)' | Timestamp: 2026-08-19T05:37:44.267604Z
+[2026-08-19 11:07:44,302] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_003 | Old URL: 'https://invalid-website.com/not_leetcode' | New URL: 'https://invalid-website.com/not_leetcode' | Old Username: 'None' | New Username: None | Fetch Started: 2026-08-19T05:37:44.294771Z | Fetch Completed: 2026-08-19T05:37:44.300655Z | Fetched Username: None | Result Status: URL_INVALID | Error: 'Invalid LeetCode URL format: 'https://invalid-website.com/not_leetcode'' | Timestamp: 2026-08-19T05:37:44.302405Z
+[2026-08-19 11:07:49,854] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'no_exist_profile_xyz_999' (Attempt 1/3)
+[2026-08-19 11:07:56,181] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'no_exist_profile_xyz_999' (Attempt 2/3)
+[2026-08-19 11:08:01,803] [WARNING] [leetcode_tracker]: Timeout fetching profile for 'no_exist_profile_xyz_999' (Attempt 3/3)
+[2026-08-19 11:08:01,821] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:08:03,685] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:08:03,694] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_004 | Old URL: 'https://leetcode.com/u/no_exist_profile_xyz_999/' | New URL: 'https://leetcode.com/u/no_exist_profile_xyz_999/' | Old Username: 'no_exist_profile_xyz_999' | New Username: 'no_exist_profile_xyz_999' | Fetch Started: 2026-08-19T05:37:44.323952Z | Fetch Completed: 2026-08-19T05:38:03.692597Z | Fetched Username: 'no_exist_profile_xyz_999' | Result Status: FAILED | Error: 'Profile fetch failed: Network timeout' | Timestamp: 2026-08-19T05:38:03.692597Z
+[2026-08-19 11:08:22,096] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST_URL_006
+[2026-08-19 11:08:23,769] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:08:24,626] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:08:24,628] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_006 | Old URL: 'https://leetcode.com/u/bharath_k/' | New URL: 'https://leetcode.com/u/bharath_k/' | Old Username: 'bharath_k' | New Username: 'bharath_k' | Fetch Started: 2026-08-19T05:38:03.729247Z | Fetch Completed: 2026-08-19T05:38:24.628445Z | Fetched Username: 'bharath_k' | Result Status: SUCCESS | Error: 'None' | Timestamp: 2026-08-19T05:38:24.628445Z
+[2026-08-19 11:08:28,651] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST_URL_006
+[2026-08-19 11:08:29,040] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:08:29,358] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:08:29,360] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_006 | Old URL: 'https://leetcode.com/u/bharath_k/' | New URL: 'https://leetcode.com/u/bharath_k/' | Old Username: 'bharath_k' | New Username: 'bharath_k' | Fetch Started: 2026-08-19T05:38:24.629422Z | Fetch Completed: 2026-08-19T05:38:29.359813Z | Fetched Username: 'bharath_k' | Result Status: SUCCESS | Error: 'None' | Timestamp: 2026-08-19T05:38:29.359813Z
+[2026-08-19 11:08:29,364] [WARNING] [leetcode_tracker]: [SINGLE_SYNC_LOCKED] Fetch already in progress for student_id=311
+[2026-08-19 11:08:31,041] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST_URL_009
+[2026-08-19 11:08:31,489] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:08:31,862] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:08:31,863] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_009 | Old URL: 'https://leetcode.com/u/bharath_k/' | New URL: 'https://leetcode.com/u/bharath_k/' | Old Username: 'bharath_k' | New Username: 'bharath_k' | Fetch Started: 2026-08-19T05:38:29.375392Z | Fetch Completed: 2026-08-19T05:38:31.863442Z | Fetched Username: 'bharath_k' | Result Status: SUCCESS | Error: 'None' | Timestamp: 2026-08-19T05:38:31.863442Z
+[2026-08-19 11:09:57,399] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 11:09:57,400] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 11:09:57,712] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 11:09:57,716] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth.
+[2026-08-19 11:09:57,724] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 11:09:57,726] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 11:09:57,729] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 11:09:57,729] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 11:09:57,926] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 11:09
+[2026-08-19 11:09:57,926] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 11:09:58,148] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 302 students.
+[2026-08-19 11:10:11,272] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 11:10:11,275] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 11:10:11,309] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 11:10:11,607] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 11:10:12,762] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 11:10:12,865] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 11:10:20,967] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 11:10:21,286] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 11:10:21,326] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 3
+[2026-08-19 11:10:21,510] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 2
+[2026-08-19 11:10:27,300] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 11:10:40,212] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 11:10:40,227] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 11:11:01,523] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-27035] AI_COPILOT_QUERY by admin (admin@college.edu)
+[2026-08-19 11:11:10,216] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 11:11:10,235] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 11:11:23,598] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-77551] AI_COPILOT_QUERY by admin (admin@college.edu)
+[2026-08-19 11:11:40,214] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 11:11:40,220] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 11:11:58,291] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 11:12:00,443] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 11:12:00,481] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 11:12:00,538] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 11:12:00,575] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 11:12:00,675] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 11:12:00,698] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 11:12:30,386] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 11:12:30,401] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 11:12:30,854] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 11:12:31,177] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 11:12:31,193] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 3
+[2026-08-19 11:12:31,429] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 2
+[2026-08-19 11:12:34,574] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 11:13:01,194] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 11:13:01,201] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 11:13:31,194] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 11:13:31,201] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 11:14:01,198] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 11:14:01,211] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 11:14:30,384] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 11:14:30,393] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 11:15:00,385] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 11:15:00,409] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 11:15:30,383] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 11:15:30,396] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 11:16:00,377] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 11:16:00,384] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 11:16:31,193] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 11:16:31,196] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 11:17:01,200] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 11:17:01,209] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 11:18:10,198] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 11:18:10,207] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 11:19:10,209] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 11:19:10,225] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 11:20:10,205] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 11:20:10,214] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 11:21:10,196] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 11:21:10,205] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 11:21:31,073] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 11:21:33,941] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 11:21:33,942] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 11:21:34,251] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 11:21:34,256] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth.
+[2026-08-19 11:21:34,262] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 11:21:34,265] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 11:21:34,269] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 11:21:34,270] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 11:21:34,449] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 11:21
+[2026-08-19 11:21:34,450] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 11:21:34,632] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 302 students.
+[2026-08-19 11:21:36,712] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 11:22:00,753] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 11:35:54,237] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 11:35:54,238] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 11:35:54,599] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 11:35:54,606] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth.
+[2026-08-19 11:35:54,618] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 11:35:54,621] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 11:35:54,624] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 11:35:54,624] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 11:35:55,030] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 11:35
+[2026-08-19 11:35:55,031] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 11:35:55,427] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 302 students.
+[2026-08-19 11:35:55,741] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 11:35:55,745] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 11:35:55,759] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 3
+[2026-08-19 11:35:55,762] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 2
+[2026-08-19 11:35:55,762] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 11:35:55,763] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 11:36:10,150] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 11:36:26,188] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 11:36:29,304] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 11:36:29,305] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 11:36:29,747] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 11:36:29,765] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth.
+[2026-08-19 11:36:29,791] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 11:36:29,798] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 11:36:29,809] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 11:36:29,811] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 11:36:30,667] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 11:36
+[2026-08-19 11:36:30,668] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 11:36:31,517] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 302 students.
+[2026-08-19 11:38:02,687] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 11:38:02,688] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 11:38:03,043] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 11:38:03,049] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth.
+[2026-08-19 11:38:03,060] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 11:38:03,063] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 11:38:03,067] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 11:38:03,067] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 11:38:03,331] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 11:38
+[2026-08-19 11:38:03,331] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 11:38:03,582] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 302 students.
+[2026-08-19 11:38:50,065] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 11:38:50,067] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 11:38:50,406] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 11:38:50,411] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth.
+[2026-08-19 11:38:50,417] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 11:38:50,419] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 11:38:50,421] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 11:38:50,422] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 11:38:50,674] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 11:38
+[2026-08-19 11:38:50,674] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 11:38:50,910] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 302 students.
+[2026-08-19 11:40:10,405] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 11:40:10,410] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 11:40:10,740] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 11:40:10,748] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth.
+[2026-08-19 11:40:10,763] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 11:40:10,773] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 11:40:10,778] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 11:40:10,779] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 11:40:10,990] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 11:40
+[2026-08-19 11:40:10,990] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 11:40:12,062] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 302 students.
+[2026-08-19 11:40:26,782] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 11:40:27,142] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-22698] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 11:42:00,966] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 11:42:00,969] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 11:42:01,833] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 11:42:01,844] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth.
+[2026-08-19 11:42:01,862] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 11:42:01,867] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 11:42:01,874] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 11:42:01,875] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 11:42:02,757] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 11:42
+[2026-08-19 11:42:02,758] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 11:42:03,698] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 302 students.
+[2026-08-19 11:42:42,672] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 11:42:42,674] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 11:42:43,008] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 11:42:43,015] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth.
+[2026-08-19 11:42:43,027] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 11:42:43,033] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 11:42:43,035] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 11:42:43,036] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 11:42:43,249] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 11:42
+[2026-08-19 11:42:43,250] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 11:42:43,464] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 302 students.
+[2026-08-19 11:43:26,864] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 11:43:26,866] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 11:43:27,180] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 11:43:27,186] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth.
+[2026-08-19 11:43:27,195] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 11:43:27,197] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 11:43:27,199] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 11:43:27,200] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 11:43:27,417] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 11:43
+[2026-08-19 11:43:27,417] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 11:43:27,628] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 302 students.
+[2026-08-19 11:43:29,914] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 11:44:06,942] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 11:44:10,863] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 11:44:10,865] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 11:44:11,186] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 11:44:11,191] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth.
+[2026-08-19 11:44:11,200] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 11:44:11,202] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 11:44:11,205] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 11:44:11,206] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 11:44:11,436] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 11:44
+[2026-08-19 11:44:11,436] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 11:44:11,676] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 302 students.
+[2026-08-19 11:44:40,842] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 11:44:43,814] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 11:44:43,815] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 11:44:44,155] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 11:44:44,159] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth.
+[2026-08-19 11:44:44,166] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 11:44:44,168] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 11:44:44,170] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 11:44:44,171] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 11:44:44,425] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 11:44
+[2026-08-19 11:44:44,425] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 11:44:44,714] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 302 students.
+[2026-08-19 11:44:54,252] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 11:58:31,991] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 11:58:31,993] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 11:58:32,754] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 11:58:32,769] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth.
+[2026-08-19 11:58:32,797] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 11:58:32,803] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 11:58:32,811] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 11:58:32,812] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 11:58:33,693] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 11:58
+[2026-08-19 11:58:33,694] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 11:58:34,344] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 302 students.
+[2026-08-19 11:58:40,112] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for 732224CI008
+[2026-08-19 11:58:41,056] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 11:58:42,281] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 11:58:42,287] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 235 | Reg No: 732224CI008 | Old URL: 'https://leetcode.com/u/Spidy_42/' | New URL: 'https://leetcode.com/u/Spidy_42/' | Old Username: 'Spidy_42' | New Username: 'Spidy_42' | Fetch Started: 2026-08-19T06:28:34.608325Z | Fetch Completed: 2026-08-19T06:28:42.285937Z | Fetched Username: 'Spidy_42' | Result Status: SUCCESS | Error: 'None' | Timestamp: 2026-08-19T06:28:42.285937Z
+[2026-08-19 12:05:07,164] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 12:05:07,186] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 12:05:08,165] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 12:05:08,177] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 12:05:09,405] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 12:05:09,443] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 12:05:10,309] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 12:05:10,382] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 12:05:10,509] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 12:05:10,706] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 12:05:10,770] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 3
+[2026-08-19 12:05:10,989] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 2
+[2026-08-19 12:05:12,872] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 12:05:38,174] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 12:05:38,194] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 12:06:08,191] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 12:06:08,197] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 12:06:38,198] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 12:06:38,204] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 12:07:08,202] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 12:07:08,210] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 12:07:38,033] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 12:07:42,764] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 12:07:42,766] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 12:07:43,340] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 12:07:43,365] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth.
+[2026-08-19 12:07:43,411] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 12:07:43,440] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 12:07:43,453] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 12:07:43,454] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 12:07:44,360] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 12:07
+[2026-08-19 12:07:44,361] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 12:07:45,427] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 302 students.
+[2026-08-19 12:07:46,406] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 12:07:46,439] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 12:07:46,469] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 12:08:00,859] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 12:08:13,825] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 12:08:13,827] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 12:08:14,165] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 12:08:14,169] [INFO] [leetcode_tracker]: Database contains 302 existing student records. Preserving database single source of truth.
+[2026-08-19 12:08:14,175] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 12:08:14,178] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 12:08:14,182] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 12:08:14,183] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 12:08:14,428] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 12:08
+[2026-08-19 12:08:14,428] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 12:08:14,616] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 302 students.
+[2026-08-19 12:08:14,824] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 12:08:14,832] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 12:08:14,839] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 12:08:17,632] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 12:09:10,205] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 12:09:10,219] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 12:10:10,197] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 12:10:10,216] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 12:11:10,214] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 12:11:10,230] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 12:12:10,208] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 12:12:10,224] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 12:13:10,215] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 12:13:10,228] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 12:14:10,194] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 12:14:10,209] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 12:15:10,219] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 12:15:10,233] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 12:15:42,638] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 12:16:33,092] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 12:16:33,100] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 12:16:33,385] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 12:17:10,203] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 12:17:10,206] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 12:18:35,954] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 12:18:37,450] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 12:18:37,455] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 12:18:41,516] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 12:19:53,963] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 12:19:54,324] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-19 12:20:02,300] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 12:25:32,607] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 12:25:32,719] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 12:25:32,727] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 12:25:33,215] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 12:25:33,229] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 12:25:33,588] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 12:25:33,657] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 12:25:34,387] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 12:25:34,640] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 12:25:34,643] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 12:25:34,710] [INFO] [leetcode_tracker]: [SYNC] Loaded 302 active students
+[2026-08-19 13:54:44,849] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-12714] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 13:54:54,207] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 13:54:55,115] [INFO] [leetcode_tracker]: Duplicate email prevented for hod@test.nec.in under key 1-hod@test.nec.in-WEEKLY_CONTEST.
+[2026-08-19 13:54:58,018] [INFO] [leetcode_tracker]: [BREVO_DELIVERY_SUCCESS] Attempt 1/3 | MessageID: <202608190824.91208144954@smtp-relay.mailin.fr> | Recipient: s*****f@test.nec.in
+[2026-08-19 13:54:58,025] [INFO] [leetcode_tracker]: [REPORT EMAIL DELIVERED] To: staff@test.nec.in | Files: 3 | Students: 0
+[2026-08-19 13:54:58,147] [WARNING] [leetcode_tracker]: Session 1 is 'SCHEDULED'. Auto-email dispatch skipped until FINALIZED.
+[2026-08-19 13:54:58,149] [WARNING] [leetcode_tracker]: Session 2 is 'PENDING'. Auto-email dispatch skipped until FINALIZED.
+[2026-08-19 13:54:58,226] [WARNING] [leetcode_tracker]: Session 1 is 'LIVE'. Auto-email dispatch skipped until FINALIZED.
+[2026-08-19 13:55:03,068] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST_URL_001
+[2026-08-19 13:55:04,296] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-19 14:10:45,026] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 14:10:45,027] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 14:10:45,358] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 14:10:45,363] [INFO] [leetcode_tracker]: Database contains 303 existing student records. Preserving database single source of truth.
+[2026-08-19 14:10:45,372] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 14:10:45,374] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 14:10:45,377] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 14:10:45,377] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 14:10:46,874] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 14:10
+[2026-08-19 14:10:46,874] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 14:10:47,132] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 303 students.
+[2026-08-19 14:10:56,604] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:10:56,891] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 14:10:56,927] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 14:10:57,091] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:10:57,297] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:10:57,608] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:10:59,038] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 14:10:59,346] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 14:10:59,375] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 3
+[2026-08-19 14:10:59,466] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 2
+[2026-08-19 14:11:02,141] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 14:11:26,161] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:11:26,176] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:11:56,162] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:11:56,173] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:12:26,955] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:12:26,961] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:12:56,951] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:12:56,963] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:13:26,960] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:13:26,964] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:13:56,967] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:13:56,975] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:15:07,949] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:15:07,955] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:16:07,962] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:16:07,971] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:16:26,162] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:16:26,173] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:16:56,962] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:16:56,969] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:17:26,959] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:17:26,964] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:17:48,573] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 14:17:48,848] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:17:48,931] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:17:49,149] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 14:17:49,161] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:17:49,190] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 14:17:49,217] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:17:52,367] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 14:17:52,691] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 14:17:55,000] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 14:18:03,535] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 14:18:03,698] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-54347] AI_CONTROL_CENTER_EXECUTION by admin (admin@college.edu)
+[2026-08-19 14:18:12,428] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:18:12,472] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:18:12,692] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:18:12,698] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:18:12,726] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 14:18:12,742] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 14:18:14,553] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 14:18:14,859] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 14:18:22,601] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 14:18:22,603] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 14:18:22,641] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:18:22,732] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:18:22,924] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:18:22,945] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 14:18:22,956] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:18:22,974] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 14:18:24,487] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 14:18:24,488] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 14:18:44,115] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:18:44,156] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:18:44,336] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:18:44,340] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:18:44,420] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 14:18:44,451] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 14:19:14,961] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:19:14,966] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:19:44,970] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:19:44,978] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:20:14,961] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:20:14,978] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:20:27,829] [INFO] [leetcode_tracker]: [BREVO_DELIVERY_SUCCESS] Attempt 1/3 | MessageID: <202608190850.51010219609@smtp-relay.mailin.fr> | Recipient: n*****7@gmail.com
+[2026-08-19 14:20:43,406] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 14:20:43,407] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 14:20:46,229] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 14:20:46,247] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 14:20:46,549] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 14:20:46,553] [INFO] [leetcode_tracker]: Database contains 303 existing student records. Preserving database single source of truth.
+[2026-08-19 14:20:46,559] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 14:20:46,561] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 14:20:46,563] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 14:20:46,564] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 14:20:46,728] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 14:20
+[2026-08-19 14:20:46,728] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 14:20:46,889] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 303 students.
+[2026-08-19 14:20:46,948] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:20:46,952] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:20:49,548] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 14:20:49,574] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 14:20:50,097] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 14:20:50,098] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 14:21:15,392] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 14:21:15,394] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 14:21:15,968] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 14:21:15,979] [INFO] [leetcode_tracker]: Database contains 303 existing student records. Preserving database single source of truth.
+[2026-08-19 14:21:15,997] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 14:21:16,001] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 14:21:16,008] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 14:21:16,008] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 14:21:16,558] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 14:21
+[2026-08-19 14:21:16,558] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 14:21:17,134] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 303 students.
+[2026-08-19 14:21:17,636] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 14:21:17,666] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 14:21:17,667] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:21:17,692] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:21:32,853] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-40295] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 14:21:44,320] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 14:21:44,321] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 14:21:47,105] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 14:21:47,107] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 14:21:47,404] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 14:21:47,408] [INFO] [leetcode_tracker]: Database contains 303 existing student records. Preserving database single source of truth.
+[2026-08-19 14:21:47,414] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 14:21:47,416] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 14:21:47,418] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 14:21:47,419] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 14:21:47,601] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 14:21
+[2026-08-19 14:21:47,601] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 14:21:47,800] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 303 students.
+[2026-08-19 14:21:50,582] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 14:21:50,607] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 14:21:51,524] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-68575] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 14:21:53,037] [INFO] [leetcode_tracker]: [BREVO_DELIVERY_SUCCESS] Attempt 1/3 | MessageID: <202608190851.67617373689@smtp-relay.mailin.fr> | Recipient: n*****7@gmail.com
+[2026-08-19 14:21:53,040] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-60981] CONFIRMED_SEND_EMAIL_ALERT by SYSTEM (system@nandhaengg.org)
+[2026-08-19 14:22:07,969] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:22:07,980] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:22:14,691] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:22:14,699] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:22:42,676] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-79420] AI_CONTROL_CENTER_EXECUTION by admin (admin@college.edu)
+[2026-08-19 14:22:44,115] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:22:44,126] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:23:00,273] [INFO] [leetcode_tracker]: [BREVO_DELIVERY_SUCCESS] Attempt 1/3 | MessageID: <202608190852.34137625291@smtp-relay.mailin.fr> | Recipient: n*****7@gmail.com
+[2026-08-19 14:23:00,277] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-65288] CONFIRMED_SEND_EMAIL_ALERT by admin (admin@college.edu)
+[2026-08-19 14:23:08,903] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 14:23:08,904] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 14:23:12,458] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 14:23:12,460] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 14:23:12,892] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 14:23:12,899] [INFO] [leetcode_tracker]: Database contains 303 existing student records. Preserving database single source of truth.
+[2026-08-19 14:23:12,916] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 14:23:12,920] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 14:23:12,927] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 14:23:12,928] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 14:23:13,442] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 14:23
+[2026-08-19 14:23:13,442] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 14:23:13,874] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 303 students.
+[2026-08-19 14:23:14,755] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 14:23:14,979] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:23:14,992] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:23:15,270] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 14:23:15,942] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-70135] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 14:23:18,160] [INFO] [leetcode_tracker]: [BREVO_DELIVERY_SUCCESS] Attempt 1/3 | MessageID: <202608190853.84359869965@smtp-relay.mailin.fr> | Recipient: n*****7@gmail.com
+[2026-08-19 14:23:18,165] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-59044] CONFIRMED_SEND_EMAIL_ALERT by SYSTEM (system@nandhaengg.org)
+[2026-08-19 14:23:44,126] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:23:44,134] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:23:53,529] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-69917] AI_CONTROL_CENTER_EXECUTION by admin (admin@college.edu)
+[2026-08-19 14:23:56,596] [INFO] [leetcode_tracker]: [BREVO_DELIVERY_SUCCESS] Attempt 1/3 | MessageID: <202608190853.51741284941@smtp-relay.mailin.fr> | Recipient: n*****7@gmail.com
+[2026-08-19 14:23:56,601] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-25710] CONFIRMED_SEND_EMAIL_ALERT by admin (admin@college.edu)
+[2026-08-19 14:24:14,961] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:24:14,966] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:24:34,884] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 14:24:34,885] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 14:24:37,474] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 14:24:37,479] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 14:24:37,768] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 14:24:37,773] [INFO] [leetcode_tracker]: Database contains 303 existing student records. Preserving database single source of truth.
+[2026-08-19 14:24:37,779] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 14:24:37,780] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 14:24:37,782] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 14:24:37,783] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 14:24:37,953] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 14:24
+[2026-08-19 14:24:37,953] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 14:24:38,122] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 303 students.
+[2026-08-19 14:24:40,704] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 14:24:40,721] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 14:24:40,755] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-90317] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 14:24:40,758] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-94981] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 14:24:44,961] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:24:44,973] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:25:14,963] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:25:14,971] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:26:07,957] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:26:07,968] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:27:07,955] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:27:07,963] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:27:29,389] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:27:29,396] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:27:31,248] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-78876] AI_CONTROL_CENTER_EXECUTION by admin (admin@college.edu)
+[2026-08-19 14:27:34,158] [INFO] [leetcode_tracker]: [BREVO_DELIVERY_SUCCESS] Attempt 1/3 | MessageID: <202608190857.10813688736@smtp-relay.mailin.fr> | Recipient: n*****7@gmail.com
+[2026-08-19 14:27:34,165] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-52969] CONFIRMED_SEND_EMAIL_ALERT by admin (admin@college.edu)
+[2026-08-19 14:27:44,959] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:27:45,052] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:28:14,960] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:28:14,964] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:28:44,969] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:28:44,983] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:29:14,960] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:29:14,974] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:30:07,964] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:30:07,978] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:31:07,973] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:31:07,986] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:31:33,117] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:31:33,123] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:31:36,342] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-72055] AI_CONTROL_CENTER_EXECUTION by admin (admin@college.edu)
+[2026-08-19 14:31:39,901] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 14:31:39,902] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 14:31:40,352] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:31:40,365] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:31:40,699] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 14:31:40,736] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 14:31:42,056] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:31:42,125] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:31:46,373] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-13554] AI_CONTROL_CENTER_EXECUTION by admin (admin@college.edu)
+[2026-08-19 14:32:09,447] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-55810] AI_COPILOT_QUERY by admin (admin@college.edu)
+[2026-08-19 14:32:10,351] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:32:10,367] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:32:15,049] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 14:32:15,051] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 14:32:19,378] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 14:32:19,380] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 14:32:19,760] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 14:32:19,764] [INFO] [leetcode_tracker]: Database contains 303 existing student records. Preserving database single source of truth.
+[2026-08-19 14:32:19,771] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 14:32:19,773] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 14:32:19,776] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 14:32:19,776] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 14:32:20,090] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 14:32
+[2026-08-19 14:32:20,091] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 14:32:20,392] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 303 students.
+[2026-08-19 14:32:20,686] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 14:32:20,704] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 14:32:40,991] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:32:41,032] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:33:10,969] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:33:10,995] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:33:40,965] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:33:40,979] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:34:10,962] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:34:10,970] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:34:40,962] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:34:40,970] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:35:56,544] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:35:56,552] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:36:01,463] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:36:01,757] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:36:03,371] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 14:36:03,408] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 14:43:01,081] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 14:43:01,083] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 14:43:04,950] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 14:43:04,952] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 14:43:05,274] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 14:43:05,278] [INFO] [leetcode_tracker]: Database contains 303 existing student records. Preserving database single source of truth.
+[2026-08-19 14:43:05,284] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 14:43:05,286] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 14:43:05,288] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 14:43:05,288] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 14:43:05,473] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 14:43
+[2026-08-19 14:43:05,474] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 14:43:05,631] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 303 students.
+[2026-08-19 14:43:33,560] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 14:43:33,561] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 14:43:33,857] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 14:43:33,864] [INFO] [leetcode_tracker]: Database contains 303 existing student records. Preserving database single source of truth.
+[2026-08-19 14:43:33,871] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 14:43:33,874] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 14:43:33,877] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 14:43:33,878] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 14:43:34,082] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 14:43
+[2026-08-19 14:43:34,083] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 14:43:34,252] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 303 students.
+[2026-08-19 14:44:03,436] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 14:44:03,439] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 14:44:03,741] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 14:44:03,746] [INFO] [leetcode_tracker]: Database contains 303 existing student records. Preserving database single source of truth.
+[2026-08-19 14:44:03,767] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 14:44:03,771] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 14:44:03,774] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 14:44:03,775] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 14:44:03,951] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 14:44
+[2026-08-19 14:44:03,952] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 14:44:04,126] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 303 students.
+[2026-08-19 14:44:32,628] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 14:44:32,630] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 14:44:32,941] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 14:44:32,950] [INFO] [leetcode_tracker]: Database contains 303 existing student records. Preserving database single source of truth.
+[2026-08-19 14:44:32,965] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 14:44:32,977] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 14:44:32,982] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 14:44:32,985] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 14:44:33,232] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 14:44
+[2026-08-19 14:44:33,233] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 14:44:33,441] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 303 students.
+[2026-08-19 14:53:52,596] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 14:53:52,600] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 14:53:52,921] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 14:53:52,926] [INFO] [leetcode_tracker]: Database contains 303 existing student records. Preserving database single source of truth.
+[2026-08-19 14:53:52,933] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 14:53:52,941] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 14:53:52,947] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 14:53:52,949] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 14:53:53,140] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 14:53
+[2026-08-19 14:53:53,140] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 14:53:53,307] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 303 students.
+[2026-08-19 14:54:20,054] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 14:54:20,057] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 14:54:20,628] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 14:54:20,639] [INFO] [leetcode_tracker]: Database contains 303 existing student records. Preserving database single source of truth.
+[2026-08-19 14:54:20,655] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 14:54:20,660] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 14:54:20,665] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 14:54:20,666] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 14:54:21,182] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 14:54
+[2026-08-19 14:54:21,183] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 14:54:21,798] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 303 students.
+[2026-08-19 14:54:35,752] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-35348] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 15:00:13,835] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 15:00:13,848] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:00:13,940] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 15:00:14,271] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:00:15,489] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:00:15,691] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:00:16,540] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-64266] AI_CONTROL_CENTER_EXECUTION by admin (admin@college.edu)
+[2026-08-19 15:00:42,966] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:00:42,997] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:01:12,959] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:01:12,970] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:01:42,967] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:01:42,989] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:02:12,722] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:02:12,736] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:02:17,461] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-85220] AI_CONTROL_CENTER_EXECUTION by admin (admin@college.edu)
+[2026-08-19 15:02:20,200] [INFO] [leetcode_tracker]: [BREVO_DELIVERY_SUCCESS] Attempt 1/3 | MessageID: <202608190932.13512635669@smtp-relay.mailin.fr> | Recipient: n*****7@gmail.com
+[2026-08-19 15:02:20,207] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-61216] CONFIRMED_SEND_EMAIL_ALERT by admin (admin@college.edu)
+[2026-08-19 15:02:24,707] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-29858] AI_CONTROL_CENTER_EXECUTION by admin (admin@college.edu)
+[2026-08-19 15:02:42,953] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:02:42,962] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:03:06,476] [INFO] [leetcode_tracker]: [BREVO_DELIVERY_SUCCESS] Attempt 1/3 | MessageID: <202608190933.10999242198@smtp-relay.mailin.fr> | Recipient: n*****7@gmail.com
+[2026-08-19 15:03:12,963] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:03:12,979] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:03:40,120] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 15:03:40,123] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 15:03:44,038] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 15:03:44,041] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 15:03:44,336] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 15:03:44,341] [INFO] [leetcode_tracker]: Database contains 303 existing student records. Preserving database single source of truth.
+[2026-08-19 15:03:44,348] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 15:03:44,349] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 15:03:44,352] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 15:03:44,353] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 15:03:44,537] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 15:03
+[2026-08-19 15:03:44,540] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 15:03:44,723] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 303 students.
+[2026-08-19 15:03:44,781] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:03:44,793] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:03:47,067] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 15:03:47,094] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 15:03:53,917] [INFO] [leetcode_tracker]: [GMAIL_SMTP_SUCCESS] Email dispatched directly to nanthishvaran17@gmail.com via smtp.gmail.com:587
+[2026-08-19 15:03:59,589] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-33447] AI_CONTROL_CENTER_EXECUTION by SYSTEM (system@nandhaengg.org)
+[2026-08-19 15:04:05,413] [INFO] [leetcode_tracker]: [GMAIL_SMTP_SUCCESS] Email dispatched directly to nanthishvaran17@gmail.com via smtp.gmail.com:587
+[2026-08-19 15:04:05,426] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-53579] CONFIRMED_SEND_EMAIL_ALERT by SYSTEM (system@nandhaengg.org)
+[2026-08-19 15:04:25,699] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:04:25,707] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:04:27,505] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-14332] AI_CONTROL_CENTER_EXECUTION by admin (admin@college.edu)
+[2026-08-19 15:04:35,182] [INFO] [leetcode_tracker]: [GMAIL_SMTP_SUCCESS] Email dispatched directly to nanthishvaran17@gmail.com via smtp.gmail.com:587
+[2026-08-19 15:04:35,191] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-76140] CONFIRMED_SEND_EMAIL_ALERT by admin (admin@college.edu)
+[2026-08-19 15:04:42,955] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:04:42,966] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:05:04,075] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-83709] AI_CONTROL_CENTER_EXECUTION by admin (admin@college.edu)
+[2026-08-19 15:05:12,968] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:05:12,981] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:05:42,956] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:05:43,166] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:07:07,975] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:07:07,993] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:08:07,958] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:08:07,972] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:09:07,968] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:09:07,990] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:10:07,966] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:10:07,980] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:11:07,992] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:11:08,011] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:12:07,958] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:12:07,972] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:13:07,963] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:13:07,977] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:14:07,955] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:14:07,968] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:15:07,963] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:15:07,975] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:16:07,959] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:16:07,972] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:17:07,961] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:17:07,975] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:18:07,959] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:18:07,973] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:19:07,954] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:19:07,967] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:19:50,567] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 15:24:46,014] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 15:28:56,338] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 15:28:56,340] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 15:28:57,630] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 15:28:57,649] [INFO] [leetcode_tracker]: Database contains 303 existing student records. Preserving database single source of truth.
+[2026-08-19 15:28:57,689] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 15:28:57,700] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 15:28:57,716] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 15:28:57,717] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 15:28:58,858] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 15:28
+[2026-08-19 15:28:58,859] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 15:28:59,890] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 303 students.

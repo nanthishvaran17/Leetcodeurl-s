@@ -347,27 +347,55 @@ def send_email(
         except Exception:
             pass
 
-    last_error = None
+    # Priority 1: Direct Gmail SMTP (if SMTP_USERNAME & SMTP_PASSWORD configured in .env)
+    if smtp_user and smtp_pass:
+        try:
+            msg = MIMEMultipart('alternative')
+            msg['From'] = f"Nandha Engineering College — LeetCode Tracker <{from_email}>"
+            msg['To'] = recipient
+            msg['Subject'] = subject
 
-    # Priority 1: RESEND_API_KEY (HTTPS Port 443)
+            if text_body:
+                msg.attach(MIMEText(text_body, 'plain', 'utf-8'))
+            if html_body:
+                msg.attach(MIMEText(html_body, 'html', 'utf-8'))
+
+            if attachments:
+                from email.mime.base import MIMEBase
+                from email import encoders
+                for fname, fbytes in attachments:
+                    part = MIMEBase('application', 'octet-stream')
+                    part.set_payload(fbytes)
+                    encoders.encode_base64(part)
+                    part.add_header('Content-Disposition', f'attachment; filename="{fname}"')
+                    msg.attach(part)
+
+            ctx = ssl.create_default_context()
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=12) as server:
+                server.starttls(context=ctx)
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(from_email, recipient, msg.as_string())
+            
+            logger.info(f"[GMAIL_SMTP_SUCCESS] Email dispatched directly to {recipient} via {smtp_host}:{smtp_port}")
+            return True, None
+        except Exception as smtp_err:
+            logger.warning(f"[GMAIL_SMTP_FAILED] Direct SMTP attempt failed: {smtp_err}. Falling back to HTTPS APIs...")
+
+    # Priority 2: RESEND_API_KEY (HTTPS Port 443)
     if resend_key:
         ok, err = send_email_via_resend(resend_key, from_email, recipient, subject, html_body, attachments, text_body)
         if ok:
             return True, None
         last_error = err
-        logger.warning(f"[EMAIL_ROUTING] Resend HTTPS API failed: {err}. Attempting fallback...")
 
-    # Priority 2: BREVO_API_KEY (HTTPS Port 443)
+    # Priority 3: BREVO_API_KEY (HTTPS Port 443)
     if brevo_key:
         ok, err = send_email_via_brevo(brevo_key, from_email, recipient, subject, html_body, attachments, text_body)
         if ok:
             return True, None
         last_error = err
-        logger.warning(f"[EMAIL_ROUTING] Brevo HTTPS API failed: {err}. Falling back to Gmail SMTP...")
 
-    # Priority 3: Gmail SMTP fallback (Port 587 + STARTTLS)
-    if not smtp_user or not smtp_pass:
-        return False, last_error or "EMAIL_PROVIDER_NOT_CONFIGURED: Set BREVO_API_KEY or SMTP_PASSWORD in environment variables."
+    return False, last_error or "EMAIL_PROVIDER_NOT_CONFIGURED: Failed to deliver email."
 
     msg = MIMEMultipart('alternative')
     msg['From'] = f"Nandha Engineering College — LeetCode Tracker <{from_email}>"

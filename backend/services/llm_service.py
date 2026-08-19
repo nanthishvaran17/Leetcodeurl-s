@@ -85,9 +85,10 @@ class LLMService:
     def _call_ollama_api(api_key: str, prompt: str, system_context: str) -> Optional[str]:
         # Try Ollama Cloud / Open AI compatible endpoint
         endpoints = [
+            ("http://localhost:11434/v1/chat/completions", "llama3.2"),
+            ("http://localhost:11434/api/chat", "llama3.2"),
             ("https://api.ollama.com/v1/chat/completions", "llama3.2"),
-            ("https://ollama.com/api/chat", "llama3.2"),
-            ("http://localhost:11434/api/chat", "llama3.2")
+            ("https://ollama.com/api/chat", "llama3.2")
         ]
 
         headers = {
@@ -102,6 +103,8 @@ class LLMService:
                 {"role": "user", "content": prompt}
             ],
             "stream": False,
+            "max_tokens": 150,
+            "options": {"num_predict": 150},
             "temperature": 0.2
         }
 
@@ -109,13 +112,35 @@ class LLMService:
             try:
                 payload["model"] = model
                 req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers, method='POST')
-                with urllib.request.urlopen(req, timeout=8) as response:
+                with urllib.request.urlopen(req, timeout=18) as response:
                     res_body = response.read().decode('utf-8')
-                    res_json = json.loads(res_body)
-                    if "choices" in res_json and len(res_json["choices"]) > 0:
-                        return res_json["choices"][0]["message"]["content"].strip()
-                    elif "message" in res_json and "content" in res_json["message"]:
-                        return res_json["message"]["content"].strip()
+                    
+                    # 1. Single JSON response
+                    try:
+                        res_json = json.loads(res_body)
+                        if "choices" in res_json and len(res_json["choices"]) > 0:
+                            return res_json["choices"][0]["message"]["content"].strip()
+                        elif "message" in res_json and "content" in res_json["message"]:
+                            return res_json["message"]["content"].strip()
+                    except json.JSONDecodeError:
+                        # 2. JSON Lines streaming response
+                        chunks = []
+                        for line in res_body.strip().split("\n"):
+                            line_str = line.strip()
+                            if not line_str:
+                                continue
+                            try:
+                                chunk = json.loads(line_str)
+                                if "message" in chunk and "content" in chunk["message"]:
+                                    chunks.append(chunk["message"]["content"])
+                                elif "choices" in chunk and len(chunk["choices"]) > 0:
+                                    content = chunk["choices"][0].get("delta", {}).get("content") or chunk["choices"][0].get("message", {}).get("content", "")
+                                    if content:
+                                        chunks.append(content)
+                            except Exception:
+                                pass
+                        if chunks:
+                            return "".join(chunks).strip()
             except Exception as err:
                 logger.debug(f"[LLM_SERVICE_NOTE] Ollama endpoint '{url}' note: {err}")
                 continue

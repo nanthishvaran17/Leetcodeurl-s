@@ -1394,5 +1394,22 @@ class RawDataRecord(Base):
     captured_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, index=True)
 
 
+class AIChatHistory(Base):
+    """
+    Stores all user AI chat queries, AI responses, and metadata in SQLite DB for persistence & auditing.
+    """
+    __tablename__ = "ai_chat_history"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String(100), index=True, nullable=True)
+    user_query = Column(Text, nullable=False)
+    ai_response = Column(Text, nullable=False)
+    mode = Column(String(50), default="operations")
+    data_status = Column(String(50), default="VERIFIED")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+
 
 

@@ -41,6 +41,21 @@ def handle_ai_assistant_query(
         mode=req.mode or "institutional"
     )
 
+    # Save chat entry to SQLite DB
+    try:
+        from backend.models import AIChatHistory
+        chat_log = AIChatHistory(
+            session_id=response_data.get("requestId"),
+            user_query=clean_msg,
+            ai_response=response_data.get("answer", ""),
+            mode=req.mode or "institutional",
+            data_status=response_data.get("dataStatus", "VERIFIED")
+        )
+        db.add(chat_log)
+        db.commit()
+    except Exception:
+        pass
+
     # Security Audit Log for AI Access
     try:
         from backend.services.audit_service import log_admin_action
@@ -70,3 +85,30 @@ def handle_ai_assistant_query(
         dataStatus=response_data.get("dataStatus", "VERIFIED"),
         requestId=response_data.get("requestId", f"ai_{uuid.uuid4().hex[:12]}")
     )
+
+
+@router.get("/history")
+def get_ai_chat_history(
+    limit: int = 20,
+    db: Session = Depends(get_db)
+):
+    """
+    GET /api/ai/history
+    Returns recent saved AI chat interactions from SQLite database.
+    """
+    try:
+        from backend.models import AIChatHistory
+        history = db.query(AIChatHistory).order_by(AIChatHistory.id.desc()).limit(limit).all()
+        return [
+            {
+                "id": f"db_{h.id}",
+                "user_query": h.user_query,
+                "ai_response": h.ai_response,
+                "mode": h.mode,
+                "created_at": h.created_at.strftime("%I:%M %p") if h.created_at else ""
+            }
+            for h in reversed(history)
+        ]
+    except Exception:
+        return []
+

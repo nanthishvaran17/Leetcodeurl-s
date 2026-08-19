@@ -167,7 +167,17 @@ export const App: React.FC = () => {
 
           {activeTab === 'dashboard' && renderDashboardComponent()}
 
-          {activeTab === 'ai-control' && <AIControlCenterPage onNavigateTab={handleTabChange} />}
+          {activeTab === 'ai-control' && (
+            <div className="p-8 text-center space-y-4">
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white">AI Operations Control Center Consolidated into NEC Unified AI Chatbot</h2>
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('open-ai-chat', { detail: { mode: 'operations' } }))}
+                className="px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-bold text-xs"
+              >
+                Open Unified AI Workspace
+              </button>
+            </div>
+          )}
 
           {activeTab === 'growth' && <GrowthIntelligencePage />}
 
