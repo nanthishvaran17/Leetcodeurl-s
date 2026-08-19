@@ -59459,3 +59459,40 @@ NameError: name 'RLImage' is not defined. Did you mean: 'Image'?
 [2026-08-19 15:41:40,953] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
 [2026-08-19 15:41:40,968] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
 [2026-08-19 15:42:08,605] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 15:42:11,101] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-19 15:42:11,103] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-19 15:42:11,399] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-19 15:42:11,403] [INFO] [leetcode_tracker]: Database contains 303 existing student records. Preserving database single source of truth.
+[2026-08-19 15:42:11,409] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-19 15:42:11,411] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-19 15:42:11,415] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-19 15:42:11,415] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-19 15:42:11,626] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 15:42
+[2026-08-19 15:42:11,626] [INFO] [leetcode_tracker]: Resuming 08:00 AM Start Snapshot...
+[2026-08-19 15:42:11,877] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 21 with 303 students.
+[2026-08-19 15:42:11,935] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:42:11,941] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:42:14,404] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 15:42:40,233] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:42:40,247] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:43:10,960] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:43:10,963] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:43:40,952] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:43:40,955] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:44:02,988] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-19 15:44:03,379] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:44:03,425] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:44:03,836] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-19 15:44:03,908] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 15:44:04,795] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:44:05,069] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 15:44:05,200] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:44:05,422] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-19 15:44:07,410] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-19 15:44:25,367] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-D64327F8 (Official Forensic Verification Audit Report) for Student: AADHISH S B (732224CI001)
+[2026-08-19 15:44:25,427] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-D64327F8 (Official Forensic Verification Audit Report) for Student: AADHISH S B (732224CI001)
+[2026-08-19 15:44:33,952] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:44:33,957] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:44:43,450] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=732224CI001, reg=None
+[2026-08-19 15:44:43,539] [INFO] [leetcode_tracker]: [certificate_pdf_resolved_from_cache] Size=58459 bytes for trace_732224ci001
+[2026-08-19 15:44:43,540] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched AADHISH_S_B_Weekly_Contest_515_Certificate.pdf (58459 bytes)

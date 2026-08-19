@@ -187,13 +187,30 @@ export const CertificateManagementModal: React.FC<{
     }
   };
 
-  const handleDownloadPdf = async (verificationId: string) => {
+  const handleDownloadPdf = async (targetId?: string) => {
+    const idToUse = targetId || generatedCert?.verification_id || selectedStudent?.reg_no || (selectedStudent ? String(selectedStudent.id) : null);
+    if (!idToUse) {
+      alert("Please select a student recipient first to download certificate.");
+      return;
+    }
+
     try {
-      const response = await api.get(`/certificates/${encodeURIComponent(verificationId)}/download-pdf`, {
+      const response = await api.get(`/certificates/${encodeURIComponent(idToUse)}/download-pdf`, {
         responseType: 'blob'
       });
+
+      // Handle JSON error payload returned as blob
+      if (response.data && response.data.type === 'application/json') {
+        const text = await response.data.text();
+        try {
+          const errJson = JSON.parse(text);
+          alert(`Certificate Error: ${errJson.detail || 'Could not generate PDF.'}`);
+          return;
+        } catch (e) {}
+      }
+
       const blob = new Blob([response.data], { type: 'application/pdf' });
-      let filename = `Certificate_${verificationId}.pdf`;
+      let filename = `Certificate_${idToUse}.pdf`;
       const disposition = response.headers['content-disposition'] || response.headers['Content-Disposition'];
       if (disposition && disposition.includes('filename=')) {
         const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
@@ -201,6 +218,7 @@ export const CertificateManagementModal: React.FC<{
           filename = matches[1].replace(/['"]/g, '').trim();
         }
       }
+
       const blobUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = blobUrl;
@@ -213,7 +231,7 @@ export const CertificateManagementModal: React.FC<{
       }, 2000);
     } catch (err: any) {
       console.error("Download error:", err);
-      alert("Failed to download certificate PDF.");
+      alert("Failed to download official certificate PDF. Please try again.");
     }
   };
 
@@ -483,27 +501,26 @@ export const CertificateManagementModal: React.FC<{
                       <span>{isGenerating ? 'Generating High-Res Certificate...' : 'Generate & Issue Certificate'}</span>
                     </button>
 
-                    {generatedCert && (
-                      <div className="space-y-2 pt-2 border-t border-slate-800">
-                        <button
-                          onClick={() => handleDownloadPdf(generatedCert.verification_id)}
-                          className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-2 shadow-md cursor-pointer"
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                          <span>Download Official PDF</span>
-                        </button>
+                    <div className="space-y-2 pt-2 border-t border-slate-800">
+                      <button
+                        onClick={() => handleDownloadPdf(generatedCert?.verification_id || selectedStudent?.reg_no)}
+                        disabled={!selectedStudent}
+                        className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-2 shadow-md cursor-pointer transition-all"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Download Official PDF</span>
+                      </button>
 
-                        <a
-                          href={generatedCert.verification_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl flex items-center justify-center space-x-2 border border-slate-700"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                          <span>Verify Public QR Page</span>
-                        </a>
-                      </div>
-                    )}
+                      <a
+                        href={generatedCert?.verification_url || `/verify-certificate/${selectedStudent?.reg_no || ''}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl flex items-center justify-center space-x-2 border border-slate-700 transition-all"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Verify Public QR Page</span>
+                      </a>
+                    </div>
                   </div>
                 </div>
 
