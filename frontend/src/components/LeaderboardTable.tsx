@@ -393,7 +393,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                 ? `#${student.stats.public_profile_ranking.toLocaleString('en-US')}`
                 : '—';
 
-              const effectiveCollegeRank = isSolver ? (student.college_rank || idx + 1) : undefined;
+              const effectiveCollegeRank = student.college_rank || (isSolver ? idx + 1 : undefined);
               const hasCanonicalUrl = isVerified && Boolean(student.leetcode_url && student.leetcode_url.includes('/u/'));
               const verifiedUsername = student.username || (student.leetcode_url ? student.leetcode_url.split('/u/')[1]?.replace('/', '') : null);
 

@@ -403,6 +403,11 @@ def get_students(
         for hr in hist_rows:
             hist_map[hr.student_id] = hr
 
+    # Pre-compute canonical college ranks across all verified solvers
+    verified_solvers = [st for st in students if st.stats and st.stats.total_solved is not None and st.stats.sync_status in ("success", "verified")]
+    verified_solvers_sorted = sorted(verified_solvers, key=lambda x: (x.stats.total_solved or 0, x.stats.contest_rating or 0), reverse=True)
+    rank_map = {st.id: r + 1 for r, st in enumerate(verified_solvers_sorted)}
+
     results = []
     for st in students:
         st_out = StudentOut.from_orm(st)
@@ -458,7 +463,7 @@ def get_students(
 
         latest_prog = prog_map.get(st.id)
         if latest_prog:
-            st_out.college_rank = latest_prog.college_rank if is_verified else None
+            st_out.college_rank = latest_prog.college_rank if (latest_prog.college_rank and is_verified) else rank_map.get(st.id)
             st_out.dept_rank = latest_prog.dept_rank if is_verified else None
             st_out.year_rank = latest_prog.year_rank if is_verified else None
             st_out.section_rank = latest_prog.section_rank if is_verified else None
@@ -467,6 +472,8 @@ def get_students(
                 st_out.streak_count = latest_prog.streak_count if is_verified else 0
             st_out.consistency_score = latest_prog.consistency_score if is_verified else 0.0
             st_out.badge_list = latest_prog.badge_list or []
+        else:
+            st_out.college_rank = rank_map.get(st.id) if is_verified else None
 
         pub_res = pub_map.get(st.id)
         vir_res = vir_map.get(st.id)
