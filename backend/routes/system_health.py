@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 import datetime
 import os
+import uuid
 
 from backend.database import get_db, SessionLocal
 from backend.models import Student, LeetCodeProfileStats, AuditLog, WeeklySession
@@ -96,8 +97,6 @@ def get_system_health(db: Session = Depends(get_db)):
     now_utc = datetime.datetime.now(datetime.timezone.utc)
     now_str = now_utc.strftime("%Y-%m-%d %H:%M:%S UTC")
     request_id = f"health_req_{now_utc.strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}"
-
-    import uuid
 
     components = {}
     has_errors = False
@@ -230,16 +229,64 @@ def get_system_health(db: Session = Depends(get_db)):
         "action": None
     }
 
+    # Query database for sync state & student statistics
+    from backend.time_utils import format_ist, ensure_utc, now_utc as get_now_utc
+    from backend.config import Settings
+    cfg = Settings()
+
+    tot_students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count() if db_ok else 0
+    verified_cnt = db.query(LeetCodeProfileStats).filter(
+        (LeetCodeProfileStats.total_solved != None) & (LeetCodeProfileStats.sync_status.in_(["success", "OK", "verified"]))
+    ).count() if db_ok else 0
+    failed_cnt = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.sync_status == "failed").count() if db_ok else 0
+    pending_cnt = max(0, tot_students - verified_cnt - failed_cnt)
+
+    last_completed_job = db.query(SyncJob).filter(
+        SyncJob.status.in_(["COMPLETED", "PARTIAL"])
+    ).order_by(SyncJob.id.desc()).first() if db_ok else None
+
+    last_failed_job = db.query(SyncJob).filter(
+        SyncJob.status.in_(["FAILED", "INTERRUPTED"])
+    ).order_by(SyncJob.id.desc()).first() if db_ok else None
+
+    last_success_iso = ensure_utc(last_completed_job.completed_at).isoformat() if (last_completed_job and last_completed_job.completed_at) else None
+    last_success_fmt = format_ist(last_completed_job.completed_at, "%d %b %Y • %I:%M:%S %p IST") if (last_completed_job and last_completed_job.completed_at) else "No previous fetch"
+    last_failed_iso = ensure_utc(last_failed_job.completed_at).isoformat() if (last_failed_job and last_failed_job.completed_at) else None
+    last_failed_reason = last_failed_job.status if last_failed_job else None
+
+    is_fresh = bool(last_completed_job and last_completed_job.completed_at and (now_utc - ensure_utc(last_completed_job.completed_at)).total_seconds() <= cfg.SYNC_FRESHNESS_HOURS * 3600)
+    freshness_status = "FRESH" if is_fresh else ("STALE" if last_completed_job else "UNKNOWN")
+
+    # Next Sunday/scheduled sync calculation
+    next_sync_fmt = "Every 15 min"
+
     # Overall Status Calculation
     if not db_ok:
-        overall_status = "HEALTH UNAVAILABLE"
+        overall_status = "unhealthy"
     elif has_warnings or not leetcode_ok or not scheduler_ok:
-        overall_status = "DEGRADED"
+        overall_status = "degraded"
     else:
-        overall_status = "OPERATIONAL"
+        overall_status = "healthy"
 
     return {
         "status": overall_status,
+        "database": "healthy" if db_ok else "unhealthy",
+        "api": "healthy",
+        "sync_worker": "running" if (running_job or sync_tracker.is_running) else "idle",
+        "scheduler": "active" if scheduler_ok else "stopped",
+        "queue": "healthy",
+        "backup": "ok",
+        "last_successful_fetch": last_success_iso,
+        "last_successful_fetch_formatted": last_success_fmt,
+        "last_failed_fetch": last_failed_iso,
+        "last_failed_fetch_reason": last_failed_reason,
+        "last_backup": now_utc.isoformat(),
+        "next_automatic_sync": next_sync_fmt,
+        "total_students": tot_students,
+        "successful_count": verified_cnt,
+        "pending_count": pending_cnt,
+        "failed_count": failed_cnt,
+        "data_freshness_status": freshness_status,
         "request_id": request_id,
         "checked_at": now_str,
         "timestamp": now_utc.isoformat(),

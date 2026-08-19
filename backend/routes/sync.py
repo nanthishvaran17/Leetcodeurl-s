@@ -293,9 +293,108 @@ def trigger_contest_session_sync(session_id: int, db: Session = Depends(get_db))
     }
 
 
+@router.post("/api/sync/start")
+@router.post("/start")
+async def start_background_sync(triggered_by: str = Query("admin"), db: Session = Depends(get_db)):
+    """
+    Triggers asynchronous full roster live sync. Returns job_id immediately (<50ms).
+    """
+    logger.info(f"[SYNC_START_REQUEST] Triggered background sync from: {triggered_by}")
+    return start_full_sync_job(db, triggered_by=triggered_by)
+
+
+@router.get("/history")
+@router.get("/api/sync/history")
+def get_sync_history(limit: int = Query(25, ge=1, le=100), db: Session = Depends(get_db)):
+    """
+    Retrieves recent synchronization execution history from SyncJob registry.
+    """
+    from backend.time_utils import format_ist, ensure_utc
+    jobs = db.query(SyncJob).order_by(SyncJob.id.desc()).limit(limit).all()
+    history = []
+    for j in jobs:
+        dur_sec = round((j.completed_at - j.started_at).total_seconds(), 1) if (j.completed_at and j.started_at) else None
+        history.append({
+            "id": j.id,
+            "job_id": j.job_id,
+            "job_type": j.job_type or "FULL_ROSTER_SYNC",
+            "status": j.status,
+            "triggered_by": j.triggered_by or "system",
+            "started_at": ensure_utc(j.started_at).isoformat() if j.started_at else None,
+            "started_at_formatted": format_ist(j.started_at, "%d %b %Y • %I:%M:%S %p IST") if j.started_at else None,
+            "completed_at": ensure_utc(j.completed_at).isoformat() if j.completed_at else None,
+            "completed_at_formatted": format_ist(j.completed_at, "%d %b %Y • %I:%M:%S %p IST") if j.completed_at else None,
+            "duration_seconds": dur_sec,
+            "total_records": j.total_records or 0,
+            "success_count": j.success_count or 0,
+            "partial_count": j.partial_count or 0,
+            "error_count": j.error_count or 0,
+        })
+    return history
+
+
+@router.get("/failed-students")
+@router.get("/api/sync/failed-students")
+def get_failed_sync_students(db: Session = Depends(get_db)):
+    """
+    Returns transparent audit report of all students with failed synchronization attempts.
+    Categorizes failure reasons (NETWORK_TIMEOUT, RATE_LIMITED, PRIVATE_PROFILE, etc.) without altering student attendance.
+    """
+    from backend.time_utils import format_ist, ensure_utc
+    records = db.query(LeetCodeProfileStats).join(Student).filter(
+        (LeetCodeProfileStats.sync_status == "failed") | (LeetCodeProfileStats.error_message != None)
+    ).all()
+
+    failed_list = []
+    for st_rec in records:
+        student = st_rec.student
+        if not student:
+            continue
+        
+        dept_code = student.department.code if student.department else "CSE"
+        
+        # Categorize failure code transparently
+        err_msg = (st_rec.error_message or "").lower()
+        err_code = st_rec.error_code or "FETCH_FAILED"
+        if not st_rec.error_code:
+            if "timeout" in err_msg or "timed out" in err_msg:
+                err_code = "NETWORK_TIMEOUT"
+            elif "rate" in err_msg or "429" in err_msg:
+                err_code = "RATE_LIMITED"
+            elif "private" in err_msg:
+                err_code = "PRIVATE_PROFILE"
+            elif "not found" in err_msg or "404" in err_msg:
+                err_code = "PROFILE_NOT_FOUND"
+            elif "unavailable" in err_msg or "503" in err_msg:
+                err_code = "SOURCE_UNAVAILABLE"
+            else:
+                err_code = "FETCH_FAILED"
+
+        failed_list.append({
+            "student_id": student.id,
+            "reg_no": student.reg_no,
+            "name": student.name,
+            "department": dept_code,
+            "year_level": student.year_level or "III",
+            "username": student.username or "N/A",
+            "leetcode_url": student.leetcode_url or "",
+            "sync_status": st_rec.sync_status or "failed",
+            "error_code": err_code,
+            "error_message": st_rec.error_message or "Sync failed during background batch processing",
+            "retry_count": st_rec.retry_count or 1,
+            "last_attempt_at": ensure_utc(st_rec.last_attempt_at).isoformat() if st_rec.last_attempt_at else None,
+            "last_attempt_at_formatted": format_ist(st_rec.last_attempt_at, "%d %b %Y • %I:%M:%S %p IST") if st_rec.last_attempt_at else "Recently",
+            "last_successful_sync": ensure_utc(st_rec.last_successful_sync).isoformat() if st_rec.last_successful_sync else None,
+            "last_successful_sync_formatted": format_ist(st_rec.last_successful_sync, "%d %b %Y • %I:%M:%S %p IST") if st_rec.last_successful_sync else "Never"
+        })
+
+    return failed_list
+
+
 @router.get("/api/data/freshness")
 def get_data_freshness_metadata(db: Session = Depends(get_db)):
     """
     Retrieves system-wide data freshness metadata, last sync timestamp, and status badges.
     """
     return get_system_freshness(db)
+

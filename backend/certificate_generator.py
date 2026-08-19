@@ -177,128 +177,23 @@ def render_certificate_pdf_bytes(
     except Exception:
         pass
 
-    # 3. Setup Mixed-Orientation 2-Page Document Template
+    # 3. Setup Single-Page Document Template (A4 Portrait)
     pdf_buffer = io.BytesIO()
     
-    # Page 1 Frame: A4 Landscape (841.89 x 595.27 pt)
-    f_landscape = Frame(
-        36, 32, landscape(A4)[0] - 72, landscape(A4)[1] - 64,
-        id='F_Landscape',
-        leftPadding=0, rightPadding=0, topPadding=0, bottomPadding=0
-    )
-    tmpl_landscape = PageTemplate(
-        id='Page1_LandscapeCert',
-        frames=f_landscape,
-        pagesize=landscape(A4),
-        onPage=draw_ornate_border
-    )
-
-    # Page 2 Frame: A4 Portrait (595.27 x 841.89 pt)
     f_portrait = Frame(
         36, 36, A4[0] - 72, A4[1] - 72,
         id='F_Portrait',
         leftPadding=0, rightPadding=0, topPadding=0, bottomPadding=0
     )
     tmpl_portrait = PageTemplate(
-        id='Page2_PortraitAudit',
+        id='Page1_PortraitAudit',
         frames=f_portrait,
         pagesize=A4
     )
 
-    doc = BaseDocTemplate(pdf_buffer, pageTemplates=[tmpl_landscape, tmpl_portrait])
+    doc = BaseDocTemplate(pdf_buffer, pageTemplates=[tmpl_portrait])
 
     story = []
-    styles = getSampleStyleSheet()
-
-    inst_title_style = ParagraphStyle(
-        'InstTitle',
-        fontName='Times-Bold',
-        fontSize=18,
-        leading=21,
-        textColor=colors.HexColor('#0B192C'),
-        alignment=1
-    )
-
-    inst_sub_style = ParagraphStyle(
-        'InstSub',
-        fontName='Times-Roman',
-        fontSize=8.5,
-        leading=11,
-        textColor=colors.HexColor('#475569'),
-        alignment=1
-    )
-
-    divider_style = ParagraphStyle(
-        'GoldDivider',
-        fontName='Times-Bold',
-        fontSize=10,
-        leading=12,
-        textColor=colors.HexColor('#C5A059'),
-        alignment=1
-    )
-
-    award_title_style = ParagraphStyle(
-        'AwardTitle',
-        fontName='Times-Bold',
-        fontSize=20,
-        leading=23,
-        textColor=colors.HexColor('#B45309'),
-        alignment=1
-    )
-
-    present_style = ParagraphStyle(
-        'PresentText',
-        fontName='Times-Bold',
-        fontSize=9.5,
-        leading=12,
-        textColor=colors.HexColor('#475569'),
-        alignment=1
-    )
-
-    name_style = ParagraphStyle(
-        'StudentName',
-        fontName='Times-Bold',
-        fontSize=22,
-        leading=25,
-        textColor=colors.HexColor('#0B192C'),
-        alignment=1
-    )
-
-    credentials_style = ParagraphStyle(
-        'Credentials',
-        fontName='Times-Roman',
-        fontSize=10.5,
-        leading=13,
-        textColor=colors.HexColor('#1E293B'),
-        alignment=1
-    )
-
-    body_style = ParagraphStyle(
-        'CertBody',
-        fontName='Times-Roman',
-        fontSize=10,
-        leading=14,
-        textColor=colors.HexColor('#334155'),
-        alignment=1
-    )
-
-    badge_style = ParagraphStyle(
-        'BadgeStyle',
-        fontName='Times-Bold',
-        fontSize=8.5,
-        leading=11,
-        textColor=colors.HexColor('#065F46'),
-        alignment=1
-    )
-
-    sig_style = ParagraphStyle(
-        'SigStyle',
-        fontName='Times-Roman',
-        fontSize=8.5,
-        leading=11,
-        textColor=colors.HexColor('#0B192C'),
-        alignment=1
-    )
 
     clean_college = html.escape(settings.COLLEGE_NAME or "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)").upper()
     clean_name = html.escape(student_name or "").upper()
@@ -308,115 +203,8 @@ def render_certificate_pdf_bytes(
     clean_program = html.escape(program or "Institutional LeetCode Continuous Performance Tracking System")
 
     # ═════════════════════════════════════════════════════════════════════════
-    # ─── PAGE 1: CERTIFICATE OF EXCELLENCE (A4 LANDSCAPE) ─────────────────────
+    # ─── OFFICIAL FORENSIC CONTEST AUDIT REPORT (A4 PORTRAIT) ─────────────────
     # ═════════════════════════════════════════════════════════════════════════
-    if os.path.exists(COLLEGE_LOGO_PATH):
-        try:
-            emblem_img = Image(COLLEGE_LOGO_PATH, width=0.85 * inch, height=0.85 * inch)
-            emblem_img.hAlign = 'CENTER'
-            story.append(emblem_img)
-            story.append(Spacer(1, 4))
-        except Exception as e:
-            logger.warning(f"Note loading college emblem: {e}")
-
-    story.append(Paragraph(clean_college, inst_title_style))
-    story.append(Paragraph("(AUTONOMOUS)", inst_sub_style))
-    story.append(Paragraph("Approved by AICTE, New Delhi • Affiliated to Anna University, Chennai • Accredited by NAAC with 'A+' Grade", inst_sub_style))
-    story.append(Spacer(1, 4))
-    story.append(Paragraph("────────────── ◆ ──────────────", divider_style))
-    story.append(Spacer(1, 6))
-
-    story.append(Paragraph("CERTIFICATE OF EXCELLENCE", award_title_style))
-    story.append(Spacer(1, 4))
-    story.append(Paragraph("THIS CERTIFICATE IS PROUDLY PRESENTED TO", present_style))
-    story.append(Spacer(1, 6))
-
-    story.append(Paragraph(f"<u>{clean_name}</u>", name_style))
-    story.append(Spacer(1, 4))
-    story.append(Paragraph(f"Register No: <b>{clean_reg}</b> &nbsp;|&nbsp; <b>{clean_dept_full}</b>", credentials_style))
-    story.append(Spacer(1, 8))
-
-    cert_msg = (
-        f"For exceptional algorithmic problem-solving competence, dedication, "
-        f"and achieving <b>{clean_recognition}</b> distinction in the {clean_program} "
-        f"during the academic session."
-    )
-    story.append(Paragraph(cert_msg, body_style))
-    story.append(Spacer(1, 6))
-
-    story.append(Paragraph(f"<b>★ {clean_recognition.upper()} &nbsp;•&nbsp; WEEKLY LEETCODE PROGRAM ★</b>", badge_style))
-    story.append(Spacer(1, 14))
-
-    # Bottom 3-column signatures + QR verification block
-    principal_img_cell = _load_signature_cell(principal_sig)
-    principal_text_cell = Paragraph(
-        "____________________________<br/>"
-        "<b>PRINCIPAL</b><br/>"
-        "<font size='7.5' color='#475569'>Nandha Engineering College</font>",
-        sig_style
-    )
-    left_subtable = Table([[principal_img_cell], [principal_text_cell]], colWidths=[3.0 * inch])
-    left_subtable.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('VALIGN', (0, 0), (-1, 0), 'BOTTOM'),
-        ('VALIGN', (0, 1), (-1, 1), 'TOP'),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-        ('TOPPADDING', (0, 0), (-1, -1), 1),
-        ('LEFTPADDING', (0, 0), (-1, -1), 0),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-    ]))
-
-    center_text_cell = Paragraph(
-        f"<b>CERTIFICATE VERIFICATION</b><br/>"
-        f"Verification Code: <b>{verification_id}</b><br/>"
-        f"Issue Date: {issue_date_display}<br/>"
-        f"<font color='#64748B' size='7'>Scan QR to verify authenticity</font>",
-        sig_style
-    )
-    center_subtable = Table([[qr_img_cell], [center_text_cell]], colWidths=[2.8 * inch])
-    center_subtable.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
-        ('TOPPADDING', (0, 0), (-1, -1), 1),
-        ('LEFTPADDING', (0, 0), (-1, -1), 0),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-    ]))
-
-    hod_img_cell = _load_signature_cell(hod_sig)
-    hod_text_cell = Paragraph(
-        "____________________________<br/>"
-        "<b>HOD / COORDINATOR</b><br/>"
-        f"<font size='7.5' color='#475569'>{clean_dept_full}</font>",
-        sig_style
-    )
-    right_subtable = Table([[hod_img_cell], [hod_text_cell]], colWidths=[3.0 * inch])
-    right_subtable.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('VALIGN', (0, 0), (-1, 0), 'BOTTOM'),
-        ('VALIGN', (0, 1), (-1, 1), 'TOP'),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-        ('TOPPADDING', (0, 0), (-1, -1), 1),
-        ('LEFTPADDING', (0, 0), (-1, -1), 0),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-    ]))
-
-    main_footer_table = Table([[left_subtable, center_subtable, right_subtable]], colWidths=[3.1 * inch, 2.8 * inch, 3.1 * inch])
-    main_footer_table.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
-        ('LEFTPADDING', (0, 0), (-1, -1), 2),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-        ('TOPPADDING', (0, 0), (-1, -1), 0),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
-    ]))
-    story.append(main_footer_table)
-
-    # ═════════════════════════════════════════════════════════════════════════
-    # ─── PAGE 2: OFFICIAL FORENSIC CONTEST AUDIT REPORT (A4 PORTRAIT) ────────
-    # ═════════════════════════════════════════════════════════════════════════
-    story.append(NextPageTemplate('Page2_PortraitAudit'))
-    story.append(PageBreak())
 
     # Query student & contest verification evidence
     student_obj = db.query(Student).filter(
@@ -700,7 +488,7 @@ def render_certificate_pdf_bytes(
     story.append(t5)
 
     # ═════════════════════════════════════════════════════════════════════════
-    # ─── BUILD MULTI-PAGE UNIFIED CREDENTIAL BUNDLE ──────────────────────────
+    # ─── BUILD SINGLE-PAGE OFFICIAL FORENSIC CONTEST AUDIT REPORT ────────────
     # ═════════════════════════════════════════════════════════════════════════
     doc.build(story)
     pdf_bytes = pdf_buffer.getvalue()
@@ -713,7 +501,7 @@ def render_certificate_pdf_bytes(
         except Exception as e:
             logger.warning(f"Note saving certificate cache to {target_path}: {e}")
 
-    logger.info(f"[CERTIFICATE_GENERATED] Verification ID: {verification_id} (2-Page Bundle: Cert + Audit) for Student: {student_name} ({register_no})")
+    logger.info(f"[CERTIFICATE_GENERATED] Verification ID: {verification_id} (Official Forensic Verification Audit Report) for Student: {student_name} ({register_no})")
     return pdf_bytes
 
 
