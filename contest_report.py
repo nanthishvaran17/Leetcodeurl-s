@@ -89,6 +89,40 @@ def get_all_contests():
         print(f"  ⚠️ Warning: Failed to fetch master contest list from LeetCode: {e}")
     return []
 
+def check_contest_exists(contest_slug):
+    """
+    Check if a contest slug or title exists in LeetCode's master contest list.
+    """
+    all_contests = get_all_contests()
+    if not all_contests:
+        return True  # Fallback to true if master list fails
+    slug_clean = contest_slug.lower().strip()
+    slug_num = ''.join(filter(str.isdigit, slug_clean))
+    for c in all_contests:
+        title = c.get("title", "").lower()
+        title_slug = c.get("titleSlug", "").lower()
+        title_num = ''.join(filter(str.isdigit, title))
+        if slug_clean in title or slug_clean in title_slug or (slug_num and slug_num == title_num):
+            return True
+    return False
+
+def get_contest_date(contest_slug):
+    """
+    Get the official datetime of a contest from LeetCode's master list.
+    """
+    all_contests = get_all_contests()
+    slug_clean = contest_slug.lower().strip()
+    slug_num = ''.join(filter(str.isdigit, slug_clean))
+    for c in all_contests:
+        title = c.get("title", "").lower()
+        title_slug = c.get("titleSlug", "").lower()
+        title_num = ''.join(filter(str.isdigit, title))
+        if slug_clean in title or slug_clean in title_slug or (slug_num and slug_num == title_num):
+            start_time = c.get("startTime")
+            if start_time:
+                return datetime.fromtimestamp(start_time)
+    return None
+
 def fetch_contest_data(username, contest_slug, retry_count=0):
     """
     Fetch contest data for a specific user and contest.
