@@ -141,10 +141,10 @@ export const App: React.FC = () => {
         setActiveTab={handleTabChange}
       />
 
-      <div className={`flex-1 w-full py-5 sm:py-6 ${
+      <div className={`flex-1 w-full py-4 sm:py-6 ${
         isAuthenticated && activeTab !== 'landing'
-          ? 'lg:grid lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)] lg:gap-6 px-4 sm:px-6 lg:px-8 max-w-[1920px] mx-auto'
-          : 'px-4 sm:px-6 lg:px-8 max-w-[1920px] mx-auto'
+          ? 'lg:grid lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)] 2xl:grid-cols-[300px_minmax(0,1fr)] lg:gap-6 px-3 sm:px-5 lg:px-6 w-full max-w-[98vw] mx-auto'
+          : 'px-3 sm:px-5 lg:px-6 w-full max-w-[98vw] mx-auto'
       }`}>
         
         {/* Left Sidebar (Only visible for authenticated users when not on landing page) */}

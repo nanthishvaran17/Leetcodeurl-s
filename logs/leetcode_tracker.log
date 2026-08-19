@@ -59496,3 +59496,7 @@ NameError: name 'RLImage' is not defined. Did you mean: 'Image'?
 [2026-08-19 15:44:43,450] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=732224CI001, reg=None
 [2026-08-19 15:44:43,539] [INFO] [leetcode_tracker]: [certificate_pdf_resolved_from_cache] Size=58459 bytes for trace_732224ci001
 [2026-08-19 15:44:43,540] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched AADHISH_S_B_Weekly_Contest_515_Certificate.pdf (58459 bytes)
+[2026-08-19 15:45:03,368] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:45:03,396] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
+[2026-08-19 15:45:33,957] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-19 15:45:33,960] [INFO] [leetcode_tracker]: [SYNC] Loaded 303 active students
