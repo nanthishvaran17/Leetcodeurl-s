@@ -231,7 +231,7 @@
   bottom: 0;
   z-index: 99000;
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* ALIGN TO TOP SO MODAL IS ALWAYS IMMEDIATELY VISIBLE AT TOP */
   justify-content: center;
   padding: 12px 16px;
   background-color: rgba(10, 15, 25, 0.45);
@@ -247,7 +247,7 @@
   max-height: calc(100dvh - 5.5rem);
   display: flex;
   flex-direction: column;
-  margin-top: auto;
+  margin-top: 4px; /* Starts right near the top header */
   margin-bottom: auto;
   overflow: hidden;
   box-sizing: border-box;
