@@ -1,5 +1,5 @@
 # cache_manager.py
-# Complete Cache + Fallback Strategy for LeetCode Contest & Profile Data
+# Complete Cache + Fallback Strategy
 
 import sqlite3
 import json
@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import time
 import logging
-import os
 import sys
 
 if hasattr(sys.stdout, 'reconfigure'):
@@ -20,9 +19,6 @@ if hasattr(sys.stdout, 'reconfigure'):
 IST = ZoneInfo("Asia/Kolkata")
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-
-LEETCODE_GRAPHQL_URL = "https://leetcode.com/graphql"
-CONTEST_API_BASE = "https://leetcode.com/contest/api/ranking"
 
 # ============================================
 # DATABASE SCHEMA
@@ -46,7 +42,7 @@ CREATE TABLE IF NOT EXISTS student_cache (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
     total_solved INTEGER DEFAULT 0,
-    rating REAL DEFAULT 0,
+    rating INTEGER DEFAULT 0,
     ranking INTEGER DEFAULT 0,
     fetch_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -263,65 +259,65 @@ class CacheManager:
 class SmartFetcher:
     def __init__(self, db_path="contest_cache.db"):
         self.cache = CacheManager(db_path=db_path)
+        self.last_fetch_data = {}
     
-    def fetch_contest_rankings(self, contest_slug, force_refresh=False):
+    def fetch_contest_rankings(self, contest_slug):
         """
         SMART FETCH:
-        1. Try cache (if not force_refresh)
+        1. Try cache (FAST)
         2. Try LeetCode API (if available)
         3. Fallback to cache (if API fails)
         """
-        logger.info(f"🔍 Fetching contest rankings for: {contest_slug}")
+        logger.info(f"🔍 Fetching contest: {contest_slug}")
         
-        # Step 1: Check cache FIRST if not forcing refresh
-        if not force_refresh:
-            cached = self.cache.get_contest_rankings(contest_slug)
-            if cached:
-                logger.info(f"  ✅ Using CACHED data ({len(cached)} participants)")
-                return {
-                    "source": "CACHE",
-                    "data": cached,
-                    "timestamp": datetime.now(IST)
-                }
+        # Step 1: Check cache FIRST (FASTEST)
+        cached = self.cache.get_contest_rankings(contest_slug)
+        if cached:
+            logger.info(f"  ✅ Using CACHED data ({len(cached)} participants)")
+            return {
+                "source": "CACHE",
+                "data": cached,
+                "timestamp": datetime.now(IST).isoformat()
+            }
         
         # Step 2: Try LeetCode API
         try:
-            logger.info("  🌐 Fetching live from LeetCode Contest Page API...")
+            logger.info("  🌐 Fetching from LeetCode API...")
             api_data = self._fetch_from_leetcode_api(contest_slug)
             
             if api_data:
                 # Save to cache
                 self.cache.save_contest_rankings(contest_slug, api_data)
-                logger.info(f"  ✅ API success! {len(api_data)} participants cached")
+                logger.info(f"  ✅ API success! {len(api_data)} participants")
                 return {
                     "source": "API",
                     "data": api_data,
-                    "timestamp": datetime.now(IST)
+                    "timestamp": datetime.now(IST).isoformat()
                 }
         except Exception as e:
             logger.warning(f"  ⚠️ API failed: {e}")
         
-        # Step 3: Fallback - try GraphQL user history if students list is known or use cached
+        # Step 3: Fallback - use cache (even old data)
         cached = self.cache.get_contest_rankings(contest_slug)
         if cached:
-            logger.warning(f"  ⚠️ Using LAST CACHED data (API was down/empty)")
+            logger.warning(f"  ⚠️ Using LAST CACHED data (API was down)")
             return {
                 "source": "FALLBACK_CACHE",
                 "data": cached,
-                "timestamp": datetime.now(IST),
+                "timestamp": datetime.now(IST).isoformat(),
                 "warning": "Using cached data - LeetCode API unavailable"
             }
         
         # Step 4: No data available
-        logger.error("  ❌ No data available in API or Cache")
+        logger.error("  ❌ No data available")
         return {
-            "source": "EMPTY_OR_UNAVAILABLE",
+            "source": "ERROR",
             "data": [],
-            "error": "No data available in cache yet"
+            "error": "No data available - please check LeetCode"
         }
     
     def _fetch_from_leetcode_api(self, contest_slug):
-        """Fetch from LeetCode Contest Page API with pagination"""
+        """Fetch from LeetCode Contest Page API"""
         all_rankings = []
         page = 1
         headers = {
@@ -330,11 +326,11 @@ class SmartFetcher:
         }
         
         while True:
-            url = f"{CONTEST_API_BASE}/{contest_slug}/"
+            url = f"https://leetcode.com/contest/api/ranking/{contest_slug}/"
             params = {"pagination": page, "region": "global"}
             
             try:
-                response = requests.get(url, params=params, headers=headers, timeout=12)
+                response = requests.get(url, params=params, headers=headers, timeout=15)
                 
                 if response.status_code != 200:
                     break
@@ -365,20 +361,24 @@ class SmartFetcher:
         
         return all_rankings
     
-    def fetch_student_data(self, username, force_refresh=False):
-        """Smart fetch student profile with cache + fallback"""
+    def fetch_student_data(self, username):
+        """Smart fetch student profile"""
+        logger.info(f"🔍 Fetching student: {username}")
+        
         # Step 1: Check cache
-        if not force_refresh:
-            cached = self.cache.get_student(username)
-            if cached:
-                return {
-                    "source": "CACHE",
-                    "data": cached
-                }
+        cached = self.cache.get_student(username)
+        if cached:
+            logger.info(f"  ✅ Using CACHED data")
+            return {
+                "source": "CACHE",
+                "data": cached
+            }
         
         # Step 2: Try LeetCode API
         try:
+            logger.info("  🌐 Fetching from LeetCode API...")
             api_data = self._fetch_student_from_api(username)
+            
             if api_data:
                 self.cache.save_student(
                     username,
@@ -386,16 +386,18 @@ class SmartFetcher:
                     api_data.get("rating", 0),
                     api_data.get("ranking", 0)
                 )
+                logger.info(f"  ✅ API success!")
                 return {
                     "source": "API",
                     "data": api_data
                 }
         except Exception as e:
-            logger.warning(f"  ⚠️ Student API fetch failed for {username}: {e}")
+            logger.warning(f"  ⚠️ API failed: {e}")
         
-        # Step 3: Fallback to existing cache
+        # Step 3: Fallback
         cached = self.cache.get_student(username)
         if cached:
+            logger.warning(f"  ⚠️ Using LAST CACHED data")
             return {
                 "source": "FALLBACK_CACHE",
                 "data": cached,
@@ -409,7 +411,7 @@ class SmartFetcher:
         }
     
     def _fetch_student_from_api(self, username):
-        """Fetch student profile from LeetCode GraphQL API"""
+        """Fetch student from LeetCode GraphQL API"""
         query = """
         query userPublicProfile($username: String!) {
           matchedUser(username: $username) {
@@ -428,23 +430,37 @@ class SmartFetcher:
           }
         }
         """
-        payload = {"query": query, "variables": {"username": username}}
+        
+        payload = {
+            "query": query,
+            "variables": {"username": username}
+        }
         headers = {
             "Content-Type": "application/json",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
         }
         
-        response = requests.post(LEETCODE_GRAPHQL_URL, json=payload, headers=headers, timeout=12)
+        response = requests.post(
+            "https://leetcode.com/graphql",
+            json=payload,
+            headers=headers,
+            timeout=15
+        )
+        
         if response.status_code != 200:
             return None
         
         data = response.json()
+        
         if "errors" in data and not data.get("data"):
             return None
         
         user = data.get("data", {}).get("matchedUser", {}) or {}
         contest_info = data.get("data", {}).get("userContestRanking", {}) or {}
+        if not user and not contest_info:
+            return None
         
+        # Get total solved
         submit_stats = user.get("submitStats", {}).get("acSubmissionNum", []) or []
         total_solved = 0
         for stat in submit_stats:
@@ -452,17 +468,15 @@ class SmartFetcher:
                 total_solved = stat.get("count", 0)
                 break
         
-        rating = contest_info.get("rating", 0) or user.get("contestRating", 0) or 0
-        ranking = contest_info.get("globalRanking", 0) or 0
-        
         return {
             "username": username,
             "total_solved": int(total_solved),
-            "rating": round(float(rating), 1),
-            "ranking": int(ranking)
+            "rating": round(float(contest_info.get("rating", 0) or user.get("contestRating", 0) or 0), 1),
+            "ranking": int(contest_info.get("globalRanking", 0) or 0)
         }
     
     def get_cache_stats(self):
+        """Get cache statistics"""
         return self.cache.get_cache_stats()
 
 # ============================================
@@ -474,23 +488,35 @@ class ContestProcessor:
         self.fetcher = SmartFetcher(db_path=db_path)
         self.results = []
     
-    def process_contest(self, contest_slug, students, force_refresh=False):
-        """Process contest with smart cache + fallback"""
-        print(f"\n🚀 Processing contest with Smart Cache: {contest_slug}")
+    def process_contest(self, contest_slug, students):
+        """
+        Process contest with smart cache + fallback
+        """
+        print(f"\n🚀 Processing contest: {contest_slug}")
         print("=" * 60)
         
-        contest_result = self.fetcher.fetch_contest_rankings(contest_slug, force_refresh=force_refresh)
+        # Step 1: Fetch contest data (with cache)
+        contest_result = self.fetcher.fetch_contest_rankings(contest_slug)
         
-        rankings = contest_result.get("data", [])
-        source = contest_result.get("source", "UNKNOWN")
+        if contest_result["source"] == "ERROR":
+            print("❌ No data available")
+            return []
         
-        print(f"📊 Data Source: {source}")
+        rankings = contest_result["data"]
+        source = contest_result["source"]
+        
+        print(f"\n📊 Data Source: {source}")
         if "warning" in contest_result:
             print(f"⚠️ {contest_result['warning']}")
-        print(f"✅ Found {len(rankings)} cached/live participants")
         
-        rank_map = {r["username"]: r for r in rankings}
+        print(f"✅ Found {len(rankings)} participants")
         
+        # Build lookup
+        rank_map = {}
+        for r in rankings:
+            rank_map[r["username"]] = r
+        
+        # Step 2: Process each student
         results = []
         for student in students:
             username = student.get("username", "")
@@ -505,7 +531,11 @@ class ContestProcessor:
                 solved = data.get("solved", 0)
                 rank = data.get("rank", 0)
                 
-                participation = "LIVE" if finish_time <= 5400 else "VIRTUAL"
+                # Classify participation
+                if finish_time <= 5400:  # 90 minutes
+                    participation = "LIVE"
+                else:
+                    participation = "VIRTUAL"
                 
                 results.append({
                     "name": name,
@@ -520,6 +550,7 @@ class ContestProcessor:
                     "source": source
                 })
             else:
+                # Student not in contest
                 results.append({
                     "name": name,
                     "username": username,
@@ -537,6 +568,7 @@ class ContestProcessor:
         return results
     
     def generate_summary(self):
+        """Generate summary from results"""
         total = len(self.results)
         live = sum(1 for r in self.results if r.get("participation") == "LIVE")
         virtual = sum(1 for r in self.results if r.get("participation") == "VIRTUAL")
@@ -555,21 +587,40 @@ class ContestProcessor:
             "source": self.results[0].get("source", "UNKNOWN") if self.results else "UNKNOWN"
         }
 
+# ============================================
+# USAGE EXAMPLE
+# ============================================
+
 if __name__ == "__main__":
-    sample_students = [
+    # Sample students
+    students = [
         {"name": "AJAY A", "username": "ajay_a1277", "roll_number": "732224CC001", "department": "CSE(CS)", "year": 3},
         {"name": "DHARSHINI", "username": "DHARSHINI_1605", "roll_number": "732224CC002", "department": "CSE(CS)", "year": 3},
     ]
     
+    # Process contest
     processor = ContestProcessor()
-    results = processor.process_contest("weekly-contest-514", sample_students)
+    results = processor.process_contest("weekly-contest-514", students)
+    
+    # Generate summary
     summary = processor.generate_summary()
     
     print("\n" + "=" * 60)
-    print("📊 SUMMARY RESULTS")
+    print("📊 SUMMARY")
     print("=" * 60)
-    print(f"Total: {summary['total']} | LIVE: {summary['live']} | NONE: {summary['none']}")
-    print(f"Data Source: {summary['source']}")
+    print(f"Total Students: {summary['total']}")
+    print(f"LIVE: {summary['live']}")
+    print(f"VIRTUAL: {summary['virtual']}")
+    print(f"NONE: {summary['none']}")
+    print(f"\nProblems Solved:")
+    for i in range(5):
+        print(f"  {i} Problems: {summary['solved'][i]}")
+    print(f"\nData Source: {summary['source']}")
     
+    # Cache stats
     stats = processor.fetcher.get_cache_stats()
-    print(f"\nCache Stats: {stats}")
+    print(f"\n📊 Cache Stats:")
+    print(f"  Contest Rankings: {stats['contest_rankings']}")
+    print(f"  Students: {stats['students']}")
+    print(f"  Cache Hits: {stats['cache_hits']}")
+    print(f"  Cache Misses: {stats['cache_misses']}")
