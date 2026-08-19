@@ -10,22 +10,32 @@ from backend.schemas import StudentStatSnapshotOut, ImproverOut
 
 router = APIRouter(prefix="/api", tags=["History & Growth Intelligence"])
 
-@router.get("/history/{student_id}", response_model=List[StudentStatSnapshotOut])
+@router.get("/history/{student_identifier}")
 def get_student_history(
-    student_id: int,
+    student_identifier: str,
     limit: int = Query(50, ge=1, le=500),
     from_date: Optional[str] = None,
     to_date: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """
-    Returns time-series historical snapshots for a specific student (Time Machine feature).
+    Returns time-series historical snapshots for a specific student by ID, register number, username, or name.
     """
-    student = db.query(Student).filter(Student.id == student_id).first()
+    student = None
+    if student_identifier.isdigit():
+        student = db.query(Student).filter(Student.id == int(student_identifier)).first()
+    
     if not student:
-        raise HTTPException(status_code=404, detail="Student not found.")
+        student = db.query(Student).filter(
+            (Student.reg_no.ilike(student_identifier.strip())) |
+            (Student.username.ilike(student_identifier.strip())) |
+            (Student.name.ilike(f"%{student_identifier.strip()}%"))
+        ).first()
 
-    query = db.query(StudentStatSnapshot).filter(StudentStatSnapshot.student_id == student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail=f"Student '{student_identifier}' not found.")
+
+    query = db.query(StudentStatSnapshot).filter(StudentStatSnapshot.student_id == student.id)
 
     if from_date:
         try:
@@ -42,7 +52,19 @@ def get_student_history(
             pass
 
     snapshots = query.order_by(StudentStatSnapshot.captured_at.desc()).limit(limit).all()
-    return snapshots
+    
+    # Return enriched response containing student info + snapshots
+    return {
+        "student": {
+            "id": student.id,
+            "name": student.name,
+            "reg_no": student.reg_no,
+            "username": student.username,
+            "department": student.department.code if student.department else "CSE",
+            "year": student.year_level
+        },
+        "snapshots": [StudentStatSnapshotOut.model_validate(s) for s in snapshots]
+    }
 
 @router.get("/growth/improvers", response_model=List[ImproverOut])
 def get_top_improvers(

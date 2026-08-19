@@ -13,7 +13,8 @@ import {
   Search,
   UserCheck,
   CheckCircle2,
-  BarChart2
+  BarChart2,
+  X
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -72,6 +73,8 @@ export const GrowthIntelligencePage: React.FC = () => {
   const [historySnapshots, setHistorySnapshots] = useState<StatSnapshot[]>([]);
   const [historyLoading, setHistoryLoading] = useState<boolean>(false);
   const [selectedStudentName, setSelectedStudentName] = useState<string>('');
+  const [activeStudentInfo, setActiveStudentInfo] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     fetchGrowthData();
@@ -93,15 +96,24 @@ export const GrowthIntelligencePage: React.FC = () => {
     }
   };
 
-  const handleFetchStudentHistory = async (id: string, name?: string) => {
-    if (!id) return;
+  const handleFetchStudentHistory = async (identifier: string, fallbackName?: string) => {
+    if (!identifier || (typeof identifier === 'string' && !identifier.trim())) return;
     setHistoryLoading(true);
     try {
-      const res = await api.get(`/history/${id}?limit=50`);
-      setHistorySnapshots(res.data || []);
-      if (name) setSelectedStudentName(name);
-    } catch (err) {
+      const res = await api.get(`/history/${encodeURIComponent(identifier.trim())}?limit=50`);
+      if (res.data && Array.isArray(res.data)) {
+        setHistorySnapshots(res.data);
+        setSelectedStudentName(fallbackName || `Student #${identifier}`);
+        setActiveStudentInfo(null);
+      } else if (res.data && res.data.snapshots) {
+        setHistorySnapshots(res.data.snapshots || []);
+        setSelectedStudentName(res.data.student?.name || fallbackName || `Student #${identifier}`);
+        setActiveStudentInfo(res.data.student);
+      }
+      setIsModalOpen(true);
+    } catch (err: any) {
       console.error("Fetch history error:", err);
+      alert(`Time Machine: Could not find timeline records for '${identifier}'. Please check student ID or Register Number.`);
     } finally {
       setHistoryLoading(false);
     }
@@ -453,6 +465,141 @@ export const GrowthIntelligencePage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Interactive Student Time Machine Timeline Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-950/80 backdrop-blur-md animate-fade-in">
+          <div className="relative w-full max-w-4xl max-h-[90vh] bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+            
+            {/* Modal Header */}
+            <div className="p-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-gray-800 shrink-0">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 rounded-2xl bg-brand-500/20 border border-brand-400/30 text-brand-400">
+                  <Clock className="w-6 h-6 stroke-[2.5]" />
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <h3 className="text-xl font-black tracking-tight">{selectedStudentName}</h3>
+                    {activeStudentInfo && (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-brand-500/20 border border-brand-400/30 text-brand-300">
+                        {activeStudentInfo.reg_no}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-300 font-medium">
+                    Granular Historical Solve Snapshots & Timeline Analytics
+                    {activeStudentInfo && ` • ${activeStudentInfo.department} Year ${activeStudentInfo.year}`}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-2 rounded-2xl bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-6 custom-scrollbar flex-1">
+              
+              {/* Snapshot KPI Summary Strip */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60">
+                  <span className="text-[10px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400">Latest Solved</span>
+                  <div className="text-2xl font-black text-emerald-900 dark:text-emerald-100 mt-1">
+                    {historySnapshots[0]?.total_solved ?? 0}
+                  </div>
+                </div>
+                <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60">
+                  <span className="text-[10px] font-extrabold uppercase text-amber-600 dark:text-amber-400">Rating Trajectory</span>
+                  <div className="text-2xl font-black text-amber-900 dark:text-amber-100 mt-1">
+                    {historySnapshots[0]?.contest_rating ?? 'Unrated'}
+                  </div>
+                </div>
+                <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60">
+                  <span className="text-[10px] font-extrabold uppercase text-indigo-600 dark:text-indigo-400">Period Delta</span>
+                  <div className="text-2xl font-black text-indigo-900 dark:text-indigo-100 mt-1">
+                    +{historySnapshots.reduce((acc, s) => acc + (s.delta_total || 0), 0)}
+                  </div>
+                </div>
+                <div className="p-4 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60">
+                  <span className="text-[10px] font-extrabold uppercase text-purple-600 dark:text-purple-400">Total Snapshots</span>
+                  <div className="text-2xl font-black text-purple-900 dark:text-purple-100 mt-1">
+                    {historySnapshots.length}
+                  </div>
+                </div>
+              </div>
+
+              {/* Timeline Snapshot Records Table */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 flex items-center justify-between">
+                  <span>Snapshot History Logs</span>
+                  <span>Descending Order (Newest First)</span>
+                </h4>
+
+                <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-gray-800">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-gray-100 dark:bg-navy-950 text-gray-700 dark:text-gray-300 uppercase font-black text-[10px] border-b border-gray-200 dark:border-gray-800">
+                      <tr>
+                        <th className="py-3 px-4">Captured Timestamp</th>
+                        <th className="py-3 px-4">Total</th>
+                        <th className="py-3 px-4 text-emerald-600">Easy</th>
+                        <th className="py-3 px-4 text-amber-600">Medium</th>
+                        <th className="py-3 px-4 text-rose-600">Hard</th>
+                        <th className="py-3 px-4">Rating</th>
+                        <th className="py-3 px-4 text-emerald-600">Delta</th>
+                        <th className="py-3 px-4">Source</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 dark:divide-gray-800 font-mono text-xs">
+                      {historySnapshots.map((snap) => (
+                        <tr key={snap.id} className="hover:bg-gray-50 dark:hover:bg-navy-800/60 transition-colors">
+                          <td className="py-3 px-4 font-sans font-bold text-gray-800 dark:text-gray-200">
+                            {new Date(snap.captured_at).toLocaleString([], {
+                              year: 'numeric',
+                              month: 'short',
+                              day: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </td>
+                          <td className="py-3 px-4 font-black text-gray-900 dark:text-white">{snap.total_solved}</td>
+                          <td className="py-3 px-4 font-bold text-emerald-600 dark:text-emerald-400">{snap.easy_solved}</td>
+                          <td className="py-3 px-4 font-bold text-amber-600 dark:text-amber-400">{snap.medium_solved}</td>
+                          <td className="py-3 px-4 font-bold text-rose-600 dark:text-rose-400">{snap.hard_solved}</td>
+                          <td className="py-3 px-4 font-bold text-gray-700 dark:text-gray-300">{snap.contest_rating ?? '—'}</td>
+                          <td className="py-3 px-4">
+                            <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-black text-[11px]">
+                              +{snap.delta_total}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-[10px] font-sans font-bold text-gray-400">{snap.source || 'leetcode_sync'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between shrink-0">
+              <span className="text-[11px] text-gray-500 font-medium">
+                Single Source of Truth Grounded Timeline Records
+              </span>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-5 py-2 rounded-xl bg-gray-200 dark:bg-navy-800 text-gray-800 dark:text-gray-200 text-xs font-black hover:bg-gray-300 dark:hover:bg-navy-700 transition-all"
+              >
+                Close Timeline
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );
