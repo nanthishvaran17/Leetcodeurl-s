@@ -6,7 +6,10 @@ import { EmailDeliveryTab } from '../components/EmailDeliveryTab';
 import { CertificateManagementModal } from '../components/CertificateManagementModal';
 import { ConfirmDeleteModal, DeleteItemInfo } from '../components/ConfirmDeleteModal';
 
+import { useNotification } from '../context/NotificationContext';
+
 export const ReportsPage: React.FC = () => {
+  const { notify } = useNotification();
   const [activeTab, setActiveTab] = useState<'reports' | 'email'>('reports');
   const [showCertModal, setShowCertModal] = useState<boolean>(false);
   const [emailLogs, setEmailLogs] = useState<any[]>([]);
@@ -136,13 +139,13 @@ export const ReportsPage: React.FC = () => {
       setTimeout(() => setToastMessage(null), 5000);
 
       if (statusCode === 401) {
-        alert("Authentication required. Please sign in again.");
+        notify.error('Authentication Required', 'Please sign in again.', { category: 'AUTH' });
       } else if (statusCode === 403) {
-        alert("You do not have permission to generate this institutional report.");
+        notify.error('Access Denied', 'You do not have permission to generate this institutional report.', { category: 'SECURITY' });
       } else if (statusCode === 404) {
-        alert("Report resource not found.");
+        notify.error('Not Found', 'Report resource not found.', { category: 'REPORTS' });
       } else if (statusCode === 422) {
-        alert("Invalid report parameters.");
+        notify.error('Invalid Parameters', 'Invalid report parameters.', { category: 'REPORTS' });
       }
     }
   };
@@ -179,14 +182,15 @@ export const ReportsPage: React.FC = () => {
 
   const handleSendWeeklyEmail = async () => {
     setIsSendingEmail(true);
+    notify.info('Sending Email Report', 'Dispatching automated email report...', { category: 'EMAIL ENGINE' });
     try {
       const res = await api.post('/reports/send-weekly-email', {
         recipient_emails: recipientInput
       });
-      alert(res.data.message);
+      notify.success('Email Dispatched', res.data.message || 'Weekly report dispatched successfully.', { category: 'EMAIL ENGINE' });
       fetchEmailLogs();
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Failed to dispatch email report.");
+      notify.error('Email Dispatch Failed', err.response?.data?.detail || "Failed to dispatch email report.", { category: 'EMAIL ENGINE' });
     } finally {
       setIsSendingEmail(false);
     }
@@ -194,6 +198,7 @@ export const ReportsPage: React.FC = () => {
 
   const handleGenerateUniversalReport = async (overrideType?: string, overrideFilters?: any) => {
     setIsGeneratingUniversal(true);
+    notify.info('Generating Universal Report', 'Processing custom filters...', { category: 'UNIVERSAL REPORT' });
     try {
       const reportType = overrideType || selectedReportType;
       const department = overrideFilters?.department || selectedDept;
@@ -208,21 +213,22 @@ export const ReportsPage: React.FC = () => {
         filters: overrideFilters || {}
       });
       setActiveUniversalPreviewId(res.data.reportId || res.data.report_id);
+      notify.success('Report Ready', 'Universal report generated successfully.', { category: 'UNIVERSAL REPORT' });
     } catch (err: any) {
       const statusCode = err.response?.status;
       const detailMsg = err.response?.data?.detail;
       if (statusCode === 401) {
-        alert("Authentication required. Please sign in again.");
+        notify.error('Authentication Required', 'Please sign in again.', { category: 'AUTH' });
       } else if (statusCode === 403) {
-        alert("You do not have permission to generate this institutional report.");
+        notify.error('Access Denied', 'You do not have permission to generate this institutional report.', { category: 'SECURITY' });
       } else if (statusCode === 404) {
-        alert("Report resource not found.");
+        notify.error('Not Found', 'Report resource not found.', { category: 'REPORTS' });
       } else if (statusCode === 422) {
-        alert("Invalid report parameters.");
+        notify.error('Invalid Parameters', 'Invalid report parameters.', { category: 'REPORTS' });
       } else if (statusCode === 500) {
-        alert("Report generation failed on the server. Check server logs.");
+        notify.error('Server Error', 'Report generation failed on the server.', { category: 'REPORTS' });
       } else {
-        alert(detailMsg || "Failed to generate report.");
+        notify.error('Report Error', detailMsg || "Failed to generate report.", { category: 'REPORTS' });
       }
     } finally {
       setIsGeneratingUniversal(false);
@@ -750,8 +756,8 @@ export const ReportsPage: React.FC = () => {
       </div>
       {/* Preview Modal */}
       {selectedSnapshotPreview && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto animate-fade-in">
-          <div className="bg-white dark:bg-navy-950 w-full max-w-4xl max-h-[calc(100vh-3rem)] rounded-3xl shadow-2xl flex flex-col border border-gray-200 dark:border-gray-800 overflow-hidden my-auto">
+        <div className="modal-overlay-responsive animate-modal-backdrop">
+          <div className="modal-container-responsive max-w-4xl bg-white dark:bg-navy-950 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 animate-modal-content">
             {/* Modal Header */}
             <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-navy-900/50 shrink-0">
               <div className="space-y-1">

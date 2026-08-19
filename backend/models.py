@@ -1410,6 +1410,171 @@ class AIChatHistory(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 
+# ============================================================================
+# 🤖 AI CODING INTELLIGENCE PLATFORM MODELS
+# ============================================================================
+
+class StudentRiskProfile(Base):
+    """
+    Stores dynamic Risk Score (0-100), Risk Level (LOW, MODERATE, HIGH, CRITICAL),
+    Early Disengagement detection, Evidence, Explanations, Confidence, and Recommended Actions.
+    """
+    __tablename__ = "student_risk_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), unique=True, nullable=False, index=True)
+    
+    risk_score = Column(Float, default=0.0, nullable=False) # 0 to 100
+    risk_level = Column(String(30), default="LOW", nullable=False) # LOW, MODERATE, HIGH, CRITICAL
+    
+    is_silent_disengaged = Column(Boolean, default=False)
+    disengagement_drop_pct = Column(Float, nullable=True)
+    
+    evidence_json = Column(JSON, nullable=True) # Bullet points of signals
+    explanation = Column(Text, nullable=True) # Explainable AI description
+    recommended_action = Column(Text, nullable=True) # Actionable mentor guidance
+    confidence_pct = Column(Float, default=85.0) # AI Confidence score 0-100%
+    
+    last_calculated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    student = relationship("Student", backref=backref("risk_profile", uselist=False))
+
+
+class FacultyIntervention(Base):
+    """
+    Tracks faculty mentoring interventions across their full lifecycle:
+    Risk Detected -> Faculty Assigned -> Intervention Created -> Practice Assigned -> Student Completes -> Performance Re-evaluated.
+    """
+    __tablename__ = "faculty_interventions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    faculty_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    
+    title = Column(String(200), nullable=False)
+    reason = Column(Text, nullable=False)
+    status = Column(String(30), default="Pending", index=True) # Pending, In Progress, Completed, Monitoring, Resolved
+    priority = Column(String(20), default="Medium", index=True) # High, Medium, Low
+    
+    assigned_topics = Column(JSON, nullable=True) # e.g. ["Dynamic Programming", "Graphs"]
+    target_problem_count = Column(Integer, default=5)
+    completed_problem_count = Column(Integer, default=0)
+    
+    # Intervention Effectiveness Tracking
+    rating_before = Column(Float, nullable=True)
+    rating_after = Column(Float, nullable=True)
+    weekly_solved_before = Column(Integer, default=0)
+    weekly_solved_after = Column(Integer, default=0)
+    improvement_notes = Column(Text, nullable=True)
+    
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    resolved_at = Column(DateTime, nullable=True)
+
+    student = relationship("Student", backref="interventions")
+    faculty = relationship("User", backref="assigned_interventions")
+
+
+class StudentSkillProfile(Base):
+    """
+    Stores DSA Skill Knowledge Map (16 core topics), Contest Skill, DSA Skill,
+    Consistency Score, Growth Rate, and Next Recommended Skill.
+    """
+    __tablename__ = "student_skill_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), unique=True, nullable=False, index=True)
+    
+    overall_score = Column(Float, default=50.0) # 0 to 100
+    contest_skill = Column(Float, default=50.0) # 0 to 100
+    dsa_skill = Column(Float, default=50.0) # 0 to 100
+    consistency_score = Column(Float, default=50.0) # 0 to 100
+    growth_rate_pct = Column(Float, default=0.0) # e.g. +18.4%
+    
+    current_level = Column(String(30), default="INTERMEDIATE") # BEGINNER, INTERMEDIATE, ADVANCED, EXPERT
+    next_recommended_skill = Column(String(100), default="Dynamic Programming")
+    
+    dsa_topic_scores = Column(JSON, nullable=True) # Dict of 16 topics -> score (0-100)
+    strong_areas = Column(JSON, nullable=True) # Array of top strong topic strings
+    weak_areas = Column(JSON, nullable=True) # Array of top weak topic strings
+    
+    last_calculated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    student = relationship("Student", backref=backref("skill_profile", uselist=False))
+
+
+class StudentLearningPath(Base):
+    """
+    Stores student-specific 4-week adaptive learning plan.
+    """
+    __tablename__ = "student_learning_paths"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    
+    title = Column(String(200), default="Adaptive 4-Week DSA Acceleration Plan")
+    status = Column(String(30), default="ACTIVE") # ACTIVE, COMPLETED, ADJUSTED
+    current_week = Column(Integer, default=1)
+    weeks_plan_json = Column(JSON, nullable=False) # 4 week plan array with tasks and targets
+    
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    student = relationship("Student", backref="learning_paths")
+
+
+class SystemAlert(Base):
+    """
+    Automated Priority Notification Alert Center record.
+    Types: CRITICAL (Red), WARNING (Orange), ATTENTION (Yellow), ACHIEVEMENT (Green)
+    """
+    __tablename__ = "system_alerts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    alert_type = Column(String(30), default="ATTENTION", index=True) # CRITICAL, WARNING, ATTENTION, ACHIEVEMENT
+    title = Column(String(200), nullable=False)
+    message = Column(Text, nullable=False)
+    
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=True, index=True)
+    department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
+    section_id = Column(Integer, ForeignKey("sections.id"), nullable=True)
+    
+    action_label = Column(String(100), nullable=True)
+    action_route = Column(String(100), nullable=True)
+    
+    is_read = Column(Boolean, default=False, index=True)
+    is_resolved = Column(Boolean, default=False, index=True)
+    
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+
+    student = relationship("Student")
+    department = relationship("Department")
+
+
+class FacultyActionQueueItem(Base):
+    """
+    Task-based action queue item for faculty interventions.
+    """
+    __tablename__ = "faculty_action_queue"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    faculty_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    
+    priority = Column(String(20), default="Medium", index=True) # High, Medium, Low
+    reason = Column(Text, nullable=False)
+    recommended_action = Column(Text, nullable=False)
+    status = Column(String(30), default="Pending", index=True) # Pending, In Progress, Completed, Monitoring, Resolved
+    category = Column(String(50), default="PERFORMANCE_DROP", index=True) # PERFORMANCE_DROP, INACTIVITY, WEAK_TOPIC, LOW_PARTICIPATION, SILENT_DISENGAGED
+    
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    student = relationship("Student")
+    faculty = relationship("User")
+
+
+
 
 
 

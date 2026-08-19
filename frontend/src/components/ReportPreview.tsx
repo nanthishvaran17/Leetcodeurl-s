@@ -7,7 +7,10 @@ interface ReportPreviewProps {
   onClose: () => void;
 }
 
+import { useNotification } from '../context/NotificationContext';
+
 export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose }) => {
+  const { notify } = useNotification();
   const [report, setReport] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
@@ -96,28 +99,29 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
       document.body.appendChild(link);
       link.click();
       link.remove();
+      notify.success('Report Downloaded', `${filename} generated successfully.`, { category: 'REPORT PREVIEW' });
     } catch (err: any) {
       console.error(`Failed to download ${format} report:`, err);
       const statusCode = err.response?.status;
       if (statusCode === 401) {
-        alert("Authentication required. Please sign in again.");
+        notify.error('Authentication Required', 'Please sign in again.', { category: 'AUTH' });
       } else if (statusCode === 403) {
-        alert("You do not have permission to generate this institutional report.");
+        notify.error('Access Denied', 'You do not have permission to generate this report.', { category: 'SECURITY' });
       } else if (statusCode === 404) {
-        alert("Report resource not found.");
+        notify.error('Not Found', 'Report resource not found.', { category: 'REPORTS' });
       } else if (statusCode === 422) {
-        alert("Invalid report parameters.");
+        notify.error('Invalid Parameters', 'Invalid report parameters.', { category: 'REPORTS' });
       } else if (statusCode === 500) {
-        alert("Report generation failed on the server. Check server logs.");
+        notify.error('Server Error', 'Report generation failed on the server.', { category: 'REPORTS' });
       } else {
-        alert(`Failed to download ${format.toUpperCase()} report. Please try again.`);
+        notify.error('Download Failed', `Failed to download ${format.toUpperCase()} report. Please try again.`, { category: 'REPORTS' });
       }
     }
   };
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div className="modal-overlay-responsive animate-modal-backdrop">
         <div className="bg-white dark:bg-navy-900 p-8 rounded-3xl flex flex-col items-center space-y-4 shadow-2xl border border-gray-200 dark:border-gray-800">
           <RefreshCw className="w-8 h-8 animate-spin text-brand-500" />
           <p className="font-bold text-gray-700 dark:text-gray-300">Fetching verified report dataset...</p>
@@ -155,10 +159,10 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md overflow-hidden animate-fade-in"
+      className="modal-overlay-responsive animate-modal-backdrop"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-white dark:bg-navy-900 w-full max-w-6xl max-h-[92vh] rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 flex flex-col overflow-hidden my-auto animate-modal-content">
+      <div className="modal-container-responsive max-w-6xl bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 animate-modal-content">
         
         {/* ── 1. HEADER BANNER ── */}
         <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-950 text-white flex items-center justify-between shrink-0">

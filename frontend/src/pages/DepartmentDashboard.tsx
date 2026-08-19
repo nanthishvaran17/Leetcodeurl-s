@@ -5,12 +5,14 @@ import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { StudentFlipCard } from '../components/StudentFlipCard';
 import { CANONICAL_ROSTER } from '../data/canonicalRoster';
 import { filterAndSortStudents } from '../utils/filterUtils';
+import { useNotification } from '../context/NotificationContext';
 
 interface DepartmentDashboardProps {
   onSelectStudent: (student: StudentData) => void;
 }
 
 export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSelectStudent }) => {
+  const { notify, confirmAction } = useNotification();
   const [departments, setDepartments] = useState<any[]>([]);
   const [selectedDept, setSelectedDept] = useState<string>('all');
   const [yearLevel, setYearLevel] = useState<string>('all');
@@ -38,8 +40,8 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
 
   const fetchStudents = async () => {
     try {
-      const res = await api.get('/students');
-      if (res.data && res.data.length > 0) {
+      const res = await api.get('/students?limit=500');
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setStudents(res.data);
       }
     } catch (err) {
@@ -49,12 +51,14 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
 
   const handleRefreshAllStats = async () => {
     setIsRefreshing(true);
+    notify.info('Syncing Department Roster', 'Fetching fresh LeetCode statistics for department students...', { category: 'DEPARTMENT SYNC' });
     try {
-      // Trigger global sync for ALL active students (not just visible ones)
-      await api.post('/sync/full?triggered_by=admin');
+      await api.post('/sync/start?triggered_by=department_dashboard');
       await fetchStudents();
+      notify.success('Sync Completed', 'Department roster statistics updated.', { category: 'DEPARTMENT SYNC' });
     } catch (err) {
-      console.error("Manual sync error:", err);
+      console.error("Refresh all error", err);
+      notify.error('Sync Error', 'Failed to trigger roster sync.', { category: 'DEPARTMENT SYNC' });
     } finally {
       setIsRefreshing(false);
     }
@@ -78,18 +82,25 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
     setSolvedFilter('all');
     setSortBy('top_solved');
     setDisplayCount(32);
+    notify.info('Filters Reset', 'Department filters restored to default.', { category: 'FILTERS' });
   };
 
   const handleDeleteStudent = async (student: StudentData) => {
-    if (!confirm(`Are you sure you want to delete student "${student.name}" (${student.reg_no})? This action cannot be undone.`)) {
-      return;
-    }
+    const confirmed = await confirmAction({
+      title: 'Delete Student Record?',
+      message: `Are you sure you want to delete student "${student.name}" (${student.reg_no})? This action cannot be undone.`,
+      confirmLabel: 'Delete Record',
+      category: 'DEPARTMENT DASHBOARD',
+      variant: 'danger',
+    });
+    if (!confirmed) return;
+
     try {
       await api.delete(`/students/${student.id}`);
-      alert(`Student "${student.name}" deleted successfully!`);
+      notify.success('Student Deleted', `Student "${student.name}" deleted successfully!`, { category: 'DEPARTMENT DASHBOARD' });
       fetchStudents();
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Failed to delete student record.");
+      notify.error('Delete Failed', err.response?.data?.detail || "Failed to delete student record.", { category: 'DEPARTMENT DASHBOARD' });
     }
   };
 
@@ -202,8 +213,8 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                 className="w-full appearance-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-xs font-bold py-3 pl-3.5 pr-9 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 cursor-pointer"
               >
                 <option value="all">All Departments</option>
-                <option value="cyber_security">Computer Science and Engineering (Cyber Security)</option>
-                <option value="iot">Computer Science and Engineering (IoT)</option>
+                <option value="cyber_security">CSE (Cyber Security)</option>
+                <option value="iot">CSE (IoT)</option>
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
                 <ChevronDown className="w-4 h-4" />

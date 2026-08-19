@@ -37,8 +37,24 @@ const api = axios.create({
 });
 
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+import { auth } from '../firebase';
+
+api.interceptors.request.use(async (config) => {
+  let token = localStorage.getItem('token');
+
+  // If Firebase currentUser exists, ensure we fetch/refresh the latest ID Token
+  if (auth && auth.currentUser) {
+    try {
+      const fbToken = await auth.currentUser.getIdToken();
+      if (fbToken) {
+        token = fbToken;
+        localStorage.setItem('token', fbToken);
+      }
+    } catch (_err) {
+      // Ignore token refresh errors and fallback to stored token
+    }
+  }
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

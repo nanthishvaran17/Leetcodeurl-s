@@ -170,14 +170,14 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-[9999] bg-black/65 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-fadeIn"
+      className="modal-overlay-responsive animate-modal-backdrop"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
         }
       }}
     >
-      <div className="relative w-full max-w-lg max-h-[calc(100vh-48px)] flex flex-col bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-2xl overflow-hidden my-auto">
+      <div className="modal-container-responsive max-w-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-2xl animate-modal-content">
         
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-navy-800 bg-gray-50/50 dark:bg-navy-950/50 shrink-0">

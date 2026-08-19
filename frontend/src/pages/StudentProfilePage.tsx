@@ -11,7 +11,10 @@ interface StudentProfilePageProps {
   onBack: () => void;
 }
 
+import { useNotification } from '../context/NotificationContext';
+
 export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student, onBack }) => {
+  const { notify } = useNotification();
   const [detail, setDetail] = useState<any>(student);
   const [insights, setInsights] = useState<any>(null);
   const [isLiveFetching, setIsLiveFetching] = useState(false);
@@ -44,6 +47,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   const handleGenerateCert = async () => {
     if (!student?.id) return;
     setDownloadingCert(true);
+    notify.info('Generating Certificate', 'Creating official performance certificate PDF...', { category: 'CERTIFICATE ENGINE' });
     try {
       const res = await api.post('/certificates/generate', {
         student_id: student.id,
@@ -59,7 +63,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         const text = await response.data.text();
         try {
           const errJson = JSON.parse(text);
-          alert(`Certificate Error: ${errJson.detail || 'Could not generate PDF.'}`);
+          notify.error('Certificate Error', errJson.detail || 'Could not generate PDF.', { category: 'CERTIFICATE ENGINE' });
           return;
         } catch (e) {}
       }
@@ -83,10 +87,11 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       setTimeout(() => {
         window.URL.revokeObjectURL(blobUrl);
       }, 2000);
+      notify.success('Certificate Downloaded', `Certificate ${filename} generated.`, { category: 'CERTIFICATE ENGINE' });
     } catch (err: any) {
       console.error("Certificate error:", err);
       const detailMsg = err.response?.data?.detail || err.message || "Failed to generate certificate.";
-      alert(`Certificate Error: ${detailMsg}`);
+      notify.error('Certificate Error', detailMsg, { category: 'CERTIFICATE ENGINE' });
     } finally {
       setDownloadingCert(false);
     }
@@ -95,6 +100,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   const handleDownloadForensicCert = async () => {
     if (!student?.id) return;
     setDownloadingForensic(true);
+    notify.info('Generating Forensic Report', 'Compiling official contest forensic audit PDF...', { category: 'FORENSIC AUDIT' });
     try {
       const targetId = student.reg_no || student.id;
       const response = await api.get(`/certificates/${encodeURIComponent(targetId)}/download-forensic-pdf`, {
@@ -105,7 +111,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         const text = await response.data.text();
         try {
           const errJson = JSON.parse(text);
-          alert(`Forensic Report Error: ${errJson.detail || 'Could not generate report.'}`);
+          notify.error('Forensic Report Error', errJson.detail || 'Could not generate report.', { category: 'FORENSIC AUDIT' });
           return;
         } catch (e) {}
       }
@@ -129,9 +135,10 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       setTimeout(() => {
         window.URL.revokeObjectURL(blobUrl);
       }, 2000);
+      notify.success('Forensic Report Downloaded', `Audit report ${filename} saved.`, { category: 'FORENSIC AUDIT' });
     } catch (err: any) {
       console.error("Forensic report error:", err);
-      alert("Failed to download Official LeetCode Contest Forensic Verification Audit Report.");
+      notify.error('Forensic Error', 'Failed to download Official LeetCode Contest Forensic Verification Audit Report.', { category: 'FORENSIC AUDIT' });
     } finally {
       setDownloadingForensic(false);
     }

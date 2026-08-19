@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, AlertTriangle, RefreshCw, ExternalLink, ShieldAlert, UserCheck } from 'lucide-react';
 import api from '../services/api';
+import { useNotification } from '../context/NotificationContext';
 
 interface FailedStudentItem {
   student_id: number;
@@ -26,7 +27,8 @@ interface FailedSyncModalProps {
   onSelectStudent?: (studentId: number) => void;
 }
 
-export const FailedSyncModal: React.FC<FailedSyncModalProps> = ({ isOpen, onClose, onSelectStudent }) => {
+export const FailedSyncModal: React.FC<FailedSyncModalProps> = ({ isOpen, onClose }) => {
+  const { notify } = useNotification();
   const [failedStudents, setFailedStudents] = useState<FailedStudentItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [retryingId, setRetryingId] = useState<number | null>(null);
@@ -53,12 +55,14 @@ export const FailedSyncModal: React.FC<FailedSyncModalProps> = ({ isOpen, onClos
 
   const handleRetryStudent = async (studentId: number) => {
     setRetryingId(studentId);
+    notify.info('Retrying Sync', `Re-evaluating student #${studentId}...`, { category: 'SYNC RETRY' });
     try {
       await api.post(`/sync/student/${studentId}`);
+      notify.success('Sync Retry Succeeded', 'Student profile statistics updated.', { category: 'SYNC RETRY' });
       await fetchFailedStudents();
     } catch (err) {
       console.error("Retry failed", err);
-      alert("Failed to sync student. Please check username / link.");
+      notify.error('Retry Failed', "Failed to sync student. Please check username / link.", { category: 'SYNC RETRY' });
     } finally {
       setRetryingId(null);
     }
@@ -67,8 +71,8 @@ export const FailedSyncModal: React.FC<FailedSyncModalProps> = ({ isOpen, onClos
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-950/80 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-5xl max-h-[85vh] bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 flex flex-col overflow-hidden">
+    <div className="modal-overlay-responsive animate-modal-backdrop">
+      <div className="modal-container-responsive max-w-5xl bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 animate-modal-content">
         
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-navy-950/50">

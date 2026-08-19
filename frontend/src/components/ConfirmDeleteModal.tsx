@@ -58,7 +58,7 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-6 bg-slate-950/60 backdrop-blur-xs overflow-y-auto animate-fadeIn"
+      className="modal-overlay-responsive animate-modal-backdrop"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isDeleting) {
           onCancel();
@@ -69,7 +69,7 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
       aria-labelledby="confirm-delete-title"
     >
       <div
-        className="relative w-full max-w-[500px] max-h-[calc(100vh-3rem)] bg-slate-900 border border-slate-700/80 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] border-t-[3.5px] border-t-rose-500 flex flex-col overflow-y-auto transform transition-all animate-scaleUp text-white my-auto p-1"
+        className="modal-container-responsive max-w-[500px] bg-slate-900 border border-slate-700/80 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] border-t-[3.5px] border-t-rose-500 animate-modal-content text-white p-1"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Close Button */}

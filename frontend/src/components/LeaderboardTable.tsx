@@ -119,6 +119,8 @@ interface LeaderboardTableProps {
   onUpdateStudent?: (updated: StudentData) => void;
 }
 
+import { useNotification } from '../context/NotificationContext';
+
 export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
   students,
   loading = false,
@@ -128,6 +130,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
   onBulkDeleteStudents,
   onUpdateStudent
 }) => {
+  const { notify, confirmAction } = useNotification();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [viewingStudent, setViewingStudent] = useState<StudentData | null>(null);
   const [editingStudent, setEditingStudent] = useState<StudentData | null>(null);
@@ -144,19 +147,32 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
     setViewingStudent(student);
   };
 
-  // Body scroll lock when modal is open
+  // Body scroll lock & layout shift prevention when any modal is open
   useEffect(() => {
-    if (viewingStudent) {
-      const prev = document.body.style.overflow;
+    const isAnyModalOpen = Boolean(viewingStudent || editingStudent || deletingStudent);
+    if (isAnyModalOpen) {
+      const prevOverflow = document.body.style.overflow;
+      const prevPaddingRight = document.body.style.paddingRight;
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
-      const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setViewingStudent(null); };
+      if (scrollbarWidth > 0) {
+        document.body.style.paddingRight = `${scrollbarWidth}px`;
+      }
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setViewingStudent(null);
+          setEditingStudent(null);
+          setDeletingStudent(null);
+        }
+      };
       window.addEventListener('keydown', onKey);
       return () => {
-        document.body.style.overflow = prev;
+        document.body.style.overflow = prevOverflow || 'unset';
+        document.body.style.paddingRight = prevPaddingRight || '';
         window.removeEventListener('keydown', onKey);
       };
     }
-  }, [viewingStudent]);
+  }, [viewingStudent, editingStudent, deletingStudent]);
 
   const toggleStudent = (id: number) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
@@ -182,25 +198,44 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
     if (onBulkDeleteStudents) {
       onBulkDeleteStudents(selectedIds);
       setSelectedIds([]);
-    } else if (onDeleteStudent) {
-      if (confirm(`Are you sure you want to delete ${selectedIds.length} selected students?`)) {
-        selectedIds.forEach(id => {
-          const st = students.find(s => s.id === id);
-          if (st) onDeleteStudent(st);
-        });
-        setSelectedIds([]);
-      }
     } else {
-      if (confirm(`Are you sure you want to delete ${selectedIds.length} selected student records? This action cannot be undone.`)) {
-        try {
-          await api.post('/students/bulk-delete', { student_ids: selectedIds });
-          alert(`✅ Successfully deleted ${selectedIds.length} student records!`);
-          setSelectedIds([]);
-          window.location.reload();
-        } catch (err: any) {
-          alert(err.response?.data?.detail || "Failed to bulk delete student records.");
-        }
+      const confirmed = await confirmAction({
+        title: 'Permanently Delete Selected Students?',
+        message: `Are you sure you want to permanently delete ${selectedIds.length} selected student records? This action cannot be undone.`,
+        confirmLabel: `Delete ${selectedIds.length} Records`,
+        category: 'LEADERBOARD',
+        variant: 'danger',
+      });
+      if (!confirmed) return;
+
+      try {
+        await api.post('/students/bulk-delete', { student_ids: selectedIds, soft_delete: false });
+        notify.success('Students Deleted', `Successfully deleted ${selectedIds.length} student records.`, { category: 'LEADERBOARD' });
+        setSelectedIds([]);
+        if (onRefreshStudent) onRefreshStudent(0);
+      } catch (err: any) {
+        notify.error('Bulk Delete Failed', err.response?.data?.detail || "Failed to bulk delete student records.", { category: 'LEADERBOARD' });
       }
+    }
+  };
+
+  const handleTriggerBulkDeactivate = async () => {
+    const confirmed = await confirmAction({
+      title: 'Deactivate Selected Students?',
+      message: `Are you sure you want to deactivate ${selectedIds.length} selected student records? They can be re-activated later from Student Master.`,
+      confirmLabel: `Deactivate ${selectedIds.length} Students`,
+      category: 'LEADERBOARD',
+      variant: 'warning',
+    });
+    if (!confirmed) return;
+
+    try {
+      await api.post('/students/bulk-delete', { student_ids: selectedIds, soft_delete: true });
+      notify.success('Students Deactivated', `Successfully deactivated ${selectedIds.length} student records.`, { category: 'LEADERBOARD' });
+      setSelectedIds([]);
+      if (onRefreshStudent) onRefreshStudent(0);
+    } catch (err: any) {
+      notify.error('Bulk Deactivate Failed', err.response?.data?.detail || "Failed to bulk deactivate student records.", { category: 'LEADERBOARD' });
     }
   };
 
@@ -225,11 +260,12 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
         leetcode_url: editLeetCodeUrl.trim() || undefined,
         username: editUsername.trim() || undefined
       });
+      notify.success('Profile Updated', `Student record for ${editName} updated successfully.`, { category: 'STUDENT EDIT' });
       if (onUpdateStudent) onUpdateStudent(res.data);
       if (onRefreshStudent) onRefreshStudent(editingStudent.id);
       setEditingStudent(null);
     } catch (err: any) {
-      alert(`Update failed: ${err?.response?.data?.detail || err.message}`);
+      notify.error('Update Failed', err?.response?.data?.detail || err.message || 'Failed to save student profile.', { category: 'STUDENT EDIT' });
     } finally {
       setIsSaving(false);
     }
@@ -262,10 +298,12 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
     setIsDeleting(true);
     try {
       await api.delete(`/students/${deletingStudent.id}?soft_delete=true`);
+      notify.success('Student Deactivated', `Student record for ${deletingStudent.name} deactivated.`, { category: 'STUDENT DEACTIVATION' });
       if (onDeleteStudent) onDeleteStudent(deletingStudent);
       setDeletingStudent(null);
+      if (onRefreshStudent) onRefreshStudent(deletingStudent.id);
     } catch (err: any) {
-      alert(`Deactivation failed: ${err?.response?.data?.detail || err.message}`);
+      notify.error('Deactivation Failed', err?.response?.data?.detail || err.message || 'Failed to deactivate student.', { category: 'STUDENT DEACTIVATION' });
     } finally {
       setIsDeleting(false);
     }
@@ -277,28 +315,35 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
 
   return (
     <div className="w-full space-y-2">
-      {/* Bulk Delete Bar */}
+      {/* Bulk Delete & Deactivate Bar */}
       {selectedIds.length > 0 && (
-        <div className="flex items-center justify-between p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-2xl mb-3 text-rose-600 dark:text-rose-300">
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-2xl mb-3 text-rose-600 dark:text-rose-300">
           <div className="flex items-center space-x-2">
             <Trash2 className="w-4 h-4 text-rose-500 animate-bounce" />
             <span className="font-black text-xs md:text-sm">
               {selectedIds.length} Student{selectedIds.length > 1 ? 's' : ''} Selected
             </span>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => setSelectedIds([])}
-              className="px-3 py-1.5 rounded-xl bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-bold hover:bg-gray-300 transition-colors"
+              className="px-3 py-1.5 rounded-xl bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-bold hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
             >
               Clear Selection
+            </button>
+            <button
+              onClick={handleTriggerBulkDeactivate}
+              className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-black flex items-center space-x-1.5 shadow-md transition-transform transform hover:scale-105"
+            >
+              <AlertCircle className="w-3.5 h-3.5" />
+              <span>Deactivate Selected ({selectedIds.length})</span>
             </button>
             <button
               onClick={handleTriggerBulkDelete}
               className="px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black flex items-center space-x-1.5 shadow-lg transition-transform transform hover:scale-105"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              <span>Delete Selected ({selectedIds.length})</span>
+              <span>Delete Permanently ({selectedIds.length})</span>
             </button>
           </div>
         </div>
@@ -587,13 +632,13 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
       {/* Viewport-Centered Student Edit Modal */}
       {editingStudent && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-fade-in"
+          className="modal-overlay-responsive animate-modal-backdrop"
           onClick={(e) => {
             if (e.target === e.currentTarget && !isSaving) setEditingStudent(null);
           }}
         >
           <div
-            className="bg-white dark:bg-navy-900 w-full max-w-lg max-h-[calc(100vh-3rem)] rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col my-auto"
+            className="modal-container-responsive max-w-lg bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 animate-modal-content"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -704,35 +749,33 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
       {/* Viewport-Centered Student Delete Confirmation Modal */}
       {deletingStudent && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-fade-in"
+          className="modal-overlay-responsive animate-modal-backdrop"
           onClick={(e) => {
             if (e.target === e.currentTarget && !isDeleting) setDeletingStudent(null);
           }}
         >
           <div
-            className="bg-white dark:bg-navy-900 w-full max-w-md max-h-[calc(100vh-3rem)] rounded-3xl shadow-2xl border border-rose-200 dark:border-rose-900/50 overflow-hidden flex flex-col p-6 space-y-4 my-auto"
+            className="modal-container-responsive max-w-md bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-rose-200 dark:border-rose-900/50 p-6 space-y-4 animate-modal-content"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
               <Trash2 className="w-6 h-6" />
             </div>
-
-            <div className="text-center space-y-1">
-              <h3 className="text-base font-black text-gray-900 dark:text-white">Deactivate Student Record?</h3>
-              <p className="text-xs text-gray-500">
-                Are you sure you want to deactivate <b className="text-gray-900 dark:text-white">{deletingStudent.name}</b> (<code className="font-mono text-rose-600">{deletingStudent.reg_no}</code>)?
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-black text-gray-900 dark:text-white">Deactivate Student?</h3>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Are you sure you want to deactivate <strong className="text-gray-900 dark:text-white">{deletingStudent.name}</strong> ({deletingStudent.reg_no})?
+              </p>
+              <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold bg-amber-50 dark:bg-amber-950/40 p-2 rounded-xl border border-amber-200 dark:border-amber-900/40">
+                ⚠️ Soft Delete: Record will be hidden from public leaderboard but preserved in audit logs.
               </p>
             </div>
-
-            <div className="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 rounded-xl text-[11px] text-rose-700 dark:text-rose-300 font-bold">
-              ⚠️ This student will be marked as inactive and removed from public contest rankings. You can re-activate them anytime from Student Master.
-            </div>
-
-            <div className="flex items-center justify-end space-x-3 pt-2">
+            <div className="flex items-center space-x-3 pt-2">
               <button
                 type="button"
                 onClick={() => setDeletingStudent(null)}
-                className="px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-gray-800 cursor-pointer"
+                disabled={isDeleting}
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-navy-800 transition-colors"
               >
                 Cancel
               </button>
@@ -740,9 +783,9 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                 type="button"
                 onClick={handleConfirmSoftDelete}
                 disabled={isDeleting}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer disabled:opacity-50"
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-lg shadow-rose-600/30 transition-colors disabled:opacity-50"
               >
-                {isDeleting ? 'Deactivating...' : 'Confirm Deactivation'}
+                {isDeleting ? 'Deactivating...' : 'Confirm Deactivate'}
               </button>
             </div>
           </div>
@@ -757,12 +800,12 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
           role="dialog"
           aria-modal="true"
           aria-label={`Student profile for ${viewingStudent.name}`}
-          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 md:p-8 bg-black/80 backdrop-blur-md overflow-hidden animate-modal-backdrop"
+          className="modal-overlay-responsive animate-modal-backdrop"
           onClick={(e) => { if (e.target === e.currentTarget) setViewingStudent(null); }}
         >
           {/* Modal panel — centered with safe margins from top & bottom */}
           <div
-            className="relative w-full max-w-2xl flex flex-col bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden my-auto max-h-[calc(100vh-3rem)] animate-modal-content"
+            className="modal-container-responsive bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 animate-modal-content"
             onClick={(e) => e.stopPropagation()}
           >
 

@@ -8,8 +8,10 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { SecurityActivitySection } from '../components/SecurityActivitySection';
+import { useNotification } from '../context/NotificationContext';
 
 export const SettingsPage: React.FC = () => {
+  const { notify, confirmAction } = useNotification();
   const [initialSettings, setInitialSettings] = useState<any>({});
   const [settings, setSettings] = useState<any>({
     SESSION_START: '08:00',
@@ -179,9 +181,10 @@ export const SettingsPage: React.FC = () => {
       await fetchSettings();
       await fetchAuditLogs();
       await fetchSystemHealth();
+      notify.success('Configuration Saved', `Updated ${changedKeys.length} settings successfully.`, { category: 'ADMIN SETTINGS' });
     } catch (err: any) {
       const errMsg = err.response?.data?.detail || 'Failed to save settings.';
-      alert(`Save Error: ${errMsg}`);
+      notify.error('Save Error', errMsg, { category: 'ADMIN SETTINGS' });
     } finally {
       setSaving(false);
     }
@@ -189,19 +192,20 @@ export const SettingsPage: React.FC = () => {
 
   const handleCreateBackup = async () => {
     setActionLoading('create-backup');
+    notify.info('Creating Database Snapshot', 'Backing up SQLite database file...', { category: 'BACKUP ENGINE' });
     try {
       const prefix = customSnapshotTag.trim() ? `backup_${customSnapshotTag.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_')}` : 'backup_leetcode_tracker';
       const res = await api.post('/settings/backup', { prefix });
       if (res.data?.status === 'SUCCESS') {
-        alert(`Database Snapshot Created!\n\nFilename: ${res.data.filename}\nSHA256: ${res.data.checksum}`);
+        notify.success('Snapshot Created', `Filename: ${res.data.filename}`, { category: 'BACKUP ENGINE' });
         setCustomSnapshotTag('');
         fetchBackups();
         fetchAuditLogs();
       } else {
-        alert(`Failed to create backup: ${res.data?.message || 'Unknown error'}`);
+        notify.error('Backup Failed', res.data?.message || 'Unknown error', { category: 'BACKUP ENGINE' });
       }
     } catch (err) {
-      alert('Error creating database snapshot.');
+      notify.error('Backup Error', 'Error creating database snapshot.', { category: 'BACKUP ENGINE' });
     } finally {
       setActionLoading(null);
     }
@@ -212,12 +216,12 @@ export const SettingsPage: React.FC = () => {
     try {
       const res = await api.post(`/settings/backups/${encodeURIComponent(filename)}/verify`);
       if (res.data?.verified) {
-        alert(`BACKUP INTEGRITY VERIFIED\n\nFilename: ${filename}\nStatus: HEALTHY\nSHA256 Checksum: ${res.data.checksum}`);
+        notify.success('Backup Verified', `Filename: ${filename} (SHA256: ${res.data.checksum?.substring(0, 12)}...)`, { category: 'BACKUP INTEGRITY' });
       } else {
-        alert(`INTEGRITY ERROR: ${res.data?.message || 'File check failed'}`);
+        notify.error('Integrity Check Failed', res.data?.message || 'File check failed', { category: 'BACKUP INTEGRITY' });
       }
     } catch (err) {
-      alert('Error verifying backup integrity.');
+      notify.error('Verification Error', 'Error verifying backup integrity.', { category: 'BACKUP INTEGRITY' });
     } finally {
       setActionLoading(null);
     }
@@ -259,14 +263,14 @@ export const SettingsPage: React.FC = () => {
       try {
         const res = await api.post(`/settings/backups/${encodeURIComponent(targetFilename)}/restore`);
         if (res.data?.status === 'SUCCESS') {
-          alert(`RESTORE SUCCESSFUL!\n\n${res.data.message}`);
+          notify.success('Restore Successful', res.data.message || 'Snapshot restored successfully.', { category: 'RESTORE ENGINE' });
           fetchBackups();
           fetchAuditLogs();
         } else {
-          alert(`Restore error: ${res.data?.message}`);
+          notify.error('Restore Error', res.data?.message || 'Restore failed.', { category: 'RESTORE ENGINE' });
         }
       } catch (err) {
-        alert('Failed to restore snapshot.');
+        notify.error('Restore Failed', 'Failed to restore snapshot.', { category: 'RESTORE ENGINE' });
       } finally {
         setActionLoading(null);
       }
@@ -275,13 +279,14 @@ export const SettingsPage: React.FC = () => {
       try {
         const res = await api.delete(`/settings/backups/${encodeURIComponent(targetFilename)}`);
         if (res.data?.status === 'SUCCESS') {
+          notify.success('Snapshot Deleted', `Backup snapshot "${targetFilename}" removed.`, { category: 'BACKUP ENGINE' });
           fetchBackups();
           fetchAuditLogs();
         } else {
-          alert(`Delete failed: ${res.data?.message}`);
+          notify.error('Delete Failed', res.data?.message || 'Delete failed.', { category: 'BACKUP ENGINE' });
         }
       } catch (err) {
-        alert('Failed to delete backup snapshot.');
+        notify.error('Delete Failed', 'Failed to delete backup snapshot.', { category: 'BACKUP ENGINE' });
       } finally {
         setActionLoading(null);
       }
@@ -293,11 +298,11 @@ export const SettingsPage: React.FC = () => {
           await api.post('/settings/backup');
         }
         const res = await api.post(`/settings/advanced/${op}`);
-        alert(`Operation Completed: ${res.data?.message || 'Success'}`);
+        notify.success('Operation Completed', res.data?.message || 'Success', { category: 'ADVANCED OPERATIONS' });
         fetchAuditLogs();
         fetchBackups();
       } catch (err: any) {
-        alert(`Operation error: ${err.response?.data?.detail || err.message}`);
+        notify.error('Operation Error', err.response?.data?.detail || err.message, { category: 'ADVANCED OPERATIONS' });
       } finally {
         setActionLoading(null);
       }
@@ -306,13 +311,14 @@ export const SettingsPage: React.FC = () => {
 
   const handleTestEmail = async () => {
     setTestingEmail(true);
+    notify.info('Testing Email Service', 'Sending test notification to nanthishvaran17@gmail.com...', { category: 'EMAIL TEST' });
     try {
       const target = 'nanthishvaran17@gmail.com';
       const res = await api.post('/settings/test-email', { recipient: target });
-      alert(`Email Test: ${res.data.message}`);
+      notify.success('Test Email Sent', res.data.message || 'Email test successful.', { category: 'EMAIL TEST' });
       fetchAuditLogs();
     } catch (err) {
-      alert('Failed to send test notification email.');
+      notify.error('Test Failed', 'Failed to send test notification email.', { category: 'EMAIL TEST' });
     } finally {
       setTestingEmail(false);
     }
@@ -331,7 +337,7 @@ export const SettingsPage: React.FC = () => {
   // Export Audit Logs to CSV
   const handleExportAuditLogsCsv = () => {
     if (auditLogs.length === 0) {
-      alert('No audit logs to export.');
+      notify.warning('No Audit Logs', 'No audit logs available to export.', { category: 'AUDIT LOGS' });
       return;
     }
     const headers = ['ID', 'Timestamp (IST)', 'Admin User', 'Action', 'Result', 'Details'];
@@ -351,6 +357,7 @@ export const SettingsPage: React.FC = () => {
     link.download = `admin_audit_logs_${new Date().toISOString().substring(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(url);
+    notify.success('CSV Exported', 'Audit logs exported to CSV file.', { category: 'AUDIT LOGS' });
   };
 
   // Export Settings Config JSON
@@ -360,6 +367,7 @@ export const SettingsPage: React.FC = () => {
     downloadAnchor.setAttribute('href', dataStr);
     downloadAnchor.setAttribute('download', `system_config_${new Date().toISOString().substring(0, 10)}.json`);
     downloadAnchor.click();
+    notify.success('Config Exported', 'System configuration saved as JSON.', { category: 'ADMIN SETTINGS' });
   };
 
   // Import Settings Config JSON
@@ -372,10 +380,10 @@ export const SettingsPage: React.FC = () => {
         const parsed = JSON.parse(event.target?.result as string);
         if (typeof parsed === 'object') {
           setSettings((prev: any) => ({ ...prev, ...parsed }));
-          alert('Configuration imported successfully! Review changes and click [ SAVE CONFIGURATION ] to apply.');
+          notify.success('Config Imported', 'Configuration imported successfully! Click Save Configuration to apply.', { category: 'ADMIN SETTINGS' });
         }
       } catch (err) {
-        alert('Invalid JSON configuration file.');
+        notify.error('Import Failed', 'Invalid JSON configuration file.', { category: 'ADMIN SETTINGS' });
       }
     };
     reader.readAsText(file);
@@ -1343,8 +1351,8 @@ export const SettingsPage: React.FC = () => {
 
       {/* Confirmation Modal */}
       {confirmModal.open && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl p-6 max-w-md max-h-[calc(100vh-3rem)] w-full space-y-4 shadow-2xl animate-fade-in my-auto overflow-y-auto">
+        <div className="modal-overlay-responsive animate-modal-backdrop">
+          <div className="modal-container-responsive max-w-md bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl p-6 space-y-4 shadow-2xl animate-modal-content">
             <h3 className="text-base font-extrabold text-gray-900 dark:text-white flex items-center space-x-2">
               <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
               <span>{confirmModal.title}</span>

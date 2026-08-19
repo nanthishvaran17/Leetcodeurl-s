@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { X, UploadCloud, CheckCircle2, AlertTriangle, FileSpreadsheet, Loader2 } from 'lucide-react';
 import api from '../services/api';
 
+import { useNotification } from '../context/NotificationContext';
+
 interface ImportModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -9,6 +11,7 @@ interface ImportModalProps {
 }
 
 export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  const { notify } = useNotification();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<any>(null);
@@ -22,6 +25,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
       
       // Auto trigger preview check
       setLoading(true);
+      notify.info('Validating Roster File', 'Checking column headers and LeetCode handle syntax...', { category: 'EXCEL IMPORT' });
       const formData = new FormData();
       formData.append('file', selected);
 
@@ -30,8 +34,9 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         setPreview(res.data);
+        notify.success('Validation Complete', `${res.data?.valid_rows?.length || 0} valid student records ready for import.`, { category: 'EXCEL IMPORT' });
       } catch (err: any) {
-        alert(err.response?.data?.detail || "Error validating file");
+        notify.error('File Validation Failed', err.response?.data?.detail || "Error validating file.", { category: 'EXCEL IMPORT' });
       } finally {
         setLoading(false);
       }
@@ -41,13 +46,14 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
   const handleCommit = async () => {
     if (!preview || !preview.valid_rows || preview.valid_rows.length === 0) return;
     setLoading(true);
+    notify.info('Importing Student Records', `Inserting ${preview.valid_rows.length} records into database...`, { category: 'EXCEL IMPORT' });
     try {
       await api.post('/students/import-commit', preview.valid_rows);
-      alert(`Successfully imported ${preview.valid_rows.length} students!`);
+      notify.success('Roster Import Successful', `${preview.valid_rows.length} student records added to institutional roster.`, { category: 'EXCEL IMPORT' });
       onSuccess();
       onClose();
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Import failed");
+      notify.error('Import Failed', err.response?.data?.detail || "Import failed.", { category: 'EXCEL IMPORT' });
     } finally {
       setLoading(false);
     }
@@ -66,14 +72,15 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
+      notify.success('Sample Template Saved', 'Student_Import_Sample.xlsx downloaded.', { category: 'EXCEL IMPORT' });
     } catch (err: any) {
-      alert("Unable to download sample Excel template. Please try again.");
+      notify.error('Download Error', 'Unable to download sample Excel template. Please try again.', { category: 'EXCEL IMPORT' });
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto animate-fade-in">
-      <div className="w-full max-w-3xl glass-card rounded-3xl border border-gray-200 dark:border-gray-800 flex flex-col max-h-[calc(100vh-3rem)] overflow-hidden my-auto shadow-2xl">
+    <div className="modal-overlay-responsive animate-modal-backdrop">
+      <div className="modal-container-responsive max-w-3xl glass-card rounded-3xl border border-gray-200 dark:border-gray-800 shadow-2xl animate-modal-content">
         
         {/* Header */}
         <div className="flex items-center justify-between border-b p-6 border-gray-200 dark:border-gray-800 shrink-0 bg-gray-50/50 dark:bg-navy-900/50">

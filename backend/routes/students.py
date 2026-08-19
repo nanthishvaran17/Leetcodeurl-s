@@ -753,6 +753,7 @@ from pydantic import BaseModel
 
 class BulkDeleteRequest(BaseModel):
     student_ids: List[int]
+    soft_delete: Optional[bool] = False
 
 @router.post("/bulk-delete")
 def bulk_delete_students(
@@ -764,22 +765,31 @@ def bulk_delete_students(
         raise HTTPException(status_code=400, detail="No student IDs provided for deletion.")
 
     count = len(req.student_ids)
-    db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-    db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-    db.query(Student).filter(Student.id.in_(req.student_ids)).delete(synchronize_session=False)
+
+    if req.soft_delete:
+        db.query(Student).filter(Student.id.in_(req.student_ids)).update({"is_active": False}, synchronize_session=False)
+        action_name = "BULK_DEACTIVATE_STUDENTS"
+        msg = f"Successfully deactivated {count} student records."
+    else:
+        db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        db.query(Student).filter(Student.id.in_(req.student_ids)).delete(synchronize_session=False)
+        action_name = "BULK_DELETE_STUDENTS"
+        msg = f"Successfully deleted {count} student records."
 
     audit = AuditLog(
         user_id=current_user.id,
         user_name=current_user.username,
-        action="BULK_DELETE_STUDENTS",
-        details=f"Bulk deleted {count} student records."
+        action=action_name,
+        details=msg
     )
     db.add(audit)
     db.commit()
 
     update_all_rankings_and_badges(db)
+    cache.clear()
 
-    return {"message": f"Successfully deleted {count} student records.", "count": count}
+    return {"message": msg, "count": count}
 
 class StudentUpdateSchema(BaseModel):
     name: Optional[str] = None

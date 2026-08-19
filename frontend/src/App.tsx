@@ -20,6 +20,9 @@ import { GrowthIntelligencePage } from './pages/GrowthIntelligencePage';
 import { SystemHealthPage } from './pages/SystemHealthPage';
 import { CertificateVerificationPage } from './pages/CertificateVerificationPage';
 import { AIControlCenterPage } from './pages/AIControlCenterPage';
+import { HODCommandCenter } from './pages/HODCommandCenter';
+import { FacultyActionCenter } from './pages/FacultyActionCenter';
+import { AlertCenterModal } from './components/AlertCenterModal';
 import { ImportModal } from './components/ImportModal';
 import { AccessRestrictedView } from './components/AccessRestrictedView';
 import { AIAssistantWidget } from './components/AIAssistantWidget';
@@ -44,6 +47,7 @@ export const App: React.FC = () => {
   const [selectedStudent, setSelectedStudent] = useState<StudentData | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showAlertCenterModal, setShowAlertCenterModal] = useState(false);
   const [summaryData, setSummaryData] = useState<any>(null);
 
   useEffect(() => {
@@ -86,6 +90,14 @@ export const App: React.FC = () => {
   };
 
   const handleTabChange = (tab: string) => {
+    if (tab === 'alert-center') {
+      setShowAlertCenterModal(true);
+      return;
+    }
+    if (tab === 'login') {
+      setShowLoginModal(true);
+      return;
+    }
     if (!isAuthenticated && tab !== 'landing' && tab !== 'public' && tab !== 'profile') {
       setShowLoginModal(true);
       return;
@@ -143,8 +155,8 @@ export const App: React.FC = () => {
 
       <div className={`flex-1 w-full py-4 sm:py-6 ${
         isAuthenticated && activeTab !== 'landing'
-          ? 'lg:grid lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)] 2xl:grid-cols-[300px_minmax(0,1fr)] lg:gap-6 px-3 sm:px-5 lg:px-6 w-full max-w-[98vw] mx-auto'
-          : 'px-3 sm:px-5 lg:px-6 w-full max-w-[98vw] mx-auto'
+          ? 'lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-6 px-3 sm:px-5 lg:px-8 w-full max-w-[1800px] mx-auto'
+          : 'px-3 sm:px-5 lg:px-8 w-full max-w-[1800px] mx-auto'
       }`}>
         
         {/* Left Sidebar (Only visible for authenticated users when not on landing page) */}
@@ -167,16 +179,16 @@ export const App: React.FC = () => {
 
           {activeTab === 'dashboard' && renderDashboardComponent()}
 
-          {activeTab === 'ai-control' && (
-            <div className="p-8 text-center space-y-4">
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white">AI Operations Control Center Consolidated into NEC Unified AI Chatbot</h2>
-              <button
-                onClick={() => window.dispatchEvent(new CustomEvent('open-ai-chat', { detail: { mode: 'operations' } }))}
-                className="px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-bold text-xs"
-              >
-                Open Unified AI Workspace
-              </button>
-            </div>
+          {activeTab === 'hod-command-center' && (
+            isTabAuthorized(['admin', 'super admin', 'hod', 'faculty', 'staff', 'professor'])
+              ? <HODCommandCenter />
+              : renderAccessRestricted('HOD Command Center')
+          )}
+
+          {activeTab === 'faculty-action-center' && (
+            isTabAuthorized(['admin', 'super admin', 'hod', 'faculty', 'staff', 'professor'])
+              ? <FacultyActionCenter />
+              : renderAccessRestricted('Faculty Action Center')
           )}
 
           {activeTab === 'growth' && <GrowthIntelligencePage />}
@@ -257,14 +269,14 @@ export const App: React.FC = () => {
       {/* Login Modal */}
       {showLoginModal && (
         <div
-          className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto animate-fadeIn"
+          className="modal-overlay-responsive animate-modal-backdrop"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowLoginModal(false);
             }
           }}
         >
-          <div className="w-full max-w-md my-auto max-h-[calc(100vh-2rem)] overflow-y-auto">
+          <div className="modal-container-responsive max-w-md animate-modal-content">
             <LoginPage
               onClose={() => setShowLoginModal(false)}
               onSuccess={() => { setShowLoginModal(false); setActiveTab('dashboard'); }}
@@ -281,8 +293,12 @@ export const App: React.FC = () => {
         onSuccess={() => { fetchSummary(); setActiveTab('students'); }}
       />
 
-      {/* Floating Institutional AI Assistant */}
-      <AIAssistantWidget />
+      {/* Automated Alert Center Modal */}
+      <AlertCenterModal
+        isOpen={showAlertCenterModal}
+        onClose={() => setShowAlertCenterModal(false)}
+        onNavigate={handleTabChange}
+      />
 
     </div>
   );

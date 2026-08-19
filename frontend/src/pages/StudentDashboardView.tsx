@@ -70,7 +70,7 @@ export const StudentDashboardView: React.FC = () => {
 
   return (
     <div className="space-y-8 py-2">
-      
+
       {/* Student Welcome Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-brand-950 text-white p-8 shadow-2xl border border-brand-500/30">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -130,10 +130,10 @@ export const StudentDashboardView: React.FC = () => {
 
       {studentData && (
         <div className="space-y-8">
-          
+
           {/* Key Metrics Row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            
+
             {/* Total Solved */}
             <div className="glass-card p-6 rounded-3xl border border-brand-500/30 space-y-2 shadow-lg">
               <div className="flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">

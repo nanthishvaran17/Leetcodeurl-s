@@ -619,6 +619,13 @@ def get_normalized_contest_data(
             "2 Q Solved": metrics["q2Count"],
             "1 Q Solved": metrics["q1Count"],
         },
+        "session": {
+            "session_id": session_id,
+            "id": session_id,
+            "contest_name": canonical_data["contestName"],
+            "session_date": canonical_data["sessionDate"],
+            "status": session.status if session else "FINALIZED"
+        },
         "rows": matrix_rows,
         "departmentStats": canonical_data["departmentStats"],
         "yearStats": canonical_data["yearStats"],
@@ -633,7 +640,8 @@ def get_session_matrix(
     dept: Optional[str] = Query(None), 
     year: Optional[str] = Query(None), 
     attendance: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Institutional Tracker Matrix", required_roles=["admin", "super admin", "hod", "faculty", "staff"]))
 ):
     """
     Delegates strictly to the single canonical normalized dataset function.

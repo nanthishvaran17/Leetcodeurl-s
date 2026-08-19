@@ -772,8 +772,8 @@ export const EmailDeliveryTab: React.FC = () => {
 
       {/* ── ADD RECIPIENT MODAL ──────────────────────────────────── */}
       {showAddRecipient && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-navy-900 rounded-3xl shadow-2xl w-full max-w-md max-h-[calc(100vh-3rem)] border border-gray-200 dark:border-gray-700 p-6 space-y-4 my-auto overflow-y-auto">
+        <div className="modal-overlay-responsive animate-modal-backdrop">
+          <div className="modal-container-responsive max-w-md bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 space-y-4 animate-modal-content">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-black text-gray-900 dark:text-white">Add Email Recipient</h2>
               <button onClick={() => setShowAddRecipient(false)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
@@ -827,8 +827,8 @@ export const EmailDeliveryTab: React.FC = () => {
 
       {/* ── SEND REPORT EMAIL MODAL ─────────────────────────────── */}
       {showSendModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-navy-900 rounded-3xl shadow-2xl w-full max-w-2xl max-h-[calc(100vh-3rem)] border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col my-auto">
+        <div className="modal-overlay-responsive animate-modal-backdrop">
+          <div className="modal-container-responsive max-w-2xl bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden animate-modal-content">
 
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-navy-950 to-indigo-950 text-white shrink-0">

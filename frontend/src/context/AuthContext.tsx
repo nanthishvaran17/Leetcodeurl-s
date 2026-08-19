@@ -102,15 +102,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChanged(auth, async (fbUser: FirebaseUser | null) => {
       if (fbUser) {
         try {
+          const idToken = await fbUser.getIdToken();
+          setToken(idToken);
+          localStorage.setItem('token', idToken);
+
           const activeDb = db || getOrInitDb();
           const userDocRef = doc(activeDb, 'users', fbUser.uid);
           const userDocSnap = await getDoc(userDocRef);
 
           let userData: AuthUser;
 
+          const emailLower = (fbUser.email || '').toLowerCase().trim();
+          const isAdminAccount = emailLower === 'nanthishvaran17@gmail.com' || emailLower === 'msanthoshkumar@nandhaengg.org' || fbUser.uid === 'SATDrDpJAcP07WdyyHbPjCb6u5F3';
+
           if (userDocSnap.exists()) {
             const data = userDocSnap.data();
-            const isAdminAccount = fbUser.email?.toLowerCase() === 'nanthishvaran17@gmail.com' || fbUser.uid === 'SATDrDpJAcP07WdyyHbPjCb6u5F3';
             const effectiveRole = isAdminAccount ? 'admin' : (data.role || 'student');
 
             userData = {
@@ -142,10 +148,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             userData = {
               uid: fbUser.uid,
-              name: fbUser.displayName || 'Student User',
+              name: fbUser.displayName || (isAdminAccount ? 'Administrator' : 'Student User'),
               email: fbUser.email || '',
               photoURL: fbUser.photoURL || '',
-              role: 'student',
+              role: isAdminAccount ? 'admin' : 'student',
               registerNo: matchedStudent ? matchedStudent.reg_no : null,
               department: matchedStudent ? matchedStudent.department?.code : null,
               year: matchedStudent ? matchedStudent.year_level : null,
@@ -166,12 +172,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(userData);
         } catch (err: any) {
           console.error("Firestore user sync error:", err);
+          const emailLower = (fbUser.email || '').toLowerCase().trim();
+          const isAdminAccount = emailLower === 'nanthishvaran17@gmail.com' || emailLower === 'msanthoshkumar@nandhaengg.org';
           const fallbackUser: AuthUser = {
             uid: fbUser.uid,
             name: fbUser.displayName || 'User',
             email: fbUser.email || '',
             photoURL: fbUser.photoURL || '',
-            role: 'student',
+            role: isAdminAccount ? 'admin' : 'student',
             isProfileLinked: false
           };
           setUser(fallbackUser);

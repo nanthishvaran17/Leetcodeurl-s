@@ -667,7 +667,7 @@ export const WeeklyContestPage: React.FC = () => {
 
     setIsSavingStudent(true);
     try {
-      await api.patch(`/api/students/${studentId}`, {
+      await api.patch(`/students/${studentId}`, {
         name: editName.trim(),
         department_id: editDeptId,
         year_level: editYearLevel,
@@ -716,7 +716,7 @@ export const WeeklyContestPage: React.FC = () => {
 
     setIsDeletingStudent(true);
     try {
-      await api.delete(`/api/students/${studentId}?soft_delete=true`);
+      await api.delete(`/students/${studentId}?soft_delete=true`);
       setMatrixRows(prev => prev.filter(row => (row.student_id || row.id) !== studentId));
       setDeletingStudent(null);
       setNotification({
@@ -2436,10 +2436,10 @@ export const WeeklyContestPage: React.FC = () => {
       {/* Interactive Report Preview Modal — Auto-fitted Viewport Card (Matches Student Modal) */}
       {showPreviewModal && (
         <div 
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md overflow-hidden animate-modal-backdrop"
+          className="modal-overlay-responsive animate-modal-backdrop"
           onClick={(e) => { if (e.target === e.currentTarget) setShowPreviewModal(false); }}
         >
-          <div className="bg-white dark:bg-navy-900 w-full max-w-5xl max-h-[88vh] rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 flex flex-col overflow-hidden my-auto animate-modal-content">
+          <div className="modal-container-responsive max-w-5xl bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 animate-modal-content">
             
             {/* ── A. SLEEK GRADIENT HEADER (Matches Image 2) ── */}
             <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-950 text-white flex items-center justify-between shrink-0">
@@ -2613,8 +2613,8 @@ export const WeeklyContestPage: React.FC = () => {
 
       {/* Interactive Report Email Dispatch Modal */}
       {showEmailModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md overflow-y-auto animate-modal-backdrop">
-          <div className="bg-white dark:bg-navy-900 w-full max-w-2xl max-h-[calc(100vh-3rem)] rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col my-auto">
+        <div className="modal-overlay-responsive animate-modal-backdrop">
+          <div className="modal-container-responsive max-w-2xl bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col my-auto">
             {/* Modal Header */}
             <div className="p-5 sm:p-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between shrink-0">
               <div>
@@ -2774,13 +2774,13 @@ export const WeeklyContestPage: React.FC = () => {
       {/* Viewport-Centered Student Edit Modal */}
       {editingStudent && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-fade-in"
+          className="modal-overlay-responsive animate-fade-in"
           onClick={(e) => {
             if (e.target === e.currentTarget && !isSavingStudent) setEditingStudent(null);
           }}
         >
           <div
-            className="bg-white dark:bg-navy-900 w-full max-w-lg max-h-[calc(100vh-3rem)] rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col my-auto"
+            className="modal-container-responsive max-w-lg bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -2906,13 +2906,13 @@ export const WeeklyContestPage: React.FC = () => {
       {/* Viewport-Centered Student Delete Confirmation Modal */}
       {deletingStudent && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-fade-in"
+          className="modal-overlay-responsive animate-fade-in"
           onClick={(e) => {
             if (e.target === e.currentTarget && !isDeletingStudent) setDeletingStudent(null);
           }}
         >
           <div
-            className="bg-white dark:bg-navy-900 w-full max-w-md max-h-[calc(100vh-3rem)] rounded-3xl shadow-2xl border border-rose-200 dark:border-rose-900/50 overflow-hidden flex flex-col p-6 space-y-4 my-auto"
+            className="modal-container-responsive max-w-md bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-rose-200 dark:border-rose-900/50 overflow-hidden flex flex-col p-6 space-y-4 my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
@@ -2959,8 +2959,8 @@ export const WeeklyContestPage: React.FC = () => {
 
       {/* Centered Institutional Authentication Required Modal */}
       {showAuthRequiredModal && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-fade-in">
-          <div className="bg-white dark:bg-navy-900 w-full max-w-md max-h-[calc(100vh-3rem)] rounded-3xl shadow-2xl border border-amber-300 dark:border-amber-700/60 p-6 space-y-4 my-auto text-center overflow-y-auto">
+        <div className="modal-overlay-responsive animate-fade-in">
+          <div className="modal-container-responsive max-w-md bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-amber-300 dark:border-amber-700/60 p-6 space-y-4 my-auto text-center overflow-y-auto">
             <div className="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-inner">
               <Lock className="w-7 h-7" />
             </div>

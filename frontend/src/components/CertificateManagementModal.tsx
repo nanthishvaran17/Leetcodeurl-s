@@ -64,11 +64,14 @@ interface StudentOption {
   };
 }
 
+import { useNotification } from '../context/NotificationContext';
+
 export const CertificateManagementModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   preselectedStudent?: StudentOption | null;
 }> = ({ isOpen, onClose, preselectedStudent }) => {
+  const { notify, confirmAction } = useNotification();
   const [activeTab, setActiveTab] = useState<'generate' | 'signatures' | 'history'>('generate');
 
   // Student selection
@@ -178,10 +181,11 @@ export const CertificateManagementModal: React.FC<{
       });
       setGeneratedCert(res.data);
       setGenSuccessMsg(`Official Certificate ${res.data.verification_id} generated successfully!`);
+      notify.success('Certificate Generated', `Verification ID: ${res.data.verification_id}`, { category: 'CERTIFICATE ENGINE' });
       await syncCertificateToFirestoreWeb(res.data);
       await fetchHistory();
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Failed to generate certificate.");
+      notify.error('Generation Failed', err.response?.data?.detail || "Failed to generate certificate.", { category: 'CERTIFICATE ENGINE' });
     } finally {
       setIsGenerating(false);
     }
@@ -190,7 +194,7 @@ export const CertificateManagementModal: React.FC<{
   const handleDownloadPdf = async (targetId?: string) => {
     const idToUse = targetId || generatedCert?.verification_id || selectedStudent?.reg_no || (selectedStudent ? String(selectedStudent.id) : null);
     if (!idToUse) {
-      alert("Please select a student recipient first to download certificate.");
+      notify.warning('Select Student', 'Please select a student recipient first to download certificate.', { category: 'CERTIFICATE ENGINE' });
       return;
     }
 
@@ -204,7 +208,7 @@ export const CertificateManagementModal: React.FC<{
         const text = await response.data.text();
         try {
           const errJson = JSON.parse(text);
-          alert(`Certificate Error: ${errJson.detail || 'Could not generate PDF.'}`);
+          notify.error('Certificate Error', errJson.detail || 'Could not generate PDF.', { category: 'CERTIFICATE ENGINE' });
           return;
         } catch (e) {}
       }
@@ -229,16 +233,17 @@ export const CertificateManagementModal: React.FC<{
       setTimeout(() => {
         window.URL.revokeObjectURL(blobUrl);
       }, 2000);
+      notify.success('PDF Downloaded', `Certificate ${filename} saved.`, { category: 'CERTIFICATE ENGINE' });
     } catch (err: any) {
       console.error("Download error:", err);
-      alert("Failed to download official certificate PDF. Please try again.");
+      notify.error('Download Failed', 'Failed to download official certificate PDF. Please try again.', { category: 'CERTIFICATE ENGINE' });
     }
   };
 
   const handleDownloadForensicPdf = async (targetId?: string) => {
     const idToUse = targetId || generatedCert?.verification_id || selectedStudent?.reg_no || (selectedStudent ? String(selectedStudent.id) : null);
     if (!idToUse) {
-      alert("Please select a student recipient first to download Forensic Audit Report.");
+      notify.warning('Select Student', 'Please select a student recipient first to download Forensic Audit Report.', { category: 'FORENSIC AUDIT' });
       return;
     }
 
@@ -251,7 +256,7 @@ export const CertificateManagementModal: React.FC<{
         const text = await response.data.text();
         try {
           const errJson = JSON.parse(text);
-          alert(`Forensic Report Error: ${errJson.detail || 'Could not generate report.'}`);
+          notify.error('Forensic Error', errJson.detail || 'Could not generate report.', { category: 'FORENSIC AUDIT' });
           return;
         } catch (e) {}
       }
@@ -276,9 +281,10 @@ export const CertificateManagementModal: React.FC<{
       setTimeout(() => {
         window.URL.revokeObjectURL(blobUrl);
       }, 2000);
+      notify.success('Audit PDF Saved', `Forensic Audit Report ${filename} saved.`, { category: 'FORENSIC AUDIT' });
     } catch (err: any) {
       console.error("Forensic Download error:", err);
-      alert("Failed to download Official LeetCode Contest Forensic Verification Audit Report.");
+      notify.error('Download Failed', 'Failed to download Official LeetCode Contest Forensic Verification Audit Report.', { category: 'FORENSIC AUDIT' });
     }
   };
 
@@ -286,7 +292,7 @@ export const CertificateManagementModal: React.FC<{
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       if (file.size > 5 * 1024 * 1024) {
-        alert("Image must be smaller than 5MB.");
+        notify.warning('File Too Large', 'Image must be smaller than 5MB.', { category: 'SIGNATURE UPLOAD' });
         return;
       }
       setUploadFile(file);
@@ -301,6 +307,7 @@ export const CertificateManagementModal: React.FC<{
   const handleUploadSignature = async () => {
     if (!uploadFile) return;
     setIsUploadingSig(true);
+    notify.info('Uploading Signature', 'Processing institutional signature image...', { category: 'SIGNATURE UPLOAD' });
     try {
       const formData = new FormData();
       formData.append("file", uploadFile);
@@ -313,26 +320,35 @@ export const CertificateManagementModal: React.FC<{
       setUploadFile(null);
       setUploadPreview(null);
       await fetchSignatures();
-      alert("Signature uploaded successfully!");
+      notify.success('Signature Saved', 'Signature uploaded successfully!', { category: 'SIGNATURE UPLOAD' });
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Failed to upload signature.");
+      notify.error('Upload Failed', err.response?.data?.detail || "Failed to upload signature.", { category: 'SIGNATURE UPLOAD' });
     } finally {
       setIsUploadingSig(false);
     }
   };
 
   const handleRevokeCertificate = async (verificationId: string) => {
-    if (!confirm(`Are you sure you want to revoke Certificate ${verificationId}? This cannot be undone.`)) return;
+    const confirmed = await confirmAction({
+      title: `Revoke Certificate ${verificationId}?`,
+      message: `Are you sure you want to revoke Certificate ${verificationId}? This action cannot be undone.`,
+      confirmLabel: 'Revoke Certificate',
+      category: 'CERTIFICATE REVOCATION',
+      variant: 'danger',
+    });
+    if (!confirmed) return;
+
     try {
       await api.post(`/certificates/${verificationId}/revoke`, {
         reason: "Revoked by Administrator"
       });
+      notify.success('Certificate Revoked', `Certificate ${verificationId} has been revoked.`, { category: 'CERTIFICATE REVOCATION' });
       await fetchHistory();
       if (generatedCert && generatedCert.verification_id === verificationId) {
         setGeneratedCert({ ...generatedCert, status: 'REVOKED' });
       }
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Failed to revoke certificate.");
+      notify.error('Revocation Failed', err.response?.data?.detail || "Failed to revoke certificate.", { category: 'CERTIFICATE REVOCATION' });
     }
   };
 
@@ -350,13 +366,13 @@ export const CertificateManagementModal: React.FC<{
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-start justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-hidden animate-fade-in"
+      className="modal-overlay-responsive animate-modal-backdrop"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
-        className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl max-w-6xl w-full max-h-[calc(100vh-48px)] flex flex-col overflow-hidden animate-scaleUp mt-2 sm:mt-4"
+        className="modal-container-responsive max-w-6xl bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl animate-modal-content"
         onClick={(e) => e.stopPropagation()}
       >
 
@@ -790,8 +806,16 @@ export const CertificateManagementModal: React.FC<{
                       {principalSig && (
                         <button
                           onClick={async () => {
-                            if (confirm("Remove Principal signature image?")) {
+                            const confirmed = await confirmAction({
+                              title: 'Remove Principal Signature?',
+                              message: 'Are you sure you want to remove the stored Principal signature image?',
+                              confirmLabel: 'Remove Signature',
+                              category: 'SIGNATURE ENGINE',
+                              variant: 'danger',
+                            });
+                            if (confirmed) {
                               await api.delete(`/signatures/${principalSig.id}`);
+                              notify.success('Signature Removed', 'Principal signature image deleted.', { category: 'SIGNATURE ENGINE' });
                               await fetchSignatures();
                             }
                           }}
@@ -883,8 +907,16 @@ export const CertificateManagementModal: React.FC<{
                             {activeHod && (
                               <button
                                 onClick={async () => {
-                                  if (confirm(`Remove ${deptLabel} signature image?`)) {
+                                  const confirmed = await confirmAction({
+                                    title: `Remove ${deptLabel} Signature?`,
+                                    message: `Are you sure you want to remove the stored ${deptLabel} signature image?`,
+                                    confirmLabel: 'Remove Signature',
+                                    category: 'SIGNATURE ENGINE',
+                                    variant: 'danger',
+                                  });
+                                  if (confirmed) {
                                     await api.delete(`/signatures/${activeHod.id}`);
+                                    notify.success('Signature Removed', `${deptLabel} signature image deleted.`, { category: 'SIGNATURE ENGINE' });
                                     await fetchSignatures();
                                   }
                                 }}

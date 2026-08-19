@@ -6,6 +6,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { StudentData } from '../components/LeaderboardTable';
 import api from '../services/api';
+import { FacultyActionCenter } from './FacultyActionCenter';
 
 export const StaffDashboardView: React.FC = () => {
   const { user } = useAuth();
@@ -52,7 +53,7 @@ export const StaffDashboardView: React.FC = () => {
 
   return (
     <div className="space-y-8 py-2">
-      
+
       {/* Staff Welcome Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-2xl border border-indigo-500/30">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -79,9 +80,12 @@ export const StaffDashboardView: React.FC = () => {
         </div>
       </div>
 
+      {/* FACULTY ACTION CENTER & MENTORING HUB */}
+      <FacultyActionCenter />
+
       {/* Staff Metrics Summary Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        
+
         <div className="glass-card p-6 rounded-3xl border space-y-2 shadow-lg">
           <div className="flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">
             <span>Total Students</span>

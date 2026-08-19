@@ -3,7 +3,7 @@ import {
   Sparkles, Bot, Terminal, ShieldCheck, Database, Cpu, Activity,
   RefreshCw, Search, Send, Users, Trophy, AlertOctagon, Mail, FileText,
   CheckCircle2, XCircle, AlertTriangle, Layers, ChevronRight, Play, Trash2,
-  Lock, ArrowRight, CornerDownRight, Filter, Eye, ExternalLink, Sliders, Zap
+  Lock, ArrowRight, CornerDownRight, Filter, Eye, ExternalLink, Sliders, Zap, ShieldAlert, BookOpen, Building2
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -238,7 +238,104 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
         </button>
       </div>
 
-      {/* ── 4. OPERATIONS LAUNCHERS GRID ── */}
+      {/* ── 4. 6 CENTRAL INTELLIGENCE HUBS ── */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center space-x-2">
+            <Cpu className="w-5 h-5 text-brand-500" />
+            <span>6 Central Intelligence Hubs</span>
+          </h3>
+          <span className="text-xs font-bold text-gray-500">Automated institutional intelligence layers</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div 
+            onClick={() => onNavigateTab && onNavigateTab('alert-center')}
+            className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 hover:border-rose-500/50 shadow-sm hover:shadow-md transition-all cursor-pointer space-y-2 group"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-rose-500 uppercase tracking-wider flex items-center gap-1.5">
+                <Activity className="w-4 h-4" /> 1. Live Intelligence
+              </span>
+              <ArrowRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
+            </div>
+            <h4 className="text-sm font-black text-gray-900 dark:text-white">Alerts & Anomalies Hub</h4>
+            <p className="text-xs text-gray-500">Automated Priority Notification Alert Center for critical drops & milestone achievements.</p>
+          </div>
+
+          <div 
+            onClick={() => onNavigateTab && onNavigateTab('faculty-action-center')}
+            className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 hover:border-amber-500/50 shadow-sm hover:shadow-md transition-all cursor-pointer space-y-2 group"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-amber-500 uppercase tracking-wider flex items-center gap-1.5">
+                <ShieldAlert className="w-4 h-4" /> 2. Risk Intelligence
+              </span>
+              <ArrowRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
+            </div>
+            <h4 className="text-sm font-black text-gray-900 dark:text-white">At-Risk & Silent Student Hub</h4>
+            <p className="text-xs text-gray-500">10-Signal Risk Prediction Engine & Early Disengagement Detector (-80%+ 4-week drops).</p>
+          </div>
+
+          <div 
+            onClick={() => onNavigateTab && onNavigateTab('student-dashboard')}
+            className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 hover:border-purple-500/50 shadow-sm hover:shadow-md transition-all cursor-pointer space-y-2 group"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-purple-500 uppercase tracking-wider flex items-center gap-1.5">
+                <BookOpen className="w-4 h-4" /> 3. Learning Intelligence
+              </span>
+              <ArrowRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
+            </div>
+            <h4 className="text-sm font-black text-gray-900 dark:text-white">Skill Gaps & Adaptive Paths</h4>
+            <p className="text-xs text-gray-500">16 DSA Topic Skill Map & Personalized 4-Week Adaptive AI Learning Plans.</p>
+          </div>
+
+          <div 
+            onClick={() => onNavigateTab && onNavigateTab('faculty-action-center')}
+            className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 hover:border-brand-500/50 shadow-sm hover:shadow-md transition-all cursor-pointer space-y-2 group"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-brand-500 uppercase tracking-wider flex items-center gap-1.5">
+                <Zap className="w-4 h-4" /> 4. Action Intelligence
+              </span>
+              <ArrowRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
+            </div>
+            <h4 className="text-sm font-black text-gray-900 dark:text-white">Faculty Queue & Interventions</h4>
+            <p className="text-xs text-gray-500">"What Needs My Attention?" Engine & Intervention Lifecycle Effectiveness Tracking.</p>
+          </div>
+
+          <div 
+            onClick={() => onNavigateTab && onNavigateTab('hod-command-center')}
+            className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 hover:border-indigo-500/50 shadow-sm hover:shadow-md transition-all cursor-pointer space-y-2 group"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-indigo-500 uppercase tracking-wider flex items-center gap-1.5">
+                <Building2 className="w-4 h-4" /> 5. Institutional Intelligence
+              </span>
+              <ArrowRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
+            </div>
+            <h4 className="text-sm font-black text-gray-900 dark:text-white">Benchmarking & What-If Simulator</h4>
+            <p className="text-xs text-gray-500">Institutional Benchmarking Matrix & Interactive What-If Scenario Outcome Simulator.</p>
+          </div>
+
+          <div 
+            onClick={() => onNavigateTab && onNavigateTab('hod-command-center')}
+            className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 hover:border-emerald-500/50 shadow-sm hover:shadow-md transition-all cursor-pointer space-y-2 group"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-emerald-500 uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4" /> 6. Executive Intelligence
+              </span>
+              <ArrowRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
+            </div>
+            <h4 className="text-sm font-black text-gray-900 dark:text-white">HOD Summaries & AI Query</h4>
+            <p className="text-xs text-gray-500">Coding Health Score (0-100), Executive Briefs & Zero-Hallucination AI Queries.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 5. OPERATIONS LAUNCHERS GRID ── */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center space-x-2">

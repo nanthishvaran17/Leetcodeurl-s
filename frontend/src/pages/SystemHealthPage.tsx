@@ -53,8 +53,10 @@ import {
   Printer
 } from 'lucide-react';
 import api from '../services/api';
+import { useNotification } from '../context/NotificationContext';
 
 export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void }> = ({ onNavigateTab }) => {
+  const { notify } = useNotification();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -322,9 +324,10 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
       link.click();
       link.remove();
       window.URL.revokeObjectURL(blobUrl);
+      notify.success('Forensic PDF Downloaded', 'Official forensic contest verification report saved.', { category: 'FORENSIC AUDIT' });
     } catch (err: any) {
       console.error('PDF download error:', err);
-      alert('Failed to download official forensic audit PDF.');
+      notify.error('Download Error', 'Failed to download official forensic audit PDF.', { category: 'FORENSIC AUDIT' });
     } finally {
       setDownloadingPdf(false);
     }
@@ -333,14 +336,16 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
   const handleCreateSnapshot = async () => {
     setCreatingSnapshot(true);
     setSnapshotSuccessMsg(null);
+    notify.info('Generating Snapshot', 'Creating database snapshot with SHA-256 validation...', { category: 'SNAPSHOT ENGINE' });
     try {
       const res = await api.post('/settings/backup');
       setSnapshotSuccessMsg(`Snapshot "${res.data.filename}" generated successfully with SHA-256 validation.`);
+      notify.success('Snapshot Created', `Snapshot "${res.data.filename}" generated successfully.`, { category: 'SNAPSHOT ENGINE' });
       fetchBackups();
       fetchOperationsCenterData(true);
       setTimeout(() => setSnapshotSuccessMsg(null), 5000);
     } catch (err: any) {
-      alert(`Snapshot creation failed: ${err.message}`);
+      notify.error('Snapshot Failed', `Snapshot creation failed: ${err.message}`, { category: 'SNAPSHOT ENGINE' });
     } finally {
       setCreatingSnapshot(false);
     }
@@ -350,13 +355,13 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
     setVerifyingSnapshot(filename);
     try {
       const res = await api.get(`/settings/backup/verify/${filename}`);
-      alert(
-        `Snapshot Verification Result:\nStatus: ${res.data.status}\nIntegrity Check: ${
-          res.data.verified ? 'PASSED (0 Corruptions)' : 'FAILED'
-        }\nSHA-256 Checksum: ${res.data.checksum || 'Verified'}`
+      notify.success(
+        'Snapshot Integrity Passed',
+        `Filename: ${filename} | Status: ${res.data.status} | Checksum: ${res.data.checksum || 'Verified'}`,
+        { category: 'SNAPSHOT VERIFICATION' }
       );
     } catch (err: any) {
-      alert(`Verification failed: ${err.message}`);
+      notify.error('Verification Failed', `Verification failed: ${err.message}`, { category: 'SNAPSHOT VERIFICATION' });
     } finally {
       setVerifyingSnapshot(null);
     }
@@ -380,9 +385,10 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
         is_active: true
       });
       setSchedToast('Autonomous Sunday schedule configuration updated and armed successfully.');
+      notify.success('Schedule Armed', 'Autonomous Sunday schedule configuration updated.', { category: 'SCHEDULER' });
       setTimeout(() => setSchedToast(null), 5000);
     } catch (err: any) {
-      alert(`Schedule save error: ${err.message}`);
+      notify.error('Save Schedule Error', `Schedule save error: ${err.message}`, { category: 'SCHEDULER' });
     } finally {
       setIsSavingSched(false);
     }
@@ -1643,8 +1649,8 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
       {/* ── 13. TRUST SCORE "WHY THIS SCORE?" FACTOR BREAKDOWN MODAL ── */}
       {showTrustModal && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-fade-in">
-          <div className="bg-white dark:bg-navy-900 w-full max-w-xl max-h-[calc(100vh-3rem)] rounded-3xl shadow-2xl border border-indigo-300 dark:border-indigo-700/60 p-6 space-y-4 my-auto overflow-y-auto">
+        <div className="modal-overlay-responsive animate-modal-backdrop">
+          <div className="modal-container-responsive max-w-xl bg-white dark:bg-navy-900 border border-indigo-300 dark:border-indigo-700/60 rounded-3xl shadow-2xl p-6 space-y-4 animate-modal-content">
             <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-indigo-600" />
@@ -1696,8 +1702,8 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
       {/* ── 13. OFFICIAL FORENSIC AUDIT CERTIFICATE PREVIEW MODAL ── */}
       {showCertPreviewModal && forensicResult && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto animate-fade-in">
-          <div className="bg-white text-gray-900 w-full max-w-3xl max-h-[92vh] rounded-3xl shadow-2xl border-4 border-amber-500/40 overflow-hidden flex flex-col my-auto relative">
+        <div className="modal-overlay-responsive animate-modal-backdrop">
+          <div className="modal-container-responsive max-w-3xl bg-white text-gray-900 rounded-3xl shadow-2xl border-4 border-amber-500/40 animate-modal-content">
             
             {/* Modal Controls Bar */}
             <div className="px-6 py-3 bg-navy-950 text-white flex items-center justify-between border-b border-gray-800">
@@ -1880,8 +1886,8 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
       {/* ── 14. SMART COMMAND PALETTE (CTRL+K / CMD+K) ── */}
       {showCommandPalette && (
-        <div className="fixed inset-0 z-[99999] flex items-start justify-center pt-10 sm:pt-16 p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-fade-in">
-          <div className="bg-white dark:bg-navy-900 w-full max-w-lg max-h-[calc(100vh-5rem)] rounded-3xl shadow-2xl border border-indigo-300 dark:border-indigo-700/60 overflow-hidden flex flex-col my-auto">
+        <div className="modal-overlay-responsive animate-modal-backdrop">
+          <div className="modal-container-responsive max-w-lg bg-white dark:bg-navy-900 border border-indigo-300 dark:border-indigo-700/60 rounded-3xl shadow-2xl animate-modal-content">
             <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2 shrink-0">
               <Search className="w-4 h-4 text-gray-400" />
               <input

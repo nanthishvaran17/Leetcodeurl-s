@@ -60,7 +60,10 @@ interface StatSnapshot {
   source?: string;
 }
 
+import { useNotification } from '../context/NotificationContext';
+
 export const GrowthIntelligencePage: React.FC = () => {
+  const { notify } = useNotification();
   const [period, setPeriod] = useState<'today' | '7d' | '30d' | 'all'>('7d');
   const [deptFilter, setDeptFilter] = useState<string>('ALL');
   const [yearFilter, setYearFilter] = useState<string>('ALL');
@@ -113,7 +116,7 @@ export const GrowthIntelligencePage: React.FC = () => {
       setIsModalOpen(true);
     } catch (err: any) {
       console.error("Fetch history error:", err);
-      alert(`Time Machine: Could not find timeline records for '${identifier}'. Please check student ID or Register Number.`);
+      notify.warning('Timeline Records Not Found', `Could not find history snapshots for '${identifier}'. Please verify Register Number.`, { category: 'TIME MACHINE' });
     } finally {
       setHistoryLoading(false);
     }
@@ -127,15 +130,15 @@ export const GrowthIntelligencePage: React.FC = () => {
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-2xl border border-brand-500/30">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
           <div className="space-y-3 max-w-2xl">
             <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               <span>REAL-TIME GROWTH & DELTA ENGINE</span>
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight flex items-center gap-3">
-              <TrendingUp className="w-8 h-8 text-emerald-400 stroke-[2.5]" />
+            <h1 className="text-2xl sm:text-3xl xl:text-4xl font-black tracking-tight flex items-center gap-3">
+              <TrendingUp className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-400 stroke-[2.5]" />
               Growth Intelligence & <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-300">Time Machine</span>
             </h1>
 
@@ -149,17 +152,17 @@ export const GrowthIntelligencePage: React.FC = () => {
             <select
               value={deptFilter}
               onChange={(e) => setDeptFilter(e.target.value)}
-              className="px-3.5 py-2 rounded-2xl bg-navy-900/90 text-white text-xs font-bold border border-gray-700/80 backdrop-blur-md shadow-inner outline-none cursor-pointer hover:border-brand-500"
+              className="px-3.5 py-2 rounded-2xl bg-navy-900/90 text-white text-xs font-bold border border-gray-700/80 backdrop-blur-md shadow-inner outline-none cursor-pointer hover:border-brand-500 max-w-full"
             >
-              <option value="ALL">All Departments (Cyber Security & IoT)</option>
-              <option value="CSE(CS)">Computer Science & Engg (Cyber Security)</option>
-              <option value="CSE(IoT)">Computer Science & Engg (IoT)</option>
+              <option value="ALL">All Departments</option>
+              <option value="CSE(CS)">CSE (Cyber Security)</option>
+              <option value="CSE(IoT)">CSE (IoT)</option>
             </select>
 
             <select
               value={yearFilter}
               onChange={(e) => setYearFilter(e.target.value)}
-              className="px-3.5 py-2 rounded-2xl bg-navy-900/90 text-white text-xs font-bold border border-gray-700/80 backdrop-blur-md shadow-inner outline-none cursor-pointer hover:border-brand-500"
+              className="px-3.5 py-2 rounded-2xl bg-navy-900/90 text-white text-xs font-bold border border-gray-700/80 backdrop-blur-md shadow-inner outline-none cursor-pointer hover:border-brand-500 max-w-full"
             >
               <option value="ALL">All Academic Years</option>
               <option value="II">II Year</option>
@@ -167,14 +170,14 @@ export const GrowthIntelligencePage: React.FC = () => {
               <option value="IV">IV Year</option>
             </select>
 
-            <div className="flex items-center space-x-1.5 bg-navy-900/90 p-1.5 rounded-2xl border border-gray-700/80 shadow-inner backdrop-blur-md">
+            <div className="flex items-center space-x-1 bg-navy-900/90 p-1.5 rounded-2xl border border-gray-700/80 shadow-inner backdrop-blur-md">
               {(['today', '7d', '30d', 'all'] as const).map((p) => (
                 <button
                   key={p}
                   onClick={() => setPeriod(p)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
                     period === p
-                      ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg shadow-brand-600/40 scale-105'
+                      ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md'
                       : 'text-gray-300 hover:text-white hover:bg-white/10'
                   }`}
                 >
@@ -187,7 +190,7 @@ export const GrowthIntelligencePage: React.FC = () => {
       </div>
 
       {/* College Aggregate Delta Metrics KPI Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         
         <div className="glass-card p-5 rounded-3xl border border-emerald-500/30 bg-white dark:bg-navy-900 shadow-xl space-y-2">
           <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">
@@ -468,8 +471,8 @@ export const GrowthIntelligencePage: React.FC = () => {
 
       {/* Interactive Student Time Machine Timeline Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-navy-950/80 backdrop-blur-md animate-fade-in">
-          <div className="relative w-full max-w-6xl max-h-[92vh] bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+        <div className="modal-overlay-responsive animate-modal-backdrop">
+          <div className="modal-container-responsive max-w-6xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-2xl animate-modal-content">
             
             {/* Modal Header */}
             <div className="p-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-gray-800 shrink-0">

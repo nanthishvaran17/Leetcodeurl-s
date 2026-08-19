@@ -137,10 +137,13 @@ interface StudentMasterPageProps {
   onOpenImport: () => void;
 }
 
+import { useNotification } from '../context/NotificationContext';
+
 export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   onSelectStudent,
   onOpenImport
 }) => {
+  const { notify, confirmAction } = useNotification();
   const [students, setStudents] = useState<StudentData[]>(CANONICAL_ROSTER);
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
@@ -290,54 +293,66 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       });
 
       const msg = lcValidation.status === 'valid'
-        ? `✅ Student added! LeetCode account '${lcValidation.username}' verified. Background sync triggered.`
-        : '✅ Student added! LeetCode profile will be verified during the next sync.';
-      alert(msg);
+        ? `Student added! LeetCode account '${lcValidation.username}' verified. Background sync triggered.`
+        : 'Student added! LeetCode profile will be verified during the next sync.';
+      notify.success('Student Added Successfully', msg, { category: 'STUDENT REPOSITORY' });
 
       setShowAddModal(false);
       setRegNo(''); setName(''); setLeetcodeUrl('');
       setLcValidation({ status: 'idle' });
       fetchStudents();
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Failed to add student.");
+      notify.error('Failed to Add Student', err.response?.data?.detail || "Failed to add student.", { category: 'STUDENT REPOSITORY' });
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteStudent = async (student: StudentData) => {
-    if (!confirm(`Are you sure you want to delete student "${student.name}" (${student.reg_no})? This action cannot be undone.`)) {
-      return;
-    }
+    const confirmed = await confirmAction({
+      title: 'Delete Student Record?',
+      message: `Are you sure you want to delete student "${student.name}" (${student.reg_no})? This action cannot be undone.`,
+      confirmLabel: 'Delete Record',
+      category: 'STUDENT REPOSITORY',
+      variant: 'danger',
+    });
+    if (!confirmed) return;
+
     try {
       await api.delete(`/students/${student.id}`);
-      alert(`Student "${student.name}" deleted successfully!`);
+      notify.success('Student Record Deleted', `Student "${student.name}" deleted successfully.`, { category: 'STUDENT REPOSITORY' });
       fetchStudents();
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Failed to delete student record.");
+      notify.error('Delete Failed', err.response?.data?.detail || "Failed to delete student record.", { category: 'STUDENT REPOSITORY' });
     }
   };
 
   const handleBulkDeleteStudents = async (studentIds: number[]) => {
-    if (!confirm(`Are you sure you want to delete ${studentIds.length} selected student records? This action cannot be undone.`)) {
-      return;
-    }
+    const confirmed = await confirmAction({
+      title: 'Delete Selected Records?',
+      message: `Are you sure you want to delete ${studentIds.length} selected student records? This action cannot be undone.`,
+      confirmLabel: `Delete ${studentIds.length} Records`,
+      category: 'STUDENT REPOSITORY',
+      variant: 'danger',
+    });
+    if (!confirmed) return;
+
     try {
       const res = await api.post('/students/bulk-delete', { student_ids: studentIds });
-      alert(`✅ Successfully deleted ${res.data.count || studentIds.length} student records!`);
+      notify.success('Bulk Delete Successful', `Successfully deleted ${res.data.count || studentIds.length} student records.`, { category: 'STUDENT REPOSITORY' });
       fetchStudents();
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Failed to bulk delete student records.");
+      notify.error('Bulk Delete Failed', err.response?.data?.detail || "Failed to bulk delete student records.", { category: 'STUDENT REPOSITORY' });
     }
   };
 
   const handleSyncSingleStudent = async (studentId: number) => {
     try {
       const res = await api.post(`/students/${studentId}/refresh`);
-      alert(`✓ ${res.data?.message || 'Student profile synced successfully!'}`);
+      notify.success('Profile Synced', res.data?.message || 'Student profile synced successfully!', { category: 'SYNC ENGINE' });
       fetchStudents();
     } catch (err: any) {
-      alert(`❌ Sync Failed: ${err.response?.data?.detail || err.message || 'Unable to fetch LeetCode profile statistics.'}`);
+      notify.error('Sync Failed', err.response?.data?.detail || err.message || 'Unable to fetch LeetCode profile statistics.', { category: 'SYNC ENGINE' });
     }
   };
 
@@ -464,8 +479,8 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
       {/* Add Student Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto animate-fade-in">
-          <div className="w-full max-w-md max-h-[calc(100vh-3rem)] glass-card rounded-3xl border border-gray-200 dark:border-gray-800 flex flex-col overflow-hidden my-auto shadow-2xl">
+        <div className="modal-overlay-responsive animate-modal-backdrop">
+          <div className="modal-container-responsive max-w-md glass-card rounded-3xl border border-gray-200 dark:border-gray-800 shadow-2xl animate-modal-content">
             <div className="p-5 border-b border-gray-100 dark:border-gray-800 shrink-0 bg-gray-50/50 dark:bg-navy-900/50 flex items-center justify-between">
               <h3 className="text-base font-extrabold text-gray-900 dark:text-white">Add New Student Record</h3>
               <button onClick={handleCloseAddModal} className="p-1 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors cursor-pointer">

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { Sun, Moon, User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu } from 'lucide-react';
+import { Sun, Moon, User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, Zap } from 'lucide-react';
 import { CollegeLogo } from './CollegeLogo';
 import { getDataFreshness } from '../services/api';
 import { SyncStatusModal } from './SyncStatusModal';
@@ -14,6 +14,7 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
+  currentSessionStatus = 'ACTIVE',
   onOpenLogin,
   activeTab,
   setActiveTab
@@ -42,8 +43,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white/90 dark:bg-navy-900/90 backdrop-blur-md border-b border-gray-200 dark:border-navy-800 transition-colors">
-        <div className="w-full px-3 sm:px-6 lg:px-8">
+      <header className="sticky top-0 z-[100000] bg-white/95 dark:bg-navy-900/95 backdrop-blur-md border-b border-gray-200 dark:border-navy-800 transition-colors shadow-sm">
+        <div className="w-full max-w-[1800px] mx-auto px-3 sm:px-5 lg:px-8">
           <div className="flex items-center justify-between h-16">
             
             {/* Left: Hamburger Button (Mobile/Tablet) + Branding */}
@@ -63,31 +64,47 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onClick={() => setActiveTab('landing')}
                 className="flex items-center space-x-3 cursor-pointer group"
               >
-                <CollegeLogo size={40} />
-                <div>
-                  <div className="text-xs sm:text-sm font-black tracking-tight text-gray-900 dark:text-white flex items-center space-x-1.5 sm:space-x-2">
-                    <span className="truncate max-w-[160px] sm:max-w-none">NANDHA ENGINEERING COLLEGE</span>
-                    <span className="px-1 py-0.5 rounded text-[9px] sm:text-[10px] font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                      AUTONOMOUS
+                <CollegeLogo size={40} className="transition-transform group-hover:scale-105" />
+                <div className="flex flex-col">
+                  <div className="flex items-center space-x-1.5">
+                    <span className="font-extrabold text-sm sm:text-base tracking-tight text-gray-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                      Nandha Engineering College
+                    </span>
+                    <span className="px-2 py-0.5 text-[10px] font-black rounded-md bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+                      LEETCODE
                     </span>
                   </div>
-                  <div className="text-[10px] sm:text-[11px] font-bold text-brand-600 dark:text-brand-400 flex items-center space-x-1 sm:space-x-1.5">
-                    <span>LeetCode Tracker</span>
-                    <span className="text-gray-300 dark:text-gray-700">•</span>
-                    <span className="text-gray-500 dark:text-gray-400">Institutional Edition</span>
-                  </div>
+                  <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium -mt-0.5">
+                    LeetCode Tracker • Institutional Edition
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Right: Actions, Sync, Theme & User Auth */}
-            <div className="flex items-center space-x-3">
+            {/* Middle: Quick Status Indicator */}
+            <div className="hidden md:flex items-center space-x-4">
+              <div className="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-navy-950/80 border border-gray-200 dark:border-navy-800 text-xs">
+                <div className={`w-2.5 h-2.5 rounded-full ${
+                  currentSessionStatus === 'ACTIVE'
+                    ? 'bg-emerald-500 animate-pulse'
+                    : currentSessionStatus === 'FINALIZED'
+                    ? 'bg-blue-500'
+                    : 'bg-amber-500'
+                }`} />
+                <span className="font-bold text-gray-700 dark:text-gray-300">
+                  Sync Engine: <span className="text-gray-900 dark:text-white uppercase font-black">{currentSessionStatus}</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Right: Actions */}
+            <div className="flex items-center space-x-2 sm:space-x-3">
               
               {/* Sync Status Button */}
               <button
                 type="button"
                 onClick={() => setShowSyncModal(true)}
-                className="hidden lg:flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-xs font-semibold text-gray-700 dark:text-gray-200 transition-all border border-gray-200 dark:border-navy-700"
+                className="hidden lg:flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-xs font-semibold text-gray-700 dark:text-gray-200 transition-all border border-gray-200 dark:border-navy-700 cursor-pointer"
               >
                 <Activity className="w-3.5 h-3.5 text-brand-500" />
                 <span>Sync Engine Status</span>
@@ -97,7 +114,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={toggleTheme}
-                className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-navy-800 transition-colors"
+                className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-navy-800 transition-colors cursor-pointer"
                 title="Toggle Dark / Light Mode"
               >
                 {theme === 'dark' ? (
@@ -134,7 +151,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <button
                     type="button"
                     onClick={logout}
-                    className="p-2 rounded-xl text-gray-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors flex items-center space-x-1"
+                    className="p-2 rounded-xl text-gray-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors flex items-center space-x-1 cursor-pointer"
                     title="Sign Out"
                   >
                     <LogOut className="w-4 h-4 text-rose-500" />
@@ -145,7 +162,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={onOpenLogin}
-                  className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md shadow-brand-600/30 transition-all flex items-center space-x-1.5"
+                  className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md shadow-brand-600/30 transition-all flex items-center space-x-1.5 cursor-pointer"
                 >
                   <User className="w-4 h-4" />
                   <span>Portal Sign In</span>
@@ -184,7 +201,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               <nav className="space-y-1">
                 {[
                   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-                  { id: 'ai-control', label: 'AI Control Center', icon: Cpu },
+                  { id: 'hod-command-center', label: 'HOD Command Center', icon: Cpu },
+                  { id: 'faculty-action-center', label: 'Faculty Action Center', icon: Zap },
                   { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
                   { id: 'departments', label: 'Departments & Sections', icon: Layers },
                   { id: 'weekly-contest', label: 'Weekly Contest Tracker', icon: Calendar },

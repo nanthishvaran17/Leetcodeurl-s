@@ -62,6 +62,8 @@ def setup_database():
     # Clear in-memory security tracking
     BLOCKED_ATTEMPTS.clear()
     ALERT_COOLDOWN.clear()
+    from backend.security import _RECENT_ACCESS_LOGS
+    _RECENT_ACCESS_LOGS.clear()
     
     yield
     db.close()

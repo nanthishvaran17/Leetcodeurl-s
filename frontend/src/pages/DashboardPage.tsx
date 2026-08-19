@@ -13,6 +13,7 @@ import { FailedSyncModal } from '../components/FailedSyncModal';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import api from '../services/api';
 import { CANONICAL_ROSTER, getCanonicalSummary } from '../data/canonicalRoster';
+import { useNotification } from '../context/NotificationContext';
 
 interface DashboardPageProps {
   onSelectStudent: (student: StudentData) => void;
@@ -25,6 +26,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   onOpenImport,
   onNavigateTab
 }) => {
+  const { notify, confirmAction } = useNotification();
   const [summary, setSummary] = useState<any>(getCanonicalSummary());
   const [students, setStudents] = useState<StudentData[]>(CANONICAL_ROSTER);
   const [departments, setDepartments] = useState<any[]>([]);
@@ -130,39 +132,55 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
   const handleStartSync = async () => {
     setSyncStarting(true);
+    notify.info('Live Sync Started', 'Background synchronization process initiated for active student roster.', { category: 'SYNC ENGINE' });
     try {
       await api.post('/sync/start?triggered_by=admin_dashboard');
       fetchDashboardData();
+      notify.success('Synchronization Initiated', 'Sync worker is processing verified LeetCode profile statistics.', { category: 'SYNC ENGINE' });
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Failed to start live sync.");
+      notify.error('Live Sync Failure', err.response?.data?.detail || "Failed to start live sync.", { category: 'SYNC ENGINE' });
     } finally {
       setSyncStarting(false);
     }
   };
 
   const handleTriggerStart = async () => {
-    if (!confirm("Trigger 8:00 AM Baseline Snapshot for all students?")) return;
+    const confirmed = await confirmAction({
+      title: 'Trigger 8:00 AM Baseline Snapshot?',
+      message: 'This will record the baseline problem count for all active students for today\'s session.',
+      confirmLabel: 'Trigger Baseline',
+      category: 'SESSION CONTROLS',
+      variant: 'info',
+    });
+    if (!confirmed) return;
     setTriggering(true);
     try {
       await api.post('/sessions/trigger-start');
-      alert("Baseline snapshot triggered!");
+      notify.success('Baseline Snapshot Triggered', 'Initial session snapshot saved successfully.', { category: 'SESSION CONTROLS' });
       fetchDashboardData();
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Trigger failed");
+      notify.error('Trigger Failed', err.response?.data?.detail || "Trigger failed", { category: 'SESSION CONTROLS' });
     } finally {
       setTriggering(false);
     }
   };
 
   const handleTriggerEnd = async () => {
-    if (!confirm("Trigger 9:30 AM Final Snapshot & calculate weekly progress?")) return;
+    const confirmed = await confirmAction({
+      title: 'Trigger 9:30 AM Final Snapshot & calculate weekly progress?',
+      message: 'This will capture final snapshot counts and calculate weekly performance deltas for all students.',
+      confirmLabel: 'Trigger Evaluation',
+      category: 'SESSION CONTROLS',
+      variant: 'warning',
+    });
+    if (!confirmed) return;
     setTriggering(true);
     try {
       await api.post('/sessions/trigger-end');
-      alert("Final snapshot & rankings evaluated!");
+      notify.success('Final snapshot & rankings evaluated!', 'Weekly progress deltas and rankings calculated successfully.', { category: 'SESSION CONTROLS' });
       fetchDashboardData();
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Trigger failed");
+      notify.error('Trigger Failed', err.response?.data?.detail || "Trigger failed", { category: 'SESSION CONTROLS' });
     } finally {
       setTriggering(false);
     }
@@ -170,6 +188,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
   const handleGenerateReport = async () => {
     setGeneratingReport(true);
+    notify.info('Generating PDF Report', 'Compiling institutional performance metrics and charts...', { category: 'REPORTS' });
     try {
       const res = await api.get('/reports/export-pdf', { responseType: 'blob' });
       const blobUrl = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
@@ -180,15 +199,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       link.click();
       link.remove();
       window.URL.revokeObjectURL(blobUrl);
+      notify.success('Report Ready', 'Weekly PDF report downloaded successfully.', { category: 'REPORTS' });
     } catch (err: any) {
       console.error("Report generation failed", err);
       const statusCode = err.response?.status;
       if (statusCode === 401) {
-        alert("Authentication required. Please sign in again.");
+        notify.error('Authentication Required', 'Please sign in again.', { category: 'AUTH' });
       } else if (statusCode === 403) {
-        alert("You do not have permission to generate this institutional report.");
+        notify.error('Access Denied', 'You do not have permission to generate this institutional report.', { category: 'SECURITY' });
       } else {
-        alert("Failed to generate PDF report.");
+        notify.error('Report Error', 'Failed to generate PDF report.', { category: 'REPORTS' });
       }
     } finally {
       setGeneratingReport(false);
@@ -196,6 +216,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   };
 
   const handleExportExcel = async () => {
+    notify.info('Preparing Excel Export', 'Gathering college-wide student statistics...', { category: 'REPORTS' });
     try {
       const res = await api.get('/reports/export-excel', { responseType: 'blob' });
       const blobUrl = window.URL.createObjectURL(new Blob([res.data]));
@@ -206,15 +227,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       link.click();
       link.remove();
       window.URL.revokeObjectURL(blobUrl);
+      notify.success('Excel Export Complete', 'College summary workbook downloaded.', { category: 'REPORTS' });
     } catch (err: any) {
       console.error("Excel export failed", err);
       const statusCode = err.response?.status;
       if (statusCode === 401) {
-        alert("Authentication required. Please sign in again.");
+        notify.error('Authentication Required', 'Please sign in again.', { category: 'AUTH' });
       } else if (statusCode === 403) {
-        alert("You do not have permission to generate this institutional report.");
+        notify.error('Access Denied', 'You do not have permission to generate this institutional report.', { category: 'SECURITY' });
       } else {
-        alert("Failed to generate Excel report.");
+        notify.error('Export Failed', 'Failed to generate Excel report.', { category: 'REPORTS' });
       }
     }
   };
@@ -529,7 +551,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       </div>
 
       {/* 4. Top College Institutional KPIs Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5 sm:gap-4">
         <StatCard title="Total Students" value={totalStudents} icon={Users} color="blue" />
         <StatCard title="Active Students" value={activeStudents} icon={CheckCircle2} color="green" />
         <StatCard title="Not Started" value={notStartedStudents} icon={AlertTriangle} color="rose" />
