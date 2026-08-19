@@ -391,28 +391,13 @@ def download_certificate_pdf(
         )
 
     pdf_bytes = None
-    # 1. Check if cached PDF on disk exists and is valid
-    if cert.pdf_path and os.path.exists(cert.pdf_path):
-        try:
-            if os.path.getsize(cert.pdf_path) > 0:
-                with open(cert.pdf_path, "rb") as f:
-                    cached_data = f.read()
-                    if cached_data.startswith(b"%PDF-"):
-                        pdf_bytes = cached_data
-                        logger.info(f"[certificate_pdf_resolved_from_cache] Size={len(pdf_bytes)} bytes for {cert.verification_id}")
-        except Exception as read_err:
-            logger.warning(f"[certificate_pdf_cache_read_error] Could not read existing PDF at {cert.pdf_path}: {read_err}")
-            pdf_bytes = None
-
-    # 2. If missing or invalid, automatically regenerate from verified certificate record
-    if not pdf_bytes:
-        logger.info(f"[certificate_pdf_missing_regenerating] Re-rendering official PDF for {cert.verification_id} ({cert.student_name})")
-        try:
-            pdf_bytes = build_certificate_pdf_from_record(cert, db)
-            logger.info(f"[certificate_pdf_generated] Successfully generated {len(pdf_bytes)} bytes for {cert.verification_id}")
-        except Exception as gen_err:
-            logger.error(f"[certificate_pdf_generation_failed] Exception generating PDF for {cert.verification_id}: {gen_err}", exc_info=True)
-            raise HTTPException(status_code=500, detail="Failed to generate official certificate PDF.")
+    # Generate fresh official A4 Landscape Gold Certificate of Excellence PDF
+    try:
+        pdf_bytes = build_certificate_pdf_from_record(cert, db)
+        logger.info(f"[certificate_pdf_generated] Successfully generated {len(pdf_bytes)} bytes for {cert.verification_id}")
+    except Exception as gen_err:
+        logger.error(f"[certificate_pdf_generation_failed] Exception generating PDF for {cert.verification_id}: {gen_err}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to generate official certificate PDF.")
 
     # 3. Final validation of PDF bytes
     if not pdf_bytes or len(pdf_bytes) == 0 or not pdf_bytes.startswith(b"%PDF-"):

@@ -39,6 +39,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   };
 
   const [downloadingCert, setDownloadingCert] = useState(false);
+  const [downloadingForensic, setDownloadingForensic] = useState(false);
 
   const handleGenerateCert = async () => {
     if (!student?.id) return;
@@ -48,15 +49,21 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         student_id: student.id,
         cert_type: "Top Performer"
       });
-      const certId = res.data.verification_id;
-
-      if (!certId) {
-        throw new Error("No certificate verification ID returned.");
-      }
+      const certId = res.data.verification_id || student.reg_no || student.id;
 
       const response = await api.get(`/certificates/${encodeURIComponent(certId)}/download-pdf`, {
         responseType: 'blob'
       });
+
+      if (response.data && response.data.type === 'application/json') {
+        const text = await response.data.text();
+        try {
+          const errJson = JSON.parse(text);
+          alert(`Certificate Error: ${errJson.detail || 'Could not generate PDF.'}`);
+          return;
+        } catch (e) {}
+      }
+
       const blob = new Blob([response.data], { type: 'application/pdf' });
       let filename = `Certificate_${certId}.pdf`;
       const disposition = response.headers['content-disposition'] || response.headers['Content-Disposition'];
@@ -82,6 +89,51 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       alert(`Certificate Error: ${detailMsg}`);
     } finally {
       setDownloadingCert(false);
+    }
+  };
+
+  const handleDownloadForensicCert = async () => {
+    if (!student?.id) return;
+    setDownloadingForensic(true);
+    try {
+      const targetId = student.reg_no || student.id;
+      const response = await api.get(`/certificates/${encodeURIComponent(targetId)}/download-forensic-pdf`, {
+        responseType: 'blob'
+      });
+
+      if (response.data && response.data.type === 'application/json') {
+        const text = await response.data.text();
+        try {
+          const errJson = JSON.parse(text);
+          alert(`Forensic Report Error: ${errJson.detail || 'Could not generate report.'}`);
+          return;
+        } catch (e) {}
+      }
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      let filename = `Forensic_Audit_Report_${targetId}.pdf`;
+      const disposition = response.headers['content-disposition'] || response.headers['Content-Disposition'];
+      if (disposition && disposition.includes('filename=')) {
+        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+        if (matches != null && matches[1]) {
+          filename = matches[1].replace(/['"]/g, '').trim();
+        }
+      }
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => {
+        window.URL.revokeObjectURL(blobUrl);
+      }, 2000);
+    } catch (err: any) {
+      console.error("Forensic report error:", err);
+      alert("Failed to download Official LeetCode Contest Forensic Verification Audit Report.");
+    } finally {
+      setDownloadingForensic(false);
     }
   };
 
@@ -171,7 +223,16 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md shadow-amber-600/30 transition-all hover:scale-105 disabled:opacity-50"
             >
               <Award className="w-3.5 h-3.5" />
-              <span>{downloadingCert ? 'Downloading PDF...' : 'Issue Certificate'}</span>
+              <span>{downloadingCert ? 'Downloading Gold PDF...' : 'Issue Gold Certificate'}</span>
+            </button>
+
+            <button
+              onClick={handleDownloadForensicCert}
+              disabled={downloadingForensic}
+              className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md shadow-emerald-600/30 transition-all hover:scale-105 disabled:opacity-50"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>{downloadingForensic ? 'Downloading Report...' : 'Forensic Audit Report'}</span>
             </button>
           </div>
 
