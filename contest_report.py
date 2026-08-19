@@ -248,19 +248,23 @@ def process_student_data(student_df, contest_slug, contest_date):
     print("=" * 60)
     
     for idx, row in student_df.iterrows():
-        username = str(row.get('LeetCodeUsername', '') or '').strip()
+        raw_u = row.get('LeetCodeUsername', '')
+        if pd.isna(raw_u) or str(raw_u).strip() in ('', 'nan', 'None', 'null'):
+            username = ''
+        else:
+            username = str(raw_u).strip()
         name = row.get('Name', 'Unknown')
         roll = row.get('RollNumber', '')
         dept = row.get('Department', 'Unknown')
         year = row.get('Year', 0)
         
-        if not username or username == 'nan':
+        if not username:
             results.append({
                 'Name': name,
                 'RollNumber': roll,
                 'Department': dept,
                 'Year': year,
-                'LeetCodeUsername': username,
+                'LeetCodeUsername': '',
                 'Attended': False,
                 'ProblemsSolved': 0,
                 'FinishTime': None,
