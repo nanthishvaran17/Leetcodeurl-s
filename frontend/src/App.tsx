@@ -19,6 +19,7 @@ import { StaffDashboardView } from './pages/StaffDashboardView';
 import { GrowthIntelligencePage } from './pages/GrowthIntelligencePage';
 import { SystemHealthPage } from './pages/SystemHealthPage';
 import { CertificateVerificationPage } from './pages/CertificateVerificationPage';
+import { AIControlCenterPage } from './pages/AIControlCenterPage';
 import { ImportModal } from './components/ImportModal';
 import { AccessRestrictedView } from './components/AccessRestrictedView';
 import { AIAssistantWidget } from './components/AIAssistantWidget';
@@ -165,6 +166,8 @@ export const App: React.FC = () => {
           )}
 
           {activeTab === 'dashboard' && renderDashboardComponent()}
+
+          {activeTab === 'ai-control' && <AIControlCenterPage onNavigateTab={handleTabChange} />}
 
           {activeTab === 'growth' && <GrowthIntelligencePage />}
 

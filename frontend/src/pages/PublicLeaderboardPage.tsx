@@ -26,7 +26,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
   const fetchPublicData = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/public/leaderboard?limit=300');
+      const res = await api.get('/public/leaderboard?limit=300&sort_by=solved_desc');
       setStudents(res.data || []);
     } catch (err) {
       console.error(err);
@@ -35,11 +35,19 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
     }
   };
 
+  // Overall top 3 rankers sorted by total solved for podium display
+  const top3 = [...students]
+    .sort((a, b) => (b.stats?.total_solved || 0) - (a.stats?.total_solved || 0))
+    .slice(0, 3);
+
   // Derived filtered list
   const filtered = students
     .filter(s => {
-      if (filterYear !== 'ALL' && s.year_level !== filterYear) return false;
-      if (filterDept !== 'ALL' && (s.department?.code || '') !== filterDept) return false;
+      if (filterYear !== 'ALL' && (s.year_level || '').toUpperCase() !== filterYear.toUpperCase()) return false;
+      if (filterDept !== 'ALL') {
+        const dStr = (s.department?.code || s.department?.name || (typeof s.department === 'string' ? s.department : '')).toUpperCase();
+        if (!dStr.includes(filterDept.toUpperCase())) return false;
+      }
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         return (
@@ -54,15 +62,17 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
       if (sortBy === 'easy') return (b.stats?.easy_solved || 0) - (a.stats?.easy_solved || 0);
       if (sortBy === 'medium') return (b.stats?.medium_solved || 0) - (a.stats?.medium_solved || 0);
       if (sortBy === 'hard') return (b.stats?.hard_solved || 0) - (a.stats?.hard_solved || 0);
-      return (a.college_rank || 999) - (b.college_rank || 999);
+      const rA = a.college_rank || 999;
+      const rB = b.college_rank || 999;
+      if (rA !== rB) return rA - rB;
+      return (b.stats?.total_solved || 0) - (a.stats?.total_solved || 0);
     });
 
-  const top3 = filtered.slice(0, 3);
   const totalSolved = students.reduce((acc, s) => acc + (s.stats?.total_solved || 0), 0);
   const avgSolved = students.length ? Math.round(totalSolved / students.length) : 0;
   const topSolver = students[0];
-  const uniqueYears = ['II', 'III', 'IV'];
-  const uniqueDepts = [...new Set(students.map(s => s.department?.code).filter(Boolean))] as string[];
+  const uniqueYears = [...new Set(students.map(s => s.year_level).filter(Boolean))];
+  const uniqueDepts = [...new Set(students.map(s => s.department?.code || s.department?.name || (typeof s.department === 'string' ? s.department : '')).filter(Boolean))] as string[];
 
   const MEDAL_CONFIGS = [
     { rank: 2, color: 'from-slate-400 to-slate-500', borderColor: 'border-slate-300', textColor: 'text-slate-300', emoji: '🥈', label: 'SILVER', size: 'scale-90', order: 'order-1' },

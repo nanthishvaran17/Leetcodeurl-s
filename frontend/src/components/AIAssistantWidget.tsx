@@ -223,7 +223,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
           <div className="px-3.5 py-1.5 bg-gray-50 dark:bg-navy-950 border-b border-gray-100 dark:border-gray-800/80 flex items-center justify-between text-[10px] text-gray-500 font-bold">
             <span className="flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              <span>Context: 300 Students • Contest 514 • 100% Parity</span>
+              <span>Context: 302 Enrolled Students • Weekly Contest • 100% Parity</span>
             </span>
             <span className="font-mono text-indigo-600 dark:text-indigo-400 font-black uppercase">
               {activeMode === 'operations' ? '⚙️ OPS_MODE' : '🎓 ACADEMIC_MODE'}

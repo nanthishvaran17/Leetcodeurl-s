@@ -557,12 +557,12 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
         return (False, old_total is not None and old_total > 0, True)
 
     # Case C: Identity Mismatch — Preserve previous stats
-    if status_str == "IDENTITY_MISMATCH":
-        st.status = "IDENTITY_MISMATCH"
+    if status_str in ("IDENTITY_MISMATCH", "USERNAME_MISMATCH"):
+        st.status = "USERNAME_MISMATCH"
         st.sync_status = "identity_mismatch"
         st.validation_status = "identity_mismatch"
         st.error_message = res.get("error_message") or "Returned LeetCode identity does not match requested identity"
-        st.error_code = "IDENTITY_MISMATCH"
+        st.error_code = "USERNAME_MISMATCH"
         st.last_attempt_at = now
 
         item = SyncJobItem(
@@ -766,57 +766,153 @@ def _sync_active_contest_data(db: Session):
         get_session_matrix(session_id=active_session.id, dept="ALL", year="ALL", db=db)
 
 
-def sync_single_student(student_id: int, db: Session) -> Dict[str, Any]:
+_active_single_fetches: set = set()
+_single_fetch_lock = threading.Lock()
+
+def sync_single_student(student_id: int, db: Session, force_refresh: bool = True) -> Dict[str, Any]:
     """
-    Performs single-student instant live refresh.
+    Performs single-student instant live refresh directly reading the AUTHORITATIVE DATABASE URL.
     Updates DB, logs item audit, recalculates ranks, and broadcasts WebSocket update.
+    Enforces thread-safe lock per student_id to prevent duplicate simultaneous fetches.
     """
-    student = db.query(Student).filter(Student.id == student_id).first()
-    if not student:
-        return {"status": "error", "message": "Student not found"}
+    with _single_fetch_lock:
+        if student_id in _active_single_fetches:
+            logger.warning(f"[SINGLE_SYNC_LOCKED] Fetch already in progress for student_id={student_id}")
+            student = db.query(Student).filter(Student.id == student_id).first()
+            return {
+                "status": "fetching",
+                "sync_status": "FETCHING",
+                "message": "Fetch already in progress for this student.",
+                "student_id": student_id,
+                "name": student.name if student else "",
+                "reg_no": student.reg_no if student else ""
+            }
+        _active_single_fetches.add(student_id)
 
-    username = student.username or extract_leetcode_username(student.leetcode_url)[0]
-    if not username:
-        return {"status": "error", "message": "Student profile URL or username is invalid"}
-
-    # Execute single fetch synchronously/async loop
     try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        # Re-query student directly from authoritative database session
+        student = db.query(Student).filter(Student.id == student_id).first()
+        if not student:
+            return {"status": "error", "message": f"Student ID {student_id} not found"}
 
-    res = loop.run_until_complete(fetch_leetcode_profile(username))
+        old_url = student.leetcode_url
+        old_username = student.username
+        start_time_iso = datetime.datetime.utcnow().isoformat() + "Z"
 
-    job_id = f"SINGLE-{student_id}-{int(datetime.datetime.utcnow().timestamp())}"
-    is_success, is_partial, is_error = _process_single_student_sync(db, job_id, student, res)
+        # Validate URL from DB
+        parsed_username, canonical_url, url_status = extract_leetcode_username(student.leetcode_url)
+        if url_status != "OK" or not parsed_username:
+            # Mark URL_INVALID
+            st = student.stats
+            if not st:
+                st = LeetCodeProfileStats(student_id=student.id)
+                db.add(st)
+            st.status = "URL_INVALID"
+            st.sync_status = "url_invalid"
+            st.validation_status = "url_invalid"
+            st.error_message = f"Invalid LeetCode URL format: '{student.leetcode_url}'"
+            st.error_code = "URL_INVALID"
+            st.last_attempt_at = datetime.datetime.utcnow()
+            db.commit()
 
-    update_all_rankings_and_badges(db)
-    db.commit()
-    db.refresh(student)
+            logger.info(
+                f"[URL_CHANGE_FETCH] Student ID: {student.id} | Reg No: {student.reg_no} | "
+                f"Old URL: '{old_url}' | New URL: '{student.leetcode_url}' | "
+                f"Old Username: '{old_username}' | New Username: None | "
+                f"Fetch Started: {start_time_iso} | Fetch Completed: {datetime.datetime.utcnow().isoformat()}Z | "
+                f"Fetched Username: None | Result Status: URL_INVALID | "
+                f"Error: '{st.error_message}' | Timestamp: {datetime.datetime.utcnow().isoformat()}Z"
+            )
 
-    # Broadcast WebSocket update for single student
-    try:
-        loop.create_task(broadcast_sync_event({
-            "type": "STUDENT_UPDATED",
+            return {
+                "status": "error",
+                "sync_status": "url_invalid",
+                "error_code": "URL_INVALID",
+                "message": st.error_message,
+                "student_id": student.id,
+                "name": student.name,
+                "reg_no": student.reg_no
+            }
+
+        # Clear in-memory cache for both old & new username
+        from backend.leetcode_fetcher import clear_leetcode_cache
+        if old_username:
+            clear_leetcode_cache(old_username)
+        clear_leetcode_cache(parsed_username)
+
+        # Update student record with normalized username & canonical URL if needed
+        student.username = parsed_username.lower()
+        if canonical_url and student.leetcode_url != canonical_url:
+            student.leetcode_url = canonical_url
+        db.commit()
+        db.refresh(student)
+
+        # Execute single fetch against LeetCode GraphQL with force_refresh=True
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+        res = loop.run_until_complete(fetch_leetcode_profile(student.username, force_refresh=force_refresh))
+
+        job_id = f"SINGLE-{student_id}-{int(datetime.datetime.utcnow().timestamp())}"
+        is_success, is_partial, is_error = _process_single_student_sync(db, job_id, student, res)
+
+        update_all_rankings_and_badges(db)
+        db.commit()
+        student = db.query(Student).filter(Student.id == student_id).first()
+
+        # Invalidate application level cache
+        try:
+            from backend.cache import cache
+            cache.clear()
+        except Exception:
+            pass
+
+        end_time_iso = datetime.datetime.utcnow().isoformat() + "Z"
+        result_status = "SUCCESS" if is_success else ("PARTIAL" if is_partial else (student.stats.sync_status.upper() if student.stats else "FAILED"))
+        fetched_uname = res.get("fetched_username") or res.get("username") or student.username
+
+        logger.info(
+            f"[URL_CHANGE_FETCH] Student ID: {student.id} | Reg No: {student.reg_no} | "
+            f"Old URL: '{old_url}' | New URL: '{student.leetcode_url}' | "
+            f"Old Username: '{old_username}' | New Username: '{student.username}' | "
+            f"Fetch Started: {start_time_iso} | Fetch Completed: {end_time_iso} | "
+            f"Fetched Username: '{fetched_uname}' | Result Status: {result_status} | "
+            f"Error: '{student.stats.error_message if student.stats else None}' | Timestamp: {end_time_iso}"
+        )
+
+        # Broadcast WebSocket update
+        try:
+            loop.create_task(broadcast_sync_event({
+                "type": "STUDENT_UPDATED",
+                "student_id": student.id,
+                "reg_no": student.reg_no,
+                "name": student.name,
+                "username": student.username,
+                "leetcode_url": student.leetcode_url,
+                "total_solved": student.stats.total_solved if student.stats else None,
+                "sync_status": student.stats.sync_status if student.stats else "failed"
+            }))
+        except Exception:
+            pass
+
+        return {
+            "status": "success" if is_success else "partial" if is_partial else "error",
             "student_id": student.id,
-            "reg_no": student.reg_no,
             "name": student.name,
+            "reg_no": student.reg_no,
+            "username": student.username,
+            "leetcode_url": student.leetcode_url,
             "total_solved": student.stats.total_solved if student.stats else None,
-            "sync_status": student.stats.sync_status if student.stats else "failed"
-        }))
-    except Exception:
-        pass
-
-    return {
-        "status": "success" if is_success else "partial" if is_partial else "error",
-        "student_id": student.id,
-        "name": student.name,
-        "reg_no": student.reg_no,
-        "total_solved": student.stats.total_solved if student.stats else None,
-        "sync_status": student.stats.sync_status if student.stats else "failed",
-        "last_verified_at": student.stats.last_verified_at.isoformat() if (student.stats and student.stats.last_verified_at) else None
-    }
+            "sync_status": student.stats.sync_status if student.stats else "failed",
+            "error_message": student.stats.error_message if student.stats else None,
+            "last_verified_at": student.stats.last_verified_at.isoformat() if (student.stats and student.stats.last_verified_at) else None
+        }
+    finally:
+        with _single_fetch_lock:
+            _active_single_fetches.discard(student_id)
 
 
 def get_system_freshness(db: Session) -> Dict[str, Any]:

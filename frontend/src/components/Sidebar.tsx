@@ -12,7 +12,8 @@ import {
   Calendar,
   TrendingUp,
   Activity,
-  ChevronRight
+  ChevronRight,
+  Cpu
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -23,6 +24,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'ai-control', label: 'AI Control Center', icon: Cpu, badge: 'AI OPS' },
     { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp, badge: 'AI' },
     { id: 'departments', label: 'Departments & Sections', icon: Layers },
     { id: 'weekly-contest', label: 'Weekly Contest Tracker', icon: Calendar, pulse: true },

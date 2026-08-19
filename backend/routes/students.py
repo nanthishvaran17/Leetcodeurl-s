@@ -48,26 +48,16 @@ def get_leaderboard_fast(
     )
     import re
 
-    # --- Step 1: Find target session in ONE query (no N+1 loop) ---
-    target_session = (
-        db.query(WeeklySession)
-        .filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED"]))
-        .outerjoin(
-            WeeklyPublicResult,
-            (WeeklyPublicResult.session_id == WeeklySession.id) &
-            (WeeklyPublicResult.participation_status.in_(["PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"]))
-        )
-        .filter(WeeklyPublicResult.id.isnot(None))
-        .order_by(WeeklySession.id.desc())
-        .first()
-    )
-    if not target_session:
-        target_session = (
-            db.query(WeeklySession)
-            .filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED"]))
-            .order_by(WeeklySession.id.desc())
-            .first()
-        )
+    # --- Step 1: Find target session ordered by numeric contest number ---
+    sessions = db.query(WeeklySession).filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED", "LIVE", "ACTIVE"])).all()
+    def _get_c_num(s):
+        m = re.search(r'\d+', s.contest_name or '')
+        return int(m.group(0)) if m else (s.id or 0)
+
+    sorted_sessions = sorted(sessions, key=_get_c_num, reverse=True)
+    target_session = next((s for s in sorted_sessions if s.status in ["FINALIZED", "COMPLETED"]), None)
+    if not target_session and sorted_sessions:
+        target_session = sorted_sessions[0]
 
     target_session_id = target_session.id if target_session else None
     target_contest_name = target_session.contest_name if target_session else "Weekly Contest"
@@ -247,7 +237,8 @@ def get_students(
     cache_key = f"students_list:{dept_id}:{year_level}:{section_id}:{search}:{session_id}:{sort_by}:{min_solved}:{max_solved}:{verified_only}:{page}:{limit}"
     cached_data = cache.get(cache_key)
     if cached_data is not None:
-        return cached_data
+        from starlette.responses import Response
+        return Response(content=cached_data, media_type="application/json")
 
     query = db.query(Student).outerjoin(Student.stats).options(
         joinedload(Student.department),
@@ -327,32 +318,23 @@ def get_students(
     target_session_id = session_id
     target_session = None
     if not target_session_id:
-        # Single JOIN query instead of N+1 loop through sessions
-        target_session = (
-            db.query(WeeklySession)
-            .filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED"]))
-            .outerjoin(
-                WeeklyPublicResult,
-                (WeeklyPublicResult.session_id == WeeklySession.id) &
-                (WeeklyPublicResult.participation_status.in_(["PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"]))
-            )
-            .filter(WeeklyPublicResult.id.isnot(None))
-            .order_by(WeeklySession.id.desc())
-            .first()
-        )
-        if not target_session:
-            target_session = (
-                db.query(WeeklySession)
-                .filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED"]))
-                .order_by(WeeklySession.id.desc())
-                .first()
-            )
+        sessions = db.query(WeeklySession).filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED", "LIVE", "ACTIVE"])).all()
+        def _get_c_num(s):
+            m = re.search(r'\d+', s.contest_name or '')
+            return int(m.group(0)) if m else (s.id or 0)
+
+        sorted_sessions = sorted(sessions, key=_get_c_num, reverse=True)
+        # Prefer completed/finalized sessions first, or latest live session
+        target_session = next((s for s in sorted_sessions if s.status in ["FINALIZED", "COMPLETED"]), None)
+        if not target_session and sorted_sessions:
+            target_session = sorted_sessions[0]
         if target_session:
             target_session_id = target_session.id
     else:
         target_session = db.query(WeeklySession).filter(WeeklySession.id == target_session_id).first()
 
     c_num = None
+    target_contest_name = target_session.contest_name if (target_session and target_session.contest_name) else "Weekly Contest"
     if target_session and target_session.contest_name:
         m = re.search(r'\d+', target_session.contest_name)
         if m:
@@ -793,79 +775,61 @@ def update_student(
         student.email = payload.email.strip().lower() if payload.email else None
 
     # ── LeetCode URL / username normalisation ─────────────────────────────────
-    # BUG FIX: extract_leetcode_username returns a 3-tuple (username, url, status).
-    # The old code assigned the whole tuple to student.username — now corrected.
+    url_changed = False
+    old_url = student.leetcode_url
     if payload.leetcode_url is not None:
         raw_lc = payload.leetcode_url.strip() if payload.leetcode_url else None
-        student.leetcode_url = raw_lc
-        if raw_lc:
-            _parsed_u, _parsed_url, _u_status = extract_leetcode_username(raw_lc)
-            if _parsed_u:
-                # Normalise to lowercase for consistent deduplication
-                student.username = _parsed_u.lower()
-                student.leetcode_url = _parsed_url  # canonical URL
+        if raw_lc != old_url:
+            url_changed = True
+            student.leetcode_url = raw_lc
+            if raw_lc:
+                _parsed_u, _parsed_url, _u_status = extract_leetcode_username(raw_lc)
+                if _parsed_u:
+                    student.username = _parsed_u.lower()
+                    student.leetcode_url = _parsed_url  # canonical URL
+                else:
+                    student.username = None
+
     # Direct username override (e.g. from the username field in the edit form)
     if payload.username and payload.username.strip():
         _direct_u = payload.username.strip().lower()
-        student.username = _direct_u
-        student.leetcode_url = f"https://leetcode.com/u/{_direct_u}/"
+        if _direct_u != (old_username or "").strip().lower():
+            url_changed = True
+            student.username = _direct_u
+            student.leetcode_url = f"https://leetcode.com/u/{_direct_u}/"
 
     if payload.is_active is not None:
         student.is_active = payload.is_active
 
-    # ── Username change detection & safe reset ────────────────────────────────
-    # Normalise both sides before comparing so "User" == "user" does not
-    # spuriously trigger a re-sync.
     old_u_norm = (old_username or "").strip().lower()
     new_u_norm = (student.username or "").strip().lower()
-    username_changed = bool(new_u_norm and old_u_norm != new_u_norm)
+    username_changed = bool(url_changed or (new_u_norm and old_u_norm != new_u_norm))
 
     if username_changed:
-        # Align canonical URL
-        student.leetcode_url = f"https://leetcode.com/u/{student.username}/"
-        # Reset sync metadata BEFORE commit so the DB is immediately consistent:
-        # any reader between now and the background sync completion will see
-        # "pending" rather than stale "verified" data for a different username.
-        if student.stats:
-            student.stats.sync_status = "pending"
-            student.stats.status = "pending"
-            student.stats.validation_status = "pending"
-            student.stats.error_message = f"Username changed from '{old_username}' to '{student.username}' — re-verification pending."
-            student.stats.error_code = "USERNAME_CHANGED"
+        from backend.leetcode_fetcher import clear_leetcode_cache
+        if old_username:
+            clear_leetcode_cache(old_username)
+        if student.username:
+            clear_leetcode_cache(student.username)
 
+        if student.stats:
+            student.stats.sync_status = "fetching"
+            student.stats.status = "FETCHING"
+            student.stats.validation_status = "fetching"
+            student.stats.error_message = None
+
+    # Commit updated URL/username to DB first before starting fetch (Requirement 17)
     db.commit()
     db.refresh(student)
 
-    # ── Background sync — thread-safe session handling ────────────────────────
-    # CRITICAL: The request-scoped `db` session MUST NOT be passed to a background
-    # thread (SQLAlchemy sessions are not thread-safe).  The background function
-    # opens its own independent SessionLocal() and closes it in a finally block.
+    # Perform synchronous fresh fetch for immediate UI update & response
     if username_changed:
-        student_id_for_sync = student.id
-        new_username_for_log = student.username
-
-        def _bg_username_change_sync():
-            from backend.database import SessionLocal as _SL
-            from backend.services.live_sync_service import sync_single_student as _sss
-            _bg_db = _SL()
-            try:
-                _sss(student_id_for_sync, _bg_db)
-                logger.info(
-                    f"[USERNAME_CHANGE] Background sync completed for student_id={student_id_for_sync}: "
-                    f"'{old_username}' -> '{new_username_for_log}'."
-                )
-            except Exception as _e:
-                logger.warning(
-                    f"[USERNAME_CHANGE_SYNC] Background sync note for student_id={student_id_for_sync}: {_e}"
-                )
-            finally:
-                _bg_db.close()
-
-        background_tasks.add_task(_bg_username_change_sync)
-        logger.info(
-            f"[USERNAME_CHANGE] Background sync queued for student_id={student_id_for_sync}: "
-            f"'{old_username}' -> '{new_username_for_log}'."
-        )
+        from backend.services.live_sync_service import sync_single_student as _sss
+        try:
+            _sss(student.id, db, force_refresh=True)
+            db.refresh(student)
+        except Exception as _sync_err:
+            logger.warning(f"[UPDATE_STUDENT_SYNC] Direct sync note for student_id={student.id}: {_sync_err}")
 
     # ── Cloud Firestore sync (best-effort) ────────────────────────────────────
     try:

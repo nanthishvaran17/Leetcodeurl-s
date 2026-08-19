@@ -86,35 +86,20 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   };
 
   const handleLiveFetch = async () => {
-    // Determine username from leetcode_url if username is not explicitly set
-    const username = detail?.username || (detail?.leetcode_url ? detail.leetcode_url.split('/u/')[1]?.replace('/', '') : null);
-    if (!username) {
-      setLiveFetchError("No valid LeetCode username found.");
+    if (!student?.id) {
+      setLiveFetchError("No valid student record ID found.");
       return;
     }
     
     setIsLiveFetching(true);
     setLiveFetchError(null);
     try {
-      const res = await api.get(`/leetcode/stats?username=${username}`);
-      setDetail((prev: any) => ({
-        ...prev,
-        stats: {
-          ...prev.stats,
-          total_solved: res.data.total_solved,
-          easy_solved: res.data.easy_solved,
-          medium_solved: res.data.medium_solved,
-          hard_solved: res.data.hard_solved,
-          contest_rating: res.data.contest_rating,
-          official_contests: res.data.official_contests,
-          virtual_contests: res.data.virtual_contests ?? 0,
-          virtual_contest_status: res.data.virtual_contest_status || 'NOT_ATTENDED',
-          virtual_problems_solved: res.data.virtual_problems_solved ?? 0,
-        }
-      }));
+      await api.post(`/api/sync/student/${student.id}`);
+      const refreshed = await api.get(`/students/${student.id}`);
+      setDetail(refreshed.data);
     } catch (err: any) {
       console.error("Live fetch error:", err);
-      setLiveFetchError(err.response?.data?.detail || "Failed to fetch live stats");
+      setLiveFetchError(err.response?.data?.detail || err.response?.data?.message || "Failed to fetch live stats");
     } finally {
       setIsLiveFetching(false);
     }

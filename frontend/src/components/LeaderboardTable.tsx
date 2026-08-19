@@ -14,19 +14,23 @@ function parseUtcTime(ts?: string): number {
   return isNaN(time) ? Date.now() : time;
 }
 
-function getSyncState(syncStatus?: string, lastVerifiedAt?: string): 'pending'|'syncing'|'verified'|'failed'|'mismatch'|'stale'|'invalid_profile'|'pending_username' {
-  if (syncStatus === 'pending_username' || syncStatus === 'PENDING_USERNAME' || syncStatus === 'MISSING LINK') return 'pending_username';
-  if (syncStatus === 'invalid_profile' || syncStatus === 'invalid_username' || syncStatus === 'INVALID_USERNAME' || syncStatus === 'INVALID_LINK') return 'invalid_profile';
-  if (syncStatus === 'syncing') return 'syncing';
-  if (syncStatus === 'success' || syncStatus === 'OK' || syncStatus === 'verified' || syncStatus === 'stale') {
+function getSyncState(syncStatus?: string, lastVerifiedAt?: string): 'pending'|'syncing'|'fetching'|'verified'|'failed'|'mismatch'|'stale'|'invalid_profile'|'pending_username'|'url_invalid'|'profile_not_found'|'username_mismatch' {
+  if (!syncStatus) return 'pending';
+  const s = syncStatus.toLowerCase();
+  if (s === 'fetching' || s === 'syncing') return 'fetching';
+  if (s === 'url_invalid' || s === 'invalid link' || s === 'missing link') return 'url_invalid';
+  if (s === 'username_mismatch' || s === 'identity_mismatch') return 'username_mismatch';
+  if (s === 'profile_not_found' || s === 'invalid_profile' || s === 'invalid_username' || s === '404_not_found') return 'profile_not_found';
+  if (s === 'pending_username') return 'pending_username';
+  if (s === 'success' || s === 'ok' || s === 'verified' || s === 'stale') {
     if (lastVerifiedAt) {
       const age = Date.now() - parseUtcTime(lastVerifiedAt);
       if (age > 24 * 60 * 60 * 1000) return 'stale';
     }
     return 'verified';
   }
-  if (!syncStatus || syncStatus === 'pending' || syncStatus === 'not_started') return 'pending';
-  if (syncStatus === 'mismatch' || syncStatus === 'data_mismatch') return 'mismatch';
+  if (s === 'pending' || s === 'not_started') return 'pending';
+  if (s === 'mismatch' || s === 'data_mismatch') return 'mismatch';
   return 'failed';
 }
 
@@ -222,6 +226,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
         username: editUsername.trim() || undefined
       });
       if (onUpdateStudent) onUpdateStudent(res.data);
+      if (onRefreshStudent) onRefreshStudent(editingStudent.id);
       setEditingStudent(null);
     } catch (err: any) {
       alert(`Update failed: ${err?.response?.data?.detail || err.message}`);

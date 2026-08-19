@@ -24,15 +24,19 @@ def calculate_competition_ranks(scores: List[float]) -> List[Optional[int]]:
 
     return [rank_map.get(val, None) for val in scores]
 
-def update_all_rankings_and_badges(db: Session, week_number: int = 1, academic_year: str = "2026-27"):
+def update_all_rankings_and_badges(db: Session, week_number: Optional[int] = None, academic_year: str = "2026-27"):
     """
     Recalculates College, Department, Year, Section, and Progress Ranks for all active students.
-    Also computes streaks, consistency scores, and milestone badges.
+    Also computes streaks, consistency scores, and milestone badges across all progress records.
     """
+    if week_number is None:
+        import datetime
+        week_number = datetime.date.today().isocalendar()[1]
+
     logger.info(f"Recalculating multi-level rankings for week {week_number} ({academic_year})...")
 
     # Fetch all active students with their latest stats
-    students = db.query(Student).filter(Student.is_active == True).all()
+    students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
     if not students:
         logger.info("No active students found for ranking.")
         return
@@ -164,36 +168,36 @@ def update_all_rankings_and_badges(db: Session, week_number: int = 1, academic_y
         # Composite Coding Score (Difficulty-weighted: Easy*1 + Med*3 + Hard*5 + Progress*2)
         composite_score = (r["easy"] * 1.0) + (r["med"] * 3.0) + (r["hard"] * 5.0) + (r["weekly_progress"] * 2.0)
 
-        # Update or create progress record
-        prog_rec = db.query(WeeklyStudentProgress).filter(
-            WeeklyStudentProgress.student_id == r["student_id"],
-            WeeklyStudentProgress.week_number == week_number,
-            WeeklyStudentProgress.academic_year == academic_year
-        ).first()
+        # Update or create progress records (update all existing progress records for this student)
+        prog_recs = db.query(WeeklyStudentProgress).filter(
+            WeeklyStudentProgress.student_id == r["student_id"]
+        ).all()
 
-        if not prog_rec:
-            prog_rec = WeeklyStudentProgress(
+        if not prog_recs:
+            new_rec = WeeklyStudentProgress(
                 student_id=r["student_id"],
                 week_number=week_number,
                 academic_year=academic_year
             )
-            db.add(prog_rec)
+            db.add(new_rec)
+            prog_recs = [new_rec]
 
-        prog_rec.total_solved = r["total_solved"]
-        prog_rec.weekly_progress = r["weekly_progress"]
-        prog_rec.easy_solved = r["easy"]
-        prog_rec.medium_solved = r["med"]
-        prog_rec.hard_solved = r["hard"]
-        prog_rec.rating = r["rating"]
-        prog_rec.college_rank = r["college_rank"]
-        prog_rec.dept_rank = r["dept_rank"]
-        prog_rec.year_rank = r["year_rank"]
-        prog_rec.section_rank = r["section_rank"]
-        prog_rec.progress_rank = r["progress_rank"]
-        prog_rec.streak_count = r["streak"]
-        prog_rec.consistency_score = r["consistency"]
-        prog_rec.badge_list = badges
-        prog_rec.composite_score = composite_score
+        for prog_rec in prog_recs:
+            prog_rec.total_solved = r["total_solved"]
+            prog_rec.weekly_progress = r["weekly_progress"]
+            prog_rec.easy_solved = r["easy"]
+            prog_rec.medium_solved = r["med"]
+            prog_rec.hard_solved = r["hard"]
+            prog_rec.rating = r["rating"]
+            prog_rec.college_rank = r["college_rank"]
+            prog_rec.dept_rank = r["dept_rank"]
+            prog_rec.year_rank = r["year_rank"]
+            prog_rec.section_rank = r["section_rank"]
+            prog_rec.progress_rank = r["progress_rank"]
+            prog_rec.streak_count = r["streak"]
+            prog_rec.consistency_score = r["consistency"]
+            prog_rec.badge_list = badges
+            prog_rec.composite_score = composite_score
 
     db.commit()
     logger.info("Multi-level rankings and badges successfully updated!")

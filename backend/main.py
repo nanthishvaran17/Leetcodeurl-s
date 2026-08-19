@@ -22,7 +22,7 @@ from backend.routes import (
     audit, public, sync, history, risk, goals, system_health, weekly_contests,
     scheduled_reports, certificates
 )
-from backend.routes import admin, email_reports, ai_assistant, leetcode
+from backend.routes import admin, email_reports, ai_assistant, leetcode, ai_control_center
 
 app = FastAPI(
     title="College LeetCode Weekly Tracker API",
@@ -107,6 +107,8 @@ app.include_router(leetcode.router, prefix="/api")
 app.include_router(leetcode.router)
 app.include_router(ai_assistant.router, prefix="/api")
 app.include_router(ai_assistant.router)
+app.include_router(ai_control_center.router, prefix="/api")
+app.include_router(ai_control_center.router)
 
 # Mount Static File Directories
 is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")

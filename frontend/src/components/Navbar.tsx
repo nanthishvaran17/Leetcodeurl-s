@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { Sun, Moon, User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp } from 'lucide-react';
+import { Sun, Moon, User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu } from 'lucide-react';
 import { CollegeLogo } from './CollegeLogo';
 import { getDataFreshness } from '../services/api';
 import { SyncStatusModal } from './SyncStatusModal';
@@ -184,6 +184,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <nav className="space-y-1">
                 {[
                   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+                  { id: 'ai-control', label: 'AI Control Center', icon: Cpu },
                   { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
                   { id: 'departments', label: 'Departments & Sections', icon: Layers },
                   { id: 'weekly-contest', label: 'Weekly Contest Tracker', icon: Calendar },

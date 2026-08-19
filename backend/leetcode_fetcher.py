@@ -15,12 +15,22 @@ RESERVED_USERNAMES = {
     'store', 'signup', 'login', 'profile', 'account', 'problemset'
 }
 
+def clear_leetcode_cache(username: Optional[str] = None):
+    """Clears in-memory profile cache for a specific username or entire cache if None."""
+    global _profile_cache
+    if username:
+        u_norm = username.strip().lower()
+        _profile_cache.pop(u_norm, None)
+    else:
+        _profile_cache.clear()
+
 def extract_leetcode_username(url_or_username: Optional[str]) -> Tuple[Optional[str], Optional[str], str]:
     """
     Extract username and generate standardized profile URL from LeetCode URL or username string.
+    Normalizes URLs with trailing slashes, query parameters, or domain paths.
     Examples:
       - https://leetcode.com/u/john_doe/ -> ("john_doe", "https://leetcode.com/u/john_doe/", "OK")
-      - https://leetcode.com/u/login/MADAN__200/ -> ("MADAN__200", "https://leetcode.com/u/MADAN__200/", "OK")
+      - https://leetcode.com/u/john_doe/?ref=123 -> ("john_doe", "https://leetcode.com/u/john_doe/", "OK")
       - https://leetcode.com/john_doe -> ("john_doe", "https://leetcode.com/u/john_doe/", "OK")
       - john_doe -> ("john_doe", "https://leetcode.com/u/john_doe/", "OK")
     Returns (username, profile_url, status)
@@ -29,8 +39,16 @@ def extract_leetcode_username(url_or_username: Optional[str]) -> Tuple[Optional[
         return None, None, "MISSING LINK"
     
     cleaned = str(url_or_username).strip()
+
+    # Strip query strings and URL fragments
+    cleaned = cleaned.split('?')[0].split('#')[0].strip()
+
+    # If full URL is provided, ensure domain is strictly leetcode.com
+    if re.match(r'^https?:\/\/', cleaned, flags=re.IGNORECASE):
+        if not re.match(r'^https?:\/\/(?:www\.)?leetcode\.com\/', cleaned, flags=re.IGNORECASE):
+            return None, None, "INVALID LINK"
     
-    # Handle pure username string if given
+    # Handle pure username string if given (no protocol)
     if re.match(r'^[a-zA-Z0-9_-]{3,35}$', cleaned):
         if cleaned.lower() not in RESERVED_USERNAMES:
             std_url = f"https://leetcode.com/u/{cleaned}/"
