@@ -878,7 +878,67 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
     
     generated_msg_id = f"<{uuid.uuid4().hex}.otp@{smtp_host}>"
 
-    # Path 1: Direct Gmail SMTP
+    # --- Detect environment: Render production blocks SMTP ports 587/465 ---
+    is_render = bool(os.environ.get("RENDER") or os.environ.get("RENDER_EXTERNAL_URL") or os.environ.get("IS_RENDER"))
+    is_local = not is_render and (
+        "localhost" in os.environ.get("BASE_URL", "") or
+        "127.0.0.1" in os.environ.get("BASE_URL", "") or
+        not os.environ.get("RENDER_EXTERNAL_URL")
+    )
+
+    # Resolve Brevo API key once for both paths
+    brevo_key = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
+    if not brevo_key:
+        try:
+            brevo_key = 'wrDobdfWB9qOxlJv-e64910bfafe3e010a198b55863b85bb90a7d818c92f44d569007f34370916cb0-bisyekx'[::-1]
+        except Exception:
+            pass
+
+    # ================================================================
+    # PRODUCTION PATH: Brevo HTTPS API FIRST (Render blocks SMTP 587/465)
+    # ================================================================
+    if is_render or not is_local:
+        logger.info(f"[{now_iso}] [OTP] stage=production_detected using Brevo HTTPS API as primary transport")
+        
+        if brevo_key:
+            try:
+                t_brevo_start = time.time()
+                ok, msg_id = send_email_via_brevo(brevo_key, from_email, clean_rec, subject, html_body, None, text_body, max_retries=2)
+                dur = (time.time() - t_brevo_start) * 1000
+                now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
+                if ok:
+                    logger.info(f"[{now_iso}] [OTP] stage=brevo_accepted messageId={msg_id} in {dur:.0f}ms")
+                    record_email_delivery_diagnostic(
+                        recipient=clean_rec,
+                        smtp_server="BREVO_HTTPS_API",
+                        smtp_response=f"201 Created Accepted by Brevo API (ID: {msg_id})",
+                        delivery_status=STATUS_SMTP_ACCEPTED,
+                        error_code=None,
+                        is_permanent=False
+                    )
+                    return True, STATUS_SMTP_ACCEPTED, str(msg_id)
+                else:
+                    logger.error(f"[{now_iso}] [OTP] stage=brevo_failed error={msg_id}")
+                    is_perm = "invalid" in str(msg_id).lower() or "rejected" in str(msg_id).lower() or "not found" in str(msg_id).lower()
+                    record_email_delivery_diagnostic(
+                        recipient=clean_rec,
+                        smtp_server="BREVO_HTTPS_API",
+                        smtp_response=str(msg_id),
+                        delivery_status=STATUS_DELIVERY_REJECTED if is_perm else STATUS_DELIVERY_FAILED,
+                        error_code="BREVO_RECIPIENT_REJECTED" if is_perm else "BREVO_API_ERROR",
+                        is_permanent=is_perm
+                    )
+                    return False, f"Email delivery failed: {msg_id}", None
+            except Exception as brevo_err:
+                now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
+                logger.error(f"[{now_iso}] [OTP] Brevo exception: {brevo_err}")
+                # Fall through to SMTP as last resort
+        else:
+            logger.error(f"[{now_iso}] [OTP] No Brevo API key available on production. SMTP ports are blocked on Render.")
+
+    # ================================================================
+    # LOCAL DEV PATH: Gmail SMTP FIRST (ports 587/465 available locally)
+    # ================================================================
     if smtp_user and smtp_pass:
         t_smtp_start = time.time()
         logger.info(f"[{now_iso}] [OTP] stage=smtp_send_started host={smtp_host}:{smtp_port}")
@@ -886,8 +946,8 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
             msg = MIMEMultipart('alternative')
             msg['Message-ID'] = generated_msg_id
             msg['Date'] = email.utils.formatdate(localtime=True)
-            msg['From'] = f"Nandha Engineering College — LeetCode Tracker <{from_email}>"
-            msg['To'] = recipient
+            msg['From'] = f"Nandha Engineering College \u2014 LeetCode Tracker <{from_email}>"
+            msg['To'] = clean_rec
             msg['Subject'] = subject
             msg.attach(MIMEText(text_body, 'plain', 'utf-8'))
             msg.attach(MIMEText(html_body, 'html', 'utf-8'))
@@ -899,7 +959,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
                 server.starttls(context=ctx)
                 server.ehlo()
                 server.login(smtp_user, smtp_pass)
-                refused = server.sendmail(from_email, [recipient], msg.as_string())
+                refused = server.sendmail(from_email, [clean_rec], msg.as_string())
             finally:
                 try:
                     server.quit()
@@ -910,7 +970,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
             now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
             logger.info(f"[{now_iso}] [OTP] stage=smtp_accepted messageId={generated_msg_id} in {dur:.0f}ms")
             record_email_delivery_diagnostic(
-                recipient=recipient,
+                recipient=clean_rec,
                 smtp_server=f"{smtp_host}:{smtp_port}",
                 smtp_response="250 2.0.0 OK Message accepted for delivery",
                 delivery_status=STATUS_SMTP_ACCEPTED,
@@ -923,7 +983,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
             refused_info = str(r_err)
             logger.error(f"[{now_iso}] [OTP] stage=smtp_failed code=550 classification=PERMANENT_RECIPIENT_FAILURE: {refused_info}")
             record_email_delivery_diagnostic(
-                recipient=recipient,
+                recipient=clean_rec,
                 smtp_server=f"{smtp_host}:{smtp_port}",
                 smtp_response=f"550 RecipientRefused: {refused_info}",
                 delivery_status=STATUS_DELIVERY_REJECTED,
@@ -939,7 +999,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
             if is_perm:
                 logger.error(f"[{now_iso}] [OTP] stage=smtp_failed code={code} classification=PERMANENT_RECIPIENT_FAILURE: {err_msg}")
                 record_email_delivery_diagnostic(
-                    recipient=recipient,
+                    recipient=clean_rec,
                     smtp_server=f"{smtp_host}:{smtp_port}",
                     smtp_response=f"{code} {err_msg}",
                     delivery_status=STATUS_DELIVERY_REJECTED,
@@ -956,24 +1016,19 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
             now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
             logger.warning(f"[{now_iso}] [OTP] Gmail SMTP delay/error ({dur:.0f}ms): {smtp_err}. Dispatching via Brevo HTTPS API...")
 
-    # Path 2: Brevo HTTPS API (Fallback / Render compatibility)
-    brevo_key = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
-    if not brevo_key:
-        try:
-            brevo_key = 'wrDobdfWB9qOxlJv-e64910bfafe3e010a198b55863b85bb90a7d818c92f44d569007f34370916cb0-bisyekx'[::-1]
-        except Exception:
-            pass
-
-    if brevo_key:
+    # ================================================================
+    # FALLBACK: Brevo HTTPS API (if SMTP failed on local, or no SMTP creds)
+    # ================================================================
+    if brevo_key and is_local:
         try:
             t_brevo_start = time.time()
-            ok, msg_id = send_email_via_brevo(brevo_key, from_email, recipient, subject, html_body, None, text_body, max_retries=1)
+            ok, msg_id = send_email_via_brevo(brevo_key, from_email, clean_rec, subject, html_body, None, text_body, max_retries=1)
             dur = (time.time() - t_brevo_start) * 1000
             now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
             if ok:
                 logger.info(f"[{now_iso}] [OTP] stage=brevo_accepted messageId={msg_id} in {dur:.0f}ms")
                 record_email_delivery_diagnostic(
-                    recipient=recipient,
+                    recipient=clean_rec,
                     smtp_server="BREVO_HTTPS_API",
                     smtp_response=f"201 Created Accepted by Brevo API (ID: {msg_id})",
                     delivery_status=STATUS_SMTP_ACCEPTED,
@@ -985,7 +1040,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
                 logger.error(f"[{now_iso}] [OTP] stage=brevo_failed error={msg_id}")
                 is_perm = "invalid" in str(msg_id).lower() or "rejected" in str(msg_id).lower() or "not found" in str(msg_id).lower()
                 record_email_delivery_diagnostic(
-                    recipient=recipient,
+                    recipient=clean_rec,
                     smtp_server="BREVO_HTTPS_API",
                     smtp_response=str(msg_id),
                     delivery_status=STATUS_DELIVERY_REJECTED if is_perm else STATUS_DELIVERY_FAILED,
@@ -999,7 +1054,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
             return False, str(brevo_err), None
 
     record_email_delivery_diagnostic(
-        recipient=recipient,
+        recipient=clean_rec,
         smtp_server="ALL_TRANSPORTS",
         smtp_response="No active transport available",
         delivery_status=STATUS_DELIVERY_FAILED,
