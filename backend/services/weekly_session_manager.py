@@ -410,7 +410,7 @@ def get_active_verification_windows(db: Session) -> List[Dict[str, Any]]:
     active_windows = []
 
     for s in sessions:
-        s_date = parse_session_date(s.session_date)
+        s_date = parse_session_date(str(s.session_date or ''))
         if not s_date:
             continue
         end_dt = datetime.datetime.combine(s_date, datetime.time(9, 30, 0), tzinfo=IST_TZ)
@@ -441,7 +441,7 @@ async def sweep_bounded_verification_windows(db: Session):
     sessions = db.query(WeeklySession).filter(WeeklySession.status.in_(("LIVE", "FINALIZED", "COMPLETED"))).all()
 
     for s in sessions:
-        s_date = parse_session_date(s.session_date)
+        s_date = parse_session_date(str(s.session_date or ''))
         if not s_date:
             continue
         end_dt = datetime.datetime.combine(s_date, datetime.time(9, 30, 0), tzinfo=IST_TZ)
@@ -472,7 +472,7 @@ def seed_institutional_historical_sessions(db: Session):
     if not students or len(students) < 100:
         try:
             from backend.seed import seed_database
-            seed_database(db)
+            seed_database()
             students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
         except Exception as _se:
             logger.warning(f"Student seed warning in session manager: {_se}")
@@ -500,9 +500,9 @@ def seed_institutional_historical_sessions(db: Session):
         c_num = None
         # 1. Try extracting contest number from contest_name e.g. "Weekly Contest 511" -> 511
         if sess.contest_name:
-            match = re.search(r'Weekly\s+Contest\s+(\d+)', sess.contest_name, re.IGNORECASE)
+            match = re.search(r'Weekly\s+Contest\s+(\d+)', str(sess.contest_name), re.IGNORECASE)
             if not match:
-                match = re.search(r'\d+', sess.contest_name)
+                match = re.search(r'\d+', str(sess.contest_name))
             if match:
                 c_num = int(match.group(1) if match.lastindex else match.group(0))
 
@@ -511,7 +511,7 @@ def seed_institutional_historical_sessions(db: Session):
             s_date_obj = None
             for fmt in ("%d.%m.%Y", "%Y-%m-%d", "%d-%m-%Y"):
                 try:
-                    s_date_obj = datetime.datetime.strptime(sess.session_date.strip(), fmt).date()
+                    s_date_obj = datetime.datetime.strptime(str(sess.session_date).strip(), fmt).date()
                     break
                 except Exception:
                     pass
@@ -748,7 +748,7 @@ def sync_single_historical_session(db: Session, session_id: int):
 
     c_num = None
     if session.contest_name:
-        match = re.search(r'\d+', session.contest_name)
+        match = re.search(r'\d+', str(session.contest_name))
         if match:
             c_num = int(match.group(0))
 
@@ -1322,7 +1322,7 @@ class SundayLiveContestEngine:
             }
 
         # Calculate live time remaining until 09:30 AM IST
-        contest_date = parse_session_date(session.session_date) or now_ist.date()
+        contest_date = parse_session_date(str(session.session_date or '')) or now_ist.date()
         end_dt = datetime.datetime.combine(contest_date, datetime.time(9, 30, 0), tzinfo=IST_TZ)
         start_dt = datetime.datetime.combine(contest_date, datetime.time(8, 0, 0), tzinfo=IST_TZ)
 

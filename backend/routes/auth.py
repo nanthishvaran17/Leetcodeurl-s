@@ -2,9 +2,10 @@ import os
 import datetime
 import secrets
 import hashlib
+import json
 import bcrypt
 import jwt
-from typing import Optional
+from typing import Optional, Any
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -409,7 +410,14 @@ def verify_otp(req: VerifyOtpRequest, request: Request, response: Response, db: 
                 description=f"Multiple failed OTP verification attempts for {clean_email}",
                 current_user=None, target_type="EmailOTPRecord", target_id=str(otp_rec.id)
             )
-            evaluate_security_alert_threshold(db, client_ip, clean_email, "REPEATED_FAILED_OTP_VERIFICATION")
+            evaluate_security_alert_threshold(
+                db=db,
+                source_id=client_ip,
+                username_or_role=clean_email,
+                requested_resource="OTP_VERIFICATION",
+                contest_info=None,
+                reason="REPEATED_FAILED_OTP_VERIFICATION"
+            )
 
         raise HTTPException(status_code=400, detail=msg)
 
