@@ -17,7 +17,8 @@ import {
   Cpu,
   Zap,
   Sparkles,
-  Compass
+  Compass,
+  AlertOctagon
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -58,6 +59,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
         { id: 'students', label: 'Student Leaderboard', icon: Users },
         { id: 'compare', label: 'Student Comparison', icon: BarChart3 },
         { id: 'quality', label: 'Data Quality Board', icon: CheckCircle2 },
+        { id: 'data-issues', label: 'Student Data Issues', icon: AlertOctagon, badge: 'RECOVERY', badgeColor: 'rose' },
       ]
     },
     {

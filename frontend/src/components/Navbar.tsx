@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { Sun, Moon, User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, Zap } from 'lucide-react';
+import { Sun, Moon, User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, Zap, AlertOctagon } from 'lucide-react';
 import { CollegeLogo } from './CollegeLogo';
 import { getDataFreshness } from '../services/api';
 import { SyncStatusModal } from './SyncStatusModal';
@@ -233,6 +233,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         { id: 'students', label: 'Student Leaderboard', icon: Users },
                         { id: 'compare', label: 'Student Comparison', icon: BarChart3 },
                         { id: 'quality', label: 'Data Quality Board', icon: CheckCircle2 },
+                        { id: 'data-issues', label: 'Student Data Issues', icon: AlertOctagon, badge: 'RECOVERY' },
                       ]
                     },
                     {

@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 
-export const DataQualityPage: React.FC = () => {
+export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }> = ({ onNavigateTab }) => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -57,14 +57,23 @@ export const DataQualityPage: React.FC = () => {
 
             <p className="text-xs md:text-sm text-gray-300 font-bold tracking-wide">
               Monitor missing links, invalid profile URLs, profile not found errors, and network anomalies across all institutional student records.
-
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            {onNavigateTab && (
+              <button
+                onClick={() => onNavigateTab('data-issues')}
+                className="px-4 py-2.5 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700 text-white text-xs font-black rounded-xl shadow-lg shadow-rose-600/30 transition-all flex items-center space-x-2 cursor-pointer transform hover:scale-105"
+              >
+                <AlertCircle className="w-4 h-4" />
+                <span>Open Student Data Issues & Recovery</span>
+              </button>
+            )}
+
             <button
               onClick={fetchQualityData}
-              className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-black rounded-xl border border-white/20 transition-all backdrop-blur-md flex items-center space-x-2"
+              className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-black rounded-xl border border-white/20 transition-all backdrop-blur-md flex items-center space-x-2 cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
               <span>Run Quality Audit</span>

@@ -20,7 +20,7 @@ from backend.routes import (
     auth, students, departments, sessions,
     leaderboard, analytics, reports, settings as settings_route,
     audit, public, sync, history, risk, goals, system_health, weekly_contests,
-    scheduled_reports, certificates
+    scheduled_reports, certificates, data_issues
 )
 from backend.routes import admin, email_reports, ai_assistant, leetcode, ai_control_center, intelligence
 
@@ -111,6 +111,8 @@ app.include_router(ai_control_center.router, prefix="/api")
 app.include_router(ai_control_center.router)
 app.include_router(intelligence.router, prefix="/api")
 app.include_router(intelligence.router)
+app.include_router(data_issues.router, prefix="/api")
+app.include_router(data_issues.router)
 
 # Mount Static File Directories
 is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")

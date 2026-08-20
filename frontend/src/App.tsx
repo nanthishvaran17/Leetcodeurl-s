@@ -23,6 +23,7 @@ import { CertificateVerificationPage } from './pages/CertificateVerificationPage
 import { AIControlCenterPage } from './pages/AIControlCenterPage';
 import { HODCommandCenter } from './pages/HODCommandCenter';
 import { FacultyActionCenter } from './pages/FacultyActionCenter';
+import { StudentDataIssuesPage } from './pages/StudentDataIssuesPage';
 import { AlertCenterModal } from './components/AlertCenterModal';
 import { ImportModal } from './components/ImportModal';
 import { AccessRestrictedView } from './components/AccessRestrictedView';
@@ -246,8 +247,14 @@ export const App: React.FC = () => {
 
           {activeTab === 'quality' && (
             isTabAuthorized(['admin', 'super admin', 'hod', 'faculty', 'staff', 'professor'])
-              ? <DataQualityPage />
+              ? <DataQualityPage onNavigateTab={handleTabChange} />
               : renderAccessRestricted('Data Quality Board')
+          )}
+
+          {(activeTab === 'data-issues' || activeTab === 'issues' || activeTab === 'not-started-issues') && (
+            isTabAuthorized(['admin', 'super admin', 'hod', 'faculty', 'staff', 'professor'])
+              ? <StudentDataIssuesPage />
+              : renderAccessRestricted('Student Data Issues & Recovery')
           )}
 
           {activeTab === 'system-health' && (
