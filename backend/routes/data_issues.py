@@ -76,8 +76,13 @@ def classify_student_issue(student: Student) -> dict:
         recommended_action = "Trigger deep reconciliation sync."
         url_status = "NEEDS_CHECK"
 
-    # Check 5: Sync Failed
-    elif stats and (stats.sync_status == "failed" or (stats.status and stats.status.startswith("INVALID")) or stats.error_code):
+    # Check 5: Sync Failed (only if current sync is actually in failed state, not leftover error_code from past)
+    elif stats and (
+        stats.sync_status == "failed" or
+        (stats.status and stats.status.startswith("INVALID")) or
+        (stats.error_code and stats.error_code == "PENDING_USERNAME") or
+        (stats.error_code and stats.sync_status != "success" and stats.status != "verified")
+    ):
         issue_category = "SYNC_FAILED"
         issue_label = "Sync Failed"
         severity = "CRITICAL"
