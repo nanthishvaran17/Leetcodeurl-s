@@ -262,6 +262,7 @@ def mask_email_str(email_str: str) -> str:
 
 
 @router.post("/send-otp")
+@router.post("/resend-otp")
 @router.post("/request-otp")
 @router.post("/admin/request-otp")
 async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(get_db)):
@@ -381,7 +382,9 @@ async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(
         "status": "success",
         "message": f"Verification code sent to registered administrator email ({masked_recipient}).",
         "expires_in": 300,
+        "expires_at": otp_rec.expires_at.isoformat() + "Z",
         "request_id": otp_rec.request_id,
+        "masked_email": masked_recipient,
         "email": db_email
     }
 
@@ -725,4 +728,24 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
         )
 
     return {"success": True, "message": "Logged out successfully."}
+
+
+@router.post("/test-email")
+def test_admin_email_delivery(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Diagnostic capability for development only (authenticated administrators).
+    Sends a test verification email to the configured administrator address.
+    """
+    target = current_user.email or "nanthishvaran17@gmail.com"
+    from backend.services.email_service import build_otp_email_template, send_email
+    subject, body_html, body_text = build_otp_email_template("123456")
+    ok, err = send_email(target, subject, body_html, None, body_text)
+    if not ok:
+        raise HTTPException(status_code=502, detail=f"Diagnostic test email delivery failed: {err}")
+    return {"success": True, "message": f"Diagnostic OTP email successfully delivered to {target}"}
+
 

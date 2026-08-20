@@ -90,6 +90,15 @@ def create_otp_transaction(
         EmailOTPRecord.used == False
     ).update({"used": True}, synchronize_session=False)
 
+    # 4.1 Automatic DB Cleanup: prune expired records older than 24 hours
+    try:
+        twenty_four_hours_ago = now - datetime.timedelta(hours=24)
+        db.query(EmailOTPRecord).filter(
+            EmailOTPRecord.created_at < twenty_four_hours_ago
+        ).delete(synchronize_session=False)
+    except Exception:
+        pass
+
     # 5. Generate new OTP & Request ID
     plain_otp = generate_secure_otp()
     req_id = f"req_{uuid.uuid4().hex[:16]}"

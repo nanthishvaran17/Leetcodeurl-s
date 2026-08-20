@@ -77,9 +77,12 @@ def get_current_sync_status(db: Session = Depends(get_db)):
 
     tot = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count()
     verified_cnt = db.query(LeetCodeProfileStats).filter(
-        (LeetCodeProfileStats.total_solved != None) & (LeetCodeProfileStats.sync_status.in_(["success", "OK", "verified"]))
+        (LeetCodeProfileStats.total_solved != None) | (LeetCodeProfileStats.sync_status.in_(["success", "OK", "verified", "stale"]))
     ).count()
-    failed_cnt = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.sync_status == "failed").count()
+    pending_cnt = db.query(LeetCodeProfileStats).filter(
+        LeetCodeProfileStats.sync_status.in_(["pending", "pending_username", "not_started"])
+    ).count()
+    failed_cnt = max(0, tot - verified_cnt - pending_cnt)
 
     # Reconcile any zombie RUNNING jobs if in-memory sync worker is not active
     running_job = db.query(SyncJob).filter(SyncJob.status == "RUNNING").first()
@@ -121,19 +124,7 @@ def get_current_sync_status(db: Session = Depends(get_db)):
         current_student = sync_tracker.current_student
         current_username = sync_tracker.current_username
         progress_pct = sync_tracker.progress_percentage or round((students_processed / max(1, total_students)) * 100.0, 1)
-    elif last_completed_job:
-        operation = "COMPLETED"
-        status_text = "✓ Last Sync Completed"
-        total_students = last_completed_job.total_records or tot
-        students_processed = last_completed_job.total_records or tot
-        profiles_synced = last_completed_job.success_count if last_completed_job.success_count else verified_cnt
-        successful = last_completed_job.success_count if last_completed_job.success_count else verified_cnt
-        failed = last_completed_job.error_count if last_completed_job.error_count is not None else failed_cnt
-        pending_usernames = last_completed_job.partial_count if last_completed_job.partial_count is not None else 0
-        current_student = None
-        current_username = None
-        progress_pct = 100.0
-    elif verified_cnt > 0:
+    elif last_completed_job or verified_cnt > 0:
         operation = "COMPLETED"
         status_text = "✓ All Student Profiles Synchronized"
         total_students = tot
@@ -141,7 +132,7 @@ def get_current_sync_status(db: Session = Depends(get_db)):
         profiles_synced = verified_cnt
         successful = verified_cnt
         failed = failed_cnt
-        pending_usernames = 0
+        pending_usernames = pending_cnt
         current_student = None
         current_username = None
         progress_pct = 100.0

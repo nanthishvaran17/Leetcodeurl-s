@@ -436,7 +436,7 @@ def build_otp_email_template(otp: str) -> Tuple[str, str, str]:
     Generates a premium, modern corporate-grade institutional HTML & plain-text email
     for NANDHA ENGINEERING COLLEGE (AUTONOMOUS) LeetCode Tracker Admin Verification.
     """
-    subject = "NEC LeetCode Tracker -  Secure Administrator Verification"
+    subject = "Nandha Engineering College — Admin Verification Code"
 
     html_body = f"""<!DOCTYPE html>
 <html lang="en">

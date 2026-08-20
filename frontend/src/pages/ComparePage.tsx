@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { StudentData } from '../components/LeaderboardTable';
+import { getCachedStudents } from '../data/canonicalRoster';
 
 export const ComparePage: React.FC = () => {
   // Mode: STUDENT vs GROUP
@@ -19,8 +20,8 @@ export const ComparePage: React.FC = () => {
   const [selectedDept, setSelectedDept] = useState<string>('ALL');
   const [selectedYear, setSelectedYear] = useState<string>('ALL');
 
-  const [students, setStudents] = useState<StudentData[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [students, setStudents] = useState<StudentData[]>(() => getCachedStudents());
+  const [loading, setLoading] = useState<boolean>(false);
 
   // Student Battle Selection
   const [studentAId, setStudentAId] = useState<number | null>(null);

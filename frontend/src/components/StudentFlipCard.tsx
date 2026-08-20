@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ExternalLink, Trophy, Flame, Star, Award, CheckCircle2, RotateCw, User, Trash2, ShieldCheck, Clock, AlertCircle, Loader } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ExternalLink, Trophy, Flame, Star, Award, CheckCircle2, RotateCw, User, Trash2, ShieldCheck, Clock, AlertCircle, Loader, Crown } from 'lucide-react';
 import { StudentData } from './LeaderboardTable';
 
 interface StudentFlipCardProps {
@@ -182,9 +183,14 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
     );
   };
 
+  const auraClass = effectiveRank === 1 ? 'gold-aura ring-2 ring-amber-400/40' :
+                    effectiveRank === 2 ? 'silver-aura ring-2 ring-slate-300/40' :
+                    effectiveRank === 3 ? 'bronze-aura ring-2 ring-amber-600/40' : '';
+
   return (
-    <div
-      className="w-full min-h-[360px] flex flex-col perspective-1000 cursor-pointer group min-w-0"
+    <motion.div
+      whileHover={{ y: -6, transition: { type: "spring", stiffness: 350, damping: 22 } }}
+      className={`w-full min-h-[360px] flex flex-col perspective-1000 cursor-pointer group min-w-0 rounded-3xl ${auraClass}`}
       onClick={() => setIsFlipped(!isFlipped)}
     >
       <div
@@ -197,19 +203,26 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
           
           {/* Card Top: Rank & Department Pill */}
           <div className="flex items-center justify-between gap-2">
-            <span className={`px-3 py-1 rounded-full text-xs border uppercase tracking-wider flex items-center space-x-1 whitespace-nowrap ${getRankBadgeStyle(effectiveRank)}`}>
-              {!isSolver || !effectiveRank ? (
-                <span>—</span>
-              ) : effectiveRank === 1 ? (
-                <><span>🥇</span><span>#1 Rank</span></>
+            <span className={`px-3 py-1 rounded-full text-xs border uppercase tracking-wider flex items-center space-x-1.5 whitespace-nowrap ${getRankBadgeStyle(effectiveRank)}`}>
+              {effectiveRank === 1 ? (
+                <>
+                  <Crown className="w-3.5 h-3.5 fill-amber-400 stroke-amber-900 animate-bounce" />
+                  <span>#1 Rank</span>
+                </>
               ) : effectiveRank === 2 ? (
-                <><span>🥈</span><span>#2 Rank</span></>
+                <>
+                  <Trophy className="w-3.5 h-3.5 text-slate-700" />
+                  <span>#2 Rank</span>
+                </>
               ) : effectiveRank === 3 ? (
-                <><span>🥉</span><span>#3 Rank</span></>
-              ) : effectiveRank <= 10 ? (
-                <><span>🏅</span><span>#{effectiveRank} Rank</span></>
-              ) : (
+                <>
+                  <Award className="w-3.5 h-3.5 text-amber-200" />
+                  <span>#3 Rank</span>
+                </>
+              ) : effectiveRank ? (
                 <span>#{effectiveRank}</span>
+              ) : (
+                <span>—</span>
               )}
             </span>
             <span className="px-2.5 py-1 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 font-extrabold text-xs font-mono whitespace-nowrap">
@@ -393,6 +406,6 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
 
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

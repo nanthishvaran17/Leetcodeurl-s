@@ -41,17 +41,29 @@ class LLMService:
         prompt: str,
         system_context: str = "",
         data_context: Optional[Dict[str, Any]] = None,
-        max_tokens: int = 800
+        history: Optional[List[Dict[str, Any]]] = None,
+        max_tokens: int = 1024
     ) -> Optional[str]:
         ollama_key = os.getenv("OLLAMA_API_KEY") or os.getenv("LLM_API_KEY")
         groq_key = os.getenv("GROQ_API_KEY")
         openai_key = os.getenv("OPENAI_API_KEY")
 
-        full_prompt = f"System Context: {system_context}\n\nVerified Ground Truth Data:\n{json.dumps(data_context, default=str) if data_context else 'None'}\n\nUser Question: {prompt}"
+        full_system = (
+            "You are NEC Unified AI, a state-of-the-art AI assistant for Nandha Engineering College LeetCode Performance Analytics (like ChatGPT).\n"
+            "You have deep knowledge of LeetCode, Data Structures, Algorithms, Python/Java/C++, college student rankings, and institutional analytics.\n"
+            "You understand and can converse fluently in English, Tamil, and Tanglish (Tamil written in English script).\n"
+            "When answering coding/technical questions, provide clear explanations, optimal time/space complexities, and clean code blocks.\n"
+            "When answering institutional/student questions, ground your answers in the verified database facts provided.\n"
+            "Format your output with clean, beautiful Markdown (bullet points, bold text, code blocks).\n"
+        )
+        if system_context:
+            full_system += f"\nSpecific Context:\n{system_context}"
+        if data_context:
+            full_system += f"\nVerified Database Facts:\n{json.dumps(data_context, default=str)}"
 
         # 1. Try Ollama Cloud / API
         if ollama_key:
-            res = LLMService._call_ollama_api(ollama_key, full_prompt, system_context)
+            res = LLMService._call_ollama_api(ollama_key, prompt, full_system, history=history, max_tokens=max_tokens)
             if res:
                 return res
 
@@ -61,8 +73,10 @@ class LLMService:
                 url="https://api.groq.com/openai/v1/chat/completions",
                 api_key=groq_key,
                 model="llama-3.3-70b-versatile",
-                prompt=full_prompt,
-                system_context=system_context
+                prompt=prompt,
+                system_context=full_system,
+                history=history,
+                max_tokens=max_tokens
             )
             if res:
                 return res
@@ -73,8 +87,10 @@ class LLMService:
                 url="https://api.openai.com/v1/chat/completions",
                 api_key=openai_key,
                 model="gpt-4o-mini",
-                prompt=full_prompt,
-                system_context=system_context
+                prompt=prompt,
+                system_context=full_system,
+                history=history,
+                max_tokens=max_tokens
             )
             if res:
                 return res
@@ -82,37 +98,48 @@ class LLMService:
         return None
 
     @staticmethod
-    def _call_ollama_api(api_key: str, prompt: str, system_context: str) -> Optional[str]:
-        # Try Ollama Cloud / Open AI compatible endpoint
+    def _call_ollama_api(
+        api_key: Optional[str],
+        prompt: str,
+        system_context: str,
+        history: Optional[List[Dict[str, Any]]] = None,
+        max_tokens: int = 1024
+    ) -> Optional[str]:
+        # Try local Ollama first, then cloud endpoints
         endpoints = [
-            ("http://localhost:11434/v1/chat/completions", "llama3.2"),
-            ("http://localhost:11434/api/chat", "llama3.2"),
-            ("https://api.ollama.com/v1/chat/completions", "llama3.2"),
-            ("https://ollama.com/api/chat", "llama3.2")
+            ("http://localhost:11434/api/chat", "llama3.2", False),
+            ("http://localhost:11434/v1/chat/completions", "llama3.2", False),
+            ("https://api.ollama.com/v1/chat/completions", "llama3.2", True),
+            ("https://ollama.com/api/chat", "llama3.2", True)
         ]
 
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}"
-        }
+        messages = [{"role": "system", "content": system_context}]
+        if history:
+            for turn in history[-6:]: # Last 6 conversation turns
+                role = "user" if turn.get("sender") == "user" or turn.get("role") == "user" else "assistant"
+                content = turn.get("text") or turn.get("content") or ""
+                if content:
+                    messages.append({"role": role, "content": content})
+        messages.append({"role": "user", "content": prompt})
 
         payload = {
             "model": "llama3.2",
-            "messages": [
-                {"role": "system", "content": system_context or "You are the AI Control Center for Nandha Engineering College LeetCode Performance Analytics. Rely strictly on verified database ground truth."},
-                {"role": "user", "content": prompt}
-            ],
+            "messages": messages,
             "stream": False,
-            "max_tokens": 150,
-            "options": {"num_predict": 150},
-            "temperature": 0.2
+            "max_tokens": max_tokens,
+            "options": {"num_predict": max_tokens},
+            "temperature": 0.4
         }
 
-        for url, model in endpoints:
+        for url, model, require_auth in endpoints:
             try:
+                headers = {"Content-Type": "application/json"}
+                if require_auth and api_key:
+                    headers["Authorization"] = f"Bearer {api_key}"
+
                 payload["model"] = model
                 req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers, method='POST')
-                with urllib.request.urlopen(req, timeout=18) as response:
+                with urllib.request.urlopen(req, timeout=25) as response:
                     res_body = response.read().decode('utf-8')
                     
                     # 1. Single JSON response
@@ -148,22 +175,37 @@ class LLMService:
         return None
 
     @staticmethod
-    def _call_openai_compatible(url: str, api_key: str, model: str, prompt: str, system_context: str) -> Optional[str]:
+    def _call_openai_compatible(
+        url: str,
+        api_key: str,
+        model: str,
+        prompt: str,
+        system_context: str,
+        history: Optional[List[Dict[str, Any]]] = None,
+        max_tokens: int = 1024
+    ) -> Optional[str]:
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {api_key}"
         }
+        messages = [{"role": "system", "content": system_context}]
+        if history:
+            for turn in history[-6:]:
+                role = "user" if turn.get("sender") == "user" or turn.get("role") == "user" else "assistant"
+                content = turn.get("text") or turn.get("content") or ""
+                if content:
+                    messages.append({"role": role, "content": content})
+        messages.append({"role": "user", "content": prompt})
+
         payload = {
             "model": model,
-            "messages": [
-                {"role": "system", "content": system_context or "You are the AI Control Center for Nandha Engineering College. Rely strictly on database truth."},
-                {"role": "user", "content": prompt}
-            ],
-            "temperature": 0.2
+            "messages": messages,
+            "temperature": 0.4,
+            "max_tokens": max_tokens
         }
         try:
             req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers, method='POST')
-            with urllib.request.urlopen(req, timeout=10) as response:
+            with urllib.request.urlopen(req, timeout=15) as response:
                 res_json = json.loads(response.read().decode('utf-8'))
                 if "choices" in res_json and len(res_json["choices"]) > 0:
                     return res_json["choices"][0]["message"]["content"].strip()

@@ -5,15 +5,16 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { StudentData } from '../components/LeaderboardTable';
+import { getCachedStudents, saveCachedStudents } from '../data/canonicalRoster';
 import api from '../services/api';
 import { FacultyActionCenter } from './FacultyActionCenter';
 
 export const StaffDashboardView: React.FC = () => {
   const { user } = useAuth();
-  const [students, setStudents] = useState<StudentData[]>([]);
+  const [students, setStudents] = useState<StudentData[]>(() => getCachedStudents());
   const [deptAnalytics, setDeptAnalytics] = useState<any[]>([]);
   const [dataQuality, setDataQuality] = useState<any>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [search, setSearch] = useState<string>('');
 
   useEffect(() => {
@@ -21,7 +22,6 @@ export const StaffDashboardView: React.FC = () => {
   }, []);
 
   const fetchData = async () => {
-    setLoading(true);
     try {
       const [studRes, deptRes, qualRes] = await Promise.all([
         api.get('/students'),
@@ -29,8 +29,11 @@ export const StaffDashboardView: React.FC = () => {
         api.get('/analytics/data-quality')
       ]);
 
-      const sorted = studRes.data.sort((a: StudentData, b: StudentData) => (b.stats?.total_solved || 0) - (a.stats?.total_solved || 0));
-      setStudents(sorted);
+      if (studRes.data && Array.isArray(studRes.data)) {
+        const sorted = studRes.data.sort((a: StudentData, b: StudentData) => (b.stats?.total_solved || 0) - (a.stats?.total_solved || 0));
+        setStudents(sorted);
+        saveCachedStudents(sorted);
+      }
       setDeptAnalytics(deptRes.data);
       setDataQuality(qualRes.data);
     } catch (err) {

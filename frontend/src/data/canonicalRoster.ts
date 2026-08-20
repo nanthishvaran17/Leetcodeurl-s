@@ -1,10215 +1,10568 @@
+// Instant Database Cache for Zero-Latency First Paint
+// Generated directly from database snapshot
 export const CANONICAL_ROSTER: any[] = [
   {
-    "id": 9,
-    "reg_no": "732224CC001",
-    "name": "AJAY A",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/Ajay_A1277/",
-    "username": "Ajay_A1277",
-    "college_rank": 1,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 194,
-      "easy_solved": 66,
-      "medium_solved": 102,
-      "hard_solved": 26,
-      "contest_rating": 1355.3,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 10,
-    "reg_no": "732224CC002",
-    "name": "AMRUTHA M",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/Ammu1927/",
-    "username": "Ammu1927",
-    "college_rank": 2,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 102,
-      "easy_solved": 50,
-      "medium_solved": 48,
-      "hard_solved": 4,
-      "contest_rating": 1538.5,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 11,
-    "reg_no": "732224CC003",
-    "name": "ANUSHKUMAR R",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/anushkumar_06/",
-    "username": "anushkumar_06",
-    "college_rank": 3,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 162,
-      "easy_solved": 62,
-      "medium_solved": 87,
-      "hard_solved": 13,
-      "contest_rating": 1368.0,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 12,
-    "reg_no": "732224CC004",
-    "name": "BHARATH G",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/BHARATH1927/",
-    "username": "BHARATH1927",
-    "college_rank": 4,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 96,
-      "easy_solved": 33,
-      "medium_solved": 52,
-      "hard_solved": 11,
-      "contest_rating": 1303.9,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 13,
-    "reg_no": "732224CC005",
-    "name": "DHANUSHYA G K",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/dhanu2006/",
-    "username": "dhanu2006",
-    "college_rank": 5,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 245,
-      "easy_solved": 91,
-      "medium_solved": 121,
-      "hard_solved": 33,
-      "contest_rating": 1412.7,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 14,
-    "reg_no": "732224CC006",
-    "name": "DHARSHINI A M",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/DHARSHINI_1605/",
-    "username": "DHARSHINI_1605",
-    "college_rank": 6,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 121,
-      "easy_solved": 53,
-      "medium_solved": 55,
-      "hard_solved": 13,
-      "contest_rating": 1456.8,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 15,
-    "reg_no": "732224CC007",
-    "name": "DHARSHINI S M",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/Dharshini90989/",
-    "username": "Dharshini90989",
-    "college_rank": 7,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 183,
-      "easy_solved": 58,
-      "medium_solved": 95,
-      "hard_solved": 30,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 16,
-    "reg_no": "732224CC008",
-    "name": "DHARUNRAJ K P",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/K_P_DHARUNRAJ/",
-    "username": "K_P_DHARUNRAJ",
-    "college_rank": 8,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 208,
-      "easy_solved": 80,
-      "medium_solved": 97,
-      "hard_solved": 31,
-      "contest_rating": 1551.2,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 17,
-    "reg_no": "732224CC009",
-    "name": "GIRIPATHI K",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/Giripathi_k/",
-    "username": "Giripathi_k",
-    "college_rank": 9,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 148,
-      "easy_solved": 53,
-      "medium_solved": 71,
-      "hard_solved": 24,
-      "contest_rating": 1533.2,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 18,
-    "reg_no": "732224CC010",
-    "name": "GOKUL P",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/gokul_5405/",
-    "username": "gokul_5405",
-    "college_rank": 10,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 141,
-      "easy_solved": 58,
-      "medium_solved": 64,
-      "hard_solved": 19,
-      "contest_rating": 1459.0,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 19,
-    "reg_no": "732224CC011",
-    "name": "HARDIKA M",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/hardi22011/",
-    "username": "hardi22011",
-    "college_rank": 11,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 91,
-      "easy_solved": 24,
-      "medium_solved": 48,
-      "hard_solved": 19,
-      "contest_rating": 1355.9,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 20,
-    "reg_no": "732224CC012",
-    "name": "HARIHARAN S V",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/x8ggzaR6Gx/",
-    "username": "x8ggzaR6Gx",
-    "college_rank": 12,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 139,
-      "easy_solved": 43,
-      "medium_solved": 74,
-      "hard_solved": 22,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 21,
-    "reg_no": "732224CC013",
-    "name": "HARISH K",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/Harish000007/",
-    "username": "Harish000007",
-    "college_rank": 13,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 19,
-      "easy_solved": 2,
-      "medium_solved": 15,
-      "hard_solved": 2,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 22,
-    "reg_no": "732224CC014",
-    "name": "HARISH KUMAAR S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/HarishVichu/",
-    "username": "HarishVichu",
-    "college_rank": 14,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 123,
-      "easy_solved": 40,
-      "medium_solved": 61,
-      "hard_solved": 22,
-      "contest_rating": 1429.4,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 23,
-    "reg_no": "732224CC015",
-    "name": "HARISH N",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/Har-ish23/",
-    "username": "Har-ish23",
-    "college_rank": 15,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 185,
-      "easy_solved": 83,
-      "medium_solved": 84,
-      "hard_solved": 18,
-      "contest_rating": 1367.8,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 24,
-    "reg_no": "732224CC016",
-    "name": "INIYA K",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/Iniya3126/",
-    "username": "Iniya3126",
-    "college_rank": 16,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 331,
-      "easy_solved": 154,
-      "medium_solved": 133,
-      "hard_solved": 44,
-      "contest_rating": 1353.4,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 25,
-    "reg_no": "732224CC017",
-    "name": "JANANI S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/_itz_pretty/",
-    "username": "_itz_pretty",
-    "college_rank": 17,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 137,
-      "easy_solved": 55,
-      "medium_solved": 65,
-      "hard_solved": 17,
-      "contest_rating": 1413.1,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 26,
-    "reg_no": "732224CC018",
-    "name": "JAYAPRAKASH S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/jayaprakash2007/",
-    "username": "jayaprakash2007",
-    "college_rank": 18,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 129,
-      "easy_solved": 50,
-      "medium_solved": 66,
-      "hard_solved": 13,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 27,
-    "reg_no": "732224CC019",
-    "name": "JAYASURYA S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/Surya1231172/",
-    "username": "Surya1231172",
-    "college_rank": 19,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 113,
-      "easy_solved": 46,
-      "medium_solved": 57,
-      "hard_solved": 10,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 28,
-    "reg_no": "732224CC020",
-    "name": "KARTHIKEYAN V",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/karthi_2007/",
-    "username": "karthi_2007",
-    "college_rank": 20,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 113,
-      "easy_solved": 31,
-      "medium_solved": 63,
-      "hard_solved": 19,
-      "contest_rating": 1469.4,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 29,
-    "reg_no": "732224CC021",
-    "name": "KIRUTHIKAA P T",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/success_lover_01/",
-    "username": "success_lover_01",
-    "college_rank": 21,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 159,
-      "easy_solved": 62,
-      "medium_solved": 75,
-      "hard_solved": 22,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 30,
-    "reg_no": "732224CC022",
-    "name": "KISHORE C",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/KISHORE_CHAND/",
-    "username": "KISHORE_CHAND",
-    "college_rank": 22,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 31,
-    "reg_no": "732224CC023",
-    "name": "LAKSANA S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/Laksana_Subramanian/",
-    "username": "Laksana_Subramanian",
-    "college_rank": 23,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 200,
-      "easy_solved": 72,
-      "medium_solved": 98,
-      "hard_solved": 30,
-      "contest_rating": 1504.1,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 32,
-    "reg_no": "732224CC024",
-    "name": "MADAN PRASATH G",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/login/MADAN__200/",
-    "username": "MADAN__200",
-    "college_rank": 24,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 33,
-    "reg_no": "732224CC025",
-    "name": "MAGUDAPATHI S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/XDb4OxGxp6/",
-    "username": "XDb4OxGxp6",
-    "college_rank": 25,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 34,
-    "reg_no": "732224CC026",
-    "name": "MAHILNETHRA S K",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "http://leetcode.com/u/mahilnethra/",
-    "username": "mahilnethra",
-    "college_rank": 26,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 35,
-    "reg_no": "732224CC027",
-    "name": "MANJUNATH D",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/M1c4D2Ur5h/",
-    "username": "M1c4D2Ur5h",
-    "college_rank": 27,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 36,
-    "reg_no": "732224CC028",
-    "name": "MANOJ KUMAR C",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/ManojKumar2315/",
-    "username": "ManojKumar2315",
-    "college_rank": 28,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 96,
-      "easy_solved": 36,
-      "medium_solved": 50,
-      "hard_solved": 10,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 37,
-    "reg_no": "732224CC029",
-    "name": "MOHAMED THARIQ J",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/Thariq2525/",
-    "username": "Thariq2525",
-    "college_rank": 29,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
     "id": 38,
-    "reg_no": "732224CC031",
     "name": "NANTHISH S",
-    "email": "nanthishvaran17@gmail.com",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/nanthishvaran_07/",
+    "reg_no": "732224CC031",
     "username": "nanthishvaran_07",
-    "college_rank": 30,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/nanthishvaran_07/",
     "stats": {
-      "total_solved": 768,
-      "easy_solved": 316,
-      "medium_solved": 340,
-      "hard_solved": 112,
+      "total_solved": 847,
+      "easy_solved": 387,
+      "medium_solved": 346,
+      "hard_solved": 114,
       "contest_rating": 1678.1,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:41:58.607553"
+    },
+    "streak_count": 206,
+    "college_rank": 1,
+    "dept_rank": 1,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
   },
   {
-    "id": 39,
-    "reg_no": "732224CC032",
-    "name": "NISHANTH J S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
+    "id": 268,
+    "name": "RITHANYA S",
+    "reg_no": "732224CI044",
+    "username": "RithanyaSivagami",
     "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/Nishanthjs/",
-    "username": "Nishanthjs",
-    "college_rank": 31,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 197,
-      "easy_solved": 61,
-      "medium_solved": 104,
-      "hard_solved": 32,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 40,
-    "reg_no": "732224CC033",
-    "name": "NITHIN S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/nithin_31_/",
-    "username": "nithin_31_",
-    "college_rank": 32,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 246,
-      "easy_solved": 110,
-      "medium_solved": 98,
-      "hard_solved": 38,
-      "contest_rating": 1360.9,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 41,
-    "reg_no": "732224CC034",
-    "name": "NIVETHYTHA JR R",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/Nivethytha0704/",
-    "username": "Nivethytha0704",
-    "college_rank": 33,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 261,
-      "easy_solved": 84,
-      "medium_solved": 133,
-      "hard_solved": 44,
-      "contest_rating": 1355.2,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 42,
-    "reg_no": "732224CC035",
-    "name": "POOMITHA KS",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/sahasri_04/",
-    "username": "sahasri_04",
-    "college_rank": 34,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 149,
-      "easy_solved": 47,
-      "medium_solved": 77,
-      "hard_solved": 25,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 43,
-    "reg_no": "732224CC036",
-    "name": "PRASATH R",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/prasath00156/",
-    "username": "prasath00156",
-    "college_rank": 35,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 191,
-      "easy_solved": 56,
-      "medium_solved": 101,
-      "hard_solved": 34,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 44,
-    "reg_no": "732224CC037",
-    "name": "PRITHIKA P",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/Pritss2206/",
-    "username": "Pritss2206",
-    "college_rank": 36,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 184,
-      "easy_solved": 67,
-      "medium_solved": 90,
-      "hard_solved": 27,
-      "contest_rating": 1508.5,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 45,
-    "reg_no": "732224CC038",
-    "name": "RADHISRI N",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/Radhisri28/",
-    "username": "Radhisri28",
-    "college_rank": 37,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 294,
-      "easy_solved": 100,
-      "medium_solved": 149,
-      "hard_solved": 45,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 46,
-    "reg_no": "732224CC039",
-    "name": "RAJESH R",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/Rajesh1328/",
-    "username": "Rajesh1328",
-    "college_rank": 38,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 265,
-      "easy_solved": 94,
-      "medium_solved": 132,
-      "hard_solved": 39,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 47,
-    "reg_no": "732224CC040",
-    "name": "RITHANIKA V",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/Rithanika_Venakatac/",
-    "username": "Rithanika_Venakatac",
-    "college_rank": 39,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 48,
-    "reg_no": "732224CC041",
-    "name": "RITHIKA J",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/Rithu16122006/",
-    "username": "Rithu16122006",
-    "college_rank": 40,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 180,
-      "easy_solved": 56,
-      "medium_solved": 90,
-      "hard_solved": 34,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 49,
-    "reg_no": "732224CC042",
-    "name": "ROHITH R",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/Rohith_2682006/",
-    "username": "Rohith_2682006",
-    "college_rank": 41,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 50,
-    "reg_no": "732224CC043",
-    "name": "SABARI N",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/sabari43/",
-    "username": "sabari43",
-    "college_rank": 42,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 189,
-      "easy_solved": 67,
-      "medium_solved": 91,
-      "hard_solved": 31,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 51,
-    "reg_no": "732224CC044",
-    "name": "SAKTHI S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/s8oyP1SH73/",
-    "username": "s8oyP1SH73",
-    "college_rank": 43,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 182,
-      "easy_solved": 57,
-      "medium_solved": 91,
-      "hard_solved": 34,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 52,
-    "reg_no": "732224CC045",
-    "name": "SHANDEESH R P",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/shandeeshrp/",
-    "username": "shandeeshrp",
-    "college_rank": 44,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 98,
-      "easy_solved": 50,
-      "medium_solved": 42,
-      "hard_solved": 6,
-      "contest_rating": 1356.2,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 53,
-    "reg_no": "732224CC046",
-    "name": "SHANMUGA PRIYA J",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/Priya_1410/",
-    "username": "Priya_1410",
-    "college_rank": 45,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 233,
-      "easy_solved": 80,
-      "medium_solved": 122,
-      "hard_solved": 31,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 54,
-    "reg_no": "732224CC047",
-    "name": "SHARMILA P",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/rFIIQ4f2JS/",
-    "username": "rFIIQ4f2JS",
-    "college_rank": 46,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 55,
-    "reg_no": "732224CC048",
-    "name": "SOWMIYA S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/DJyWNuZj4N/",
-    "username": "DJyWNuZj4N",
-    "college_rank": 47,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 147,
-      "easy_solved": 54,
-      "medium_solved": 73,
-      "hard_solved": 20,
-      "contest_rating": 1413.5,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 56,
-    "reg_no": "732224CC049",
-    "name": "SRISELVAN P",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/SriselvanP/",
-    "username": "SriselvanP",
-    "college_rank": 48,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 56,
-      "easy_solved": 24,
-      "medium_solved": 26,
-      "hard_solved": 6,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 57,
-    "reg_no": "732224CC050",
-    "name": "SUBA SRI B",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/suba_sri10/",
-    "username": "suba_sri10",
-    "college_rank": 49,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 81,
-      "easy_solved": 32,
-      "medium_solved": 43,
-      "hard_solved": 6,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 58,
-    "reg_no": "732224CC051",
-    "name": "SUBASH MURUGAN S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/subashmurugan212/",
-    "username": "subashmurugan212",
-    "college_rank": 50,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 93,
-      "easy_solved": 42,
-      "medium_solved": 44,
-      "hard_solved": 7,
-      "contest_rating": 1379.3,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 59,
-    "reg_no": "732224CC052",
-    "name": "SUPRIYA K",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/SUPRIYA_2601/",
-    "username": "SUPRIYA_2601",
-    "college_rank": 51,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 158,
-      "easy_solved": 62,
-      "medium_solved": 77,
-      "hard_solved": 19,
-      "contest_rating": 1353.9,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 60,
-    "reg_no": "732224CC053",
-    "name": "SURESH S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/suresh11092006/",
-    "username": "suresh11092006",
-    "college_rank": 52,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 131,
-      "easy_solved": 46,
-      "medium_solved": 71,
-      "hard_solved": 14,
-      "contest_rating": 1336.4,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 61,
-    "reg_no": "732224CC054",
-    "name": "VARSHINI DEVI K",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/varshini_devi2006/",
-    "username": "varshini_devi2006",
-    "college_rank": 53,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 125,
-      "easy_solved": 52,
-      "medium_solved": 63,
-      "hard_solved": 10,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 62,
-    "reg_no": "732224CC055",
-    "name": "VEDHASREE P",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/vedhasree_2006/",
-    "username": "vedhasree_2006",
-    "college_rank": 54,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 111,
-      "easy_solved": 46,
-      "medium_solved": 56,
-      "hard_solved": 9,
-      "contest_rating": 1473.5,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 63,
-    "reg_no": "732224CC056",
-    "name": "VIGNESH T",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/vignesh_1112/",
-    "username": "vignesh_1112",
-    "college_rank": 55,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 214,
-      "easy_solved": 81,
-      "medium_solved": 103,
-      "hard_solved": 30,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 64,
-    "reg_no": "732224CC057",
-    "name": "VISHAANTH M B",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/vishaanth0007/",
-    "username": "vishaanth0007",
-    "college_rank": 56,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 128,
-      "easy_solved": 32,
-      "medium_solved": 71,
-      "hard_solved": 25,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 65,
-    "reg_no": "732224CC058",
-    "name": "YAZHINI SHREE A",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/yazhu_shree/",
-    "username": "yazhu_shree",
-    "college_rank": 57,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 300,
-      "easy_solved": 105,
-      "medium_solved": 150,
-      "hard_solved": 45,
-      "contest_rating": 1582.7,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 66,
-    "reg_no": "732224CC059",
-    "name": "YURJEEN J",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/Yurjeen26/",
-    "username": "Yurjeen26",
-    "college_rank": 58,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 169,
-      "easy_solved": 57,
-      "medium_solved": 82,
-      "hard_solved": 30,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 67,
-    "reg_no": "732224CC060",
-    "name": "YUVANESH S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/V0mg69rzpB/",
-    "username": "V0mg69rzpB",
-    "college_rank": 59,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 105,
-      "easy_solved": 37,
-      "medium_solved": 56,
-      "hard_solved": 12,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 68,
-    "reg_no": "732224CCL01",
-    "name": "MOHAMMED AFFAN.JA",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/Mohammed_Affan_J/",
-    "username": "Mohammed_Affan_J",
-    "college_rank": 60,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 69,
-    "reg_no": "732224CCL02",
-    "name": "SARAN.R",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/Saranraj_2580/",
-    "username": "Saranraj_2580",
-    "college_rank": 61,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 175,
-      "easy_solved": 54,
-      "medium_solved": 96,
-      "hard_solved": 25,
-      "contest_rating": 1392.0,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 70,
-    "reg_no": "732224CCL03",
-    "name": "SHREE SANJAY U K",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/shreesanjay/",
-    "username": "shreesanjay",
-    "college_rank": 62,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 144,
-      "easy_solved": 47,
-      "medium_solved": 71,
-      "hard_solved": 26,
-      "contest_rating": 1516.0,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 71,
-    "reg_no": "732224CCL04",
-    "name": "SRIDHAR S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "III",
-    "section": {
-      "name": "NEC"
-    },
-    "leetcode_url": "https://leetcode.com/u/sridhar320076/",
-    "username": "sridhar320076",
-    "college_rank": 63,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 241,
-      "easy_solved": 87,
-      "medium_solved": 121,
-      "hard_solved": 33,
-      "contest_rating": 1459.0,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 72,
-    "reg_no": "732225CC001",
-    "name": "AARATHANA L",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/LQatII0XhaQ/",
-    "username": "LQatII0XhaQ",
-    "college_rank": 64,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 73,
-    "reg_no": "732225CC002",
-    "name": "AARSIKA M",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Aarsika_M",
-    "username": "Aarsika_M",
-    "college_rank": 65,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 74,
-    "reg_no": "732225CC003",
-    "name": "ABHISHEK M",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/abhishek_cc003",
-    "username": "abhishek_cc003",
-    "college_rank": 66,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 2,
-      "easy_solved": 2,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 75,
-    "reg_no": "732225CC004",
-    "name": "ABINAYA S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Abi_CC004/",
-    "username": "Abi_CC004",
-    "college_rank": 67,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 46,
-      "easy_solved": 37,
-      "medium_solved": 7,
-      "hard_solved": 2,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 76,
-    "reg_no": "732225CC005",
-    "name": "ASHVIK AKHIL RAJAN R",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/ASHVIKAKILRAJAN/",
-    "username": "ASHVIKAKILRAJAN",
-    "college_rank": 68,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 77,
-    "reg_no": "732225CC006",
-    "name": "DEEPAK T",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/0MGVasBmsd/",
-    "username": "0MGVasBmsd",
-    "college_rank": 69,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 78,
-    "reg_no": "732225CC007",
-    "name": "DEEPIKA G L",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/iXZMxOzqMf/",
-    "username": "iXZMxOzqMf",
-    "college_rank": 70,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 79,
-    "reg_no": "732225CC008",
-    "name": "DHARANEESH SABARI N",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/8Fr8Zz0vdVq/",
-    "username": "8Fr8Zz0vdVq",
-    "college_rank": 71,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 80,
-    "reg_no": "732225CC009",
-    "name": "DHARSHAN G",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/dharshang2007/",
-    "username": "dharshang2007",
-    "college_rank": 72,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 2,
-      "easy_solved": 2,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 81,
-    "reg_no": "732225CC010",
-    "name": "DIVYANAND G R",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/problemset/",
-    "username": "",
-    "college_rank": 73,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 82,
-    "reg_no": "732225CC011",
-    "name": "FARVAESH MUSHRAF M",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/6oyrbP7Cn",
-    "username": "6oyrbP7Cn",
-    "college_rank": 74,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 83,
-    "reg_no": "732225CC012",
-    "name": "GAYATHIRIDEVI P",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "",
-    "username": "",
-    "college_rank": 75,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 84,
-    "reg_no": "732225CC013",
-    "name": "GIBSON KENLEY S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/n1J49Ovita",
-    "username": "n1J49Ovita",
-    "college_rank": 76,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 21,
-      "easy_solved": 10,
-      "medium_solved": 10,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 85,
-    "reg_no": "732225CC014",
-    "name": "GOKULRAJ R",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Gokulraj14/",
-    "username": "Gokulraj14",
-    "college_rank": 77,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 49,
-      "easy_solved": 18,
-      "medium_solved": 27,
-      "hard_solved": 4,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 86,
-    "reg_no": "732225CC015",
-    "name": "GOWRIPRIYA M",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/81JUyQRRqL/",
-    "username": "81JUyQRRqL",
-    "college_rank": 78,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 87,
-    "reg_no": "732225CC016",
-    "name": "HARISH B",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/732225CC016/",
-    "username": "732225CC016",
-    "college_rank": 79,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 50,
-      "easy_solved": 23,
-      "medium_solved": 23,
-      "hard_solved": 4,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 88,
-    "reg_no": "732225CC017",
-    "name": "HARISH M S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/harishms2007/",
-    "username": "harishms2007",
-    "college_rank": 80,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 89,
-    "reg_no": "732225CC018",
-    "name": "JANARTHANAN R",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/jana777/",
-    "username": "jana777",
-    "college_rank": 81,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 90,
-      "easy_solved": 25,
-      "medium_solved": 50,
-      "hard_solved": 15,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 90,
-    "reg_no": "732225CC019",
-    "name": "JAYASRI R",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Jayasri3103",
-    "username": "Jayasri3103",
-    "college_rank": 82,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 46,
-      "easy_solved": 18,
-      "medium_solved": 23,
-      "hard_solved": 5,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 91,
-    "reg_no": "732225CC020",
-    "name": "JAYEL CHRISTINA SCUDD",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Jayel_18/",
-    "username": "Jayel_18",
-    "college_rank": 83,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 58,
-      "easy_solved": 45,
-      "medium_solved": 10,
-      "hard_solved": 3,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 92,
-    "reg_no": "732225CC021",
-    "name": "JEBARSON K",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/7RHM08kNyY",
-    "username": "7RHM08kNyY",
-    "college_rank": 84,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 93,
-    "reg_no": "732225CC022",
-    "name": "JEEVITHA S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Jeevi_AlgoQueen/",
-    "username": "Jeevi_AlgoQueen",
-    "college_rank": 85,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 47,
-      "easy_solved": 36,
-      "medium_solved": 11,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 94,
-    "reg_no": "732225CC023",
-    "name": "KARMUGIL V",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/p4J1zKdZXp/",
-    "username": "p4J1zKdZXp",
-    "college_rank": 86,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 95,
-    "reg_no": "732225CC024",
-    "name": "KAVI PRIYA T",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/rBjc1qgtsB/",
-    "username": "rBjc1qgtsB",
-    "college_rank": 87,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 96,
-    "reg_no": "732225CC025",
-    "name": "KAVIN B",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/65lGBoRTZN/",
-    "username": "65lGBoRTZN",
-    "college_rank": 88,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 97,
-    "reg_no": "732225CC026",
-    "name": "KEERTHEESH K R",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/keertheesh/",
-    "username": "keertheesh",
-    "college_rank": 89,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 98,
-    "reg_no": "732225CC027",
-    "name": "KEERTHI RAJA S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/profile/account/",
-    "username": "",
-    "college_rank": 90,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 99,
-    "reg_no": "732225CC028",
-    "name": "LALITHKUMAR B V",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/LalithKumar19",
-    "username": "LalithKumar19",
-    "college_rank": 91,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 35,
-      "easy_solved": 16,
-      "medium_solved": 16,
-      "hard_solved": 3,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 100,
-    "reg_no": "732225CC029",
-    "name": "LIGITH SANJAY G",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/cbZx47N2Af/",
-    "username": "cbZx47N2Af",
-    "college_rank": 92,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 101,
-    "reg_no": "732225CC030",
-    "name": "MIDESH K P",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/midesh_123/",
-    "username": "midesh_123",
-    "college_rank": 93,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 71,
-      "easy_solved": 18,
-      "medium_solved": 41,
-      "hard_solved": 12,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 102,
-    "reg_no": "732225CC031",
-    "name": "MOUNESH G",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/j01UT4oM0T/",
-    "username": "j01UT4oM0T",
-    "college_rank": 94,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 103,
-    "reg_no": "732225CC032",
-    "name": "MUKESH S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Mukeshmukesh123",
-    "username": "Mukeshmukesh123",
-    "college_rank": 95,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 50,
-      "easy_solved": 41,
-      "medium_solved": 9,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 104,
-    "reg_no": "732225CC033",
-    "name": "NAVASAKTHI K K",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Nava_sakthi/",
-    "username": "Nava_sakthi",
-    "college_rank": 96,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 9,
-      "easy_solved": 6,
-      "medium_solved": 3,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 105,
-    "reg_no": "732225CC034",
-    "name": "NAVEEN R",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/HR1IfJuaDf/",
-    "username": "HR1IfJuaDf",
-    "college_rank": 97,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 106,
-    "reg_no": "732225CC035",
-    "name": "NIVETHAA S B",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/nivethaa_baskaran",
-    "username": "nivethaa_baskaran",
-    "college_rank": 98,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 2,
-      "easy_solved": 2,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 107,
-    "reg_no": "732225CC036",
-    "name": "POOVARASU A",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/POOVARASU_",
-    "username": "POOVARASU_",
-    "college_rank": 99,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 108,
-    "reg_no": "732225CC037",
-    "name": "PRADEEPA M",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/PradeepaM_/",
-    "username": "PradeepaM_",
-    "college_rank": 100,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 10,
-      "easy_solved": 7,
-      "medium_solved": 3,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 109,
-    "reg_no": "732225CC038",
-    "name": "PRIYADHARSHINI D",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Priyaa_27/",
-    "username": "Priyaa_27",
-    "college_rank": 101,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 61,
-      "easy_solved": 51,
-      "medium_solved": 10,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 110,
-    "reg_no": "732225CC039",
-    "name": "PRIYADHARSHINI G",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/f0Gm3IZrgv/",
-    "username": "f0Gm3IZrgv",
-    "college_rank": 102,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 48,
-      "easy_solved": 44,
-      "medium_solved": 4,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 111,
-    "reg_no": "732225CC040",
-    "name": "PRIYADHARSHINI P",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/mn6vcyWJAN/",
-    "username": "mn6vcyWJAN",
-    "college_rank": 103,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 38,
-      "easy_solved": 19,
-      "medium_solved": 15,
-      "hard_solved": 4,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 112,
-    "reg_no": "732225CC041",
-    "name": "RAJABALAN B",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/RAJABALAN_B/",
-    "username": "RAJABALAN_B",
-    "college_rank": 104,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 52,
-      "easy_solved": 38,
-      "medium_solved": 11,
-      "hard_solved": 3,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 113,
-    "reg_no": "732225CC042",
-    "name": "RAVIBHARATHI R",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/RaviBharathi1234/",
-    "username": "RaviBharathi1234",
-    "college_rank": 105,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 52,
-      "easy_solved": 27,
-      "medium_solved": 20,
-      "hard_solved": 5,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 114,
-    "reg_no": "732225CC043",
-    "name": "ROKITHKISHOR R S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/ROKITHKISHOR",
-    "username": "ROKITHKISHOR",
-    "college_rank": 106,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 76,
-      "easy_solved": 41,
-      "medium_solved": 28,
-      "hard_solved": 7,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 115,
-    "reg_no": "732225CC044",
-    "name": "SABARI T",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/sabari_044/",
-    "username": "sabari_044",
-    "college_rank": 107,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 3,
-      "easy_solved": 3,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 116,
-    "reg_no": "732225CC045",
-    "name": "SAHANAJ BANU M",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/sahanajbanu/",
-    "username": "sahanajbanu",
-    "college_rank": 108,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 62,
-      "easy_solved": 47,
-      "medium_solved": 13,
-      "hard_solved": 2,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 117,
-    "reg_no": "732225CC046",
-    "name": "SAJAN VENKAT M",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/contest/weekly-contest",
-    "username": "",
-    "college_rank": 109,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 118,
-    "reg_no": "732225CC047",
-    "name": "SANTHOSH M",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/ZAWXjcjOUw",
-    "username": "ZAWXjcjOUw",
-    "college_rank": 110,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 119,
-    "reg_no": "732225CC048",
-    "name": "SARATHY S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/m2gQcjuz57/",
-    "username": "m2gQcjuz57",
-    "college_rank": 111,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 120,
-    "reg_no": "732225CC049",
-    "name": "SASINESAN T",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/problemset/",
-    "username": "",
-    "college_rank": 112,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 121,
-    "reg_no": "732225CC050",
-    "name": "SHRUTI S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/rMkHpSQTH6/",
-    "username": "rMkHpSQTH6",
-    "college_rank": 113,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 122,
-    "reg_no": "732225CC051",
-    "name": "SIDDHDEV V R",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/SIDDHDEV/",
-    "username": "SIDDHDEV",
-    "college_rank": 114,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 6,
-      "easy_solved": 5,
-      "medium_solved": 1,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 123,
-    "reg_no": "732225CC052",
-    "name": "STALIN A",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/profile/account/",
-    "username": "",
-    "college_rank": 115,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 124,
-    "reg_no": "732225CC053",
-    "name": "SUBILNATH G",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/WbcKc8koB8",
-    "username": "WbcKc8koB8",
-    "college_rank": 116,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 45,
-      "easy_solved": 20,
-      "medium_solved": 24,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 125,
-    "reg_no": "732225CC054",
-    "name": "SUJITH A",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Sujithnandha/",
-    "username": "Sujithnandha",
-    "college_rank": 117,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 11,
-      "easy_solved": 8,
-      "medium_solved": 3,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 126,
-    "reg_no": "732225CC055",
-    "name": "SURUTHI S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/YI7QFq600/",
-    "username": "YI7QFq600",
-    "college_rank": 118,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 127,
-    "reg_no": "732225CC056",
-    "name": "SUSITHA U",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/XXqTDMCg8v/",
-    "username": "XXqTDMCg8v",
-    "college_rank": 119,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 128,
-    "reg_no": "732225CC057",
-    "name": "SUVATHI V",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/00uzqPrwKt/",
-    "username": "00uzqPrwKt",
-    "college_rank": 120,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 129,
-    "reg_no": "732225CC058",
-    "name": "SWETHA JAYASIKA P",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/aUkFZZq7AJ/",
-    "username": "aUkFZZq7AJ",
-    "college_rank": 121,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 98,
-      "easy_solved": 55,
-      "medium_solved": 36,
-      "hard_solved": 7,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 130,
-    "reg_no": "732225CC059",
-    "name": "TAMILARASAN S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/problemset/",
-    "username": "",
-    "college_rank": 122,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 131,
-    "reg_no": "732225CC060",
-    "name": "THARANYA L",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/tharanya008/",
-    "username": "tharanya008",
-    "college_rank": 123,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 132,
-    "reg_no": "732225CC061",
-    "name": "VETRIVEL G",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/2M4WMu7ICq/",
-    "username": "2M4WMu7ICq",
-    "college_rank": 124,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 133,
-    "reg_no": "732225CC062",
-    "name": "YOGESH P",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/YOGESH_062/",
-    "username": "YOGESH_062",
-    "college_rank": 125,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 51,
-      "easy_solved": 26,
-      "medium_solved": 20,
-      "hard_solved": 5,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 134,
-    "reg_no": "732225CCL01",
-    "name": "ANVAR AHAMED S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/AnvarAhamed1234",
-    "username": "AnvarAhamed1234",
-    "college_rank": 126,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 135,
-    "reg_no": "732225CCL02",
-    "name": "JEEVADHARSAN M",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Jeevadharsan12/",
-    "username": "Jeevadharsan12",
-    "college_rank": 127,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 2,
-      "easy_solved": 1,
-      "medium_solved": 1,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 136,
-    "reg_no": "732225CCL03",
-    "name": "KATHIR V",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Kathir260",
-    "username": "Kathir260",
-    "college_rank": 128,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 6,
-      "easy_solved": 2,
-      "medium_solved": 4,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 137,
-    "reg_no": "732225CCL04",
-    "name": "LINGESWARAN M",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/LINGESWARAN_6",
-    "username": "LINGESWARAN_6",
-    "college_rank": 129,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 138,
-    "reg_no": "732225CCL05",
-    "name": "MOHAMMED HAROON M",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "",
-    "username": "",
-    "college_rank": 130,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 139,
-    "reg_no": "732225CCL06",
-    "name": "SHYNTH ABRAHAM C",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/ShynthAbraham/",
-    "username": "ShynthAbraham",
-    "college_rank": 131,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 4,
-      "easy_solved": 2,
-      "medium_solved": 2,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 140,
-    "reg_no": "732225CI001",
-    "name": "AARTHI R S",
-    "email": "",
+    "department_id": 2,
     "department": {
       "id": 2,
       "name": "Computer Science and Engineering (IoT)",
       "code": "CSE(IOT)"
     },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/aarthi-rs",
-    "username": "aarthi-rs",
-    "college_rank": 132,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/RithanyaSivagami/",
     "stats": {
-      "total_solved": 66,
-      "easy_solved": 19,
-      "medium_solved": 35,
-      "hard_solved": 12,
-      "contest_rating": null,
+      "total_solved": 709,
+      "easy_solved": 229,
+      "medium_solved": 322,
+      "hard_solved": 158,
+      "contest_rating": 1923.1,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 141,
-    "reg_no": "732225CI002",
-    "name": "BHARANITHARAN R",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/732225ci002-bharanitharan-r",
-    "username": "732225ci002-bharanitharan-r",
-    "college_rank": 133,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 142,
-    "reg_no": "732225CI003",
-    "name": "BHUPESH S A",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/732225ci003-bhupesh-s-a",
-    "username": "732225ci003-bhupesh-s-a",
-    "college_rank": 134,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 143,
-    "reg_no": "732225CI004",
-    "name": "DEVI SHREE M",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/devishree2026/",
-    "username": "devishree2026",
-    "college_rank": 135,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 13,
-      "easy_solved": 5,
-      "medium_solved": 7,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 144,
-    "reg_no": "732225CI005",
-    "name": "DHANYA J",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/",
-    "username": "",
-    "college_rank": 136,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 145,
-    "reg_no": "732225CI006",
-    "name": "DHARANI I",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Dharani_0404",
-    "username": "Dharani_0404",
-    "college_rank": 137,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 13,
-      "easy_solved": 8,
-      "medium_solved": 5,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 146,
-    "reg_no": "732225CI007",
-    "name": "DHARSHAN S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/DHARSHAN_X0/",
-    "username": "DHARSHAN_X0",
-    "college_rank": 138,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 21,
-      "easy_solved": 10,
-      "medium_solved": 10,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 147,
-    "reg_no": "732225CI008",
-    "name": "DHARSHINI G",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Dharshini_Ramya/",
-    "username": "Dharshini_Ramya",
-    "college_rank": 139,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 2,
-      "easy_solved": 2,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 148,
-    "reg_no": "732225CI009",
-    "name": "GAYATHRI R",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Gayathri_VP/",
-    "username": "Gayathri_VP",
-    "college_rank": 140,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 1,
-      "easy_solved": 1,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 149,
-    "reg_no": "732225CI010",
-    "name": "GEERTHANA A S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/geerthanaas_2008",
-    "username": "geerthanaas_2008",
-    "college_rank": 141,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 19,
-      "easy_solved": 13,
-      "medium_solved": 6,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 150,
-    "reg_no": "732225CI011",
-    "name": "GOBIKRISHNA M",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Gobi_krishna/",
-    "username": "Gobi_krishna",
-    "college_rank": 142,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 42,
-      "easy_solved": 10,
-      "medium_solved": 25,
-      "hard_solved": 7,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 151,
-    "reg_no": "732225CI012",
-    "name": "GOKULKRISHNA M",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Gokulkrishna_26/",
-    "username": "Gokulkrishna_26",
-    "college_rank": 143,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 28,
-      "easy_solved": 14,
-      "medium_solved": 13,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 152,
-    "reg_no": "732225CI013",
-    "name": "GOKUL P S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/gokulps/",
-    "username": "gokulps",
-    "college_rank": 144,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 11,
-      "easy_solved": 6,
-      "medium_solved": 4,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 153,
-    "reg_no": "732225CI014",
-    "name": "HARIPRIYA S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/haripriya_14",
-    "username": "haripriya_14",
-    "college_rank": 145,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 154,
-    "reg_no": "732225CI015",
-    "name": "HARSHINI R",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Harshini_CN/",
-    "username": "Harshini_CN",
-    "college_rank": 146,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 155,
-    "reg_no": "732225CI016",
-    "name": "INIYA A",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/ZDHinXS03z",
-    "username": "ZDHinXS03z",
-    "college_rank": 147,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 21,
-      "easy_solved": 19,
-      "medium_solved": 2,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 156,
-    "reg_no": "732225CI017",
-    "name": "JANANI D",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Janannn_iiiiii/",
-    "username": "Janannn_iiiiii",
-    "college_rank": 148,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 10,
-      "easy_solved": 4,
-      "medium_solved": 5,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 157,
-    "reg_no": "732225CI018",
-    "name": "JAYASURIYA V",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Jayasuriya_27/",
-    "username": "Jayasuriya_27",
-    "college_rank": 149,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 158,
-    "reg_no": "732225CI019",
-    "name": "KARUPPUSAMYDEEPAK P",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Deepak_2d",
-    "username": "Deepak_2d",
-    "college_rank": 150,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 16,
-      "easy_solved": 10,
-      "medium_solved": 6,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 159,
-    "reg_no": "732225CI020",
-    "name": "KAVIYA JAYA CHITRA A",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/kaviya_Jaya_Chitra/",
-    "username": "kaviya_Jaya_Chitra",
-    "college_rank": 151,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 160,
-    "reg_no": "732225CI021",
-    "name": "KIRAN CHANTH T L",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Kiranchanth_21/",
-    "username": "Kiranchanth_21",
-    "college_rank": 152,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 45,
-      "easy_solved": 20,
-      "medium_solved": 21,
-      "hard_solved": 4,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 161,
-    "reg_no": "732225CI022",
-    "name": "KISHORE KANNA S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Kishore_Kanna_S/",
-    "username": "Kishore_Kanna_S",
-    "college_rank": 153,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 18,
-      "easy_solved": 7,
-      "medium_solved": 9,
-      "hard_solved": 2,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 162,
-    "reg_no": "732225CI023",
-    "name": "MADHU BALA P",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Madhubala_45/",
-    "username": "Madhubala_45",
-    "college_rank": 154,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 7,
-      "easy_solved": 2,
-      "medium_solved": 4,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 163,
-    "reg_no": "732225CI024",
-    "name": "MALAVIKA G",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Malavika_24",
-    "username": "Malavika_24",
-    "college_rank": 155,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 164,
-    "reg_no": "732225CI025",
-    "name": "MOHAMMED YUNUS A",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Md_yunus025/",
-    "username": "Md_yunus025",
-    "college_rank": 156,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 15,
-      "easy_solved": 10,
-      "medium_solved": 4,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 165,
-    "reg_no": "732225CI026",
-    "name": "MONISHA C",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Mw9qUJLaJo",
-    "username": "Mw9qUJLaJo",
-    "college_rank": 157,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 22,
-      "easy_solved": 14,
-      "medium_solved": 7,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 166,
-    "reg_no": "732225CI027",
-    "name": "NANTHEES N S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/NANTHEES_NS-14",
-    "username": "NANTHEES_NS-14",
-    "college_rank": 158,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 10,
-      "easy_solved": 2,
-      "medium_solved": 7,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 167,
-    "reg_no": "732225CI028",
-    "name": "NAVIN V",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Navin_IOT_28/",
-    "username": "Navin_IOT_28",
-    "college_rank": 159,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 16,
-      "easy_solved": 7,
-      "medium_solved": 8,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 168,
-    "reg_no": "732225CI029",
-    "name": "NIKILAN S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/NIRAI_NIKILAN",
-    "username": "NIRAI_NIKILAN",
-    "college_rank": 160,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 169,
-    "reg_no": "732225CI030",
-    "name": "NISHA C",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/732225ci030-nisha-c",
-    "username": "732225ci030-nisha-c",
-    "college_rank": 161,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 31,
-      "easy_solved": 17,
-      "medium_solved": 13,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 170,
-    "reg_no": "732225CI031",
-    "name": "NITHISH KUMAR B",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Nithishkumar_A_2602/",
-    "username": "Nithishkumar_A_2602",
-    "college_rank": 162,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 3,
-      "easy_solved": 3,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 171,
-    "reg_no": "732225CI032",
-    "name": "NOUSHAL HASHIM A",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/qXuSu2Zg8M/",
-    "username": "qXuSu2Zg8M",
-    "college_rank": 163,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 172,
-    "reg_no": "732225CI033",
-    "name": "POOJANA R",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Pooja_AP/",
-    "username": "Pooja_AP",
-    "college_rank": 164,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 173,
-    "reg_no": "732225CI034",
-    "name": "PRAVEENA S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/praveena_selvaraj/",
-    "username": "praveena_selvaraj",
-    "college_rank": 165,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 30,
-      "easy_solved": 18,
-      "medium_solved": 9,
-      "hard_solved": 3,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 174,
-    "reg_no": "732225CI035",
-    "name": "PRIYADHARSHINI K M",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Priyadharshini_0506",
-    "username": "Priyadharshini_0506",
-    "college_rank": 166,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 14,
-      "easy_solved": 6,
-      "medium_solved": 7,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 175,
-    "reg_no": "732225CI036",
-    "name": "PUGAZHENTHI G",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/pugazhenthi123/",
-    "username": "pugazhenthi123",
-    "college_rank": 167,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 176,
-    "reg_no": "732225CI037",
-    "name": "RAGUL T",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/ragul_bruce/",
-    "username": "ragul_bruce",
-    "college_rank": 168,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 7,
-      "easy_solved": 1,
-      "medium_solved": 5,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 177,
-    "reg_no": "732225CI038",
-    "name": "RAGULRAAJ M",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://share.google/TZFiXOBGVsjzvlOZD",
-    "username": "https",
-    "college_rank": 169,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 178,
-    "reg_no": "732225CI039",
-    "name": "ROHITH P",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Rohith_pannirselvam/",
-    "username": "Rohith_pannirselvam",
-    "college_rank": 170,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 42,
-      "easy_solved": 11,
-      "medium_solved": 24,
-      "hard_solved": 7,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 179,
-    "reg_no": "732225CI040",
-    "name": "ROSHAN AKTHAR K",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Roshan_v46/",
-    "username": "Roshan_v46",
-    "college_rank": 171,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 18,
-      "easy_solved": 11,
-      "medium_solved": 7,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 180,
-    "reg_no": "732225CI041",
-    "name": "SAHA N",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Saha_NC/",
-    "username": "Saha_NC",
-    "college_rank": 172,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 13,
-      "easy_solved": 4,
-      "medium_solved": 6,
-      "hard_solved": 3,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 181,
-    "reg_no": "732225CI042",
-    "name": "SALINI S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/salini-25",
-    "username": "salini-25",
-    "college_rank": 173,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 28,
-      "easy_solved": 16,
-      "medium_solved": 7,
-      "hard_solved": 5,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 182,
-    "reg_no": "732225CI043",
-    "name": "SANJAI B",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Sanjaaiiii_/",
-    "username": "Sanjaaiiii_",
-    "college_rank": 174,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 183,
-    "reg_no": "732225CI044",
-    "name": "SANJAY KUMAR M",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/sk21_sanjay/",
-    "username": "sk21_sanjay",
-    "college_rank": 175,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 184,
-    "reg_no": "732225CI045",
-    "name": "SANJEEV R T",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/GAgrm4ykwn/",
-    "username": "GAgrm4ykwn",
-    "college_rank": 176,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 185,
-    "reg_no": "732225CI046",
-    "name": "SANTHOSH KUMAR S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Santhosh_Mahi/",
-    "username": "Santhosh_Mahi",
-    "college_rank": 177,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 5,
-      "easy_solved": 3,
-      "medium_solved": 1,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 186,
-    "reg_no": "732225CI047",
-    "name": "SATHISH M",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Sathish_chml",
-    "username": "Sathish_chml",
-    "college_rank": 178,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 19,
-      "easy_solved": 12,
-      "medium_solved": 7,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 187,
-    "reg_no": "732225CI048",
-    "name": "SHARMATHA K",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Sharmatha_K",
-    "username": "Sharmatha_K",
-    "college_rank": 179,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 32,
-      "easy_solved": 14,
-      "medium_solved": 14,
-      "hard_solved": 4,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 188,
-    "reg_no": "732225CI049",
-    "name": "SHIVAN SUNDAR V",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/GAgrm4ykwn/",
-    "username": "GAgrm4ykwn",
-    "college_rank": 180,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 189,
-    "reg_no": "732225CI050",
-    "name": "SHREEDHARSHAN S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Shreedharshan_s/",
-    "username": "Shreedharshan_s",
-    "college_rank": 181,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 12,
-      "easy_solved": 7,
-      "medium_solved": 3,
-      "hard_solved": 2,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 190,
-    "reg_no": "732225CI051",
-    "name": "SMITHA M",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "",
-    "username": "",
-    "college_rank": 182,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 191,
-    "reg_no": "732225CI052",
-    "name": "SORNA RIYAS J",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/RIYAS18/",
-    "username": "RIYAS18",
-    "college_rank": 183,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 5,
-      "easy_solved": 1,
-      "medium_solved": 3,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 192,
-    "reg_no": "732225CI053",
-    "name": "SUDHARSHAN E",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/SUDHARSHAN_E-01/",
-    "username": "SUDHARSHAN_E-01",
-    "college_rank": 184,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 193,
-    "reg_no": "732225CI054",
-    "name": "SURYAKUMAR J",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/suryalic",
-    "username": "suryalic",
-    "college_rank": 185,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 9,
-      "easy_solved": 2,
-      "medium_solved": 6,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 194,
-    "reg_no": "732225CI055",
-    "name": "SWEDHAN S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/swedhan_s/",
-    "username": "swedhan_s",
-    "college_rank": 186,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 6,
-      "easy_solved": 2,
-      "medium_solved": 3,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 195,
-    "reg_no": "732225CI056",
-    "name": "THAMARAIKANNAN M R",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Thamaraikannan_mr_2007",
-    "username": "Thamaraikannan_mr_2007",
-    "college_rank": 187,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 42,
-      "easy_solved": 17,
-      "medium_solved": 24,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 196,
-    "reg_no": "732225CI057",
-    "name": "THIVYASRUTHI G D",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/ThivyaSruthi_20/",
-    "username": "ThivyaSruthi_20",
-    "college_rank": 188,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 17,
-      "easy_solved": 13,
-      "medium_solved": 3,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 197,
-    "reg_no": "732225CI058",
-    "name": "THIYA S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/thiya2026/",
-    "username": "thiya2026",
-    "college_rank": 189,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 14,
-      "easy_solved": 8,
-      "medium_solved": 5,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 198,
-    "reg_no": "732225CI059",
-    "name": "VANITHA E",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "",
-    "username": "",
-    "college_rank": 190,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 199,
-    "reg_no": "732225CI060",
-    "name": "VANITHA S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Vanitha_07",
-    "username": "Vanitha_07",
-    "college_rank": 191,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 17,
-      "easy_solved": 11,
-      "medium_solved": 6,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 200,
-    "reg_no": "732225CI061",
-    "name": "YALENEY POOFSIN C",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/yaleneypoofsin",
-    "username": "yaleneypoofsin",
-    "college_rank": 192,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 201,
-    "reg_no": "732225CI062",
-    "name": "YAZHINI M P",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "II",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Yazhini-0508/",
-    "username": "Yazhini-0508",
-    "college_rank": 193,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 27,
-      "easy_solved": 16,
-      "medium_solved": 7,
-      "hard_solved": 4,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 202,
-    "reg_no": "23CC001",
-    "name": "AATHAVAN T",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/AathavanThiyakeswaran/",
-    "username": "AathavanThiyakeswaran",
-    "college_rank": 194,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 366,
-      "easy_solved": 101,
-      "medium_solved": 201,
-      "hard_solved": 64,
-      "contest_rating": 1342.8,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 203,
-    "reg_no": "23CC002",
-    "name": "S.ABIRAMI",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/ShtLj6CNJL/",
-    "username": "ShtLj6CNJL",
-    "college_rank": 195,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 499,
-      "easy_solved": 137,
-      "medium_solved": 274,
-      "hard_solved": 88,
-      "contest_rating": 1451.2,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 204,
-    "reg_no": "23CC003",
-    "name": "ASWIN P",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/aswinkanin/",
-    "username": "aswinkanin",
-    "college_rank": 196,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 445,
-      "easy_solved": 120,
-      "medium_solved": 243,
-      "hard_solved": 82,
-      "contest_rating": 1565.3,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 205,
-    "reg_no": "23CC005",
-    "name": "BHARATH I",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Bharath_77/",
-    "username": "Bharath_77",
-    "college_rank": 197,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 591,
-      "easy_solved": 179,
-      "medium_solved": 325,
-      "hard_solved": 87,
-      "contest_rating": 1715.8,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 206,
-    "reg_no": "23CC007",
-    "name": "DEEPADHARSHINI C",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/deepadharshini_10/",
-    "username": "deepadharshini_10",
-    "college_rank": 198,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 377,
-      "easy_solved": 97,
-      "medium_solved": 215,
-      "hard_solved": 65,
-      "contest_rating": 1505.0,
-      "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:15:02.309570"
+    },
+    "streak_count": 7,
+    "college_rank": 2,
+    "dept_rank": 1,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
     "id": 207,
-    "reg_no": "23CC009",
     "name": "DEEPAKKUMAR E",
-    "email": "",
+    "reg_no": "23CC009",
+    "username": "Deepak1524",
+    "year_level": "IV",
+    "department_id": 1,
     "department": {
       "id": 1,
       "name": "Computer Science and Engineering (Cyber Security)",
       "code": "CSE(CS)"
     },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Deepak1524/",
-    "username": "Deepak1524",
-    "college_rank": 199,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Deepak1524/",
     "stats": {
       "total_solved": 642,
       "easy_solved": 164,
       "medium_solved": 368,
       "hard_solved": 110,
       "contest_rating": 1899.8,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 208,
-    "reg_no": "23CC010",
-    "name": "DEEPAKKUMAR M",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
+      "last_verified_at": "2026-08-20T02:14:23.485017"
     },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Deepak2612/",
-    "username": "Deepak2612",
-    "college_rank": 200,
+    "streak_count": 1,
+    "college_rank": 3,
+    "dept_rank": 2,
     "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 432,
-      "easy_solved": 105,
-      "medium_solved": 246,
-      "hard_solved": 81,
-      "contest_rating": 1453.5,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 209,
-    "reg_no": "23CC013",
-    "name": "ENIYAVAN R",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Eniyavan_r/",
-    "username": "Eniyavan_r",
-    "college_rank": 201,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 571,
-      "easy_solved": 193,
-      "medium_solved": 309,
-      "hard_solved": 69,
-      "contest_rating": 1454.2,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 210,
-    "reg_no": "23CC017",
-    "name": "JANARANSHINI P",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Janaranshini_17/",
-    "username": "Janaranshini_17",
-    "college_rank": 202,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 540,
-      "easy_solved": 136,
-      "medium_solved": 306,
-      "hard_solved": 98,
-      "contest_rating": 1536.2,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 211,
-    "reg_no": "23CC020",
-    "name": "KANISHAA.K.S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/kani_shaa/",
-    "username": "kani_shaa",
-    "college_rank": 203,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 414,
-      "easy_solved": 114,
-      "medium_solved": 230,
-      "hard_solved": 70,
-      "contest_rating": 1435.9,
-      "status": "verified",
-      "sync_status": "success"
-    }
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
     "id": 212,
-    "reg_no": "23CC021",
     "name": "KANISKA N J",
-    "email": "",
+    "reg_no": "23CC021",
+    "username": "ka_nizzu29",
+    "year_level": "IV",
+    "department_id": 1,
     "department": {
       "id": 1,
       "name": "Computer Science and Engineering (Cyber Security)",
       "code": "CSE(CS)"
     },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/ka_nizzu29/",
-    "username": "ka_nizzu29",
-    "college_rank": 204,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/ka_nizzu29/",
     "stats": {
       "total_solved": 638,
       "easy_solved": 183,
       "medium_solved": 352,
       "hard_solved": 103,
       "contest_rating": 1463.7,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 213,
-    "reg_no": "23CC023",
-    "name": "KAVINRAJAN K",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
+      "last_verified_at": "2026-08-20T02:14:28.154197"
     },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/kavinrajan/",
-    "username": "kavinrajan",
-    "college_rank": 205,
+    "streak_count": 1,
+    "college_rank": 4,
+    "dept_rank": 3,
     "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 583,
-      "easy_solved": 247,
-      "medium_solved": 248,
-      "hard_solved": 88,
-      "contest_rating": 1717.8,
-      "status": "verified",
-      "sync_status": "success"
-    }
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
     "id": 214,
-    "reg_no": "23CC025",
     "name": "KEERTHANA B",
-    "email": "",
+    "reg_no": "23CC025",
+    "username": "Keerthu-2005",
+    "year_level": "IV",
+    "department_id": 1,
     "department": {
       "id": 1,
       "name": "Computer Science and Engineering (Cyber Security)",
       "code": "CSE(CS)"
     },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Keerthu-2005/",
-    "username": "Keerthu-2005",
-    "college_rank": 206,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Keerthu-2005/",
     "stats": {
       "total_solved": 593,
       "easy_solved": 253,
       "medium_solved": 263,
       "hard_solved": 77,
       "contest_rating": 1608.0,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:14:29.059625"
+    },
+    "streak_count": 1,
+    "college_rank": 5,
+    "dept_rank": 4,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
-    "id": 215,
-    "reg_no": "23CC031",
-    "name": "MOWNAVARTHINI A L",
-    "email": "",
+    "id": 205,
+    "name": "BHARATH I",
+    "reg_no": "23CC005",
+    "username": "Bharath_77",
+    "year_level": "IV",
+    "department_id": 1,
     "department": {
       "id": 1,
       "name": "Computer Science and Engineering (Cyber Security)",
       "code": "CSE(CS)"
     },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/mowna_14/",
-    "username": "mowna_14",
-    "college_rank": 207,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Bharath_77/",
     "stats": {
-      "total_solved": 489,
-      "easy_solved": 129,
-      "medium_solved": 264,
-      "hard_solved": 96,
-      "contest_rating": 1355.2,
+      "total_solved": 591,
+      "easy_solved": 179,
+      "medium_solved": 325,
+      "hard_solved": 87,
+      "contest_rating": 1715.8,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:14:21.470783"
+    },
+    "streak_count": 1,
+    "college_rank": 6,
+    "dept_rank": 5,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
-    "id": 216,
-    "reg_no": "23CC038",
-    "name": "PRAVEEN KUMAR J",
-    "email": "",
+    "id": 213,
+    "name": "KAVINRAJAN K",
+    "reg_no": "23CC023",
+    "username": "kavinrajan",
+    "year_level": "IV",
+    "department_id": 1,
     "department": {
       "id": 1,
       "name": "Computer Science and Engineering (Cyber Security)",
       "code": "CSE(CS)"
     },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/PRAVEEN360/",
-    "username": "PRAVEEN360",
-    "college_rank": 208,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/kavinrajan/",
     "stats": {
-      "total_solved": 551,
-      "easy_solved": 227,
-      "medium_solved": 245,
-      "hard_solved": 79,
-      "contest_rating": 1488.1,
+      "total_solved": 583,
+      "easy_solved": 247,
+      "medium_solved": 248,
+      "hard_solved": 88,
+      "contest_rating": 1717.8,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 217,
-    "reg_no": "23CC039",
-    "name": "PRAVEEN VENKATESH A",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
+      "last_verified_at": "2026-08-20T02:14:28.613577"
     },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/pravexn/",
-    "username": "pravexn",
-    "college_rank": 209,
+    "streak_count": 1,
+    "college_rank": 7,
+    "dept_rank": 6,
     "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 154,
-      "easy_solved": 75,
-      "medium_solved": 71,
-      "hard_solved": 8,
-      "contest_rating": 1453.4,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 218,
-    "reg_no": "23CC042",
-    "name": "PRIYADHARSHINI K",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/dhars_02/",
-    "username": "dhars_02",
-    "college_rank": 210,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 525,
-      "easy_solved": 154,
-      "medium_solved": 277,
-      "hard_solved": 94,
-      "contest_rating": 1471.4,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 219,
-    "reg_no": "23CC043",
-    "name": "RAGAVAN S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/j123kcmcm/",
-    "username": "j123kcmcm",
-    "college_rank": 211,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 372,
-      "easy_solved": 126,
-      "medium_solved": 200,
-      "hard_solved": 46,
-      "contest_rating": 1469.5,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 220,
-    "reg_no": "23CC044",
-    "name": "RAM PRAKASH S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Ramprakash5/",
-    "username": "Ramprakash5",
-    "college_rank": 212,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 447,
-      "easy_solved": 164,
-      "medium_solved": 218,
-      "hard_solved": 65,
-      "contest_rating": 1588.8,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 221,
-    "reg_no": "23CC045",
-    "name": "RATHEESH S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/ratheesh1226/",
-    "username": "ratheesh1226",
-    "college_rank": 213,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 459,
-      "easy_solved": 191,
-      "medium_solved": 211,
-      "hard_solved": 57,
-      "contest_rating": 1474.3,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 222,
-    "reg_no": "23CC046",
-    "name": "RITHIKA P",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/rithikap13/",
-    "username": "rithikap13",
-    "college_rank": 214,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 366,
-      "easy_solved": 99,
-      "medium_solved": 204,
-      "hard_solved": 63,
-      "contest_rating": 1713.9,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 223,
-    "reg_no": "23CC047",
-    "name": "SARAVANAN R",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/SARAVANAN_ROLEX/",
-    "username": "SARAVANAN_ROLEX",
-    "college_rank": 215,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 266,
-      "easy_solved": 66,
-      "medium_solved": 159,
-      "hard_solved": 41,
-      "contest_rating": 1555.6,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 224,
-    "reg_no": "23CC050",
-    "name": "SRIVIDHYA S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/SRIVIDHYA_25/",
-    "username": "SRIVIDHYA_25",
-    "college_rank": 216,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 118,
-      "easy_solved": 49,
-      "medium_solved": 59,
-      "hard_solved": 10,
-      "contest_rating": 1460.7,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 225,
-    "reg_no": "23CC051",
-    "name": "SRIRAM.S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Sriram6758/",
-    "username": "Sriram6758",
-    "college_rank": 217,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 402,
-      "easy_solved": 106,
-      "medium_solved": 221,
-      "hard_solved": 75,
-      "contest_rating": 1459.4,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 226,
-    "reg_no": "23CC052",
-    "name": "STEFFY MARTINA P",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Steffy_15/",
-    "username": "Steffy_15",
-    "college_rank": 218,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 564,
-      "easy_solved": 226,
-      "medium_solved": 260,
-      "hard_solved": 78,
-      "contest_rating": 1607.3,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 227,
-    "reg_no": "23CC053",
-    "name": "SUBITHA P S",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/23cc053/",
-    "username": "23cc053",
-    "college_rank": 219,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 430,
-      "easy_solved": 124,
-      "medium_solved": 235,
-      "hard_solved": 71,
-      "contest_rating": 1503.0,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 228,
-    "reg_no": "23CC056",
-    "name": "VIGNESH J",
-    "email": "",
-    "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
-    },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Vignesh_2639/",
-    "username": "Vignesh_2639",
-    "college_rank": 220,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 319,
-      "easy_solved": 89,
-      "medium_solved": 175,
-      "hard_solved": 55,
-      "contest_rating": 1393.6,
-      "status": "verified",
-      "sync_status": "success"
-    }
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
     "id": 229,
-    "reg_no": "23CC059",
     "name": "WASIM M",
-    "email": "",
+    "reg_no": "23CC059",
+    "username": "Wasim_M",
+    "year_level": "IV",
+    "department_id": 1,
     "department": {
       "id": 1,
       "name": "Computer Science and Engineering (Cyber Security)",
       "code": "CSE(CS)"
     },
-    "department_id": 1,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Wasim_M/",
-    "username": "Wasim_M",
-    "college_rank": 221,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Wasim_M/",
     "stats": {
       "total_solved": 581,
       "easy_solved": 153,
       "medium_solved": 329,
       "hard_solved": 99,
       "contest_rating": 1671.3,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:14:38.461133"
+    },
+    "streak_count": 1,
+    "college_rank": 8,
+    "dept_rank": 7,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
-    "id": 230,
-    "reg_no": "732224CI001",
-    "name": "AADHISH S B",
-    "email": "",
+    "id": 209,
+    "name": "ENIYAVAN R",
+    "reg_no": "23CC013",
+    "username": "Eniyavan_r",
+    "year_level": "IV",
+    "department_id": 1,
     "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
     },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "",
-    "username": "",
-    "college_rank": 222,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Eniyavan_r/",
     "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
+      "total_solved": 571,
+      "easy_solved": 193,
+      "medium_solved": 309,
+      "hard_solved": 69,
+      "contest_rating": 1454.2,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:25.244883"
+    },
+    "streak_count": 0,
+    "college_rank": 9,
+    "dept_rank": 8,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
-    "id": 231,
-    "reg_no": "732224CI004",
-    "name": "ABISHEK C",
-    "email": "",
+    "id": 226,
+    "name": "STEFFY MARTINA P",
+    "reg_no": "23CC052",
+    "username": "Steffy_15",
+    "year_level": "IV",
+    "department_id": 1,
     "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
     },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Abishek0007/",
-    "username": "Abishek0007",
-    "college_rank": 223,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Steffy_15/",
     "stats": {
-      "total_solved": 53,
-      "easy_solved": 24,
-      "medium_solved": 24,
-      "hard_solved": 5,
-      "contest_rating": null,
+      "total_solved": 564,
+      "easy_solved": 226,
+      "medium_solved": 260,
+      "hard_solved": 78,
+      "contest_rating": 1607.3,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:14:36.957941"
+    },
+    "streak_count": 1,
+    "college_rank": 10,
+    "dept_rank": 9,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
-    "id": 232,
-    "reg_no": "732224CI005",
-    "name": "AISHWARYA E",
-    "email": "",
+    "id": 216,
+    "name": "PRAVEEN KUMAR J",
+    "reg_no": "23CC038",
+    "username": "PRAVEEN360",
+    "year_level": "IV",
+    "department_id": 1,
     "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
     },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/aishueswaran/",
-    "username": "aishueswaran",
-    "college_rank": 224,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/PRAVEEN360/",
     "stats": {
-      "total_solved": 72,
-      "easy_solved": 20,
-      "medium_solved": 42,
-      "hard_solved": 10,
-      "contest_rating": 1414.6,
+      "total_solved": 551,
+      "easy_solved": 227,
+      "medium_solved": 245,
+      "hard_solved": 79,
+      "contest_rating": 1488.1,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:14:30.073868"
+    },
+    "streak_count": 1,
+    "college_rank": 11,
+    "dept_rank": 10,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
-    "id": 233,
-    "reg_no": "732224CI006",
-    "name": "AKKSHAYAA K",
-    "email": "",
+    "id": 210,
+    "name": "JANARANSHINI P",
+    "reg_no": "23CC017",
+    "username": "Janaranshini_17",
+    "year_level": "IV",
+    "department_id": 1,
     "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
     },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/AkkshayaaK/",
-    "username": "AkkshayaaK",
-    "college_rank": 225,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Janaranshini_17/",
     "stats": {
-      "total_solved": 62,
-      "easy_solved": 22,
-      "medium_solved": 35,
-      "hard_solved": 5,
-      "contest_rating": 1394.7,
+      "total_solved": 540,
+      "easy_solved": 136,
+      "medium_solved": 306,
+      "hard_solved": 98,
+      "contest_rating": 1536.2,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:14:26.192178"
+    },
+    "streak_count": 1,
+    "college_rank": 12,
+    "dept_rank": 11,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
-    "id": 234,
-    "reg_no": "732224CI007",
-    "name": "ANU SRI S",
-    "email": "",
+    "id": 218,
+    "name": "PRIYADHARSHINI K",
+    "reg_no": "23CC042",
+    "username": "dhars_02",
+    "year_level": "IV",
+    "department_id": 1,
     "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
     },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/anu_07/",
-    "username": "anu_07",
-    "college_rank": 226,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/dhars_02/",
     "stats": {
-      "total_solved": 75,
-      "easy_solved": 21,
-      "medium_solved": 42,
-      "hard_solved": 12,
-      "contest_rating": 1414.6,
+      "total_solved": 525,
+      "easy_solved": 154,
+      "medium_solved": 277,
+      "hard_solved": 94,
+      "contest_rating": 1471.4,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:14:31.933632"
+    },
+    "streak_count": 0,
+    "college_rank": 13,
+    "dept_rank": 12,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
-    "id": 235,
-    "reg_no": "732224CI008",
-    "name": "BHARATH K",
-    "email": "",
+    "id": 203,
+    "name": "S.ABIRAMI",
+    "reg_no": "23CC002",
+    "username": "ShtLj6CNJL",
+    "year_level": "IV",
+    "department_id": 1,
     "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
     },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Spidy_42/",
-    "username": "Spidy_42",
-    "college_rank": 227,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/ShtLj6CNJL/",
     "stats": {
-      "total_solved": 711,
-      "easy_solved": 187,
-      "medium_solved": 391,
-      "hard_solved": 133,
-      "contest_rating": 1414.6,
+      "total_solved": 499,
+      "easy_solved": 137,
+      "medium_solved": 274,
+      "hard_solved": 88,
+      "contest_rating": 1451.2,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:14:18.576077"
+    },
+    "streak_count": 1,
+    "college_rank": 14,
+    "dept_rank": 13,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
-    "id": 236,
-    "reg_no": "732224CI010",
-    "name": "DIVYA S",
-    "email": "",
+    "id": 215,
+    "name": "MOWNAVARTHINI A L",
+    "reg_no": "23CC031",
+    "username": "mowna_14",
+    "year_level": "IV",
+    "department_id": 1,
     "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
     },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/divya_sd/",
-    "username": "divya_sd",
-    "college_rank": 228,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/mowna_14/",
     "stats": {
-      "total_solved": 63,
-      "easy_solved": 25,
-      "medium_solved": 32,
-      "hard_solved": 6,
-      "contest_rating": 1375.1,
+      "total_solved": 489,
+      "easy_solved": 129,
+      "medium_solved": 264,
+      "hard_solved": 96,
+      "contest_rating": 1355.2,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:14:29.598973"
+    },
+    "streak_count": 0,
+    "college_rank": 15,
+    "dept_rank": 14,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 221,
+    "name": "RATHEESH S",
+    "reg_no": "23CC045",
+    "username": "ratheesh1226",
+    "year_level": "IV",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/ratheesh1226/",
+    "stats": {
+      "total_solved": 459,
+      "easy_solved": 191,
+      "medium_solved": 211,
+      "hard_solved": 57,
+      "contest_rating": 1474.3,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:33.554548"
+    },
+    "streak_count": 6,
+    "college_rank": 16,
+    "dept_rank": 15,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 220,
+    "name": "RAM PRAKASH S",
+    "reg_no": "23CC044",
+    "username": "Ramprakash5",
+    "year_level": "IV",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Ramprakash5/",
+    "stats": {
+      "total_solved": 447,
+      "easy_solved": 164,
+      "medium_solved": 218,
+      "hard_solved": 65,
+      "contest_rating": 1588.8,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:33.098157"
+    },
+    "streak_count": 1,
+    "college_rank": 17,
+    "dept_rank": 16,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 204,
+    "name": "ASWIN P",
+    "reg_no": "23CC003",
+    "username": "aswinkanin",
+    "year_level": "IV",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/aswinkanin/",
+    "stats": {
+      "total_solved": 445,
+      "easy_solved": 120,
+      "medium_solved": 243,
+      "hard_solved": 82,
+      "contest_rating": 1565.3,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:19.732248"
+    },
+    "streak_count": 1,
+    "college_rank": 18,
+    "dept_rank": 17,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 208,
+    "name": "DEEPAKKUMAR M",
+    "reg_no": "23CC010",
+    "username": "Deepak2612",
+    "year_level": "IV",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Deepak2612/",
+    "stats": {
+      "total_solved": 432,
+      "easy_solved": 105,
+      "medium_solved": 246,
+      "hard_solved": 81,
+      "contest_rating": 1453.5,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:24.131491"
+    },
+    "streak_count": 0,
+    "college_rank": 19,
+    "dept_rank": 18,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 227,
+    "name": "SUBITHA P S",
+    "reg_no": "23CC053",
+    "username": "23cc053",
+    "year_level": "IV",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/23cc053/",
+    "stats": {
+      "total_solved": 430,
+      "easy_solved": 124,
+      "medium_solved": 235,
+      "hard_solved": 71,
+      "contest_rating": 1503.0,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:37.439160"
+    },
+    "streak_count": 1,
+    "college_rank": 20,
+    "dept_rank": 19,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 211,
+    "name": "KANISHAA.K.S",
+    "reg_no": "23CC020",
+    "username": "kani_shaa",
+    "year_level": "IV",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/kani_shaa/",
+    "stats": {
+      "total_solved": 414,
+      "easy_solved": 114,
+      "medium_solved": 230,
+      "hard_solved": 70,
+      "contest_rating": 1435.9,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:27.357015"
+    },
+    "streak_count": 1,
+    "college_rank": 21,
+    "dept_rank": 20,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
     "id": 237,
-    "reg_no": "732224CI011",
     "name": "ELAVARASAN B",
-    "email": "",
+    "reg_no": "732224CI011",
+    "username": "prince__11",
+    "year_level": "III",
+    "department_id": 2,
     "department": {
       "id": 2,
       "name": "Computer Science and Engineering (IoT)",
       "code": "CSE(IOT)"
     },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/prince__11/",
-    "username": "prince__11",
-    "college_rank": 229,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/prince__11/",
     "stats": {
-      "total_solved": 396,
+      "total_solved": 402,
       "easy_solved": 121,
-      "medium_solved": 199,
+      "medium_solved": 205,
       "hard_solved": 76,
       "contest_rating": 1356.0,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 238,
-    "reg_no": "732224CI012",
-    "name": "GUHAN D",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
+      "last_verified_at": "2026-08-20T02:14:43.381304"
     },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Guhan_12_/a",
-    "username": "Guhan_12_",
-    "college_rank": 230,
-    "weekly_progress": 0,
     "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 27,
-      "easy_solved": 11,
-      "medium_solved": 16,
-      "hard_solved": 0,
-      "contest_rating": 1395.5,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 239,
-    "reg_no": "732224CI013",
-    "name": "HARISH S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Harish_48/",
-    "username": "Harish_48",
-    "college_rank": 231,
+    "college_rank": 22,
+    "dept_rank": 2,
     "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 106,
-      "easy_solved": 24,
-      "medium_solved": 66,
-      "hard_solved": 16,
-      "contest_rating": 1400.5,
-      "status": "verified",
-      "sync_status": "success"
-    }
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
-    "id": 240,
-    "reg_no": "732224CI014",
-    "name": "JANANI PRIYA V",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/janani_08_/",
-    "username": "janani_08_",
-    "college_rank": 232,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 64,
-      "easy_solved": 21,
-      "medium_solved": 35,
-      "hard_solved": 8,
-      "contest_rating": 1355.3,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 241,
-    "reg_no": "732224CI015",
-    "name": "JESRA BEGAM ABDUL RAHUMAN",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/jesra005/",
-    "username": "jesra005",
-    "college_rank": 233,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 223,
-      "easy_solved": 86,
-      "medium_solved": 100,
-      "hard_solved": 37,
-      "contest_rating": 1515.4,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 242,
-    "reg_no": "732224CI016",
-    "name": "KABILESH R",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/kabilesh_7/",
-    "username": "kabilesh_7",
-    "college_rank": 234,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 179,
-      "easy_solved": 63,
-      "medium_solved": 90,
-      "hard_solved": 26,
-      "contest_rating": 1363.6,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 243,
-    "reg_no": "732224CI017",
-    "name": "KANNIGA PARAMESWARI S B",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/KANNIGA_SB/",
-    "username": "KANNIGA_SB",
-    "college_rank": 235,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 42,
-      "easy_solved": 16,
-      "medium_solved": 23,
-      "hard_solved": 3,
-      "contest_rating": 1656.9,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 244,
-    "reg_no": "732224CI018",
-    "name": "KARTHEESHWAR T",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/kartheeshwar/",
-    "username": "kartheeshwar",
-    "college_rank": 236,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 66,
-      "easy_solved": 37,
-      "medium_solved": 27,
-      "hard_solved": 2,
-      "contest_rating": 1492.9,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 245,
-    "reg_no": "732224CI019",
-    "name": "KAVINRAJ R",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/kavin629/",
-    "username": "kavin629",
-    "college_rank": 237,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 28,
-      "easy_solved": 13,
-      "medium_solved": 14,
-      "hard_solved": 1,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 246,
-    "reg_no": "732224CI021",
-    "name": "LASHMEE SRI C B",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Lash1686/",
-    "username": "Lash1686",
-    "college_rank": 238,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 326,
-      "easy_solved": 137,
-      "medium_solved": 144,
-      "hard_solved": 45,
-      "contest_rating": 1774.3,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 247,
-    "reg_no": "732224CI022",
-    "name": "LOGESH M S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Logesh_1204_/",
-    "username": "Logesh_1204_",
-    "college_rank": 239,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 86,
-      "easy_solved": 24,
-      "medium_solved": 57,
-      "hard_solved": 5,
-      "contest_rating": 1411.7,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 248,
-    "reg_no": "732224CI023",
-    "name": "MADHANKUMAR K",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/_madan_km_",
-    "username": "_madan_km_",
-    "college_rank": 240,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 79,
-      "easy_solved": 30,
-      "medium_solved": 36,
-      "hard_solved": 13,
-      "contest_rating": 1414.6,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 249,
-    "reg_no": "732224CI024",
-    "name": "MADHANRAJ A",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/madhan_11_/",
-    "username": "madhan_11_",
-    "college_rank": 241,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 102,
-      "easy_solved": 26,
-      "medium_solved": 60,
-      "hard_solved": 16,
-      "contest_rating": 1289.9,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 250,
-    "reg_no": "732224CI025",
-    "name": "MADHESWARAN P",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/madhes_187142_/",
-    "username": "madhes_187142_",
-    "college_rank": 242,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 314,
-      "easy_solved": 83,
-      "medium_solved": 178,
-      "hard_solved": 53,
-      "contest_rating": 1403.7,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 251,
-    "reg_no": "732224CI026",
-    "name": "MEENA E",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/MeenaElangovan/",
-    "username": "MeenaElangovan",
-    "college_rank": 243,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 34,
-      "easy_solved": 12,
-      "medium_solved": 20,
-      "hard_solved": 2,
-      "contest_rating": 1371.0,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 252,
-    "reg_no": "732224CI028",
-    "name": "MOHANA PRASATH S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "",
-    "username": "",
-    "college_rank": 244,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 253,
-    "reg_no": "732224CI029",
-    "name": "MYTHREYAN K",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Mythreyan_64/",
-    "username": "Mythreyan_64",
-    "college_rank": 245,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 35,
-      "easy_solved": 15,
-      "medium_solved": 18,
-      "hard_solved": 2,
-      "contest_rating": 1355.4,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 254,
-    "reg_no": "732224CI030",
-    "name": "NANDHINI G",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/GNandhini_09/",
-    "username": "GNandhini_09",
-    "college_rank": 246,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 30,
-      "easy_solved": 12,
-      "medium_solved": 17,
-      "hard_solved": 1,
-      "contest_rating": 1414.6,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 255,
-    "reg_no": "732224CI031",
-    "name": "NAVANITH S R",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/NavanithSenthil/",
-    "username": "NavanithSenthil",
-    "college_rank": 247,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 335,
-      "easy_solved": 134,
-      "medium_solved": 148,
-      "hard_solved": 53,
-      "contest_rating": 1419.9,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 256,
-    "reg_no": "732224CI032",
-    "name": "NAVEEN KUMAR D",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/naveenkumar1713/",
-    "username": "naveenkumar1713",
-    "college_rank": 248,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 123,
-      "easy_solved": 31,
-      "medium_solved": 72,
-      "hard_solved": 20,
-      "contest_rating": 1388.5,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 257,
-    "reg_no": "732224CI033",
-    "name": "NAVEEN R",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/naveen2501/",
-    "username": "naveen2501",
-    "college_rank": 249,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 175,
-      "easy_solved": 61,
-      "medium_solved": 89,
-      "hard_solved": 25,
-      "contest_rating": 1533.3,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 258,
-    "reg_no": "732224CI034",
-    "name": "NISHA S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Nisha_Sivakumar/",
-    "username": "Nisha_Sivakumar",
-    "college_rank": 250,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 124,
-      "easy_solved": 53,
-      "medium_solved": 59,
-      "hard_solved": 12,
-      "contest_rating": 1586.4,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 259,
-    "reg_no": "732224CI035",
-    "name": "NISHANTH S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/sivanishanth2006/",
-    "username": "sivanishanth2006",
-    "college_rank": 251,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 105,
-      "easy_solved": 31,
-      "medium_solved": 65,
-      "hard_solved": 9,
-      "contest_rating": 1470.9,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 260,
-    "reg_no": "732224CI036",
-    "name": "PAVITHRAA M",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/pavithraa_28/",
-    "username": "pavithraa_28",
-    "college_rank": 252,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 114,
-      "easy_solved": 26,
-      "medium_solved": 68,
-      "hard_solved": 20,
-      "contest_rating": 1382.7,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 261,
-    "reg_no": "732224CI037",
-    "name": "PRAJIN SANKAR A U",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/PrajinSankar/",
-    "username": "PrajinSankar",
-    "college_rank": 253,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 98,
-      "easy_solved": 38,
-      "medium_solved": 49,
-      "hard_solved": 11,
-      "contest_rating": 1355.4,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 262,
-    "reg_no": "732224CI038",
-    "name": "PRAVEEN S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/praveen__13/",
-    "username": "praveen__13",
-    "college_rank": 254,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 102,
-      "easy_solved": 27,
-      "medium_solved": 59,
-      "hard_solved": 16,
-      "contest_rating": 1389.2,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 263,
-    "reg_no": "732224CI039",
-    "name": "PREMKUMAR K",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Prem_kumar_karuna/",
-    "username": "Prem_kumar_karuna",
-    "college_rank": 255,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 75,
-      "easy_solved": 22,
-      "medium_solved": 42,
-      "hard_solved": 11,
-      "contest_rating": 1390.4,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 264,
-    "reg_no": "732224CI040",
-    "name": "RAGHAVAN G",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Raghavan_0116_/",
-    "username": "Raghavan_0116_",
-    "college_rank": 256,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 15,
-      "easy_solved": 6,
-      "medium_solved": 8,
-      "hard_solved": 1,
-      "contest_rating": 1414.6,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 265,
-    "reg_no": "732224CI041",
-    "name": "RAGUL J M",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/ragul_006/",
-    "username": "ragul_006",
-    "college_rank": 257,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 45,
-      "easy_solved": 18,
-      "medium_solved": 24,
-      "hard_solved": 3,
-      "contest_rating": 1342.1,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 266,
-    "reg_no": "732224CI042",
-    "name": "RAHUL KUMAR L",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "",
-    "username": "",
-    "college_rank": 258,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 267,
-    "reg_no": "732224CI043",
-    "name": "RANJITH KUMAR C",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/ranjith_2006/",
-    "username": "ranjith_2006",
-    "college_rank": 259,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 23,
-      "easy_solved": 10,
-      "medium_solved": 13,
-      "hard_solved": 0,
-      "contest_rating": 1432.1,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 268,
-    "reg_no": "732224CI044",
-    "name": "RITHANYA S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/RithanyaSivagami/",
-    "username": "RithanyaSivagami",
-    "college_rank": 260,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 701,
-      "easy_solved": 228,
-      "medium_solved": 317,
-      "hard_solved": 156,
-      "contest_rating": 1923.1,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 269,
-    "reg_no": "732224CI045",
-    "name": "ROHITH S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Rohith_2006_S/",
-    "username": "Rohith_2006_S",
-    "college_rank": 261,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 66,
-      "easy_solved": 19,
-      "medium_solved": 37,
-      "hard_solved": 10,
-      "contest_rating": 1459.9,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 270,
-    "reg_no": "732224CI046",
-    "name": "ROJASRI S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Rojasri_007_/",
-    "username": "Rojasri_007_",
-    "college_rank": 262,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 88,
-      "easy_solved": 23,
-      "medium_solved": 54,
-      "hard_solved": 11,
-      "contest_rating": 1453.1,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 271,
-    "reg_no": "732224CI047",
-    "name": "RUPESH S NAIR",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Rupesh_08nair_20/",
-    "username": "Rupesh_08nair_20",
-    "college_rank": 263,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 151,
-      "easy_solved": 41,
-      "medium_solved": 90,
-      "hard_solved": 20,
-      "contest_rating": 1414.6,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 272,
-    "reg_no": "732224CI048",
-    "name": "SAI SIDDHARDH S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/SaiSiddhardh_007/",
-    "username": "SaiSiddhardh_007",
-    "college_rank": 264,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 79,
-      "easy_solved": 19,
-      "medium_solved": 49,
-      "hard_solved": 11,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 273,
-    "reg_no": "732224CI049",
-    "name": "SANJAY G",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/sanjay_gireesh",
-    "username": "sanjay_gireesh",
-    "college_rank": 265,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 117,
-      "easy_solved": 26,
-      "medium_solved": 70,
-      "hard_solved": 21,
-      "contest_rating": 1414.6,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 274,
-    "reg_no": "732224CI050",
-    "name": "SATHYANARAYANAN R",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/iiX42fQP6I/",
-    "username": "iiX42fQP6I",
-    "college_rank": 266,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 275,
-      "easy_solved": 84,
-      "medium_solved": 141,
-      "hard_solved": 50,
-      "contest_rating": 1580.9,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 275,
-    "reg_no": "732224CI051",
-    "name": "SIDDAESHWAR K",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/siddaesh_siddu/",
-    "username": "siddaesh_siddu",
-    "college_rank": 267,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 94,
-      "easy_solved": 30,
-      "medium_solved": 44,
-      "hard_solved": 20,
-      "contest_rating": 1356.2,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 276,
-    "reg_no": "732224CI052",
-    "name": "SUDHARSAN B",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/sudharsanbalsubramaniyam/",
-    "username": "sudharsanbalsubramaniyam",
-    "college_rank": 268,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 94,
-      "easy_solved": 30,
-      "medium_solved": 51,
-      "hard_solved": 13,
-      "contest_rating": 1351.8,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 277,
-    "reg_no": "732224CI053",
-    "name": "SUDHARSHAN J",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/_sudharshan_J/",
-    "username": "_sudharshan_J",
-    "college_rank": 269,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 107,
-      "easy_solved": 26,
-      "medium_solved": 63,
-      "hard_solved": 18,
-      "contest_rating": 1407.3,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 278,
-    "reg_no": "732224CI054",
-    "name": "SUSIDHARAN S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/susidharan_21/",
-    "username": "susidharan_21",
-    "college_rank": 270,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 159,
-      "easy_solved": 43,
-      "medium_solved": 89,
-      "hard_solved": 27,
-      "contest_rating": 1414.6,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 279,
-    "reg_no": "732224CI055",
-    "name": "VELMURUGAN T",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/vel_muruga_/",
-    "username": "vel_muruga_",
-    "college_rank": 271,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 89,
-      "easy_solved": 23,
-      "medium_solved": 53,
-      "hard_solved": 13,
-      "contest_rating": 1414.6,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 280,
-    "reg_no": "732224CI056",
-    "name": "VIJAY PRABHU.M",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/vijayprabhu56/",
-    "username": "vijayprabhu56",
-    "college_rank": 272,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 34,
-      "easy_solved": 13,
-      "medium_solved": 18,
-      "hard_solved": 3,
-      "contest_rating": 1352.1,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 281,
-    "reg_no": "732224CIR01",
-    "name": "SOWMIYA K",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "III",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/sowmiya4306/",
-    "username": "sowmiya4306",
-    "college_rank": 273,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 76,
-      "easy_solved": 18,
-      "medium_solved": 46,
-      "hard_solved": 12,
-      "contest_rating": null,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 282,
-    "reg_no": "23CI002",
-    "name": "AJAY VISHALESWAR",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
+    "id": 225,
+    "name": "SRIRAM.S",
+    "reg_no": "23CC051",
+    "username": "Sriram6758",
     "year_level": "IV",
-    "section": {
-      "name": "A"
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
     },
-    "leetcode_url": "https://leetcode.com/u/ajaysoftware/",
-    "username": "ajaysoftware",
-    "college_rank": 274,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Sriram6758/",
     "stats": {
-      "total_solved": 274,
-      "easy_solved": 199,
-      "medium_solved": 69,
-      "hard_solved": 6,
-      "contest_rating": 1413.5,
+      "total_solved": 402,
+      "easy_solved": 106,
+      "medium_solved": 221,
+      "hard_solved": 75,
+      "contest_rating": 1459.4,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:14:36.058164"
+    },
+    "streak_count": 0,
+    "college_rank": 22,
+    "dept_rank": 21,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
-    "id": 283,
-    "reg_no": "23CI004",
-    "name": "BHUVANADHARSHINI C",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
+    "id": 206,
+    "name": "DEEPADHARSHINI C",
+    "reg_no": "23CC007",
+    "username": "deepadharshini_10",
     "year_level": "IV",
-    "section": {
-      "name": "A"
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
     },
-    "leetcode_url": "https://leetcode.com/u/Bhuvanadharshini/",
-    "username": "Bhuvanadharshini",
-    "college_rank": 275,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/deepadharshini_10/",
     "stats": {
-      "total_solved": 168,
-      "easy_solved": 82,
-      "medium_solved": 71,
-      "hard_solved": 15,
-      "contest_rating": 1521.3,
+      "total_solved": 377,
+      "easy_solved": 97,
+      "medium_solved": 215,
+      "hard_solved": 65,
+      "contest_rating": 1505.0,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:14:22.593525"
+    },
+    "streak_count": 1,
+    "college_rank": 24,
+    "dept_rank": 22,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 219,
+    "name": "RAGAVAN S",
+    "reg_no": "23CC043",
+    "username": "j123kcmcm",
+    "year_level": "IV",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/j123kcmcm/",
+    "stats": {
+      "total_solved": 372,
+      "easy_solved": 126,
+      "medium_solved": 200,
+      "hard_solved": 46,
+      "contest_rating": 1469.5,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:32.398086"
+    },
+    "streak_count": 0,
+    "college_rank": 25,
+    "dept_rank": 23,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "0 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 202,
+    "name": "AATHAVAN T",
+    "reg_no": "23CC001",
+    "username": "AathavanThiyakeswaran",
+    "year_level": "IV",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/AathavanThiyakeswaran/",
+    "stats": {
+      "total_solved": 366,
+      "easy_solved": 101,
+      "medium_solved": 201,
+      "hard_solved": 64,
+      "contest_rating": 1342.8,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:17.555541"
+    },
+    "streak_count": 0,
+    "college_rank": 26,
+    "dept_rank": 24,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 222,
+    "name": "RITHIKA P",
+    "reg_no": "23CC046",
+    "username": "rithikap13",
+    "year_level": "IV",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/rithikap13/",
+    "stats": {
+      "total_solved": 366,
+      "easy_solved": 99,
+      "medium_solved": 204,
+      "hard_solved": 63,
+      "contest_rating": 1713.9,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:34.011034"
+    },
+    "streak_count": 1,
+    "college_rank": 26,
+    "dept_rank": 24,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
     "id": 284,
-    "reg_no": "23CI006",
     "name": "DHARNEESH P",
-    "email": "",
+    "reg_no": "23CI006",
+    "username": "TDq3huRfEI",
+    "year_level": "IV",
+    "department_id": 2,
     "department": {
       "id": 2,
       "name": "Computer Science and Engineering (IoT)",
       "code": "CSE(IOT)"
     },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/TDq3huRfEI/",
-    "username": "TDq3huRfEI",
-    "college_rank": 276,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/TDq3huRfEI/",
     "stats": {
       "total_solved": 360,
       "easy_solved": 186,
       "medium_solved": 144,
       "hard_solved": 30,
       "contest_rating": 1788.1,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:15:12.938156"
+    },
+    "streak_count": 1,
+    "college_rank": 28,
+    "dept_rank": 3,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
-    "id": 285,
-    "reg_no": "23CI007",
-    "name": "DIVYA A",
-    "email": "",
+    "id": 24,
+    "name": "INIYA K",
+    "reg_no": "732224CC016",
+    "username": "Iniya3126",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Iniya3126/",
+    "stats": {
+      "total_solved": 357,
+      "easy_solved": 159,
+      "medium_solved": 149,
+      "hard_solved": 49,
+      "contest_rating": 1353.4,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:56.240906"
+    },
+    "streak_count": 9,
+    "college_rank": 29,
+    "dept_rank": 26,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 255,
+    "name": "NAVANITH S R",
+    "reg_no": "732224CI031",
+    "username": "NavanithSenthil",
+    "year_level": "III",
+    "department_id": 2,
     "department": {
       "id": 2,
       "name": "Computer Science and Engineering (IoT)",
       "code": "CSE(IOT)"
     },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/DIVI_ARUL/",
-    "username": "DIVI_ARUL",
-    "college_rank": 277,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/NavanithSenthil/",
     "stats": {
-      "total_solved": 12,
-      "easy_solved": 7,
-      "medium_solved": 5,
-      "hard_solved": 0,
-      "contest_rating": 1440.6,
+      "total_solved": 343,
+      "easy_solved": 135,
+      "medium_solved": 153,
+      "hard_solved": 55,
+      "contest_rating": 1419.9,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:14:54.255363"
+    },
+    "streak_count": 2,
+    "college_rank": 30,
+    "dept_rank": 4,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
-    "id": 286,
-    "reg_no": "23CI010",
-    "name": "GOKILA.G",
-    "email": "",
+    "id": 45,
+    "name": "RADHISRI N",
+    "reg_no": "732224CC038",
+    "username": "Radhisri28",
+    "year_level": "III",
+    "department_id": 1,
     "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
     },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "",
-    "username": "",
-    "college_rank": 278,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Radhisri28/",
     "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
+      "total_solved": 339,
+      "easy_solved": 104,
+      "medium_solved": 177,
+      "hard_solved": 58,
       "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:59.642070"
+    },
+    "streak_count": 4,
+    "college_rank": 31,
+    "dept_rank": 27,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "0 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
   },
   {
-    "id": 287,
-    "reg_no": "23CI012",
-    "name": "GOWCIKA U",
-    "email": "",
+    "id": 246,
+    "name": "LASHMEE SRI C B",
+    "reg_no": "732224CI021",
+    "username": "Lash1686",
+    "year_level": "III",
+    "department_id": 2,
     "department": {
       "id": 2,
       "name": "Computer Science and Engineering (IoT)",
       "code": "CSE(IOT)"
     },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Gowcika/",
-    "username": "Gowcika",
-    "college_rank": 279,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Lash1686/",
     "stats": {
-      "total_solved": 204,
-      "easy_solved": 98,
-      "medium_solved": 91,
-      "hard_solved": 15,
-      "contest_rating": 1714.2,
+      "total_solved": 337,
+      "easy_solved": 138,
+      "medium_solved": 153,
+      "hard_solved": 46,
+      "contest_rating": 1774.3,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:14:47.602252"
+    },
+    "streak_count": 71,
+    "college_rank": 32,
+    "dept_rank": 5,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
     "id": 288,
-    "reg_no": "23CI013",
     "name": "HAMSHA N",
-    "email": "",
+    "reg_no": "23CI013",
+    "username": "hamsha07",
+    "year_level": "IV",
+    "department_id": 2,
     "department": {
       "id": 2,
       "name": "Computer Science and Engineering (IoT)",
       "code": "CSE(IOT)"
     },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/hamsha07/",
-    "username": "hamsha07",
-    "college_rank": 280,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/hamsha07/",
     "stats": {
-      "total_solved": 328,
+      "total_solved": 329,
       "easy_solved": 132,
       "medium_solved": 150,
-      "hard_solved": 46,
+      "hard_solved": 47,
       "contest_rating": 1584.4,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:15:15.402077"
+    },
+    "streak_count": 1,
+    "college_rank": 33,
+    "dept_rank": 6,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
-    "id": 289,
-    "reg_no": "23CI014",
-    "name": "HAREE D",
-    "email": "",
+    "id": 228,
+    "name": "VIGNESH J",
+    "reg_no": "23CC056",
+    "username": "Vignesh_2639",
+    "year_level": "IV",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Vignesh_2639/",
+    "stats": {
+      "total_solved": 319,
+      "easy_solved": 89,
+      "medium_solved": 175,
+      "hard_solved": 55,
+      "contest_rating": 1393.6,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:37.959086"
+    },
+    "streak_count": 0,
+    "college_rank": 34,
+    "dept_rank": 28,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 250,
+    "name": "MADHESWARAN P",
+    "reg_no": "732224CI025",
+    "username": "madhes_187142_",
+    "year_level": "III",
+    "department_id": 2,
     "department": {
       "id": 2,
       "name": "Computer Science and Engineering (IoT)",
       "code": "CSE(IOT)"
     },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Haree05/",
-    "username": "Haree05",
-    "college_rank": 281,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/madhes_187142_/",
     "stats": {
-      "total_solved": 59,
-      "easy_solved": 17,
-      "medium_solved": 32,
-      "hard_solved": 10,
-      "contest_rating": 1402.9,
+      "total_solved": 317,
+      "easy_solved": 83,
+      "medium_solved": 181,
+      "hard_solved": 53,
+      "contest_rating": 1403.7,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:14:50.176638"
+    },
+    "streak_count": 1,
+    "college_rank": 35,
+    "dept_rank": 7,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "0 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
-    "id": 290,
-    "reg_no": "23CI015",
-    "name": "HARINI S",
-    "email": "",
+    "id": 46,
+    "name": "RAJESH R",
+    "reg_no": "732224CC039",
+    "username": "Rajesh1328",
+    "year_level": "III",
+    "department_id": 1,
     "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
     },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "",
-    "username": "",
-    "college_rank": 282,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Rajesh1328/",
     "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
+      "total_solved": 308,
+      "easy_solved": 99,
+      "medium_solved": 160,
+      "hard_solved": 49,
       "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 291,
-    "reg_no": "23CI018",
-    "name": "JAYASURYA P",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Jayasurya-619/",
-    "username": "Jayasurya-619",
-    "college_rank": 283,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 209,
-      "easy_solved": 132,
-      "medium_solved": 62,
-      "hard_solved": 15,
-      "contest_rating": 1360.3,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:41:59.873497"
+    },
+    "streak_count": 4,
+    "college_rank": 37,
+    "dept_rank": 30,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
   },
   {
-    "id": 292,
-    "reg_no": "23CI021",
-    "name": "KAMALA VISHNU G",
-    "email": "",
+    "id": 39,
+    "name": "NISHANTH J S",
+    "reg_no": "732224CC032",
+    "username": "Nishanthjs",
+    "year_level": "III",
+    "department_id": 1,
     "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
     },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "",
-    "username": "",
-    "college_rank": 284,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Nishanthjs/",
     "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
+      "total_solved": 307,
+      "easy_solved": 89,
+      "medium_solved": 167,
+      "hard_solved": 51,
       "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 293,
-    "reg_no": "23CI022",
-    "name": "KARMUKILAN A",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/pPPRNakI4T/",
-    "username": "pPPRNakI4T",
-    "college_rank": 285,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 294,
-    "reg_no": "23CI023",
-    "name": "KARTHIK.V",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/karthik_v3/",
-    "username": "karthik_v3",
-    "college_rank": 286,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 5,
-      "easy_solved": 2,
-      "medium_solved": 3,
-      "hard_solved": 0,
-      "contest_rating": null,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:41:58.723787"
+    },
+    "streak_count": 8,
+    "college_rank": 36,
+    "dept_rank": 29,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
   },
   {
-    "id": 295,
-    "reg_no": "23CI025",
-    "name": "KARUNYA C",
-    "email": "",
+    "id": 65,
+    "name": "YAZHINI SHREE A",
+    "reg_no": "732224CC058",
+    "username": "yazhu_shree",
+    "year_level": "III",
+    "department_id": 1,
     "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
     },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/sivakarunya/",
-    "username": "sivakarunya",
-    "college_rank": 287,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/yazhu_shree/",
     "stats": {
-      "total_solved": 209,
-      "easy_solved": 96,
-      "medium_solved": 92,
-      "hard_solved": 21,
-      "contest_rating": 1573.6,
+      "total_solved": 300,
+      "easy_solved": 105,
+      "medium_solved": 150,
+      "hard_solved": 45,
+      "contest_rating": 1582.7,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:42:03.419343"
+    },
+    "streak_count": 0,
+    "college_rank": 37,
+    "dept_rank": 30,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
-    "id": 296,
-    "reg_no": "23CI027",
-    "name": "KAVI ISHWARRYA S K",
-    "email": "",
+    "id": 274,
+    "name": "SATHYANARAYANAN R",
+    "reg_no": "732224CI050",
+    "username": "iiX42fQP6I",
+    "year_level": "III",
+    "department_id": 2,
     "department": {
       "id": 2,
       "name": "Computer Science and Engineering (IoT)",
       "code": "CSE(IOT)"
     },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/s9hXtuAA2E/",
-    "username": "s9hXtuAA2E",
-    "college_rank": 288,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
     "stats": {
-      "total_solved": 179,
-      "easy_solved": 69,
-      "medium_solved": 108,
-      "hard_solved": 2,
-      "contest_rating": 1623.0,
-      "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 297,
-    "reg_no": "23CI028",
-    "name": "KAVIN V",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "",
-    "username": "",
-    "college_rank": 289,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
       "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-19T03:01:34.244598"
+    },
+    "streak_count": 86,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
-    "id": 298,
-    "reg_no": "23CI029",
-    "name": "KAVIYARASU S",
-    "email": "",
+    "id": 282,
+    "name": "AJAY VISHALESWAR",
+    "reg_no": "23CI002",
+    "username": "Ajaysoftware",
+    "year_level": "IV",
+    "department_id": 2,
     "department": {
       "id": 2,
       "name": "Computer Science and Engineering (IoT)",
       "code": "CSE(IOT)"
     },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/KAVIYARASU_S123/",
-    "username": "KAVIYARASU_S123",
-    "college_rank": 290,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Ajaysoftware/",
     "stats": {
-      "total_solved": 89,
-      "easy_solved": 43,
-      "medium_solved": 40,
+      "total_solved": 280,
+      "easy_solved": 199,
+      "medium_solved": 75,
       "hard_solved": 6,
-      "contest_rating": 1679.8,
+      "contest_rating": 1413.5,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:15:11.940281"
+    },
+    "streak_count": 1,
+    "college_rank": 40,
+    "dept_rank": 9,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
-    "id": 299,
-    "reg_no": "23CI030",
-    "name": "KEERTHANA.K",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
+    "id": 223,
+    "name": "SARAVANAN R",
+    "reg_no": "23CC047",
+    "username": "SARAVANAN_ROLEX",
     "year_level": "IV",
-    "section": {
-      "name": "A"
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
     },
-    "leetcode_url": "https://leetcode.com/u/K_KEERTHANA_/",
-    "username": "K_KEERTHANA_",
-    "college_rank": 291,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/SARAVANAN_ROLEX/",
     "stats": {
-      "total_solved": 132,
-      "easy_solved": 71,
-      "medium_solved": 54,
-      "hard_solved": 7,
-      "contest_rating": 1748.1,
+      "total_solved": 266,
+      "easy_solved": 66,
+      "medium_solved": 159,
+      "hard_solved": 41,
+      "contest_rating": 1555.6,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:14:34.738795"
+    },
+    "streak_count": 1,
+    "college_rank": 41,
+    "dept_rank": 32,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
-    "id": 300,
-    "reg_no": "23CI034",
-    "name": "MOHAMED AQDHAS U",
-    "email": "",
+    "id": 71,
+    "name": "SRIDHAR S",
+    "reg_no": "732224CCL04",
+    "username": "sridhar320076",
+    "year_level": "III",
+    "department_id": 1,
     "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
     },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/AQDHAS/",
-    "username": "AQDHAS",
-    "college_rank": 292,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/sridhar320076/",
     "stats": {
-      "total_solved": 217,
-      "easy_solved": 129,
-      "medium_solved": 65,
-      "hard_solved": 23,
-      "contest_rating": 1355.0,
+      "total_solved": 265,
+      "easy_solved": 90,
+      "medium_solved": 136,
+      "hard_solved": 39,
+      "contest_rating": 1459.0,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:42:04.108317"
+    },
+    "streak_count": 2,
+    "college_rank": 42,
+    "dept_rank": 33,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
-    "id": 301,
-    "reg_no": "23CI038",
-    "name": "PRABHAKARAN . S",
-    "email": "",
+    "id": 13,
+    "name": "DHANUSHYA G K",
+    "reg_no": "732224CC005",
+    "username": "dhanu2006",
+    "year_level": "III",
+    "department_id": 1,
     "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
     },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/Prabha_1503/",
-    "username": "Prabha_1503",
-    "college_rank": 293,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/dhanu2006/",
     "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 302,
-    "reg_no": "23CI044",
-    "name": "RAVI BHARATHI.J",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/ravi_bharathi509/",
-    "username": "ravi_bharathi509",
-    "college_rank": 294,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 205,
-      "easy_solved": 156,
-      "medium_solved": 48,
-      "hard_solved": 1,
-      "contest_rating": 1410.0,
+      "total_solved": 264,
+      "easy_solved": 98,
+      "medium_solved": 132,
+      "hard_solved": 34,
+      "contest_rating": 1412.7,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:41:53.822613"
+    },
+    "streak_count": 7,
+    "college_rank": 43,
+    "dept_rank": 34,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
   },
   {
-    "id": 303,
-    "reg_no": "23CI046",
-    "name": "ROHITH T",
-    "email": "",
+    "id": 40,
+    "name": "NITHIN S",
+    "reg_no": "732224CC033",
+    "username": "nithin_31_",
+    "year_level": "III",
+    "department_id": 1,
     "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
     },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "",
-    "username": "",
-    "college_rank": 295,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/nithin_31_/",
     "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 304,
-    "reg_no": "23CI050",
-    "name": "SATHISHKUMAR.S",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "",
-    "username": "",
-    "college_rank": 296,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 0,
-      "easy_solved": 0,
-      "medium_solved": 0,
-      "hard_solved": 0,
-      "contest_rating": null,
-      "status": "pending",
-      "sync_status": "pending"
-    }
-  },
-  {
-    "id": 305,
-    "reg_no": "23CI053",
-    "name": "SUJITH K",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
-    },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/sujith2006/",
-    "username": "sujith2006",
-    "college_rank": 297,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 17,
-      "easy_solved": 13,
-      "medium_solved": 4,
-      "hard_solved": 0,
-      "contest_rating": 1372.8,
+      "total_solved": 264,
+      "easy_solved": 114,
+      "medium_solved": 110,
+      "hard_solved": 40,
+      "contest_rating": 1360.9,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
-  },
-  {
-    "id": 306,
-    "reg_no": "23CI055",
-    "name": "G THEJASWINI",
-    "email": "",
-    "department": {
-      "id": 2,
-      "name": "Computer Science and Engineering (IoT)",
-      "code": "CSE(IOT)"
+      "last_verified_at": "2026-08-20T02:41:58.911049"
     },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/thejaswini_10/",
-    "username": "thejaswini_10",
-    "college_rank": 298,
+    "streak_count": 2,
+    "college_rank": 43,
+    "dept_rank": 34,
     "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
-    "stats": {
-      "total_solved": 224,
-      "easy_solved": 71,
-      "medium_solved": 120,
-      "hard_solved": 33,
-      "contest_rating": 1539.9,
-      "status": "verified",
-      "sync_status": "success"
-    }
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
   },
   {
     "id": 307,
-    "reg_no": "23CI058",
     "name": "VICHITHRA.V",
-    "email": "",
+    "reg_no": "23CI058",
+    "username": "VichithraVelusamy",
+    "year_level": "IV",
+    "department_id": 2,
     "department": {
       "id": 2,
       "name": "Computer Science and Engineering (IoT)",
       "code": "CSE(IOT)"
     },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
-    },
-    "leetcode_url": "https://leetcode.com/u/VichithraVelusamy/",
-    "username": "VichithraVelusamy",
-    "college_rank": 299,
-    "weekly_progress": 0,
-    "streak_count": 0,
-    "consistency_score": 0.0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/VichithraVelusamy/",
     "stats": {
       "total_solved": 263,
       "easy_solved": 98,
       "medium_solved": 142,
       "hard_solved": 23,
       "contest_rating": 1634.9,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:15:24.438786"
+    },
+    "streak_count": 4,
+    "college_rank": 45,
+    "dept_rank": 10,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   },
   {
-    "id": 308,
-    "reg_no": "23CI001",
-    "name": "AAKASH SHIVA KB",
-    "email": "",
+    "id": 41,
+    "name": "NIVETHYTHA JR R",
+    "reg_no": "732224CC034",
+    "username": "Nivethytha0704",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Nivethytha0704/",
+    "stats": {
+      "total_solved": 261,
+      "easy_solved": 84,
+      "medium_solved": 133,
+      "hard_solved": 44,
+      "contest_rating": 1355.2,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:58.913290"
+    },
+    "streak_count": 1,
+    "college_rank": 46,
+    "dept_rank": 36,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 53,
+    "name": "SHANMUGA PRIYA J",
+    "reg_no": "732224CC046",
+    "username": "Priya_1410",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Priya_1410/",
+    "stats": {
+      "total_solved": 256,
+      "easy_solved": 91,
+      "medium_solved": 133,
+      "hard_solved": 32,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:01.146212"
+    },
+    "streak_count": 12,
+    "college_rank": 47,
+    "dept_rank": 37,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 241,
+    "name": "JESRA BEGAM ABDUL RAHUMAN",
+    "reg_no": "732224CI015",
+    "username": "jesra005",
+    "year_level": "III",
+    "department_id": 2,
     "department": {
       "id": 2,
       "name": "Computer Science and Engineering (IoT)",
       "code": "CSE(IOT)"
     },
-    "department_id": 2,
-    "year_level": "IV",
-    "section": {
-      "name": "A"
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/jesra005/",
+    "stats": {
+      "total_solved": 235,
+      "easy_solved": 87,
+      "medium_solved": 109,
+      "hard_solved": 39,
+      "contest_rating": 1515.4,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:45.270003"
     },
-    "leetcode_url": "https://leetcode.com/u/aakashshiva/",
-    "username": "aakashshiva",
-    "college_rank": 300,
+    "streak_count": 14,
+    "college_rank": 48,
+    "dept_rank": 11,
     "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 300,
+    "name": "MOHAMED AQDHAS U",
+    "reg_no": "23CI034",
+    "username": "AQDHAS",
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/AQDHAS/",
+    "stats": {
+      "total_solved": 226,
+      "easy_solved": 136,
+      "medium_solved": 66,
+      "hard_solved": 24,
+      "contest_rating": 1355.0,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:21.678880"
+    },
+    "streak_count": 61,
+    "college_rank": 49,
+    "dept_rank": 12,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 306,
+    "name": "G THEJASWINI",
+    "reg_no": "23CI055",
+    "username": "thejaswini_10",
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/thejaswini_10/",
+    "stats": {
+      "total_solved": 224,
+      "easy_solved": 71,
+      "medium_solved": 120,
+      "hard_solved": 33,
+      "contest_rating": 1539.9,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:23.872279"
+    },
+    "streak_count": 1,
+    "college_rank": 50,
+    "dept_rank": 13,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 31,
+    "name": "LAKSANA S",
+    "reg_no": "732224CC023",
+    "username": "Laksana_Subramanian",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Laksana_Subramanian/",
+    "stats": {
+      "total_solved": 222,
+      "easy_solved": 79,
+      "medium_solved": 109,
+      "hard_solved": 34,
+      "contest_rating": 1504.1,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:57.686861"
+    },
+    "streak_count": 8,
+    "college_rank": 51,
+    "dept_rank": 38,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 9,
+    "name": "AJAY A",
+    "reg_no": "732224CC001",
+    "username": "Ajay_a1277",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Ajay_a1277/",
+    "stats": {
+      "total_solved": 216,
+      "easy_solved": 69,
+      "medium_solved": 120,
+      "hard_solved": 27,
+      "contest_rating": 1355.3,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:53.791131"
+    },
     "streak_count": 0,
-    "consistency_score": 0.0,
+    "college_rank": 52,
+    "dept_rank": 39,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "0 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 63,
+    "name": "VIGNESH T",
+    "reg_no": "732224CC056",
+    "username": "vignesh_1112",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/vignesh_1112/",
+    "stats": {
+      "total_solved": 214,
+      "easy_solved": 81,
+      "medium_solved": 103,
+      "hard_solved": 30,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:03.204597"
+    },
+    "streak_count": 0,
+    "college_rank": 53,
+    "dept_rank": 40,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 16,
+    "name": "DHARUNRAJ K P",
+    "reg_no": "732224CC008",
+    "username": "K_P_DHARUNRAJ",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/K_P_DHARUNRAJ/",
+    "stats": {
+      "total_solved": 213,
+      "easy_solved": 84,
+      "medium_solved": 98,
+      "hard_solved": 31,
+      "contest_rating": 1551.2,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:53.841132"
+    },
+    "streak_count": 2,
+    "college_rank": 54,
+    "dept_rank": 41,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 291,
+    "name": "JAYASURYA P",
+    "reg_no": "23CI018",
+    "username": "Jayasurya-619",
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Jayasurya-619/",
+    "stats": {
+      "total_solved": 209,
+      "easy_solved": 132,
+      "medium_solved": 62,
+      "hard_solved": 15,
+      "contest_rating": 1360.3,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:16.789137"
+    },
+    "streak_count": 1,
+    "college_rank": 55,
+    "dept_rank": 14,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 295,
+    "name": "KARUNYA C",
+    "reg_no": "23CI025",
+    "username": "sivakarunya",
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/sivakarunya/",
+    "stats": {
+      "total_solved": 209,
+      "easy_solved": 96,
+      "medium_solved": 92,
+      "hard_solved": 21,
+      "contest_rating": 1573.6,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:19.194546"
+    },
+    "streak_count": 0,
+    "college_rank": 55,
+    "dept_rank": 14,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 302,
+    "name": "RAVI BHARATHI.J",
+    "reg_no": "23CI044",
+    "username": "ravi_bharathi509",
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/ravi_bharathi509/",
+    "stats": {
+      "total_solved": 205,
+      "easy_solved": 156,
+      "medium_solved": 48,
+      "hard_solved": 1,
+      "contest_rating": 1410.0,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:22.748485"
+    },
+    "streak_count": 1,
+    "college_rank": 57,
+    "dept_rank": 16,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 15,
+    "name": "DHARSHINI S M",
+    "reg_no": "732224CC007",
+    "username": "Dharshini90989",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Dharshini90989/",
+    "stats": {
+      "total_solved": 204,
+      "easy_solved": 68,
+      "medium_solved": 106,
+      "hard_solved": 30,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:53.835340"
+    },
+    "streak_count": 6,
+    "college_rank": 58,
+    "dept_rank": 42,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 287,
+    "name": "GOWCIKA U",
+    "reg_no": "23CI012",
+    "username": "Gowcika",
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Gowcika/",
+    "stats": {
+      "total_solved": 204,
+      "easy_solved": 98,
+      "medium_solved": 91,
+      "hard_solved": 15,
+      "contest_rating": 1714.2,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:14.493502"
+    },
+    "streak_count": 1,
+    "college_rank": 58,
+    "dept_rank": 17,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 48,
+    "name": "RITHIKA J",
+    "reg_no": "732224CC041",
+    "username": "Rithu16122006",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Rithu16122006/",
+    "stats": {
+      "total_solved": 198,
+      "easy_solved": 61,
+      "medium_solved": 103,
+      "hard_solved": 34,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:00.061031"
+    },
+    "streak_count": 1,
+    "college_rank": 60,
+    "dept_rank": 43,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 50,
+    "name": "SABARI N",
+    "reg_no": "732224CC043",
+    "username": "sabari43",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/sabari43/",
+    "stats": {
+      "total_solved": 198,
+      "easy_solved": 70,
+      "medium_solved": 97,
+      "hard_solved": 31,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:00.469820"
+    },
+    "streak_count": 1,
+    "college_rank": 60,
+    "dept_rank": 43,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 43,
+    "name": "PRASATH R",
+    "reg_no": "732224CC036",
+    "username": "prasath00156",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/prasath00156/",
+    "stats": {
+      "total_solved": 191,
+      "easy_solved": 56,
+      "medium_solved": 101,
+      "hard_solved": 34,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:59.031004"
+    },
+    "streak_count": 1,
+    "college_rank": 62,
+    "dept_rank": 45,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 51,
+    "name": "SAKTHI S",
+    "reg_no": "732224CC044",
+    "username": "s8oyP1SH73",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-17T15:10:29.001125"
+    },
+    "streak_count": 1,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 69,
+    "name": "SARAN.R",
+    "reg_no": "732224CCL02",
+    "username": "Saranraj_2580",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Saranraj_2580/",
+    "stats": {
+      "total_solved": 187,
+      "easy_solved": 57,
+      "medium_solved": 103,
+      "hard_solved": 27,
+      "contest_rating": 1392.0,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:03.789863"
+    },
+    "streak_count": 1,
+    "college_rank": 63,
+    "dept_rank": 46,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 242,
+    "name": "KABILESH R",
+    "reg_no": "732224CI016",
+    "username": "kabilesh_7",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/kabilesh_7/",
+    "stats": {
+      "total_solved": 186,
+      "easy_solved": 64,
+      "medium_solved": 95,
+      "hard_solved": 27,
+      "contest_rating": 1363.6,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:45.730501"
+    },
+    "streak_count": 7,
+    "college_rank": 65,
+    "dept_rank": 18,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 23,
+    "name": "HARISH N",
+    "reg_no": "732224CC015",
+    "username": "Har-ish23",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Har-ish23/",
+    "stats": {
+      "total_solved": 185,
+      "easy_solved": 83,
+      "medium_solved": 84,
+      "hard_solved": 18,
+      "contest_rating": 1367.8,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:56.071856"
+    },
+    "streak_count": 0,
+    "college_rank": 66,
+    "dept_rank": 48,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 257,
+    "name": "NAVEEN R",
+    "reg_no": "732224CI033",
+    "username": "naveen2501",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/naveen2501/",
+    "stats": {
+      "total_solved": 185,
+      "easy_solved": 62,
+      "medium_solved": 97,
+      "hard_solved": 26,
+      "contest_rating": 1533.3,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:55.491937"
+    },
+    "streak_count": 1,
+    "college_rank": 66,
+    "dept_rank": 19,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 296,
+    "name": "KAVI ISHWARRYA S K",
+    "reg_no": "23CI027",
+    "username": "s9hXtuAA2E",
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/s9hXtuAA2E/",
+    "stats": {
+      "total_solved": 184,
+      "easy_solved": 71,
+      "medium_solved": 111,
+      "hard_solved": 2,
+      "contest_rating": 1623.0,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:20.108066"
+    },
+    "streak_count": 3,
+    "college_rank": 68,
+    "dept_rank": 20,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 44,
+    "name": "PRITHIKA P",
+    "reg_no": "732224CC037",
+    "username": "Pritss2206",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Pritss2206/",
+    "stats": {
+      "total_solved": 184,
+      "easy_solved": 67,
+      "medium_solved": 90,
+      "hard_solved": 27,
+      "contest_rating": 1508.5,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:59.054391"
+    },
+    "streak_count": 0,
+    "college_rank": 68,
+    "dept_rank": 49,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 66,
+    "name": "YURJEEN J",
+    "reg_no": "732224CC059",
+    "username": "Yurjeen26",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Yurjeen26/",
+    "stats": {
+      "total_solved": 175,
+      "easy_solved": 60,
+      "medium_solved": 85,
+      "hard_solved": 30,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:03.572985"
+    },
+    "streak_count": 1,
+    "college_rank": 70,
+    "dept_rank": 50,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 283,
+    "name": "BHUVANADHARSHINI C",
+    "reg_no": "23CI004",
+    "username": "Bhuvanadharshini",
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Bhuvanadharshini/",
+    "stats": {
+      "total_solved": 168,
+      "easy_solved": 82,
+      "medium_solved": 71,
+      "hard_solved": 15,
+      "contest_rating": 1521.3,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:12.472753"
+    },
+    "streak_count": 2,
+    "college_rank": 71,
+    "dept_rank": 21,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 29,
+    "name": "KIRUTHIKAA P T",
+    "reg_no": "732224CC021",
+    "username": "success_lover_01",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-18T02:31:14.740649"
+    },
+    "streak_count": 6,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 11,
+    "name": "ANUSHKUMAR R",
+    "reg_no": "732224CC003",
+    "username": "anushkumar_06",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/anushkumar_06/",
+    "stats": {
+      "total_solved": 165,
+      "easy_solved": 62,
+      "medium_solved": 90,
+      "hard_solved": 13,
+      "contest_rating": 1368.0,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:53.810723"
+    },
+    "streak_count": 0,
+    "college_rank": 73,
+    "dept_rank": 52,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 17,
+    "name": "GIRIPATHI K",
+    "reg_no": "732224CC009",
+    "username": "Giripathi_k",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Giripathi_k/",
+    "stats": {
+      "total_solved": 164,
+      "easy_solved": 62,
+      "medium_solved": 78,
+      "hard_solved": 24,
+      "contest_rating": 1533.2,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:55.255556"
+    },
+    "streak_count": 1,
+    "college_rank": 75,
+    "dept_rank": 53,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 278,
+    "name": "SUSIDHARAN S",
+    "reg_no": "732224CI054",
+    "username": "susidharan_21",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/susidharan_21/",
+    "stats": {
+      "total_solved": 162,
+      "easy_solved": 43,
+      "medium_solved": 92,
+      "hard_solved": 27,
+      "contest_rating": 1414.6,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:08.646284"
+    },
+    "streak_count": 2,
+    "college_rank": 74,
+    "dept_rank": 22,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 42,
+    "name": "POOMITHA KS",
+    "reg_no": "732224CC035",
+    "username": "sahasri_04",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-17T15:10:27.927568"
+    },
+    "streak_count": 2,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 59,
+    "name": "SUPRIYA K",
+    "reg_no": "732224CC052",
+    "username": "SUPRIYA_2601",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/SUPRIYA_2601/",
+    "stats": {
+      "total_solved": 158,
+      "easy_solved": 62,
+      "medium_solved": 77,
+      "hard_solved": 19,
+      "contest_rating": 1353.9,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:02.430662"
+    },
+    "streak_count": 0,
+    "college_rank": 75,
+    "dept_rank": 53,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 18,
+    "name": "GOKUL P",
+    "reg_no": "732224CC010",
+    "username": "gokul_5405",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/gokul_5405/",
+    "stats": {
+      "total_solved": 156,
+      "easy_solved": 64,
+      "medium_solved": 73,
+      "hard_solved": 19,
+      "contest_rating": 1459.0,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:55.923094"
+    },
+    "streak_count": 1,
+    "college_rank": 78,
+    "dept_rank": 56,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 217,
+    "name": "PRAVEEN VENKATESH A",
+    "reg_no": "23CC039",
+    "username": "pravexn",
+    "year_level": "IV",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/pravexn/",
+    "stats": {
+      "total_solved": 154,
+      "easy_solved": 75,
+      "medium_solved": 71,
+      "hard_solved": 8,
+      "contest_rating": 1453.4,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:30.577307"
+    },
+    "streak_count": 1,
+    "college_rank": 79,
+    "dept_rank": 57,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 70,
+    "name": "SHREE SANJAY U K",
+    "reg_no": "732224CCL03",
+    "username": "shreesanjay",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/shreesanjay/",
+    "stats": {
+      "total_solved": 152,
+      "easy_solved": 47,
+      "medium_solved": 78,
+      "hard_solved": 27,
+      "contest_rating": 1516.0,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:03.795710"
+    },
+    "streak_count": 1,
+    "college_rank": 80,
+    "dept_rank": 58,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 271,
+    "name": "RUPESH S NAIR",
+    "reg_no": "732224CI047",
+    "username": "Rupesh_08nair_20",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Rupesh_08nair_20/",
+    "stats": {
+      "total_solved": 151,
+      "easy_solved": 41,
+      "medium_solved": 90,
+      "hard_solved": 20,
+      "contest_rating": 1414.6,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:03.931382"
+    },
+    "streak_count": 2,
+    "college_rank": 81,
+    "dept_rank": 23,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 55,
+    "name": "SOWMIYA S",
+    "reg_no": "732224CC048",
+    "username": "DjyWNuZj4N",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-17T15:10:29.295067"
+    },
+    "streak_count": 1,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 61,
+    "name": "VARSHINI DEVI K",
+    "reg_no": "732224CC054",
+    "username": "varshini_devi2006",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/varshini_devi2006/",
+    "stats": {
+      "total_solved": 148,
+      "easy_solved": 60,
+      "medium_solved": 77,
+      "hard_solved": 11,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:02.705365"
+    },
+    "streak_count": 1,
+    "college_rank": 83,
+    "dept_rank": 60,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "0 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 25,
+    "name": "JANANI S",
+    "reg_no": "732224CC017",
+    "username": "_itz_pretty",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-18T02:31:14.431590"
+    },
+    "streak_count": 1,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 20,
+    "name": "HARIHARAN S V",
+    "reg_no": "732224CC012",
+    "username": "x8ggzaR6Gx",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/x8ggzaR6Gx/",
+    "stats": {
+      "total_solved": 139,
+      "easy_solved": 43,
+      "medium_solved": 74,
+      "hard_solved": 22,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:56.028697"
+    },
+    "streak_count": 1,
+    "college_rank": 85,
+    "dept_rank": 62,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 10,
+    "name": "AMRUTHA M",
+    "reg_no": "732224CC002",
+    "username": "Ammu1927",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-18T02:31:10.311155"
+    },
+    "streak_count": 1,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 28,
+    "name": "KARTHIKEYAN V",
+    "reg_no": "732224CC020",
+    "username": "karthi_2007",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/karthi_2007/",
+    "stats": {
+      "total_solved": 138,
+      "easy_solved": 35,
+      "medium_solved": 76,
+      "hard_solved": 27,
+      "contest_rating": 1469.4,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:57.409828"
+    },
+    "streak_count": 1,
+    "college_rank": 86,
+    "dept_rank": 63,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 12,
+    "name": "BHARATH G",
+    "reg_no": "732224CC004",
+    "username": "BHARATH1927",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/BHARATH1927/",
+    "stats": {
+      "total_solved": 137,
+      "easy_solved": 39,
+      "medium_solved": 78,
+      "hard_solved": 20,
+      "contest_rating": 1303.9,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:53.816685"
+    },
+    "streak_count": 8,
+    "college_rank": 88,
+    "dept_rank": 65,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 60,
+    "name": "SURESH S",
+    "reg_no": "732224CC053",
+    "username": "suresh11092006",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/suresh11092006/",
+    "stats": {
+      "total_solved": 135,
+      "easy_solved": 46,
+      "medium_solved": 74,
+      "hard_solved": 15,
+      "contest_rating": 1336.4,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:02.521900"
+    },
+    "streak_count": 0,
+    "college_rank": 89,
+    "dept_rank": 66,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 299,
+    "name": "KEERTHANA.K",
+    "reg_no": "23CI030",
+    "username": "K_KEERTHANA_",
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/K_KEERTHANA_/",
+    "stats": {
+      "total_solved": 133,
+      "easy_solved": 71,
+      "medium_solved": 55,
+      "hard_solved": 7,
+      "contest_rating": 1748.1,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:21.134881"
+    },
+    "streak_count": 2,
+    "college_rank": 90,
+    "dept_rank": 24,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 256,
+    "name": "NAVEEN KUMAR D",
+    "reg_no": "732224CI032",
+    "username": "naveenkumar1713",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/naveenkumar1713/",
+    "stats": {
+      "total_solved": 133,
+      "easy_solved": 32,
+      "medium_solved": 80,
+      "hard_solved": 21,
+      "contest_rating": 1388.5,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:55.026651"
+    },
+    "streak_count": 1,
+    "college_rank": 90,
+    "dept_rank": 24,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 64,
+    "name": "VISHAANTH M B",
+    "reg_no": "732224CC057",
+    "username": "vishaanth0007",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/vishaanth0007/",
+    "stats": {
+      "total_solved": 131,
+      "easy_solved": 32,
+      "medium_solved": 73,
+      "hard_solved": 26,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:03.370718"
+    },
+    "streak_count": 1,
+    "college_rank": 92,
+    "dept_rank": 67,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 26,
+    "name": "JAYAPRAKASH S",
+    "reg_no": "732224CC018",
+    "username": "jayaprakash2007",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/jayaprakash2007/",
+    "stats": {
+      "total_solved": 129,
+      "easy_solved": 50,
+      "medium_solved": 66,
+      "hard_solved": 13,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:57.308895"
+    },
+    "streak_count": 0,
+    "college_rank": 93,
+    "dept_rank": 68,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 258,
+    "name": "NISHA S",
+    "reg_no": "732224CI034",
+    "username": "Nisha_Sivakumar",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Nisha_Sivakumar/",
+    "stats": {
+      "total_solved": 129,
+      "easy_solved": 53,
+      "medium_solved": 64,
+      "hard_solved": 12,
+      "contest_rating": 1586.4,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:55.951643"
+    },
+    "streak_count": 2,
+    "college_rank": 93,
+    "dept_rank": 26,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 36,
+    "name": "MANOJ KUMAR C",
+    "reg_no": "732224CC028",
+    "username": "ManojKumar2315",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/ManojKumar2315/",
+    "stats": {
+      "total_solved": 126,
+      "easy_solved": 38,
+      "medium_solved": 68,
+      "hard_solved": 20,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:58.502898"
+    },
+    "streak_count": 1,
+    "college_rank": 95,
+    "dept_rank": 69,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 273,
+    "name": "SANJAY G",
+    "reg_no": "732224CI049",
+    "username": "sanjay_gireesh",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/sanjay_gireesh/",
+    "stats": {
+      "total_solved": 126,
+      "easy_solved": 26,
+      "medium_solved": 78,
+      "hard_solved": 22,
+      "contest_rating": 1414.6,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:04.887625"
+    },
+    "streak_count": 1,
+    "college_rank": 95,
+    "dept_rank": 27,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 22,
+    "name": "HARISH KUMAAR S",
+    "reg_no": "732224CC014",
+    "username": "HarishVichu",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/HarishVichu/",
+    "stats": {
+      "total_solved": 123,
+      "easy_solved": 40,
+      "medium_solved": 61,
+      "hard_solved": 22,
+      "contest_rating": 1429.4,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:56.039634"
+    },
+    "streak_count": 1,
+    "college_rank": 97,
+    "dept_rank": 70,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 52,
+    "name": "SHANDEESH R P",
+    "reg_no": "732224CC045",
+    "username": "shandeeshrp",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/shandeeshrp/",
+    "stats": {
+      "total_solved": 123,
+      "easy_solved": 59,
+      "medium_solved": 58,
+      "hard_solved": 6,
+      "contest_rating": 1356.2,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:01.139396"
+    },
+    "streak_count": 1,
+    "college_rank": 97,
+    "dept_rank": 70,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 14,
+    "name": "DHARSHINI A M",
+    "reg_no": "732224CC006",
+    "username": "DHARSHINI_1605",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/DHARSHINI_1605/",
+    "stats": {
+      "total_solved": 121,
+      "easy_solved": 53,
+      "medium_solved": 55,
+      "hard_solved": 13,
+      "contest_rating": 1456.8,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:53.827580"
+    },
+    "streak_count": 1,
+    "college_rank": 99,
+    "dept_rank": 72,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 67,
+    "name": "YUVANESH S",
+    "reg_no": "732224CC060",
+    "username": "V0mg69rzpB",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/V0mg69rzpB/",
+    "stats": {
+      "total_solved": 120,
+      "easy_solved": 43,
+      "medium_solved": 63,
+      "hard_solved": 14,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:03.580938"
+    },
+    "streak_count": 1,
+    "college_rank": 100,
+    "dept_rank": 73,
+    "weekly_progress": 0,
     "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_score": 0,
-    "contest_rank": null,
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 260,
+    "name": "PAVITHRAA M",
+    "reg_no": "732224CI036",
+    "username": "pavithraa_28",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/pavithraa_28/",
+    "stats": {
+      "total_solved": 118,
+      "easy_solved": 26,
+      "medium_solved": 72,
+      "hard_solved": 20,
+      "contest_rating": 1382.7,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:58.228017"
+    },
+    "streak_count": 2,
+    "college_rank": 100,
+    "dept_rank": 28,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 224,
+    "name": "SRIVIDHYA S",
+    "reg_no": "23CC050",
+    "username": "SRIVIDHYA_25",
+    "year_level": "IV",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/SRIVIDHYA_25/",
+    "stats": {
+      "total_solved": 118,
+      "easy_solved": 49,
+      "medium_solved": 59,
+      "hard_solved": 10,
+      "contest_rating": 1460.7,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:35.557845"
+    },
+    "streak_count": 1,
+    "college_rank": 100,
+    "dept_rank": 73,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 308,
+    "name": "AAKASH SHIVA KB",
+    "reg_no": "23CI001",
+    "username": "aakashshiva",
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/aakashshiva/",
     "stats": {
       "total_solved": 116,
       "easy_solved": 75,
       "medium_solved": 39,
       "hard_solved": 2,
       "contest_rating": 1538.4,
+      "sync_status": "success",
       "status": "verified",
-      "sync_status": "success"
-    }
+      "last_verified_at": "2026-08-20T02:15:25.618171"
+    },
+    "streak_count": 1,
+    "college_rank": 103,
+    "dept_rank": 29,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 259,
+    "name": "NISHANTH S",
+    "reg_no": "732224CI035",
+    "username": "sivanishanth2006",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/sivanishanth2006/",
+    "stats": {
+      "total_solved": 115,
+      "easy_solved": 32,
+      "medium_solved": 73,
+      "hard_solved": 10,
+      "contest_rating": 1470.9,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:57.218616"
+    },
+    "streak_count": 7,
+    "college_rank": 104,
+    "dept_rank": 30,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 239,
+    "name": "HARISH S",
+    "reg_no": "732224CI013",
+    "username": "Harish_48",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Harish_48/",
+    "stats": {
+      "total_solved": 114,
+      "easy_solved": 24,
+      "medium_solved": 74,
+      "hard_solved": 16,
+      "contest_rating": 1400.5,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:44.341594"
+    },
+    "streak_count": 1,
+    "college_rank": 105,
+    "dept_rank": 31,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 27,
+    "name": "JAYASURYA S",
+    "reg_no": "732224CC019",
+    "username": "Surya1231172",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Surya1231172/",
+    "stats": {
+      "total_solved": 113,
+      "easy_solved": 46,
+      "medium_solved": 57,
+      "hard_solved": 10,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:57.407682"
+    },
+    "streak_count": 0,
+    "college_rank": 106,
+    "dept_rank": 75,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 277,
+    "name": "SUDHARSHAN J",
+    "reg_no": "732224CI053",
+    "username": "_sudharshan_J",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/_sudharshan_J/",
+    "stats": {
+      "total_solved": 111,
+      "easy_solved": 26,
+      "medium_solved": 67,
+      "hard_solved": 18,
+      "contest_rating": 1407.3,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:08.136330"
+    },
+    "streak_count": 2,
+    "college_rank": 107,
+    "dept_rank": 32,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 62,
+    "name": "VEDHASREE P",
+    "reg_no": "732224CC055",
+    "username": "vedhasree_2006",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/vedhasree_2006/",
+    "stats": {
+      "total_solved": 111,
+      "easy_solved": 46,
+      "medium_solved": 56,
+      "hard_solved": 9,
+      "contest_rating": 1473.5,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:02.769468"
+    },
+    "streak_count": 0,
+    "college_rank": 107,
+    "dept_rank": 76,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 249,
+    "name": "MADHANRAJ A",
+    "reg_no": "732224CI024",
+    "username": "madhan_11_",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/madhan_11_/",
+    "stats": {
+      "total_solved": 106,
+      "easy_solved": 26,
+      "medium_solved": 64,
+      "hard_solved": 16,
+      "contest_rating": 1289.9,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:49.329002"
+    },
+    "streak_count": 1,
+    "college_rank": 109,
+    "dept_rank": 33,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 262,
+    "name": "PRAVEEN S",
+    "reg_no": "732224CI038",
+    "username": "praveen__13",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/praveen__13/",
+    "stats": {
+      "total_solved": 106,
+      "easy_solved": 27,
+      "medium_solved": 63,
+      "hard_solved": 16,
+      "contest_rating": 1389.2,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:59.358622"
+    },
+    "streak_count": 2,
+    "college_rank": 109,
+    "dept_rank": 33,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 261,
+    "name": "PRAJIN SANKAR A U",
+    "reg_no": "732224CI037",
+    "username": "PrajinSankar",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/PrajinSankar/",
+    "stats": {
+      "total_solved": 105,
+      "easy_solved": 38,
+      "medium_solved": 55,
+      "hard_solved": 12,
+      "contest_rating": 1355.4,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:58.687659"
+    },
+    "streak_count": 1,
+    "college_rank": 111,
+    "dept_rank": 35,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 276,
+    "name": "SUDHARSAN B",
+    "reg_no": "732224CI052",
+    "username": "sudharsanbalsubramaniyam",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/sudharsanbalsubramaniyam/",
+    "stats": {
+      "total_solved": 103,
+      "easy_solved": 30,
+      "medium_solved": 60,
+      "hard_solved": 13,
+      "contest_rating": 1351.8,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:07.666402"
+    },
+    "streak_count": 0,
+    "college_rank": 112,
+    "dept_rank": 36,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 275,
+    "name": "SIDDAESHWAR K",
+    "reg_no": "732224CI051",
+    "username": "siddaesh_siddu",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/siddaesh_siddu/",
+    "stats": {
+      "total_solved": 102,
+      "easy_solved": 30,
+      "medium_solved": 52,
+      "hard_solved": 20,
+      "contest_rating": 1356.2,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:07.154802"
+    },
+    "streak_count": 0,
+    "college_rank": 113,
+    "dept_rank": 37,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 129,
+    "name": "SWETHA JAYASIKA P",
+    "reg_no": "732225CC058",
+    "username": "aUkFZZq7AJ",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/aUkFZZq7AJ/",
+    "stats": {
+      "total_solved": 98,
+      "easy_solved": 55,
+      "medium_solved": 36,
+      "hard_solved": 7,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:32.259963"
+    },
+    "streak_count": 0,
+    "college_rank": 114,
+    "dept_rank": 77,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 56,
+    "name": "SRISELVAN P",
+    "reg_no": "732224CC049",
+    "username": "SriselvanP",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/SriselvanP/",
+    "stats": {
+      "total_solved": 97,
+      "easy_solved": 41,
+      "medium_solved": 50,
+      "hard_solved": 6,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:02.179046"
+    },
+    "streak_count": 1,
+    "college_rank": 115,
+    "dept_rank": 78,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 248,
+    "name": "MADHANKUMAR K",
+    "reg_no": "732224CI023",
+    "username": "_madan_km_",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/_madan_km_/",
+    "stats": {
+      "total_solved": 95,
+      "easy_solved": 30,
+      "medium_solved": 50,
+      "hard_solved": 15,
+      "contest_rating": 1414.6,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:48.758495"
+    },
+    "streak_count": 1,
+    "college_rank": 119,
+    "dept_rank": 40,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 247,
+    "name": "LOGESH M S",
+    "reg_no": "732224CI022",
+    "username": "Logesh_1204_",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Logesh_1204_/",
+    "stats": {
+      "total_solved": 93,
+      "easy_solved": 24,
+      "medium_solved": 64,
+      "hard_solved": 5,
+      "contest_rating": 1411.7,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:48.258631"
+    },
+    "streak_count": 1,
+    "college_rank": 116,
+    "dept_rank": 38,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 270,
+    "name": "ROJASRI S",
+    "reg_no": "732224CI046",
+    "username": "Rojasri_007_",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Rojasri_007_/",
+    "stats": {
+      "total_solved": 93,
+      "easy_solved": 23,
+      "medium_solved": 59,
+      "hard_solved": 11,
+      "contest_rating": 1453.1,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:03.453776"
+    },
+    "streak_count": 1,
+    "college_rank": 116,
+    "dept_rank": 38,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 58,
+    "name": "SUBASH MURUGAN S",
+    "reg_no": "732224CC051",
+    "username": "subashmurugan212",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/subashmurugan212/",
+    "stats": {
+      "total_solved": 93,
+      "easy_solved": 42,
+      "medium_solved": 44,
+      "hard_solved": 7,
+      "contest_rating": 1379.3,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:02.423443"
+    },
+    "streak_count": 0,
+    "college_rank": 116,
+    "dept_rank": 79,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 19,
+    "name": "HARDIKA M",
+    "reg_no": "732224CC011",
+    "username": "hardi22011",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/hardi22011/",
+    "stats": {
+      "total_solved": 91,
+      "easy_solved": 24,
+      "medium_solved": 48,
+      "hard_solved": 19,
+      "contest_rating": 1355.9,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:56.025305"
+    },
+    "streak_count": 0,
+    "college_rank": 119,
+    "dept_rank": 80,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 89,
+    "name": "JANARTHANAN R",
+    "reg_no": "732225CC018",
+    "username": "jana777",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/jana777/",
+    "stats": {
+      "total_solved": 91,
+      "easy_solved": 26,
+      "medium_solved": 50,
+      "hard_solved": 15,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:05.790088"
+    },
+    "streak_count": 0,
+    "college_rank": 119,
+    "dept_rank": 80,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 298,
+    "name": "KAVIYARASU S",
+    "reg_no": "23CI029",
+    "username": "KAVIYARASU_S123",
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/KAVIYARASU_S123/",
+    "stats": {
+      "total_solved": 89,
+      "easy_solved": 43,
+      "medium_solved": 40,
+      "hard_solved": 6,
+      "contest_rating": 1679.8,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:20.690599"
+    },
+    "streak_count": 1,
+    "college_rank": 122,
+    "dept_rank": 41,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 279,
+    "name": "VELMURUGAN T",
+    "reg_no": "732224CI055",
+    "username": "vel_muruga_",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/vel_muruga_/",
+    "stats": {
+      "total_solved": 89,
+      "easy_solved": 23,
+      "medium_solved": 53,
+      "hard_solved": 13,
+      "contest_rating": 1414.6,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:09.288529"
+    },
+    "streak_count": 1,
+    "college_rank": 122,
+    "dept_rank": 41,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 234,
+    "name": "ANU SRI S",
+    "reg_no": "732224CI007",
+    "username": "anu_07",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/anu_07/",
+    "stats": {
+      "total_solved": 88,
+      "easy_solved": 22,
+      "medium_solved": 52,
+      "hard_solved": 14,
+      "contest_rating": 1414.6,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:41.963983"
+    },
+    "streak_count": 1,
+    "college_rank": 124,
+    "dept_rank": 43,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 272,
+    "name": "SAI SIDDHARDH S",
+    "reg_no": "732224CI048",
+    "username": "SaiSiddhardh_007",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/SaiSiddhardh_007/",
+    "stats": {
+      "total_solved": 88,
+      "easy_solved": 19,
+      "medium_solved": 58,
+      "hard_solved": 11,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:04.413979"
+    },
+    "streak_count": 0,
+    "college_rank": 124,
+    "dept_rank": 43,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 57,
+    "name": "SUBA SRI B",
+    "reg_no": "732224CC050",
+    "username": "suba_sri10",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/suba_sri10/",
+    "stats": {
+      "total_solved": 81,
+      "easy_solved": 32,
+      "medium_solved": 43,
+      "hard_solved": 6,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:02.343912"
+    },
+    "streak_count": 0,
+    "college_rank": 126,
+    "dept_rank": 82,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 281,
+    "name": "SOWMIYA K",
+    "reg_no": "732224CIR01",
+    "username": "sowmiya4306",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/sowmiya4306/",
+    "stats": {
+      "total_solved": 80,
+      "easy_solved": 18,
+      "medium_solved": 50,
+      "hard_solved": 12,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:11.181577"
+    },
+    "streak_count": 2,
+    "college_rank": 127,
+    "dept_rank": 45,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 232,
+    "name": "AISHWARYA E",
+    "reg_no": "732224CI005",
+    "username": "aishueswaran",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/aishueswaran/",
+    "stats": {
+      "total_solved": 78,
+      "easy_solved": 20,
+      "medium_solved": 48,
+      "hard_solved": 10,
+      "contest_rating": 1414.6,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:40.928817"
+    },
+    "streak_count": 1,
+    "college_rank": 128,
+    "dept_rank": 46,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 114,
+    "name": "ROKITHKISHOR R S",
+    "reg_no": "732225CC043",
+    "username": "ROKITHKISHOR",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/ROKITHKISHOR/",
+    "stats": {
+      "total_solved": 76,
+      "easy_solved": 41,
+      "medium_solved": 28,
+      "hard_solved": 7,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:08.878890"
+    },
+    "streak_count": 0,
+    "college_rank": 129,
+    "dept_rank": 83,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 263,
+    "name": "PREMKUMAR K",
+    "reg_no": "732224CI039",
+    "username": "Prem_kumar_karuna",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Prem_kumar_karuna/",
+    "stats": {
+      "total_solved": 75,
+      "easy_solved": 22,
+      "medium_solved": 42,
+      "hard_solved": 11,
+      "contest_rating": 1390.4,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:59.818430"
+    },
+    "streak_count": 2,
+    "college_rank": 130,
+    "dept_rank": 47,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 269,
+    "name": "ROHITH S",
+    "reg_no": "732224CI045",
+    "username": "Rohith_2006_S",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Rohith_2006_S/",
+    "stats": {
+      "total_solved": 75,
+      "easy_solved": 19,
+      "medium_solved": 46,
+      "hard_solved": 10,
+      "contest_rating": 1459.9,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:02.790594"
+    },
+    "streak_count": 0,
+    "college_rank": 130,
+    "dept_rank": 47,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 244,
+    "name": "KARTHEESHWAR T",
+    "reg_no": "732224CI018",
+    "username": "kartheeshwar",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/kartheeshwar/",
+    "stats": {
+      "total_solved": 73,
+      "easy_solved": 37,
+      "medium_solved": 34,
+      "hard_solved": 2,
+      "contest_rating": 1492.9,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:46.621897"
+    },
+    "streak_count": 1,
+    "college_rank": 132,
+    "dept_rank": 49,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 101,
+    "name": "MIDESH K P",
+    "reg_no": "732225CC030",
+    "username": "midesh_123",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/midesh_123/",
+    "stats": {
+      "total_solved": 71,
+      "easy_solved": 18,
+      "medium_solved": 41,
+      "hard_solved": 12,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:07.336175"
+    },
+    "streak_count": 1,
+    "college_rank": 133,
+    "dept_rank": 84,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 236,
+    "name": "DIVYA S",
+    "reg_no": "732224CI010",
+    "username": "divya_sd",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/divya_sd/",
+    "stats": {
+      "total_solved": 70,
+      "easy_solved": 25,
+      "medium_solved": 39,
+      "hard_solved": 6,
+      "contest_rating": 1375.1,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:42.772315"
+    },
+    "streak_count": 2,
+    "college_rank": 134,
+    "dept_rank": 50,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 233,
+    "name": "AKKSHAYAA K",
+    "reg_no": "732224CI006",
+    "username": "AkkshayaaK",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/AkkshayaaK/",
+    "stats": {
+      "total_solved": 69,
+      "easy_solved": 22,
+      "medium_solved": 42,
+      "hard_solved": 5,
+      "contest_rating": 1394.7,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:41.368819"
+    },
+    "streak_count": 0,
+    "college_rank": 135,
+    "dept_rank": 51,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 240,
+    "name": "JANANI PRIYA V",
+    "reg_no": "732224CI014",
+    "username": "janani_08_",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/janani_08_/",
+    "stats": {
+      "total_solved": 68,
+      "easy_solved": 21,
+      "medium_solved": 39,
+      "hard_solved": 8,
+      "contest_rating": 1355.3,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:44.798576"
+    },
+    "streak_count": 1,
+    "college_rank": 136,
+    "dept_rank": 52,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 140,
+    "name": "AARTHI R S",
+    "reg_no": "732225CI001",
+    "username": "aarthi-rs",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/aarthi-rs/",
+    "stats": {
+      "total_solved": 66,
+      "easy_solved": 19,
+      "medium_solved": 35,
+      "hard_solved": 12,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:37.424020"
+    },
+    "streak_count": 1,
+    "college_rank": 137,
+    "dept_rank": 53,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 116,
+    "name": "SAHANAJ BANU M",
+    "reg_no": "732225CC045",
+    "username": "sahanajbanu",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/sahanajbanu/",
+    "stats": {
+      "total_solved": 62,
+      "easy_solved": 47,
+      "medium_solved": 13,
+      "hard_solved": 2,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:09.452989"
+    },
+    "streak_count": 1,
+    "college_rank": 138,
+    "dept_rank": 85,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 109,
+    "name": "PRIYADHARSHINI D",
+    "reg_no": "732225CC038",
+    "username": "Priyaa_27",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Priyaa_27/",
+    "stats": {
+      "total_solved": 61,
+      "easy_solved": 51,
+      "medium_solved": 10,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:08.146530"
+    },
+    "streak_count": 1,
+    "college_rank": 139,
+    "dept_rank": 86,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 289,
+    "name": "HAREE D",
+    "reg_no": "23CI014",
+    "username": "Haree05",
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Haree05/",
+    "stats": {
+      "total_solved": 59,
+      "easy_solved": 17,
+      "medium_solved": 32,
+      "hard_solved": 10,
+      "contest_rating": 1402.9,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:16.052218"
+    },
+    "streak_count": 0,
+    "college_rank": 140,
+    "dept_rank": 54,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 231,
+    "name": "ABISHEK C",
+    "reg_no": "732224CI004",
+    "username": "Abishek0007",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Abishek0007/",
+    "stats": {
+      "total_solved": 58,
+      "easy_solved": 24,
+      "medium_solved": 29,
+      "hard_solved": 5,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:40.466538"
+    },
+    "streak_count": 2,
+    "college_rank": 141,
+    "dept_rank": 55,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 91,
+    "name": "JAYEL CHRISTINA SCUDD",
+    "reg_no": "732225CC020",
+    "username": "Jayel_18",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Jayel_18/",
+    "stats": {
+      "total_solved": 58,
+      "easy_solved": 45,
+      "medium_solved": 10,
+      "hard_solved": 3,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:06.372504"
+    },
+    "streak_count": 0,
+    "college_rank": 141,
+    "dept_rank": 87,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 230,
+    "name": "AADHISH S B",
+    "reg_no": "732224CI001",
+    "username": "Aadhish_sb",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Aadhish_sb/",
+    "stats": {
+      "total_solved": 56,
+      "easy_solved": 22,
+      "medium_solved": 30,
+      "hard_solved": 4,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:39.812285"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 112,
+    "name": "RAJABALAN B",
+    "reg_no": "732225CC041",
+    "username": "RAJABALAN_B",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/RAJABALAN_B/",
+    "stats": {
+      "total_solved": 52,
+      "easy_solved": 38,
+      "medium_solved": 11,
+      "hard_solved": 3,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:08.391750"
+    },
+    "streak_count": 0,
+    "college_rank": 143,
+    "dept_rank": 88,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 113,
+    "name": "RAVIBHARATHI R",
+    "reg_no": "732225CC042",
+    "username": "RaviBharathi1234",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/RaviBharathi1234/",
+    "stats": {
+      "total_solved": 52,
+      "easy_solved": 27,
+      "medium_solved": 20,
+      "hard_solved": 5,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:08.679480"
+    },
+    "streak_count": 0,
+    "college_rank": 143,
+    "dept_rank": 88,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 133,
+    "name": "YOGESH P",
+    "reg_no": "732225CC062",
+    "username": "YOGESH_062",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/YOGESH_062/",
+    "stats": {
+      "total_solved": 51,
+      "easy_solved": 26,
+      "medium_solved": 20,
+      "hard_solved": 5,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:33.610204"
+    },
+    "streak_count": 0,
+    "college_rank": 145,
+    "dept_rank": 90,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 87,
+    "name": "HARISH B",
+    "reg_no": "732225CC016",
+    "username": "732225CC016",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/732225CC016/",
+    "stats": {
+      "total_solved": 50,
+      "easy_solved": 23,
+      "medium_solved": 23,
+      "hard_solved": 4,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:05.618519"
+    },
+    "streak_count": 0,
+    "college_rank": 146,
+    "dept_rank": 91,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 103,
+    "name": "MUKESH S",
+    "reg_no": "732225CC032",
+    "username": "Mukeshmukesh123",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Mukeshmukesh123/",
+    "stats": {
+      "total_solved": 50,
+      "easy_solved": 41,
+      "medium_solved": 9,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:07.542673"
+    },
+    "streak_count": 1,
+    "college_rank": 146,
+    "dept_rank": 91,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 85,
+    "name": "GOKULRAJ R",
+    "reg_no": "732225CC014",
+    "username": "Gokulraj14",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Gokulraj14/",
+    "stats": {
+      "total_solved": 49,
+      "easy_solved": 18,
+      "medium_solved": 27,
+      "hard_solved": 4,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:05.553077"
+    },
+    "streak_count": 1,
+    "college_rank": 148,
+    "dept_rank": 93,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 265,
+    "name": "RAGUL J M",
+    "reg_no": "732224CI041",
+    "username": "ragul_006",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/ragul_006/",
+    "stats": {
+      "total_solved": 49,
+      "easy_solved": 18,
+      "medium_solved": 28,
+      "hard_solved": 3,
+      "contest_rating": 1342.1,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:00.883550"
+    },
+    "streak_count": 1,
+    "college_rank": 148,
+    "dept_rank": 56,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 243,
+    "name": "KANNIGA PARAMESWARI S B",
+    "reg_no": "732224CI017",
+    "username": "KANNIGA_SB",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/KANNIGA_SB/",
+    "stats": {
+      "total_solved": 48,
+      "easy_solved": 16,
+      "medium_solved": 29,
+      "hard_solved": 3,
+      "contest_rating": 1656.9,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:46.161152"
+    },
+    "streak_count": 1,
+    "college_rank": 150,
+    "dept_rank": 57,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 110,
+    "name": "PRIYADHARSHINI G",
+    "reg_no": "732225CC039",
+    "username": "f0Gm3IZrgv",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/f0Gm3IZrgv/",
+    "stats": {
+      "total_solved": 48,
+      "easy_solved": 44,
+      "medium_solved": 4,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:08.350142"
+    },
+    "streak_count": 1,
+    "college_rank": 150,
+    "dept_rank": 94,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 93,
+    "name": "JEEVITHA S",
+    "reg_no": "732225CC022",
+    "username": "Jeevi_AlgoQueen",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Jeevi_AlgoQueen/",
+    "stats": {
+      "total_solved": 47,
+      "easy_solved": 36,
+      "medium_solved": 11,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:06.594845"
+    },
+    "streak_count": 0,
+    "college_rank": 152,
+    "dept_rank": 95,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 75,
+    "name": "ABINAYA S",
+    "reg_no": "732225CC004",
+    "username": "Abi_CC004",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Abi_CC004/",
+    "stats": {
+      "total_solved": 46,
+      "easy_solved": 37,
+      "medium_solved": 7,
+      "hard_solved": 2,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:04.709791"
+    },
+    "streak_count": 1,
+    "college_rank": 153,
+    "dept_rank": 96,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 90,
+    "name": "JAYASRI R",
+    "reg_no": "732225CC019",
+    "username": "Jayasri3103",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Jayasri3103/",
+    "stats": {
+      "total_solved": 46,
+      "easy_solved": 18,
+      "medium_solved": 23,
+      "hard_solved": 5,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:05.800912"
+    },
+    "streak_count": 0,
+    "college_rank": 153,
+    "dept_rank": 96,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 160,
+    "name": "KIRAN CHANTH T L",
+    "reg_no": "732225CI021",
+    "username": "Kiranchanth_21",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Kiranchanth_21/",
+    "stats": {
+      "total_solved": 45,
+      "easy_solved": 20,
+      "medium_solved": 21,
+      "hard_solved": 4,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:50.652396"
+    },
+    "streak_count": 1,
+    "college_rank": 155,
+    "dept_rank": 58,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 253,
+    "name": "MYTHREYAN K",
+    "reg_no": "732224CI029",
+    "username": "Mythreyan_64",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Mythreyan_64/",
+    "stats": {
+      "total_solved": 45,
+      "easy_solved": 15,
+      "medium_solved": 26,
+      "hard_solved": 4,
+      "contest_rating": 1355.4,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:52.833947"
+    },
+    "streak_count": 1,
+    "college_rank": 155,
+    "dept_rank": 58,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 124,
+    "name": "SUBILNATH G",
+    "reg_no": "732225CC053",
+    "username": "WbcKc8koB8",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/WbcKc8koB8/",
+    "stats": {
+      "total_solved": 45,
+      "easy_solved": 20,
+      "medium_solved": 24,
+      "hard_solved": 1,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:29.237511"
+    },
+    "streak_count": 1,
+    "college_rank": 155,
+    "dept_rank": 98,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 150,
+    "name": "GOBIKRISHNA M",
+    "reg_no": "732225CI011",
+    "username": "Gobi_krishna",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Gobi_krishna/",
+    "stats": {
+      "total_solved": 42,
+      "easy_solved": 10,
+      "medium_solved": 25,
+      "hard_solved": 7,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:43.615560"
+    },
+    "streak_count": 0,
+    "college_rank": 158,
+    "dept_rank": 60,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 178,
+    "name": "ROHITH P",
+    "reg_no": "732225CI039",
+    "username": "Rohith_pannirselvam",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Rohith_pannirselvam/",
+    "stats": {
+      "total_solved": 42,
+      "easy_solved": 11,
+      "medium_solved": 24,
+      "hard_solved": 7,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:00.786128"
+    },
+    "streak_count": 1,
+    "college_rank": 158,
+    "dept_rank": 60,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 195,
+    "name": "THAMARAIKANNAN M R",
+    "reg_no": "732225CI056",
+    "username": "thamaraikannan_mr_2007",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/thamaraikannan_mr_2007/",
+    "stats": {
+      "total_solved": 42,
+      "easy_solved": 17,
+      "medium_solved": 24,
+      "hard_solved": 1,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:10.528263"
+    },
+    "streak_count": 1,
+    "college_rank": 158,
+    "dept_rank": 60,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 280,
+    "name": "VIJAY PRABHU.M",
+    "reg_no": "732224CI056",
+    "username": "vijayprabhu56",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/vijayprabhu56/",
+    "stats": {
+      "total_solved": 42,
+      "easy_solved": 13,
+      "medium_solved": 24,
+      "hard_solved": 5,
+      "contest_rating": 1352.1,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:10.327820"
+    },
+    "streak_count": 0,
+    "college_rank": 158,
+    "dept_rank": 60,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 238,
+    "name": "GUHAN D",
+    "reg_no": "732224CI012",
+    "username": "Guhan_12_",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Guhan_12_/",
+    "stats": {
+      "total_solved": 39,
+      "easy_solved": 11,
+      "medium_solved": 26,
+      "hard_solved": 2,
+      "contest_rating": 1395.5,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:43.895214"
+    },
+    "streak_count": 1,
+    "college_rank": 162,
+    "dept_rank": 64,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 251,
+    "name": "MEENA E",
+    "reg_no": "732224CI026",
+    "username": "MeenaElangovan",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/MeenaElangovan/",
+    "stats": {
+      "total_solved": 38,
+      "easy_solved": 12,
+      "medium_solved": 24,
+      "hard_solved": 2,
+      "contest_rating": 1371.0,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:50.605485"
+    },
+    "streak_count": 2,
+    "college_rank": 163,
+    "dept_rank": 65,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 111,
+    "name": "PRIYADHARSHINI P",
+    "reg_no": "732225CC040",
+    "username": "mn6vcyWJAN",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/mn6vcyWJAN/",
+    "stats": {
+      "total_solved": 38,
+      "easy_solved": 19,
+      "medium_solved": 15,
+      "hard_solved": 4,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:08.389141"
+    },
+    "streak_count": 0,
+    "college_rank": 163,
+    "dept_rank": 99,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 99,
+    "name": "LALITHKUMAR B V",
+    "reg_no": "732225CC028",
+    "username": "LalithKumar19",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/LalithKumar19/",
+    "stats": {
+      "total_solved": 35,
+      "easy_solved": 16,
+      "medium_solved": 16,
+      "hard_solved": 3,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:07.132747"
+    },
+    "streak_count": 1,
+    "college_rank": 165,
+    "dept_rank": 100,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 245,
+    "name": "KAVINRAJ R",
+    "reg_no": "732224CI019",
+    "username": "kavin629",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/kavin629/",
+    "stats": {
+      "total_solved": 33,
+      "easy_solved": 13,
+      "medium_solved": 18,
+      "hard_solved": 2,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:47.110998"
+    },
+    "streak_count": 1,
+    "college_rank": 169,
+    "dept_rank": 69,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 267,
+    "name": "RANJITH KUMAR C",
+    "reg_no": "732224CI043",
+    "username": "ranjith_2006",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/ranjith_2006/",
+    "stats": {
+      "total_solved": 32,
+      "easy_solved": 10,
+      "medium_solved": 20,
+      "hard_solved": 2,
+      "contest_rating": 1432.1,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:01.322083"
+    },
+    "streak_count": 0,
+    "college_rank": 166,
+    "dept_rank": 66,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 187,
+    "name": "SHARMATHA K",
+    "reg_no": "732225CI048",
+    "username": "Sharmatha_K",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Sharmatha_K/",
+    "stats": {
+      "total_solved": 32,
+      "easy_solved": 14,
+      "medium_solved": 14,
+      "hard_solved": 4,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:06.005283"
+    },
+    "streak_count": 1,
+    "college_rank": 166,
+    "dept_rank": 66,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 169,
+    "name": "NISHA C",
+    "reg_no": "732225CI030",
+    "username": "732225ci030-nisha-c",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/732225ci030-nisha-c/",
+    "stats": {
+      "total_solved": 31,
+      "easy_solved": 17,
+      "medium_solved": 13,
+      "hard_solved": 1,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:55.705577"
+    },
+    "streak_count": 2,
+    "college_rank": 168,
+    "dept_rank": 68,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 254,
+    "name": "NANDHINI G",
+    "reg_no": "732224CI030",
+    "username": "GNandhini_09",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/GNandhini_09/",
+    "stats": {
+      "total_solved": 30,
+      "easy_solved": 12,
+      "medium_solved": 17,
+      "hard_solved": 1,
+      "contest_rating": 1414.6,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:53.730725"
+    },
+    "streak_count": 1,
+    "college_rank": 169,
+    "dept_rank": 69,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 173,
+    "name": "PRAVEENA S",
+    "reg_no": "732225CI034",
+    "username": "praveena_selvaraj",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/praveena_selvaraj/",
+    "stats": {
+      "total_solved": 30,
+      "easy_solved": 18,
+      "medium_solved": 9,
+      "hard_solved": 3,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:57.883344"
+    },
+    "streak_count": 0,
+    "college_rank": 169,
+    "dept_rank": 69,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 151,
+    "name": "GOKULKRISHNA M",
+    "reg_no": "732225CI012",
+    "username": "Gokulkrishna_26",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Gokulkrishna_26/",
+    "stats": {
+      "total_solved": 28,
+      "easy_solved": 14,
+      "medium_solved": 13,
+      "hard_solved": 1,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:44.049910"
+    },
+    "streak_count": 0,
+    "college_rank": 172,
+    "dept_rank": 72,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 181,
+    "name": "SALINI S",
+    "reg_no": "732225CI042",
+    "username": "salini-25",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/salini-25/",
+    "stats": {
+      "total_solved": 28,
+      "easy_solved": 16,
+      "medium_solved": 7,
+      "hard_solved": 5,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:02.635487"
+    },
+    "streak_count": 0,
+    "college_rank": 172,
+    "dept_rank": 72,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 201,
+    "name": "YAZHINI M P",
+    "reg_no": "732225CI062",
+    "username": "Yazhini-0508",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Yazhini-0508/",
+    "stats": {
+      "total_solved": 27,
+      "easy_solved": 16,
+      "medium_solved": 7,
+      "hard_solved": 4,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:16.863414"
+    },
+    "streak_count": 0,
+    "college_rank": 174,
+    "dept_rank": 74,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 165,
+    "name": "MONISHA C",
+    "reg_no": "732225CI026",
+    "username": "Mw9qUJLaJo",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Mw9qUJLaJo/",
+    "stats": {
+      "total_solved": 22,
+      "easy_solved": 14,
+      "medium_solved": 7,
+      "hard_solved": 1,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:53.466264"
+    },
+    "streak_count": 1,
+    "college_rank": 175,
+    "dept_rank": 75,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 146,
+    "name": "DHARSHAN S",
+    "reg_no": "732225CI007",
+    "username": "DHARSHAN_X0",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/DHARSHAN_X0/",
+    "stats": {
+      "total_solved": 21,
+      "easy_solved": 10,
+      "medium_solved": 10,
+      "hard_solved": 1,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:41.352131"
+    },
+    "streak_count": 1,
+    "college_rank": 176,
+    "dept_rank": 76,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 84,
+    "name": "GIBSON KENLEY S",
+    "reg_no": "732225CC013",
+    "username": "n1J49Ovita",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/n1J49Ovita/",
+    "stats": {
+      "total_solved": 21,
+      "easy_solved": 10,
+      "medium_solved": 10,
+      "hard_solved": 1,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:05.308032"
+    },
+    "streak_count": 0,
+    "college_rank": 176,
+    "dept_rank": 101,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 155,
+    "name": "INIYA A",
+    "reg_no": "732225CI016",
+    "username": "ZDHinXS03z",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/ZDHinXS03z/",
+    "stats": {
+      "total_solved": 21,
+      "easy_solved": 19,
+      "medium_solved": 2,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:47.035142"
+    },
+    "streak_count": 0,
+    "college_rank": 176,
+    "dept_rank": 76,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 264,
+    "name": "RAGHAVAN G",
+    "reg_no": "732224CI040",
+    "username": "Raghavan_0116_",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Raghavan_0116_/",
+    "stats": {
+      "total_solved": 20,
+      "easy_solved": 6,
+      "medium_solved": 12,
+      "hard_solved": 2,
+      "contest_rating": 1414.6,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:00.280926"
+    },
+    "streak_count": 1,
+    "college_rank": 179,
+    "dept_rank": 78,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 199,
+    "name": "VANITHA S",
+    "reg_no": "732225CI060",
+    "username": "Vanitha_07",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Vanitha_07/",
+    "stats": {
+      "total_solved": 20,
+      "easy_solved": 14,
+      "medium_solved": 6,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:14.861751"
+    },
+    "streak_count": 1,
+    "college_rank": 179,
+    "dept_rank": 78,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 149,
+    "name": "GEERTHANA A S",
+    "reg_no": "732225CI010",
+    "username": "geerthanaas_2008",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/geerthanaas_2008/",
+    "stats": {
+      "total_solved": 19,
+      "easy_solved": 13,
+      "medium_solved": 6,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:42.980563"
+    },
+    "streak_count": 1,
+    "college_rank": 181,
+    "dept_rank": 80,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 21,
+    "name": "HARISH K",
+    "reg_no": "732224CC013",
+    "username": "Harish000007",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Harish000007/",
+    "stats": {
+      "total_solved": 19,
+      "easy_solved": 2,
+      "medium_solved": 15,
+      "hard_solved": 2,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:56.031351"
+    },
+    "streak_count": 1,
+    "college_rank": 181,
+    "dept_rank": 102,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 186,
+    "name": "SATHISH M",
+    "reg_no": "732225CI047",
+    "username": "Sathish_chml",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Sathish_chml/",
+    "stats": {
+      "total_solved": 19,
+      "easy_solved": 12,
+      "medium_solved": 7,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:05.414244"
+    },
+    "streak_count": 1,
+    "college_rank": 181,
+    "dept_rank": 80,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 161,
+    "name": "KISHORE KANNA S",
+    "reg_no": "732225CI022",
+    "username": "Kishore_Kanna_S",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Kishore_Kanna_S/",
+    "stats": {
+      "total_solved": 18,
+      "easy_solved": 7,
+      "medium_solved": 9,
+      "hard_solved": 2,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:51.120319"
+    },
+    "streak_count": 0,
+    "college_rank": 184,
+    "dept_rank": 82,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 179,
+    "name": "ROSHAN AKTHAR K",
+    "reg_no": "732225CI040",
+    "username": "Roshan_v46",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Roshan_v46/",
+    "stats": {
+      "total_solved": 18,
+      "easy_solved": 11,
+      "medium_solved": 7,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:01.387822"
+    },
+    "streak_count": 0,
+    "college_rank": 184,
+    "dept_rank": 82,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 305,
+    "name": "SUJITH K",
+    "reg_no": "23CI053",
+    "username": "sujith2006",
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/sujith2006/",
+    "stats": {
+      "total_solved": 17,
+      "easy_solved": 13,
+      "medium_solved": 4,
+      "hard_solved": 0,
+      "contest_rating": 1372.8,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:23.216552"
+    },
+    "streak_count": 0,
+    "college_rank": 186,
+    "dept_rank": 84,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 196,
+    "name": "THIVYASRUTHI G D",
+    "reg_no": "732225CI057",
+    "username": "ThivyaSruthi_20",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/ThivyaSruthi_20/",
+    "stats": {
+      "total_solved": 17,
+      "easy_solved": 13,
+      "medium_solved": 3,
+      "hard_solved": 1,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:13.369267"
+    },
+    "streak_count": 1,
+    "college_rank": 186,
+    "dept_rank": 84,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 158,
+    "name": "KARUPPUSAMYDEEPAK P",
+    "reg_no": "732225CI019",
+    "username": "Deepak_2d",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Deepak_2d/",
+    "stats": {
+      "total_solved": 16,
+      "easy_solved": 10,
+      "medium_solved": 6,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:48.891484"
+    },
+    "streak_count": 1,
+    "college_rank": 188,
+    "dept_rank": 86,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 167,
+    "name": "NAVIN V",
+    "reg_no": "732225CI028",
+    "username": "Navin_IOT_28",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Navin_IOT_28/",
+    "stats": {
+      "total_solved": 16,
+      "easy_solved": 7,
+      "medium_solved": 8,
+      "hard_solved": 1,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:54.493868"
+    },
+    "streak_count": 0,
+    "college_rank": 188,
+    "dept_rank": 86,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 164,
+    "name": "MOHAMMED YUNUS A",
+    "reg_no": "732225CI025",
+    "username": "Md_yunus025",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Md_yunus025/",
+    "stats": {
+      "total_solved": 15,
+      "easy_solved": 10,
+      "medium_solved": 4,
+      "hard_solved": 1,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:52.951393"
+    },
+    "streak_count": 1,
+    "college_rank": 190,
+    "dept_rank": 88,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 174,
+    "name": "PRIYADHARSHINI K M",
+    "reg_no": "732225CI035",
+    "username": "Priyadharshini_0506",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Priyadharshini_0506/",
+    "stats": {
+      "total_solved": 14,
+      "easy_solved": 6,
+      "medium_solved": 7,
+      "hard_solved": 1,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:58.915044"
+    },
+    "streak_count": 1,
+    "college_rank": 191,
+    "dept_rank": 89,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 197,
+    "name": "THIYA S",
+    "reg_no": "732225CI058",
+    "username": "thiya2026",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/thiya2026/",
+    "stats": {
+      "total_solved": 14,
+      "easy_solved": 8,
+      "medium_solved": 5,
+      "hard_solved": 1,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:14.053064"
+    },
+    "streak_count": 1,
+    "college_rank": 191,
+    "dept_rank": 89,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 143,
+    "name": "DEVI SHREE M",
+    "reg_no": "732225CI004",
+    "username": "devishree2026",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/devishree2026/",
+    "stats": {
+      "total_solved": 13,
+      "easy_solved": 5,
+      "medium_solved": 7,
+      "hard_solved": 1,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:40.392933"
+    },
+    "streak_count": 1,
+    "college_rank": 193,
+    "dept_rank": 91,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 145,
+    "name": "DHARANI I",
+    "reg_no": "732225CI006",
+    "username": "Dharani_0404",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Dharani_0404/",
+    "stats": {
+      "total_solved": 13,
+      "easy_solved": 8,
+      "medium_solved": 5,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:40.893586"
+    },
+    "streak_count": 1,
+    "college_rank": 193,
+    "dept_rank": 91,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 180,
+    "name": "SAHA N",
+    "reg_no": "732225CI041",
+    "username": "Saha_NC",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Saha_NC/",
+    "stats": {
+      "total_solved": 13,
+      "easy_solved": 4,
+      "medium_solved": 6,
+      "hard_solved": 3,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:01.942178"
+    },
+    "streak_count": 1,
+    "college_rank": 193,
+    "dept_rank": 91,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 285,
+    "name": "DIVYA A",
+    "reg_no": "23CI007",
+    "username": "DIVI_ARUL",
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/DIVI_ARUL/",
+    "stats": {
+      "total_solved": 12,
+      "easy_solved": 7,
+      "medium_solved": 5,
+      "hard_solved": 0,
+      "contest_rating": 1440.6,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:13.459913"
+    },
+    "streak_count": 1,
+    "college_rank": 196,
+    "dept_rank": 94,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 189,
+    "name": "SHREEDHARSHAN S",
+    "reg_no": "732225CI050",
+    "username": "shreedharshan_s",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/shreedharshan_s/",
+    "stats": {
+      "total_solved": 12,
+      "easy_solved": 7,
+      "medium_solved": 3,
+      "hard_solved": 2,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:07.775095"
+    },
+    "streak_count": 0,
+    "college_rank": 196,
+    "dept_rank": 94,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 152,
+    "name": "GOKUL P S",
+    "reg_no": "732225CI013",
+    "username": "gokulps",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/gokulps/",
+    "stats": {
+      "total_solved": 11,
+      "easy_solved": 6,
+      "medium_solved": 4,
+      "hard_solved": 1,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:44.677288"
+    },
+    "streak_count": 1,
+    "college_rank": 198,
+    "dept_rank": 96,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 4,
+    "contest_score_display": "4 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 125,
+    "name": "SUJITH A",
+    "reg_no": "732225CC054",
+    "username": "Sujithnandha",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Sujithnandha/",
+    "stats": {
+      "total_solved": 11,
+      "easy_solved": 8,
+      "medium_solved": 3,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:29.704730"
+    },
+    "streak_count": 0,
+    "college_rank": 198,
+    "dept_rank": 103,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 156,
+    "name": "JANANI D",
+    "reg_no": "732225CI017",
+    "username": "Janannn_iiiiii",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Janannn_iiiiii/",
+    "stats": {
+      "total_solved": 10,
+      "easy_solved": 4,
+      "medium_solved": 5,
+      "hard_solved": 1,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:47.536336"
+    },
+    "streak_count": 0,
+    "college_rank": 200,
+    "dept_rank": 97,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 166,
+    "name": "NANTHEES N S",
+    "reg_no": "732225CI027",
+    "username": "NANTHEES_NS-14",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/NANTHEES_NS-14/",
+    "stats": {
+      "total_solved": 10,
+      "easy_solved": 2,
+      "medium_solved": 7,
+      "hard_solved": 1,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:53.944767"
+    },
+    "streak_count": 0,
+    "college_rank": 200,
+    "dept_rank": 97,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 108,
+    "name": "PRADEEPA M",
+    "reg_no": "732225CC037",
+    "username": "PradeepaM_",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/PradeepaM_/",
+    "stats": {
+      "total_solved": 10,
+      "easy_solved": 7,
+      "medium_solved": 3,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:08.141245"
+    },
+    "streak_count": 0,
+    "college_rank": 200,
+    "dept_rank": 104,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 104,
+    "name": "NAVASAKTHI K K",
+    "reg_no": "732225CC033",
+    "username": "Nava_sakthi",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Nava_sakthi/",
+    "stats": {
+      "total_solved": 9,
+      "easy_solved": 6,
+      "medium_solved": 3,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:07.636874"
+    },
+    "streak_count": 0,
+    "college_rank": 203,
+    "dept_rank": 105,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 193,
+    "name": "SURYAKUMAR J",
+    "reg_no": "732225CI054",
+    "username": "suryalic",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/suryalic/",
+    "stats": {
+      "total_solved": 9,
+      "easy_solved": 2,
+      "medium_solved": 6,
+      "hard_solved": 1,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:09.569199"
+    },
+    "streak_count": 0,
+    "college_rank": 203,
+    "dept_rank": 99,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 162,
+    "name": "MADHU BALA P",
+    "reg_no": "732225CI023",
+    "username": "Madhubala_45",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Madhubala_45/",
+    "stats": {
+      "total_solved": 7,
+      "easy_solved": 2,
+      "medium_solved": 4,
+      "hard_solved": 1,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:51.647989"
+    },
+    "streak_count": 0,
+    "college_rank": 205,
+    "dept_rank": 100,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 176,
+    "name": "RAGUL T",
+    "reg_no": "732225CI037",
+    "username": "ragul_bruce",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/ragul_bruce/",
+    "stats": {
+      "total_solved": 7,
+      "easy_solved": 1,
+      "medium_solved": 5,
+      "hard_solved": 1,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:59.843673"
+    },
+    "streak_count": 0,
+    "college_rank": 205,
+    "dept_rank": 100,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 136,
+    "name": "KATHIR V",
+    "reg_no": "732225CCL03",
+    "username": "Kathir260",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Kathir260/",
+    "stats": {
+      "total_solved": 6,
+      "easy_solved": 2,
+      "medium_solved": 4,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:35.619685"
+    },
+    "streak_count": 1,
+    "college_rank": 207,
+    "dept_rank": 106,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 122,
+    "name": "SIDDHDEV V R",
+    "reg_no": "732225CC051",
+    "username": "SIDDHDEV",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/SIDDHDEV/",
+    "stats": {
+      "total_solved": 6,
+      "easy_solved": 5,
+      "medium_solved": 1,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:09.732572"
+    },
+    "streak_count": 1,
+    "college_rank": 207,
+    "dept_rank": 106,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 194,
+    "name": "SWEDHAN S",
+    "reg_no": "732225CI055",
+    "username": "swedhan_s",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/swedhan_s/",
+    "stats": {
+      "total_solved": 6,
+      "easy_solved": 2,
+      "medium_solved": 3,
+      "hard_solved": 1,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:10.014027"
+    },
+    "streak_count": 0,
+    "college_rank": 207,
+    "dept_rank": 102,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 294,
+    "name": "KARTHIK.V",
+    "reg_no": "23CI023",
+    "username": "karthik_v3",
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/karthik_v3/",
+    "stats": {
+      "total_solved": 5,
+      "easy_solved": 2,
+      "medium_solved": 3,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:15:18.228045"
+    },
+    "streak_count": 1,
+    "college_rank": 210,
+    "dept_rank": 103,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 3,
+    "contest_score_display": "3 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 185,
+    "name": "SANTHOSH KUMAR S",
+    "reg_no": "732225CI046",
+    "username": "Santhosh_Mahi",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Santhosh_Mahi/",
+    "stats": {
+      "total_solved": 5,
+      "easy_solved": 3,
+      "medium_solved": 1,
+      "hard_solved": 1,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:04.903543"
+    },
+    "streak_count": 0,
+    "college_rank": 210,
+    "dept_rank": 103,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 191,
+    "name": "SORNA RIYAS J",
+    "reg_no": "732225CI052",
+    "username": "RIYAS18",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/RIYAS18/",
+    "stats": {
+      "total_solved": 5,
+      "easy_solved": 1,
+      "medium_solved": 3,
+      "hard_solved": 1,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:08.551658"
+    },
+    "streak_count": 0,
+    "college_rank": 210,
+    "dept_rank": 103,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 139,
+    "name": "SHYNTH ABRAHAM C",
+    "reg_no": "732225CCL06",
+    "username": "ShynthAbraham",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/ShynthAbraham/",
+    "stats": {
+      "total_solved": 4,
+      "easy_solved": 2,
+      "medium_solved": 2,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:36.976818"
+    },
+    "streak_count": 1,
+    "college_rank": 213,
+    "dept_rank": 108,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 2,
+    "contest_score_display": "2 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 170,
+    "name": "NITHISH KUMAR B",
+    "reg_no": "732225CI031",
+    "username": "Nithishkumar_A_2602",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Nithishkumar_A_2602/",
+    "stats": {
+      "total_solved": 3,
+      "easy_solved": 3,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:56.151180"
+    },
+    "streak_count": 0,
+    "college_rank": 214,
+    "dept_rank": 106,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 115,
+    "name": "SABARI T",
+    "reg_no": "732225CC044",
+    "username": "sabari_044",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/sabari_044/",
+    "stats": {
+      "total_solved": 3,
+      "easy_solved": 3,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:08.968674"
+    },
+    "streak_count": 0,
+    "college_rank": 214,
+    "dept_rank": 109,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 74,
+    "name": "ABHISHEK M",
+    "reg_no": "732225CC003",
+    "username": "abhishek_cc003",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/abhishek_cc003/",
+    "stats": {
+      "total_solved": 2,
+      "easy_solved": 2,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:04.621764"
+    },
+    "streak_count": 0,
+    "college_rank": 216,
+    "dept_rank": 110,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 80,
+    "name": "DHARSHAN G",
+    "reg_no": "732225CC009",
+    "username": "dharshang2007",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/dharshang2007/",
+    "stats": {
+      "total_solved": 2,
+      "easy_solved": 2,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:05.112376"
+    },
+    "streak_count": 0,
+    "college_rank": 216,
+    "dept_rank": 110,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 147,
+    "name": "DHARSHINI G",
+    "reg_no": "732225CI008",
+    "username": "Dharshini_Ramya",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Dharshini_Ramya/",
+    "stats": {
+      "total_solved": 2,
+      "easy_solved": 2,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:42.047647"
+    },
+    "streak_count": 0,
+    "college_rank": 216,
+    "dept_rank": 107,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 135,
+    "name": "JEEVADHARSAN M",
+    "reg_no": "732225CCL02",
+    "username": "Jeevadharsan12",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Jeevadharsan12/",
+    "stats": {
+      "total_solved": 2,
+      "easy_solved": 1,
+      "medium_solved": 1,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:35.173312"
+    },
+    "streak_count": 0,
+    "college_rank": 216,
+    "dept_rank": 110,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 106,
+    "name": "NIVETHAA S B",
+    "reg_no": "732225CC035",
+    "username": "nivethaa_baskaran",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/nivethaa_baskaran/",
+    "stats": {
+      "total_solved": 2,
+      "easy_solved": 2,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:07.854080"
+    },
+    "streak_count": 0,
+    "college_rank": 216,
+    "dept_rank": 110,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 148,
+    "name": "GAYATHRI R",
+    "reg_no": "732225CI009",
+    "username": "Gayathri_VP",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Gayathri_VP/",
+    "stats": {
+      "total_solved": 1,
+      "easy_solved": 1,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:42.510204"
+    },
+    "streak_count": 1,
+    "college_rank": 222,
+    "dept_rank": 108,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_ATTENDED",
+    "contest_solved": 1,
+    "contest_score_display": "1 / 4",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 73,
+    "name": "AARSIKA M",
+    "reg_no": "732225CC002",
+    "username": "Aarsika_M",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Aarsika_M/",
+    "stats": {
+      "total_solved": 0,
+      "easy_solved": 0,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:04.424422"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 141,
+    "name": "BHARANITHARAN R",
+    "reg_no": "732225CI002",
+    "username": "732225ci002-bharanitharan-r",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/732225ci002-bharanitharan-r/",
+    "stats": {
+      "total_solved": 0,
+      "easy_solved": 0,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:37.897979"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 142,
+    "name": "BHUPESH S A",
+    "reg_no": "732225CI003",
+    "username": "732225ci003-bhupesh-s-a",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/732225ci003-bhupesh-s-a/",
+    "stats": {
+      "total_solved": 0,
+      "easy_solved": 0,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:39.526200"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 86,
+    "name": "GOWRIPRIYA M",
+    "reg_no": "732225CC015",
+    "username": "81jUYqRRqL",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/81jUYqRRqL/",
+    "stats": {
+      "total_solved": 0,
+      "easy_solved": 0,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:05.572036"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 153,
+    "name": "HARIPRIYA S",
+    "reg_no": "732225CI014",
+    "username": "Haripriya_14",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Haripriya_14/",
+    "stats": {
+      "total_solved": 0,
+      "easy_solved": 0,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:45.806221"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 88,
+    "name": "HARISH M S",
+    "reg_no": "732225CC017",
+    "username": "harishms2007",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/harishms2007/",
+    "stats": {
+      "total_solved": 0,
+      "easy_solved": 0,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:05.674468"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 154,
+    "name": "HARSHINI R",
+    "reg_no": "732225CI015",
+    "username": "Harshini_CN",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Harshini_CN/",
+    "stats": {
+      "total_solved": 0,
+      "easy_solved": 0,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:46.512295"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 157,
+    "name": "JAYASURIYA V",
+    "reg_no": "732225CI018",
+    "username": "Jayasuriya_27",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Jayasuriya_27/",
+    "stats": {
+      "total_solved": 0,
+      "easy_solved": 0,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:48.429986"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 94,
+    "name": "KARMUGIL V",
+    "reg_no": "732225CC023",
+    "username": "p4j1zKdZXp",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/p4j1zKdZXp/",
+    "stats": {
+      "total_solved": 0,
+      "easy_solved": 0,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:06.619197"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 159,
+    "name": "KAVIYA JAYA CHITRA A",
+    "reg_no": "732225CI020",
+    "username": "kaviya_Jaya_Chitra",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/kaviya_Jaya_Chitra/",
+    "stats": {
+      "total_solved": 0,
+      "easy_solved": 0,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:49.853490"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 32,
+    "name": "MADAN PRASATH G",
+    "reg_no": "732224CC024",
+    "username": "MADAN_2007",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/MADAN_2007/",
+    "stats": {
+      "total_solved": 0,
+      "easy_solved": 0,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:57.720632"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 34,
+    "name": "MAHILNETHRA S K",
+    "reg_no": "732224CC026",
+    "username": "mahilnethra",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/mahilnethra/",
+    "stats": {
+      "total_solved": 0,
+      "easy_solved": 0,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:41:57.919091"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 163,
+    "name": "MALAVIKA G",
+    "reg_no": "732225CI024",
+    "username": "Malavika_24",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Malavika_24/",
+    "stats": {
+      "total_solved": 0,
+      "easy_solved": 0,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:52.467917"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 172,
+    "name": "POOJANA R",
+    "reg_no": "732225CI033",
+    "username": "Pooja_AP",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Pooja_AP/",
+    "stats": {
+      "total_solved": 0,
+      "easy_solved": 0,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:57.144079"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 175,
+    "name": "PUGAZHENTHI G",
+    "reg_no": "732225CI036",
+    "username": "pugazhenthi123",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/pugazhenthi123/",
+    "stats": {
+      "total_solved": 0,
+      "easy_solved": 0,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:13:59.350332"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 177,
+    "name": "RAGULRAAJ M",
+    "reg_no": "732225CI038",
+    "username": "HTTPs",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/HTTPs/",
+    "stats": {
+      "total_solved": 0,
+      "easy_solved": 0,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:00.337190"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 49,
+    "name": "ROHITH R",
+    "reg_no": "732224CC042",
+    "username": "Rohith_2682006",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/Rohith_2682006/",
+    "stats": {
+      "total_solved": 0,
+      "easy_solved": 0,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:42:00.083049"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 183,
+    "name": "SANJAY KUMAR M",
+    "reg_no": "732225CI044",
+    "username": "sk21_sanjay",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/sk21_sanjay/",
+    "stats": {
+      "total_solved": 0,
+      "easy_solved": 0,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:03.607042"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 184,
+    "name": "SANJEEV R T",
+    "reg_no": "732225CI045",
+    "username": "GAgrm4ykwn",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/GAgrm4ykwn/",
+    "stats": {
+      "total_solved": 0,
+      "easy_solved": 0,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:04.031619"
+    },
+    "streak_count": 1,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 188,
+    "name": "SHIVAN SUNDAR V",
+    "reg_no": "732225CI049",
+    "username": "GAgrm4ykwn",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/GAgrm4ykwn/",
+    "stats": {
+      "total_solved": 0,
+      "easy_solved": 0,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:06.765555"
+    },
+    "streak_count": 1,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 192,
+    "name": "SUDHARSHAN E",
+    "reg_no": "732225CI053",
+    "username": "SUDHARSHAN_E-01",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/SUDHARSHAN_E-01/",
+    "stats": {
+      "total_solved": 0,
+      "easy_solved": 0,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:09.001532"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 200,
+    "name": "YALENEY POOFSIN C",
+    "reg_no": "732225CI061",
+    "username": "yaleneypoofsin",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/yaleneypoofsin/",
+    "stats": {
+      "total_solved": 0,
+      "easy_solved": 0,
+      "medium_solved": 0,
+      "hard_solved": 0,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-20T02:14:16.235307"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 72,
+    "name": "AARATHANA L",
+    "reg_no": "732225CC001",
+    "username": "LQatII0XhaQ",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.963731"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 309,
+    "name": "AI Test Student",
+    "reg_no": "732224AITEST",
+    "username": "aitest_user",
+    "year_level": "III",
+    "department_id": 3,
+    "department": {
+      "id": 3,
+      "name": "Computer Science AI Test",
+      "code": "CSE_AI_TEST"
+    },
+    "sync_state": "PENDING_USERNAME",
+    "profile_url": null,
+    "stats": null,
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 134,
+    "name": "ANVAR AHAMED S",
+    "reg_no": "732225CCL01",
+    "username": "AnvarAhamed1234",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:20.001469"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 76,
+    "name": "ASHVIK AKHIL RAJAN R",
+    "reg_no": "732225CC005",
+    "username": "ASHVIKAKILRAJAN",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.966812"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 77,
+    "name": "DEEPAK T",
+    "reg_no": "732225CC006",
+    "username": "0MGVasBmsd",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.967446"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 78,
+    "name": "DEEPIKA G L",
+    "reg_no": "732225CC007",
+    "username": "iXZMxOzqMf",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.968046"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 144,
+    "name": "DHANYA J",
+    "reg_no": "732225CI005",
+    "username": null,
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "PENDING_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "pending",
+      "status": "MISSING LINK",
+      "last_verified_at": "2026-08-13T13:04:20.008972"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 79,
+    "name": "DHARANEESH SABARI N",
+    "reg_no": "732225CC008",
+    "username": "8Fr8Zz0vdVq",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.968641"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 81,
+    "name": "DIVYANAND G R",
+    "reg_no": "732225CC010",
+    "username": null,
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "PENDING_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "pending",
+      "status": "MISSING LINK",
+      "last_verified_at": "2026-08-13T13:04:19.969844"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 82,
+    "name": "FARVAESH MUSHRAF M",
+    "reg_no": "732225CC011",
+    "username": "6oyrbP7Cn",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.970689"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 83,
+    "name": "GAYATHIRIDEVI P",
+    "reg_no": "732225CC012",
+    "username": null,
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "PENDING_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "pending",
+      "status": "MISSING LINK",
+      "last_verified_at": "2026-08-13T13:04:19.971311"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 286,
+    "name": "GOKILA.G",
+    "reg_no": "23CI010",
+    "username": null,
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "PENDING_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "pending",
+      "status": "MISSING LINK",
+      "last_verified_at": null
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 290,
+    "name": "HARINI S",
+    "reg_no": "23CI015",
+    "username": null,
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "PENDING_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "pending",
+      "status": "MISSING LINK",
+      "last_verified_at": null
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 92,
+    "name": "JEBARSON K",
+    "reg_no": "732225CC021",
+    "username": "7RHM08kNyY",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.977989"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 292,
+    "name": "KAMALA VISHNU G",
+    "reg_no": "23CI021",
+    "username": null,
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "PENDING_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "pending",
+      "status": "MISSING LINK",
+      "last_verified_at": null
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 293,
+    "name": "KARMUKILAN A",
+    "reg_no": "23CI022",
+    "username": "pPPRNakI4T",
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": null
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 95,
+    "name": "KAVI PRIYA T",
+    "reg_no": "732225CC024",
+    "username": "rBjc1qgtsB",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.979600"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 96,
+    "name": "KAVIN B",
+    "reg_no": "732225CC025",
+    "username": "65lGBoRTZN",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.980114"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 297,
+    "name": "KAVIN V",
+    "reg_no": "23CI028",
+    "username": null,
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "PENDING_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "pending",
+      "status": "MISSING LINK",
+      "last_verified_at": null
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 97,
+    "name": "KEERTHEESH K R",
+    "reg_no": "732225CC026",
+    "username": "keertheesh",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.980669"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 98,
+    "name": "KEERTHI RAJA S",
+    "reg_no": "732225CC027",
+    "username": null,
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "PENDING_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "pending",
+      "status": "MISSING LINK",
+      "last_verified_at": "2026-08-13T13:04:19.981162"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 30,
+    "name": "KISHORE C",
+    "reg_no": "732224CC022",
+    "username": "KISHORE_CHAND",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.933381"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 100,
+    "name": "LIGITH SANJAY G",
+    "reg_no": "732225CC029",
+    "username": "cbZx47N2Af",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.982303"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 137,
+    "name": "LINGESWARAN M",
+    "reg_no": "732225CCL04",
+    "username": "LINGESWARAN_6",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:20.003069"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 33,
+    "name": "MAGUDAPATHI S",
+    "reg_no": "732224CC025",
+    "username": "XDb4OxGxp6",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.935001"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 35,
+    "name": "MANJUNATH D",
+    "reg_no": "732224CC027",
+    "username": "M1c4D2Ur5h",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.936065"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 37,
+    "name": "MOHAMED THARIQ J",
+    "reg_no": "732224CC029",
+    "username": "Thariq2525",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.937244"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 68,
+    "name": "MOHAMMED AFFAN.JA",
+    "reg_no": "732224CCL01",
+    "username": "Mohammed_Affan_J",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.960912"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 138,
+    "name": "MOHAMMED HAROON M",
+    "reg_no": "732225CCL05",
+    "username": null,
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "PENDING_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "pending",
+      "status": "MISSING LINK",
+      "last_verified_at": "2026-08-13T13:04:20.003555"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 252,
+    "name": "MOHANA PRASATH S",
+    "reg_no": "732224CI028",
+    "username": "Aesath_2028",
+    "year_level": "III",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "PENDING_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "MISSING LINK",
+      "last_verified_at": "2026-08-13T13:04:20.073368"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 102,
+    "name": "MOUNESH G",
+    "reg_no": "732225CC031",
+    "username": "j01UT4oM0T",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.983383"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 105,
+    "name": "NAVEEN R",
+    "reg_no": "732225CC034",
+    "username": "HR1IfJuaDf",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.984965"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 168,
+    "name": "NIKILAN S",
+    "reg_no": "732225CI029",
+    "username": "NIRAI_NIKILAN",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:20.022763"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 171,
+    "name": "NOUSHAL HASHIM A",
+    "reg_no": "732225CI032",
+    "username": "qXuSu2Zg8M",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:20.024475"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 310,
+    "name": "OTP Test Student",
+    "reg_no": "732224TEST01",
+    "username": null,
+    "year_level": "III",
+    "department_id": 4,
+    "department": {
+      "id": 4,
+      "name": "Computer Science Test",
+      "code": "CSE_TEST"
+    },
+    "sync_state": "PENDING_USERNAME",
+    "profile_url": null,
+    "stats": null,
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 107,
+    "name": "POOVARASU A",
+    "reg_no": "732225CC036",
+    "username": "POOVARASU_",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.986017"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 301,
+    "name": "PRABHAKARAN . S",
+    "reg_no": "23CI038",
+    "username": "Prabha_1503",
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": null
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 47,
+    "name": "RITHANIKA V",
+    "reg_no": "732224CC040",
+    "username": "Rithanika_Venakatac",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.945367"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": true
+  },
+  {
+    "id": 303,
+    "name": "ROHITH T",
+    "reg_no": "23CI046",
+    "username": null,
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "PENDING_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "pending",
+      "status": "MISSING LINK",
+      "last_verified_at": null
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 117,
+    "name": "SAJAN VENKAT M",
+    "reg_no": "732225CC046",
+    "username": null,
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "PENDING_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "pending",
+      "status": "MISSING LINK",
+      "last_verified_at": "2026-08-13T13:04:19.992215"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 182,
+    "name": "SANJAI B",
+    "reg_no": "732225CI043",
+    "username": "Sanjaaiiii_",
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:20.031533"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 118,
+    "name": "SANTHOSH M",
+    "reg_no": "732225CC047",
+    "username": "ZAWXjcjOUw",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.992825"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 119,
+    "name": "SARATHY S",
+    "reg_no": "732225CC048",
+    "username": "m2gQcjuz57",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.993412"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 120,
+    "name": "SASINESAN T",
+    "reg_no": "732225CC049",
+    "username": null,
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "PENDING_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "pending",
+      "status": "MISSING LINK",
+      "last_verified_at": "2026-08-13T13:04:19.993953"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 304,
+    "name": "SATHISHKUMAR.S",
+    "reg_no": "23CI050",
+    "username": null,
+    "year_level": "IV",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "PENDING_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "pending",
+      "status": "MISSING LINK",
+      "last_verified_at": null
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 54,
+    "name": "SHARMILA P",
+    "reg_no": "732224CC047",
+    "username": "rFIIQ4f2JS",
+    "year_level": "III",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.951905"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 121,
+    "name": "SHRUTI S",
+    "reg_no": "732225CC050",
+    "username": "rMkHpSQTH6",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.994500"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 190,
+    "name": "SMITHA M",
+    "reg_no": "732225CI051",
+    "username": null,
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "PENDING_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "pending",
+      "status": "MISSING LINK",
+      "last_verified_at": "2026-08-13T13:04:20.035669"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 123,
+    "name": "STALIN A",
+    "reg_no": "732225CC052",
+    "username": null,
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "PENDING_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "pending",
+      "status": "MISSING LINK",
+      "last_verified_at": "2026-08-13T13:04:19.995527"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 126,
+    "name": "SURUTHI S",
+    "reg_no": "732225CC055",
+    "username": "YI7QFq600",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.997163"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 127,
+    "name": "SUSITHA U",
+    "reg_no": "732225CC056",
+    "username": "XXqTDMCg8v",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.997706"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 128,
+    "name": "SUVATHI V",
+    "reg_no": "732225CC057",
+    "username": "00uzqPrwKt",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.998202"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 130,
+    "name": "TAMILARASAN S",
+    "reg_no": "732225CC059",
+    "username": null,
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "PENDING_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "pending",
+      "status": "MISSING LINK",
+      "last_verified_at": "2026-08-13T13:04:19.999270"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 131,
+    "name": "THARANYA L",
+    "reg_no": "732225CC060",
+    "username": "tharanya008",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:19.999796"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 198,
+    "name": "VANITHA E",
+    "reg_no": "732225CI059",
+    "username": null,
+    "year_level": "II",
+    "department_id": 2,
+    "department": {
+      "id": 2,
+      "name": "Computer Science and Engineering (IoT)",
+      "code": "CSE(IOT)"
+    },
+    "sync_state": "PENDING_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "pending",
+      "status": "MISSING LINK",
+      "last_verified_at": "2026-08-13T13:04:20.042359"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
+  },
+  {
+    "id": 132,
+    "name": "VETRIVEL G",
+    "reg_no": "732225CC061",
+    "username": "2M4WMu7ICq",
+    "year_level": "II",
+    "department_id": 1,
+    "department": {
+      "id": 1,
+      "name": "Computer Science and Engineering (Cyber Security)",
+      "code": "CSE(CS)"
+    },
+    "sync_state": "INVALID_USERNAME",
+    "profile_url": null,
+    "stats": {
+      "total_solved": null,
+      "easy_solved": null,
+      "medium_solved": null,
+      "hard_solved": null,
+      "contest_rating": null,
+      "sync_status": "failed",
+      "status": "INVALID_USERNAME",
+      "last_verified_at": "2026-08-13T13:04:20.000424"
+    },
+    "streak_count": 0,
+    "college_rank": null,
+    "dept_rank": null,
+    "weekly_progress": 0,
+    "contest_status": "PUBLIC_NOT_ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "Not Attended",
+    "contest_name": "Weekly Contest 515",
+    "contest_number": 515,
+    "has_virtual": false
   }
 ];
 
+export const CANONICAL_SUMMARY: any = {
+  "total_students": 300,
+  "total_departments": 5,
+  "total_sections": 14,
+  "active_students": 222,
+  "not_started_students": 78,
+  "total_problems_solved": 34397,
+  "average_problems_solved": 114.7,
+  "average_weekly_progress": 114.7,
+  "highest_contest_rating": 1923.1,
+  "top_college_ranker": "NANTHISH S",
+  "current_session": {
+    "id": 21,
+    "academic_year": "2026-27",
+    "week_number": 34,
+    "session_date": "23.08.2026",
+    "start_time": "08:00",
+    "end_time": "09:30",
+    "status": "SCHEDULED"
+  },
+  "is_session_live": false,
+  "session_phase": "SCHEDULED_NEXT_WEEK",
+  "next_session_countdown_seconds": 223879,
+  "verified_profiles": 244,
+  "pending_sync": 19,
+  "failed_sync": 37
+};
+
+export function getCachedStudents(): any[] {
+  if (typeof window === 'undefined') return CANONICAL_ROSTER;
+  try {
+    const cached = localStorage.getItem('nec_cached_students');
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.warn('Could not read cached students:', e);
+  }
+  return CANONICAL_ROSTER;
+}
+
+export function saveCachedStudents(students: any[]): void {
+  if (typeof window === 'undefined' || !Array.isArray(students) || students.length === 0) return;
+  try {
+    localStorage.setItem('nec_cached_students', JSON.stringify(students));
+  } catch (e) {
+    console.warn('Could not save cached students to localStorage:', e);
+  }
+}
+
+export function getCachedSummary(): any {
+  if (typeof window === 'undefined') return CANONICAL_SUMMARY;
+  try {
+    const cached = localStorage.getItem('nec_cached_summary');
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed && typeof parsed === 'object' && parsed.total_students) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.warn('Could not read cached summary:', e);
+  }
+  return CANONICAL_SUMMARY;
+}
+
+export function saveCachedSummary(summary: any): void {
+  if (typeof window === 'undefined' || !summary) return;
+  try {
+    localStorage.setItem('nec_cached_summary', JSON.stringify(summary));
+  } catch (e) {
+    console.warn('Could not save cached summary to localStorage:', e);
+  }
+}
+
 export function getCanonicalSummary() {
-  const total_students = CANONICAL_ROSTER.length;
-  const verified_profiles = CANONICAL_ROSTER.filter((s: any) => (s.stats?.total_solved ?? s.total_solved ?? 0) > 0).length;
-  const total_problems_solved = CANONICAL_ROSTER.reduce((acc: number, s: any) => acc + (s.stats?.total_solved ?? s.total_solved ?? 0), 0);
-  const active_students = verified_profiles;
-  return {
-    total_students,
-    verified_profiles,
-    total_problems_solved,
-    active_students
-  };
+  return getCachedSummary();
 }

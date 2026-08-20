@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { LandingPage } from './pages/LandingPage';
@@ -28,6 +29,7 @@ import { AccessRestrictedView } from './components/AccessRestrictedView';
 import { AIAssistantWidget } from './components/AIAssistantWidget';
 import { StudentData } from './components/LeaderboardTable';
 import api from './services/api';
+import { getCachedSummary, saveCachedSummary } from './data/canonicalRoster';
 
 import { useAuth } from './context/AuthContext';
 
@@ -48,11 +50,14 @@ export const App: React.FC = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showAlertCenterModal, setShowAlertCenterModal] = useState(false);
-  const [summaryData, setSummaryData] = useState<any>(null);
+  const [summaryData, setSummaryData] = useState<any>(() => getCachedSummary());
 
   useEffect(() => {
     fetchSummary();
-    triggerCloudSync();
+    const timer = setTimeout(() => {
+      triggerCloudSync();
+    }, 4000);
+    return () => clearTimeout(timer);
   }, []);
 
 
@@ -71,7 +76,10 @@ export const App: React.FC = () => {
   const fetchSummary = async () => {
     try {
       const res = await api.get('/sessions/dashboard-summary');
-      setSummaryData(res.data);
+      if (res.data) {
+        setSummaryData(res.data);
+        saveCachedSummary(res.data);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -155,8 +163,8 @@ export const App: React.FC = () => {
 
       <div className={`flex-1 w-full py-4 sm:py-6 ${
         isAuthenticated && activeTab !== 'landing'
-          ? 'lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-6 px-3 sm:px-5 lg:px-8 w-full max-w-[1800px] mx-auto'
-          : 'px-3 sm:px-5 lg:px-8 w-full max-w-[1800px] mx-auto'
+          ? 'lg:grid lg:grid-cols-[310px_minmax(0,1fr)] xl:grid-cols-[330px_minmax(0,1fr)] lg:gap-7 px-3 sm:px-5 lg:px-8 w-full max-w-[1850px] mx-auto'
+          : 'px-3 sm:px-5 lg:px-8 w-full max-w-[1850px] mx-auto'
       }`}>
         
         {/* Left Sidebar (Only visible for authenticated users when not on landing page) */}
@@ -164,8 +172,16 @@ export const App: React.FC = () => {
           <Sidebar activeTab={activeTab} setActiveTab={handleTabChange} />
         )}
 
-        {/* Main Content View Container */}
-        <main key={activeTab} className="min-w-0 w-full animate-page-enter">
+        {/* Main Content View Container with Framer Motion Transition */}
+        <AnimatePresence mode="wait">
+          <motion.main
+            key={activeTab}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.24, ease: "easeOut" }}
+            className="min-w-0 w-full"
+          >
 
           
           {activeTab === 'landing' && (
@@ -259,10 +275,17 @@ export const App: React.FC = () => {
           {activeTab === 'audit' && (
             isTabAuthorized(['admin', 'super admin'])
               ? <AuditLogPage />
-              : renderAccessRestricted('Audit Logs')
+              : renderAccessRestricted('Audit Log')
           )}
 
-        </main>
+          {activeTab === 'ai-control' && (
+            isTabAuthorized(['admin', 'super admin'])
+              ? <AIControlCenterPage />
+              : renderAccessRestricted('AI Control Center')
+          )}
+
+          </motion.main>
+        </AnimatePresence>
 
       </div>
 

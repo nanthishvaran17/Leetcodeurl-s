@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   MessageSquare,
   X,
@@ -390,30 +391,42 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
 
   return (
     <div className="fixed bottom-6 right-6 z-50 font-sans">
-      {/* Floating Toggle Button */}
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="flex items-center space-x-2.5 px-4 py-3 rounded-full bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 hover:from-brand-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-2xl shadow-brand-600/40 hover:scale-105 active:scale-95 transition-all group cursor-pointer border border-white/20"
-        >
-          <div className="relative">
-            <Sparkles className="w-5 h-5 animate-pulse text-amber-300" />
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping"></span>
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full"></span>
-          </div>
-          <span>💬 NEC Unified AI</span>
-        </button>
-      )}
+      <AnimatePresence>
+        {/* Floating Toggle Button */}
+        {!isOpen && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 15 }}
+            whileHover={{ scale: 1.06, y: -2 }}
+            whileTap={{ scale: 0.94 }}
+            onClick={() => setIsOpen(true)}
+            className="flex items-center space-x-2.5 px-4 py-3 rounded-full bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 hover:from-brand-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-2xl shadow-brand-600/40 cursor-pointer border border-white/20 animate-pulseGlow"
+          >
+            <div className="relative">
+              <Sparkles className="w-5 h-5 animate-pulse text-amber-300" />
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping"></span>
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full"></span>
+            </div>
+            <span>💬 NEC Unified AI</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* Slide-Up Unified Chat Panel */}
-      {isOpen && (
-        <div
-          className={`bg-white dark:bg-navy-900 rounded-3xl border border-gray-200 dark:border-navy-800 shadow-2xl flex flex-col overflow-hidden animate-fade-in text-gray-900 dark:text-gray-100 transition-all ${
-            isExpanded
-              ? 'w-[800px] max-w-[calc(100vw-2rem)] h-[780px] max-h-[calc(100vh-4rem)]'
-              : 'w-[420px] max-w-[calc(100vw-2rem)] h-[640px]'
-          }`}
-        >
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.92, y: 20 }}
+            transition={{ type: "spring", stiffness: 350, damping: 25 }}
+            className={`bg-white dark:bg-navy-900 rounded-3xl border border-gray-200 dark:border-navy-800 shadow-2xl flex flex-col overflow-hidden text-gray-900 dark:text-gray-100 transition-all ${
+              isExpanded
+                ? 'w-[800px] max-w-[calc(100vw-2rem)] h-[780px] max-h-[calc(100vh-4rem)]'
+                : 'w-[420px] max-w-[calc(100vw-2rem)] h-[640px]'
+            }`}
+          >
           {/* Header */}
           <div className="p-3.5 bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 text-white flex flex-col gap-2 shrink-0 shadow-md">
             <div className="flex items-center justify-between">
@@ -755,8 +768,9 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
               <Send className="w-3.5 h-3.5" />
             </button>
           </div>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -6,14 +6,15 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
+import { getCachedStudents, saveCachedStudents } from '../data/canonicalRoster';
 
 interface PublicLeaderboardPageProps {
   onSelectStudent?: (student: StudentData) => void;
 }
 
 export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ onSelectStudent }) => {
-  const [students, setStudents] = useState<StudentData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [students, setStudents] = useState<StudentData[]>(() => getCachedStudents());
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterYear, setFilterYear] = useState('ALL');
   const [filterDept, setFilterDept] = useState('ALL');
@@ -24,10 +25,12 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
   }, []);
 
   const fetchPublicData = async () => {
-    setLoading(true);
     try {
       const res = await api.get('/public/leaderboard?limit=300&sort_by=solved_desc');
-      setStudents(res.data || []);
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+        setStudents(res.data);
+        saveCachedStudents(res.data);
+      }
     } catch (err) {
       console.error(err);
     } finally {

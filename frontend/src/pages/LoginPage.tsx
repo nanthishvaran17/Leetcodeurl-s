@@ -17,6 +17,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
 
   // Form States
   const [email, setEmail] = useState('');
+  const [maskedEmail, setMaskedEmail] = useState('');
   const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
   const [requestId, setRequestId] = useState<string>('');
   const [username, setUsername] = useState('');
@@ -28,6 +29,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(300);
+  const [expiresAtMs, setExpiresAtMs] = useState<number | null>(null);
   const [resendCooldown, setResendCooldown] = useState(0);
 
   const digitRefs = [
@@ -52,23 +54,30 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
-  // 5-minute OTP Expiration Timer
+  // Real Backend Expiry-driven Countdown Timer
   useEffect(() => {
     let interval: any = null;
-    if (step === 'otp_verify' && timerSeconds > 0) {
-      interval = setInterval(() => {
-        setTimerSeconds((prev) => prev - 1);
-      }, 1000);
+    if (step === 'otp_verify') {
+      const updateTimer = () => {
+        if (expiresAtMs) {
+          const remaining = Math.max(0, Math.floor((expiresAtMs - Date.now()) / 1000));
+          setTimerSeconds(remaining);
+        } else {
+          setTimerSeconds((prev) => Math.max(0, prev - 1));
+        }
+      };
+      updateTimer();
+      interval = setInterval(updateTimer, 1000);
     }
     return () => clearInterval(interval);
-  }, [step, timerSeconds]);
+  }, [step, expiresAtMs]);
 
   // Resend Cooldown Timer
   useEffect(() => {
     let interval: any = null;
     if (resendCooldown > 0) {
       interval = setInterval(() => {
-        setResendCooldown((prev) => prev - 1);
+        setResendCooldown((prev) => Math.max(0, prev - 1));
       }, 1000);
     }
     return () => clearInterval(interval);
@@ -97,9 +106,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       const res = await api.post('/auth/send-otp', { email: cleanEmail });
       setSuccessMsg(res.data.message || 'Verification code sent to your registered email address.');
       setRequestId(res.data.request_id || '');
+      setMaskedEmail(res.data.masked_email || maskEmail(cleanEmail));
+      if (res.data.expires_at) {
+        setExpiresAtMs(new Date(res.data.expires_at).getTime());
+      } else {
+        setExpiresAtMs(Date.now() + (res.data.expires_in || 300) * 1000);
+      }
       setStep('otp_verify');
       setOtpDigits(['', '', '', '', '', '']);
-      setTimerSeconds(300);
       setResendCooldown(60);
       setTimeout(() => {
         digitRefs[0].current?.focus();
@@ -108,7 +122,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       const detailMsg = err.response?.data?.detail || err.message;
       if (err.response?.status === 400 || err.response?.status === 404) {
         setError(detailMsg || 'Please enter your registered administrator email.');
-      } else if (err.response?.status === 503 || err.response?.status === 500) {
+      } else if (err.response?.status === 502 || err.response?.status === 503) {
         setError(detailMsg || 'Unable to send the verification code. Please check your network and try again.');
       } else {
         setError(detailMsg || 'Authentication service is temporarily unavailable. Please try again.');
@@ -125,18 +139,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
     setLoading(true);
 
     try {
-      const res = await api.post('/auth/send-otp', { email: email.trim().toLowerCase() });
-      setSuccessMsg(res.data.message || 'Verification code sent to your registered email address.');
+      const cleanEmail = email.trim().toLowerCase();
+      const res = await api.post('/auth/resend-otp', { email: cleanEmail });
+      setSuccessMsg(res.data.message || 'New verification code sent to your registered email address.');
       setRequestId(res.data.request_id || '');
+      setMaskedEmail(res.data.masked_email || maskEmail(cleanEmail));
+      if (res.data.expires_at) {
+        setExpiresAtMs(new Date(res.data.expires_at).getTime());
+      } else {
+        setExpiresAtMs(Date.now() + (res.data.expires_in || 300) * 1000);
+      }
       setStep('otp_verify');
       setOtpDigits(['', '', '', '', '', '']);
-      setTimerSeconds(300);
       setResendCooldown(60);
       setTimeout(() => {
         digitRefs[0].current?.focus();
       }, 100);
     } catch (err: any) {
-      setError('Unable to send the verification code. Please try again.');
+      setError(err.response?.data?.detail || 'Unable to send the verification code. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -406,12 +426,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
             <form onSubmit={handleVerifyOtp} className="space-y-4 animate-fadeIn">
               <div className="p-3 rounded-2xl bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800 text-xs text-brand-900 dark:text-brand-200 flex items-center justify-between">
                 <div>
-                  <span className="text-gray-500 dark:text-gray-400 block text-[10px] uppercase font-bold">Verification code sent to:</span>
-                  <span className="font-extrabold text-brand-700 dark:text-brand-300">{maskEmail(email)}</span>
+                  <span className="text-gray-500 dark:text-gray-400 block text-[10px] uppercase font-bold tracking-wider">Verification code sent to:</span>
+                  <span className="font-mono font-extrabold text-brand-700 dark:text-brand-300">{maskedEmail || maskEmail(email)}</span>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setStep('email')}
+                  onClick={() => { setStep('email'); setError(''); setSuccessMsg(''); }}
                   className="text-[11px] font-bold text-brand-600 hover:underline flex items-center space-x-1"
                 >
                   <ArrowLeft className="w-3 h-3" />
@@ -424,9 +444,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                   <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                     Verification Code
                   </label>
-                  <span className="text-xs font-extrabold font-mono text-brand-600 dark:text-brand-400">
-                    OTP expires in {formatTimer(timerSeconds)}
-                  </span>
+                  {timerSeconds > 0 ? (
+                    <span className="text-xs font-extrabold font-mono text-brand-600 dark:text-brand-400">
+                      OTP expires in {formatTimer(timerSeconds)}
+                    </span>
+                  ) : (
+                    <span className="text-xs font-extrabold font-mono text-rose-600 dark:text-rose-400 animate-pulse">
+                      OTP expired
+                    </span>
+                  )}
                 </div>
 
                 {/* 6-Digit Segmented Box Inputs */}
@@ -456,7 +482,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                   className="py-2.5 rounded-xl border border-gray-300 dark:border-navy-700 bg-gray-50 dark:bg-navy-900 text-gray-700 dark:text-gray-200 font-extrabold text-xs hover:bg-gray-100 dark:hover:bg-navy-800 disabled:opacity-50 flex items-center justify-center space-x-1 transition-all"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-                  <span>{resendCooldown > 0 ? `Resend (${resendCooldown}s)` : 'RESEND OTP'}</span>
+                  <span>{resendCooldown > 0 ? `Resend available in ${resendCooldown}s` : 'RESEND OTP'}</span>
                 </button>
 
                 <button

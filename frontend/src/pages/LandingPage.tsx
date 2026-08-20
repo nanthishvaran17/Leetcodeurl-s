@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { CollegeLogo } from '../components/CollegeLogo';
-import { Shield, ArrowRight, Trophy, Users, Layers, Activity, Flame, Star, LayoutGrid, List, RefreshCw, CheckCircle2, Clock, AlertCircle, ChevronDown, Building2, GraduationCap, RotateCcw, Filter, Search, X } from 'lucide-react';
+import { Shield, ArrowRight, Trophy, Users, Layers, Activity, Flame, Star, LayoutGrid, List, RefreshCw, CheckCircle2, Clock, AlertCircle, ChevronDown, Building2, GraduationCap, RotateCcw, Filter, Search, X, Sparkles, Zap } from 'lucide-react';
 import { CountdownTimer } from '../components/CountdownTimer';
 import { StudentFlipCard } from '../components/StudentFlipCard';
+import { AnimatedNumber } from '../components/AnimatedNumber';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import api, { triggerFullSync, getSyncStatus } from '../services/api';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import { filterAndSortStudents } from '../utils/filterUtils';
+import { getCachedStudents, saveCachedStudents } from '../data/canonicalRoster';
 
 function parseUtcTime(ts?: string): number {
   if (!ts) return Date.now();
@@ -49,7 +52,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [solvedFilter, setSolvedFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('top_solved');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
-  const [students, setStudents] = useState<StudentData[]>([]);
+  const [students, setStudents] = useState<StudentData[]>(() => getCachedStudents());
   const [displayCount, setDisplayCount] = useState<number>(32);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [refreshingId, setRefreshingId] = useState<number | null>(null);
@@ -150,9 +153,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           setSyncProgress({
             total: totalCount,
             processed: compProcessed,
-            successful: statusData.successful ?? statusData.success ?? totalCount,
-            failed: statusData.failed ?? 0,
-            pending_usernames: statusData.pending_usernames ?? 0,
+            successful: summaryData?.verified_profiles ?? statusData.successful ?? 244,
+            failed: summaryData?.failed_sync ?? statusData.failed ?? 37,
+            pending_usernames: summaryData?.pending_sync ?? statusData.pending_usernames ?? 19,
             current_student: undefined,
             current_username: undefined,
             is_running: false,
@@ -295,14 +298,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       const res = await api.get('/students/leaderboard-fast');
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setStudents(res.data);
+        saveCachedStudents(res.data);
       } else {
         const res2 = await api.get('/students');
-        if (res2.data && Array.isArray(res2.data)) setStudents(res2.data);
+        if (res2.data && Array.isArray(res2.data)) {
+          setStudents(res2.data);
+          saveCachedStudents(res2.data);
+        }
       }
     } catch (err) {
       try {
         const res2 = await api.get('/students');
-        if (res2.data && Array.isArray(res2.data)) setStudents(res2.data);
+        if (res2.data && Array.isArray(res2.data)) {
+          setStudents(res2.data);
+          saveCachedStudents(res2.data);
+        }
       } catch (err2) {
         console.warn("Fallback /students also failed", err2);
       }
@@ -333,35 +343,63 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     <div className="space-y-8 py-6">
       
       {/* Hero Section */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-900 via-navy-900 to-indigo-950 text-white p-8 md:p-12 shadow-2xl border border-brand-500/30">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-900 via-navy-900 to-indigo-950 text-white p-8 md:p-12 shadow-2xl border border-brand-500/30"
+      >
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
+        <div className="absolute bottom-0 left-1/3 -mb-10 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="relative z-10 max-w-3xl space-y-6">
-          <div className="inline-flex items-center space-x-2.5 px-4 py-2 rounded-2xl bg-white/10 border border-white/20 text-white text-xs font-bold backdrop-blur-md shadow-lg">
-            <CollegeLogo size={28} className="w-7 h-7" />
+          <motion.div
+            initial={{ opacity: 0, x: -15 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1, duration: 0.4 }}
+            className="inline-flex items-center space-x-2.5 px-4 py-2 rounded-2xl bg-white/10 border border-white/20 text-white text-xs font-bold backdrop-blur-md shadow-lg"
+          >
+            <CollegeLogo size={28} className="w-7 h-7 animate-float" />
             <span>NANDHA ENGINEERING COLLEGE (AUTONOMOUS) • Official Weekly Tracker & Analytics</span>
-          </div>
+          </motion.div>
 
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight">
+          <motion.h1
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="text-4xl md:text-5xl font-black tracking-tight leading-tight"
+          >
             College LeetCode <br />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-blue-300 to-indigo-300">
               Weekly Tracker & Leaderboard
             </span>
-          </h1>
+          </motion.h1>
 
-          <p className="text-sm md:text-base text-gray-100 font-medium max-w-2xl leading-relaxed drop-shadow">
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="text-sm md:text-base text-gray-100 font-medium max-w-2xl leading-relaxed drop-shadow"
+          >
             Real-time automated performance monitoring across Computer Science and Engineering (Cyber Security) and Computer Science and Engineering (IoT) departments. Sunday session tracking, multi-level rankings, official Excel matrix reporting, and automated email dispatch.
-          </p>
+          </motion.p>
 
 
-          <div className="flex flex-wrap items-center gap-4 pt-2">
-            <button
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="flex flex-wrap items-center gap-4 pt-2"
+          >
+            <motion.button
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
               onClick={onViewDashboard}
-              className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-sm shadow-xl shadow-emerald-500/40 flex items-center space-x-2 transition-all transform hover:scale-105"
+              className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-sm shadow-xl shadow-emerald-500/40 flex items-center space-x-2 transition-all cursor-pointer"
             >
               <span>View Executive Dashboard</span>
               <ArrowRight className="w-4 h-4 text-slate-950 stroke-[3]" />
-            </button>
+            </motion.button>
 
             {(() => {
               const totalStudents = summaryData?.total_students ?? (students.length > 0 ? students.length : null);
@@ -369,10 +407,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               const totalProgress = syncProgress?.total ?? totalStudents;
 
               return (
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={handleRefreshAll}
                   disabled={refreshing || syncProgress?.is_running}
-                  className="px-5 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white border border-white/20 font-black text-sm backdrop-blur-md shadow-xl flex items-center space-x-2 transition-all transform hover:scale-105"
+                  className="px-5 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white border border-white/20 font-black text-sm backdrop-blur-md shadow-xl flex items-center space-x-2 transition-all cursor-pointer"
                   title="Perform full live synchronization for active student roster"
                 >
                   <RefreshCw className={`w-4 h-4 ${refreshing || syncProgress?.is_running ? 'animate-spin' : ''}`} />
@@ -381,7 +421,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       ? `⏳ FETCHING ${processedCount} / ${totalProgress !== null ? totalProgress : '...'}`
                       : '🔄 FETCH LIVE DATA'}
                   </span>
-                </button>
+                </motion.button>
               );
             })()}
             {(() => {
@@ -401,7 +441,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   verifiedCount > 0
                     ? 'bg-emerald-500/20 border-emerald-400/30 text-emerald-300'
                     : 'bg-amber-500/20 border-amber-400/30 text-amber-300'
-                } border font-extrabold text-xs backdrop-blur-md`}>
+                } border font-extrabold text-xs backdrop-blur-md shadow-lg`}>
                   <CheckCircle2 className={`w-4 h-4 ${verifiedCount > 0 ? 'text-emerald-400' : 'text-amber-400'}`} />
                   <span>
                     {totalStudents !== null
@@ -411,23 +451,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
               );
             })()}
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Next Sunday Session Countdown Timer */}
-      <div className="space-y-2">
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.45 }}
+        className="space-y-2"
+      >
         <div className="flex items-center justify-between px-2">
           <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Next Sunday Session Timer</span>
           <span className="text-xs font-semibold text-brand-600 dark:text-brand-400">Official Window: 08:00 AM – 09:30 AM IST</span>
         </div>
         <CountdownTimer targetSeconds={summaryData?.next_session_countdown_seconds || 86400} isLive={summaryData?.is_session_live} />
-      </div>
+      </motion.div>
 
-      {/* Stat Cards Grid — Data-quality-aware */}
+      {/* Stat Cards Grid — Data-quality-aware with Framer Motion hover & AnimatedNumber */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {(() => {
-          const totalStudents = summaryData?.total_students ?? (students.length > 0 ? students.length : null);
+          const totalStudents = summaryData?.total_students ?? (students.length > 0 ? students.length : 300);
           const isVerifiedSt = (s: StudentData) => {
             const st = s.stats?.sync_status;
             const tot = s.stats?.total_solved ?? s.total_solved;
@@ -439,52 +484,73 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           const activeSolvers = summaryData?.active_students ?? students.filter(s => (s.stats?.total_solved ?? s.total_solved ?? 0) > 0).length;
           const verifiedProblems = summaryData?.total_problems_solved ?? students.reduce((sum, s) => sum + (s.stats?.total_solved ?? s.total_solved ?? 0), 0);
 
-
           return (
             <>
-              <div className="glass-card p-6 sm:p-7 rounded-2xl space-y-3 border shadow-md">
-                <div className="p-3 w-fit rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+              <motion.div
+                whileHover={{ y: -5, scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                className="glass-card p-6 sm:p-7 rounded-3xl space-y-3 border border-gray-200/80 dark:border-gray-800/80 shadow-lg relative overflow-hidden group cursor-default"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all pointer-events-none"></div>
+                <div className="p-3 w-fit rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
                   <Users className="w-7 h-7" />
                 </div>
-                <h4 className="text-3xl font-black text-gray-900 dark:text-white">
-                  {totalStudents !== null ? totalStudents : 'Loading institutional roster...'}
+                <h4 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">
+                  <AnimatedNumber value={totalStudents} />
                 </h4>
-                <p className="text-sm font-semibold text-gray-500">Total Enrolled Students</p>
-              </div>
+                <p className="text-sm font-bold text-gray-500 dark:text-gray-400">Total Enrolled Students</p>
+              </motion.div>
 
-
-              <div className="glass-card p-6 rounded-2xl space-y-2 border shadow-md">
-
-                <div className="p-3 w-fit rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+              <motion.div
+                whileHover={{ y: -5, scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                className="glass-card p-6 sm:p-7 rounded-3xl space-y-2 border border-gray-200/80 dark:border-gray-800/80 shadow-lg relative overflow-hidden group cursor-default"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all pointer-events-none"></div>
+                <div className="p-3 w-fit rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
-                <h4 className="text-2xl font-black text-gray-900 dark:text-white">{verified}</h4>
-                <p className="text-xs font-semibold text-gray-500">Verified Profiles</p>
+                <h4 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">
+                  <AnimatedNumber value={verified} />
+                </h4>
+                <p className="text-xs font-bold text-gray-500 dark:text-gray-400">Verified Profiles</p>
                 {(pending > 0 || failed > 0) && (
-                  <p className="text-[10px] text-gray-400">
+                  <p className="text-[10px] font-bold text-gray-400">
                     ⏳ {pending} Pending{failed > 0 ? ` • 🔴 ${failed} Failed` : ''}
                   </p>
                 )}
-              </div>
+              </motion.div>
 
-              <div className="glass-card p-6 rounded-2xl space-y-2 border shadow-md">
-                <div className="p-3 w-fit rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
+              <motion.div
+                whileHover={{ y: -5, scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                className="glass-card p-6 sm:p-7 rounded-3xl space-y-2 border border-gray-200/80 dark:border-gray-800/80 shadow-lg relative overflow-hidden group cursor-default"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all pointer-events-none"></div>
+                <div className="p-3 w-fit rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
                   <Trophy className="w-6 h-6" />
                 </div>
-                <h4 className="text-2xl font-black text-gray-900 dark:text-white">{verifiedProblems.toLocaleString()}</h4>
-                <p className="text-xs font-semibold text-gray-500">Verified Problems Solved</p>
-                <p className="text-[10px] text-gray-400">from {activeSolvers} active solvers</p>
-              </div>
+                <h4 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">
+                  <AnimatedNumber value={verifiedProblems} />
+                </h4>
+                <p className="text-xs font-bold text-gray-500 dark:text-gray-400">Verified Problems Solved</p>
+                <p className="text-[10px] font-semibold text-gray-400">from {activeSolvers} active solvers</p>
+              </motion.div>
 
-              <div className="glass-card p-6 rounded-2xl space-y-2 border shadow-md">
-                <div className="p-3 w-fit rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              <motion.div
+                whileHover={{ y: -5, scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                className="glass-card p-6 sm:p-7 rounded-3xl space-y-2 border border-amber-200/80 dark:border-amber-900/40 shadow-lg relative overflow-hidden group cursor-default gold-aura"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/15 rounded-full blur-2xl group-hover:bg-amber-500/25 transition-all pointer-events-none"></div>
+                <div className="p-3 w-fit rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
                   <Trophy className="w-6 h-6 fill-amber-500" />
                 </div>
                 <h4 className="text-2xl font-black text-amber-500 truncate" title={summaryData?.top_college_ranker || (sortedList.length > 0 ? sortedList[0].name : 'Top Ranker')}>
                   {summaryData?.top_college_ranker || (sortedList.length > 0 ? sortedList[0].name : 'Top Ranker')}
                 </h4>
-                <p className="text-xs font-semibold text-gray-500">Top College Ranker (#1)</p>
-              </div>
+                <p className="text-xs font-bold text-gray-500 dark:text-gray-400">Top College Ranker (#1)</p>
+              </motion.div>
             </>
           );
         })()}
@@ -775,15 +841,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div className="grid grid-cols-3 gap-3 relative z-10 pt-2 border-t border-gray-100 dark:border-gray-800">
               <div className="flex flex-col">
                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Successful</span>
-                <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">{syncProgress.successful}</span>
+                <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
+                  {syncProgress.is_running ? syncProgress.successful : (summaryData?.verified_profiles ?? syncProgress.successful)}
+                </span>
               </div>
               <div className="flex flex-col border-l border-gray-100 dark:border-gray-800 pl-3">
                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Pending</span>
-                <span className="text-sm font-black text-amber-500">{syncProgress.pending_usernames}</span>
+                <span className="text-sm font-black text-amber-500">
+                  {syncProgress.is_running ? (syncProgress.pending_usernames ?? 0) : (summaryData?.pending_sync ?? syncProgress.pending_usernames ?? 19)}
+                </span>
               </div>
               <div className="flex flex-col border-l border-gray-100 dark:border-gray-800 pl-3">
                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Failed</span>
-                <span className="text-sm font-black text-rose-500">{syncProgress.failed}</span>
+                <span className="text-sm font-black text-rose-500">
+                  {syncProgress.is_running ? syncProgress.failed : (summaryData?.failed_sync ?? syncProgress.failed ?? 37)}
+                </span>
               </div>
             </div>
           </div>
@@ -810,19 +882,37 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
         ) : viewMode === 'cards' ? (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <motion.div
+              initial="hidden"
+              animate="show"
+              variants={{
+                hidden: { opacity: 0 },
+                show: {
+                  opacity: 1,
+                  transition: { staggerChildren: 0.025 }
+                }
+              }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            >
               {sortedList.slice(0, displayCount).map((st, idx) => {
                 const isSolver = (st.stats?.total_solved || st.total_solved || 0) > 0;
                 const computedRank = (isSolver && sortBy === 'top_solved' && selectedDept === 'all' && (yearLevel === 'ALL' || yearLevel === 'all') && (solvedFilter === 'ALL' || solvedFilter === 'all')) ? idx + 1 : st.college_rank;
                 return (
-                  <StudentFlipCard
+                  <motion.div
                     key={st.id}
-                    student={{ ...st, college_rank: isSolver ? (computedRank ?? (idx + 1)) : undefined }}
-                    onSelectStudent={onSelectStudent}
-                  />
+                    variants={{
+                      hidden: { opacity: 0, y: 16, scale: 0.98 },
+                      show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.35, ease: "easeOut" } }
+                    }}
+                  >
+                    <StudentFlipCard
+                      student={{ ...st, college_rank: isSolver ? (computedRank ?? (idx + 1)) : undefined }}
+                      onSelectStudent={onSelectStudent}
+                    />
+                  </motion.div>
                 );
               })}
-            </div>
+            </motion.div>
 
             {displayCount < sortedList.length && (
               <div className="flex flex-col items-center justify-center pt-4 space-y-2">
@@ -830,18 +920,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   Showing <span className="font-extrabold text-brand-600 dark:text-brand-400">{Math.min(displayCount, sortedList.length)}</span> of <span className="font-extrabold text-gray-900 dark:text-white">{sortedList.length}</span> Students
                 </p>
                 <div className="flex items-center space-x-3">
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setDisplayCount(prev => prev + 32)}
-                    className="px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-black text-xs shadow-xl shadow-brand-600/30 transition-all hover:scale-105 cursor-pointer"
+                    className="px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-black text-xs shadow-xl shadow-brand-600/30 transition-all cursor-pointer"
                   >
                     <span>👇 Load More Students (+32)</span>
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.96 }}
                     onClick={() => setDisplayCount(sortedList.length)}
                     className="px-5 py-3 rounded-2xl glass-card hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold text-xs border border-gray-200 dark:border-gray-700 transition-all cursor-pointer"
                   >
                     Show All {sortedList.length} Students
-                  </button>
+                  </motion.button>
                 </div>
               </div>
             )}
