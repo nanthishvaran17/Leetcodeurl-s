@@ -552,51 +552,7 @@ export const StudentDataIssuesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── 2. REAL-TIME GROUND TRUTH TELEMETRY KPI RIBBON ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 gap-3">
-        {[
-          { label: 'TOTAL STUDENTS', count: summary?.total_students ?? 0, color: '#ffffff', borderColor: '#64748b', bgFrom: '#0f172a', bgTo: '#1e293b', filter: 'all' },
-          { label: 'NOT STARTED', count: summary?.not_started ?? 0, color: '#38bdf8', borderColor: '#0ea5e9', bgFrom: '#0c1a2e', bgTo: '#0f2540', filter: 'NOT_STARTED' },
-          { label: 'SYNC FAILED', count: summary?.sync_failed ?? 0, color: '#fb7185', borderColor: '#f43f5e', bgFrom: '#1a0a10', bgTo: '#2a1020', filter: 'SYNC_FAILED' },
-          { label: 'NEVER SYNCED', count: summary?.never_synced ?? 0, color: '#fbbf24', borderColor: '#f59e0b', bgFrom: '#1a1508', bgTo: '#2a2210', filter: 'NEVER_SYNCED' },
-          { label: 'MISSING USER', count: summary?.missing_username ?? 0, color: '#c084fc', borderColor: '#a855f7', bgFrom: '#160a24', bgTo: '#20103a', filter: 'MISSING_USERNAME' },
-          { label: 'INVALID PROFILE', count: (summary?.invalid_username ?? 0) + (summary?.invalid_url ?? 0), color: '#f87171', borderColor: '#ef4444', bgFrom: '#1a0808', bgTo: '#2a1010', filter: 'INVALID_USERNAME' },
-          { label: 'STALE (>7d)', count: summary?.stale_data ?? 0, color: '#facc15', borderColor: '#eab308', bgFrom: '#1a1808', bgTo: '#2a2510', filter: 'STALE_DATA' },
-          { label: 'DATA MISMATCH', count: summary?.data_mismatch ?? 0, color: '#fb923c', borderColor: '#f97316', bgFrom: '#1a1008', bgTo: '#2a1a10', filter: 'DATA_MISMATCH' },
-          { label: 'HEALTHY', count: summary?.healthy ?? 0, color: '#34d399', borderColor: '#10b981', bgFrom: '#061a14', bgTo: '#0a2a20', filter: 'HEALTHY' }
-        ].map((kpi, idx) => {
-          const isSelected = selectedIssue === kpi.filter;
-          return (
-            <div
-              key={idx}
-              onClick={() => setSelectedIssue(kpi.filter)}
-              className={`relative p-3.5 rounded-2xl text-center transition-all cursor-pointer overflow-hidden ${
-                isSelected ? 'ring-2 ring-brand-400 scale-[1.04] shadow-xl' : 'hover:scale-[1.02] shadow-md'
-              }`}
-              style={{
-                background: `linear-gradient(135deg, ${kpi.bgFrom}, ${kpi.bgTo})`,
-                borderLeft: `3px solid ${kpi.borderColor}`,
-                borderTop: '1px solid rgba(255,255,255,0.06)',
-                borderRight: '1px solid rgba(255,255,255,0.03)',
-                borderBottom: '1px solid rgba(255,255,255,0.03)',
-              }}
-            >
-              {/* Glow effect on selected */}
-              {isSelected && (
-                <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{
-                  boxShadow: `inset 0 0 20px ${kpi.borderColor}33, 0 0 15px ${kpi.borderColor}22`
-                }} />
-              )}
-              <span className="text-[10px] font-bold uppercase tracking-widest block truncate" style={{ color: 'rgba(148,163,184,0.9)' }} title={kpi.label}>
-                {kpi.label}
-              </span>
-              <span className="text-2xl font-mono font-black mt-1 block" style={{ color: kpi.color }}>
-                {kpi.count}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+      {/* ── 2. QUICK VIEWS PRESETS & SAVED FILTERS BAR ── */}
 
       {/* ── 3. QUICK VIEWS PRESETS & SAVED FILTERS BAR ── */}
       <div className="p-4 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl space-y-2.5">
