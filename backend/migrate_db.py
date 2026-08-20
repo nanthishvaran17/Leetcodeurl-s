@@ -171,6 +171,56 @@ def run_db_migrations():
             except Exception:
                 pass
 
+        public_res_cols = [
+            ("state", "VARCHAR(30) DEFAULT 'PENDING'"),
+            ("previous_state", "VARCHAR(30)"),
+            ("state_changed_at", "DATETIME"),
+            ("last_error_code", "VARCHAR(50)"),
+            ("evidence_json", "TEXT"),
+            ("record_hash", "VARCHAR(128)"),
+        ]
+        for col_name, col_type in public_res_cols:
+            try:
+                cursor.execute(f"ALTER TABLE weekly_public_results ADD COLUMN {col_name} {col_type};")
+                print(f"Added column '{col_name}' to weekly_public_results.")
+            except Exception:
+                pass
+
+        virtual_res_cols = [
+            ("state", "VARCHAR(30) DEFAULT 'VALIDATED'"),
+            ("evidence_json", "TEXT"),
+            ("record_hash", "VARCHAR(128)"),
+        ]
+        for col_name, col_type in virtual_res_cols:
+            try:
+                cursor.execute(f"ALTER TABLE weekly_virtual_results ADD COLUMN {col_name} {col_type};")
+                print(f"Added column '{col_name}' to weekly_virtual_results.")
+            except Exception:
+                pass
+
+        snapshot_cols = [
+            ("session_data_hash", "VARCHAR(128)"),
+            ("reconciliation_summary", "TEXT"),
+            ("snapshot_version", "INTEGER DEFAULT 1"),
+        ]
+        for col_name, col_type in snapshot_cols:
+            try:
+                cursor.execute(f"ALTER TABLE official_weekly_snapshots ADD COLUMN {col_name} {col_type};")
+                print(f"Added column '{col_name}' to official_weekly_snapshots.")
+            except Exception:
+                pass
+
+        session_cols = [
+            ("session_data_hash", "VARCHAR(128)"),
+            ("reconciliation_summary", "TEXT"),
+        ]
+        for col_name, col_type in session_cols:
+            try:
+                cursor.execute(f"ALTER TABLE weekly_sessions ADD COLUMN {col_name} {col_type};")
+                print(f"Added column '{col_name}' to weekly_sessions.")
+            except Exception:
+                pass
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS student_contest_snapshots (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -162,6 +162,8 @@ class WeeklySession(Base):
     completed_at = Column(DateTime, nullable=True)
     finalized_at = Column(DateTime, nullable=True)
 
+    session_data_hash = Column(String(128), nullable=True)
+    reconciliation_summary = Column(JSON, nullable=True)
     snapshots = relationship("WeeklySessionSnapshot", back_populates="session", cascade="all, delete-orphan")
     public_results = relationship("WeeklyPublicResult", back_populates="session", cascade="all, delete-orphan")
     virtual_results = relationship("WeeklyVirtualResult", back_populates="session", cascade="all, delete-orphan")
@@ -200,6 +202,13 @@ class WeeklyPublicResult(Base):
     year = Column(String(10), nullable=False)
 
     participation_status = Column(String(30), default="PENDING", index=True) # PUBLIC_ATTENDED, PUBLIC_NOT_ATTENDED, DATA_ERROR, PENDING
+    state = Column(String(30), default="PENDING", index=True) # PENDING, FETCHING, SOURCE_FOUND, VALIDATING, VALIDATED, CLASSIFIED, FINALIZED, INVALID_USERNAME, FETCH_ERROR, SOURCE_TIMEOUT, RATE_LIMITED, DATA_ERROR, UNVERIFIED
+    previous_state = Column(String(30), nullable=True)
+    state_changed_at = Column(DateTime, default=datetime.datetime.utcnow)
+    last_error_code = Column(String(50), nullable=True)
+    evidence_json = Column(Text, nullable=True)
+    record_hash = Column(String(128), nullable=True)
+
     q1 = Column(Integer, default=0)
     q2 = Column(Integer, default=0)
     q3 = Column(Integer, default=0)
@@ -231,6 +240,10 @@ class WeeklyVirtualResult(Base):
     name = Column(String(150), nullable=False)
 
     participation_status = Column(String(30), default="VIRTUAL_ATTENDED")
+    state = Column(String(30), default="VALIDATED", index=True)
+    evidence_json = Column(Text, nullable=True)
+    record_hash = Column(String(128), nullable=True)
+
     q1 = Column(Integer, default=0)
     q2 = Column(Integer, default=0)
     q3 = Column(Integer, default=0)
@@ -271,6 +284,9 @@ class OfficialWeeklySnapshot(Base):
     finalized_at = Column(DateTime, default=datetime.datetime.utcnow)
     dataset = Column(JSON, nullable=False)
     dataset_hash = Column(String(100), nullable=False)
+    session_data_hash = Column(String(128), nullable=True)
+    reconciliation_summary = Column(JSON, nullable=True)
+    snapshot_version = Column(Integer, default=1)
     student_count = Column(Integer, default=273)
     error_count = Column(Integer, default=0)
     is_superseded = Column(Boolean, default=False)
