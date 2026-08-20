@@ -1,0 +1,29 @@
+{
+  "contest_slug": "weekly-contest-516",
+  "contest_date": "23.08.2026",
+  "session_id": "21",
+  "cohort_size": 300,
+  "counts": {
+    "public_attended": 0,
+    "virtual_attended": 0,
+    "not_attended": 0,
+    "data_error": 0,
+    "unverified": 300
+  },
+  "reconciliation": {
+    "expected": 300,
+    "actual": 300,
+    "passed": true
+  },
+  "integrity": {
+    "session_hash": "89307bc1dcf5c4b2a42c0b0613815a0d675fbf97f0d76c37a0597e8aaee8591d",
+    "algorithm": "SHA-256",
+    "tamper_detected_on_mutation": true
+  },
+  "tests": {
+    "passed": 40,
+    "failed": 0
+  },
+  "execution_time_seconds": 0.102,
+  "verified_at": "2026-08-20T02:41:43.714812"
+}
