@@ -63,7 +63,7 @@ export const EmailDeliveryTab: React.FC = () => {
   const [logs, setLogs] = useState<EmailLog[]>([]);
   const [sessions, setSessions] = useState<WeeklySessionOption[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState<'status' | 'recipients' | 'history'>('status');
+  const [activeSection, setActiveSection] = useState<'manual' | 'automated' | 'recipients' | 'history'>('manual');
 
   // Manual send modal
   const [showSendModal, setShowSendModal] = useState(false);
@@ -559,106 +559,212 @@ export const EmailDeliveryTab: React.FC = () => {
         )}
       </div>
 
-      {/* Automated Schedule & Auto-Cron Configuration Card */}
-      <div className="glass-card p-6 rounded-3xl border border-amber-500/30 bg-white dark:bg-navy-900 shadow-xl space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-3">
-          <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
-              <Clock className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-black text-gray-900 dark:text-white flex items-center space-x-2">
-                <span>Automated Email Dispatch Schedule & Time Configuration</span>
-              </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                Configure automated background execution time, day of week, and trigger status for institutional reports.
-              </p>
-            </div>
-          </div>
+      {/* ── SUB-MODE NAVIGATION BAR ────────────────────────── */}
+      <div className="flex items-center space-x-2 bg-gray-100 dark:bg-navy-950 p-1.5 rounded-2xl border border-gray-200 dark:border-gray-800 flex-wrap gap-2">
+        <button
+          onClick={() => setActiveSection('manual')}
+          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+            activeSection === 'manual'
+              ? 'bg-gradient-to-r from-indigo-600 to-brand-600 text-white shadow-md'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+          }`}
+        >
+          <Send className="w-4 h-4 text-emerald-400" />
+          <span>⚡ Manual Instant Dispatch</span>
+        </button>
 
-          <div className="flex items-center space-x-2">
-            <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
-              autoScheduleEnabled
-                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/30'
-                : 'bg-gray-100 text-gray-700 dark:bg-navy-950 dark:text-gray-400 border border-gray-300'
-            }`}>
-              {autoScheduleEnabled ? '🟢 AUTO CRON ACTIVE' : '⚪ MANUAL ONLY'}
-            </span>
-          </div>
-        </div>
+        <button
+          onClick={() => setActiveSection('automated')}
+          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+            activeSection === 'automated'
+              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+          }`}
+        >
+          <Clock className="w-4 h-4" />
+          <span>⏰ Automated Sunday Schedule & Time Settings</span>
+        </button>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Schedule Status Toggle */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase">Auto Dispatch Status</label>
-            <select
-              value={autoScheduleEnabled ? 'ENABLED' : 'DISABLED'}
-              onChange={(e) => setAutoScheduleEnabled(e.target.value === 'ENABLED')}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-navy-950 text-xs font-bold text-gray-900 dark:text-white"
-            >
-              <option value="ENABLED">🟢 Enabled (Auto-Trigger On Schedule)</option>
-              <option value="DISABLED">⚪ Disabled (Manual Trigger Only)</option>
-            </select>
-          </div>
+        <button
+          onClick={() => setActiveSection('recipients')}
+          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+            activeSection === 'recipients'
+              ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          <span>Report Recipients ({recipients.length})</span>
+        </button>
 
-          {/* Schedule Frequency */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase">Report Frequency</label>
-            <select
-              value={scheduleFrequency}
-              onChange={(e) => setScheduleFrequency(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-navy-950 text-xs font-bold text-gray-900 dark:text-white"
-            >
-              <option value="WEEKLY_EXECUTIVE">Weekly Sunday Executive Summary</option>
-              <option value="DAILY_ROSTER">Daily Roster Audit Log</option>
-              <option value="MONTHLY_BENCHMARK">Monthly Benchmark Matrix</option>
-            </select>
-          </div>
-
-          {/* Schedule Day */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase">Trigger Day</label>
-            <select
-              value={scheduleDay}
-              onChange={(e) => setScheduleDay(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-navy-950 text-xs font-bold text-gray-900 dark:text-white"
-            >
-              <option value="Sunday">Every Sunday</option>
-              <option value="Monday">Every Monday</option>
-              <option value="Friday">Every Friday</option>
-            </select>
-          </div>
-
-          {/* Schedule Time */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase">Trigger Time (IST)</label>
-            <select
-              value={scheduleTime}
-              onChange={(e) => setScheduleTime(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-navy-950 text-xs font-bold text-gray-900 dark:text-white"
-            >
-              <option value="08:00">08:00 AM (Morning Summary)</option>
-              <option value="09:00">09:00 AM (Office Opening)</option>
-              <option value="18:00">06:00 PM (Evening Closing)</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800 flex-wrap gap-3">
-          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-            Next scheduled run: <strong className="text-gray-900 dark:text-white">{scheduleDay} at {scheduleTime} AM</strong> ({autoScheduleEnabled ? 'Active' : 'Paused'})
-          </p>
-
-          <button
-            onClick={handleSaveScheduleSettings}
-            disabled={savingSchedule}
-            className="px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs rounded-xl shadow-md transition-all flex items-center space-x-1.5 cursor-pointer"
-          >
-            {savingSchedule ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Clock className="w-3.5 h-3.5" />}
-            <span>Save Auto-Schedule Settings</span>
-          </button>
-        </div>
+        <button
+          onClick={() => setActiveSection('history')}
+          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+            activeSection === 'history'
+              ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+          }`}
+        >
+          <FileText className="w-4 h-4" />
+          <span>Delivery History ({logs.length})</span>
+        </button>
       </div>
+
+      {/* ── MANUAL INSTANT DISPATCH CARD ─────────────────── */}
+      {activeSection === 'manual' && (
+        <div className="glass-card p-6 rounded-3xl border border-indigo-500/30 bg-white dark:bg-navy-900 shadow-xl space-y-4">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3 flex-wrap gap-2">
+            <div className="flex items-center space-x-3">
+              <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                <Send className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-gray-900 dark:text-white">Manual Instant Email Dispatch Center</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                  Trigger an immediate, on-demand report email dispatch to college management, HODs, or custom email lists.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => { setShowSendModal(true); setSendStep('select'); setSelectedSessionId(null); setSelectedRecipientIds(new Set()); setCustomMessage(''); setSendResult(null); }}
+              className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-brand-600 hover:from-indigo-700 hover:to-brand-700 text-white font-black text-xs rounded-2xl shadow-lg shadow-indigo-500/30 transition-all flex items-center space-x-2 cursor-pointer transform hover:scale-105"
+            >
+              <Send className="w-4 h-4" />
+              <span>Compose & Send Manual Email Report Now</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-medium text-gray-600 dark:text-gray-300">
+            <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 space-y-1">
+              <span className="font-black text-gray-900 dark:text-white block">1. Select Report Session</span>
+              <p className="text-[11px] text-gray-400">Choose from recent weekly sessions or auto-generated executive snapshot.</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 space-y-1">
+              <span className="font-black text-gray-900 dark:text-white block">2. Target Distribution</span>
+              <p className="text-[11px] text-gray-400">Filter recipients by Role (Deans, HODs, Management) or pick specific emails.</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 space-y-1">
+              <span className="font-black text-gray-900 dark:text-white block">3. Add Custom Note</span>
+              <p className="text-[11px] text-gray-400">Attach an executive summary note or administrative instructions before dispatch.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── AUTOMATED SCHEDULE CARD ───────────────────────── */}
+      {activeSection === 'automated' && (
+        <div className="glass-card p-6 rounded-3xl border border-amber-500/30 bg-white dark:bg-navy-900 shadow-xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-3">
+            <div className="flex items-center space-x-3">
+              <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                <Clock className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-gray-900 dark:text-white flex items-center space-x-2">
+                  <span>Automated Sunday Email Scheduler & Time Configuration</span>
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                  Configure automated background execution time, day of week, and trigger status for institutional reports.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
+                autoScheduleEnabled
+                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/30'
+                  : 'bg-gray-100 text-gray-700 dark:bg-navy-950 dark:text-gray-400 border border-gray-300'
+              }`}>
+                {autoScheduleEnabled ? '🟢 AUTO CRON ACTIVE' : '⚪ MANUAL ONLY'}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Schedule Status Toggle */}
+            <div className="space-y-1">
+              <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase">Auto Dispatch Status</label>
+              <select
+                value={autoScheduleEnabled ? 'ENABLED' : 'DISABLED'}
+                onChange={(e) => setAutoScheduleEnabled(e.target.value === 'ENABLED')}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-navy-950 text-xs font-bold text-gray-900 dark:text-white"
+              >
+                <option value="ENABLED">🟢 Enabled (Auto-Trigger On Schedule)</option>
+                <option value="DISABLED">⚪ Disabled (Manual Trigger Only)</option>
+              </select>
+            </div>
+
+            {/* Schedule Frequency */}
+            <div className="space-y-1">
+              <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase">Report Frequency</label>
+              <select
+                value={scheduleFrequency}
+                onChange={(e) => setScheduleFrequency(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-navy-950 text-xs font-bold text-gray-900 dark:text-white"
+              >
+                <option value="WEEKLY_EXECUTIVE">Weekly Sunday Executive Summary</option>
+                <option value="DAILY_ROSTER">Daily Roster Audit Log</option>
+                <option value="MONTHLY_BENCHMARK">Monthly Benchmark Matrix</option>
+              </select>
+            </div>
+
+            {/* Schedule Day */}
+            <div className="space-y-1">
+              <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase">Trigger Day</label>
+              <select
+                value={scheduleDay}
+                onChange={(e) => setScheduleDay(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-navy-950 text-xs font-bold text-gray-900 dark:text-white"
+              >
+                <option value="Sunday">Every Sunday</option>
+                <option value="Monday">Every Monday</option>
+                <option value="Friday">Every Friday</option>
+              </select>
+            </div>
+
+            {/* Schedule Time */}
+            <div className="space-y-1">
+              <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase">Trigger Time (IST)</label>
+              <select
+                value={scheduleTime}
+                onChange={(e) => setScheduleTime(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-navy-950 text-xs font-bold text-gray-900 dark:text-white"
+              >
+                <option value="08:00">08:00 AM (Morning Summary)</option>
+                <option value="09:00">09:00 AM (Office Opening)</option>
+                <option value="18:00">06:00 PM (Evening Closing)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800 flex-wrap gap-3">
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+              Next scheduled run: <strong className="text-gray-900 dark:text-white">{scheduleDay} at {scheduleTime} AM</strong> ({autoScheduleEnabled ? 'Active' : 'Paused'})
+            </p>
+
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={handleTriggerAutomatedDispatch}
+                disabled={isTriggeringWeekly}
+                className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {isTriggeringWeekly ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                <span>Trigger Auto-Dispatch Right Now</span>
+              </button>
+
+              <button
+                onClick={handleSaveScheduleSettings}
+                disabled={savingSchedule}
+                className="px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs rounded-xl shadow-md transition-all flex items-center space-x-1.5 cursor-pointer"
+              >
+                {savingSchedule ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Clock className="w-3.5 h-3.5" />}
+                <span>Save Auto-Schedule Settings</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Action Buttons */}
       <div className="flex flex-wrap items-center gap-3">
@@ -695,20 +801,20 @@ export const EmailDeliveryTab: React.FC = () => {
 
         {/* Section Tabs */}
         <div className="flex items-center ml-auto border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
-          {(['status', 'recipients', 'history'] as const).map(s => (
+          {(['manual', 'automated', 'recipients', 'history'] as const).map(s => (
             <button
               key={s}
               onClick={() => setActiveSection(s)}
               className={`px-4 py-2 text-[11px] font-black capitalize transition-all ${activeSection === s ? 'bg-brand-600 text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`}
             >
-              {s === 'status' ? 'Status' : s === 'recipients' ? 'Recipients' : 'History'}
+              {s === 'manual' ? 'Manual Send' : s === 'automated' ? 'Auto Schedule' : s === 'recipients' ? 'Recipients' : 'History'}
             </button>
           ))}
         </div>
       </div>
 
-      {/* ── STATUS SECTION ──────────────────────────────────────── */}
-      {activeSection === 'status' && (
+      {/* ── STATUS / MANUAL SUMMARY SECTION ───────────────────── */}
+      {(activeSection === 'manual' || activeSection === 'automated') && (
         <div className="glass-card rounded-3xl border border-gray-200 dark:border-gray-700/50 overflow-hidden">
           <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
             <div>
