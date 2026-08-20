@@ -98,23 +98,29 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
   return (
     <div className="space-y-6 pb-12 animate-fade-in font-sans">
 
-      {/* ── 1. HEADER TELEMETRY BAR ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-2xl border border-indigo-500/30">
-        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-80 h-80 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
+      {/* ── 1. HEADER TELEMETRY BAR (RICH GLOWING INSTITUTIONAL GRADIENT) ── */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-2xl border border-brand-500/30">
+        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-80 h-80 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-black">
-              <Cpu className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-              <span>AI CONTROL CENTER • INTELLIGENT OPERATIONS DASHBOARD</span>
+          <div className="space-y-2.5 max-w-3xl">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                SYSTEM ONLINE
+              </span>
+              <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
+                <Cpu className="w-3.5 h-3.5 text-amber-400" />
+                <span>NANDHA DATA OPERATIONS CENTER</span>
+              </span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">
-              AI Operations <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-indigo-300 to-teal-300">Control Center</span>
+              Institutional <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">AI Control Center</span>
             </h1>
 
-            <p className="text-xs sm:text-sm text-gray-300 font-semibold max-w-3xl">
-              Unified multi-step task execution, tool router, database audits & two-step safety confirmation — integrated into the single NEC Unified AI workspace.
+            <p className="text-xs sm:text-sm text-gray-300 font-bold tracking-wide">
+              Continuous Contest Synchronization, AI Intelligence & Automated Lifecycle Dispatch
             </p>
           </div>
 

@@ -38,21 +38,33 @@ export const AuditLogPage: React.FC = () => {
   return (
     <div className="space-y-6">
       
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white flex items-center space-x-2">
-            <ShieldAlert className="w-6 h-6 text-brand-600 dark:text-brand-400" />
-            <span>Admin Identity & Audit Log</span>
-          </h2>
-          <p className="text-xs text-gray-500 mt-1">Real-time database audit log recording administrator identity, logins, report generation, email dispatches & setting modifications.</p>
+      {/* ── HEADER (RICH GLOWING INSTITUTIONAL GRADIENT) ── */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-2xl border border-brand-500/30">
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
+          <div className="space-y-2.5 max-w-2xl">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
+              <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+              <span>ADMIN IDENTITY & AUDIT TRAIL</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white">
+              Admin Identity & <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Audit Log</span>
+            </h1>
+            <p className="text-xs md:text-sm text-gray-300 font-bold tracking-wide">
+              Real-time database audit log recording administrator identity, logins, report generation, email dispatches & setting modifications.
+            </p>
+          </div>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={fetchLogs}
+              disabled={loading}
+              className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 disabled:opacity-50 text-white rounded-2xl text-xs font-bold shadow-lg shadow-brand-600/30 transition-all cursor-pointer"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <span>{loading ? 'Refreshing...' : 'Refresh Logs'}</span>
+            </button>
+          </div>
         </div>
-        <button
-          onClick={fetchLogs}
-          className="flex items-center space-x-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-2xl shadow-md transition-all self-start md:self-auto"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          <span>Refresh Logs</span>
-        </button>
       </div>
 
       {/* Filter Controls */}

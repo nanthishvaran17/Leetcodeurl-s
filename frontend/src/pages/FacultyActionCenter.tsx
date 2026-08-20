@@ -92,25 +92,33 @@ export const FacultyActionCenter: React.FC = () => {
   return (
     <div className="space-y-6">
 
-      {/* ── HEADER ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
-            <Zap className="w-7 h-7 text-brand-500 stroke-[2.5]" />
-            <span>Faculty Action Center & Mentoring Hub</span>
-          </h1>
-          <p className="text-xs text-gray-500 font-bold mt-0.5">
-            "What Needs My Attention?" Engine • Priority Action Queue • Intervention Lifecycle
-          </p>
+      {/* ── HEADER (RICH GLOWING INSTITUTIONAL GRADIENT) ── */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-2xl border border-brand-500/30">
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
+          <div className="space-y-2.5 max-w-2xl">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
+              <Zap className="w-3.5 h-3.5 text-amber-400" />
+              <span>FACULTY ACTION CENTER & MENTORING HUB</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white">
+              Faculty Action Center & <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Mentoring Hub</span>
+            </h1>
+            <p className="text-xs md:text-sm text-gray-300 font-bold tracking-wide">
+              "What Needs My Attention?" Engine • Priority Action Queue • Intervention Lifecycle
+            </p>
+          </div>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={loadData}
+              disabled={loading}
+              className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 disabled:opacity-50 text-white rounded-2xl text-xs font-bold shadow-lg shadow-brand-600/30 transition-all cursor-pointer"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <span>{loading ? 'Refreshing...' : 'Refresh Queue'}</span>
+            </button>
+          </div>
         </div>
-
-        <button
-          onClick={loadData}
-          className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors self-start sm:self-auto cursor-pointer"
-          title="Refresh Data"
-        >
-          <RefreshCw className={`w-4 h-4 text-gray-600 dark:text-gray-300 ${loading ? 'animate-spin' : ''}`} />
-        </button>
       </div>
 
       {/* ── 1. COLLEGE-WIDE INTERVENTION EFFECTIVENESS MATRIX ── */}
