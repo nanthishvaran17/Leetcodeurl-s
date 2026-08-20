@@ -429,7 +429,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
             }`}
           >
           {/* Header */}
-          <div className="p-3.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white flex flex-col gap-1.5 shrink-0 shadow-md">
+          <div className="p-3.5 bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 text-white flex flex-col gap-2 shrink-0 shadow-md">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2.5">
                 <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
@@ -442,11 +442,22 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                       PROD
                     </span>
                   </h3>
-                  <p className="text-[10px] text-white/80 font-medium">Autonomous Operations & Institutional Intelligence</p>
+                  <p className="text-[10px] text-white/80 font-medium">AI Operations Control Center & Intelligence</p>
                 </div>
               </div>
 
               <div className="flex items-center space-x-1">
+                <button
+                  onClick={() => setShowLaunchers(!showLaunchers)}
+                  className={`px-2 py-1 rounded-lg text-[10px] font-black flex items-center gap-1 transition-all cursor-pointer border ${
+                    showLaunchers ? 'bg-amber-400 text-slate-950 border-amber-300' : 'bg-white/10 hover:bg-white/20 text-white border-white/20'
+                  }`}
+                  title="Operations Launchers & Audit Tools"
+                >
+                  <Sliders className="w-3 h-3" />
+                  <span>Tools & Telemetry</span>
+                </button>
+
                 <button
                   onClick={() => setIsExpanded(!isExpanded)}
                   className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all cursor-pointer"
@@ -461,6 +472,32 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                   <X className="w-4 h-4 text-white" />
                 </button>
               </div>
+            </div>
+
+            {/* Mode Selector */}
+            <div className="grid grid-cols-2 gap-1.5 p-1 bg-black/20 backdrop-blur-md rounded-xl text-[11px] font-black">
+              <button
+                onClick={() => setActiveMode('operations')}
+                className={`py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  activeMode === 'operations'
+                    ? 'bg-white text-indigo-900 shadow-md'
+                    : 'text-white/80 hover:text-white'
+                }`}
+              >
+                <Zap className="w-3.5 h-3.5 text-amber-500" />
+                <span>AI Operations Copilot</span>
+              </button>
+              <button
+                onClick={() => setActiveMode('institutional')}
+                className={`py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  activeMode === 'institutional'
+                    ? 'bg-white text-indigo-900 shadow-md'
+                    : 'text-white/80 hover:text-white'
+                }`}
+              >
+                <GraduationCap className="w-3.5 h-3.5" />
+                <span>Institutional AI</span>
+              </button>
             </div>
           </div>
 
@@ -696,24 +733,19 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
           )}
 
           {/* Quick Actions Suggestions */}
-          <div className="p-2 bg-gray-50 dark:bg-navy-950 border-t border-gray-100 dark:border-gray-800/80 flex space-x-1.5 overflow-x-auto no-scrollbar shrink-0">
-            {[
-              '👨‍🎓 Top Solvers',
-              '📊 Compare 514 vs 515',
-              '🚫 Scan Absentee Roster',
-              '🐞 Run Deep Audit',
-              '✉️ Draft Warning Email',
-              '🕒 last fetch kaatu'
-            ].map((action, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleSend(action)}
-                className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 text-[10.5px] font-bold text-gray-700 dark:text-gray-300 hover:border-indigo-400 whitespace-nowrap cursor-pointer transition-all hover:bg-indigo-50 dark:hover:bg-indigo-950/40"
-              >
-                💬 {action}
-              </button>
-            ))}
-          </div>
+          {!showLaunchers && (
+            <div className="p-2 bg-gray-50 dark:bg-navy-950 border-t border-gray-100 dark:border-gray-800/80 flex space-x-1.5 overflow-x-auto no-scrollbar shrink-0">
+              {(activeMode === 'operations' ? quickActionsOps : quickActionsInst).map((action, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleSend(action)}
+                  className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 text-[10.5px] font-bold text-gray-700 dark:text-gray-300 hover:border-indigo-400 whitespace-nowrap cursor-pointer transition-all"
+                >
+                  💬 {action}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Input Box */}
           <div className="p-3 bg-white dark:bg-navy-900 border-t border-gray-200 dark:border-navy-800 flex items-center space-x-2 shrink-0">
@@ -722,13 +754,17 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Ask AI or issue command (e.g. mail panu, top solvers, audit, 514 compare)..."
+              placeholder={
+                activeMode === 'operations'
+                  ? 'Issue command (e.g. mail panu, run audit, last fetch kaatu)...'
+                  : 'Ask about contest performance, student, comparison, or architecture...'
+              }
               className="flex-1 px-3.5 py-2 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl text-xs font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
             <button
               onClick={() => handleSend()}
               disabled={loading || !input.trim()}
-              className="p-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white disabled:opacity-40 cursor-pointer shadow-md transition-all"
+              className="p-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white disabled:opacity-40 cursor-pointer shadow-md transition-all"
             >
               <Send className="w-3.5 h-3.5" />
             </button>
