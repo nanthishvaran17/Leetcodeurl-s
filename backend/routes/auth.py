@@ -363,7 +363,6 @@ async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(
     # CRITICAL CHECK: Verify provider accepted the email before returning success to UI
     if not email_sent:
         logger.error(f"[{t2_str}] [OTP_STEP_ERROR] Email provider rejected delivery to {masked_recipient} after {elapsed_ms:.0f}ms: {err_msg}")
-        logger.warning(f"[EMAIL_RECOVERY_KEY] Recovery OTP for admin {masked_recipient}: {plain_otp}")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Unable to send verification code. Provider error: {err_msg or 'Delivery failed'}. Please try again."

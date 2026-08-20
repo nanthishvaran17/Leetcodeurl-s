@@ -378,6 +378,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
         <>
           {step === 'email' && (
             <div className="space-y-4">
+              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-400 flex items-start space-x-2">
+                <span className="text-amber-500 font-bold">🔒</span>
+                <div>
+                  <span className="font-bold text-slate-900 dark:text-slate-200 block">Authoritative Admin Destination:</span>
+                  <span>OTP is dispatched only to registered administrator accounts (e.g. <span className="font-mono text-indigo-600 dark:text-indigo-400">n******7@gmail.com</span>).</span>
+                </div>
+              </div>
+
               <form onSubmit={handleSendOtp} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
@@ -389,7 +397,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your official administrator email"
+                      placeholder="e.g. nanthishvaran17@gmail.com"
                       required
                       className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-navy-900 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
                     />

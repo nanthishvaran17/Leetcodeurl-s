@@ -298,6 +298,13 @@ def retry_failed_email_dispatch(log_id: int, db: Session = Depends(get_db)):
     if not log:
         raise HTTPException(status_code=404, detail="Email log item not found")
 
+    # If error is a permanent 550 recipient refusal, do NOT auto retry
+    if log.error_message and ("5.1.10" in log.error_message or "550" in log.error_message or "RecipientNotFound" in log.error_message):
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot retry: Recipient was permanently rejected by destination mail server (550 5.1.10 RecipientNotFound). Please update recipient email first."
+        )
+
     log.status = "RETRYING"
     log.error_message = None
     db.commit()
@@ -305,3 +312,18 @@ def retry_failed_email_dispatch(log_id: int, db: Session = Depends(get_db)):
     _trigger_email_queue_worker()
 
     return {"status": "success", "message": f"Queued retry attempt for log id {log_id}"}
+
+
+@router.get("/delivery-diagnostics")
+def get_email_delivery_diagnostics():
+    """
+    Returns email delivery diagnostics telemetry (Recipient, SMTP Server, SMTP Response, Delivery Status, Timestamp, Error Code).
+    """
+    from backend.services.email_service import get_delivery_diagnostics
+    diagnostics = get_delivery_diagnostics()
+    return {
+        "status": "success",
+        "total_records": len(diagnostics),
+        "diagnostics": diagnostics
+    }
+

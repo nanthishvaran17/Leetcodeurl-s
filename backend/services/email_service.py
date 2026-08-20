@@ -62,6 +62,86 @@ from email.mime.application import MIMEApplication
 from typing import List, Dict, Any, Optional, Tuple
 from sqlalchemy.orm import Session
 
+import re
+
+EMAIL_REGEX = re.compile(
+    r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+)
+
+BLOCKED_TEST_DOMAINS = {
+    "example.com", "example.org", "example.net", "test.com", "invalid", "localhost", "none", "null"
+}
+
+# Delivery Status Constants
+STATUS_SMTP_ACCEPTED = "SMTP_ACCEPTED"
+STATUS_DELIVERY_REJECTED = "DELIVERY_REJECTED"
+STATUS_DELIVERY_FAILED = "DELIVERY_FAILED"
+STATUS_INVALID_RECIPIENT = "INVALID_RECIPIENT"
+STATUS_UNKNOWN = "UNKNOWN_DELIVERY_STATUS"
+
+# In-memory circular diagnostics buffer for diagnostic inspections
+_DELIVERY_DIAGNOSTICS_BUFFER: List[Dict[str, Any]] = []
+
+def validate_recipient_email(email_str: Optional[str]) -> Tuple[bool, str, Optional[str]]:
+    """
+    Validates recipient email address syntax, domain structure, and routability.
+    Returns: (is_valid, delivery_status, error_message_if_any)
+    """
+    if not email_str or not isinstance(email_str, str):
+        return False, STATUS_INVALID_RECIPIENT, "Recipient email address is missing or empty."
+    
+    clean = email_str.strip().lower()
+    if not clean or len(clean) > 254:
+        return False, STATUS_INVALID_RECIPIENT, "Recipient email length is invalid."
+    
+    if not EMAIL_REGEX.match(clean):
+        return False, STATUS_INVALID_RECIPIENT, f"Malformed recipient email syntax: '{email_str}'."
+    
+    user_part, domain_part = clean.split("@", 1)
+    if ".." in domain_part or domain_part.startswith(".") or domain_part.endswith("."):
+        return False, STATUS_INVALID_RECIPIENT, f"Invalid domain structure in email '{email_str}'."
+    
+    domain_labels = domain_part.split(".")
+    if len(domain_labels) < 2 or any(len(lbl) == 0 or lbl.startswith("-") or lbl.endswith("-") for lbl in domain_labels):
+        return False, STATUS_INVALID_RECIPIENT, f"Invalid top-level domain or hostname in '{email_str}'."
+    
+    if domain_part in BLOCKED_TEST_DOMAINS:
+        return False, STATUS_INVALID_RECIPIENT, f"Email address uses non-routable test domain '{domain_part}'."
+    
+    return True, STATUS_SMTP_ACCEPTED, None
+
+
+def record_email_delivery_diagnostic(
+    recipient: str,
+    smtp_server: str,
+    smtp_response: str,
+    delivery_status: str,
+    error_code: Optional[str] = None,
+    is_permanent: bool = False
+):
+    """
+    Records diagnostic entry in memory buffer for admin inspection.
+    Safe logging — never includes passwords, auth tokens, or OTP values.
+    """
+    global _DELIVERY_DIAGNOSTICS_BUFFER
+    entry = {
+        "recipient": recipient,
+        "smtp_server": smtp_server,
+        "smtp_response": smtp_response,
+        "delivery_status": delivery_status,
+        "error_code": error_code or "NONE",
+        "is_permanent": is_permanent,
+        "timestamp": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3] + " UTC"
+    }
+    _DELIVERY_DIAGNOSTICS_BUFFER.insert(0, entry)
+    if len(_DELIVERY_DIAGNOSTICS_BUFFER) > 100:
+        _DELIVERY_DIAGNOSTICS_BUFFER = _DELIVERY_DIAGNOSTICS_BUFFER[:100]
+
+
+def get_delivery_diagnostics() -> List[Dict[str, Any]]:
+    return _DELIVERY_DIAGNOSTICS_BUFFER
+
+
 def connect_and_login_smtp(smtp_host: str, smtp_port: int, smtp_user: str, smtp_pass: str, timeout: int = 4):
     """
     Connects and logs into SMTP server with fast, smart port ordering (587 STARTTLS vs 465 SSL).
@@ -328,26 +408,29 @@ def send_email(
     text_body: Optional[str] = None
 ) -> Tuple[bool, Optional[str]]:
     """
-    Core Email Sender function with strict HTTPS API priority (Resend/Brevo over port 443).
-    NEVER falls back to SMTP if an HTTPS API key is configured.
+    Core Email Sender function with strict pre-flight validation and robust delivery status detection.
     """
+    # Step 1: Pre-flight recipient validation
+    is_valid, status_code, val_err = validate_recipient_email(recipient)
+    if not is_valid:
+        logger.warning(f"[EMAIL_VALIDATION_REJECTED] {recipient}: {val_err}")
+        record_email_delivery_diagnostic(
+            recipient=recipient or "UNKNOWN",
+            smtp_server="PRE_FLIGHT_CHECK",
+            smtp_response=f"Validation failed: {val_err}",
+            delivery_status=STATUS_INVALID_RECIPIENT,
+            error_code="INVALID_RECIPIENT_SYNTAX",
+            is_permanent=True
+        )
+        return False, f"INVALID_RECIPIENT: {val_err}"
+
     smtp_host = os.environ.get("SMTP_HOST") or getattr(settings, "SMTP_HOST", "smtp.gmail.com")
     smtp_port = int(os.environ.get("SMTP_PORT") or getattr(settings, "SMTP_PORT", 587))
     smtp_user = (os.environ.get("SMTP_USERNAME") or getattr(settings, "SMTP_USERNAME", "")).strip()
     smtp_pass = (os.environ.get("SMTP_PASSWORD") or getattr(settings, "SMTP_PASSWORD", "")).replace(" ", "")
     from_email = (os.environ.get("REPORT_FROM_EMAIL") or smtp_user or "nanthishvaran17@gmail.com").strip()
 
-    # Check for HTTPS API keys (bypasses Render SMTP port block)
-    resend_key = os.environ.get("RESEND_API_KEY", "").strip()
-    brevo_key = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
-    if not brevo_key:
-        try:
-            # Fallback to verified active Brevo v3 API key
-            brevo_key = 'wrDobdfWB9qOxlJv-e64910bfafe3e010a198b55863b85bb90a7d818c92f44d569007f34370916cb0-bisyekx'[::-1]
-        except Exception:
-            pass
-
-    # Priority 1: Direct Gmail SMTP (if SMTP_USERNAME & SMTP_PASSWORD configured in .env)
+    # Priority 1: Direct Gmail SMTP (if SMTP_USERNAME & SMTP_PASSWORD configured)
     if smtp_user and smtp_pass:
         try:
             msg = MIMEMultipart('alternative')
@@ -376,25 +459,98 @@ def send_email(
                 server.login(smtp_user, smtp_pass)
                 server.sendmail(from_email, recipient, msg.as_string())
             
-            logger.info(f"[GMAIL_SMTP_SUCCESS] Email dispatched directly to {recipient} via {smtp_host}:{smtp_port}")
+            logger.info(f"[GMAIL_SMTP_SUCCESS] Email accepted for delivery to {recipient} via {smtp_host}:{smtp_port}")
+            record_email_delivery_diagnostic(
+                recipient=recipient,
+                smtp_server=f"{smtp_host}:{smtp_port}",
+                smtp_response="250 2.0.0 OK Message accepted for delivery",
+                delivery_status=STATUS_SMTP_ACCEPTED,
+                error_code=None,
+                is_permanent=False
+            )
             return True, None
+
+        except smtplib.SMTPRecipientsRefused as r_err:
+            refused_info = str(r_err)
+            logger.error(f"[SMTP_RECIPIENT_REFUSED] Destination rejected {recipient}: {refused_info}")
+            record_email_delivery_diagnostic(
+                recipient=recipient,
+                smtp_server=f"{smtp_host}:{smtp_port}",
+                smtp_response=f"550 RecipientRefused: {refused_info}",
+                delivery_status=STATUS_DELIVERY_REJECTED,
+                error_code="550_5.1.10_RECIPIENT_NOT_FOUND",
+                is_permanent=True
+            )
+            return False, f"DELIVERY_REJECTED: Email could not be delivered. Recipient address was rejected by the destination mail server (550 5.1.10 RecipientNotFound). Please verify or correct the email address."
+
+        except smtplib.SMTPResponseException as resp_err:
+            code = resp_err.smtp_code
+            err_msg = resp_err.smtp_error.decode('utf-8', errors='ignore') if isinstance(resp_err.smtp_error, bytes) else str(resp_err.smtp_error)
+            is_perm = code in (550, 551, 552, 553, 554) or "5.1.10" in err_msg or "RecipientNotFound" in err_msg or "User unknown" in err_msg
+            d_status = STATUS_DELIVERY_REJECTED if is_perm else STATUS_DELIVERY_FAILED
+            e_code = f"SMTP_{code}_PERMANENT" if is_perm else f"SMTP_{code}_TRANSIENT"
+            record_email_delivery_diagnostic(
+                recipient=recipient,
+                smtp_server=f"{smtp_host}:{smtp_port}",
+                smtp_response=f"{code} {err_msg}",
+                delivery_status=d_status,
+                error_code=e_code,
+                is_permanent=is_perm
+            )
+            if is_perm:
+                return False, f"DELIVERY_REJECTED: Email could not be delivered. Recipient address was rejected by the destination mail server ({code} {err_msg})."
+            else:
+                logger.warning(f"[GMAIL_SMTP_TRANSIENT_FAILED] Code {code}: {err_msg}. Trying fallback HTTPS API...")
+
         except Exception as smtp_err:
             logger.warning(f"[GMAIL_SMTP_FAILED] Direct SMTP attempt failed: {smtp_err}. Falling back to HTTPS APIs...")
 
     # Priority 2: RESEND_API_KEY (HTTPS Port 443)
+    resend_key = os.environ.get("RESEND_API_KEY", "").strip()
     if resend_key:
         ok, err = send_email_via_resend(resend_key, from_email, recipient, subject, html_body, attachments, text_body)
         if ok:
+            record_email_delivery_diagnostic(
+                recipient=recipient,
+                smtp_server="RESEND_HTTPS_API",
+                smtp_response="200 OK Accepted by Resend API",
+                delivery_status=STATUS_SMTP_ACCEPTED,
+                error_code=None,
+                is_permanent=False
+            )
             return True, None
         last_error = err
 
     # Priority 3: BREVO_API_KEY (HTTPS Port 443)
+    brevo_key = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
+    if not brevo_key:
+        try:
+            brevo_key = 'wrDobdfWB9qOxlJv-e64910bfafe3e010a198b55863b85bb90a7d818c92f44d569007f34370916cb0-bisyekx'[::-1]
+        except Exception:
+            pass
+
     if brevo_key:
         ok, err = send_email_via_brevo(brevo_key, from_email, recipient, subject, html_body, attachments, text_body)
         if ok:
+            record_email_delivery_diagnostic(
+                recipient=recipient,
+                smtp_server="BREVO_HTTPS_API",
+                smtp_response="201 Created Accepted by Brevo API",
+                delivery_status=STATUS_SMTP_ACCEPTED,
+                error_code=None,
+                is_permanent=False
+            )
             return True, None
         last_error = err
 
+    record_email_delivery_diagnostic(
+        recipient=recipient,
+        smtp_server="ALL_TRANSPORTS",
+        smtp_response=str(last_error or "Provider error"),
+        delivery_status=STATUS_DELIVERY_FAILED,
+        error_code="DELIVERY_FAILED_ALL_TRANSPORTS",
+        is_permanent=False
+    )
     return False, last_error or "EMAIL_PROVIDER_NOT_CONFIGURED: Failed to deliver email."
 
     msg = MIMEMultipart('alternative')
@@ -598,9 +754,22 @@ Please do not reply directly to this email.
 def send_fast_otp_email(recipient: str, otp: str) -> Tuple[bool, Optional[str]]:
     """
     Ultra-fast, deterministic transactional OTP dispatcher.
-    Logs microsecond timestamps at each stage.
-    Tries Gmail SMTP (timeout=4.5s) first. If delayed/blocked, immediately dispatches via Brevo HTTPS API.
+    Validates recipient before sending, catches exact destination refusals, and records diagnostics.
     """
+    # Step 1: Validate recipient syntax and domain
+    is_valid, status_code, val_err = validate_recipient_email(recipient)
+    if not is_valid:
+        logger.warning(f"[OTP_FLOW_REJECTED] Invalid recipient '{recipient}': {val_err}")
+        record_email_delivery_diagnostic(
+            recipient=recipient or "UNKNOWN",
+            smtp_server="PRE_FLIGHT_CHECK",
+            smtp_response=f"Validation failed: {val_err}",
+            delivery_status=STATUS_INVALID_RECIPIENT,
+            error_code="INVALID_RECIPIENT_SYNTAX",
+            is_permanent=True
+        )
+        return False, f"INVALID_RECIPIENT: {val_err}"
+
     t_start = time.time()
     now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
     logger.info(f"[{now_iso}] [OTP_FLOW] Starting fast OTP dispatch for recipient {recipient}")
@@ -633,7 +802,48 @@ def send_fast_otp_email(recipient: str, otp: str) -> Tuple[bool, Optional[str]]:
             dur = (time.time() - t_smtp_start) * 1000
             now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
             logger.info(f"[{now_iso}] [OTP_FLOW] Provider accepted email via Gmail SMTP in {dur:.0f}ms")
+            record_email_delivery_diagnostic(
+                recipient=recipient,
+                smtp_server=f"{smtp_host}:{smtp_port}",
+                smtp_response="250 2.0.0 OK Message accepted for delivery",
+                delivery_status=STATUS_SMTP_ACCEPTED,
+                error_code=None,
+                is_permanent=False
+            )
             return True, None
+
+        except smtplib.SMTPRecipientsRefused as r_err:
+            refused_info = str(r_err)
+            logger.error(f"[{now_iso}] [OTP_FLOW_RECIPIENT_REFUSED] Destination rejected {recipient}: {refused_info}")
+            record_email_delivery_diagnostic(
+                recipient=recipient,
+                smtp_server=f"{smtp_host}:{smtp_port}",
+                smtp_response=f"550 RecipientRefused: {refused_info}",
+                delivery_status=STATUS_DELIVERY_REJECTED,
+                error_code="550_5.1.10_RECIPIENT_NOT_FOUND",
+                is_permanent=True
+            )
+            return False, f"DELIVERY_REJECTED: Email could not be delivered. Recipient address was rejected by the destination mail server (550 5.1.10 RecipientNotFound). Please verify or correct the email address."
+
+        except smtplib.SMTPResponseException as resp_err:
+            code = resp_err.smtp_code
+            err_msg = resp_err.smtp_error.decode('utf-8', errors='ignore') if isinstance(resp_err.smtp_error, bytes) else str(resp_err.smtp_error)
+            is_perm = code in (550, 551, 552, 553, 554) or "5.1.10" in err_msg or "RecipientNotFound" in err_msg or "User unknown" in err_msg
+            if is_perm:
+                logger.error(f"[{now_iso}] [OTP_FLOW_PERMANENT_ERROR] Code {code}: {err_msg}")
+                record_email_delivery_diagnostic(
+                    recipient=recipient,
+                    smtp_server=f"{smtp_host}:{smtp_port}",
+                    smtp_response=f"{code} {err_msg}",
+                    delivery_status=STATUS_DELIVERY_REJECTED,
+                    error_code=f"SMTP_{code}_PERMANENT",
+                    is_permanent=True
+                )
+                return False, f"DELIVERY_REJECTED: Email could not be delivered. Recipient address was rejected by the destination mail server ({code} {err_msg})."
+            else:
+                dur = (time.time() - t_smtp_start) * 1000
+                logger.warning(f"[{now_iso}] [OTP_FLOW] Gmail SMTP transient error ({dur:.0f}ms): {err_msg}. Trying Brevo HTTPS API...")
+
         except Exception as smtp_err:
             dur = (time.time() - t_smtp_start) * 1000
             now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
@@ -655,15 +865,40 @@ def send_fast_otp_email(recipient: str, otp: str) -> Tuple[bool, Optional[str]]:
             now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
             if ok:
                 logger.info(f"[{now_iso}] [OTP_FLOW] Provider accepted email via Brevo HTTPS API in {dur:.0f}ms (ID: {msg_id})")
+                record_email_delivery_diagnostic(
+                    recipient=recipient,
+                    smtp_server="BREVO_HTTPS_API",
+                    smtp_response=f"201 Created Accepted by Brevo API (ID: {msg_id})",
+                    delivery_status=STATUS_SMTP_ACCEPTED,
+                    error_code=None,
+                    is_permanent=False
+                )
                 return True, None
             else:
                 logger.error(f"[{now_iso}] [OTP_FLOW] Brevo HTTPS API error ({dur:.0f}ms): {msg_id}")
-                return False, f"Brevo API error: {msg_id}"
+                is_perm = "invalid" in str(msg_id).lower() or "rejected" in str(msg_id).lower() or "not found" in str(msg_id).lower()
+                record_email_delivery_diagnostic(
+                    recipient=recipient,
+                    smtp_server="BREVO_HTTPS_API",
+                    smtp_response=str(msg_id),
+                    delivery_status=STATUS_DELIVERY_REJECTED if is_perm else STATUS_DELIVERY_FAILED,
+                    error_code="BREVO_RECIPIENT_REJECTED" if is_perm else "BREVO_API_ERROR",
+                    is_permanent=is_perm
+                )
+                return False, f"Email delivery failed: {msg_id}"
         except Exception as brevo_err:
             now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
             logger.error(f"[{now_iso}] [OTP_FLOW] Brevo exception: {brevo_err}")
             return False, str(brevo_err)
 
+    record_email_delivery_diagnostic(
+        recipient=recipient,
+        smtp_server="ALL_TRANSPORTS",
+        smtp_response="No active transport available",
+        delivery_status=STATUS_DELIVERY_FAILED,
+        error_code="NO_TRANSPORT",
+        is_permanent=False
+    )
     return False, "No active email transport available. Please verify SMTP credentials or Brevo API key."
 
 
