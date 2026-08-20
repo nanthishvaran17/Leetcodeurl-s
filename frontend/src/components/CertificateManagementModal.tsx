@@ -192,7 +192,8 @@ export const CertificateManagementModal: React.FC<{
   };
 
   const handleDownloadPdf = async (targetId?: string) => {
-    const idToUse = targetId || generatedCert?.verification_id || selectedStudent?.reg_no || (selectedStudent ? String(selectedStudent.id) : null);
+    const cleanReg = (selectedStudent?.reg_no || '').replace(/[^A-Za-z0-9]+/g, '').toUpperCase();
+    const idToUse = targetId || generatedCert?.verification_id || (cleanReg ? `CERT-${cleanReg}-EXCELLENCE` : null);
     if (!idToUse) {
       notify.warning('Select Student', 'Please select a student recipient first to download certificate.', { category: 'CERTIFICATE ENGINE' });
       return;
@@ -214,7 +215,7 @@ export const CertificateManagementModal: React.FC<{
       }
 
       const blob = new Blob([response.data], { type: 'application/pdf' });
-      let filename = `Certificate_${idToUse}.pdf`;
+      let filename = `Certificate_${cleanReg || idToUse}.pdf`;
       const disposition = response.headers['content-disposition'] || response.headers['Content-Disposition'];
       if (disposition && disposition.includes('filename=')) {
         const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
@@ -241,7 +242,8 @@ export const CertificateManagementModal: React.FC<{
   };
 
   const handleDownloadForensicPdf = async (targetId?: string) => {
-    const idToUse = targetId || generatedCert?.verification_id || selectedStudent?.reg_no || (selectedStudent ? String(selectedStudent.id) : null);
+    const cleanReg = (selectedStudent?.reg_no || '').replace(/[^A-Za-z0-9]+/g, '').toUpperCase();
+    const idToUse = targetId || (cleanReg ? `CERT-${cleanReg}-FORENSIC` : null);
     if (!idToUse) {
       notify.warning('Select Student', 'Please select a student recipient first to download Forensic Audit Report.', { category: 'FORENSIC AUDIT' });
       return;

@@ -159,19 +159,17 @@ def run_db_migrations():
             );
         """)
 
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS certificate_records (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                student_id INTEGER NOT NULL,
-                certificate_type VARCHAR(100) NOT NULL,
-                certificate_code VARCHAR(50) UNIQUE NOT NULL,
-                issue_date VARCHAR(20) NOT NULL,
-                qr_code_path VARCHAR(255),
-                pdf_path VARCHAR(255),
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (student_id) REFERENCES students (id)
-            );
-        """)
+        cert_cols = [
+            ("document_type", "VARCHAR(64) DEFAULT 'CERTIFICATE_OF_EXCELLENCE'"),
+            ("contest_id",    "VARCHAR(64)"),
+            ("sha_hash",      "VARCHAR(128)"),
+        ]
+        for col_name, col_type in cert_cols:
+            try:
+                cursor.execute(f"ALTER TABLE certificate_records ADD COLUMN {col_name} {col_type};")
+                print(f"Added column '{col_name}' to certificate_records.")
+            except Exception:
+                pass
 
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS student_contest_snapshots (

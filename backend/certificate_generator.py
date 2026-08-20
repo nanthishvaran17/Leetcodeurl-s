@@ -386,7 +386,18 @@ def generate_student_certificate(
     dept_full_title = resolve_department_name(raw_dept)
     
     # 2. Unique Verification ID & Production Verification URL
-    cert_id = f"CERT-{uuid.uuid4().hex[:8].upper()}"
+    clean_reg = re.sub(r'[^A-Za-z0-9]+', '', student.reg_no or "").strip().upper()
+    candidate_id = f"CERT-{clean_reg}-EXCELLENCE"
+    
+    # Check if candidate_id already exists for this student
+    existing = db.query(CertificateRecord).filter(CertificateRecord.verification_id == candidate_id).first()
+    if existing and existing.student_id == student.id and existing.status == "VALID":
+        cert_id = candidate_id
+    elif existing and existing.student_id != student.id:
+        cert_id = f"CERT-{clean_reg}-EXC-{uuid.uuid4().hex[:4].upper()}"
+    else:
+        cert_id = candidate_id
+        
     verification_url = f"https://leetcode-student-data.web.app/verify/{cert_id}"
     
     # Date Display
@@ -408,26 +419,36 @@ def generate_student_certificate(
     qr_path = os.path.join(CERT_DIR, qr_filename)
 
     # 4. Persist Certificate Record in Database
-    cert_record = CertificateRecord(
-        verification_id=cert_id,
-        certificate_type=cert_type,
-        student_id=student.id,
-        student_name=student.name,
-        register_no=student.reg_no,
-        department=raw_dept,
-        department_name=dept_full_title,
-        program="Institutional LeetCode Continuous Performance Tracking System",
-        recognition="Top Performer",
-        issue_date=issue_date_display,
-        status="VALID",
-        principal_signature_version=principal_ver,
-        hod_signature_version=hod_ver,
-        verification_url=verification_url,
-        qr_path=qr_path,
-        pdf_path=pdf_path,
-        created_by=created_by
-    )
-    db.add(cert_record)
+    if existing and existing.student_id == student.id:
+        cert_record = existing
+        cert_record.issue_date = issue_date_display
+        cert_record.document_type = "CERTIFICATE_OF_EXCELLENCE"
+        cert_record.certificate_type = cert_type or "Certificate of Excellence"
+        cert_record.status = "VALID"
+        cert_record.verification_url = verification_url
+    else:
+        cert_record = CertificateRecord(
+            verification_id=cert_id,
+            certificate_code=cert_id,
+            certificate_type=cert_type or "Certificate of Excellence",
+            document_type="CERTIFICATE_OF_EXCELLENCE",
+            student_id=student.id,
+            student_name=student.name,
+            register_no=student.reg_no,
+            department=raw_dept,
+            department_name=dept_full_title,
+            program="Institutional LeetCode Continuous Performance Tracking System",
+            recognition="Top Performer",
+            issue_date=issue_date_display,
+            status="VALID",
+            principal_signature_version=principal_ver,
+            hod_signature_version=hod_ver,
+            verification_url=verification_url,
+            qr_path=qr_path,
+            pdf_path=pdf_path,
+            created_by=created_by
+        )
+        db.add(cert_record)
     db.commit()
     db.refresh(cert_record)
 

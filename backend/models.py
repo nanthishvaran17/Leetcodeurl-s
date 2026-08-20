@@ -369,6 +369,9 @@ class CertificateRecord(Base):
     verification_id = Column(String(64), unique=True, index=True, nullable=False) # e.g. CERT-AA4933CE
     certificate_code = Column(String(64), nullable=True) # Backwards compatibility
     certificate_type = Column(String(64), default="Top Performer", nullable=False)
+    document_type = Column(String(64), default="CERTIFICATE_OF_EXCELLENCE", nullable=False) # CERTIFICATE_OF_EXCELLENCE, FORENSIC_VERIFICATION_REPORT
+    contest_id = Column(String(64), nullable=True)
+    sha_hash = Column(String(128), nullable=True)
     
     student_id = Column(Integer, ForeignKey("students.id"), nullable=True)
     student_name = Column(String(255), nullable=False)

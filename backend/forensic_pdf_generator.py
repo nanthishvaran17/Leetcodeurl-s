@@ -41,34 +41,54 @@ def generate_forensic_audit_pdf(db: Session, student_id: int, session_id: int, t
         WeeklyVirtualResult.session_id == session_id
     ).first() if not contest_result or contest_result.participation_status != "PUBLIC_ATTENDED" else None
 
+    clean_reg = "".join(c for c in (student.reg_no or "") if c.isalnum()).upper()
     if not trace_id:
-        trace_id = f"trace_{hashlib.md5(f'{student.reg_no}:{session_id}:{datetime.datetime.utcnow().isoformat()}'.encode()).hexdigest()[:12]}"
+        trace_id = f"CERT-{clean_reg}-FORENSIC"
+    elif not trace_id.startswith("CERT-") and not trace_id.startswith("trace_"):
+        trace_id = f"CERT-{trace_id.upper()}"
+
+    # Pre-calculate sha_hash
+    p_status_tmp = contest_result.participation_status if contest_result else ("VIRTUAL_ATTENDED" if virtual_result else "NOT_ATTENDED")
+    tot_solved_tmp = contest_result.total_contest_solved if contest_result else (virtual_result.total_contest_solved if virtual_result else 0)
+    sha_hash = hashlib.sha256(f"{trace_id}:{student.reg_no}:{session_id}:{tot_solved_tmp}".encode()).hexdigest()
 
     # Auto-register CertificateRecord in Database for instant verification resolution
     try:
         from backend.models import CertificateRecord
         existing_cert = db.query(CertificateRecord).filter(CertificateRecord.verification_id == trace_id).first()
-        if not existing_cert:
-            dept_name_str = student.department.name if student.department else "Computer Science and Engineering"
-            dept_code_str = student.department.code if student.department else "CSE"
+        dept_name_str = student.department.name if student.department else "Computer Science and Engineering"
+        dept_code_str = student.department.code if student.department else "CSE"
+        ver_url = f"https://leetcode-student-data.web.app/verify/{trace_id}"
+        
+        if existing_cert:
+            existing_cert.document_type = "FORENSIC_VERIFICATION_REPORT"
+            existing_cert.certificate_type = "Official LeetCode Contest Forensic Verification Audit Report"
+            existing_cert.sha_hash = sha_hash
+            existing_cert.contest_id = session_obj.contest_id or str(session_obj.id)
+            existing_cert.status = "VALID"
+            existing_cert.verification_url = ver_url
+        else:
             c_record = CertificateRecord(
                 verification_id=trace_id,
                 certificate_code=trace_id,
-                certificate_type="Official Forensic Contest Verification",
+                certificate_type="Official LeetCode Contest Forensic Verification Audit Report",
+                document_type="FORENSIC_VERIFICATION_REPORT",
+                contest_id=session_obj.contest_id or str(session_obj.id),
+                sha_hash=sha_hash,
                 student_id=student.id,
                 student_name=student.name,
                 register_no=student.reg_no,
                 department=dept_code_str,
                 department_name=dept_name_str,
                 program=f"B.E. {dept_name_str}",
-                recognition=f"Official Contest Verification: {session_obj.contest_name or 'Weekly Contest'}",
+                recognition=f"Official Contest Forensic Verification: {session_obj.contest_name or 'Weekly Contest'}",
                 issue_date=session_obj.session_date or "16.08.2026",
                 status="VALID",
-                verification_url=f"https://leetcode-student-data.web.app/verify/{trace_id}",
+                verification_url=ver_url,
                 created_by="Automated Forensic Engine"
             )
             db.add(c_record)
-            db.commit()
+        db.commit()
     except Exception as db_err:
         logger.warning(f"Note on CertificateRecord auto-registration: {db_err}")
         db.rollback()
@@ -379,7 +399,7 @@ def generate_forensic_audit_pdf(db: Session, student_id: int, session_id: int, t
 
     # 7. Institutional Signatures & QR Code
     qr = qrcode.QRCode(box_size=2, border=1)
-    qr.add_data(f"https://leetcode-student-data.web.app/verify/{trace_id}?reg={student.reg_no}&contest={session_id}")
+    qr.add_data(f"https://leetcode-student-data.web.app/verify/{trace_id}")
     qr.make(fit=True)
     qr_img = qr.make_image(fill_color="#0F172A", back_color="white")
     qr_buf = io.BytesIO()

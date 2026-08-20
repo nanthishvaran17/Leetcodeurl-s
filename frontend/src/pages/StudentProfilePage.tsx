@@ -53,7 +53,8 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         student_id: student.id,
         cert_type: "Top Performer"
       });
-      const certId = res.data.verification_id || student.reg_no || student.id;
+      const cleanReg = (student.reg_no || '').replace(/[^A-Za-z0-9]+/g, '').toUpperCase();
+      const certId = res.data?.verification_id || `CERT-${cleanReg}-EXCELLENCE`;
 
       const response = await api.get(`/certificates/${encodeURIComponent(certId)}/download-pdf`, {
         responseType: 'blob'
@@ -69,7 +70,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       }
 
       const blob = new Blob([response.data], { type: 'application/pdf' });
-      let filename = `Certificate_${certId}.pdf`;
+      let filename = `Certificate_${cleanReg || certId}.pdf`;
       const disposition = response.headers['content-disposition'] || response.headers['Content-Disposition'];
       if (disposition && disposition.includes('filename=')) {
         const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
@@ -102,7 +103,8 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
     setDownloadingForensic(true);
     notify.info('Generating Forensic Report', 'Compiling official contest forensic audit PDF...', { category: 'FORENSIC AUDIT' });
     try {
-      const targetId = student.reg_no || student.id;
+      const cleanReg = (student.reg_no || '').replace(/[^A-Za-z0-9]+/g, '').toUpperCase();
+      const targetId = `CERT-${cleanReg}-FORENSIC`;
       const response = await api.get(`/certificates/${encodeURIComponent(targetId)}/download-forensic-pdf`, {
         responseType: 'blob'
       });
