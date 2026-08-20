@@ -585,7 +585,7 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
     clean_username = login_data.username.strip()
     clean_password = login_data.password.strip()
 
-    if not clean_username or not clean_password or (clean_password == "admin123" and not os.environ.get("ADMIN_PASSWORD")):
+    if not clean_username or not clean_password:
         raise HTTPException(status_code=400, detail="Invalid username or password.")
 
     user = db.query(User).filter(User.username.ilike(clean_username)).first()
