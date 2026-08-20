@@ -10,7 +10,7 @@ from sqlalchemy import desc, func
 
 from backend.database import get_db
 from backend.models import Student, LeetCodeProfileStats, Department, Section, AuditLog
-from backend.leetcode_client import fetch_leetcode_profile, extract_leetcode_username
+from backend.leetcode_client import fetch_leetcode_profile_sync, extract_leetcode_username
 from backend.logger import logger
 from backend.routes.auth import get_current_user
 
@@ -309,24 +309,26 @@ def verify_leetcode_url(req: VerifyUrlRequest):
     """
     Live on-demand validation of a LeetCode username.
     """
-    clean_user = extract_leetcode_username(req.username) or req.username.strip()
+    parsed_user, _, _ = extract_leetcode_username(req.username)
+    clean_user = (parsed_user or req.username or "").strip()
     if not clean_user:
         raise HTTPException(status_code=400, detail="LeetCode username cannot be empty.")
 
     try:
-        profile = fetch_leetcode_profile(clean_user)
-        if not profile or not profile.get("exists"):
+        profile = fetch_leetcode_profile_sync(clean_user, force_refresh=True)
+        if not profile or (profile.get("total_solved") is None and not profile.get("exists")):
+            err_msg = profile.get("error_message") or profile.get("error") if profile else None
             return {
                 "valid": False,
                 "username": clean_user,
                 "canonical_url": f"https://leetcode.com/u/{clean_user}/",
-                "message": f"LeetCode user '{clean_user}' does not exist on LeetCode.",
+                "message": err_msg or f"LeetCode user '{clean_user}' does not exist on LeetCode.",
                 "total_solved": 0
             }
 
         return {
             "valid": True,
-            "username": clean_user,
+            "username": profile.get("username") or clean_user,
             "canonical_url": f"https://leetcode.com/u/{clean_user}/",
             "message": "LeetCode profile exists and is active.",
             "total_solved": profile.get("total_solved", 0),
@@ -363,14 +365,16 @@ def repair_student_profile(
     if not student:
         raise HTTPException(status_code=404, detail="Student record not found.")
 
-    clean_user = extract_leetcode_username(req.new_username) or req.new_username.strip()
+    parsed_user, _, _ = extract_leetcode_username(req.new_username)
+    clean_user = (parsed_user or req.new_username or "").strip()
     if not clean_user:
         raise HTTPException(status_code=400, detail="Valid LeetCode username required.")
 
     # 1. Live verify profile
-    profile = fetch_leetcode_profile(clean_user)
-    if not profile or not profile.get("exists"):
-        raise HTTPException(status_code=400, detail=f"Cannot verify '{clean_user}' on LeetCode. Please check spelling.")
+    profile = fetch_leetcode_profile_sync(clean_user, force_refresh=True)
+    if not profile or (profile.get("total_solved") is None and not profile.get("exists")):
+        err_detail = profile.get("error_message") or profile.get("error") if profile else f"Cannot verify '{clean_user}' on LeetCode."
+        raise HTTPException(status_code=400, detail=f"Verification failed: {err_detail}")
 
     old_user = student.username
     old_url = student.leetcode_url
@@ -436,8 +440,8 @@ def bulk_sync_issues(
             continue
 
         try:
-            profile = fetch_leetcode_profile(s.username)
-            if profile and profile.get("exists"):
+            profile = fetch_leetcode_profile_sync(s.username, force_refresh=True)
+            if profile and (profile.get("total_solved") is not None or profile.get("exists")):
                 if not s.stats:
                     s.stats = LeetCodeProfileStats(student_id=s.id)
                 s.stats.total_solved = profile.get("total_solved", 0)
