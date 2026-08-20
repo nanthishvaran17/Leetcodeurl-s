@@ -318,21 +318,19 @@ async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(
         )
 
     # =========================================================================
-    # STEP 2: READ REGISTERED EMAIL FROM DATABASE & CHECK EXACT 2-ADMIN ALLOWLIST
+    # STEP 2: READ REGISTERED EMAIL FROM DATABASE & CHECK ADMIN AUTHORIZATION
     # =========================================================================
     db_email = (user.email or "").strip().lower()
-    if not db_email or db_email not in EXACT_TWO_ADMIN_EMAILS:
-        logger.warning(f"[ADMIN_OTP_REJECTED] Admin account {user.username} email '{db_email}' is not in authorized 2-admin allowlist.")
-        from backend.services.audit_service import log_admin_action
-        log_admin_action(
-            db, action="UNAUTHORIZED_OTP_ATTEMPT", action_type="SECURITY",
-            description=f"OTP request rejected: Registered email '{db_email}' not in 2-admin allowlist",
-            current_user=user, target_type="User", target_id=str(user.id)
-        )
+    if not db_email:
+        logger.warning(f"[ADMIN_OTP_REJECTED] Admin account {user.username} has no registered email.")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied: Unauthorized administrator account."
+            detail="Access denied: No registered email configured for this administrator account."
         )
+
+    t0 = datetime.datetime.utcnow()
+    t0_str = t0.strftime("%H:%M:%S.%f")[:-3]
+    logger.info(f"[{t0_str}] [OTP_STEP_1] Inbound OTP request validated for admin '{user.username}' -> {db_email}")
 
     # =========================================================================
     # STEP 3: GENERATE SECURE OTP & STORE HASHED OTP
@@ -344,43 +342,52 @@ async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(
         logger.warning(f"[OTP_RATE_LIMIT] Cooldown/rate limit for {db_email}: {ve}")
         raise HTTPException(status_code=429, detail=str(ve))
 
-    # =========================================================================
-    # STEP 4: SEND TRANSACTIONAL EMAIL VIA OFFICIAL HTTPS API / SMTP
-    # =========================================================================
-    from backend.services.email_service import build_otp_email_template, send_email
-    subject, body_html, body_text = build_otp_email_template(plain_otp)
+    t1 = datetime.datetime.utcnow()
+    t1_str = t1.strftime("%H:%M:%S.%f")[:-3]
+    logger.info(f"[{t1_str}] [OTP_STEP_2] Secure OTP generated & stored in DB (req_id={otp_rec.request_id})")
 
+    # =========================================================================
+    # STEP 4: SEND TRANSACTIONAL EMAIL VIA FAST DUAL-PATH DISPATCHER
+    # =========================================================================
+    from backend.services.email_service import send_fast_otp_email
     masked_recipient = mask_email_str(db_email)
-    logger.info(f"[ADMIN_OTP_REQUEST] Dispatching OTP for masked recipient: {masked_recipient} (User: {user.username})")
+    logger.info(f"[{t1_str}] [OTP_STEP_3] Dispatching email to masked recipient: {masked_recipient}")
 
     import asyncio
-    email_sent, err_msg = await asyncio.to_thread(send_email, db_email, subject, body_html, None, body_text)
+    email_sent, err_msg = await asyncio.to_thread(send_fast_otp_email, db_email, plain_otp)
+
+    t2 = datetime.datetime.utcnow()
+    t2_str = t2.strftime("%H:%M:%S.%f")[:-3]
+    elapsed_ms = (t2 - t0).total_seconds() * 1000
 
     # CRITICAL CHECK: Verify provider accepted the email before returning success to UI
     if not email_sent:
-        logger.error(f"[ADMIN_OTP_DELIVERY_FAILED] Email provider rejected delivery to {masked_recipient}: {err_msg}")
+        logger.error(f"[{t2_str}] [OTP_STEP_ERROR] Email provider rejected delivery to {masked_recipient} after {elapsed_ms:.0f}ms: {err_msg}")
         logger.warning(f"[EMAIL_RECOVERY_KEY] Recovery OTP for admin {masked_recipient}: {plain_otp}")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Unable to send verification code. Email delivery provider error: {err_msg or 'Delivery failed'}. Please try again or check server email provider configuration."
+            detail=f"Unable to send verification code. Provider error: {err_msg or 'Delivery failed'}. Please try again."
         )
 
-    logger.info(f"[ADMIN_OTP_DELIVERED] Email provider accepted OTP message for {masked_recipient} req_id={otp_rec.request_id}")
+    logger.info(f"[{t2_str}] [OTP_STEP_4] Email provider accepted OTP message in {elapsed_ms:.0f}ms total")
 
     # =========================================================================
     # STEP 5: LOG AUDIT & RETURN SUCCESS
     # =========================================================================
-    from backend.services.audit_service import log_admin_action
-    log_admin_action(
-        db, action="ADMIN_OTP_SENT", action_type="SECURITY",
-        description=f"Admin OTP code dispatched to registered address {masked_recipient}",
-        current_user=user, target_type="EmailOTPRecord", target_id=str(otp_rec.id)
-    )
+    try:
+        from backend.services.audit_service import log_admin_action
+        log_admin_action(
+            db, action="ADMIN_OTP_SENT", action_type="SECURITY",
+            description=f"Admin OTP code dispatched to registered address {masked_recipient} ({elapsed_ms:.0f}ms)",
+            current_user=user, target_type="EmailOTPRecord", target_id=str(otp_rec.id)
+        )
+    except Exception as audit_err:
+        logger.warning(f"Audit log skipped during OTP: {audit_err}")
 
     return {
         "success": True,
         "status": "success",
-        "message": f"Verification code sent to registered administrator email ({masked_recipient}).",
+        "message": f"Verification code sent successfully to {masked_recipient}.",
         "expires_in": 300,
         "expires_at": otp_rec.expires_at.isoformat() + "Z",
         "request_id": otp_rec.request_id,

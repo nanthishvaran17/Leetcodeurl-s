@@ -103,7 +103,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
 
     setLoading(true);
     try {
-      const res = await api.post('/auth/send-otp', { email: cleanEmail });
+      const res = await api.post('/auth/send-otp', { email: cleanEmail }, { timeout: 10000 });
       setSuccessMsg(res.data.message || 'Verification code sent to your registered email address.');
       setRequestId(res.data.request_id || '');
       setMaskedEmail(res.data.masked_email || maskEmail(cleanEmail));
@@ -114,16 +114,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       }
       setStep('otp_verify');
       setOtpDigits(['', '', '', '', '', '']);
-      setResendCooldown(60);
+      setResendCooldown(45);
       setTimeout(() => {
         digitRefs[0].current?.focus();
       }, 100);
     } catch (err: any) {
       const detailMsg = err.response?.data?.detail || err.message;
-      if (err.response?.status === 400 || err.response?.status === 404) {
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        setError('Email request timed out. Please check your connection and try again.');
+      } else if (err.response?.status === 400 || err.response?.status === 404) {
         setError(detailMsg || 'Please enter your registered administrator email.');
       } else if (err.response?.status === 502 || err.response?.status === 503) {
-        setError(detailMsg || 'Unable to send the verification code. Please check your network and try again.');
+        setError(detailMsg || 'Unable to deliver verification code. Please try again.');
       } else {
         setError(detailMsg || 'Authentication service is temporarily unavailable. Please try again.');
       }
@@ -140,7 +142,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
 
     try {
       const cleanEmail = email.trim().toLowerCase();
-      const res = await api.post('/auth/resend-otp', { email: cleanEmail });
+      const res = await api.post('/auth/resend-otp', { email: cleanEmail }, { timeout: 10000 });
       setSuccessMsg(res.data.message || 'New verification code sent to your registered email address.');
       setRequestId(res.data.request_id || '');
       setMaskedEmail(res.data.masked_email || maskEmail(cleanEmail));
@@ -151,12 +153,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       }
       setStep('otp_verify');
       setOtpDigits(['', '', '', '', '', '']);
-      setResendCooldown(60);
+      setResendCooldown(45);
       setTimeout(() => {
         digitRefs[0].current?.focus();
       }, 100);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Unable to send the verification code. Please try again.');
+      const detailMsg = err.response?.data?.detail || err.message;
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        setError('Resend request timed out. Please try again.');
+      } else {
+        setError(detailMsg || 'Unable to send the verification code. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -488,7 +495,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                 <button
                   type="submit"
                   disabled={loading || otpDigits.join('').length !== 6 || timerSeconds <= 0}
-                  className="py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-md shadow-brand-600/30 flex items-center justify-center space-x-1 disabled:opacity-50 transition-all"
+                  className="py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-md shadow-brand-600/30 flex items-center justify-center space-x-1 disabled:opacity-50 transition-all cursor-pointer"
                 >
                   {loading ? (
                     <>
@@ -499,6 +506,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                     <span>VERIFY OTP</span>
                   )}
                 </button>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-gray-50 dark:bg-navy-900/80 border border-gray-200 dark:border-navy-800 text-[11px] text-gray-500 dark:text-gray-400 text-center leading-relaxed">
+                💡 <span className="font-semibold text-gray-700 dark:text-gray-300">Gmail Delivery Tip:</span> If not in your primary Inbox, please check your <strong className="text-brand-600 dark:text-brand-400">Spam, Promotions, or All Mail</strong> folders.
               </div>
             </form>
           )}
