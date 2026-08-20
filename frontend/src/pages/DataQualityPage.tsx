@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, CheckCircle2, AlertTriangle, XCircle, RefreshCw, 
-  Layers, Search, FileText, AlertCircle, Sparkles, ExternalLink 
+  Layers, Search, FileText, AlertCircle, Sparkles, ExternalLink, Clock
 } from 'lucide-react';
 import api from '../services/api';
+import { useNotification } from '../context/NotificationContext';
 
 export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }> = ({ onNavigateTab }) => {
+  const { notify } = useNotification();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [lastAuditTime, setLastAuditTime] = useState<string>('');
   const [filterCategory, setFilterCategory] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -17,16 +20,27 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
   }, []);
 
   const fetchQualityData = async (force: boolean = false) => {
-    if (force) setRefreshing(true);
-    else setLoading(true);
+    if (force) {
+      setRefreshing(true);
+      notify.info('Initiating Quality Audit', 'Re-evaluating 302 student roster records against canonical schemas...', { category: 'DATA AUDITOR' });
+    } else {
+      setLoading(true);
+    }
 
     try {
       const res = await api.get('/analytics/data-quality', {
         params: force ? { force_refresh: true } : {}
       });
       setData(res.data);
-    } catch (err) {
+      const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      setLastAuditTime(nowStr);
+
+      if (force) {
+        notify.success('Audit Complete', `Roster Accuracy Score: ${res.data.health_score_percentage}% (${res.data.valid_profiles} valid, ${res.data.issues_count} action items).`, { category: 'DATA AUDITOR' });
+      }
+    } catch (err: any) {
       console.error("Failed to fetch quality data", err);
+      notify.error('Audit Failure', 'Failed to calculate database quality telemetry.', { category: 'DATA AUDITOR' });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -85,6 +99,13 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            {lastAuditTime && (
+              <span className="hidden sm:flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 text-xs font-mono font-bold">
+                <Clock className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Audited: {lastAuditTime}</span>
+              </span>
+            )}
+
             {onNavigateTab && (
               <button
                 onClick={() => onNavigateTab('data-issues')}

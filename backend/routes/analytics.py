@@ -128,7 +128,9 @@ def compare_students(ids: str = Query(..., description="Comma separated student 
 @router.get("/data-quality")
 def get_data_quality_dashboard(force_refresh: bool = Query(False), db: Session = Depends(get_db)):
     cache_key = "analytics:data_quality"
-    if not force_refresh:
+    if force_refresh:
+        cache.delete(cache_key)
+    else:
         cached = cache.get(cache_key)
         if cached is not None:
             return cached
