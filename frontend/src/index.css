@@ -468,6 +468,38 @@
   scrollbar-width: none;
 }
 
+/* Cyber Security Portal Animations */
+@keyframes cyberScanline {
+  0% { transform: translateY(-100%); opacity: 0; }
+  30% { opacity: 0.4; }
+  70% { opacity: 0.4; }
+  100% { transform: translateY(800%); opacity: 0; }
+}
+.animate-scanline {
+  animation: cyberScanline 5s ease-in-out infinite;
+}
+
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+.animate-shake {
+  animation: shakeError 0.4s ease-in-out;
+}
+
+@keyframes radarPulse {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+.animate-radar-ring {
+  animation: radarPulse 2.4s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+.cyber-glow-border {
+  box-shadow: 0 0 35px -5px rgba(14, 165, 233, 0.25), 0 0 15px -2px rgba(99, 102, 241, 0.2);
+}
+
 /* Accessibility: prefers-reduced-motion override */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -482,7 +514,10 @@
   .animate-sync-spin,
   .skeleton-shimmer,
   .animate-float,
-  .animate-pulseGlow {
+  .animate-pulseGlow,
+  .animate-scanline,
+  .animate-radar-ring,
+  .animate-shake {
     animation: none !important;
   }
 }
