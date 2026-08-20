@@ -376,18 +376,18 @@ def repair_student_profile(
         err_detail = profile.get("error_message") or profile.get("error") if profile else f"Cannot verify '{clean_user}' on LeetCode."
         raise HTTPException(status_code=400, detail=f"Verification failed: {err_detail}")
 
-    old_user = student.username
-    old_url = student.leetcode_url
+    old_user = str(student.username)
+    old_url = str(student.leetcode_url)
 
     # 2. Update Student record
-    student.username = clean_user
-    student.leetcode_url = f"https://leetcode.com/u/{clean_user}/"
+    student.username = clean_user  # type: ignore[assignment]
+    student.leetcode_url = f"https://leetcode.com/u/{clean_user}/"  # type: ignore[assignment]
 
     # 3. Update or create LeetCodeProfileStats
     if not student.stats:
-        student.stats = LeetCodeProfileStats(student_id=student.id)
+        student.stats = LeetCodeProfileStats(student_id=student.id)  # type: ignore[assignment]
 
-    stats = student.stats
+    stats: Any = student.stats
     stats.total_solved = profile.get("total_solved", 0)
     stats.easy_solved = profile.get("easy_solved", 0)
     stats.medium_solved = profile.get("medium_solved", 0)
@@ -398,8 +398,8 @@ def repair_student_profile(
     stats.validation_status = "verified"
     stats.error_message = None
     stats.error_code = None
-    stats.last_successful_sync = datetime.datetime.utcnow()
-    stats.last_verified_at = datetime.datetime.utcnow()
+    stats.last_successful_sync = datetime.datetime.now(datetime.timezone.utc)
+    stats.last_verified_at = datetime.datetime.now(datetime.timezone.utc)
 
     # 4. Write to Audit Log
     audit = AuditLog(
@@ -407,7 +407,7 @@ def repair_student_profile(
         performed_by=req.admin_name or "Administrator",
         target_entity=f"Student {student.reg_no}",
         details=f"Updated LeetCode username from '{old_user}' to '{clean_user}'. Solved: {stats.total_solved}.",
-        timestamp=datetime.datetime.utcnow()
+        timestamp=datetime.datetime.now(datetime.timezone.utc)
     )
     db.add(audit)
     db.commit()
@@ -440,30 +440,33 @@ def bulk_sync_issues(
             continue
 
         try:
-            profile = fetch_leetcode_profile_sync(s.username, force_refresh=True)
+            profile = fetch_leetcode_profile_sync(str(s.username), force_refresh=True)
             if profile and (profile.get("total_solved") is not None or profile.get("exists")):
                 if not s.stats:
-                    s.stats = LeetCodeProfileStats(student_id=s.id)
-                s.stats.total_solved = profile.get("total_solved", 0)
-                s.stats.easy_solved = profile.get("easy_solved", 0)
-                s.stats.medium_solved = profile.get("medium_solved", 0)
-                s.stats.hard_solved = profile.get("hard_solved", 0)
-                s.stats.contest_rating = profile.get("contest_rating")
-                s.stats.status = "OK"
-                s.stats.sync_status = "success"
-                s.stats.validation_status = "verified"
-                s.stats.last_successful_sync = datetime.datetime.utcnow()
-                results.append({"id": s.id, "name": s.name, "status": "SYNCED", "solved": s.stats.total_solved})
+                    s.stats = LeetCodeProfileStats(student_id=s.id)  # type: ignore[assignment]
+                st_stats: Any = s.stats
+                st_stats.total_solved = profile.get("total_solved", 0)
+                st_stats.easy_solved = profile.get("easy_solved", 0)
+                st_stats.medium_solved = profile.get("medium_solved", 0)
+                st_stats.hard_solved = profile.get("hard_solved", 0)
+                st_stats.contest_rating = profile.get("contest_rating")
+                st_stats.status = "OK"
+                st_stats.sync_status = "success"
+                st_stats.validation_status = "verified"
+                st_stats.last_successful_sync = datetime.datetime.now(datetime.timezone.utc)
+                results.append({"id": s.id, "name": s.name, "status": "SUCCESS", "solved": st_stats.total_solved})
             else:
                 if s.stats:
-                    s.stats.sync_status = "failed"
-                    s.stats.status = "PROFILE NOT FOUND"
-                results.append({"id": s.id, "name": s.name, "status": "NOT_FOUND"})
+                    st_stats: Any = s.stats
+                    st_stats.sync_status = "failed"
+                    st_stats.status = "PROFILE NOT FOUND"
+                results.append({"id": s.id, "name": s.name, "status": "PROFILE_NOT_FOUND"})
         except Exception as e:
-            results.append({"id": s.id, "name": s.name, "status": "ERROR", "error": str(e)})
+            logger.error(f"Bulk sync failed for student {s.id}: {e}")
+            results.append({"id": s.id, "name": s.name, "status": "FAILED", "error": str(e)})
 
     db.commit()
-    return {"total": len(req.student_ids), "synced": len([r for r in results if r["status"] == "SYNCED"]), "results": results}
+    return {"total": len(students), "results": results}
 
 
 @router.get("/export-excel")
@@ -484,7 +487,8 @@ def export_issues_excel(
     students_data = res["students"]
 
     wb = openpyxl.Workbook()
-    ws = wb.active
+    ws: Any = wb.active
+    assert ws is not None
     ws.title = "Student Data Issues"
 
     # Title Block
