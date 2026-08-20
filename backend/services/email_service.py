@@ -821,18 +821,40 @@ def verify_smtp_transporter() -> Tuple[bool, str, Dict[str, Any]]:
 def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = None) -> Tuple[bool, Optional[str], Optional[str]]:
     """
     Ultra-fast, deterministic transactional OTP dispatcher.
+    Strictly restricted to authorized institutional administrators only.
     Validates recipient before sending, catches exact destination refusals, and records diagnostics.
     Returns: (is_success, status_code_or_error, message_id)
     """
     import email.utils
     import uuid
 
-    # Step 1: Validate recipient syntax and domain
-    is_valid, status_code, val_err = validate_recipient_email(recipient)
-    if not is_valid:
-        logger.warning(f"[OTP_FLOW_REJECTED] Invalid recipient '{recipient}': {val_err}")
+    # Step 0: Security Gate — Enforce Authoritative Administrator Recipient Allowlist
+    auth_admin = (os.environ.get("ADMIN_EMAIL") or getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com")).strip().lower()
+    allowed_admins = {
+        auth_admin,
+        "nanthishvaran17@gmail.com",
+        "msanthoshkumar@nandhaengg.org"
+    }
+
+    clean_rec = (recipient or "").strip().lower()
+    if clean_rec not in allowed_admins:
+        logger.error(f"[OTP_SECURITY_BLOCK] Blocked OTP dispatch attempt to unauthorized/external recipient: '{clean_rec}'")
         record_email_delivery_diagnostic(
-            recipient=recipient or "UNKNOWN",
+            recipient=clean_rec or "UNKNOWN",
+            smtp_server="SECURITY_GATE",
+            smtp_response="Rejected: Destination address is not in the authorized administrator allowlist.",
+            delivery_status=STATUS_DELIVERY_REJECTED,
+            error_code="UNAUTHORIZED_OTP_RECIPIENT",
+            is_permanent=True
+        )
+        return False, "UNAUTHORIZED_OTP_RECIPIENT: Verification codes can only be dispatched to authorized administrator accounts.", None
+
+    # Step 1: Validate recipient syntax and domain
+    is_valid, status_code, val_err = validate_recipient_email(clean_rec)
+    if not is_valid:
+        logger.warning(f"[OTP_FLOW_REJECTED] Invalid recipient '{clean_rec}': {val_err}")
+        record_email_delivery_diagnostic(
+            recipient=clean_rec or "UNKNOWN",
             smtp_server="PRE_FLIGHT_CHECK",
             smtp_response=f"Validation failed: {val_err}",
             delivery_status=STATUS_INVALID_RECIPIENT,
@@ -843,7 +865,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
 
     t_start = time.time()
     now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
-    masked_target = mask_email_str(recipient)
+    masked_target = mask_email_str(clean_rec)
     logger.info(f"[{now_iso}] [OTP] requestId={request_id or 'direct'} recipient={masked_target} stage=request_received")
     
     subject, html_body, text_body = build_otp_email_template(otp)
