@@ -454,10 +454,18 @@ def send_email(
                     msg.attach(part)
 
             ctx = ssl.create_default_context()
-            with smtplib.SMTP(smtp_host, smtp_port, timeout=12) as server:
+            server = smtplib.SMTP(smtp_host, smtp_port, timeout=12)
+            try:
+                server.ehlo()
                 server.starttls(context=ctx)
+                server.ehlo()
                 server.login(smtp_user, smtp_pass)
                 server.sendmail(from_email, recipient, msg.as_string())
+            finally:
+                try:
+                    server.quit()
+                except Exception:
+                    pass
             
             logger.info(f"[GMAIL_SMTP_SUCCESS] Email accepted for delivery to {recipient} via {smtp_host}:{smtp_port}")
             record_email_delivery_diagnostic(
@@ -751,11 +759,74 @@ Please do not reply directly to this email.
     return subject, html_body, plain_text_body
 
 
-def send_fast_otp_email(recipient: str, otp: str) -> Tuple[bool, Optional[str]]:
+def mask_email_str(email_str: str) -> str:
+    if not email_str or "@" not in email_str:
+        return str(email_str)
+    user_part, domain_part = email_str.split("@", 1)
+    if len(user_part) <= 2:
+        return f"{user_part[0]}***@{domain_part}"
+    return f"{user_part[0]}*****{user_part[-1]}@{domain_part}"
+
+
+def verify_smtp_transporter() -> Tuple[bool, str, Dict[str, Any]]:
+    """
+    Safely tests and verifies the configured SMTP transporter (STARTTLS / SSL handshake & AUTH login).
+    Never exposes passwords.
+    """
+    smtp_host = os.environ.get("SMTP_HOST") or getattr(settings, "SMTP_HOST", "smtp.gmail.com")
+    smtp_port = int(os.environ.get("SMTP_PORT") or getattr(settings, "SMTP_PORT", 587))
+    smtp_user = (os.environ.get("SMTP_USERNAME") or getattr(settings, "SMTP_USERNAME", "")).strip()
+    smtp_pass = (os.environ.get("SMTP_PASSWORD") or getattr(settings, "SMTP_PASSWORD", "")).replace(" ", "")
+    admin_recipient = (os.environ.get("ADMIN_EMAIL") or getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com")).strip().lower()
+
+    if not smtp_user or not smtp_pass:
+        return False, "SMTP credentials missing or incomplete", {
+            "smtpConfigured": False,
+            "smtpHost": smtp_host,
+            "smtpPort": smtp_port,
+            "smtpUserMasked": mask_email_str(smtp_user),
+            "senderMasked": mask_email_str(smtp_user),
+            "adminRecipientMasked": mask_email_str(admin_recipient),
+            "transportVerified": False
+        }
+
+    try:
+        server = connect_and_login_smtp(smtp_host, smtp_port, smtp_user, smtp_pass, timeout=6)
+        try:
+            server.quit()
+        except Exception:
+            pass
+        return True, "SMTP Transporter verified successfully", {
+            "smtpConfigured": True,
+            "smtpHost": smtp_host,
+            "smtpPort": smtp_port,
+            "smtpUserMasked": mask_email_str(smtp_user),
+            "senderMasked": mask_email_str(smtp_user),
+            "adminRecipientMasked": mask_email_str(admin_recipient),
+            "transportVerified": True
+        }
+    except Exception as exc:
+        return False, f"SMTP verification failed: {exc}", {
+            "smtpConfigured": True,
+            "smtpHost": smtp_host,
+            "smtpPort": smtp_port,
+            "smtpUserMasked": mask_email_str(smtp_user),
+            "senderMasked": mask_email_str(smtp_user),
+            "adminRecipientMasked": mask_email_str(admin_recipient),
+            "transportVerified": False,
+            "error": str(exc)
+        }
+
+
+def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = None) -> Tuple[bool, Optional[str], Optional[str]]:
     """
     Ultra-fast, deterministic transactional OTP dispatcher.
     Validates recipient before sending, catches exact destination refusals, and records diagnostics.
+    Returns: (is_success, status_code_or_error, message_id)
     """
+    import email.utils
+    import uuid
+
     # Step 1: Validate recipient syntax and domain
     is_valid, status_code, val_err = validate_recipient_email(recipient)
     if not is_valid:
@@ -768,11 +839,12 @@ def send_fast_otp_email(recipient: str, otp: str) -> Tuple[bool, Optional[str]]:
             error_code="INVALID_RECIPIENT_SYNTAX",
             is_permanent=True
         )
-        return False, f"INVALID_RECIPIENT: {val_err}"
+        return False, f"INVALID_RECIPIENT: {val_err}", None
 
     t_start = time.time()
     now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
-    logger.info(f"[{now_iso}] [OTP_FLOW] Starting fast OTP dispatch for recipient {recipient}")
+    masked_target = mask_email_str(recipient)
+    logger.info(f"[{now_iso}] [OTP] requestId={request_id or 'direct'} recipient={masked_target} stage=request_received")
     
     subject, html_body, text_body = build_otp_email_template(otp)
     
@@ -782,11 +854,16 @@ def send_fast_otp_email(recipient: str, otp: str) -> Tuple[bool, Optional[str]]:
     smtp_pass = (os.environ.get("SMTP_PASSWORD") or getattr(settings, "SMTP_PASSWORD", "")).replace(" ", "")
     from_email = (os.environ.get("REPORT_FROM_EMAIL") or smtp_user or "nanthishvaran17@gmail.com").strip()
     
+    generated_msg_id = f"<{uuid.uuid4().hex}.otp@{smtp_host}>"
+
     # Path 1: Direct Gmail SMTP
     if smtp_user and smtp_pass:
         t_smtp_start = time.time()
+        logger.info(f"[{now_iso}] [OTP] stage=smtp_send_started host={smtp_host}:{smtp_port}")
         try:
             msg = MIMEMultipart('alternative')
+            msg['Message-ID'] = generated_msg_id
+            msg['Date'] = email.utils.formatdate(localtime=True)
             msg['From'] = f"Nandha Engineering College — LeetCode Tracker <{from_email}>"
             msg['To'] = recipient
             msg['Subject'] = subject
@@ -794,14 +871,22 @@ def send_fast_otp_email(recipient: str, otp: str) -> Tuple[bool, Optional[str]]:
             msg.attach(MIMEText(html_body, 'html', 'utf-8'))
 
             ctx = ssl.create_default_context()
-            with smtplib.SMTP(smtp_host, smtp_port, timeout=4.5) as server:
+            server = smtplib.SMTP(smtp_host, smtp_port, timeout=8.0)
+            try:
+                server.ehlo()
                 server.starttls(context=ctx)
+                server.ehlo()
                 server.login(smtp_user, smtp_pass)
-                server.sendmail(from_email, recipient, msg.as_string())
+                refused = server.sendmail(from_email, [recipient], msg.as_string())
+            finally:
+                try:
+                    server.quit()
+                except Exception:
+                    pass
             
             dur = (time.time() - t_smtp_start) * 1000
             now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
-            logger.info(f"[{now_iso}] [OTP_FLOW] Provider accepted email via Gmail SMTP in {dur:.0f}ms")
+            logger.info(f"[{now_iso}] [OTP] stage=smtp_accepted messageId={generated_msg_id} in {dur:.0f}ms")
             record_email_delivery_diagnostic(
                 recipient=recipient,
                 smtp_server=f"{smtp_host}:{smtp_port}",
@@ -810,11 +895,11 @@ def send_fast_otp_email(recipient: str, otp: str) -> Tuple[bool, Optional[str]]:
                 error_code=None,
                 is_permanent=False
             )
-            return True, None
+            return True, STATUS_SMTP_ACCEPTED, generated_msg_id
 
         except smtplib.SMTPRecipientsRefused as r_err:
             refused_info = str(r_err)
-            logger.error(f"[{now_iso}] [OTP_FLOW_RECIPIENT_REFUSED] Destination rejected {recipient}: {refused_info}")
+            logger.error(f"[{now_iso}] [OTP] stage=smtp_failed code=550 classification=PERMANENT_RECIPIENT_FAILURE: {refused_info}")
             record_email_delivery_diagnostic(
                 recipient=recipient,
                 smtp_server=f"{smtp_host}:{smtp_port}",
@@ -823,14 +908,14 @@ def send_fast_otp_email(recipient: str, otp: str) -> Tuple[bool, Optional[str]]:
                 error_code="550_5.1.10_RECIPIENT_NOT_FOUND",
                 is_permanent=True
             )
-            return False, f"DELIVERY_REJECTED: Email could not be delivered. Recipient address was rejected by the destination mail server (550 5.1.10 RecipientNotFound). Please verify or correct the email address."
+            return False, f"DELIVERY_REJECTED: Recipient address was rejected by destination mail server (550 5.1.10 RecipientNotFound).", None
 
         except smtplib.SMTPResponseException as resp_err:
             code = resp_err.smtp_code
             err_msg = resp_err.smtp_error.decode('utf-8', errors='ignore') if isinstance(resp_err.smtp_error, bytes) else str(resp_err.smtp_error)
             is_perm = code in (550, 551, 552, 553, 554) or "5.1.10" in err_msg or "RecipientNotFound" in err_msg or "User unknown" in err_msg
             if is_perm:
-                logger.error(f"[{now_iso}] [OTP_FLOW_PERMANENT_ERROR] Code {code}: {err_msg}")
+                logger.error(f"[{now_iso}] [OTP] stage=smtp_failed code={code} classification=PERMANENT_RECIPIENT_FAILURE: {err_msg}")
                 record_email_delivery_diagnostic(
                     recipient=recipient,
                     smtp_server=f"{smtp_host}:{smtp_port}",
@@ -839,15 +924,15 @@ def send_fast_otp_email(recipient: str, otp: str) -> Tuple[bool, Optional[str]]:
                     error_code=f"SMTP_{code}_PERMANENT",
                     is_permanent=True
                 )
-                return False, f"DELIVERY_REJECTED: Email could not be delivered. Recipient address was rejected by the destination mail server ({code} {err_msg})."
+                return False, f"DELIVERY_REJECTED: Recipient address was rejected by destination mail server ({code} {err_msg}).", None
             else:
                 dur = (time.time() - t_smtp_start) * 1000
-                logger.warning(f"[{now_iso}] [OTP_FLOW] Gmail SMTP transient error ({dur:.0f}ms): {err_msg}. Trying Brevo HTTPS API...")
+                logger.warning(f"[{now_iso}] [OTP] Gmail SMTP transient delay ({dur:.0f}ms): {err_msg}. Trying Brevo HTTPS API...")
 
         except Exception as smtp_err:
             dur = (time.time() - t_smtp_start) * 1000
             now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
-            logger.warning(f"[{now_iso}] [OTP_FLOW] Gmail SMTP delay/error ({dur:.0f}ms): {smtp_err}. Dispatching via Brevo HTTPS API...")
+            logger.warning(f"[{now_iso}] [OTP] Gmail SMTP delay/error ({dur:.0f}ms): {smtp_err}. Dispatching via Brevo HTTPS API...")
 
     # Path 2: Brevo HTTPS API (Fallback / Render compatibility)
     brevo_key = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
@@ -864,7 +949,7 @@ def send_fast_otp_email(recipient: str, otp: str) -> Tuple[bool, Optional[str]]:
             dur = (time.time() - t_brevo_start) * 1000
             now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
             if ok:
-                logger.info(f"[{now_iso}] [OTP_FLOW] Provider accepted email via Brevo HTTPS API in {dur:.0f}ms (ID: {msg_id})")
+                logger.info(f"[{now_iso}] [OTP] stage=brevo_accepted messageId={msg_id} in {dur:.0f}ms")
                 record_email_delivery_diagnostic(
                     recipient=recipient,
                     smtp_server="BREVO_HTTPS_API",
@@ -873,9 +958,9 @@ def send_fast_otp_email(recipient: str, otp: str) -> Tuple[bool, Optional[str]]:
                     error_code=None,
                     is_permanent=False
                 )
-                return True, None
+                return True, STATUS_SMTP_ACCEPTED, str(msg_id)
             else:
-                logger.error(f"[{now_iso}] [OTP_FLOW] Brevo HTTPS API error ({dur:.0f}ms): {msg_id}")
+                logger.error(f"[{now_iso}] [OTP] stage=brevo_failed error={msg_id}")
                 is_perm = "invalid" in str(msg_id).lower() or "rejected" in str(msg_id).lower() or "not found" in str(msg_id).lower()
                 record_email_delivery_diagnostic(
                     recipient=recipient,
@@ -885,11 +970,11 @@ def send_fast_otp_email(recipient: str, otp: str) -> Tuple[bool, Optional[str]]:
                     error_code="BREVO_RECIPIENT_REJECTED" if is_perm else "BREVO_API_ERROR",
                     is_permanent=is_perm
                 )
-                return False, f"Email delivery failed: {msg_id}"
+                return False, f"Email delivery failed: {msg_id}", None
         except Exception as brevo_err:
             now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
-            logger.error(f"[{now_iso}] [OTP_FLOW] Brevo exception: {brevo_err}")
-            return False, str(brevo_err)
+            logger.error(f"[{now_iso}] [OTP] Brevo exception: {brevo_err}")
+            return False, str(brevo_err), None
 
     record_email_delivery_diagnostic(
         recipient=recipient,
@@ -899,7 +984,7 @@ def send_fast_otp_email(recipient: str, otp: str) -> Tuple[bool, Optional[str]]:
         error_code="NO_TRANSPORT",
         is_permanent=False
     )
-    return False, "No active email transport available. Please verify SMTP credentials or Brevo API key."
+    return False, "No active email transport available. Please verify SMTP credentials or Brevo API key.", None
 
 
 def generate_canonical_report_files(db: Session) -> Dict[str, bytes]:

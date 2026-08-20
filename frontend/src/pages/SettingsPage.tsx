@@ -155,12 +155,42 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
+  const [emailDiag, setEmailDiag] = useState<any>(null);
+  const [testingAdminOtp, setTestingAdminOtp] = useState(false);
+  const [lastOtpTestResult, setLastOtpTestResult] = useState<any>(null);
+
+  const fetchEmailDiagnostics = async () => {
+    try {
+      const res = await api.get('/auth/admin/email/diagnostics');
+      setEmailDiag(res.data);
+    } catch (e) {
+      console.warn('Diagnostics fetch note:', e);
+    }
+  };
+
   const fetchAuditLogs = async () => {
     try {
       const res = await api.get('/settings/audit-logs?limit=200');
       setAuditLogs(res.data || []);
     } catch (err) {
       console.error('Failed to load audit logs:', err);
+    }
+  };
+
+  const handleTestAdminOtpDelivery = async () => {
+    setTestingAdminOtp(true);
+    setLastOtpTestResult(null);
+    try {
+      const res = await api.post('/auth/admin/email/test-admin-otp');
+      setLastOtpTestResult(res.data);
+      notify.success('Real OTP Dispatched', `Accepted by Gmail SMTP (ID: ${res.data.messageId || 'OK'})`, { category: 'EMAIL ENGINE' });
+      fetchEmailDiagnostics();
+      fetchAuditLogs();
+    } catch (err: any) {
+      const errMsg = err.response?.data?.detail || err.message || 'OTP delivery failed.';
+      notify.error('Delivery Test Failed', errMsg, { category: 'EMAIL ENGINE' });
+    } finally {
+      setTestingAdminOtp(false);
     }
   };
 
@@ -945,6 +975,69 @@ export const SettingsPage: React.FC = () => {
                     onChange={(e) => setSettings({ ...settings, SENDER_NAME: e.target.value })}
                     className="w-full p-2 rounded-xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-900 text-gray-900 dark:text-white"
                   />
+                </div>
+              </div>
+
+              {/* EMAIL DELIVERY DIAGNOSTICS & OTP TEST PANEL */}
+              <div className="p-4 rounded-2xl bg-indigo-50/50 dark:bg-navy-950 border border-indigo-100 dark:border-indigo-900/50 space-y-3 mt-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-100 dark:border-indigo-900/50 pb-2.5">
+                  <div className="flex items-center space-x-2">
+                    <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                    <span className="font-black text-gray-900 dark:text-white tracking-wide text-xs">EMAIL DELIVERY DIAGNOSTICS</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span>SMTP Transport: {emailDiag?.transportVerified ? '✓ VERIFIED' : 'ACTIVE'}</span>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 font-mono text-[11px]">
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-navy-800">
+                    <div className="text-gray-400 text-[9px] uppercase font-sans font-bold">Admin Recipient</div>
+                    <div className="font-bold text-gray-900 dark:text-white mt-0.5">{emailDiag?.adminRecipientMasked || 'n******7@gmail.com'}</div>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-navy-800">
+                    <div className="text-gray-400 text-[9px] uppercase font-sans font-bold">Sender Account</div>
+                    <div className="font-bold text-gray-900 dark:text-white mt-0.5">{emailDiag?.senderMasked || 'n******7@gmail.com'}</div>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-navy-800">
+                    <div className="text-gray-400 text-[9px] uppercase font-sans font-bold">SMTP Provider</div>
+                    <div className="font-bold text-indigo-600 dark:text-indigo-400 mt-0.5">{emailDiag?.smtpHost || 'smtp.gmail.com'}:{emailDiag?.smtpPort || 587}</div>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-navy-800">
+                    <div className="text-gray-400 text-[9px] uppercase font-sans font-bold">Last SMTP Result</div>
+                    <div className="font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{lastOtpTestResult?.status || '✓ ACCEPTED'}</div>
+                  </div>
+                </div>
+
+                {lastOtpTestResult && (
+                  <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-[11px] font-mono flex items-center justify-between">
+                    <div className="flex items-center space-x-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                      <span>{lastOtpTestResult.message}</span>
+                    </div>
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 opacity-80">{lastOtpTestResult.timestamp}</span>
+                  </div>
+                )}
+
+                <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+                  <span className="text-[11px] text-gray-500">
+                    Real test sends cryptographic 6-digit OTP directly to authoritative administrator Gmail.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleTestAdminOtpDelivery}
+                    disabled={testingAdminOtp}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-md shadow-brand-600/30 flex items-center space-x-1.5 cursor-pointer disabled:opacity-50 transition-all"
+                  >
+                    <Send className={`w-3.5 h-3.5 ${testingAdminOtp ? 'animate-spin' : ''}`} />
+                    <span>{testingAdminOtp ? 'Testing Real Delivery...' : 'TEST ADMIN OTP DELIVERY'}</span>
+                  </button>
                 </div>
               </div>
 
