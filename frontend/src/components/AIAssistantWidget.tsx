@@ -390,7 +390,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 font-sans">
+    <div className="fixed bottom-6 right-6 z-[99999] font-sans pointer-events-auto">
       <AnimatePresence>
         {/* Floating Toggle Button */}
         {!isOpen && (
@@ -398,17 +398,18 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
             initial={{ opacity: 0, scale: 0.8, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 15 }}
-            whileHover={{ scale: 1.06, y: -2 }}
+            whileHover={{ scale: 1.08, y: -2 }}
             whileTap={{ scale: 0.94 }}
             onClick={() => setIsOpen(true)}
-            className="flex items-center space-x-2.5 px-4 py-3 rounded-full bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 hover:from-brand-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-2xl shadow-brand-600/40 cursor-pointer border border-white/20 animate-pulseGlow"
+            className="flex items-center space-x-2 px-5 py-3 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-2xl shadow-blue-600/50 cursor-pointer border border-white/30 backdrop-blur-md transition-all"
           >
-            <div className="relative">
-              <Sparkles className="w-5 h-5 animate-pulse text-amber-300" />
+            <div className="relative flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
               <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping"></span>
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full"></span>
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full border border-white"></span>
             </div>
-            <span>💬 NEC Unified AI</span>
+            <span className="text-sm">💬</span>
+            <span className="tracking-wide text-xs font-black drop-shadow-sm">NEC Unified AI</span>
           </motion.button>
         )}
       </AnimatePresence>

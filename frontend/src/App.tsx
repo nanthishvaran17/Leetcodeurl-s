@@ -330,6 +330,9 @@ export const App: React.FC = () => {
         onNavigate={handleTabChange}
       />
 
+      {/* Floating Global NEC Unified AI Widget */}
+      <AIAssistantWidget onNavigateTab={handleTabChange} />
+
     </div>
   );
 };
