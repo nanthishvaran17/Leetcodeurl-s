@@ -6,10 +6,11 @@ import json
 import asyncio
 import bcrypt
 import jwt
-from typing import Optional, Any
+from typing import Optional, Any, cast
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
 from backend.database import get_db
 from backend.config import settings
@@ -21,6 +22,11 @@ from backend.logger import logger
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token", auto_error=False)
+
+
+def _utcnow() -> datetime.datetime:
+    """Helper to return current naive UTC datetime without deprecated utcnow() call."""
+    return datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -43,9 +49,9 @@ def get_password_hash(password: str) -> str:
 def create_access_token(data: dict, expires_delta: Optional[datetime.timedelta] = None) -> str:
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.datetime.utcnow() + expires_delta
+        expire = _utcnow() + expires_delta
     else:
-        expire = datetime.datetime.utcnow() + datetime.timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = _utcnow() + datetime.timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
@@ -58,7 +64,7 @@ def create_server_admin_session(db: Session, user: User, request: Request, respo
     raw_token = f"sess_{secrets.token_urlsafe(32)}"
     t_hash = hashlib.sha256(raw_token.encode('utf-8')).hexdigest()
     s_id = f"sid_{uuid_hex_short()}"
-    now = datetime.datetime.utcnow()
+    now = _utcnow()
     expires = now + datetime.timedelta(minutes=getattr(settings, "SESSION_EXPIRE_MINUTES", 60))
 
     client_ip = request.client.host if request and request.client else "127.0.0.1"
@@ -134,8 +140,8 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
         # 1. Try local app secret JWT
         try:
             payload = jwt.decode(raw_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-            username: str = payload.get("sub")
-            email_claim: str = payload.get("email")
+            username: Optional[str] = payload.get("sub")
+            email_claim: Optional[str] = payload.get("email")
             if username or email_claim:
                 query_filter = []
                 if username:
@@ -143,7 +149,7 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
                 if email_claim:
                     query_filter.append(User.email.ilike(email_claim))
                 user = db.query(User).filter(
-                    (__import__('sqlalchemy').or_(*query_filter)),
+                    or_(*query_filter),
                     User.is_active == True
                 ).first()
                 if user:
@@ -164,7 +170,7 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
                 if fb_email in EXACT_TWO_ADMIN_EMAILS:
                     user = db.query(User).filter(User.role.ilike("admin"), User.is_active == True).first()
                     if user:
-                        user.email = fb_email
+                        setattr(user, "email", str(fb_email))
                         db.commit()
                         return user
                     else:
@@ -189,7 +195,6 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
             padded = parts[1] + "=" * ((4 - len(parts[1]) % 4) % 4)
             unverified_payload = json.loads(base64.urlsafe_b64decode(padded.encode('utf-8')).decode('utf-8'))
             t_email = (unverified_payload.get("email") or "").strip().lower()
-            t_name = unverified_payload.get("name") or unverified_payload.get("sub")
             if t_email:
                 user = db.query(User).filter(User.email.ilike(t_email), User.is_active == True).first()
                 if user:
@@ -197,7 +202,7 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
                 if t_email in EXACT_TWO_ADMIN_EMAILS:
                     user = db.query(User).filter(User.role.ilike("admin"), User.is_active == True).first()
                     if user:
-                        user.email = t_email
+                        setattr(user, "email", str(t_email))
                         db.commit()
                         return user
                     else:
@@ -217,7 +222,7 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
 
     # Check Server Session Table
     t_hash = hashlib.sha256(raw_token.encode('utf-8')).hexdigest()
-    now = datetime.datetime.utcnow()
+    now = _utcnow()
 
     sess_rec = db.query(AdminSession).filter(
         AdminSession.token_hash == t_hash,
@@ -226,7 +231,7 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
     ).first()
 
     if sess_rec:
-        sess_rec.last_used_at = now
+        setattr(sess_rec, "last_used_at", now)
         db.commit()
         user = db.query(User).filter(User.id == sess_rec.user_id, User.is_active == True).first()
         return user
@@ -260,7 +265,7 @@ EXACT_TWO_ADMIN_EMAILS = {
 
 def mask_email_str(email_str: str) -> str:
     if not email_str or "@" not in email_str:
-        return str(email_str)
+        return email_str
     user_part, domain_part = email_str.split("@", 1)
     if len(user_part) <= 2:
         return f"{user_part[0]}***@{domain_part}"
@@ -296,7 +301,6 @@ async def test_admin_otp_delivery(db: Session = Depends(get_db)):
     masked_target = mask_email_str(auth_email)
     
     from backend.services.email_service import send_fast_otp_email
-    import secrets
     test_otp = f"{secrets.randbelow(900000) + 100000}"
     
     email_sent, status_msg, msg_id = await asyncio.to_thread(
@@ -315,7 +319,7 @@ async def test_admin_otp_delivery(db: Session = Depends(get_db)):
         "message": f"✓ Real OTP verification email accepted by SMTP server for {masked_target}",
         "recipientMasked": masked_target,
         "messageId": msg_id,
-        "timestamp": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+        "timestamp": _utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
     }
 
 
@@ -338,10 +342,8 @@ async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(
     # =========================================================================
     # STEP 1: VERIFY ADMINISTRATOR IDENTITY AGAINST AUTHORITATIVE CONFIG / DB
     # =========================================================================
-    # Check if input matches authoritative email or authorized allowlist
     is_direct_match = (raw_input == auth_admin_email) or (raw_input in EXACT_TWO_ADMIN_EMAILS)
     
-    # Or database lookup for admin username
     user = db.query(User).filter(
         (User.email.ilike(raw_input)) | (User.username.ilike(raw_input))
     ).first()
@@ -355,10 +357,10 @@ async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(
             )
 
     # Resolve target recipient: ALWAYS use authoritative admin email
-    target_recipient = auth_admin_email if (raw_input in (auth_admin_email, "admin", "nanthishvaran17")) else (user.email if user else auth_admin_email)
+    target_recipient: str = auth_admin_email if (raw_input in (auth_admin_email, "admin", "nanthishvaran17")) else (str(user.email) if user and user.email else auth_admin_email)
     masked_target = mask_email_str(target_recipient)
 
-    t0 = datetime.datetime.utcnow()
+    t0 = _utcnow()
 
     # =========================================================================
     # STEP 2: GENERATE CRYPTOGRAPHICALLY SECURE 6-DIGIT OTP & STORE HASH
@@ -378,10 +380,10 @@ async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(
     from backend.services.email_service import send_fast_otp_email
 
     email_sent, status_code_or_err, msg_id = await asyncio.to_thread(
-        send_fast_otp_email, target_recipient, plain_otp, otp_rec.request_id
+        send_fast_otp_email, target_recipient, plain_otp, str(otp_rec.request_id)
     )
 
-    t1 = datetime.datetime.utcnow()
+    t1 = _utcnow()
     elapsed_ms = (t1 - t0).total_seconds() * 1000
 
     # CRITICAL: Verify provider accepted the email before returning success to UI
@@ -471,7 +473,7 @@ def verify_otp(req: VerifyOtpRequest, request: Request, response: Response, db: 
         raise HTTPException(status_code=403, detail="Access denied: Unauthorized administrator.")
 
     try:
-        user.last_login = datetime.datetime.utcnow()
+        setattr(user, "last_login", _utcnow())
         db.commit()
     except Exception:
         db.rollback()
@@ -557,7 +559,6 @@ def google_auth(payload: dict, request: Request, response: Response, db: Session
         raise HTTPException(status_code=400, detail="Your Google account email must be verified.")
 
     # Step 2: Authorize Admin Account — DATABASE FIRST, EXACT 2-ADMIN ALLOWLIST
-    # Only nanthishvaran17@gmail.com and msanthoshkumar@nandhaengg.org are authorized.
     user = db.query(User).filter(User.email.ilike(verified_email)).first()
 
     if not user:
@@ -576,12 +577,10 @@ def google_auth(payload: dict, request: Request, response: Response, db: Session
         logger.warning(f"[GOOGLE_ADMIN_REJECTED] Admin account email '{verified_email}' not in 2-admin allowlist.")
         raise HTTPException(status_code=403, detail="Access denied: Unauthorized administrator account.")
 
-    is_config_admin = True  # noqa: F841
-
     logger.info(f"[GOOGLE_ADMIN_AUTHORIZED] Administrator {user.username} ({user.email}) authorized with role {user.role}.")
 
     try:
-        user.last_login = datetime.datetime.utcnow()
+        setattr(user, "last_login", _utcnow())
         db.commit()
     except Exception:
         db.rollback()
@@ -619,8 +618,6 @@ def google_auth(payload: dict, request: Request, response: Response, db: Session
     }
 
 
-
-
 @router.post("/login")
 def login(login_data: UserLogin, request: Request, response: Response, db: Session = Depends(get_db)):
     validate_csrf_origin(request)
@@ -634,7 +631,7 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
     if not user:
         user = db.query(User).filter(User.email.ilike(clean_username)).first()
 
-    if not user or not verify_password(clean_password, user.hashed_password):
+    if not user or not verify_password(clean_password, str(user.hashed_password or "")):
         configured_username = getattr(settings, "ADMIN_USERNAME", "admin").strip()
         configured_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
         configured_password = getattr(settings, "ADMIN_PASSWORD", "admin123").strip() or "admin123"
@@ -661,22 +658,19 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
                 db.commit()
                 db.refresh(user)
             else:
-                user.hashed_password = get_password_hash(configured_password)
-                user.is_active = True
+                setattr(user, "hashed_password", get_password_hash(configured_password))
+                setattr(user, "is_active", True)
                 db.commit()
         else:
             logger.warning(f"[ADMIN_LOGIN_FAILURE] Invalid credentials for username: {clean_username}")
             raise HTTPException(status_code=400, detail="Invalid username or password.")
-
-
-
 
     if not user.is_active:
         logger.warning(f"[ADMIN_LOGIN_FAILURE] Account deactivated for username: {clean_username}")
         raise HTTPException(status_code=400, detail="Account is currently deactivated.")
 
     try:
-        user.last_login = datetime.datetime.utcnow()
+        setattr(user, "last_login", _utcnow())
         db.commit()
     except Exception:
         db.rollback()
@@ -742,7 +736,7 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
     if raw_token:
         t_hash = hashlib.sha256(raw_token.encode('utf-8')).hexdigest()
         db.query(AdminSession).filter(AdminSession.token_hash == t_hash).update(
-            {"revoked_at": datetime.datetime.utcnow()}, synchronize_session=False
+            {"revoked_at": _utcnow()}, synchronize_session=False
         )
         db.commit()
 
@@ -771,7 +765,7 @@ def test_admin_email_delivery(
     Diagnostic capability for development only (authenticated administrators).
     Sends a test verification email to the configured administrator address.
     """
-    target = current_user.email or "nanthishvaran17@gmail.com"
+    target: str = str(current_user.email or "nanthishvaran17@gmail.com")
     from backend.services.email_service import build_otp_email_template, send_email
     subject, body_html, body_text = build_otp_email_template("123456")
     ok, err = send_email(target, subject, body_html, None, body_text)
