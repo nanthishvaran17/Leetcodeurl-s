@@ -58,12 +58,18 @@ const STATUS_CONFIG: Record<string, { icon: React.ReactNode; color: string; labe
   FAILED:    { icon: <XCircle className="w-4 h-4" />, color: 'text-red-500 dark:text-red-400', label: '🔴 Failed' },
 };
 
-export const EmailDeliveryTab: React.FC = () => {
+export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated' | 'recipients' | 'history' }> = ({ defaultSection = 'manual' }) => {
   const [recipients, setRecipients] = useState<EmailRecipient[]>([]);
   const [logs, setLogs] = useState<EmailLog[]>([]);
   const [sessions, setSessions] = useState<WeeklySessionOption[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState<'manual' | 'automated' | 'recipients' | 'history'>('manual');
+  const [activeSection, setActiveSection] = useState<'manual' | 'automated' | 'recipients' | 'history'>(defaultSection);
+
+  useEffect(() => {
+    if (defaultSection) {
+      setActiveSection(defaultSection);
+    }
+  }, [defaultSection]);
 
   // Manual send modal
   const [showSendModal, setShowSendModal] = useState(false);

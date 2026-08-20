@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Sparkles, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers, Inbox, Trash2, Award } from 'lucide-react';
+import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Sparkles, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers, Inbox, Trash2, Award, Clock } from 'lucide-react';
 import api from '../services/api';
 import { ReportPreview } from '../components/ReportPreview';
 import { EmailDeliveryTab } from '../components/EmailDeliveryTab';
@@ -10,7 +10,7 @@ import { useNotification } from '../context/NotificationContext';
 
 export const ReportsPage: React.FC = () => {
   const { notify } = useNotification();
-  const [activeTab, setActiveTab] = useState<'reports' | 'email'>('reports');
+  const [activeTab, setActiveTab] = useState<'reports' | 'email' | 'manual_email' | 'auto_email'>('reports');
   const [showCertModal, setShowCertModal] = useState<boolean>(false);
   const [emailLogs, setEmailLogs] = useState<any[]>([]);
   const [hodSnapshots, setHodSnapshots] = useState<any[]>([]);
@@ -361,28 +361,36 @@ export const ReportsPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2.5 flex-wrap gap-2">
             <button
               onClick={() => setShowCertModal(true)}
-              className="flex items-center space-x-2 px-5 py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-2xl text-xs font-black shadow-xl shadow-amber-500/30 transition-all transform hover:scale-105 cursor-pointer"
+              className="flex items-center space-x-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-2xl text-xs font-black shadow-xl shadow-amber-500/30 transition-all transform hover:scale-105 cursor-pointer"
             >
               <Award className="w-4 h-4" />
               <span>Generate Merit Certificates</span>
             </button>
 
             <button
-              onClick={() => setActiveTab('email')}
-              className="flex items-center space-x-2.5 px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-2xl text-xs font-black shadow-xl shadow-emerald-500/30 transition-all transform hover:scale-105 cursor-pointer"
+              onClick={() => setActiveTab('manual_email')}
+              className="flex items-center space-x-2 px-4.5 py-3 bg-gradient-to-r from-indigo-600 to-brand-600 hover:from-indigo-700 hover:to-brand-700 text-white rounded-2xl text-xs font-black shadow-xl shadow-indigo-600/30 transition-all transform hover:scale-105 cursor-pointer"
             >
-              <Mail className="w-4 h-4" />
-              <span>Email Delivery & Scheduler</span>
+              <Mail className="w-4 h-4 text-emerald-400" />
+              <span>Manual Email Send</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('auto_email')}
+              className="flex items-center space-x-2 px-4.5 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs font-black shadow-xl shadow-emerald-600/30 transition-all transform hover:scale-105 cursor-pointer"
+            >
+              <Clock className="w-4 h-4 text-amber-300" />
+              <span>Auto Scheduler Settings</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Main Tab Navigation */}
-      <div className="flex items-center space-x-2 bg-gray-100 dark:bg-navy-900 p-1.5 rounded-2xl max-w-fit border border-gray-200 dark:border-gray-800">
+      <div className="flex items-center space-x-2 bg-gray-100 dark:bg-navy-900 p-1.5 rounded-2xl max-w-fit border border-gray-200 dark:border-gray-800 flex-wrap gap-1">
         <button
           onClick={() => setActiveTab('reports')}
           className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
@@ -396,20 +404,36 @@ export const ReportsPage: React.FC = () => {
         </button>
 
         <button
-          onClick={() => setActiveTab('email')}
+          onClick={() => setActiveTab('manual_email')}
           className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
-            activeTab === 'email'
-              ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md'
+            activeTab === 'manual_email'
+              ? 'bg-gradient-to-r from-indigo-600 to-brand-600 text-white shadow-md'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
           }`}
         >
-          <Mail className="w-4 h-4" />
-          <span>Unified Email Delivery & Auto-Scheduler</span>
+          <Mail className="w-4 h-4 text-emerald-400" />
+          <span>⚡ Manual Instant Email Dispatch</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('auto_email')}
+          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+            activeTab === 'auto_email'
+              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md font-black'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+          }`}
+        >
+          <Clock className="w-4 h-4 text-amber-500" />
+          <span>⏰ Automated Sunday Auto-Scheduler</span>
         </button>
       </div>
 
-      {activeTab === 'email' ? (
-        <EmailDeliveryTab />
+      {activeTab === 'manual_email' ? (
+        <EmailDeliveryTab defaultSection="manual" />
+      ) : activeTab === 'auto_email' ? (
+        <EmailDeliveryTab defaultSection="automated" />
+      ) : activeTab === 'email' ? (
+        <EmailDeliveryTab defaultSection="manual" />
       ) : (
         <>
 
