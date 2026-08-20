@@ -775,7 +775,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 </p>
               </div>
               <span className="px-3 py-1 text-xs font-black rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 self-start sm:self-center">
-                100% HEALTH SCORE
+                {data?.dataQuality?.health_score_percentage ?? '—'}% HEALTH SCORE
               </span>
             </div>
 

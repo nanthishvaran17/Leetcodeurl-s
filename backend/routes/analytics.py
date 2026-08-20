@@ -135,7 +135,7 @@ def get_data_quality_dashboard(db: Session = Depends(get_db)):
     students = db.query(Student).options(
         joinedload(Student.department),
         joinedload(Student.stats)
-    ).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+    ).all()
     total = len(students)
 
     ok_count = 0
@@ -143,54 +143,77 @@ def get_data_quality_dashboard(db: Session = Depends(get_db)):
     invalid_link = 0
     not_found = 0
     network_error_count = 0
-    data_unavailable = 0
+    sync_failed_count = 0
 
     issues_list = []
 
     for s in students:
         st = s.stats
+        username = (s.username or "").strip()
+        leetcode_url = (s.leetcode_url or "").strip()
         status = (st.status if st else "").upper()
         sync_st = (st.sync_status if st else "").lower()
+        error_code = (st.error_code if st else None) or ""
+        dept_code = s.department.code if s.department else "CSE"
 
-        is_verified = (
-            bool(s.username or s.leetcode_url)
-            and (
-                status in ("OK", "VERIFIED", "SUCCESS")
-                or sync_st in ("success", "ok", "verified", "stale")
-                or (st and st.total_solved is not None)
-            )
-        )
-
-        if is_verified:
-            ok_count += 1
-        elif not s.leetcode_url and not s.username:
+        # 1. Missing Username — no URL and no username configured
+        if not username and not leetcode_url:
             missing_link += 1
             issues_list.append({
-                "student_id": s.id, "reg_no": s.reg_no, "name": s.name, 
-                "dept": s.department.code if s.department else "CSE", 
+                "student_id": s.id, "reg_no": s.reg_no, "name": s.name,
+                "dept": dept_code,
                 "issue": "Missing LeetCode Profile URL", "status": "MISSING_USERNAME",
                 "action_required": "Add LeetCode Profile URL"
             })
-        elif s.leetcode_url and "leetcode.com" not in s.leetcode_url.lower():
+
+        # 2. Profile Not Found on LeetCode (username exists but LeetCode says not found)
+        elif st and (status == "PROFILE NOT FOUND" or error_code == "PROFILE_NOT_FOUND"):
+            not_found += 1
+            issues_list.append({
+                "student_id": s.id, "reg_no": s.reg_no, "name": s.name,
+                "dept": dept_code,
+                "issue": f"Username '{username}' not found on LeetCode", "status": "PROFILE_NOT_FOUND",
+                "action_required": "Check & Correct LeetCode Username"
+            })
+
+        # 3. Invalid URL structure (has URL but not a LeetCode URL)
+        elif leetcode_url and "leetcode.com" not in leetcode_url.lower() and not username:
             invalid_link += 1
             issues_list.append({
-                "student_id": s.id, "reg_no": s.reg_no, "name": s.name, 
-                "dept": s.department.code if s.department else "CSE", 
+                "student_id": s.id, "reg_no": s.reg_no, "name": s.name,
+                "dept": dept_code,
                 "issue": "Invalid LeetCode Profile URL Structure", "status": "INVALID_PROFILE_URL",
                 "action_required": "Fix LeetCode URL Structure"
             })
-        elif status == "PROFILE NOT FOUND" or sync_st in ("invalid_profile", "not_found"):
-            not_found += 1
-            issues_list.append({
-                "student_id": s.id, "reg_no": s.reg_no, "name": s.name, 
-                "dept": s.department.code if s.department else "CSE", 
-                "issue": f"Username '{s.username}' not found on LeetCode", "status": "PROFILE_NOT_FOUND",
-                "action_required": "Check LeetCode Username"
-            })
-        elif sync_st in ("network_error", "timeout", "failed"):
-            network_error_count += 1
+
+        # 4. Sync truly failed (not a leftover error from a past attempt)
+        elif st and (
+            sync_st == "failed" or
+            (status and status.startswith("INVALID")) or
+            error_code == "PENDING_USERNAME" or
+            (error_code and sync_st != "success" and status != "VERIFIED")
+        ):
+            sync_failed_count += 1
+
+        # 5. Network errors that are transient (sync succeeded but old error_code remains)
+        elif st and error_code and error_code in ("NETWORK_ERROR", "TIMEOUT", "RATE_LIMITED") and sync_st == "success":
+            # These are self-healing — the student is verified but had a past transient error
+            ok_count += 1
+
+        # 6. Verified & healthy
+        elif (
+            bool(username or leetcode_url)
+            and (
+                status in ("OK", "VERIFIED", "SUCCESS")
+                or sync_st in ("success", "ok", "verified")
+                or (st and st.total_solved is not None)
+            )
+        ):
+            ok_count += 1
+
+        # 7. Everything else
         else:
-            data_unavailable += 1
+            network_error_count += 1
 
     health_score = round((ok_count / max(1, total) * 100), 1) if total > 0 else 100.0
 
@@ -201,8 +224,9 @@ def get_data_quality_dashboard(db: Session = Depends(get_db)):
         "missing_links": missing_link,
         "invalid_links": invalid_link,
         "profile_not_found": not_found,
-        "network_errors": network_error_count,
-        "data_unavailable": data_unavailable,
+        "network_errors": network_error_count + sync_failed_count,
+        "sync_failed": sync_failed_count,
+        "data_unavailable": 0,
         "health_score": health_score,
         "health_score_percentage": health_score,
         "issues_count": len(issues_list),
@@ -215,7 +239,7 @@ def get_data_quality_dashboard(db: Session = Depends(get_db)):
             "invalid_link": invalid_link,
             "not_found": not_found,
             "network_errors": network_error_count,
-            "data_unavailable": data_unavailable
+            "sync_failed": sync_failed_count
         }
     }
     cache.set(cache_key, resp, ttl_seconds=60, tags=["analytics", "students"])

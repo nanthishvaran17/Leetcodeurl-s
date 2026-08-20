@@ -83,29 +83,40 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
       </div>
 
       {/* Metrics Snapshot Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
-        <div className="p-6 rounded-3xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20 shadow-xl text-center space-y-1">
-          <p className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">Health Score</p>
-          <p className="text-3xl font-black text-emerald-700 dark:text-emerald-300">{healthScore}%</p>
-          <p className="text-[11px] text-gray-500 font-bold">Roster Accuracy Index</p>
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <div className="p-5 rounded-3xl border shadow-xl text-center space-y-1"
+          style={{ background: 'linear-gradient(135deg, #064e3b15, #06543515)', borderColor: 'rgba(16,185,129,0.25)' }}>
+          <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#34d399' }}>Health Score</p>
+          <p className="text-3xl font-black" style={{ color: '#10b981' }}>{healthScore}%</p>
+          <p className="text-[11px] font-bold" style={{ color: '#6b7280' }}>Roster Accuracy Index</p>
         </div>
 
-        <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-xl text-center space-y-1">
-          <p className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Valid Profiles</p>
-          <p className="text-3xl font-black text-gray-900 dark:text-white">{data?.valid_profiles || 0}</p>
-          <p className="text-[11px] text-gray-500 font-bold">Strictly Identity Mapped</p>
+        <div className="p-5 rounded-3xl border shadow-xl text-center space-y-1"
+          style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)', borderColor: 'rgba(100,116,139,0.3)' }}>
+          <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#94a3b8' }}>Valid Profiles</p>
+          <p className="text-3xl font-black text-white">{data?.valid_profiles || 0}</p>
+          <p className="text-[11px] font-bold" style={{ color: '#6b7280' }}>Strictly Identity Mapped</p>
         </div>
 
-        <div className="p-6 rounded-3xl bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 shadow-xl text-center space-y-1">
-          <p className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider">Missing / Invalid Links</p>
-          <p className="text-3xl font-black text-amber-700 dark:text-amber-300">{(data?.missing_links || 0) + (data?.invalid_links || 0)}</p>
-          <p className="text-[11px] text-gray-500 font-bold">Action Required</p>
+        <div className="p-5 rounded-3xl border shadow-xl text-center space-y-1"
+          style={{ background: 'linear-gradient(135deg, #1a150815, #2a221015)', borderColor: 'rgba(245,158,11,0.25)' }}>
+          <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#fbbf24' }}>Missing Links</p>
+          <p className="text-3xl font-black" style={{ color: '#f59e0b' }}>{data?.missing_links || 0}</p>
+          <p className="text-[11px] font-bold" style={{ color: '#6b7280' }}>No Username Set</p>
         </div>
 
-        <div className="p-6 rounded-3xl bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent border border-blue-500/20 shadow-xl text-center space-y-1">
-          <p className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider">Network Anomalies</p>
-          <p className="text-3xl font-black text-blue-700 dark:text-blue-300">{data?.network_errors || 0}</p>
-          <p className="text-[11px] text-gray-500 font-bold">Temporary / Self-Healing</p>
+        <div className="p-5 rounded-3xl border shadow-xl text-center space-y-1"
+          style={{ background: 'linear-gradient(135deg, #1a080815, #2a101015)', borderColor: 'rgba(239,68,68,0.25)' }}>
+          <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#f87171' }}>Profile Not Found</p>
+          <p className="text-3xl font-black" style={{ color: '#ef4444' }}>{data?.profile_not_found || 0}</p>
+          <p className="text-[11px] font-bold" style={{ color: '#6b7280' }}>Invalid Username on LeetCode</p>
+        </div>
+
+        <div className="p-5 rounded-3xl border shadow-xl text-center space-y-1"
+          style={{ background: 'linear-gradient(135deg, #0c1a2e15, #0f254015)', borderColor: 'rgba(59,130,246,0.25)' }}>
+          <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#60a5fa' }}>Network / Sync</p>
+          <p className="text-3xl font-black" style={{ color: '#3b82f6' }}>{data?.network_errors || 0}</p>
+          <p className="text-[11px] font-bold" style={{ color: '#6b7280' }}>Temporary / Retryable</p>
         </div>
       </div>
 
