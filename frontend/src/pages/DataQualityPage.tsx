@@ -8,20 +8,28 @@ import api from '../services/api';
 export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }> = ({ onNavigateTab }) => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [filterCategory, setFilterCategory] = useState<string>('ALL');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   useEffect(() => {
-    fetchQualityData();
+    fetchQualityData(false);
   }, []);
 
-  const fetchQualityData = async () => {
-    setLoading(true);
+  const fetchQualityData = async (force: boolean = false) => {
+    if (force) setRefreshing(true);
+    else setLoading(true);
+
     try {
-      const res = await api.get('/analytics/data-quality');
+      const res = await api.get('/analytics/data-quality', {
+        params: force ? { force_refresh: true } : {}
+      });
       setData(res.data);
     } catch (err) {
       console.error("Failed to fetch quality data", err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -37,8 +45,24 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
   const healthScore = data?.health_score_percentage ?? 100;
   const issuesList = data?.issues_list || [];
 
+  // Filter issues list dynamically based on search query and selected filter category
+  const filteredIssues = issuesList.filter((item: any) => {
+    const matchesSearch = !searchQuery.trim() || 
+      item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.reg_no?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.dept?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.issue?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    if (!matchesSearch) return false;
+    if (filterCategory === 'ALL') return true;
+    if (filterCategory === 'MISSING') return item.status === 'MISSING_USERNAME';
+    if (filterCategory === 'NOT_FOUND') return item.status === 'PROFILE_NOT_FOUND';
+    if (filterCategory === 'INVALID') return item.status === 'INVALID_PROFILE_URL';
+    return true;
+  });
+
   return (
-    <div className="space-y-8 animate-fade-in pb-12">
+    <div className="space-y-8 animate-fade-in pb-12 font-sans">
       
       {/* Hero Banner with Rich Styling */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-2xl border border-brand-500/30">
@@ -72,11 +96,12 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
             )}
 
             <button
-              onClick={fetchQualityData}
+              onClick={() => fetchQualityData(true)}
+              disabled={refreshing}
               className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-black rounded-xl border border-white/20 transition-all backdrop-blur-md flex items-center space-x-2 cursor-pointer"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-              <span>Run Quality Audit</span>
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              <span>{refreshing ? 'Auditing Live...' : 'Run Quality Audit'}</span>
             </button>
           </div>
         </div>
@@ -84,36 +109,51 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
 
       {/* Metrics Snapshot Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-        <div className="p-5 rounded-3xl border shadow-xl text-center space-y-1"
-          style={{ background: 'linear-gradient(135deg, #064e3b15, #06543515)', borderColor: 'rgba(16,185,129,0.25)' }}>
+        <div 
+          onClick={() => setFilterCategory('ALL')}
+          className={`p-5 rounded-3xl border shadow-xl text-center space-y-1 transition-all cursor-pointer ${filterCategory === 'ALL' ? 'ring-2 ring-emerald-400 scale-[1.03]' : 'hover:scale-[1.01]'}`}
+          style={{ background: 'linear-gradient(135deg, #064e3b15, #06543515)', borderColor: 'rgba(16,185,129,0.25)' }}
+        >
           <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#34d399' }}>Health Score</p>
           <p className="text-3xl font-black" style={{ color: '#10b981' }}>{healthScore}%</p>
           <p className="text-[11px] font-bold" style={{ color: '#6b7280' }}>Roster Accuracy Index</p>
         </div>
 
-        <div className="p-5 rounded-3xl border shadow-xl text-center space-y-1"
-          style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)', borderColor: 'rgba(100,116,139,0.3)' }}>
+        <div 
+          onClick={() => setFilterCategory('ALL')}
+          className="p-5 rounded-3xl border shadow-xl text-center space-y-1 transition-all cursor-pointer hover:scale-[1.01]"
+          style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)', borderColor: 'rgba(100,116,139,0.3)' }}
+        >
           <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#94a3b8' }}>Valid Profiles</p>
           <p className="text-3xl font-black text-white">{data?.valid_profiles || 0}</p>
           <p className="text-[11px] font-bold" style={{ color: '#6b7280' }}>Strictly Identity Mapped</p>
         </div>
 
-        <div className="p-5 rounded-3xl border shadow-xl text-center space-y-1"
-          style={{ background: 'linear-gradient(135deg, #1a150815, #2a221015)', borderColor: 'rgba(245,158,11,0.25)' }}>
+        <div 
+          onClick={() => setFilterCategory('MISSING')}
+          className={`p-5 rounded-3xl border shadow-xl text-center space-y-1 transition-all cursor-pointer ${filterCategory === 'MISSING' ? 'ring-2 ring-amber-400 scale-[1.03]' : 'hover:scale-[1.01]'}`}
+          style={{ background: 'linear-gradient(135deg, #1a150815, #2a221015)', borderColor: 'rgba(245,158,11,0.25)' }}
+        >
           <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#fbbf24' }}>Missing Links</p>
           <p className="text-3xl font-black" style={{ color: '#f59e0b' }}>{data?.missing_links || 0}</p>
           <p className="text-[11px] font-bold" style={{ color: '#6b7280' }}>No Username Set</p>
         </div>
 
-        <div className="p-5 rounded-3xl border shadow-xl text-center space-y-1"
-          style={{ background: 'linear-gradient(135deg, #1a080815, #2a101015)', borderColor: 'rgba(239,68,68,0.25)' }}>
+        <div 
+          onClick={() => setFilterCategory('NOT_FOUND')}
+          className={`p-5 rounded-3xl border shadow-xl text-center space-y-1 transition-all cursor-pointer ${filterCategory === 'NOT_FOUND' ? 'ring-2 ring-rose-400 scale-[1.03]' : 'hover:scale-[1.01]'}`}
+          style={{ background: 'linear-gradient(135deg, #1a080815, #2a101015)', borderColor: 'rgba(239,68,68,0.25)' }}
+        >
           <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#f87171' }}>Profile Not Found</p>
           <p className="text-3xl font-black" style={{ color: '#ef4444' }}>{data?.profile_not_found || 0}</p>
           <p className="text-[11px] font-bold" style={{ color: '#6b7280' }}>Invalid Username on LeetCode</p>
         </div>
 
-        <div className="p-5 rounded-3xl border shadow-xl text-center space-y-1"
-          style={{ background: 'linear-gradient(135deg, #0c1a2e15, #0f254015)', borderColor: 'rgba(59,130,246,0.25)' }}>
+        <div 
+          onClick={() => setFilterCategory('ALL')}
+          className="p-5 rounded-3xl border shadow-xl text-center space-y-1 transition-all cursor-pointer hover:scale-[1.01]"
+          style={{ background: 'linear-gradient(135deg, #0c1a2e15, #0f254015)', borderColor: 'rgba(59,130,246,0.25)' }}
+        >
           <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#60a5fa' }}>Network / Sync</p>
           <p className="text-3xl font-black" style={{ color: '#3b82f6' }}>{data?.network_errors || 0}</p>
           <p className="text-[11px] font-bold" style={{ color: '#6b7280' }}>Temporary / Retryable</p>
@@ -122,19 +162,58 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
 
       {/* Profile Attention & Quality Issues Board */}
       <div className="border border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden shadow-xl bg-white dark:bg-navy-900 p-6 space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <h3 className="text-sm font-black uppercase text-gray-900 dark:text-white flex items-center space-x-2">
-            <AlertCircle className="w-4 h-4 text-amber-500" />
-            <span>Profile Attention & Data Quality Issues List ({issuesList.length} Action Items)</span>
-          </h3>
-          {data?.source_status === 'UNAVAILABLE' && (
-            <span className="px-3 py-1 rounded-full text-xs font-black bg-rose-500/20 text-rose-600 border border-rose-500/30 animate-pulse">
-              🔴 LEETCODE SOURCE UNAVAILABLE
-            </span>
-          )}
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="space-y-1">
+            <h3 className="text-sm font-black uppercase text-gray-900 dark:text-white flex items-center space-x-2">
+              <AlertCircle className="w-4 h-4 text-amber-500" />
+              <span>Profile Attention & Data Quality Issues List ({filteredIssues.length} Items Displayed)</span>
+            </h3>
+            <p className="text-xs text-gray-500 font-medium">Filter by category or search name, register number, or issue flag.</p>
+          </div>
+
+          {/* Interactive Search & Filter Controls */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search name, reg no..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8 pr-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-navy-950 text-xs font-semibold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 w-44 sm:w-56"
+              />
+            </div>
+
+            <div className="flex items-center gap-1 bg-gray-100 dark:bg-navy-950 p-1 rounded-xl border border-gray-200 dark:border-gray-800 text-[11px] font-bold">
+              <button
+                onClick={() => setFilterCategory('ALL')}
+                className={`px-2.5 py-1 rounded-lg transition-all ${filterCategory === 'ALL' ? 'bg-white dark:bg-navy-800 text-gray-900 dark:text-white shadow-sm font-black' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
+              >
+                All ({issuesList.length})
+              </button>
+              <button
+                onClick={() => setFilterCategory('MISSING')}
+                className={`px-2.5 py-1 rounded-lg transition-all ${filterCategory === 'MISSING' ? 'bg-amber-500/20 text-amber-400 font-black' : 'text-gray-500 hover:text-amber-400'}`}
+              >
+                Missing ({data?.missing_links || 0})
+              </button>
+              <button
+                onClick={() => setFilterCategory('NOT_FOUND')}
+                className={`px-2.5 py-1 rounded-lg transition-all ${filterCategory === 'NOT_FOUND' ? 'bg-rose-500/20 text-rose-400 font-black' : 'text-gray-500 hover:text-rose-400'}`}
+              >
+                Not Found ({data?.profile_not_found || 0})
+              </button>
+            </div>
+
+            {data?.source_status === 'UNAVAILABLE' && (
+              <span className="px-3 py-1 rounded-full text-xs font-black bg-rose-500/20 text-rose-600 border border-rose-500/30 animate-pulse">
+                🔴 LEETCODE SOURCE UNAVAILABLE
+              </span>
+            )}
+          </div>
         </div>
 
-        {issuesList.length > 0 ? (
+        {filteredIssues.length > 0 ? (
           <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-navy-950 text-white font-black uppercase">
@@ -147,7 +226,7 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {issuesList.map((item: any, idx: number) => (
+                {filteredIssues.map((item: any, idx: number) => (
                   <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-navy-800/50 transition-colors">
                     <td className="px-4 py-2.5 font-bold text-gray-900 dark:text-white">{item.reg_no}</td>
                     <td className="px-4 py-2.5 font-semibold text-gray-800 dark:text-gray-200">{item.name}</td>
@@ -155,8 +234,8 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
                     <td className="px-4 py-2.5">
                       <span className={`px-3 py-1 rounded-full font-black text-[10px] ${
                         item.status === 'MISSING_USERNAME' || item.status === 'INVALID_PROFILE_URL'
-                          ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-                          : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                          ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-500/30'
+                          : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-500/30'
                       }`}>
                         {item.issue}
                       </span>
@@ -172,10 +251,9 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
         ) : (
           <div className="p-12 text-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20 space-y-2">
             <Sparkles className="w-8 h-8 text-emerald-500 mx-auto" />
-            <h4 className="text-base font-black text-emerald-700 dark:text-emerald-300">100% Clean Data Quality!</h4>
+            <h4 className="text-base font-black text-emerald-700 dark:text-emerald-300">No Matching Issues Found</h4>
             <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-              🎉 Zero data quality anomalies detected. All enrolled student profiles are verified OK with clean links.
-
+              🎉 Zero data quality anomalies match your active filter parameters.
             </p>
           </div>
         )}
