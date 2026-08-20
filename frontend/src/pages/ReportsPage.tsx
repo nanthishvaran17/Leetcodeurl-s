@@ -367,7 +367,7 @@ export const ReportsPage: React.FC = () => {
               className="flex items-center space-x-2 px-5 py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-2xl text-xs font-black shadow-xl shadow-amber-500/30 transition-all transform hover:scale-105 cursor-pointer"
             >
               <Award className="w-4 h-4" />
-              <span>Certificate of Excellence Hub</span>
+              <span>Generate Merit Certificates</span>
             </button>
 
             <button
@@ -375,7 +375,7 @@ export const ReportsPage: React.FC = () => {
               className="flex items-center space-x-2.5 px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-2xl text-xs font-black shadow-xl shadow-emerald-500/30 transition-all transform hover:scale-105 cursor-pointer"
             >
               <Mail className="w-4 h-4" />
-              <span>Email Delivery Center</span>
+              <span>Email Delivery & Scheduler</span>
             </button>
           </div>
         </div>
@@ -392,7 +392,7 @@ export const ReportsPage: React.FC = () => {
           }`}
         >
           <FileSpreadsheet className="w-4 h-4" />
-          <span>Reports & Analytics</span>
+          <span>Reports & Analytics Suite</span>
         </button>
 
         <button
@@ -404,7 +404,7 @@ export const ReportsPage: React.FC = () => {
           }`}
         >
           <Mail className="w-4 h-4" />
-          <span>Automated Email Delivery</span>
+          <span>Unified Email Delivery & Auto-Scheduler</span>
         </button>
       </div>
 
