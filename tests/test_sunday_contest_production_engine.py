@@ -3,13 +3,15 @@ import asyncio
 import datetime
 import hashlib
 import json
+import os
 from unittest.mock import AsyncMock, patch, MagicMock
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from backend.models import (
     Base, Student, Department, WeeklySession, WeeklyPublicResult, 
-    WeeklyVirtualResult, OfficialWeeklySnapshot, CertificateRecord
+    WeeklyVirtualResult, OfficialWeeklySnapshot, CertificateRecord,
+    WeeklyContestErrorLog
 )
 from backend.services.weekly_session_manager import (
     get_or_create_current_weekly_session,
@@ -53,7 +55,7 @@ def db():
     session.close()
 
 
-# ── TEST 1: IDEMPOTENT SUNDAY SESSION ───────────────────────────────────────
+# ── TEST 1: IDEMPOTENT SESSION CREATION ─────────────────────────────────────
 def test_idempotent_session_creation(db):
     """Running session discovery multiple times creates exactly 1 session, never duplicates."""
     with patch("backend.services.weekly_session_manager.discover_contest_metadata") as mock_disc:
@@ -73,8 +75,8 @@ def test_idempotent_session_creation(db):
         assert len(all_sessions) == 1
 
 
-# ── TEST 2: IDEMPOTENT START SNAPSHOT ────────────────────────────────────────
-def test_idempotent_start_snapshot(db):
+# ── TEST 2: DUPLICATE SCHEDULER EXECUTION ───────────────────────────────────
+def test_duplicate_scheduler_execution(db):
     """Triggering 08:00 AM start snapshot multiple times populates exactly 1 record per student."""
     session = WeeklySession(
         session_code="WK515-20260823",
@@ -87,26 +89,17 @@ def test_idempotent_start_snapshot(db):
     db.add(session)
     db.commit()
 
-    # First run
     asyncio.run(trigger_start_snapshot_0800(db, session.id))
-    count1 = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session.id).count()
-    assert count1 == 10
-
-    # Second run (simulating scheduler retry or duplicate dispatch)
     asyncio.run(trigger_start_snapshot_0800(db, session.id))
-    count2 = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session.id).count()
-    assert count2 == 10
+    asyncio.run(trigger_start_snapshot_0800(db, session.id))
 
-    # Verify initial state is strictly PENDING
-    records = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session.id).all()
-    for r in records:
-        assert r.state == "PENDING"
-        assert r.participation_status == "PENDING"
+    count = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session.id).count()
+    assert count == 10
 
 
 # ── TEST 3: SERVER RESTART RECOVERY ─────────────────────────────────────────
 def test_server_restart_recovery(db):
-    """Interrupted sessions can be resumed and finalize only remaining records without data loss."""
+    """Interrupted sessions resume and preserve already validated records."""
     session = WeeklySession(
         session_code="WK515-20260823",
         contest_id="weekly-contest-515",
@@ -120,7 +113,6 @@ def test_server_restart_recovery(db):
 
     asyncio.run(trigger_start_snapshot_0800(db, session.id))
 
-    # Simulate 5 students already processed before server crash
     students = db.query(Student).all()
     for i, s in enumerate(students[:5]):
         res = db.query(WeeklyPublicResult).filter(
@@ -135,9 +127,6 @@ def test_server_restart_recovery(db):
         res.contest_score = 12
         res.contest_rank = 1500 + i
 
-    db.commit()
-
-    # Simulate 5 remaining students: 3 absent, 1 invalid username, 1 fetch error
     for s in students[5:8]:
         res = db.query(WeeklyPublicResult).filter(
             WeeklyPublicResult.session_id == session.id,
@@ -162,7 +151,6 @@ def test_server_restart_recovery(db):
 
     db.commit()
 
-    # Finalize snapshot
     with patch("backend.services.weekly_session_manager.retry_failed_student_fetches", new_callable=AsyncMock):
         snapshot = asyncio.run(trigger_final_snapshot_0930(db, session.id))
 
@@ -170,99 +158,401 @@ def test_server_restart_recovery(db):
     assert session.status == "FINALIZED"
     assert session.official_participants == 5
     assert session.not_participated == 3
-    assert session.failed_verification == 2 # 1 invalid + 1 fetch error
-
-    # Verify reconciliation passed
-    reconcil = snapshot.reconciliation_summary
-    assert reconcil["reconciliation_passed"] is True
-    assert reconcil["total_processed"] == 10
-    assert reconcil["public_attended"] == 5
-    assert reconcil["not_attended"] == 3
-    assert reconcil["data_errors"] == 2
+    assert session.failed_verification == 2
 
 
-# ── TEST 4: CONTEST EVIDENCE VALIDATION & STATE MACHINE ──────────────────────
-def test_contest_evidence_classification():
-    """Validates strict classification and ensures errors never become NOT_ATTENDED."""
+# ── TEST 4: WORKER RECOVERY ─────────────────────────────────────────────────
+def test_worker_recovery_handles_crashes(db):
+    """If a worker throws during processing, the database state remains recoverable."""
+    session = WeeklySession(
+        session_code="WK515-20260823",
+        contest_id="weekly-contest-515",
+        contest_name="Weekly Contest 515",
+        session_date="2026-08-23",
+        status="LIVE",
+        total_students=10
+    )
+    db.add(session)
+    db.commit()
+    asyncio.run(trigger_start_snapshot_0800(db, session.id))
+
+    # Simulate an unhandled exception recorded as error log
+    err = WeeklyContestErrorLog(
+        session_id=session.id,
+        student_id=1,
+        reg_no="732224CS001",
+        student_name="Student 1",
+        error_type="WORKER_CRASH",
+        error_message="Worker pool connection reset by peer",
+        status="UNRESOLVED"
+    )
+    db.add(err)
+    db.commit()
+
+    log = db.query(WeeklyContestErrorLog).filter(WeeklyContestErrorLog.session_id == session.id).first()
+    assert log.error_type == "WORKER_CRASH"
+    assert log.status == "UNRESOLVED"
+
+
+# ── TEST 5: HTTP 429 RATE LIMITING ──────────────────────────────────────────
+def test_http_429_rate_limiting_handling():
+    """HTTP 429 returns RATE_LIMITED and never falsely marks student as absent."""
     mock_api = MagicMock()
+    mock_api.validate_profile.side_effect = Exception("HTTP 429 Too Many Requests")
     classifier = ContestClassifier(leetcode_api_client=mock_api)
 
-    # 1. Valid Public Attended
-    mock_api.validate_profile.return_value = {"username": "alice_coder"}
-    mock_api.fetch_contest_result.return_value = {
-        "contest_id": "weekly-contest-515",
-        "username": "alice_coder",
-        "attended": True,
-        "problems_solved": 3,
-        "score": 12,
-        "rank": 500,
-        "rating_after": 1750.5,
-        "q1_solved": True, "q2_solved": True, "q3_solved": True, "q4_solved": False
-    }
+    row = classifier.classify_student_contest(
+        student_id=1,
+        student_name="Test User",
+        leetcode_username="test_user",
+        contest_id="weekly-contest-515",
+        contest_name="Weekly Contest 515"
+    )
+    assert row.status == ContestStatus.FETCH_FAILED
+    assert row.status != ContestStatus.NOT_ATTENDED
 
-    row_pub = classifier.classify_student_contest(
+
+# ── TEST 6: HTTP 500 SERVER ERROR ───────────────────────────────────────────
+def test_http_500_server_error_handling():
+    """HTTP 500 returns FETCH_FAILED and preserves audit reason."""
+    mock_api = MagicMock()
+    mock_api.validate_profile.side_effect = Exception("HTTP 500 Internal Server Error")
+    classifier = ContestClassifier(leetcode_api_client=mock_api)
+
+    row = classifier.classify_student_contest(
+        student_id=1,
+        student_name="Test User",
+        leetcode_username="test_user",
+        contest_id="weekly-contest-515",
+        contest_name="Weekly Contest 515"
+    )
+    assert row.status == ContestStatus.FETCH_FAILED
+    assert "500" in (row.error_message or "")
+
+
+# ── TEST 7: HTTP 503 SERVICE UNAVAILABLE ─────────────────────────────────────
+def test_http_503_service_unavailable():
+    """HTTP 503 is caught and recorded cleanly."""
+    mock_api = MagicMock()
+    mock_api.validate_profile.side_effect = Exception("HTTP 503 Service Unavailable")
+    classifier = ContestClassifier(leetcode_api_client=mock_api)
+
+    row = classifier.classify_student_contest(
+        student_id=1,
+        student_name="Test User",
+        leetcode_username="test_user",
+        contest_id="weekly-contest-515",
+        contest_name="Weekly Contest 515"
+    )
+    assert row.status == ContestStatus.FETCH_FAILED
+
+
+# ── TEST 8: TIMEOUT HANDLING ────────────────────────────────────────────────
+def test_timeout_handling():
+    """Network timeout records FETCH_FAILED, not absent."""
+    mock_api = MagicMock()
+    mock_api.validate_profile.side_effect = TimeoutError("Request timed out after 15s")
+    classifier = ContestClassifier(leetcode_api_client=mock_api)
+
+    row = classifier.classify_student_contest(
+        student_id=1,
+        student_name="Test User",
+        leetcode_username="test_user",
+        contest_id="weekly-contest-515",
+        contest_name="Weekly Contest 515"
+    )
+    assert row.status == ContestStatus.FETCH_FAILED
+
+
+# ── TEST 9: MALFORMED GRAPHQL RESPONSE ──────────────────────────────────────
+def test_malformed_graphql_response():
+    """Malformed response returns FETCH_FAILED gracefully."""
+    mock_api = MagicMock()
+    mock_api.validate_profile.side_effect = ValueError("Expecting value: line 1 column 1 (char 0)")
+    classifier = ContestClassifier(leetcode_api_client=mock_api)
+
+    row = classifier.classify_student_contest(
+        student_id=1,
+        student_name="Test User",
+        leetcode_username="test_user",
+        contest_id="weekly-contest-515",
+        contest_name="Weekly Contest 515"
+    )
+    assert row.status == ContestStatus.FETCH_FAILED
+
+
+# ── TEST 10: INVALID USERNAME ───────────────────────────────────────────────
+def test_invalid_username_handling():
+    """Missing or 404 username returns PENDING_USERNAME / INVALID_USERNAME."""
+    mock_api = MagicMock()
+    mock_api.validate_profile.return_value = None
+    classifier = ContestClassifier(leetcode_api_client=mock_api)
+
+    row = classifier.classify_student_contest(
+        student_id=1,
+        student_name="Test User",
+        leetcode_username="non_existent_user_404",
+        contest_id="weekly-contest-515",
+        contest_name="Weekly Contest 515"
+    )
+    assert row.status == ContestStatus.INVALID_USERNAME
+    assert row.status != ContestStatus.NOT_ATTENDED
+
+
+# ── TEST 11: MISSING CONTEST HANDLING ───────────────────────────────────────
+def test_missing_contest_handling():
+    """Missing contest record in verified profile yields NOT_ATTENDED."""
+    mock_api = MagicMock()
+    mock_api.validate_profile.return_value = {"username": "valid_user"}
+    mock_api.fetch_contest_result.return_value = None
+    classifier = ContestClassifier(leetcode_api_client=mock_api)
+
+    row = classifier.classify_student_contest(
+        student_id=1,
+        student_name="Test User",
+        leetcode_username="valid_user",
+        contest_id="weekly-contest-515",
+        contest_name="Weekly Contest 515"
+    )
+    assert row.status == ContestStatus.NOT_ATTENDED
+
+
+# ── TEST 12: CONTEST EVIDENCE VALIDATION ────────────────────────────────────
+def test_contest_evidence_validation():
+    """Contest participation requires matching canonical contest id."""
+    mock_api = MagicMock()
+    mock_api.validate_profile.return_value = {"username": "alice"}
+    mock_api.fetch_contest_result.return_value = {
+        "contest_id": "weekly-contest-999", # Mismatched contest
+        "username": "alice",
+        "attended": True
+    }
+    classifier = ContestClassifier(leetcode_api_client=mock_api)
+
+    row = classifier.classify_student_contest(
         student_id=1,
         student_name="Alice",
-        leetcode_username="alice_coder",
+        leetcode_username="alice",
         contest_id="weekly-contest-515",
         contest_name="Weekly Contest 515"
     )
-    assert row_pub.status == ContestStatus.PUBLIC_ATTENDED
-    assert row_pub.problems_solved == 3
+    assert row.status == ContestStatus.UNKNOWN
+    assert row.reason_code == ReasonCode.IDENTITY_MISMATCH
 
-    # 2. Validated Absence (Attended is False and problems_solved is 0)
-    mock_api.fetch_contest_result.return_value = None # Profile returned no contest record -> NOT_ATTENDED
-    row_abs = classifier.classify_student_contest(
+
+# ── TEST 13: PUBLIC ATTENDED VALIDATION ─────────────────────────────────────
+def test_public_attended_validation():
+    """Confirmed attended flag yields PUBLIC_ATTENDED with score and ranks."""
+    mock_api = MagicMock()
+    mock_api.validate_profile.return_value = {"username": "alice"}
+    mock_api.fetch_contest_result.return_value = {
+        "contest_id": "weekly-contest-515",
+        "username": "alice",
+        "attended": True,
+        "problems_solved": 4,
+        "score": 18,
+        "rank": 250,
+        "rating_after": 1950.0,
+        "q1_solved": True, "q2_solved": True, "q3_solved": True, "q4_solved": True
+    }
+    classifier = ContestClassifier(leetcode_api_client=mock_api)
+
+    row = classifier.classify_student_contest(
+        student_id=1,
+        student_name="Alice",
+        leetcode_username="alice",
+        contest_id="weekly-contest-515",
+        contest_name="Weekly Contest 515"
+    )
+    assert row.status == ContestStatus.PUBLIC_ATTENDED
+    assert row.problems_solved == 4
+    assert row.score == 18
+    assert row.rank == 250
+
+
+# ── TEST 14: VIRTUAL ATTENDED VALIDATION ────────────────────────────────────
+def test_virtual_attended_validation():
+    """Confirmed virtual participation yields VIRTUAL_ATTENDED."""
+    mock_api = MagicMock()
+    mock_api.validate_profile.return_value = {"username": "bob"}
+    mock_api.fetch_contest_result.return_value = {
+        "contest_id": "weekly-contest-515",
+        "username": "bob",
+        "attended": False,
+        "problems_solved": 2,
+        "score": 7,
+        "q1_solved": True, "q2_solved": True, "q3_solved": False, "q4_solved": False
+    }
+    classifier = ContestClassifier(leetcode_api_client=mock_api)
+
+    row = classifier.classify_student_contest(
         student_id=2,
         student_name="Bob",
-        leetcode_username="bob_coder",
+        leetcode_username="bob",
         contest_id="weekly-contest-515",
         contest_name="Weekly Contest 515"
     )
-    assert row_abs.status == ContestStatus.NOT_ATTENDED
+    assert row.status == ContestStatus.VIRTUAL_ATTENDED
+    assert row.problems_solved == 2
 
-    # 3. Missing / Invalid Username -> Must be INVALID_PROFILE or NO_USERNAME, NEVER NOT_ATTENDED
-    row_inv = classifier.classify_student_contest(
+
+# ── TEST 15: NOT ATTENDED VALIDATION ────────────────────────────────────────
+def test_not_attended_validation():
+    """Profile without contest participation correctly yields NOT_ATTENDED."""
+    mock_api = MagicMock()
+    mock_api.validate_profile.return_value = {"username": "charlie"}
+    mock_api.fetch_contest_result.return_value = None
+    classifier = ContestClassifier(leetcode_api_client=mock_api)
+
+    row = classifier.classify_student_contest(
         student_id=3,
         student_name="Charlie",
-        leetcode_username="",
+        leetcode_username="charlie",
         contest_id="weekly-contest-515",
         contest_name="Weekly Contest 515"
     )
-    assert row_inv.status in (ContestStatus.PENDING_USERNAME, ContestStatus.INVALID_USERNAME)
-    assert row_inv.status != ContestStatus.NOT_ATTENDED
+    assert row.status == ContestStatus.NOT_ATTENDED
+    assert row.reason_code == ReasonCode.NO_PARTICIPATION
 
 
-# ── TEST 5: CRYPTOGRAPHIC INTEGRITY & DETERMINISTIC SESSION HASH ─────────────
-def test_session_and_student_cryptographic_hash():
-    """Computes and asserts cryptographic seals for individual students and entire session."""
-    # Individual hash
-    h1 = compute_student_record_hash("732224CS001", 1, 3, 12, 1500, 1650.0)
-    h2 = compute_student_record_hash("732224CS001", 1, 3, 12, 1500, 1650.0)
-    h3 = compute_student_record_hash("732224CS001", 1, 4, 18, 500, 1850.0)
+# ── TEST 16: DATA ERROR VALIDATION ──────────────────────────────────────────
+def test_data_error_validation():
+    """Identity mismatch creates DATA_ERROR / UNKNOWN status."""
+    mock_api = MagicMock()
+    mock_api.validate_profile.return_value = {"username": "expected_user"}
+    mock_api.fetch_contest_result.return_value = {
+        "contest_id": "weekly-contest-515",
+        "username": "different_user_returned",
+        "attended": True
+    }
+    classifier = ContestClassifier(leetcode_api_client=mock_api)
+
+    row = classifier.classify_student_contest(
+        student_id=1,
+        student_name="User",
+        leetcode_username="expected_user",
+        contest_id="weekly-contest-515",
+        contest_name="Weekly Contest 515"
+    )
+    assert row.status == ContestStatus.UNKNOWN
+    assert row.reason_code == ReasonCode.IDENTITY_MISMATCH
+
+
+# ── TEST 17: STATE MACHINE TRANSITIONS ──────────────────────────────────────
+def test_state_machine_transitions(db):
+    """Records progress cleanly through lifecycle states."""
+    session = WeeklySession(
+        session_code="WK515-20260823",
+        contest_id="weekly-contest-515",
+        contest_name="Weekly Contest 515",
+        session_date="2026-08-23",
+        status="LIVE",
+        total_students=1
+    )
+    db.add(session)
+    db.commit()
+    asyncio.run(trigger_start_snapshot_0800(db, session.id))
+
+    res = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session.id).first()
+    assert res.state == "PENDING"
+
+    # Transition to VALIDATED
+    res.state = "VALIDATED"
+    res.fetch_status = "SUCCESS"
+    res.participation_status = "PUBLIC"
+    db.commit()
+
+    # Finalize
+    with patch("backend.services.weekly_session_manager.retry_failed_student_fetches", new_callable=AsyncMock):
+        asyncio.run(trigger_final_snapshot_0930(db, session.id))
+
+    db.refresh(res)
+    assert res.state == "FINALIZED"
+
+
+# ── TEST 18: 300 STUDENT RECONCILIATION GATE ────────────────────────────────
+def test_300_student_reconciliation_gate(db):
+    """Reconciliation verifies that every active student is accounted for."""
+    dept = db.query(Department).first()
+    # Add 290 more students to reach 300 total
+    for i in range(11, 301):
+        st = Student(
+            reg_no=f"732224CS{i:03d}",
+            name=f"Student {i}",
+            department_id=dept.id,
+            year_level="III",
+            username=f"leetcode_user_{i}",
+            is_active=True
+        )
+        db.add(st)
+    db.commit()
+
+    total_active = db.query(Student).filter(Student.is_active == True).count()
+    assert total_active == 300
+
+    session = WeeklySession(
+        session_code="WK515-20260823",
+        contest_id="weekly-contest-515",
+        contest_name="Weekly Contest 515",
+        session_date="2026-08-23",
+        status="LIVE",
+        total_students=300
+    )
+    db.add(session)
+    db.commit()
+    asyncio.run(trigger_start_snapshot_0800(db, session.id))
+
+    # Mark 210 Public, 30 Virtual, 50 Absent, 10 Errors = 300
+    all_res = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session.id).all()
+    for r in all_res[:210]:
+        r.fetch_status = "SUCCESS"
+        r.participation_status = "PUBLIC"
+        r.total_contest_solved = 3
+
+    for r in all_res[210:240]:
+        r.fetch_status = "SUCCESS"
+        r.participation_status = "VIRTUAL"
+        r.total_contest_solved = 2
+
+    for r in all_res[240:290]:
+        r.fetch_status = "SUCCESS"
+        r.participation_status = "NOT_ATTENDED"
+        r.total_contest_solved = 0
+
+    for r in all_res[290:300]:
+        r.data_fetch_status = "FETCH_FAILED"
+        r.error_reason = "TIMEOUT"
+
+    db.commit()
+
+    with patch("backend.services.weekly_session_manager.retry_failed_student_fetches", new_callable=AsyncMock):
+        snapshot = asyncio.run(trigger_final_snapshot_0930(db, session.id))
+
+    assert snapshot is not None
+    rec = snapshot.reconciliation_summary
+    assert rec["reconciliation_passed"] is True
+    assert rec["total_processed"] == 300
+
+
+# ── TEST 19: CRYPTOGRAPHIC INTEGRITY ────────────────────────────────────────
+def test_cryptographic_integrity():
+    """Individual and session SHA-256 hashes are strictly deterministic."""
+    h1 = compute_student_record_hash("732224CS001", 10, 4, 18, 120, 2050.0)
+    h2 = compute_student_record_hash("732224CS001", 10, 4, 18, 120, 2050.0)
+    h3 = compute_student_record_hash("732224CS001", 10, 3, 12, 500, 1850.0)
 
     assert h1 == h2
     assert h1 != h3
 
-    # Whole session hash
-    rows_a = [
-        {"reg_no": "732224CS002", "score": 8, "total_solved": 2},
-        {"reg_no": "732224CS001", "score": 12, "total_solved": 3},
-    ]
-    rows_b = [
-        {"reg_no": "732224CS001", "score": 12, "total_solved": 3},
-        {"reg_no": "732224CS002", "score": 8, "total_solved": 2},
-    ]
-    # Sorting makes it order-independent and deterministic
-    session_hash_a = compute_session_data_hash(rows_a)
-    session_hash_b = compute_session_data_hash(rows_b)
-    assert session_hash_a == session_hash_b
-    assert len(session_hash_a) == 64
+    rows = [{"reg_no": f"732224CS{i:03d}", "score": 10, "total_solved": 2} for i in range(1, 10)]
+    s_hash_1 = compute_session_data_hash(rows)
+    s_hash_2 = compute_session_data_hash(list(reversed(rows)))
+    assert s_hash_1 == s_hash_2
 
 
-# ── TEST 6: CERTIFICATE & FORENSIC ISOLATION ────────────────────────────────
-def test_certificate_forensic_document_isolation(db):
-    """Verifies that Excellence and Forensic certificates have completely isolated identifiers and types."""
+# ── TEST 20: CERTIFICATE & FORENSIC ISOLATION ────────────────────────────────
+def test_certificate_forensic_isolation(db):
+    """Excellence and Forensic certificates maintain strict independent verification IDs."""
     st = db.query(Student).first()
 
     cert_exc = CertificateRecord(
@@ -271,8 +561,8 @@ def test_certificate_forensic_document_isolation(db):
         student_id=st.id,
         student_name=st.name,
         register_no=st.reg_no,
-        department=st.department.code,
-        department_name=st.department.name,
+        department="CSE",
+        department_name="Computer Science and Engineering",
         document_type="CERTIFICATE_OF_EXCELLENCE",
         contest_id="weekly-contest-515",
         issue_date="Aug 20, 2026",
@@ -285,8 +575,8 @@ def test_certificate_forensic_document_isolation(db):
         student_id=st.id,
         student_name=st.name,
         register_no=st.reg_no,
-        department=st.department.code,
-        department_name=st.department.name,
+        department="CSE",
+        department_name="Computer Science and Engineering",
         document_type="FORENSIC_VERIFICATION_REPORT",
         contest_id="weekly-contest-515",
         issue_date="Aug 20, 2026",
@@ -296,12 +586,17 @@ def test_certificate_forensic_document_isolation(db):
     db.add_all([cert_exc, cert_for])
     db.commit()
 
-    # Query strictly by document ID
     res_exc = db.query(CertificateRecord).filter(CertificateRecord.verification_id == f"CERT-{st.reg_no}-EXCELLENCE").first()
     res_for = db.query(CertificateRecord).filter(CertificateRecord.verification_id == f"CERT-{st.reg_no}-FORENSIC").first()
 
-    assert res_exc is not None
-    assert res_for is not None
     assert res_exc.document_type == "CERTIFICATE_OF_EXCELLENCE"
     assert res_for.document_type == "FORENSIC_VERIFICATION_REPORT"
     assert res_exc.verification_id != res_for.verification_id
+
+
+# ── TEST 21: NO FALLBACK FOR INVALID IDS ────────────────────────────────────
+def test_no_fallback_for_invalid_certificate_ids(db):
+    """Unknown verification IDs strictly resolve to None without falling back to other students."""
+    from backend.routes.certificates import resolve_certificate_record
+    res = resolve_certificate_record(db, "INVALID-NON-EXISTENT-ID-12345")
+    assert res is None

@@ -182,6 +182,7 @@ async def trigger_final_snapshot_0930(db: Session, session_id: int) -> OfficialW
     public_results = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session_id).all()
     
     official_attended = 0
+    virtual_count = 0
     not_attended = 0
     data_errors = 0
     invalid_usernames = 0
@@ -211,6 +212,7 @@ async def trigger_final_snapshot_0930(db: Session, session_id: int) -> OfficialW
                 r.participation_status = "VIRTUAL"
                 r.state = "FINALIZED"
                 r.confidence = "VERIFIED"
+                virtual_count += 1
             else:
                 # Validated absence with profile successfully queried and 0 contest solves
                 r.participation_status = "NOT_ATTENDED"
@@ -253,17 +255,18 @@ async def trigger_final_snapshot_0930(db: Session, session_id: int) -> OfficialW
         )
 
     virtual_results = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == session_id).all()
-    virtual_count = len(virtual_results)
+    dedicated_virtual_count = len(virtual_results)
+    total_virtual = virtual_count + dedicated_virtual_count
 
     # Step 3: DATA RECONCILIATION GATE
     total_processed = len(public_results)
-    reconciled_sum = official_attended + virtual_count + not_attended + data_errors
+    reconciled_sum = official_attended + total_virtual + not_attended + data_errors
 
     reconciliation_summary = {
         "total_active_students": session.total_students,
         "total_processed": total_processed,
         "public_attended": official_attended,
-        "virtual_attended": virtual_count,
+        "virtual_attended": total_virtual,
         "not_attended": not_attended,
         "data_errors": data_errors,
         "invalid_usernames": invalid_usernames,

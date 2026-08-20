@@ -62484,3 +62484,244 @@ Action: Request blocked
 [2026-08-20 08:04:21,304] [INFO] [leetcode_tracker]: 09:30 AM Official Weekly Snapshot locked for Session ID 1 (Session Hash: 03b1eb918e438119)
 [2026-08-20 08:04:22,066] [INFO] [leetcode_tracker]: [URL_SYNC_CHANGE] 732224CC002: URL updated from 'https://leetcode.com/u/old_amrutha/' to 'https://leetcode.com/u/new_amrutha_pro/'
 [2026-08-20 08:04:22,675] [INFO] [leetcode_tracker]: [CONTEST_URL_SYNC] Session 101: Slug updated from 'weekly-contest-515' to 'weekly-contest-515-renamed'
+[2026-08-20 08:06:51,520] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 1 with 10 students.
+[2026-08-20 08:06:51,540] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 1 with 10 students.
+[2026-08-20 08:06:51,556] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 1 with 10 students.
+[2026-08-20 08:06:51,632] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 1 with 10 students.
+[2026-08-20 08:06:51,660] [INFO] [leetcode_tracker]: 09:30 AM Official Weekly Snapshot locked for Session ID 1 (Session Hash: 03b1eb918e438119)
+[2026-08-20 08:06:51,775] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 1 with 10 students.
+[2026-08-20 08:06:51,780] [WARNING] [leetcode_tracker]: Profile validation failed for test_user: HTTP 429 Too Many Requests
+[2026-08-20 08:06:51,782] [WARNING] [leetcode_tracker]: Profile validation failed for test_user: HTTP 500 Internal Server Error
+[2026-08-20 08:06:51,784] [WARNING] [leetcode_tracker]: Profile validation failed for test_user: HTTP 503 Service Unavailable
+[2026-08-20 08:06:51,785] [WARNING] [leetcode_tracker]: Profile validation failed for test_user: Request timed out after 15s
+[2026-08-20 08:06:51,786] [WARNING] [leetcode_tracker]: Profile validation failed for test_user: Expecting value: line 1 column 1 (char 0)
+[2026-08-20 08:06:51,878] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 1 with 10 students.
+[2026-08-20 08:06:51,896] [INFO] [leetcode_tracker]: 09:30 AM Official Weekly Snapshot locked for Session ID 1 (Session Hash: b7fb9d5500a18672)
+[2026-08-20 08:06:52,306] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 1 with 300 students.
+[2026-08-20 08:06:52,338] [ERROR] [leetcode_tracker]: [RECONCILIATION_GATE_FAILED] Active=300 vs Processed=300 ReconciledSum=270
+[2026-08-20 08:06:52,345] [INFO] [leetcode_tracker]: 09:30 AM Official Weekly Snapshot locked for Session ID 1 (Session Hash: 6b5a2d8e8e341616)
+[2026-08-20 08:07:48,536] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 1 with 10 students.
+[2026-08-20 08:07:48,556] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 1 with 10 students.
+[2026-08-20 08:07:48,573] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 1 with 10 students.
+[2026-08-20 08:07:48,647] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 1 with 10 students.
+[2026-08-20 08:07:48,669] [INFO] [leetcode_tracker]: 09:30 AM Official Weekly Snapshot locked for Session ID 1 (Session Hash: 03b1eb918e438119)
+[2026-08-20 08:07:48,762] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 1 with 10 students.
+[2026-08-20 08:07:48,768] [WARNING] [leetcode_tracker]: Profile validation failed for test_user: HTTP 429 Too Many Requests
+[2026-08-20 08:07:48,770] [WARNING] [leetcode_tracker]: Profile validation failed for test_user: HTTP 500 Internal Server Error
+[2026-08-20 08:07:48,771] [WARNING] [leetcode_tracker]: Profile validation failed for test_user: HTTP 503 Service Unavailable
+[2026-08-20 08:07:48,773] [WARNING] [leetcode_tracker]: Profile validation failed for test_user: Request timed out after 15s
+[2026-08-20 08:07:48,774] [WARNING] [leetcode_tracker]: Profile validation failed for test_user: Expecting value: line 1 column 1 (char 0)
+[2026-08-20 08:07:48,864] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 1 with 10 students.
+[2026-08-20 08:07:48,875] [INFO] [leetcode_tracker]: 09:30 AM Official Weekly Snapshot locked for Session ID 1 (Session Hash: b7fb9d5500a18672)
+[2026-08-20 08:07:49,208] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 1 with 300 students.
+[2026-08-20 08:07:49,244] [INFO] [leetcode_tracker]: 09:30 AM Official Weekly Snapshot locked for Session ID 1 (Session Hash: 6b5a2d8e8e341616)
+[2026-08-20 08:07:49,587] [WARNING] [leetcode_tracker]: [CERT_RESOLVE_FAILED] No student found for id=INVALID-NON-EXISTENT-ID-12345, reg=None
+[2026-08-20 08:07:58,985] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-20 08:07:59,242] [WARNING] [leetcode_tracker]: [CERT_CONTEST_NOT_FOUND] Student 732224CC031 did not participate in contest 516.
+[2026-08-20 08:07:59,338] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: trace_pdf_check (Official Certificate of Excellence) for Student: NANTHISH S (732224CC031)
+[2026-08-20 08:07:59,619] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-20 08:07:59,625] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-FORENSIC found=True doc_type=FORENSIC_VERIFICATION_REPORT
+[2026-08-20 08:07:59,634] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-732224CC031-EXCELLENCE, reg=None
+[2026-08-20 08:07:59,668] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-732224CC031-EXCELLENCE (Official Certificate of Excellence) for Student: NANTHISH S (732224CC031)
+[2026-08-20 08:07:59,670] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57536 bytes for CERT-732224CC031-EXCELLENCE
+[2026-08-20 08:07:59,670] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched NANTHISH_S_732224CC031_CSE_CS_Certificate.pdf (57536 bytes)
+[2026-08-20 08:07:59,692] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-732224CC031-FORENSIC, reg=None
+[2026-08-20 08:07:59,743] [INFO] [leetcode_tracker]: [forensic_pdf_generated] Successfully generated 57570 bytes for CERT-732224CC031-FORENSIC
+[2026-08-20 08:07:59,743] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched NANTHISH_S_732224CC031_Forensic_Audit_Report.pdf (57570 bytes)
+[2026-08-20 08:07:59,750] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-20 08:07:59,756] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-FORENSIC found=True doc_type=FORENSIC_VERIFICATION_REPORT
+[2026-08-20 08:07:59,762] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-20 08:07:59,768] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-FORENSIC found=True doc_type=FORENSIC_VERIFICATION_REPORT
+[2026-08-20 08:07:59,776] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-20 08:07:59,781] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-20 08:07:59,787] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-20 08:07:59,793] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-20 08:07:59,797] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-FORENSIC found=True doc_type=FORENSIC_VERIFICATION_REPORT
+[2026-08-20 08:07:59,804] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-732224CC031-EXCELLENCE, reg=None
+[2026-08-20 08:07:59,837] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-732224CC031-EXCELLENCE (Official Certificate of Excellence) for Student: NANTHISH S (732224CC031)
+[2026-08-20 08:07:59,838] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57536 bytes for CERT-732224CC031-EXCELLENCE
+[2026-08-20 08:07:59,838] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched NANTHISH_S_732224CC031_CSE_CS_Certificate.pdf (57536 bytes)
+[2026-08-20 08:07:59,842] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-732224CC031-FORENSIC, reg=None
+[2026-08-20 08:07:59,883] [INFO] [leetcode_tracker]: [forensic_pdf_generated] Successfully generated 57570 bytes for CERT-732224CC031-FORENSIC
+[2026-08-20 08:07:59,883] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched NANTHISH_S_732224CC031_Forensic_Audit_Report.pdf (57570 bytes)
+[2026-08-20 08:07:59,891] [WARNING] [leetcode_tracker]: [CERT_RESOLVE_FAILED] No student found for id=CERT-INVALID999-RANDOM, reg=None
+[2026-08-20 08:07:59,891] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-INVALID999-RANDOM found=False doc_type=None
+[2026-08-20 08:07:59,924] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-732224CC031-EXCELLENCE (Official Certificate of Excellence) for Student: NANTHISH S (732224CC031)
+[2026-08-20 08:07:59,928] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-20 08:07:59,979] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-DOESNOTEXIST999, reg=None
+[2026-08-20 08:07:59,983] [WARNING] [leetcode_tracker]: [CERT_RESOLVE_FAILED] No student found for id=CERT-DOESNOTEXIST999, reg=None
+[2026-08-20 08:07:59,983] [WARNING] [leetcode_tracker]: [certificate_pdf_resolve_failed] Certificate not found for id=CERT-DOESNOTEXIST999
+[2026-08-20 08:07:59,992] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REVOKED01, reg=None
+[2026-08-20 08:07:59,993] [WARNING] [leetcode_tracker]: [certificate_pdf_revoked] Attempt to download revoked certificate CERT-REVOKED01
+[2026-08-20 08:08:00,003] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-REGEN001, reg=None
+[2026-08-20 08:08:00,035] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-REGEN001 (Official Certificate of Excellence) for Student: NANTHISH S (732224CC031)
+[2026-08-20 08:08:00,035] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57251 bytes for CERT-REGEN001
+[2026-08-20 08:08:00,035] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched NANTHISH_S_732224CC031_CSE_CS_Certificate.pdf (57251 bytes)
+[2026-08-20 08:08:00,044] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=cert-variant1, reg=None
+[2026-08-20 08:08:00,076] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-VARIANT1 (Official Certificate of Excellence) for Student: NANTHISH S (732224CC031)
+[2026-08-20 08:08:00,078] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57238 bytes for CERT-VARIANT1
+[2026-08-20 08:08:00,078] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched NANTHISH_S_732224CC031_CSE_CS_Certificate.pdf (57238 bytes)
+[2026-08-20 08:08:00,083] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=VARIANT1, reg=None
+[2026-08-20 08:08:00,113] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-VARIANT1 (Official Certificate of Excellence) for Student: NANTHISH S (732224CC031)
+[2026-08-20 08:08:00,113] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57238 bytes for CERT-VARIANT1
+[2026-08-20 08:08:00,113] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched NANTHISH_S_732224CC031_CSE_CS_Certificate.pdf (57238 bytes)
+[2026-08-20 08:08:00,123] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=732224CC031, reg=None
+[2026-08-20 08:08:00,159] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-732224CC031-EXCELLENCE (Official Certificate of Excellence) for Student: NANTHISH S (732224CC031)
+[2026-08-20 08:08:00,160] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57536 bytes for CERT-732224CC031-EXCELLENCE
+[2026-08-20 08:08:00,160] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched NANTHISH_S_732224CC031_CSE_CS_Certificate.pdf (57536 bytes)
+[2026-08-20 08:08:00,196] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-TEST1234 (Official Certificate of Excellence) for Student: NANTHISH S (732224CC031)
+[2026-08-20 08:08:00,205] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-MATCHING01 found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-20 08:08:00,209] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-MATCHING01, reg=None
+[2026-08-20 08:08:00,241] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-MATCHING01 (Official Certificate of Excellence) for Student: PRIYA DHARSHINI (732224CC045)
+[2026-08-20 08:08:00,243] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57230 bytes for CERT-MATCHING01
+[2026-08-20 08:08:00,243] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched PRIYA_DHARSHINI_732224CC045_CSE_CS_Certificate.pdf (57230 bytes)
+[2026-08-20 08:08:00,255] [WARNING] [leetcode_tracker]: Profile validation failed for error_user: Network timeout
+[2026-08-20 08:08:00,326] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-20 08:08:00,334] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-20 08:08:00,341] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-20 08:08:00,343] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-20 08:08:00,353] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-20 08:08:00,450] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-20 08:08:00,452] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 516 (Session ID 2), Last: Contest 515 (Session ID 1)
+[2026-08-20 08:08:00,466] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-20 08:08:00,482] [INFO] [leetcode_tracker]: [BREVO_DELIVERY_SUCCESS] Attempt 1/1 | MessageID: <20260818.12345@brevo.com> | Recipient: t*****t@example.com
+[2026-08-20 08:08:00,485] [WARNING] [leetcode_tracker]: [BREVO_TRANSIENT_ERROR] Attempt 1/3: <urlopen error The write operation timed out>
+[2026-08-20 08:08:00,485] [INFO] [leetcode_tracker]: [BREVO_BACKOFF_RETRY] Retrying in 2s after timeout/connection error...
+[2026-08-20 08:08:00,485] [WARNING] [leetcode_tracker]: [BREVO_TRANSIENT_ERROR] Attempt 2/3: <urlopen error Connection reset by peer>
+[2026-08-20 08:08:00,485] [INFO] [leetcode_tracker]: [BREVO_BACKOFF_RETRY] Retrying in 5s after timeout/connection error...
+[2026-08-20 08:08:00,485] [INFO] [leetcode_tracker]: [BREVO_DELIVERY_SUCCESS] Attempt 3/3 | MessageID: <retry_success_msg_id> | Recipient: t*****t@example.com
+[2026-08-20 08:08:00,604] [INFO] [leetcode_tracker]: [SYNC] Sync job SYNC-JOB-RUNNING-002 is already RUNNING. Reusing active job.
+[2026-08-20 08:08:00,767] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-20 08:08:00,769] [INFO] [leetcode_tracker]: [SYNC] Loaded 10 active students
+[2026-08-20 08:08:00,769] [INFO] [leetcode_tracker]: [SYNC] Creating session: SYNC-20260820-023800
+[2026-08-20 08:08:00,771] [INFO] [leetcode_tracker]: [QUEUE] Job queued: SYNC-20260820-023800
+[2026-08-20 08:08:00,780] [INFO] [leetcode_tracker]: [WORKER] Worker started for job: SYNC-20260820-023800
+[2026-08-20 08:08:00,795] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Starting streaming per-student sync for 300 students (Job: SYNC-20260820-023800)
+[2026-08-20 08:08:03,382] [INFO] [leetcode_tracker]: [HISTORICAL_RESYNC_START] Starting audit across 10 students x 6 contests (510-515)...
+[2026-08-20 08:08:03,415] [INFO] [leetcode_tracker]: [HISTORICAL_RESYNC_COMPLETE] Successfully rebuilt 510-515 in 0.03s!
+[2026-08-20 08:08:03,427] [INFO] [leetcode_tracker]: [HISTORICAL_RESYNC_START] Starting audit across 10 students x 6 contests (510-515)...
+[2026-08-20 08:08:03,447] [INFO] [leetcode_tracker]: [HISTORICAL_RESYNC_COMPLETE] Successfully rebuilt 510-515 in 0.02s!
+[2026-08-20 08:08:03,503] [INFO] [leetcode_tracker]: [HISTORICAL_RESYNC_START] Starting audit across 10 students x 6 contests (510-515)...
+[2026-08-20 08:08:03,538] [INFO] [leetcode_tracker]: [HISTORICAL_RESYNC_COMPLETE] Successfully rebuilt 510-515 in 0.04s!
+[2026-08-20 08:08:03,592] [INFO] [leetcode_tracker]: [HISTORICAL_RESYNC_START] Starting audit across 10 students x 6 contests (510-515)...
+[2026-08-20 08:08:03,623] [WARNING] [leetcode_tracker]: [HISTORICAL_RESYNC_PROTECTED] Contest weekly-contest-515 is LIVE — skipping historical mutation to protect live engine.
+[2026-08-20 08:08:03,624] [INFO] [leetcode_tracker]: [HISTORICAL_RESYNC_COMPLETE] Successfully rebuilt 510-515 in 0.03s!
+[2026-08-20 08:08:03,637] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_004' attempt 1/4 triggered backoff. Sleeping 1.44s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:03,638] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_008' attempt 1/4 triggered backoff. Sleeping 0.17s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:03,884] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_017' attempt 1/4 triggered backoff. Sleeping 1.07s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:04,117] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_028' attempt 1/4 triggered backoff. Sleeping 0.30s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:04,802] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_052' attempt 1/4 triggered backoff. Sleeping 0.32s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:05,054] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_060' attempt 1/4 triggered backoff. Sleeping 0.66s. (Reason: HTTP 503: Service Unavailable for leetcode_user_std_060)
+[2026-08-20 08:08:05,120] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_062' attempt 1/4 triggered backoff. Sleeping 1.34s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:05,714] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_060' attempt 2/4 triggered backoff. Sleeping 0.95s. (Reason: HTTP 503: Service Unavailable for leetcode_user_std_060)
+[2026-08-20 08:08:05,805] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_087' attempt 1/4 triggered backoff. Sleeping 0.71s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:06,132] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_101' attempt 1/4 triggered backoff. Sleeping 1.44s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:06,201] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_103' attempt 1/4 triggered backoff. Sleeping 1.45s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:06,201] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_104' attempt 1/4 triggered backoff. Sleeping 0.15s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:06,665] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_060' attempt 3/4 triggered backoff. Sleeping 1.44s. (Reason: HTTP 503: Service Unavailable for leetcode_user_std_060)
+[2026-08-20 08:08:06,749] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_120' attempt 1/4 triggered backoff. Sleeping 0.92s. (Reason: HTTP 503: Service Unavailable for leetcode_user_std_120)
+[2026-08-20 08:08:07,047] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_133' attempt 1/4 triggered backoff. Sleeping 0.86s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:07,099] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_135' attempt 1/4 triggered backoff. Sleeping 1.02s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:07,166] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_136' attempt 1/4 triggered backoff. Sleeping 0.70s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:07,682] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_120' attempt 2/4 triggered backoff. Sleeping 0.92s. (Reason: HTTP 503: Service Unavailable for leetcode_user_std_120)
+[2026-08-20 08:08:08,116] [ERROR] [leetcode_tracker]: [RATE_LIMIT_EXHAUSTED] Student 'leetcode_user_std_060' failed after 4 attempts. Error: HTTP 503: Service Unavailable for leetcode_user_std_060
+[2026-08-20 08:08:08,215] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_174' attempt 1/4 triggered backoff. Sleeping 0.52s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:08,350] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_180' attempt 1/4 triggered backoff. Sleeping 0.88s. (Reason: HTTP 503: Service Unavailable for leetcode_user_std_180)
+[2026-08-20 08:08:08,616] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_120' attempt 3/4 triggered backoff. Sleeping 1.47s. (Reason: HTTP 503: Service Unavailable for leetcode_user_std_120)
+[2026-08-20 08:08:08,966] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_204' attempt 1/4 triggered backoff. Sleeping 0.17s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:09,034] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_205' attempt 1/4 triggered backoff. Sleeping 0.52s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:09,099] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_208' attempt 1/4 triggered backoff. Sleeping 0.13s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:09,248] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_180' attempt 2/4 triggered backoff. Sleeping 1.33s. (Reason: HTTP 503: Service Unavailable for leetcode_user_std_180)
+[2026-08-20 08:08:09,285] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_213' attempt 1/4 triggered backoff. Sleeping 0.20s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:09,482] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_220' attempt 1/4 triggered backoff. Sleeping 0.46s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:09,799] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_230' attempt 1/4 triggered backoff. Sleeping 1.45s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:09,800] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_231' attempt 1/4 triggered backoff. Sleeping 1.18s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:09,868] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_234' attempt 1/4 triggered backoff. Sleeping 0.45s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:10,048] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_240' attempt 1/4 triggered backoff. Sleeping 0.16s. (Reason: HTTP 503: Service Unavailable for leetcode_user_std_240)
+[2026-08-20 08:08:10,100] [ERROR] [leetcode_tracker]: [RATE_LIMIT_EXHAUSTED] Student 'leetcode_user_std_120' failed after 4 attempts. Error: HTTP 503: Service Unavailable for leetcode_user_std_120
+[2026-08-20 08:08:10,165] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_244' attempt 1/4 triggered backoff. Sleeping 0.44s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:10,215] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_240' attempt 2/4 triggered backoff. Sleeping 1.23s. (Reason: HTTP 503: Service Unavailable for leetcode_user_std_240)
+[2026-08-20 08:08:10,349] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_250' attempt 1/4 triggered backoff. Sleeping 0.48s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:10,416] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_251' attempt 1/4 triggered backoff. Sleeping 0.19s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:10,586] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_180' attempt 3/4 triggered backoff. Sleeping 0.70s. (Reason: HTTP 503: Service Unavailable for leetcode_user_std_180)
+[2026-08-20 08:08:10,799] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_266' attempt 1/4 triggered backoff. Sleeping 0.43s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:10,865] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_269' attempt 1/4 triggered backoff. Sleeping 1.18s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:11,300] [ERROR] [leetcode_tracker]: [RATE_LIMIT_EXHAUSTED] Student 'leetcode_user_std_180' failed after 4 attempts. Error: HTTP 503: Service Unavailable for leetcode_user_std_180
+[2026-08-20 08:08:11,449] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_240' attempt 3/4 triggered backoff. Sleeping 1.20s. (Reason: HTTP 503: Service Unavailable for leetcode_user_std_240)
+[2026-08-20 08:08:11,449] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_291' attempt 1/4 triggered backoff. Sleeping 0.23s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:11,500] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_293' attempt 1/4 triggered backoff. Sleeping 1.19s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:11,566] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_296' attempt 1/4 triggered backoff. Sleeping 1.33s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:11,632] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_298' attempt 1/4 triggered backoff. Sleeping 0.84s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:11,698] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_300' attempt 1/4 triggered backoff. Sleeping 0.98s. (Reason: HTTP 503: Service Unavailable for leetcode_user_std_300)
+[2026-08-20 08:08:12,666] [ERROR] [leetcode_tracker]: [RATE_LIMIT_EXHAUSTED] Student 'leetcode_user_std_240' failed after 4 attempts. Error: HTTP 503: Service Unavailable for leetcode_user_std_240
+[2026-08-20 08:08:12,682] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_300' attempt 2/4 triggered backoff. Sleeping 1.00s. (Reason: HTTP 503: Service Unavailable for leetcode_user_std_300)
+[2026-08-20 08:08:13,698] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'leetcode_user_std_300' attempt 3/4 triggered backoff. Sleeping 0.58s. (Reason: HTTP 503: Service Unavailable for leetcode_user_std_300)
+[2026-08-20 08:08:14,282] [ERROR] [leetcode_tracker]: [RATE_LIMIT_EXHAUSTED] Student 'leetcode_user_std_300' failed after 4 attempts. Error: HTTP 503: Service Unavailable for leetcode_user_std_300
+[2026-08-20 08:08:14,312] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:14,312] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:14,312] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:14,312] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:14,312] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:14,312] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:14,312] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:14,313] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:14,313] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:14,313] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:14,313] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:14,314] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:14,316] [WARNING] [leetcode_tracker]: [CLASSIFIER CONFLICT] Conflict detected for user=alice, contest=weekly-contest-516: {'contest_evidence_signal': 'ACTUAL', 'history_evidence_signal': 'VIRTUAL', 'virtual_evidence_signal': 'NONE', 'contest_source': 'contest_ranking', 'history_source': 'user_contest_history'}
+[2026-08-20 08:08:14,423] [INFO] [leetcode_tracker]: [LIFECYCLE] Discovered and saved contest: weekly-contest-516
+[2026-08-20 08:08:14,432] [INFO] [leetcode_tracker]: [FETCHER] Starting 3-tier fetch for 3 students in weekly-contest-516
+[2026-08-20 08:08:14,432] [INFO] [leetcode_tracker]: [FETCHER] Strategy 1 completed. Falling back to pagination for 3 students...
+[2026-08-20 08:08:14,432] [INFO] [leetcode_tracker]: [FETCHER] Strategy 2 completed. Checking history for 3 remaining students...
+[2026-08-20 08:08:14,433] [INFO] [leetcode_tracker]: [FETCHER] Completed fetching. Resolved: 0, Unresolved: 3
+[2026-08-20 08:08:14,438] [INFO] [leetcode_tracker]: [FETCHER] Starting 3-tier fetch for 3 students in weekly-contest-516
+[2026-08-20 08:08:14,438] [INFO] [leetcode_tracker]: [FETCHER] Strategy 1 completed. Falling back to pagination for 3 students...
+[2026-08-20 08:08:14,438] [INFO] [leetcode_tracker]: [FETCHER] Strategy 2 completed. Checking history for 3 remaining students...
+[2026-08-20 08:08:14,438] [INFO] [leetcode_tracker]: [FETCHER] Completed fetching. Resolved: 0, Unresolved: 3
+[2026-08-20 08:08:14,441] [INFO] [leetcode_tracker]: [FETCHER] Starting 3-tier fetch for 3 students in weekly-contest-516
+[2026-08-20 08:08:14,441] [INFO] [leetcode_tracker]: [FETCHER] Strategy 1 completed. Falling back to pagination for 3 students...
+[2026-08-20 08:08:14,442] [INFO] [leetcode_tracker]: [FETCHER] Strategy 2 completed. Checking history for 3 remaining students...
+[2026-08-20 08:08:14,442] [INFO] [leetcode_tracker]: [FETCHER] Completed fetching. Resolved: 0, Unresolved: 3
+[2026-08-20 08:08:14,444] [INFO] [leetcode_tracker]: [FETCHER] Starting 3-tier fetch for 3 students in weekly-contest-516
+[2026-08-20 08:08:14,444] [INFO] [leetcode_tracker]: [FETCHER] Strategy 1 completed. Falling back to pagination for 3 students...
+[2026-08-20 08:08:14,444] [INFO] [leetcode_tracker]: [FETCHER] Strategy 2 completed. Checking history for 3 remaining students...
+[2026-08-20 08:08:14,444] [INFO] [leetcode_tracker]: [FETCHER] Completed fetching. Resolved: 0, Unresolved: 3
+[2026-08-20 08:08:14,446] [INFO] [leetcode_tracker]: [FETCHER] Starting 3-tier fetch for 3 students in weekly-contest-516
+[2026-08-20 08:08:14,446] [INFO] [leetcode_tracker]: [FETCHER] Strategy 1 completed. Falling back to pagination for 3 students...
+[2026-08-20 08:08:14,446] [INFO] [leetcode_tracker]: [FETCHER] Strategy 2 completed. Checking history for 3 remaining students...
+[2026-08-20 08:08:14,446] [INFO] [leetcode_tracker]: [FETCHER] Completed fetching. Resolved: 0, Unresolved: 3
+[2026-08-20 08:08:14,673] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'test_student' attempt 1/3 triggered backoff. Sleeping 0.13s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:14,807] [WARNING] [leetcode_tracker]: [RATE_LIMIT_BACKOFF] Student 'test_student' attempt 2/3 triggered backoff. Sleeping 0.69s. (Reason: HTTP 429: Too Many Requests)
+[2026-08-20 08:08:15,516] [ERROR] [leetcode_tracker]: [RATE_LIMIT_EXHAUSTED] Student 'test_student' failed after 3 attempts. Error: HTTP 429: Too Many Requests
+[2026-08-20 08:08:15,544] [INFO] [leetcode_tracker]: [SNAPSHOT_IMMUTABLE] Snapshot 81 superseded by new Snapshot 82.
+[2026-08-20 08:08:15,629] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_276/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:15,629] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_277/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:15,629] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_278/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:15,629] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_279/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:15,629] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_280/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:15,629] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_281/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:15,629] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_282/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:15,629] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_283/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:15,629] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_284/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:15,629] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_285/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:15,629] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_286/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:15,629] [WARNING] [leetcode_tracker]: Contest fetch failed for error_user_287/weekly-contest-515: Simulated API timeout
+[2026-08-20 08:08:15,741] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 1 with 10 students.
+[2026-08-20 08:08:15,749] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 1 with 10 students.
+[2026-08-20 08:08:15,758] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 1 with 10 students.
+[2026-08-20 08:08:15,825] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 1 with 10 students.
+[2026-08-20 08:08:15,842] [INFO] [leetcode_tracker]: 09:30 AM Official Weekly Snapshot locked for Session ID 1 (Session Hash: 03b1eb918e438119)
+[2026-08-20 08:08:15,894] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 1 with 10 students.
+[2026-08-20 08:08:15,900] [WARNING] [leetcode_tracker]: Profile validation failed for test_user: HTTP 429 Too Many Requests
+[2026-08-20 08:08:15,903] [WARNING] [leetcode_tracker]: Profile validation failed for test_user: HTTP 500 Internal Server Error
+[2026-08-20 08:08:15,905] [WARNING] [leetcode_tracker]: Profile validation failed for test_user: HTTP 503 Service Unavailable
+[2026-08-20 08:08:15,907] [WARNING] [leetcode_tracker]: Profile validation failed for test_user: Request timed out after 15s
+[2026-08-20 08:08:15,909] [WARNING] [leetcode_tracker]: Profile validation failed for test_user: Expecting value: line 1 column 1 (char 0)
+[2026-08-20 08:08:15,969] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 1 with 10 students.
+[2026-08-20 08:08:15,980] [INFO] [leetcode_tracker]: 09:30 AM Official Weekly Snapshot locked for Session ID 1 (Session Hash: b7fb9d5500a18672)
+[2026-08-20 08:08:16,371] [INFO] [leetcode_tracker]: 08:00 AM Start Snapshot initialized for Session ID 1 with 300 students.
+[2026-08-20 08:08:16,412] [INFO] [leetcode_tracker]: 09:30 AM Official Weekly Snapshot locked for Session ID 1 (Session Hash: 6b5a2d8e8e341616)
+[2026-08-20 08:08:16,515] [WARNING] [leetcode_tracker]: [CERT_RESOLVE_FAILED] No student found for id=INVALID-NON-EXISTENT-ID-12345, reg=None
+[2026-08-20 08:08:16,686] [INFO] [leetcode_tracker]: [URL_SYNC_CHANGE] 732224CC002: URL updated from 'https://leetcode.com/u/old_amrutha/' to 'https://leetcode.com/u/new_amrutha_pro/'
+[2026-08-20 08:08:16,835] [INFO] [leetcode_tracker]: [CONTEST_URL_SYNC] Session 101: Slug updated from 'weekly-contest-515' to 'weekly-contest-515-renamed'
