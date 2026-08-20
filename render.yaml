@@ -8,7 +8,7 @@ services:
     healthCheckPath: /health
     envVars:
       - key: PORT
-        value: 8000
+        value: 10000
       - key: TIMEZONE
         value: Asia/Kolkata
       - key: VITE_FIREBASE_PROJECT_ID

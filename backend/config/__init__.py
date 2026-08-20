@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
     # Server & Timezone
     HOST: str = "0.0.0.0"
-    PORT: int = 8000
+    PORT: int = int(os.environ.get("PORT", 10000))
     TIMEZONE: str = "Asia/Kolkata"
     
     # LeetCode Service Config

@@ -36,7 +36,7 @@ III_YEAR_CSE_CS = [
     ("732224CC021", "KIRUTHIKAA P T", "CSE(CS)", "III", "NEC", "", "https://leetcode.com/u/success_lover_01/"),
     ("732224CC022", "KISHORE C", "CSE(CS)", "III", "NEC", "", "https://leetcode.com/u/KISHORE_CHAND/"),
     ("732224CC023", "LAKSANA S", "CSE(CS)", "III", "NEC", "", "https://leetcode.com/u/Laksana_Subramanian/"),
-    ("732224CC024", "MADAN PRASATH G", "CSE(CS)", "III", "NEC", "", "https://leetcode.com/u/login/MADAN__200/"),
+    ("732224CC024", "MADAN PRASATH G", "CSE(CS)", "III", "NEC", "", "https://leetcode.com/u/MADAN_2007/"),
     ("732224CC025", "MAGUDAPATHI S", "CSE(CS)", "III", "NEC", "", "https://leetcode.com/u/XDb4OxGxp6/"),
     ("732224CC026", "MAHILNETHRA S K", "CSE(CS)", "III", "NEC", "", "http://leetcode.com/u/mahilnethra/"),
     ("732224CC027", "MANJUNATH D", "CSE(CS)", "III", "NEC", "", "https://leetcode.com/u/M1c4D2Ur5h/"),
@@ -249,7 +249,7 @@ II_YEAR_CSE_IOT = [
 ]
 # III Year CSE(IOT) Students (52 records)
 III_YEAR_CSE_IOT = [
-    ("732224CI001", "AADHISH S B", "CSE(IOT)", "III", "A", "", ""),
+    ("732224CI001", "AADHISH S B", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/Aadhish_sb/"),
     ("732224CI004", "ABISHEK C", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/Abishek0007/"),
     ("732224CI005", "AISHWARYA E", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/aishueswaran/"),
     ("732224CI006", "AKKSHAYAA K", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/AkkshayaaK/"),
@@ -271,7 +271,7 @@ III_YEAR_CSE_IOT = [
     ("732224CI024", "MADHANRAJ A", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/madhan_11_/"),
     ("732224CI025", "MADHESWARAN P", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/madhes_187142_/"),
     ("732224CI026", "MEENA E", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/MeenaElangovan/"),
-    ("732224CI028", "MOHANA PRASATH S", "CSE(IOT)", "III", "A", "", ""),
+    ("732224CI028", "MOHANA PRASATH S", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/Aesath_2028/"),
     ("732224CI029", "MYTHREYAN K", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/Mythreyan_64/"),
     ("732224CI030", "NANDHINI G", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/GNandhini_09/"),
     ("732224CI031", "NAVANITH S R", "CSE(IOT)", "III", "A", "", "https://leetcode.com/u/NavanithSenthil/"),
