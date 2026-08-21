@@ -67,15 +67,19 @@ def get_student_history(
     }
 
 @router.get("/growth/improvers", response_model=List[ImproverOut])
+@router.get("/growth/improvers", response_model=List[ImproverOut])
 def get_top_improvers(
     period: str = Query("7d", pattern="^(today|7d|30d|all)$"),
+    dept: Optional[str] = None,
     dept_id: Optional[int] = None,
+    year: Optional[str] = None,
     year_level: Optional[str] = None,
-    limit: int = Query(20, ge=1, le=100),
+    limit: int = Query(25, ge=1, le=100),
     db: Session = Depends(get_db)
 ):
     """
     Returns top problem solving improvers (biggest delta) over specified period.
+    Supports filtering by department code/id and academic year.
     """
     now = datetime.datetime.now(datetime.timezone.utc)
     if period == "today":
@@ -103,22 +107,37 @@ def get_top_improvers(
         Student, subq.c.sum_delta_total, subq.c.sum_delta_easy,
         subq.c.sum_delta_medium, subq.c.sum_delta_hard, subq.c.sum_delta_rating
     ).join(subq, Student.id == subq.c.sid).filter(
-        Student.is_active == True
+        (Student.is_active == True) | (Student.is_active.is_(None))
     )
 
+    # Apply Department Filter
+    effective_dept = dept or ""
     if dept_id:
         query = query.filter(Student.department_id == dept_id)
-    if year_level and year_level.strip().upper() not in ['ALL', 'ALL YEARS', '']:
-        query = query.filter(func.upper(Student.year_level) == year_level.strip().upper())
+    elif effective_dept and effective_dept.upper() not in ['ALL', 'ALL DEPARTMENTS', '']:
+        query = query.join(Student.department).filter(
+            (Department.code.ilike(f"%{effective_dept.strip()}%")) |
+            (Department.name.ilike(f"%{effective_dept.strip()}%"))
+        )
+
+    # Apply Year Filter
+    effective_year = year or year_level or ""
+    if effective_year and effective_year.strip().upper() not in ['ALL', 'ALL YEARS', 'ALL ACADEMIC YEARS', '']:
+        query = query.filter(func.upper(Student.year_level) == effective_year.strip().upper())
 
     results = query.order_by(subq.c.sum_delta_total.desc()).limit(limit).all()
 
     improvers = []
     for st, d_tot, d_ez, d_med, d_hd, d_rat in results:
-        dept_code = st.department.code if st.department else "GEN"
+        dept_code = st.department.code if st.department else "CSE"
         sec_name = st.section.name if st.section else "A"
         cur_solved = st.stats.total_solved if st.stats else 0
         cur_rating = st.stats.contest_rating if st.stats else None
+
+        # Sanitize rating delta (ignore baseline uninitialized artifacts)
+        clean_d_rat = float(d_rat or 0.0)
+        if clean_d_rat < -400 or clean_d_rat > 400:
+            clean_d_rat = 0.0
 
         improvers.append(ImproverOut(
             student_id=st.id,
@@ -132,7 +151,7 @@ def get_top_improvers(
             delta_easy=int(d_ez or 0),
             delta_medium=int(d_med or 0),
             delta_hard=int(d_hd or 0),
-            delta_rating=round(float(d_rat or 0.0), 1),
+            delta_rating=round(clean_d_rat, 1),
             current_contest_rating=cur_rating
         ))
 
@@ -141,10 +160,15 @@ def get_top_improvers(
 @router.get("/growth/college-delta")
 def get_college_delta(
     period: str = Query("7d", pattern="^(today|7d|30d|all)$"),
+    dept: Optional[str] = None,
+    dept_id: Optional[int] = None,
+    year: Optional[str] = None,
+    year_level: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """
-    Returns aggregate college problem solved growth and difficulty breakdown over period.
+    Returns aggregate college problem solved growth and difficulty breakdown over period,
+    with support for department and academic year filters.
     """
     now = datetime.datetime.now(datetime.timezone.utc)
     if period == "today":
@@ -156,12 +180,30 @@ def get_college_delta(
     else:
         cutoff = datetime.datetime(2020, 1, 1)
 
-    result = db.query(
+    query = db.query(
         func.coalesce(func.sum(StudentStatSnapshot.delta_total), 0).label("tot"),
         func.coalesce(func.sum(StudentStatSnapshot.delta_easy), 0).label("ez"),
         func.coalesce(func.sum(StudentStatSnapshot.delta_medium), 0).label("med"),
         func.coalesce(func.sum(StudentStatSnapshot.delta_hard), 0).label("hd")
-    ).filter(StudentStatSnapshot.captured_at >= cutoff).first()
+    ).filter(StudentStatSnapshot.captured_at >= cutoff)
+
+    # Department & Year filtering
+    effective_dept = dept or ""
+    effective_year = year or year_level or ""
+
+    if dept_id or (effective_dept and effective_dept.upper() not in ['ALL', 'ALL DEPARTMENTS', '']) or (effective_year and effective_year.strip().upper() not in ['ALL', 'ALL YEARS', 'ALL ACADEMIC YEARS', '']):
+        query = query.join(Student, StudentStatSnapshot.student_id == Student.id)
+        if dept_id:
+            query = query.filter(Student.department_id == dept_id)
+        elif effective_dept and effective_dept.upper() not in ['ALL', 'ALL DEPARTMENTS', '']:
+            query = query.join(Department, Student.department_id == Department.id).filter(
+                (Department.code.ilike(f"%{effective_dept.strip()}%")) |
+                (Department.name.ilike(f"%{effective_dept.strip()}%"))
+            )
+        if effective_year and effective_year.strip().upper() not in ['ALL', 'ALL YEARS', 'ALL ACADEMIC YEARS', '']:
+            query = query.filter(func.upper(Student.year_level) == effective_year.strip().upper())
+
+    result = query.first()
 
     return {
         "period": period,

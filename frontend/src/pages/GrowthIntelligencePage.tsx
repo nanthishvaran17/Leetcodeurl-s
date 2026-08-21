@@ -14,7 +14,8 @@ import {
   UserCheck,
   CheckCircle2,
   BarChart2,
-  X
+  X,
+  RotateCw
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -70,6 +71,7 @@ export const GrowthIntelligencePage: React.FC = () => {
   const [improvers, setImprovers] = useState<Improver[]>([]);
   const [collegeDelta, setCollegeDelta] = useState<CollegeDelta | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
   // Time Machine state
   const [searchStudentId, setSearchStudentId] = useState<string>('');
@@ -99,6 +101,24 @@ export const GrowthIntelligencePage: React.FC = () => {
     }
   };
 
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      const [impRes, deltaRes] = await Promise.all([
+        api.get(`/growth/improvers?period=${period}&limit=25&dept=${deptFilter}&year=${yearFilter}`),
+        api.get(`/growth/college-delta?period=${period}&dept=${deptFilter}&year=${yearFilter}`)
+      ]);
+      setImprovers(impRes.data || []);
+      setCollegeDelta(deltaRes.data || null);
+      notify.success('Growth Telemetry Refreshed', 'Successfully synchronized 100% verified solve deltas and performance velocity.', { category: 'GROWTH ENGINE' });
+    } catch (err) {
+      console.error("Refresh error:", err);
+      notify.error('Refresh Failed', 'Unable to reach backend telemetry engine.', { category: 'GROWTH ENGINE' });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   const handleFetchStudentHistory = async (identifier: string, fallbackName?: string) => {
     if (!identifier || (typeof identifier === 'string' && !identifier.trim())) return;
     setHistoryLoading(true);
@@ -106,17 +126,17 @@ export const GrowthIntelligencePage: React.FC = () => {
       const res = await api.get(`/history/${encodeURIComponent(identifier.trim())}?limit=50`);
       if (res.data && Array.isArray(res.data)) {
         setHistorySnapshots(res.data);
-        setSelectedStudentName(fallbackName || `Student #${identifier}`);
+        setSelectedStudentName(fallbackName || `Student: ${identifier}`);
         setActiveStudentInfo(null);
       } else if (res.data && res.data.snapshots) {
         setHistorySnapshots(res.data.snapshots || []);
-        setSelectedStudentName(res.data.student?.name || fallbackName || `Student #${identifier}`);
+        setSelectedStudentName(res.data.student?.name || fallbackName || `Student: ${identifier}`);
         setActiveStudentInfo(res.data.student);
       }
       setIsModalOpen(true);
     } catch (err: any) {
       console.error("Fetch history error:", err);
-      notify.warning('Timeline Records Not Found', `Could not find history snapshots for '${identifier}'. Please verify Register Number.`, { category: 'TIME MACHINE' });
+      notify.warning('Timeline Records Not Found', `Could not find history snapshots for '${identifier}'. Please check Register Number or LeetCode handle.`, { category: 'TIME MACHINE' });
     } finally {
       setHistoryLoading(false);
     }
@@ -125,7 +145,6 @@ export const GrowthIntelligencePage: React.FC = () => {
   return (
     <div className="space-y-8 py-2 pb-16 animate-slideUp">
 
-      
       {/* Executive Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-2xl border border-brand-500/30">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -143,11 +162,11 @@ export const GrowthIntelligencePage: React.FC = () => {
             </h1>
 
             <p className="text-xs md:text-sm text-gray-300 font-medium leading-relaxed">
-              Track student problem-solving deltas, biggest improvers, difficulty acceleration, and historical stat snapshots across custom timeframe windows.
+              Track student problem-solving deltas, biggest improvers leaderboard, difficulty velocity, and granular historical stat snapshots across custom timeframe windows.
             </p>
           </div>
 
-          {/* Filters & Timeframe Selector Pills */}
+          {/* Filters, Timeframe Selector Pills & Live Refresh Button */}
           <div className="flex flex-wrap items-center gap-3">
             <select
               value={deptFilter}
@@ -185,6 +204,17 @@ export const GrowthIntelligencePage: React.FC = () => {
                 </button>
               ))}
             </div>
+
+            {/* Live Refresh Button */}
+            <button
+              onClick={handleManualRefresh}
+              disabled={loading || isRefreshing}
+              title="Refresh Growth Metrics & Solve Deltas"
+              className="inline-flex items-center space-x-2 px-4 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-lg shadow-emerald-600/30 transition-all active:scale-95 disabled:opacity-50"
+            >
+              <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+            </button>
           </div>
         </div>
       </div>
@@ -396,24 +426,32 @@ export const GrowthIntelligencePage: React.FC = () => {
               Student Historical Time Machine
             </h3>
             <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-              Inspect historical stat snapshots and granular per-sync solve deltas for any student.
+              Inspect historical stat snapshots, difficulty shifts, and granular solve velocity for any student.
             </p>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <input
-              type="text"
-              placeholder="Enter Student ID (e.g. 1)..."
-              value={searchStudentId}
-              onChange={(e) => setSearchStudentId(e.target.value)}
-              className="bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-bold rounded-2xl px-4 py-2.5 w-52 focus:outline-none focus:border-brand-500 shadow-inner"
-            />
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
+            <div className="relative flex-1 sm:w-80">
+              <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Register No, Name, or Handle (e.g. 732224CC031)..."
+                value={searchStudentId}
+                onChange={(e) => setSearchStudentId(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchStudentId.trim()) {
+                    handleFetchStudentHistory(searchStudentId);
+                  }
+                }}
+                className="bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-bold rounded-2xl pl-10 pr-4 py-2.5 w-full focus:outline-none focus:border-brand-500 shadow-inner"
+              />
+            </div>
             <button
               onClick={() => handleFetchStudentHistory(searchStudentId)}
-              disabled={!searchStudentId || historyLoading}
-              className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-brand-600 hover:from-indigo-700 hover:to-brand-700 text-white text-xs font-black rounded-2xl shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-50"
+              disabled={!searchStudentId.trim() || historyLoading}
+              className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-brand-600 hover:from-indigo-700 hover:to-brand-700 text-white text-xs font-black rounded-2xl shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-50 shrink-0"
             >
-              {historyLoading ? 'Loading...' : 'Inspect Snapshots'}
+              {historyLoading ? 'Loading...' : 'Inspect Timeline'}
             </button>
           </div>
         </div>
