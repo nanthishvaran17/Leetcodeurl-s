@@ -90,39 +90,180 @@ const KPICard: React.FC<{
   </button>
 );
 
-// ─── Student Pass & Profile Modal ─────────────────────────────────────────────
-const StudentPassModal: React.FC<{ item: FacultyActionItem; onClose: () => void }> = ({ item, onClose }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md overflow-y-auto" onClick={(e) => e.target === e.currentTarget && onClose()}>
-    <div className="w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl bg-slate-900 border border-slate-700 shadow-2xl p-6 space-y-6 text-white my-auto">
-      <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-        <div>
-          <div className="inline-flex items-center space-x-2 px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider border border-emerald-500/40 mb-1">
-            <span>OFFICIAL STUDENT VERIFICATION</span>
+// ─── Unified Student View & Pass Modal ─────────────────────────────────────────
+const StudentViewModal: React.FC<{
+  item: FacultyActionItem;
+  initialTab?: 'pass' | 'profile' | 'timeline';
+  onClose: () => void;
+  onOpenUpdate?: () => void;
+}> = ({ item, initialTab = 'pass', onClose, onOpenUpdate }) => {
+  const [activeViewTab, setActiveViewTab] = useState<'pass' | 'profile' | 'timeline'>(initialTab);
+  const [events, setEvents] = useState<ActionTimelineEvent[]>([]);
+  const [timelineLoading, setTimelineLoading] = useState(true);
+
+  useEffect(() => {
+    getActionTimeline(item.id)
+      .then(e => { setEvents(e); setTimelineLoading(false); })
+      .catch(() => setTimelineLoading(false));
+  }, [item.id]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md overflow-y-auto animate-fade-in"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl bg-slate-900 border border-slate-700 shadow-2xl overflow-hidden my-auto text-white">
+        
+        {/* Header */}
+        <div className="p-5 border-b border-slate-800 flex items-center justify-between flex-wrap gap-3 bg-slate-950/60 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-500 to-indigo-600 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-brand-500/25">
+              {item.student_name.charAt(0)}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg sm:text-xl font-black text-white">{item.student_name}</h3>
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-brand-500/20 text-brand-400 border border-brand-500/30">
+                  {item.year_level} Year
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 font-mono mt-0.5">
+                {item.reg_no} · {item.department_name} ({item.department_code}) · <span className="text-brand-400">@{item.leetcode_username}</span>
+              </p>
+            </div>
           </div>
-          <h3 className="text-xl font-black">{item.student_name}</h3>
-          <p className="text-xs text-slate-400 font-mono">{item.reg_no} · {item.department_name} ({item.department_code}) · {item.year_level} Year</p>
+
+          <div className="flex items-center gap-2">
+            {onOpenUpdate && (
+              <button
+                onClick={() => { onClose(); onOpenUpdate(); }}
+                className="px-3.5 py-1.5 rounded-xl bg-brand-500/20 border border-brand-500/40 text-brand-300 text-xs font-bold hover:bg-brand-500/30 transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <FileText size={12} /> Edit Action
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition cursor-pointer"
+              title="Close modal"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
-        <button onClick={onClose} className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition cursor-pointer">
-          <X size={18} />
-        </button>
-      </div>
 
-      <IDCardGenerator
-        studentName={item.student_name}
-        regNo={item.reg_no}
-        deptName={item.department_name}
-        yearLevel={item.year_level}
-        totalSolved={item.total_solved}
-        collegeRank={1}
-        streakCount={item.last_active_days_ago <= 1 ? 5 : 0}
-      />
+        {/* Navigation Tabs */}
+        <div className="flex items-center gap-2 px-5 py-2.5 bg-slate-950/40 border-b border-slate-800/80 shrink-0">
+          <button
+            onClick={() => setActiveViewTab('pass')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+              activeViewTab === 'pass'
+                ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <Award size={13} />
+            <span>Digital Performance Pass</span>
+          </button>
 
-      <div className="border-t border-slate-800 pt-4">
-        <StudentCodingProfileView studentId={item.student_id} />
+          <button
+            onClick={() => setActiveViewTab('profile')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+              activeViewTab === 'profile'
+                ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/25'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <Sparkles size={13} />
+            <span>AI Coding Profile</span>
+          </button>
+
+          <button
+            onClick={() => setActiveViewTab('timeline')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+              activeViewTab === 'timeline'
+                ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/25'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <Clock size={13} />
+            <span>Intervention Timeline ({events.length})</span>
+          </button>
+        </div>
+
+        {/* Tab Content Body */}
+        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 custom-scrollbar">
+          {activeViewTab === 'pass' && (
+            <div className="space-y-4">
+              <IDCardGenerator
+                studentName={item.student_name}
+                regNo={item.reg_no}
+                deptName={item.department_name}
+                yearLevel={item.year_level}
+                totalSolved={item.total_solved}
+                collegeRank={1}
+                streakCount={item.last_active_days_ago <= 1 ? 5 : 0}
+              />
+            </div>
+          )}
+
+          {activeViewTab === 'profile' && (
+            <div className="space-y-4">
+              <StudentCodingProfileView studentId={item.student_id} />
+            </div>
+          )}
+
+          {activeViewTab === 'timeline' && (
+            <div className="space-y-4">
+              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800">
+                <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Current Action Signal</div>
+                <div className="text-sm font-black text-white">{item.signal_type}</div>
+                <div className="text-xs text-brand-400 mt-1 italic">{item.recommended_action}</div>
+              </div>
+
+              {timelineLoading ? (
+                <div className="py-12 text-center text-slate-400">
+                  <RefreshCw size={20} className="animate-spin mx-auto mb-2 opacity-50" />
+                  <span className="text-xs">Loading intervention timeline...</span>
+                </div>
+              ) : events.length === 0 ? (
+                <div className="py-12 text-center text-slate-400 text-xs">No intervention audit logs recorded yet.</div>
+              ) : (
+                <div className="relative pl-4 space-y-4">
+                  <div className="absolute left-7 top-3 bottom-3 w-px bg-slate-800" />
+                  {events.map((ev, i) => {
+                    const colorCls = EVENT_COLOR[ev.event_type] || 'text-slate-400';
+                    return (
+                      <div key={ev.id} className="flex gap-4 items-start relative z-10">
+                        <div className={`w-7 h-7 rounded-full border border-current flex items-center justify-center text-[11px] font-black bg-slate-900 ${colorCls} shrink-0`}>
+                          {i + 1}
+                        </div>
+                        <div className="flex-1 p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-1">
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <span className={`text-xs font-black ${colorCls}`}>{ev.event_type.replace(/_/g, ' ')}</span>
+                            <span className="text-[10px] text-slate-500 font-mono">{ev.timestamp}</span>
+                          </div>
+                          <div className="text-[11px] text-slate-400">by <b className="text-slate-200">{ev.user_name}</b></div>
+                          {(ev.previous_value || ev.new_value) && (
+                            <div className="text-xs pt-1 border-t border-slate-800/80">
+                              {ev.previous_value && <span className="line-through text-slate-500 mr-1.5">{ev.previous_value}</span>}
+                              {ev.new_value && <span className="text-emerald-400 font-bold">{ev.new_value}</span>}
+                            </div>
+                          )}
+                          {ev.reason && <div className="text-[11px] text-slate-400 italic pt-1">💡 {ev.reason}</div>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ─── Update Modal ─────────────────────────────────────────────────────────────
 const UpdateModal: React.FC<{
@@ -297,62 +438,6 @@ const UpdateModal: React.FC<{
   );
 };
 
-// ─── Timeline Drawer ──────────────────────────────────────────────────────────
-const TimelineDrawer: React.FC<{ actionId: number; studentName: string; onClose: () => void }> = ({ actionId, studentName, onClose }) => {
-  const [events, setEvents] = useState<ActionTimelineEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getActionTimeline(actionId).then(e => { setEvents(e); setLoading(false); }).catch(() => setLoading(false));
-  }, [actionId]);
-
-  return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="w-96 h-full overflow-y-auto bg-white dark:bg-navy-850 border-l border-slate-200 dark:border-navy-700 p-6 shadow-2xl">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <div className="text-base font-bold text-slate-800 dark:text-slate-100">Intervention Timeline</div>
-            <div className="text-xs text-slate-400 dark:text-navy-400">{studentName}</div>
-          </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"><X size={18} /></button>
-        </div>
-
-        {loading ? (
-          <div className="text-center text-slate-400 mt-10">Loading...</div>
-        ) : events.length === 0 ? (
-          <div className="text-center text-slate-400 mt-10">No events recorded yet.</div>
-        ) : (
-          <div className="relative">
-            <div className="absolute left-4 top-2 bottom-2 w-px bg-slate-200 dark:bg-navy-700" />
-            {events.map((ev, i) => {
-              const colorCls = EVENT_COLOR[ev.event_type] || 'text-slate-400';
-              return (
-                <div key={ev.id} className="flex gap-4 mb-5">
-                  <div className={`w-8 h-8 rounded-full border-2 border-current flex items-center justify-center text-xs font-bold flex-shrink-0 z-10 bg-white dark:bg-navy-850 ${colorCls}`}>
-                    {i + 1}
-                  </div>
-                  <div className="flex-1 bg-slate-50 dark:bg-navy-900/50 border border-slate-200 dark:border-navy-700 rounded-xl p-3">
-                    <div className={`text-[11px] font-bold mb-0.5 ${colorCls}`}>{ev.event_type.replace(/_/g, ' ')}</div>
-                    <div className="text-[10px] text-slate-400 dark:text-navy-400">by {ev.user_name} · {ev.timestamp}</div>
-                    {(ev.previous_value || ev.new_value) && (
-                      <div className="text-xs mt-1.5">
-                        {ev.previous_value && <span className="line-through text-slate-400">{ev.previous_value}</span>}
-                        {ev.previous_value && ev.new_value && ' → '}
-                        {ev.new_value && <span className="text-brand-500">{ev.new_value}</span>}
-                      </div>
-                    )}
-                    {ev.reason && <div className="text-[10px] text-slate-400 mt-1 italic">{ev.reason}</div>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export const FacultyActionCenter: React.FC = () => {
   const [kpis, setKpis] = useState<FacultyActionKPIs | null>(null);
@@ -379,8 +464,7 @@ export const FacultyActionCenter: React.FC = () => {
 
   // Modals
   const [updateItem, setUpdateItem] = useState<FacultyActionItem | null>(null);
-  const [timelineItem, setTimelineItem] = useState<{ id: number; name: string } | null>(null);
-  const [passItem, setPassItem] = useState<FacultyActionItem | null>(null);
+  const [viewItem, setViewItem] = useState<FacultyActionItem | null>(null);
 
   // Row expand
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
@@ -634,18 +718,22 @@ export const FacultyActionCenter: React.FC = () => {
 
                       {/* Actions */}
                       <td className={tdCls} onClick={e => e.stopPropagation()}>
-                        <div className="flex gap-1.5 items-center">
-                          <button onClick={() => setUpdateItem(item)} title="Update Action Details"
-                            className="p-1.5 rounded-lg bg-violet-500/10 border border-violet-500/25 text-violet-400 hover:bg-violet-500/20 transition cursor-pointer">
-                            <FileText size={12} />
+                        <div className="flex gap-2 items-center">
+                          <button
+                            onClick={() => setUpdateItem(item)}
+                            title="Update Mentoring Action"
+                            className="p-2 rounded-xl bg-violet-500/10 border border-violet-500/30 text-violet-400 hover:bg-violet-500/20 hover:text-violet-300 transition cursor-pointer shadow-sm flex items-center gap-1 text-xs font-bold"
+                          >
+                            <FileText size={13} />
+                            <span className="hidden xl:inline">Update</span>
                           </button>
-                          <button onClick={() => setTimelineItem({ id: item.id, name: item.student_name })} title="Intervention Timeline"
-                            className="p-1.5 rounded-lg bg-blue-500/10 border border-blue-500/25 text-blue-400 hover:bg-blue-500/20 transition cursor-pointer">
-                            <Eye size={12} />
-                          </button>
-                          <button onClick={() => setPassItem(item)} title="View Digital Pass & AI Profile"
-                            className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20 transition cursor-pointer">
-                            <Award size={12} />
+                          <button
+                            onClick={() => setViewItem(item)}
+                            title="View Digital Pass & AI Profile"
+                            className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 transition cursor-pointer shadow-sm flex items-center gap-1 text-xs font-bold"
+                          >
+                            <Eye size={13} />
+                            <span className="hidden xl:inline">View</span>
                           </button>
                         </div>
                       </td>
@@ -655,7 +743,7 @@ export const FacultyActionCenter: React.FC = () => {
                     {isExpanded && (
                       <tr className="bg-brand-500/3 dark:bg-navy-900/40">
                         <td colSpan={8} className="px-5 py-4">
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
                             <div>
                               <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-navy-400 mb-1">Recommended Action</div>
                               <div className="text-xs text-brand-500 italic font-medium">{item.recommended_action || '—'}</div>
@@ -669,8 +757,11 @@ export const FacultyActionCenter: React.FC = () => {
                               <div className="text-xs text-slate-600 dark:text-slate-300">{item.faculty_notes || '—'}</div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <button onClick={() => setPassItem(item)} className="px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold hover:bg-emerald-500/25 transition flex items-center gap-1.5 cursor-pointer">
-                                <Award size={13} /> View Digital Pass
+                              <button
+                                onClick={() => setViewItem(item)}
+                                className="px-3.5 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold hover:bg-emerald-500/25 transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                              >
+                                <Eye size={13} /> View Full Profile & Pass
                               </button>
                             </div>
                           </div>
@@ -702,8 +793,13 @@ export const FacultyActionCenter: React.FC = () => {
 
       {/* ── Modals ── */}
       {updateItem && <UpdateModal item={updateItem} onClose={() => setUpdateItem(null)} onSaved={loadData} />}
-      {timelineItem && <TimelineDrawer actionId={timelineItem.id} studentName={timelineItem.name} onClose={() => setTimelineItem(null)} />}
-      {passItem && <StudentPassModal item={passItem} onClose={() => setPassItem(null)} />}
+      {viewItem && (
+        <StudentViewModal
+          item={viewItem}
+          onClose={() => setViewItem(null)}
+          onOpenUpdate={() => setUpdateItem(viewItem)}
+        />
+      )}
     </div>
   );
 };

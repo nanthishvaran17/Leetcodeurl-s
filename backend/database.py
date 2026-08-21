@@ -174,6 +174,22 @@ def run_migrations():
                         conn.commit()
                         print(f"[DB Migration] Added weekly_public_results column: {col_name}")
 
+            # Check student_contest_participations columns
+            result_scp = conn.execute(
+                __import__('sqlalchemy').text("PRAGMA table_info(student_contest_participations)")
+            )
+            scp_cols = {row[1] for row in result_scp}
+            if scp_cols:
+                scp_migrations = [
+                    ("solved_problems", "ALTER TABLE student_contest_participations ADD COLUMN solved_problems TEXT"),
+                    ("confidence",      "ALTER TABLE student_contest_participations ADD COLUMN confidence VARCHAR DEFAULT 'HIGH'"),
+                ]
+                for col_name, sql in scp_migrations:
+                    if col_name not in scp_cols:
+                        conn.execute(__import__('sqlalchemy').text(sql))
+                        conn.commit()
+                        print(f"[DB Migration] Added student_contest_participations column: {col_name}")
+
             # Check sync_jobs columns
             result_jobs = conn.execute(
                 __import__('sqlalchemy').text("PRAGMA table_info(sync_jobs)")
