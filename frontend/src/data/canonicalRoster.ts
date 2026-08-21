@@ -8577,32 +8577,6 @@ export const CANONICAL_ROSTER: any[] = [
     "has_virtual": false
   },
   {
-    "id": 309,
-    "name": "AI Test Student",
-    "reg_no": "732224AITEST",
-    "username": "aitest_user",
-    "year_level": "III",
-    "department_id": 3,
-    "department": {
-      "id": 3,
-      "name": "Computer Science AI Test",
-      "code": "CSE_AI_TEST"
-    },
-    "sync_state": "PENDING_USERNAME",
-    "profile_url": null,
-    "stats": null,
-    "streak_count": 0,
-    "college_rank": null,
-    "dept_rank": null,
-    "weekly_progress": 0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_solved": 0,
-    "contest_score_display": "Not Attended",
-    "contest_name": "Weekly Contest 515",
-    "contest_number": 515,
-    "has_virtual": false
-  },
-  {
     "id": 134,
     "name": "ANVAR AHAMED S",
     "reg_no": "732225CCL01",
@@ -9711,32 +9685,6 @@ export const CANONICAL_ROSTER: any[] = [
       "status": "INVALID_USERNAME",
       "last_verified_at": "2026-08-13T13:04:20.024475"
     },
-    "streak_count": 0,
-    "college_rank": null,
-    "dept_rank": null,
-    "weekly_progress": 0,
-    "contest_status": "PUBLIC_NOT_ATTENDED",
-    "contest_solved": 0,
-    "contest_score_display": "Not Attended",
-    "contest_name": "Weekly Contest 515",
-    "contest_number": 515,
-    "has_virtual": false
-  },
-  {
-    "id": 310,
-    "name": "OTP Test Student",
-    "reg_no": "732224TEST01",
-    "username": null,
-    "year_level": "III",
-    "department_id": 4,
-    "department": {
-      "id": 4,
-      "name": "Computer Science Test",
-      "code": "CSE_TEST"
-    },
-    "sync_state": "PENDING_USERNAME",
-    "profile_url": null,
-    "stats": null,
     "streak_count": 0,
     "college_rank": null,
     "dept_rank": null,
