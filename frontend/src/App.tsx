@@ -98,8 +98,26 @@ export const App: React.FC = () => {
     }
   };
 
+  const TAB_DESCRIPTIONS: Record<string, string> = {
+    landing: 'Visited Landing Page & College Leaderboard',
+    dashboard: 'Visited Executive Dashboard & Performance Matrix',
+    public: 'Visited Public Leaderboard',
+    profile: 'Inspected Student Profile Details',
+    compare: 'Opened Student Performance Comparison Tool',
+    'audit-log': 'Inspected Admin Identity & Audit Logs',
+    'ai-control-center': 'Opened AI Operations Control Center',
+    'system-health': 'Visited System Health & Data Quality Board',
+    reports: 'Opened Executive Reports & Data Exporters',
+    'hod-command-center': 'Visited HOD Command Center',
+    'faculty-action-center': 'Visited Faculty Action Center',
+    'student-data-issues': 'Visited Student Data Issues & Reconciliation',
+    certificates: 'Opened Certificate Verification Engine',
+    settings: 'Visited Institutional System Settings'
+  };
+
   const handleTabChange = (tab: string) => {
-    logActivity('PAGE_NAVIGATE', `Navigated to ${tab.toUpperCase()} page`, { page: tab, role: user?.role });
+    const pageDesc = TAB_DESCRIPTIONS[tab] || `Visited ${tab.toUpperCase()} page`;
+    logActivity('PAGE_NAVIGATE', pageDesc, { page: tab, role: user?.role });
     if (tab === 'alert-center') {
       setShowAlertCenterModal(true);
       return;

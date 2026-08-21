@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, Clock, Search, Filter, RefreshCw, CheckCircle2, AlertTriangle, UserCheck } from 'lucide-react';
+import { ShieldAlert, Clock, Search, Filter, RefreshCw, CheckCircle2, AlertTriangle, UserCheck, X, Eye, Laptop, Terminal } from 'lucide-react';
 import api from '../services/api';
 
 export const AuditLogPage: React.FC = () => {
@@ -8,6 +8,7 @@ export const AuditLogPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [selectedLog, setSelectedLog] = useState<any | null>(null);
 
   useEffect(() => {
     fetchLogs();
@@ -51,7 +52,7 @@ export const AuditLogPage: React.FC = () => {
               Admin Identity & <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Audit Log</span>
             </h1>
             <p className="text-xs md:text-sm text-gray-300 font-bold tracking-wide">
-              Real-time database audit log recording administrator identity, logins, report generation, email dispatches & setting modifications.
+              Real-time database audit log recording administrator identity, logins, page visits, report generation, email dispatches & setting modifications. Click any log entry to inspect full event telemetry.
             </p>
           </div>
           <div className="flex items-center space-x-3">
@@ -74,7 +75,7 @@ export const AuditLogPage: React.FC = () => {
             <Search className="w-4 h-4 absolute left-3.5 top-3 text-gray-400" />
             <input
               type="text"
-              placeholder="Search by Audit ID, Admin Name, Email, or Action..."
+              placeholder="Search by Audit ID, Admin Name, Email, Action, or Description..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
@@ -82,7 +83,7 @@ export const AuditLogPage: React.FC = () => {
           </div>
           <button
             type="submit"
-            className="px-5 py-2 bg-brand-600 text-white text-xs font-bold rounded-2xl hover:bg-brand-700 transition-all"
+            className="px-5 py-2 bg-brand-600 text-white text-xs font-bold rounded-2xl hover:bg-brand-700 transition-all cursor-pointer"
           >
             Search
           </button>
@@ -94,7 +95,7 @@ export const AuditLogPage: React.FC = () => {
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-1 text-xs text-gray-900 dark:text-white font-medium"
+              className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-1 text-xs text-gray-900 dark:text-white font-medium cursor-pointer"
             >
               <option value="ALL">All Roles</option>
               <option value="ADMIN">ADMIN</option>
@@ -110,7 +111,7 @@ export const AuditLogPage: React.FC = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-1 text-xs text-gray-900 dark:text-white font-medium"
+              className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-1 text-xs text-gray-900 dark:text-white font-medium cursor-pointer"
             >
               <option value="ALL">All Statuses</option>
               <option value="SUCCESS">SUCCESS</option>
@@ -148,9 +149,15 @@ export const AuditLogPage: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-medium">
                 {logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-brand-50/30 dark:hover:bg-brand-950/20 transition-colors">
-                    <td className="py-3 px-4 font-mono font-bold text-brand-600 dark:text-brand-400">
-                      {log.audit_id}
+                  <tr
+                    key={log.id}
+                    onClick={() => setSelectedLog(log)}
+                    className="hover:bg-brand-50/40 dark:hover:bg-brand-950/30 transition-colors cursor-pointer group"
+                    title="Click to inspect full audit event telemetry"
+                  >
+                    <td className="py-3 px-4 font-mono font-bold text-brand-600 dark:text-brand-400 flex items-center space-x-1.5">
+                      <Eye className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-brand-500 shrink-0" />
+                      <span>{log.audit_id}</span>
                     </td>
 
                     <td className="py-3 px-4">
@@ -178,7 +185,7 @@ export const AuditLogPage: React.FC = () => {
                     </td>
 
                     <td className="py-3 px-4 text-gray-600 dark:text-gray-300 max-w-xs truncate">
-                      <div>{log.description || '—'}</div>
+                      <div className="font-semibold text-gray-900 dark:text-gray-100 truncate">{log.description || '—'}</div>
                       {log.ip_address && (
                         <div className="text-[9.5px] font-mono text-gray-400">IP: {log.ip_address}</div>
                       )}
@@ -208,6 +215,96 @@ export const AuditLogPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Audit Entry Detail Inspection Modal */}
+      {selectedLog && (
+        <div
+          className="modal-overlay-responsive animate-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedLog(null);
+          }}
+        >
+          <div className="modal-container-responsive max-w-xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-800 rounded-3xl shadow-2xl p-6 space-y-4 animate-modal-content">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-navy-800">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-gray-900 dark:text-white font-mono">
+                    {selectedLog.audit_id}
+                  </h3>
+                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                    Administrator Event & Activity Inspection
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedLog(null)}
+                className="p-2 rounded-xl text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-navy-800 transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3.5 text-xs">
+              {/* Admin Identity Card */}
+              <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-800">
+                <div>
+                  <span className="font-extrabold text-gray-400 uppercase tracking-wider text-[10px]">Administrator / User</span>
+                  <div className="font-black text-gray-900 dark:text-white text-sm mt-0.5">{selectedLog.admin_name}</div>
+                  <div className="text-gray-500 text-[11px] font-mono">{selectedLog.admin_email}</div>
+                </div>
+                <div>
+                  <span className="font-extrabold text-gray-400 uppercase tracking-wider text-[10px]">Role / Access Level</span>
+                  <div className="font-black text-indigo-600 dark:text-indigo-400 text-sm mt-0.5">{selectedLog.admin_role}</div>
+                </div>
+              </div>
+
+              {/* Action Description Box */}
+              <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-800 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-gray-400 uppercase tracking-wider text-[10px]">Action Executed</span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-black font-mono ${
+                    selectedLog.status === 'SUCCESS' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-800'
+                  }`}>
+                    {selectedLog.status}
+                  </span>
+                </div>
+                <div className="font-mono font-black text-sm text-gray-900 dark:text-white">
+                  {selectedLog.action}
+                </div>
+                <p className="text-gray-700 dark:text-gray-300 font-bold text-xs pt-1 leading-relaxed">
+                  {selectedLog.description}
+                </p>
+              </div>
+
+              {/* Technical Telemetry */}
+              <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-800">
+                <div>
+                  <span className="font-extrabold text-gray-400 uppercase tracking-wider text-[10px]">IP Address</span>
+                  <div className="font-mono font-bold text-gray-900 dark:text-white text-xs mt-0.5">{selectedLog.ip_address || '127.0.0.1'}</div>
+                </div>
+                <div>
+                  <span className="font-extrabold text-gray-400 uppercase tracking-wider text-[10px]">Logged Timestamp</span>
+                  <div className="font-mono font-bold text-gray-900 dark:text-white text-xs mt-0.5">{selectedLog.created_at || 'Just now'}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedLog(null)}
+                className="px-5 py-2 bg-gray-100 dark:bg-navy-800 hover:bg-gray-200 dark:hover:bg-navy-700 text-gray-900 dark:text-white font-extrabold rounded-xl text-xs transition-colors cursor-pointer"
+              >
+                Close Inspection
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
