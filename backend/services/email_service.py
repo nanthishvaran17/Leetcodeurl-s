@@ -324,9 +324,8 @@ def send_email_via_brevo(
     - Exponential backoff retry loop with jitter (2s, 5s, 15s) for transient network timeouts
     - Message ID extraction and safe error diagnostics
     """
-    sender_email = (os.environ.get("BREVO_SENDER_EMAIL") or from_email or "nanthishvaran0106@gmail.com").strip()
-    if "@" not in sender_email:
-        sender_email = "nanthishvaran0106@gmail.com"
+    brevo_configured_sender = (os.environ.get("BREVO_SENDER_EMAIL") or getattr(settings, "BREVO_SENDER_EMAIL", "nanthishvaran0106@gmail.com")).strip()
+    sender_email = brevo_configured_sender if (brevo_configured_sender and "@" in brevo_configured_sender) else "nanthishvaran0106@gmail.com"
 
     payload: Dict[str, Any] = {
         "sender": {"name": "Nandha Engineering College — LeetCode Tracker", "email": sender_email},
@@ -870,10 +869,13 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
 
     # Secondary / Production Primary: Brevo HTTPS API (Port 443)
     if brevo_key:
-        logger.info(f"[{now_iso}] [OTP] stage=brevo_api using Brevo HTTPS API (Port 443)")
+        brevo_sender = (os.environ.get("BREVO_SENDER_EMAIL") or getattr(settings, "BREVO_SENDER_EMAIL", "nanthishvaran0106@gmail.com")).strip()
+        if not brevo_sender or "@" not in brevo_sender:
+            brevo_sender = "nanthishvaran0106@gmail.com"
+        logger.info(f"[{now_iso}] [OTP] stage=brevo_api using Brevo HTTPS API (Port 443) with verified sender: {brevo_sender}")
         try:
             t_brevo_start = time.time()
-            ok, msg_id = send_email_via_brevo(brevo_key, from_email, clean_rec, subject, html_body, None, text_body, max_retries=2)
+            ok, msg_id = send_email_via_brevo(brevo_key, brevo_sender, clean_rec, subject, html_body, None, text_body, max_retries=2)
             dur = (time.time() - t_brevo_start) * 1000
             now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
             if ok:

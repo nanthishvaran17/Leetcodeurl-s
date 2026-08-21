@@ -115,7 +115,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
     try {
       const res = await api.post('/auth/send-otp', { email: cleanEmail }, { timeout: 15000 });
       const masked = res.data.masked_email || maskEmail(cleanEmail);
-      setSuccessMsg(`Verification code accepted by email service. Check ${masked}.`);
+      setSuccessMsg(`Verification email accepted by the email service. Check ${masked} inbox & spam folder.`);
       setRequestId(res.data.request_id || '');
       setMaskedEmail(masked);
       if (res.data.expires_at) {
@@ -158,7 +158,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       const cleanEmail = email.trim().toLowerCase();
       const res = await api.post('/auth/resend-otp', { email: cleanEmail }, { timeout: 15000 });
       const masked = res.data.masked_email || maskEmail(cleanEmail);
-      setSuccessMsg(`Verification code accepted by email service. Check ${masked}.`);
+      setSuccessMsg(`Verification email accepted by the email service. Check ${masked} inbox & spam folder.`);
       setRequestId(res.data.request_id || '');
       setMaskedEmail(masked);
       if (res.data.expires_at) {
