@@ -559,14 +559,14 @@ export const FacultyActionCenter: React.FC = () => {
         <div className="rounded-2xl bg-white/80 dark:bg-navy-800/80 border border-slate-200 dark:border-navy-700 backdrop-blur-sm overflow-hidden">
           <table className="w-full table-fixed">
             <colgroup>
-              <col style={{ width: '18%' }} />
-              <col style={{ width: '13%' }} />
-              <col style={{ width: '8%' }} />
               <col style={{ width: '20%' }} />
-              <col style={{ width: '11%' }} />
+              <col style={{ width: '12%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '18%' }} />
+              <col style={{ width: '10%' }} />
               <col style={{ width: '13%' }} />
               <col style={{ width: '9%' }} />
-              <col style={{ width: '8%' }} />
+              <col style={{ width: '10%' }} />
             </colgroup>
             <thead className="border-b border-slate-200 dark:border-navy-700 bg-slate-50/80 dark:bg-navy-900/50">
               <tr>
