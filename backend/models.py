@@ -1576,27 +1576,73 @@ class SystemAlert(Base):
 
 class FacultyActionQueueItem(Base):
     """
-    Task-based action queue item for faculty interventions.
+    Task-based action queue item for faculty interventions & mentoring lifecycle.
+    Lifecycle: Pending -> In Progress -> Monitoring -> Completed -> Resolved
     """
     __tablename__ = "faculty_action_queue"
+    __table_args__ = (
+        UniqueConstraint("student_id", "signal_type", "contest_id", name="uq_faculty_action_signal"),
+        {"extend_existing": True}
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
     faculty_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     
-    priority = Column(String(20), default="Medium", index=True) # High, Medium, Low
+    priority = Column(String(20), default="Medium", index=True) # Critical, High, Medium, Low
+    priority_score = Column(Integer, default=50) # 0 to 100
+    signal_type = Column(String(50), default="PERFORMANCE_DROP", index=True) # CONTEST_ABSENT, VIRTUAL_STREAK, PERFORMANCE_DROP, WEAK_TOPIC, LOW_SOLVE_COUNT, SILENT_DISENGAGED
+    contest_id = Column(String(100), default="live", index=True)
+    
     reason = Column(Text, nullable=False)
     recommended_action = Column(Text, nullable=False)
-    status = Column(String(30), default="Pending", index=True) # Pending, In Progress, Completed, Monitoring, Resolved
-    category = Column(String(50), default="PERFORMANCE_DROP", index=True) # PERFORMANCE_DROP, INACTIVITY, WEAK_TOPIC, LOW_PARTICIPATION, SILENT_DISENGAGED
+    status = Column(String(30), default="Pending", index=True) # Pending, In Progress, Monitoring, Completed, Resolved
+    category = Column(String(50), default="PERFORMANCE_DROP", index=True)
     
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    assigned_faculty_name = Column(String(150), nullable=True)
+    due_date = Column(DateTime, nullable=True)
+    follow_up_date = Column(DateTime, nullable=True)
+    next_review_date = Column(DateTime, nullable=True)
+    
+    action_taken = Column(Text, nullable=True)
+    faculty_notes = Column(Text, nullable=True)
+    evidence_remarks = Column(Text, nullable=True)
+    
+    is_escalated = Column(Boolean, default=False)
+    escalated_to = Column(String(100), nullable=True) # e.g. "HOD", "Principal"
+    escalated_at = Column(DateTime, nullable=True)
+    resolved_at = Column(DateTime, nullable=True)
+    
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
-    student = relationship("Student")
+    student = relationship("Student", backref="faculty_actions")
     faculty = relationship("User")
+    audit_logs = relationship("FacultyActionAuditLog", back_populates="action_item", cascade="all, delete-orphan", order_by="FacultyActionAuditLog.id.asc()")
 
 
+class FacultyActionAuditLog(Base):
+    """
+    Immutable audit history log for faculty intervention actions.
+    Records every status change, assignment, note addition, follow-up, and escalation.
+    """
+    __tablename__ = "faculty_action_audit_logs"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    action_id = Column(Integer, ForeignKey("faculty_action_queue.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    user_name = Column(String(150), default="System")
+    
+    event_type = Column(String(50), nullable=False, index=True) # ACTION_CREATED, PRIORITY_CHANGED, FACULTY_ASSIGNED, STATUS_CHANGED, NOTE_ADDED, FOLLOW_UP_SCHEDULED, ESCALATED, RESOLVED
+    previous_value = Column(String(200), nullable=True)
+    new_value = Column(String(200), nullable=True)
+    reason = Column(Text, nullable=True)
+    
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+
+    action_item = relationship("FacultyActionQueueItem", back_populates="audit_logs")
+    user = relationship("User")
 
 
 

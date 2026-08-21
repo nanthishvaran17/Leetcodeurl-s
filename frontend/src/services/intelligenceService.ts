@@ -179,3 +179,183 @@ export const markAlertResolve = async (alertId: number) => {
   const response = await api.post(`/api/intelligence/alerts/${alertId}/resolve`);
   return response.data;
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Faculty Action Center — Types & API
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface FacultyActionKPIs {
+  critical_count: number;
+  high_count: number;
+  medium_count: number;
+  low_count: number;
+  pending_count: number;
+  in_progress_count: number;
+  monitoring_count: number;
+  completed_count: number;
+  resolved_count: number;
+  total_actions: number;
+  overdue_count: number;
+  escalated_count: number;
+  immediate_attention_count: number;
+  subtitle: string;
+}
+
+export interface FacultyActionItem {
+  id: number;
+  student_id: number;
+  student_name: string;
+  reg_no: string;
+  leetcode_username: string;
+  department_name: string;
+  department_code: string;
+  year_level: string;
+  signal_type: string;
+  priority: string;
+  priority_score: number;
+  priority_score_reason: string;
+  status: string;
+  recommended_action: string;
+  assigned_faculty_name: string | null;
+  due_date: string | null;
+  follow_up_date: string | null;
+  next_review_date: string | null;
+  is_escalated: boolean;
+  escalated_to: string | null;
+  action_taken: string | null;
+  faculty_notes: string | null;
+  evidence_remarks: string | null;
+  is_overdue_followup: boolean;
+  days_overdue: number;
+  created_at: string;
+  updated_at: string;
+  total_solved: number;
+  current_rating: number;
+  contests_attended: number;
+  last_active_days_ago: number;
+}
+
+export interface ActionTimelineEvent {
+  id: number;
+  event_type: string;
+  user_name: string;
+  previous_value: string | null;
+  new_value: string | null;
+  reason: string | null;
+  timestamp: string;
+}
+
+export interface UpdateActionPayload {
+  status?: string;
+  assigned_faculty_name?: string;
+  action_taken?: string;
+  faculty_notes?: string;
+  evidence_remarks?: string;
+  follow_up_date?: string;
+  next_review_date?: string;
+  updated_by_name?: string;
+  reason?: string;
+}
+
+export const getFacultyActionKPIs = async (deptId?: number): Promise<FacultyActionKPIs> => {
+  const response = await api.get('/api/intelligence/faculty/actions/kpis', { params: { dept_id: deptId } });
+  return response.data;
+};
+
+export const getFacultyActionsList = async (params: {
+  priority?: string;
+  status?: string;
+  dept_id?: number;
+  year_level?: string;
+  search?: string;
+  sort_by?: string;
+  sort_dir?: string;
+  page?: number;
+  page_size?: number;
+}): Promise<{ items: FacultyActionItem[]; total: number; page: number; page_size: number }> => {
+  const response = await api.get('/api/intelligence/faculty/actions', { params });
+  return response.data;
+};
+
+export const getSingleFacultyAction = async (actionId: number): Promise<FacultyActionItem> => {
+  const response = await api.get(`/api/intelligence/faculty/actions/${actionId}`);
+  return response.data;
+};
+
+export const updateFacultyAction = async (
+  actionId: number,
+  payload: UpdateActionPayload
+): Promise<{ status: string; message: string }> => {
+  const response = await api.put(`/api/intelligence/faculty/actions/${actionId}`, payload);
+  return response.data;
+};
+
+export const assignFacultyAction = async (
+  actionId: number,
+  facultyName: string,
+  updatedByName?: string
+): Promise<{ status: string; message: string }> => {
+  const response = await api.post(`/api/intelligence/faculty/actions/${actionId}/assign`, {
+    faculty_name: facultyName,
+    updated_by_name: updatedByName,
+  });
+  return response.data;
+};
+
+export const updateActionStatus = async (
+  actionId: number,
+  status: string,
+  reason?: string,
+  updatedByName?: string
+): Promise<{ status: string; message: string }> => {
+  const response = await api.post(`/api/intelligence/faculty/actions/${actionId}/status`, {
+    status,
+    reason,
+    updated_by_name: updatedByName,
+  });
+  return response.data;
+};
+
+export const scheduleActionFollowUp = async (
+  actionId: number,
+  followUpDate: string,
+  nextReviewDate?: string,
+  updatedByName?: string
+): Promise<{ status: string; message: string }> => {
+  const response = await api.post(`/api/intelligence/faculty/actions/${actionId}/follow-up`, {
+    follow_up_date: followUpDate,
+    next_review_date: nextReviewDate,
+    updated_by_name: updatedByName,
+  });
+  return response.data;
+};
+
+export const escalateAction = async (
+  actionId: number,
+  escalatedTo: string,
+  reason: string,
+  updatedByName?: string
+): Promise<{ status: string; message: string }> => {
+  const response = await api.post(`/api/intelligence/faculty/actions/${actionId}/escalate`, {
+    escalated_to: escalatedTo,
+    reason,
+    updated_by_name: updatedByName,
+  });
+  return response.data;
+};
+
+export const getActionTimeline = async (actionId: number): Promise<ActionTimelineEvent[]> => {
+  const response = await api.get(`/api/intelligence/faculty/actions/${actionId}/timeline`);
+  return response.data;
+};
+
+export const triggerSignalDetection = async (): Promise<{
+  status: string;
+  new_signals_created: number;
+  existing_signals_updated: number;
+  total_processed: number;
+  message: string;
+}> => {
+  const response = await api.post('/api/intelligence/faculty/actions/detect-signals');
+  return response.data;
+};

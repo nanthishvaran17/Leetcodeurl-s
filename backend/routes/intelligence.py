@@ -12,15 +12,18 @@ from pydantic import BaseModel
 import datetime
 
 from backend.database import get_db
-from backend.models import Student, User, FacultyIntervention, FacultyActionQueueItem, SystemAlert
+from backend.models import Student, User, FacultyActionQueueItem, SystemAlert
 from backend.services.student_risk_engine import calculate_student_risk_engine, update_or_create_risk_profile
 from backend.services.skill_mapping_engine import calculate_student_skill_map, update_or_create_skill_profile
 from backend.services.learning_path_generator import generate_personalized_learning_path, update_or_create_learning_path
 from backend.services.contest_readiness_engine import calculate_contest_readiness, calculate_coding_consistency, get_digital_coding_profile
 from backend.services.faculty_action_engine import (
-    get_what_needs_attention_items, get_faculty_action_queue,
-    create_faculty_intervention, update_intervention_status,
-    calculate_intervention_effectiveness
+    get_faculty_actions_list,
+    get_faculty_kpis,
+    detect_and_sync_faculty_signals,
+    update_faculty_action_details,
+    escalate_faculty_action,
+    get_action_timeline
 )
 from backend.services.hod_analytics_engine import (
     calculate_department_health_score, get_institutional_benchmarks,
@@ -98,70 +101,259 @@ def get_student_learning_path_endpoint(student_id: int, db: Session = Depends(ge
 
 
 # ============================================================================
-# 2. FACULTY ACTION CENTER & INTERVENTIONS
+# 2. FACULTY ACTION CENTER, INTERVENTIONS & MENTORING LIFECYCLE
 # ============================================================================
 
-@router.get("/faculty/attention")
-def get_faculty_attention_endpoint(dept_id: Optional[int] = None, db: Session = Depends(get_db)):
-    """
-    Returns "What Needs My Attention?" items & counts.
-    """
-    return get_what_needs_attention_items(db, dept_id=dept_id)
+class FacultyActionUpdateRequest(BaseModel):
+    status: Optional[str] = None
+    assigned_faculty_name: Optional[str] = None
+    action_taken: Optional[str] = None
+    faculty_notes: Optional[str] = None
+    evidence_remarks: Optional[str] = None
+    follow_up_date: Optional[datetime.date] = None
+    next_review_date: Optional[datetime.date] = None
+    user_name: Optional[str] = "Faculty Mentor"
 
-@router.get("/faculty/action-queue")
-def get_faculty_action_queue_endpoint(
-    faculty_id: Optional[int] = None,
-    status: Optional[str] = Query("ALL"),
+class FacultyAssignRequest(BaseModel):
+    assigned_faculty_name: str
+    user_name: Optional[str] = "Faculty Mentor"
+
+class FacultyStatusRequest(BaseModel):
+    status: str
+    reason: Optional[str] = None
+    user_name: Optional[str] = "Faculty Mentor"
+
+class FacultyNoteRequest(BaseModel):
+    note: str
+    action_taken: Optional[str] = None
+    user_name: Optional[str] = "Faculty Mentor"
+
+class FacultyFollowUpRequest(BaseModel):
+    follow_up_date: datetime.date
+    next_review_date: Optional[datetime.date] = None
+    note: Optional[str] = None
+    user_name: Optional[str] = "Faculty Mentor"
+
+class FacultyEscalateRequest(BaseModel):
+    escalated_to: str = "HOD"
+    reason: str = "Unresolved critical performance risk"
+    user_name: Optional[str] = "Faculty Mentor"
+
+
+@router.get("/faculty/actions/kpis")
+def get_faculty_kpis_endpoint(dept_id: Optional[int] = None, db: Session = Depends(get_db)):
+    """
+    Returns real database KPI metrics: Critical, High, Monitoring, In Progress, Completed, Resolved.
+    """
+    from backend.services.faculty_action_engine import get_faculty_kpis
+    return get_faculty_kpis(db, department_id=dept_id)
+
+
+@router.get("/faculty/actions")
+def get_faculty_actions_endpoint(
+    priority: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    department_id: Optional[int] = Query(None),
+    year_level: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
     db: Session = Depends(get_db)
 ):
     """
-    Returns task-based Faculty Action Queue.
+    Returns filtered and sorted Faculty Action Queue with real student context.
     """
-    return get_faculty_action_queue(db, faculty_id=faculty_id, status=status)
-
-@router.post("/faculty/interventions")
-def create_intervention_endpoint(req: CreateInterventionRequest, db: Session = Depends(get_db)):
-    """
-    Creates a new mentoring intervention.
-    """
-    intervention = create_faculty_intervention(
+    from backend.services.faculty_action_engine import get_faculty_actions_list, detect_and_sync_faculty_signals
+    # First ensure at least initial signals are detected
+    data = get_faculty_actions_list(
         db,
-        student_id=req.student_id,
-        faculty_id=req.faculty_id,
-        title=req.title,
-        reason=req.reason,
-        assigned_topics=req.assigned_topics,
-        priority=req.priority
+        priority=priority,
+        status=status,
+        department_id=department_id,
+        year_level=year_level,
+        search=search,
+        limit=limit,
+        offset=offset
     )
+    if data["total"] == 0 and not search and not priority and not status:
+        detect_and_sync_faculty_signals(db)
+        data = get_faculty_actions_list(
+            db,
+            priority=priority,
+            status=status,
+            department_id=department_id,
+            year_level=year_level,
+            search=search,
+            limit=limit,
+            offset=offset
+        )
+    return data
+
+
+@router.post("/faculty/actions/detect-signals")
+def post_detect_faculty_signals_endpoint(force: bool = Query(False), db: Session = Depends(get_db)):
+    """
+    Triggers on-demand automated signal sweep across all active students in the database.
+    """
+    from backend.services.faculty_action_engine import detect_and_sync_faculty_signals
+    return detect_and_sync_faculty_signals(db, force=force)
+
+
+@router.get("/faculty/actions/{action_id}")
+def get_single_faculty_action_endpoint(action_id: int, db: Session = Depends(get_db)):
+    """
+    Returns single action details with timeline and student metrics.
+    """
+    from backend.models import FacultyActionQueueItem, LeetCodeProfileStats
+    from backend.services.faculty_action_engine import get_action_timeline
+
+    item = db.query(FacultyActionQueueItem).filter(FacultyActionQueueItem.id == action_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Action not found")
+
+    st = item.student
+    stats = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id == st.id).first() if st else None
+    timeline = get_action_timeline(db, action_id)
+
     return {
-        "success": True,
-        "message": "Intervention created successfully",
-        "intervention_id": intervention.id
+        "id": item.id,
+        "student_id": item.student_id,
+        "reg_no": st.reg_no if st else "",
+        "student_name": st.name if st else "",
+        "department": st.department.name if (st and st.department) else "CSE",
+        "year_level": st.year_level or "III",
+        "leetcode_username": st.username or "",
+        "priority": item.priority,
+        "priority_score": item.priority_score,
+        "signal_type": item.signal_type,
+        "contest_id": item.contest_id,
+        "reason": item.reason,
+        "recommended_action": item.recommended_action,
+        "status": item.status,
+        "assigned_faculty_name": item.assigned_faculty_name,
+        "due_date": item.due_date.strftime("%d %b %Y") if item.due_date else None,
+        "follow_up_date": item.follow_up_date.strftime("%d %b %Y") if item.follow_up_date else None,
+        "next_review_date": item.next_review_date.strftime("%d %b %Y") if item.next_review_date else None,
+        "action_taken": item.action_taken,
+        "faculty_notes": item.faculty_notes,
+        "evidence_remarks": item.evidence_remarks,
+        "is_escalated": item.is_escalated,
+        "escalated_to": item.escalated_to,
+        "stats": {
+            "total_solved": stats.total_solved if stats else 0,
+            "contest_rating": stats.contest_rating if stats else 0.0,
+            "easy_solved": stats.easy_solved if stats else 0,
+            "medium_solved": stats.medium_solved if stats else 0,
+            "hard_solved": stats.hard_solved if stats else 0,
+        },
+        "timeline": timeline
     }
 
-@router.put("/faculty/interventions/{intervention_id}")
-def update_intervention_endpoint(intervention_id: int, req: UpdateInterventionRequest, db: Session = Depends(get_db)):
-    """
-    Updates intervention status & notes.
-    """
-    intervention = update_intervention_status(
-        db,
-        intervention_id=intervention_id,
-        status=req.status,
-        improvement_notes=req.improvement_notes
-    )
-    return {
-        "success": True,
-        "message": f"Intervention status updated to {req.status}",
-        "intervention_id": intervention.id
-    }
 
-@router.get("/faculty/interventions/effectiveness")
-def get_intervention_effectiveness_endpoint(db: Session = Depends(get_db)):
+@router.patch("/faculty/actions/{action_id}")
+def patch_faculty_action_endpoint(action_id: int, req: FacultyActionUpdateRequest, db: Session = Depends(get_db)):
     """
-    Returns college-wide intervention effectiveness metrics.
+    Updates action details, status, notes, follow-up date with audit trail.
     """
-    return calculate_intervention_effectiveness(db)
+    from backend.services.faculty_action_engine import update_faculty_action_details
+    try:
+        res = update_faculty_action_details(
+            db,
+            action_id=action_id,
+            status=req.status,
+            assigned_faculty_name=req.assigned_faculty_name,
+            action_taken=req.action_taken,
+            faculty_notes=req.faculty_notes,
+            evidence_remarks=req.evidence_remarks,
+            follow_up_date=req.follow_up_date,
+            next_review_date=req.next_review_date,
+            user_name=req.user_name or "Faculty Mentor"
+        )
+        return res
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+
+
+@router.post("/faculty/actions/{action_id}/assign")
+def post_assign_faculty_endpoint(action_id: int, req: FacultyAssignRequest, db: Session = Depends(get_db)):
+    """
+    Assigns faculty to an action.
+    """
+    from backend.services.faculty_action_engine import update_faculty_action_details
+    try:
+        return update_faculty_action_details(
+            db,
+            action_id=action_id,
+            assigned_faculty_name=req.assigned_faculty_name,
+            user_name=req.user_name or "Faculty Mentor"
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+
+
+@router.post("/faculty/actions/{action_id}/status")
+def post_status_faculty_endpoint(action_id: int, req: FacultyStatusRequest, db: Session = Depends(get_db)):
+    """
+    Updates action status with validation.
+    """
+    from backend.services.faculty_action_engine import update_faculty_action_details
+    try:
+        return update_faculty_action_details(
+            db,
+            action_id=action_id,
+            status=req.status,
+            faculty_notes=req.reason,
+            user_name=req.user_name or "Faculty Mentor"
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+
+
+@router.post("/faculty/actions/{action_id}/follow-up")
+def post_follow_up_endpoint(action_id: int, req: FacultyFollowUpRequest, db: Session = Depends(get_db)):
+    """
+    Schedules a follow-up review date.
+    """
+    from backend.services.faculty_action_engine import update_faculty_action_details
+    try:
+        return update_faculty_action_details(
+            db,
+            action_id=action_id,
+            follow_up_date=req.follow_up_date,
+            next_review_date=req.next_review_date,
+            faculty_notes=req.note,
+            user_name=req.user_name or "Faculty Mentor"
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+
+
+@router.post("/faculty/actions/{action_id}/escalate")
+def post_escalate_endpoint(action_id: int, req: FacultyEscalateRequest, db: Session = Depends(get_db)):
+    """
+    Escalates an unresolved critical action to HOD.
+    """
+    from backend.services.faculty_action_engine import escalate_faculty_action
+    try:
+        return escalate_faculty_action(
+            db,
+            action_id=action_id,
+            escalated_to=req.escalated_to,
+            reason=req.reason,
+            user_name=req.user_name or "Faculty Mentor"
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+
+
+@router.get("/faculty/actions/{action_id}/timeline")
+def get_action_timeline_endpoint(action_id: int, db: Session = Depends(get_db)):
+    """
+    Returns complete chronological event audit trail for an action.
+    """
+    from backend.services.faculty_action_engine import get_action_timeline
+    return {"action_id": action_id, "timeline": get_action_timeline(db, action_id)}
+
 
 
 # ============================================================================

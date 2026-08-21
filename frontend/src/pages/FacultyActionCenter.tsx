@@ -1,404 +1,704 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  ShieldAlert, AlertTriangle, CheckCircle2, Zap, Clock, Search, Filter, 
-  UserCheck, UserX, TrendingUp, RefreshCw, Plus, FileText, ArrowRight, Activity
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  ShieldAlert, AlertTriangle, CheckCircle2, Clock, Search, RefreshCw,
+  ChevronDown, ChevronUp, X, Send, AlertCircle, Activity, TrendingDown,
+  User, Calendar, Zap, FileText, ArrowUpRight, Info, Bell, Filter,
+  RotateCcw, Eye
 } from 'lucide-react';
-import { 
-  getFacultyAttentionItems, getFacultyActionQueue, createFacultyIntervention, 
-  updateInterventionStatus, getInterventionEffectiveness, AttentionItem, ActionQueueItem 
+import {
+  getFacultyActionKPIs, getFacultyActionsList, updateFacultyAction,
+  updateActionStatus, escalateAction, getActionTimeline, triggerSignalDetection,
+  FacultyActionKPIs, FacultyActionItem, ActionTimelineEvent, UpdateActionPayload
 } from '../services/intelligenceService';
 
-export const FacultyActionCenter: React.FC = () => {
-  const [attentionData, setAttentionData] = useState<any>(null);
-  const [actionQueue, setActionQueue] = useState<ActionQueueItem[]>([]);
-  const [effectiveness, setEffectiveness] = useState<any>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  
-  const [statusFilter, setStatusFilter] = useState<string>('ALL');
-  const [searchQuery, setSearchQuery] = useState<string>('');
+// ─── Priority Config ──────────────────────────────────────────────────────────
+const PRIORITY_CONFIG: Record<string, { color: string; bg: string; border: string; icon: React.ReactNode; glow: string }> = {
+  Critical: { color: '#ff4757', bg: 'rgba(255,71,87,0.12)', border: 'rgba(255,71,87,0.35)', icon: <ShieldAlert size={13} />, glow: '0 0 12px rgba(255,71,87,0.4)' },
+  High:     { color: '#ff7f50', bg: 'rgba(255,127,80,0.12)', border: 'rgba(255,127,80,0.35)', icon: <AlertTriangle size={13} />, glow: '0 0 10px rgba(255,127,80,0.35)' },
+  Medium:   { color: '#ffd32a', bg: 'rgba(255,211,42,0.12)', border: 'rgba(255,211,42,0.35)', icon: <Clock size={13} />, glow: '0 0 10px rgba(255,211,42,0.25)' },
+  Low:      { color: '#7bed9f', bg: 'rgba(123,237,159,0.10)', border: 'rgba(123,237,159,0.3)', icon: <Activity size={13} />, glow: 'none' },
+};
 
-  // Modal State
-  const [showInterventionModal, setShowInterventionModal] = useState<boolean>(false);
-  const [selectedStudent, setSelectedStudent] = useState<{ id: number; name: string } | null>(null);
-  const [interventionTitle, setInterventionTitle] = useState<string>('5 Medium DP Problems & 1-on-1 Review');
-  const [interventionReason, setInterventionReason] = useState<string>('Severe weekly progress drop & weak contest performance.');
-  const [assignedTopicInput, setAssignedTopicInput] = useState<string>('Dynamic Programming, Graphs');
-  const [priorityInput, setPriorityInput] = useState<string>('High');
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+const STATUS_CONFIG: Record<string, { color: string; bg: string }> = {
+  Pending:     { color: '#a29bfe', bg: 'rgba(162,155,254,0.15)' },
+  'In Progress': { color: '#74b9ff', bg: 'rgba(116,185,255,0.15)' },
+  Monitoring:  { color: '#ffd32a', bg: 'rgba(255,211,42,0.12)' },
+  Completed:   { color: '#00d2d3', bg: 'rgba(0,210,211,0.12)' },
+  Resolved:    { color: '#7bed9f', bg: 'rgba(123,237,159,0.12)' },
+};
+
+const EVENT_COLORS: Record<string, string> = {
+  ACTION_CREATED: '#74b9ff',
+  STATUS_CHANGED: '#a29bfe',
+  FACULTY_ASSIGNED: '#55efc4',
+  NOTE_ADDED: '#ffeaa7',
+  FOLLOW_UP_SCHEDULED: '#fd79a8',
+  ESCALATED: '#ff4757',
+  RESOLVED: '#7bed9f',
+  PRIORITY_CHANGED: '#ff7f50',
+};
+
+// ─── KPI Card ─────────────────────────────────────────────────────────────────
+const KPICard: React.FC<{
+  label: string; value: number; color: string; icon: React.ReactNode;
+  active: boolean; onClick: () => void; subtitle?: string;
+}> = ({ label, value, color, icon, active, onClick, subtitle }) => (
+  <button
+    onClick={onClick}
+    style={{
+      background: active ? `rgba(${color},0.18)` : 'rgba(255,255,255,0.04)',
+      border: `1.5px solid ${active ? `rgba(${color},0.6)` : 'rgba(255,255,255,0.08)'}`,
+      borderRadius: 14, padding: '16px 20px', textAlign: 'left', cursor: 'pointer',
+      transition: 'all 0.25s ease', boxShadow: active ? `0 0 20px rgba(${color},0.25)` : 'none',
+      flex: 1, minWidth: 130,
+    }}
+  >
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+      <span style={{ color: `rgb(${color})`, opacity: 0.9 }}>{icon}</span>
+      <span style={{ color: '#888', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.6 }}>{label}</span>
+    </div>
+    <div style={{ fontSize: 30, fontWeight: 800, color: `rgb(${color})`, lineHeight: 1 }}>{value}</div>
+    {subtitle && <div style={{ fontSize: 10, color: '#666', marginTop: 5 }}>{subtitle}</div>}
+  </button>
+);
+
+// ─── Priority Badge ───────────────────────────────────────────────────────────
+const PriorityBadge: React.FC<{ priority: string; score: number; reason: string }> = ({ priority, score, reason }) => {
+  const [show, setShow] = useState(false);
+  const cfg = PRIORITY_CONFIG[priority] || PRIORITY_CONFIG.Low;
+  return (
+    <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+      <span
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 9px',
+          borderRadius: 20, background: cfg.bg, border: `1px solid ${cfg.border}`,
+          color: cfg.color, fontSize: 11, fontWeight: 700, cursor: 'default',
+          boxShadow: cfg.glow,
+        }}
+      >
+        {cfg.icon} {priority} <span style={{ opacity: 0.75, fontSize: 10 }}>({score})</span>
+      </span>
+      {show && (
+        <div style={{
+          position: 'absolute', top: '110%', left: 0, zIndex: 999,
+          background: '#1e1e2e', border: '1px solid rgba(255,255,255,0.12)',
+          borderRadius: 10, padding: '10px 14px', minWidth: 220, maxWidth: 300,
+          fontSize: 11, color: '#ccc', lineHeight: 1.55, boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
+        }}>
+          <strong style={{ color: cfg.color }}>Score: {score}/100</strong>
+          <div style={{ marginTop: 5 }}>{reason}</div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Update Modal ─────────────────────────────────────────────────────────────
+const UpdateModal: React.FC<{
+  item: FacultyActionItem;
+  onClose: () => void;
+  onSaved: () => void;
+}> = ({ item, onClose, onSaved }) => {
+  const [form, setForm] = useState<UpdateActionPayload>({
+    status: item.status,
+    assigned_faculty_name: item.assigned_faculty_name || '',
+    action_taken: item.action_taken || '',
+    faculty_notes: item.faculty_notes || '',
+    evidence_remarks: item.evidence_remarks || '',
+    follow_up_date: item.follow_up_date || '',
+    next_review_date: item.next_review_date || '',
+    updated_by_name: 'Faculty',
+    reason: '',
+  });
+  const [saving, setSaving] = useState(false);
+  const [escalating, setEscalating] = useState(false);
+  const [escalateTo, setEscalateTo] = useState('HOD');
+  const [escalateReason, setEscalateReason] = useState('');
+  const [showEscalate, setShowEscalate] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  const cfg = PRIORITY_CONFIG[item.priority] || PRIORITY_CONFIG.Low;
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await updateFacultyAction(item.id, form);
+      setMsg('✅ Saved successfully');
+      setTimeout(() => { onSaved(); onClose(); }, 800);
+    } catch { setMsg('❌ Save failed'); }
+    finally { setSaving(false); }
+  };
+
+  const handleEscalate = async () => {
+    setEscalating(true);
+    try {
+      await escalateAction(item.id, escalateTo, escalateReason, form.updated_by_name);
+      setMsg(`✅ Escalated to ${escalateTo}`);
+      setTimeout(() => { onSaved(); onClose(); }, 800);
+    } catch { setMsg('❌ Escalation failed'); }
+    finally { setEscalating(false); }
+  };
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 1000,
+      background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+    }} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div style={{
+        background: '#13131f', border: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: 20, width: '100%', maxWidth: 660, maxHeight: '90vh',
+        overflow: 'hidden', display: 'flex', flexDirection: 'column',
+        boxShadow: '0 30px 80px rgba(0,0,0,0.7)',
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.08)',
+          display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+          background: `linear-gradient(135deg, ${cfg.bg} 0%, rgba(13,13,31,0) 100%)`,
+        }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <PriorityBadge priority={item.priority} score={item.priority_score} reason={item.priority_score_reason} />
+              {item.is_escalated && (
+                <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: 'rgba(255,71,87,0.2)', color: '#ff4757', fontWeight: 700 }}>
+                  🔺 ESCALATED
+                </span>
+              )}
+            </div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: '#fff', marginTop: 8 }}>{item.student_name}</div>
+            <div style={{ fontSize: 12, color: '#888' }}>
+              {item.reg_no} · {item.department_code} · {item.year_level} ·&nbsp;
+              <span style={{ color: '#a29bfe' }}>@{item.leetcode_username}</span>
+            </div>
+            <div style={{ marginTop: 6, fontSize: 12, color: '#aaa', display: 'flex', gap: 16 }}>
+              <span>🧩 {item.total_solved} solved</span>
+              <span>⭐ {item.current_rating} rating</span>
+              <span>🏆 {item.contests_attended} contests</span>
+              <span>🕐 {item.last_active_days_ago}d ago</span>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', padding: 4 }}>
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Signal */}
+        <div style={{ padding: '12px 24px', background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4 }}>Signal / Reason</div>
+          <div style={{ fontSize: 13, color: '#e0e0e0', fontWeight: 600 }}>{item.signal_type}</div>
+          <div style={{ fontSize: 12, color: '#74b9ff', marginTop: 4, fontStyle: 'italic' }}>
+            💡 {item.recommended_action}
+          </div>
+        </div>
+
+        {/* Form */}
+        <div style={{ padding: '20px 24px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {/* Status + Assigned */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={labelStyle}>Status</label>
+              <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} style={selectStyle}>
+                {['Pending', 'In Progress', 'Monitoring', 'Completed', 'Resolved'].map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Assigned Faculty</label>
+              <input value={form.assigned_faculty_name} onChange={e => setForm(f => ({ ...f, assigned_faculty_name: e.target.value }))} style={inputStyle} placeholder="Dr. / Prof. Name" />
+            </div>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Action Taken</label>
+            <textarea value={form.action_taken} onChange={e => setForm(f => ({ ...f, action_taken: e.target.value }))} style={{ ...inputStyle, height: 70, resize: 'vertical' }} placeholder="Describe the action taken so far..." />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Faculty Notes</label>
+            <textarea value={form.faculty_notes} onChange={e => setForm(f => ({ ...f, faculty_notes: e.target.value }))} style={{ ...inputStyle, height: 70, resize: 'vertical' }} placeholder="Private notes for faculty reference..." />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Evidence Remarks</label>
+            <input value={form.evidence_remarks} onChange={e => setForm(f => ({ ...f, evidence_remarks: e.target.value }))} style={inputStyle} placeholder="e.g. Missed WC#515, no submission since Aug 10" />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={labelStyle}>Updated By</label>
+              <input value={form.updated_by_name} onChange={e => setForm(f => ({ ...f, updated_by_name: e.target.value }))} style={inputStyle} placeholder="Your name" />
+            </div>
+            <div>
+              <label style={labelStyle}>Follow-up Date</label>
+              <input type="date" value={form.follow_up_date || ''} onChange={e => setForm(f => ({ ...f, follow_up_date: e.target.value }))} style={inputStyle} />
+            </div>
+            <div>
+              <label style={labelStyle}>Next Review Date</label>
+              <input type="date" value={form.next_review_date || ''} onChange={e => setForm(f => ({ ...f, next_review_date: e.target.value }))} style={inputStyle} />
+            </div>
+          </div>
+
+          {/* Escalation */}
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 14 }}>
+            <button onClick={() => setShowEscalate(!showEscalate)} style={{ background: 'none', border: 'none', color: '#ff7f50', cursor: 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <ArrowUpRight size={14} /> {showEscalate ? 'Hide' : 'Escalate to HOD'}
+            </button>
+            {showEscalate && (
+              <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 10 }}>
+                  <div>
+                    <label style={labelStyle}>Escalate To</label>
+                    <input value={escalateTo} onChange={e => setEscalateTo(e.target.value)} style={inputStyle} placeholder="HOD / Dean" />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Escalation Reason</label>
+                    <input value={escalateReason} onChange={e => setEscalateReason(e.target.value)} style={inputStyle} placeholder="No improvement despite 2 interventions..." />
+                  </div>
+                </div>
+                <button onClick={handleEscalate} disabled={escalating} style={{ ...btnStyle, background: 'rgba(255,71,87,0.2)', border: '1px solid rgba(255,71,87,0.4)', color: '#ff4757', alignSelf: 'flex-start' }}>
+                  {escalating ? '⏳ Escalating...' : '🔺 Confirm Escalation'}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {msg && <div style={{ fontSize: 13, color: msg.startsWith('✅') ? '#7bed9f' : '#ff4757', fontWeight: 600 }}>{msg}</div>}
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+          <button onClick={onClose} style={{ ...btnStyle, background: 'rgba(255,255,255,0.06)', color: '#aaa' }}>Cancel</button>
+          <button onClick={handleSave} disabled={saving} style={{ ...btnStyle, background: 'linear-gradient(135deg,#6c63ff,#a29bfe)', color: '#fff', boxShadow: '0 4px 14px rgba(108,99,255,0.35)' }}>
+            {saving ? '⏳ Saving...' : <><Send size={14} /> Save Changes</>}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Timeline Drawer ──────────────────────────────────────────────────────────
+const TimelineDrawer: React.FC<{ actionId: number; studentName: string; onClose: () => void }> = ({ actionId, studentName, onClose }) => {
+  const [events, setEvents] = useState<ActionTimelineEvent[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    getActionTimeline(actionId).then(e => { setEvents(e); setLoading(false); }).catch(() => setLoading(false));
+  }, [actionId]);
 
-  const loadData = async () => {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 1001, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
+      display: 'flex', justifyContent: 'flex-end',
+    }} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div style={{
+        width: 420, background: '#13131f', borderLeft: '1px solid rgba(255,255,255,0.1)',
+        height: '100%', overflowY: 'auto', padding: '28px 24px',
+        boxShadow: '-20px 0 60px rgba(0,0,0,0.5)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>Intervention Timeline</div>
+            <div style={{ fontSize: 12, color: '#888' }}>{studentName}</div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer' }}><X size={20} /></button>
+        </div>
+
+        {loading ? (
+          <div style={{ color: '#888', textAlign: 'center', marginTop: 40 }}>Loading timeline...</div>
+        ) : events.length === 0 ? (
+          <div style={{ color: '#555', textAlign: 'center', marginTop: 40 }}>No events recorded yet.</div>
+        ) : (
+          <div style={{ position: 'relative' }}>
+            <div style={{ position: 'absolute', left: 16, top: 8, bottom: 8, width: 2, background: 'rgba(255,255,255,0.06)' }} />
+            {events.map((ev, i) => {
+              const color = EVENT_COLORS[ev.event_type] || '#888';
+              return (
+                <div key={ev.id} style={{ display: 'flex', gap: 16, marginBottom: 20, position: 'relative' }}>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: '50%', flexShrink: 0, zIndex: 1,
+                    background: `rgba(${hexToRgb(color)},0.18)`, border: `2px solid ${color}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 11, color,
+                  }}>
+                    {i + 1}
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '10px 14px', flex: 1 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color, marginBottom: 3 }}>
+                      {ev.event_type.replace(/_/g, ' ')}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#888' }}>by {ev.user_name} · {ev.timestamp}</div>
+                    {(ev.previous_value || ev.new_value) && (
+                      <div style={{ fontSize: 11, color: '#aaa', marginTop: 5 }}>
+                        {ev.previous_value && <span style={{ textDecoration: 'line-through', opacity: 0.6 }}>{ev.previous_value}</span>}
+                        {ev.previous_value && ev.new_value && ' → '}
+                        {ev.new_value && <span style={{ color: '#74b9ff' }}>{ev.new_value}</span>}
+                      </div>
+                    )}
+                    {ev.reason && <div style={{ fontSize: 11, color: '#666', marginTop: 4, fontStyle: 'italic' }}>{ev.reason}</div>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const hexToRgb = (hex: string) => {
+  const res = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return res ? `${parseInt(res[1], 16)},${parseInt(res[2], 16)},${parseInt(res[3], 16)}` : '255,255,255';
+};
+
+const labelStyle: React.CSSProperties = { fontSize: 11, color: '#888', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 5 };
+const inputStyle: React.CSSProperties = { width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '8px 12px', color: '#e0e0e0', fontSize: 13, outline: 'none', boxSizing: 'border-box' };
+const selectStyle: React.CSSProperties = { ...inputStyle, appearance: 'none' };
+const btnStyle: React.CSSProperties = { padding: '9px 18px', borderRadius: 10, border: '1px solid transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all 0.2s ease' };
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+export const FacultyActionCenter: React.FC = () => {
+  const [kpis, setKpis] = useState<FacultyActionKPIs | null>(null);
+  const [items, setItems] = useState<FacultyActionItem[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState('');
+
+  // Filters
+  const [filterPriority, setFilterPriority] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterYear, setFilterYear] = useState('');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
+
+  // Sort
+  const [sortBy, setSortBy] = useState('priority_score');
+  const [sortDir, setSortDir] = useState('desc');
+
+  // Active KPI filter
+  const [kpiFilter, setKpiFilter] = useState('');
+
+  // Modals
+  const [updateItem, setUpdateItem] = useState<FacultyActionItem | null>(null);
+  const [timelineItem, setTimelineItem] = useState<{ id: number; name: string } | null>(null);
+
+  // Row expand
+  const [expandedRow, setExpandedRow] = useState<number | null>(null);
+
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [att, queue, eff] = await Promise.all([
-        getFacultyAttentionItems(),
-        getFacultyActionQueue(undefined, statusFilter),
-        getInterventionEffectiveness()
+      const params: Record<string, any> = {
+        page, page_size: PAGE_SIZE,
+        sort_by: sortBy, sort_dir: sortDir,
+      };
+      if (filterPriority) params.priority = filterPriority;
+      if (filterStatus) params.status = filterStatus;
+      if (filterYear) params.year_level = filterYear;
+      if (search.trim()) params.search = search.trim();
+
+      const [kpiRes, listRes] = await Promise.all([
+        getFacultyActionKPIs(),
+        getFacultyActionsList(params),
       ]);
-      setAttentionData(att);
-      setActionQueue(queue);
-      setEffectiveness(eff);
+      setKpis(kpiRes);
+      setItems(listRes.items);
+      setTotal(listRes.total);
     } catch (err) {
-      console.error("Failed to load faculty action center data:", err);
+      console.error('Faculty Action Center load failed:', err);
     } finally {
       setLoading(false);
     }
+  }, [page, sortBy, sortDir, filterPriority, filterStatus, filterYear, search]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const handleKPIClick = (priority: string) => {
+    setKpiFilter(prev => {
+      const next = prev === priority ? '' : priority;
+      setFilterPriority(next);
+      setPage(1);
+      return next;
+    });
   };
 
-  const handleCreateIntervention = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedStudent) return;
+  const handleStatusKPIClick = (status: string) => {
+    setKpiFilter(prev => {
+      const next = prev === status ? '' : status;
+      setFilterStatus(next);
+      setPage(1);
+      return next;
+    });
+  };
 
-    setIsSubmitting(true);
+  const handleSync = async () => {
+    setSyncing(true); setSyncMsg('');
     try {
-      const topics = assignedTopicInput.split(',').map(t => t.trim()).filter(Boolean);
-      await createFacultyIntervention({
-        student_id: selectedStudent.id,
-        title: interventionTitle,
-        reason: interventionReason,
-        assigned_topics: topics,
-        priority: priorityInput
-      });
-
-      setShowInterventionModal(false);
-      setSelectedStudent(null);
+      const res = await triggerSignalDetection();
+      setSyncMsg(`✅ ${res.new_signals_created} new signals, ${res.existing_signals_updated} updated`);
       await loadData();
-    } catch (err) {
-      console.error("Intervention creation failed:", err);
+    } catch {
+      setSyncMsg('❌ Sync failed');
     } finally {
-      setIsSubmitting(false);
+      setSyncing(false);
     }
   };
 
-  const handleUpdateStatus = async (queueId: number, newStatus: string) => {
-    try {
-      await updateInterventionStatus(queueId, newStatus, `Faculty marked as ${newStatus}`);
-      await loadData();
-    } catch (err) {
-      console.error("Failed to update status:", err);
-    }
+  const handleSort = (col: string) => {
+    if (sortBy === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortBy(col); setSortDir('desc'); }
   };
 
-  const filteredQueue = actionQueue.filter(item => {
-    const matchesSearch = item.student_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.reg_no.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'ALL' || item.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const SortIcon = ({ col }: { col: string }) =>
+    sortBy === col ? (sortDir === 'desc' ? <ChevronDown size={12} /> : <ChevronUp size={12} />) : null;
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
-    <div className="space-y-6">
-
-      {/* ── HEADER (RICH GLOWING INSTITUTIONAL GRADIENT) ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-2xl border border-brand-500/30">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
-          <div className="space-y-2.5 max-w-2xl">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
-              <Zap className="w-3.5 h-3.5 text-amber-400" />
-              <span>FACULTY ACTION CENTER & MENTORING HUB</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white">
-              Faculty Action Center & <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Mentoring Hub</span>
+    <div style={{ minHeight: '100vh', background: '#0d0d1a', color: '#e0e0e0', fontFamily: "'Inter', sans-serif", padding: '28px 32px' }}>
+      {/* Header */}
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: 26, fontWeight: 800, background: 'linear-gradient(135deg,#a29bfe,#74b9ff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              Faculty Action Center
             </h1>
-            <p className="text-xs md:text-sm text-gray-300 font-bold tracking-wide">
-              "What Needs My Attention?" Engine • Priority Action Queue • Intervention Lifecycle
+            <p style={{ margin: '6px 0 0', color: '#888', fontSize: 13 }}>
+              {kpis?.subtitle || 'Real-time student intervention & mentoring management'}
             </p>
           </div>
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={loadData}
-              disabled={loading}
-              className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 disabled:opacity-50 text-white rounded-2xl text-xs font-bold shadow-lg shadow-brand-600/30 transition-all cursor-pointer"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              <span>{loading ? 'Refreshing...' : 'Refresh Queue'}</span>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            {syncMsg && <span style={{ fontSize: 12, color: syncMsg.startsWith('✅') ? '#7bed9f' : '#ff4757' }}>{syncMsg}</span>}
+            <button onClick={handleSync} disabled={syncing} style={{ ...btnStyle, background: 'rgba(116,185,255,0.12)', border: '1px solid rgba(116,185,255,0.3)', color: '#74b9ff' }}>
+              <RefreshCw size={14} style={{ animation: syncing ? 'spin 1s linear infinite' : 'none' }} />
+              {syncing ? 'Syncing...' : 'Force Sync'}
+            </button>
+            <button onClick={loadData} style={{ ...btnStyle, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#aaa' }}>
+              <RotateCcw size={14} /> Refresh
             </button>
           </div>
         </div>
       </div>
 
-      {/* ── 1. COLLEGE-WIDE INTERVENTION EFFECTIVENESS MATRIX ── */}
-      {effectiveness && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-navy-900 rounded-3xl p-5 border border-gray-200 dark:border-gray-800 shadow-xl text-center">
-            <span className="text-[10px] font-black uppercase text-gray-400 block">Total Interventions</span>
-            <span className="text-2xl font-black text-gray-900 dark:text-white mt-1 block">{effectiveness.total_interventions}</span>
-          </div>
-
-          <div className="bg-white dark:bg-navy-900 rounded-3xl p-5 border border-gray-200 dark:border-gray-800 shadow-xl text-center">
-            <span className="text-[10px] font-black uppercase text-gray-400 block">Avg Rating Improvement</span>
-            <span className="text-2xl font-black text-emerald-500 mt-1 block">{effectiveness.avg_rating_delta} pts</span>
-          </div>
-
-          <div className="bg-white dark:bg-navy-900 rounded-3xl p-5 border border-gray-200 dark:border-gray-800 shadow-xl text-center">
-            <span className="text-[10px] font-black uppercase text-gray-400 block">Solving Activity Boost</span>
-            <span className="text-2xl font-black text-brand-500 mt-1 block">{effectiveness.avg_activity_boost_pct}</span>
-          </div>
-
-          <div className="bg-white dark:bg-navy-900 rounded-3xl p-5 border border-gray-200 dark:border-gray-800 shadow-xl text-center">
-            <span className="text-[10px] font-black uppercase text-gray-400 block">Resolution Success Rate</span>
-            <span className="text-2xl font-black text-purple-500 mt-1 block">{effectiveness.overall_success_rate_pct}%</span>
-          </div>
+      {/* KPI Cards */}
+      {kpis && (
+        <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
+          <KPICard label="Critical" value={kpis.critical_count} color="255,71,87" icon={<ShieldAlert size={16} />}
+            active={kpiFilter === 'Critical'} onClick={() => handleKPIClick('Critical')} subtitle="Immediate action" />
+          <KPICard label="High" value={kpis.high_count} color="255,127,80" icon={<AlertTriangle size={16} />}
+            active={kpiFilter === 'High'} onClick={() => handleKPIClick('High')} subtitle="Urgent review" />
+          <KPICard label="Monitoring" value={kpis.monitoring_count} color="255,211,42" icon={<Activity size={16} />}
+            active={kpiFilter === 'Monitoring'} onClick={() => handleStatusKPIClick('Monitoring')} />
+          <KPICard label="In Progress" value={kpis.in_progress_count} color="116,185,255" icon={<Zap size={16} />}
+            active={kpiFilter === 'In Progress'} onClick={() => handleStatusKPIClick('In Progress')} />
+          <KPICard label="Completed" value={kpis.completed_count} color="0,210,211" icon={<CheckCircle2 size={16} />}
+            active={kpiFilter === 'Completed'} onClick={() => handleStatusKPIClick('Completed')} />
+          <KPICard label="Resolved" value={kpis.resolved_count} color="123,237,159" icon={<CheckCircle2 size={16} />}
+            active={kpiFilter === 'Resolved'} onClick={() => handleStatusKPIClick('Resolved')} />
+          <KPICard label="Overdue" value={kpis.overdue_count} color="253,121,168" icon={<Bell size={16} />}
+            active={false} onClick={() => {}} subtitle="Follow-up missed" />
+          <KPICard label="Escalated" value={kpis.escalated_count} color="162,155,254" icon={<ArrowUpRight size={16} />}
+            active={false} onClick={() => {}} />
         </div>
       )}
 
-      {/* ── 2. "WHAT NEEDS MY ATTENTION?" ENGINE CAROUSEL ── */}
-      {attentionData && (
-        <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border border-gray-200 dark:border-gray-800 shadow-xl space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-2.5 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400">
-                <AlertTriangle className="w-6 h-6 stroke-[2.5]" />
-              </div>
-              <div>
-                <h2 className="text-lg font-black text-gray-900 dark:text-white">"What Needs My Attention?" Engine</h2>
-                <p className="text-xs text-gray-500 font-bold">
-                  {attentionData.total_attention_items} Priority Items Requiring Faculty Review
-                </p>
-              </div>
-            </div>
+      {/* Filters */}
+      <div style={{
+        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+        borderRadius: 14, padding: '14px 18px', marginBottom: 20,
+        display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '1 1 220px' }}>
+          <Search size={14} color="#666" />
+          <input
+            value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
+            placeholder="Search by name, reg no, or username..."
+            style={{ ...inputStyle, border: 'none', background: 'none', flex: 1 }}
+          />
+        </div>
+        <select value={filterPriority} onChange={e => { setFilterPriority(e.target.value); setKpiFilter(e.target.value); setPage(1); }} style={{ ...selectStyle, width: 130 }}>
+          <option value="">All Priority</option>
+          {['Critical', 'High', 'Medium', 'Low'].map(p => <option key={p} value={p}>{p}</option>)}
+        </select>
+        <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }} style={{ ...selectStyle, width: 140 }}>
+          <option value="">All Status</option>
+          {['Pending', 'In Progress', 'Monitoring', 'Completed', 'Resolved'].map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <select value={filterYear} onChange={e => { setFilterYear(e.target.value); setPage(1); }} style={{ ...selectStyle, width: 120 }}>
+          <option value="">All Years</option>
+          {['II Year', 'III Year', 'IV Year'].map(y => <option key={y} value={y}>{y}</option>)}
+        </select>
+        {(filterPriority || filterStatus || filterYear || search) && (
+          <button onClick={() => { setFilterPriority(''); setFilterStatus(''); setFilterYear(''); setSearch(''); setKpiFilter(''); setPage(1); }}
+            style={{ ...btnStyle, background: 'rgba(255,71,87,0.1)', border: '1px solid rgba(255,71,87,0.25)', color: '#ff4757', padding: '7px 12px', fontSize: 12 }}>
+            <X size={12} /> Clear
+          </button>
+        )}
+        <span style={{ marginLeft: 'auto', fontSize: 12, color: '#555' }}>{total} records</span>
+      </div>
 
-            <div className="hidden sm:flex items-center space-x-2 text-xs font-bold text-gray-500">
-              <span className="px-2.5 py-1 rounded-xl bg-rose-500/10 text-rose-600 border border-rose-500/20">
-                {attentionData.performance_drop_count} Perf Drops
-              </span>
-              <span className="px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-600 border border-amber-500/20">
-                {attentionData.inactive_count} Inactive
-              </span>
-              <span className="px-2.5 py-1 rounded-xl bg-purple-500/10 text-purple-600 border border-purple-500/20">
-                {attentionData.silent_disengaged_count} Silent Drops
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
-            {attentionData.items.slice(0, 6).map((item: AttentionItem) => (
-              <div 
-                key={item.id}
-                className="p-5 rounded-2xl bg-gray-50 dark:bg-navy-950/60 border border-gray-200 dark:border-navy-800 flex flex-col justify-between space-y-3 hover:border-brand-500/40 transition-all shadow-sm"
-              >
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className={`text-[10px] font-black px-2 py-0.5 rounded ${
-                      item.severity === 'CRITICAL' ? 'bg-rose-500/10 text-rose-600 border border-rose-500/20' : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
-                    }`}>
-                      {item.severity}
-                    </span>
-                    <span className="text-xs font-bold text-gray-400">{item.dept_code}</span>
-                  </div>
-
-                  <h3 className="text-sm font-black text-gray-900 dark:text-white leading-tight">
-                    {item.title}
-                  </h3>
-
-                  <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
-                    {item.reason}
-                  </p>
-                </div>
-
-                <div className="pt-3 border-t border-gray-200 dark:border-navy-800 flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-brand-600 dark:text-brand-400">
-                    {item.action_type}
-                  </span>
-
-                  <button
-                    onClick={() => {
-                      setSelectedStudent({ id: item.student_id, name: item.student_name });
-                      setShowInterventionModal(true);
-                    }}
-                    className="px-3 py-1.5 rounded-xl bg-brand-600 text-white text-xs font-bold hover:bg-brand-700 transition-colors flex items-center space-x-1 cursor-pointer"
-                  >
-                    <span>Intervene</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+      {/* Table */}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: 60, color: '#555' }}>
+          <RefreshCw size={24} style={{ animation: 'spin 1s linear infinite', opacity: 0.5 }} />
+          <div style={{ marginTop: 12 }}>Loading action queue...</div>
+        </div>
+      ) : items.length === 0 ? (
+        <div style={{
+          textAlign: 'center', padding: '80px 20px',
+          background: 'rgba(123,237,159,0.05)', border: '1px solid rgba(123,237,159,0.15)',
+          borderRadius: 20, color: '#7bed9f',
+        }}>
+          <CheckCircle2 size={48} style={{ opacity: 0.6, marginBottom: 16 }} />
+          <div style={{ fontSize: 20, fontWeight: 700 }}>🎉 All Clear</div>
+          <div style={{ fontSize: 14, color: '#888', marginTop: 8 }}>No students currently require faculty intervention.</div>
+        </div>
+      ) : (
+        <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden' }}>
+          {/* Table Header */}
+          <div style={{
+            display: 'grid', gridTemplateColumns: '200px 140px 90px 160px 120px 130px 100px 110px',
+            padding: '10px 16px', background: 'rgba(255,255,255,0.04)',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            fontSize: 11, color: '#666', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6,
+          }}>
+            {[['Student', 'student_name'], ['Priority', 'priority_score'], ['Score', 'priority_score'], ['Signal', ''], ['Status', 'status'], ['Faculty', ''], ['Due Date', 'due_date'], ['Actions', '']].map(([label, col]) => (
+              <div key={label} onClick={() => col && handleSort(col)} style={{ cursor: col ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 4, userSelect: 'none' }}>
+                {label} {col && <SortIcon col={col} />}
               </div>
             ))}
           </div>
-        </div>
-      )}
 
-      {/* ── 3. TASK-BASED FACULTY ACTION QUEUE ── */}
-      <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border border-gray-200 dark:border-gray-800 shadow-xl space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-black text-gray-900 dark:text-white">Task-Based Faculty Action Queue</h2>
-            <p className="text-xs text-gray-500 font-bold">Track, Manage & Update Student Intervention Lifecycles</p>
-          </div>
+          {/* Rows */}
+          {items.map((item) => {
+            const statusCfg = STATUS_CONFIG[item.status] || { color: '#aaa', bg: 'rgba(170,170,170,0.1)' };
+            const isExpanded = expandedRow === item.id;
+            return (
+              <React.Fragment key={item.id}>
+                <div
+                  onClick={() => setExpandedRow(isExpanded ? null : item.id)}
+                  style={{
+                    display: 'grid', gridTemplateColumns: '200px 140px 90px 160px 120px 130px 100px 110px',
+                    padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)',
+                    cursor: 'pointer', transition: 'background 0.15s',
+                    background: isExpanded ? 'rgba(162,155,254,0.06)' : 'transparent',
+                  }}
+                  onMouseEnter={e => !isExpanded && ((e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)')}
+                  onMouseLeave={e => !isExpanded && ((e.currentTarget as HTMLElement).style.background = 'transparent')}
+                >
+                  {/* Student */}
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#e0e0e0' }}>{item.student_name}</div>
+                    <div style={{ fontSize: 11, color: '#666' }}>{item.reg_no} · {item.department_code} · {item.year_level}</div>
+                  </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Search */}
-            <div className="relative">
-              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
-              <input
-                type="text"
-                placeholder="Search student..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="pl-9 pr-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-navy-950 text-xs font-bold text-gray-900 dark:text-white outline-none focus:border-brand-500"
-              />
-            </div>
+                  {/* Priority Badge */}
+                  <div style={{ display: 'flex', alignItems: 'center' }} onClick={e => e.stopPropagation()}>
+                    <PriorityBadge priority={item.priority} score={item.priority_score} reason={item.priority_score_reason} />
+                  </div>
 
-            {/* Status Filter */}
-            <select
-              value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value)}
-              className="px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-navy-950 text-xs font-bold text-gray-900 dark:text-white outline-none focus:border-brand-500"
-            >
-              <option value="ALL">All Statuses</option>
-              <option value="Pending">Pending</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Monitoring">Monitoring</option>
-              <option value="Completed">Completed</option>
-              <option value="Resolved">Resolved</option>
-            </select>
-          </div>
-        </div>
+                  {/* Stats */}
+                  <div style={{ fontSize: 11, color: '#888' }}>
+                    <div>⭐ {item.current_rating}</div>
+                    <div>🧩 {item.total_solved}</div>
+                  </div>
 
-        {/* Action Queue Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[700px]">
-            <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-800 text-[11px] font-black text-gray-400 uppercase tracking-wider bg-gray-50/50 dark:bg-navy-950/50">
-                <th className="p-3.5">Priority</th>
-                <th className="p-3.5">Student</th>
-                <th className="p-3.5">Reason / Signal</th>
-                <th className="p-3.5">Recommended Action</th>
-                <th className="p-3.5">Status</th>
-                <th className="p-3.5 text-right">Update Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800 text-xs font-semibold">
-              {filteredQueue.map(item => (
-                <tr key={item.id} className="hover:bg-gray-50/80 dark:hover:bg-navy-800/40 transition-colors">
-                  <td className="p-3.5">
-                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black ${
-                      item.priority === 'High' ? 'bg-rose-500/10 text-rose-600 border border-rose-500/20' : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
-                    }`}>
-                      {item.priority}
-                    </span>
-                  </td>
-                  <td className="p-3.5">
-                    <div className="font-extrabold text-gray-900 dark:text-white">{item.student_name}</div>
-                    <div className="text-[10px] text-gray-400">{item.reg_no} • {item.dept_code}</div>
-                  </td>
-                  <td className="p-3.5 text-gray-600 dark:text-gray-300 max-w-[200px]">
-                    {item.reason}
-                  </td>
-                  <td className="p-3.5 text-gray-700 dark:text-gray-200 font-bold max-w-[220px]">
-                    {item.recommended_action}
-                  </td>
-                  <td className="p-3.5">
-                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black ${
-                      item.status === 'Resolved' || item.status === 'Completed'
-                        ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
-                        : item.status === 'In Progress'
-                        ? 'bg-brand-500/10 text-brand-600 border border-brand-500/20'
-                        : 'bg-gray-100 dark:bg-navy-800 text-gray-500'
-                    }`}>
+                  {/* Signal */}
+                  <div>
+                    <div style={{ fontSize: 11, color: '#aaa', lineHeight: 1.4 }}>{item.signal_type}</div>
+                    {item.is_escalated && <span style={{ fontSize: 10, color: '#ff4757', fontWeight: 700 }}>🔺 Escalated</span>}
+                    {item.is_overdue_followup && <span style={{ fontSize: 10, color: '#fd79a8', fontWeight: 700, marginLeft: 4 }}>⏰ {item.days_overdue}d overdue</span>}
+                  </div>
+
+                  {/* Status */}
+                  <div>
+                    <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 20, background: statusCfg.bg, color: statusCfg.color, fontWeight: 600 }}>
                       {item.status}
                     </span>
-                  </td>
-                  <td className="p-3.5 text-right">
-                    <select
-                      value={item.status}
-                      onChange={e => handleUpdateStatus(item.id, e.target.value)}
-                      className="px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-800 text-[11px] font-bold text-gray-800 dark:text-gray-200 outline-none focus:border-brand-500"
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="In Progress">In Progress</option>
-                      <option value="Monitoring">Monitoring</option>
-                      <option value="Completed">Completed</option>
-                      <option value="Resolved">Resolved</option>
-                    </select>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                  </div>
 
-      {/* ── 4. CREATE INTERVENTION MODAL ── */}
-      {showInterventionModal && selectedStudent && (
-        <div className="modal-overlay-responsive animate-fade-in">
-          <div className="modal-container-responsive max-w-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-2xl p-6 space-y-4">
-            <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center space-x-2">
-              <Zap className="w-5 h-5 text-brand-500" />
-              <span>Create Faculty Intervention: {selectedStudent.name}</span>
-            </h3>
+                  {/* Faculty */}
+                  <div style={{ fontSize: 11, color: item.assigned_faculty_name ? '#74b9ff' : '#444' }}>
+                    {item.assigned_faculty_name || '— Unassigned'}
+                  </div>
 
-            <form onSubmit={handleCreateIntervention} className="space-y-4 text-xs font-bold text-gray-700 dark:text-gray-300">
-              <div>
-                <label className="block mb-1">Intervention Title</label>
-                <input
-                  type="text"
-                  value={interventionTitle}
-                  onChange={e => setInterventionTitle(e.target.value)}
-                  required
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-navy-950 text-gray-900 dark:text-white outline-none focus:border-brand-500"
-                />
-              </div>
+                  {/* Due Date */}
+                  <div style={{ fontSize: 11, color: '#888' }}>
+                    {item.due_date || '—'}
+                  </div>
 
-              <div>
-                <label className="block mb-1">Intervention Reason / Signal</label>
-                <textarea
-                  value={interventionReason}
-                  onChange={e => setInterventionReason(e.target.value)}
-                  rows={2}
-                  required
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-navy-950 text-gray-900 dark:text-white outline-none focus:border-brand-500"
-                />
-              </div>
+                  {/* Actions */}
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }} onClick={e => e.stopPropagation()}>
+                    <button
+                      onClick={() => setUpdateItem(item)}
+                      title="Update"
+                      style={{ background: 'rgba(162,155,254,0.15)', border: '1px solid rgba(162,155,254,0.3)', borderRadius: 8, padding: '5px 8px', cursor: 'pointer', color: '#a29bfe', display: 'flex', alignItems: 'center' }}>
+                      <FileText size={13} />
+                    </button>
+                    <button
+                      onClick={() => setTimelineItem({ id: item.id, name: item.student_name })}
+                      title="Timeline"
+                      style={{ background: 'rgba(116,185,255,0.12)', border: '1px solid rgba(116,185,255,0.25)', borderRadius: 8, padding: '5px 8px', cursor: 'pointer', color: '#74b9ff', display: 'flex', alignItems: 'center' }}>
+                      <Eye size={13} />
+                    </button>
+                  </div>
+                </div>
 
-              <div>
-                <label className="block mb-1">Assigned DSA Topics (Comma Separated)</label>
-                <input
-                  type="text"
-                  value={assignedTopicInput}
-                  onChange={e => setAssignedTopicInput(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-navy-950 text-gray-900 dark:text-white outline-none focus:border-brand-500"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-1">Priority</label>
-                <select
-                  value={priorityInput}
-                  onChange={e => setPriorityInput(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-navy-950 text-gray-900 dark:text-white outline-none focus:border-brand-500"
-                >
-                  <option value="High">High Priority</option>
-                  <option value="Medium">Medium Priority</option>
-                  <option value="Low">Low Priority</option>
-                </select>
-              </div>
-
-              <div className="flex items-center justify-end space-x-3 pt-3">
-                <button
-                  type="button"
-                  onClick={() => setShowInterventionModal(false)}
-                  className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-4 py-2 rounded-xl bg-brand-600 text-white font-black shadow-md hover:bg-brand-700 transition-colors disabled:opacity-50"
-                >
-                  {isSubmitting ? 'Creating...' : 'Assign Intervention'}
-                </button>
-              </div>
-            </form>
-          </div>
+                {/* Expanded row */}
+                {isExpanded && (
+                  <div style={{ padding: '16px 24px', background: 'rgba(162,155,254,0.04)', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+                    <div>
+                      <div style={{ fontSize: 11, color: '#666', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>Recommended Action</div>
+                      <div style={{ fontSize: 12, color: '#74b9ff', fontStyle: 'italic' }}>{item.recommended_action}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: '#666', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>Action Taken</div>
+                      <div style={{ fontSize: 12, color: '#aaa' }}>{item.action_taken || '—'}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: '#666', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>Faculty Notes</div>
+                      <div style={{ fontSize: 12, color: '#aaa' }}>{item.faculty_notes || '—'}</div>
+                    </div>
+                  </div>
+                )}
+              </React.Fragment>
+            );
+          })}
         </div>
       )}
 
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 20 }}>
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ ...btnStyle, background: 'rgba(255,255,255,0.05)', color: page === 1 ? '#333' : '#aaa', border: '1px solid rgba(255,255,255,0.08)' }}>← Prev</button>
+          <span style={{ padding: '9px 16px', fontSize: 13, color: '#888' }}>Page {page} / {totalPages}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ ...btnStyle, background: 'rgba(255,255,255,0.05)', color: page === totalPages ? '#333' : '#aaa', border: '1px solid rgba(255,255,255,0.08)' }}>Next →</button>
+        </div>
+      )}
+
+      {/* Modals */}
+      {updateItem && (
+        <UpdateModal item={updateItem} onClose={() => setUpdateItem(null)} onSaved={loadData} />
+      )}
+      {timelineItem && (
+        <TimelineDrawer actionId={timelineItem.id} studentName={timelineItem.name} onClose={() => setTimelineItem(null)} />
+      )}
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        * { box-sizing: border-box; }
+        select option { background: #1a1a2e; color: #e0e0e0; }
+      `}</style>
     </div>
   );
 };
+
+export default FacultyActionCenter;

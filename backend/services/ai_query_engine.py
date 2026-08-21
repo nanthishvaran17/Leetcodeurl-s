@@ -8,7 +8,7 @@ from typing import Dict, Any, List
 from sqlalchemy.orm import Session
 from backend.models import Student, Department, Section, WeeklySession, StudentRiskProfile
 from backend.services.hod_analytics_engine import calculate_department_health_score, get_institutional_benchmarks
-from backend.services.faculty_action_engine import get_what_needs_attention_items
+from backend.services.faculty_action_engine import get_faculty_actions_list, get_faculty_kpis
 
 def answer_ai_department_query(db: Session, query_text: str, user_role: str = "HOD") -> Dict[str, Any]:
     """
@@ -26,9 +26,11 @@ def answer_ai_department_query(db: Session, query_text: str, user_role: str = "H
 
     # Query 1: Which students need attention?
     if "attention" in q_lower or "at risk" in q_lower or "at-risk" in q_lower or "critical" in q_lower:
-        attention = get_what_needs_attention_items(db)
-        items = attention.get("items", [])
-        if not items:
+        kpis = get_faculty_kpis(db)
+        items_result = get_faculty_actions_list(db, priority="Critical", limit=5)
+        items = items_result.get("items", [])
+        immediate = kpis.get("immediate_attention_count", 0)
+        if not items and immediate == 0:
             return {
                 "query": query_text,
                 "answer": "No students currently require urgent intervention. All active students are maintaining baseline activity.",
@@ -36,16 +38,16 @@ def answer_ai_department_query(db: Session, query_text: str, user_role: str = "H
                 "traceable_metrics": ["Verified zero active critical risk alerts"]
             }
 
-        names = [f"{it['student_name']} ({it['dept_code']} - {it['reason']})" for it in items[:5]]
-        answer_str = f"Currently, {attention['total_attention_items']} students require attention. Top priority students:\n• " + "\n• ".join(names)
+        names = [f"{it['student_name']} ({it.get('department_code','?')} — {it['signal_type']})" for it in items[:5]]
+        answer_str = f"Currently, {immediate} students require immediate attention. Top critical signals:\n• " + "\n• ".join(names)
         return {
             "query": query_text,
             "answer": answer_str,
             "data_confidence": "HIGH",
             "traceable_metrics": [
-                f"Total attention items: {attention['total_attention_items']}",
-                f"Performance drops: {attention['performance_drop_count']}",
-                f"Silent disengaged: {attention['silent_disengaged_count']}"
+                f"Critical: {kpis.get('critical_count', 0)}",
+                f"High Priority: {kpis.get('high_count', 0)}",
+                f"Overdue follow-ups: {kpis.get('overdue_count', 0)}"
             ]
         }
 
