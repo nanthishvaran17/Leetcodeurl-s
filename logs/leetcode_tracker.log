@@ -68789,3 +68789,294 @@ WHERE email_dispatch_logs.status IN (?, ?)
 [2026-08-21 19:50:11,801] [INFO] [leetcode_tracker]: [OTP_RECORD_FOUND] Found OTP record req_id=req_9912bb39aefd44a1 used=False attempts=0
 [2026-08-21 19:50:11,801] [INFO] [leetcode_tracker]: [OTP_HASH_MATCH] OTP hash match confirmed for req_id=req_9912bb39aefd44a1
 [2026-08-21 19:50:11,806] [INFO] [leetcode_tracker]: [OTP_VERIFICATION_SUCCESS] OTP transaction completed successfully for req_id=req_9912bb39aefd44a1
+[2026-08-21 19:50:12,865] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:50:12,873] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:50:24,842] [INFO] [leetcode_tracker]: [OTP_REQUEST_CREATED] Created OTP transaction record req_id=req_9fd91daea9624368 for email_hash=1a96b3c6
+[2026-08-21 19:50:24,843] [INFO] [leetcode_tracker]: [OTP_VERIFICATION_REQUESTED] Verifying OTP for email_hash=1a96b3c6 request_id=req_9fd91daea9624368
+[2026-08-21 19:50:24,844] [INFO] [leetcode_tracker]: [OTP_RECORD_FOUND] Found OTP record req_id=req_9fd91daea9624368 used=False attempts=0
+[2026-08-21 19:50:24,844] [INFO] [leetcode_tracker]: [OTP_HASH_MATCH] OTP hash match confirmed for req_id=req_9fd91daea9624368
+[2026-08-21 19:50:24,848] [INFO] [leetcode_tracker]: [OTP_VERIFICATION_SUCCESS] OTP transaction completed successfully for req_id=req_9fd91daea9624368
+[2026-08-21 19:50:24,848] [INFO] [leetcode_tracker]: [OTP_VERIFICATION_REQUESTED] Verifying OTP for email_hash=1a96b3c6 request_id=req_9fd91daea9624368
+[2026-08-21 19:50:24,849] [INFO] [leetcode_tracker]: [OTP_RECORD_FOUND] Found OTP record req_id=req_9fd91daea9624368 used=True attempts=0
+[2026-08-21 19:50:24,849] [WARNING] [leetcode_tracker]: [OTP_ALREADY_USED] OTP record req_id=req_9fd91daea9624368 has already been consumed.
+[2026-08-21 19:50:24,862] [INFO] [leetcode_tracker]: [OTP_REQUEST_CREATED] Created OTP transaction record req_id=req_d722418c0c454627 for email_hash=48abec74
+[2026-08-21 19:50:24,863] [INFO] [leetcode_tracker]: [OTP_VERIFICATION_REQUESTED] Verifying OTP for email_hash=48abec74 request_id=req_d722418c0c454627
+[2026-08-21 19:50:24,863] [INFO] [leetcode_tracker]: [OTP_RECORD_FOUND] Found OTP record req_id=req_d722418c0c454627 used=False attempts=0
+[2026-08-21 19:50:24,865] [WARNING] [leetcode_tracker]: [OTP_HASH_MISMATCH] OTP hash mismatch for req_id=req_d722418c0c454627 attempt=1
+[2026-08-21 19:50:24,865] [INFO] [leetcode_tracker]: [OTP_VERIFICATION_REQUESTED] Verifying OTP for email_hash=48abec74 request_id=req_d722418c0c454627
+[2026-08-21 19:50:24,865] [INFO] [leetcode_tracker]: [OTP_RECORD_FOUND] Found OTP record req_id=req_d722418c0c454627 used=False attempts=1
+[2026-08-21 19:50:24,866] [WARNING] [leetcode_tracker]: [OTP_HASH_MISMATCH] OTP hash mismatch for req_id=req_d722418c0c454627 attempt=2
+[2026-08-21 19:50:24,867] [INFO] [leetcode_tracker]: [OTP_VERIFICATION_REQUESTED] Verifying OTP for email_hash=48abec74 request_id=req_d722418c0c454627
+[2026-08-21 19:50:24,867] [INFO] [leetcode_tracker]: [OTP_RECORD_FOUND] Found OTP record req_id=req_d722418c0c454627 used=False attempts=2
+[2026-08-21 19:50:24,868] [WARNING] [leetcode_tracker]: [OTP_HASH_MISMATCH] OTP hash mismatch for req_id=req_d722418c0c454627 attempt=3
+[2026-08-21 19:50:24,869] [INFO] [leetcode_tracker]: [OTP_VERIFICATION_REQUESTED] Verifying OTP for email_hash=48abec74 request_id=req_d722418c0c454627
+[2026-08-21 19:50:24,870] [INFO] [leetcode_tracker]: [OTP_RECORD_FOUND] Found OTP record req_id=req_d722418c0c454627 used=False attempts=3
+[2026-08-21 19:50:24,871] [WARNING] [leetcode_tracker]: [OTP_HASH_MISMATCH] OTP hash mismatch for req_id=req_d722418c0c454627 attempt=4
+[2026-08-21 19:50:24,871] [INFO] [leetcode_tracker]: [OTP_VERIFICATION_REQUESTED] Verifying OTP for email_hash=48abec74 request_id=req_d722418c0c454627
+[2026-08-21 19:50:24,872] [INFO] [leetcode_tracker]: [OTP_RECORD_FOUND] Found OTP record req_id=req_d722418c0c454627 used=False attempts=4
+[2026-08-21 19:50:24,873] [WARNING] [leetcode_tracker]: [OTP_HASH_MISMATCH] OTP hash mismatch for req_id=req_d722418c0c454627 attempt=5
+[2026-08-21 19:50:32,546] [ERROR] [leetcode_tracker]: Email queue worker error: (sqlite3.OperationalError) no such column: email_dispatch_logs.dispatch_type
+[SQL: SELECT email_dispatch_logs.id AS email_dispatch_logs_id, email_dispatch_logs.email_id AS email_dispatch_logs_email_id, email_dispatch_logs.report_id AS email_dispatch_logs_report_id, email_dispatch_logs.session_id AS email_dispatch_logs_session_id, email_dispatch_logs.idempotency_key AS email_dispatch_logs_idempotency_key, email_dispatch_logs.recipient AS email_dispatch_logs_recipient, email_dispatch_logs.role AS email_dispatch_logs_role, email_dispatch_logs.subject AS email_dispatch_logs_subject, email_dispatch_logs.dispatch_type AS email_dispatch_logs_dispatch_type, email_dispatch_logs.provider AS email_dispatch_logs_provider, email_dispatch_logs.status AS email_dispatch_logs_status, email_dispatch_logs.attachment_count AS email_dispatch_logs_attachment_count, email_dispatch_logs.total_attachment_bytes AS email_dispatch_logs_total_attachment_bytes, email_dispatch_logs.error_message AS email_dispatch_logs_error_message, email_dispatch_logs.retry_count AS email_dispatch_logs_retry_count, email_dispatch_logs.sent_at AS email_dispatch_logs_sent_at, email_dispatch_logs.created_at AS email_dispatch_logs_created_at 
+FROM email_dispatch_logs 
+WHERE email_dispatch_logs.status IN (?, ?)
+ LIMIT ? OFFSET ?]
+[parameters: ('QUEUED', 'RETRYING', 10, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2026-08-21 19:50:32,786] [ERROR] [leetcode_tracker]: Email queue worker error: (sqlite3.OperationalError) no such column: email_dispatch_logs.dispatch_type
+[SQL: SELECT email_dispatch_logs.id AS email_dispatch_logs_id, email_dispatch_logs.email_id AS email_dispatch_logs_email_id, email_dispatch_logs.report_id AS email_dispatch_logs_report_id, email_dispatch_logs.session_id AS email_dispatch_logs_session_id, email_dispatch_logs.idempotency_key AS email_dispatch_logs_idempotency_key, email_dispatch_logs.recipient AS email_dispatch_logs_recipient, email_dispatch_logs.role AS email_dispatch_logs_role, email_dispatch_logs.subject AS email_dispatch_logs_subject, email_dispatch_logs.dispatch_type AS email_dispatch_logs_dispatch_type, email_dispatch_logs.provider AS email_dispatch_logs_provider, email_dispatch_logs.status AS email_dispatch_logs_status, email_dispatch_logs.attachment_count AS email_dispatch_logs_attachment_count, email_dispatch_logs.total_attachment_bytes AS email_dispatch_logs_total_attachment_bytes, email_dispatch_logs.error_message AS email_dispatch_logs_error_message, email_dispatch_logs.retry_count AS email_dispatch_logs_retry_count, email_dispatch_logs.sent_at AS email_dispatch_logs_sent_at, email_dispatch_logs.created_at AS email_dispatch_logs_created_at 
+FROM email_dispatch_logs 
+WHERE email_dispatch_logs.status IN (?, ?)
+ LIMIT ? OFFSET ?]
+[parameters: ('QUEUED', 'RETRYING', 10, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2026-08-21 19:50:32,792] [INFO] [leetcode_tracker]: Duplicate email prevented for hod@test.nec.in under key 1-hod@test.nec.in-WEEKLY_CONTEST.
+[2026-08-21 19:50:32,794] [ERROR] [leetcode_tracker]: Email queue worker error: (sqlite3.OperationalError) no such column: email_dispatch_logs.dispatch_type
+[SQL: SELECT email_dispatch_logs.id AS email_dispatch_logs_id, email_dispatch_logs.email_id AS email_dispatch_logs_email_id, email_dispatch_logs.report_id AS email_dispatch_logs_report_id, email_dispatch_logs.session_id AS email_dispatch_logs_session_id, email_dispatch_logs.idempotency_key AS email_dispatch_logs_idempotency_key, email_dispatch_logs.recipient AS email_dispatch_logs_recipient, email_dispatch_logs.role AS email_dispatch_logs_role, email_dispatch_logs.subject AS email_dispatch_logs_subject, email_dispatch_logs.dispatch_type AS email_dispatch_logs_dispatch_type, email_dispatch_logs.provider AS email_dispatch_logs_provider, email_dispatch_logs.status AS email_dispatch_logs_status, email_dispatch_logs.attachment_count AS email_dispatch_logs_attachment_count, email_dispatch_logs.total_attachment_bytes AS email_dispatch_logs_total_attachment_bytes, email_dispatch_logs.error_message AS email_dispatch_logs_error_message, email_dispatch_logs.retry_count AS email_dispatch_logs_retry_count, email_dispatch_logs.sent_at AS email_dispatch_logs_sent_at, email_dispatch_logs.created_at AS email_dispatch_logs_created_at 
+FROM email_dispatch_logs 
+WHERE email_dispatch_logs.status IN (?, ?)
+ LIMIT ? OFFSET ?]
+[parameters: ('QUEUED', 'RETRYING', 10, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2026-08-21 19:50:32,924] [ERROR] [leetcode_tracker]: Email queue worker error: (sqlite3.OperationalError) no such column: email_dispatch_logs.dispatch_type
+[SQL: SELECT email_dispatch_logs.id AS email_dispatch_logs_id, email_dispatch_logs.email_id AS email_dispatch_logs_email_id, email_dispatch_logs.report_id AS email_dispatch_logs_report_id, email_dispatch_logs.session_id AS email_dispatch_logs_session_id, email_dispatch_logs.idempotency_key AS email_dispatch_logs_idempotency_key, email_dispatch_logs.recipient AS email_dispatch_logs_recipient, email_dispatch_logs.role AS email_dispatch_logs_role, email_dispatch_logs.subject AS email_dispatch_logs_subject, email_dispatch_logs.dispatch_type AS email_dispatch_logs_dispatch_type, email_dispatch_logs.provider AS email_dispatch_logs_provider, email_dispatch_logs.status AS email_dispatch_logs_status, email_dispatch_logs.attachment_count AS email_dispatch_logs_attachment_count, email_dispatch_logs.total_attachment_bytes AS email_dispatch_logs_total_attachment_bytes, email_dispatch_logs.error_message AS email_dispatch_logs_error_message, email_dispatch_logs.retry_count AS email_dispatch_logs_retry_count, email_dispatch_logs.sent_at AS email_dispatch_logs_sent_at, email_dispatch_logs.created_at AS email_dispatch_logs_created_at 
+FROM email_dispatch_logs 
+WHERE email_dispatch_logs.status IN (?, ?)
+ LIMIT ? OFFSET ?]
+[parameters: ('QUEUED', 'RETRYING', 10, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2026-08-21 19:50:33,385] [INFO] [leetcode_tracker]: [REPORT EMAIL DELIVERED] To: staff@test.nec.in | Files: 3 | Students: 0
+[2026-08-21 19:50:33,474] [WARNING] [leetcode_tracker]: Session 1 is 'SCHEDULED'. Auto-email dispatch skipped until FINALIZED.
+[2026-08-21 19:50:33,476] [WARNING] [leetcode_tracker]: Session 2 is 'PENDING'. Auto-email dispatch skipped until FINALIZED.
+[2026-08-21 19:50:33,590] [WARNING] [leetcode_tracker]: Session 1 is 'LIVE'. Auto-email dispatch skipped until FINALIZED.
+[2026-08-21 19:50:33,816] [ERROR] [leetcode_tracker]: Email queue worker error: (sqlite3.OperationalError) no such column: email_dispatch_logs.dispatch_type
+[SQL: SELECT email_dispatch_logs.id AS email_dispatch_logs_id, email_dispatch_logs.email_id AS email_dispatch_logs_email_id, email_dispatch_logs.report_id AS email_dispatch_logs_report_id, email_dispatch_logs.session_id AS email_dispatch_logs_session_id, email_dispatch_logs.idempotency_key AS email_dispatch_logs_idempotency_key, email_dispatch_logs.recipient AS email_dispatch_logs_recipient, email_dispatch_logs.role AS email_dispatch_logs_role, email_dispatch_logs.subject AS email_dispatch_logs_subject, email_dispatch_logs.dispatch_type AS email_dispatch_logs_dispatch_type, email_dispatch_logs.provider AS email_dispatch_logs_provider, email_dispatch_logs.status AS email_dispatch_logs_status, email_dispatch_logs.attachment_count AS email_dispatch_logs_attachment_count, email_dispatch_logs.total_attachment_bytes AS email_dispatch_logs_total_attachment_bytes, email_dispatch_logs.error_message AS email_dispatch_logs_error_message, email_dispatch_logs.retry_count AS email_dispatch_logs_retry_count, email_dispatch_logs.sent_at AS email_dispatch_logs_sent_at, email_dispatch_logs.created_at AS email_dispatch_logs_created_at 
+FROM email_dispatch_logs 
+WHERE email_dispatch_logs.status IN (?, ?)
+ LIMIT ? OFFSET ?]
+[parameters: ('QUEUED', 'RETRYING', 10, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2026-08-21 19:50:33,942] [INFO] [leetcode_tracker]: [OTP] stage=request_received raw_input='teststudent_otp@nandhaengg.org' authoritative_target='n*****7@gmail.com'
+[2026-08-21 19:50:35,186] [INFO] [leetcode_tracker]: [OTP] stage=request_received raw_input='inactive_user@nandhaengg.org' authoritative_target='n*****7@gmail.com'
+[2026-08-21 19:50:36,440] [INFO] [leetcode_tracker]: [OTP_REQUEST_CREATED] Created OTP transaction record req_id=req_e1b00a59989c45a2 for email_hash=248c1559
+[2026-08-21 19:50:36,446] [INFO] [leetcode_tracker]: [OTP_VERIFICATION_REQUESTED] Verifying OTP for email_hash=248c1559 request_id=latest
+[2026-08-21 19:50:37,752] [INFO] [leetcode_tracker]: [OTP_REQUEST_CREATED] Created OTP transaction record req_id=req_48b4b76bfaac4af8 for email_hash=248c1559
+[2026-08-21 19:50:37,758] [INFO] [leetcode_tracker]: [OTP_VERIFICATION_REQUESTED] Verifying OTP for email_hash=248c1559 request_id=latest
+[2026-08-21 19:50:39,345] [INFO] [leetcode_tracker]: [OTP_REQUEST_CREATED] Created OTP transaction record req_id=req_75c2871210774ab6 for email_hash=6eea1adb
+[2026-08-21 19:50:39,351] [INFO] [leetcode_tracker]: [OTP_VERIFICATION_REQUESTED] Verifying OTP for email_hash=6eea1adb request_id=latest
+[2026-08-21 19:50:39,958] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:50:39,963] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:50:40,798] [INFO] [leetcode_tracker]: [OTP_REQUEST_CREATED] Created OTP transaction record req_id=req_86c488a998ac4969 for email_hash=248c1559
+[2026-08-21 19:50:40,804] [INFO] [leetcode_tracker]: [OTP_VERIFICATION_REQUESTED] Verifying OTP for email_hash=248c1559 request_id=latest
+[2026-08-21 19:50:42,836] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:50:42,840] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:50:49,185] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST_URL_001
+[2026-08-21 19:51:00,254] [WARNING] [leetcode_tracker]: [SYNC] RTDB stats update note for TEST_URL_001: Failed to establish a connection: HTTPSConnectionPool(host='leetcode-student-data-default-rtdb.firebaseio.com', port=443): Max retries exceeded with url: /leetcode_stats/TEST_URL_001.json?print=silent (Caused by NameResolutionError("HTTPSConnection(host='leetcode-student-data-default-rtdb.firebaseio.com', port=443): Failed to resolve 'leetcode-student-data-default-rtdb.firebaseio.com' ([Errno 11004] getaddrinfo failed)"))
+[2026-08-21 19:51:00,255] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-21 19:51:02,323] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-21 19:51:02,328] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_001 | Old URL: 'https://leetcode.com/u/bharath_k/' | New URL: 'https://leetcode.com/u/bharath_k/' | Old Username: 'bharath_k' | New Username: 'bharath_k' | Fetch Started: 2026-08-21T14:20:45.630955Z | Fetch Completed: 2026-08-21T14:21:02.327224Z | Fetched Username: 'bharath_k' | Result Status: SUCCESS | Error: 'None' | Timestamp: 2026-08-21T14:21:02.327224Z
+[2026-08-21 19:51:03,222] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-21 19:51:05,372] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-21 19:51:05,376] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_002 | Old URL: 'https://leetcode.com/u/nanthish_s/' | New URL: 'https://leetcode.com/u/nanthish_s/' | Old Username: 'nanthish_s' | New Username: 'nanthish_s' | Fetch Started: 2026-08-21T14:21:02.356636Z | Fetch Completed: 2026-08-21T14:21:05.375386Z | Fetched Username: 'nanthish_s' | Result Status: INVALID_USERNAME | Error: 'LeetCode profile not found (404)' | Timestamp: 2026-08-21T14:21:05.375386Z
+[2026-08-21 19:51:05,398] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_003 | Old URL: 'https://invalid-website.com/not_leetcode' | New URL: 'https://invalid-website.com/not_leetcode' | Old Username: 'None' | New Username: None | Fetch Started: 2026-08-21T14:21:05.393368Z | Fetch Completed: 2026-08-21T14:21:05.396826Z | Fetched Username: None | Result Status: URL_INVALID | Error: 'Invalid LeetCode URL format: 'https://invalid-website.com/not_leetcode'' | Timestamp: 2026-08-21T14:21:05.398118Z
+[2026-08-21 19:51:09,969] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:51:09,985] [INFO] [leetcode_tracker]: [SYNC] Loaded 301 active students
+[2026-08-21 19:51:12,838] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:51:12,854] [INFO] [leetcode_tracker]: [SYNC] Loaded 301 active students
+[2026-08-21 19:51:16,012] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-21 19:51:17,625] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-21 19:51:17,633] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_004 | Old URL: 'https://leetcode.com/u/no_exist_profile_xyz_999/' | New URL: 'https://leetcode.com/u/no_exist_profile_xyz_999/' | Old Username: 'no_exist_profile_xyz_999' | New Username: 'no_exist_profile_xyz_999' | Fetch Started: 2026-08-21T14:21:05.412225Z | Fetch Completed: 2026-08-21T14:21:17.631924Z | Fetched Username: 'no_exist_profile_xyz_999' | Result Status: INVALID_USERNAME | Error: 'LeetCode profile not found (404)' | Timestamp: 2026-08-21T14:21:17.631924Z
+[2026-08-21 19:51:18,965] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST_URL_006
+[2026-08-21 19:51:19,907] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-21 19:51:20,656] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-21 19:51:20,658] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_006 | Old URL: 'https://leetcode.com/u/bharath_k/' | New URL: 'https://leetcode.com/u/bharath_k/' | Old Username: 'bharath_k' | New Username: 'bharath_k' | Fetch Started: 2026-08-21T14:21:17.677796Z | Fetch Completed: 2026-08-21T14:21:20.658159Z | Fetched Username: 'bharath_k' | Result Status: SUCCESS | Error: 'None' | Timestamp: 2026-08-21T14:21:20.658159Z
+[2026-08-21 19:51:22,162] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST_URL_006
+[2026-08-21 19:51:22,520] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-21 19:51:23,830] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-21 19:51:23,835] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_006 | Old URL: 'https://leetcode.com/u/bharath_k/' | New URL: 'https://leetcode.com/u/bharath_k/' | Old Username: 'bharath_k' | New Username: 'bharath_k' | Fetch Started: 2026-08-21T14:21:20.659273Z | Fetch Completed: 2026-08-21T14:21:23.834247Z | Fetched Username: 'bharath_k' | Result Status: SUCCESS | Error: 'None' | Timestamp: 2026-08-21T14:21:23.834247Z
+[2026-08-21 19:51:23,857] [WARNING] [leetcode_tracker]: [SINGLE_SYNC_LOCKED] Fetch already in progress for student_id=311
+[2026-08-21 19:51:26,138] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST_URL_009
+[2026-08-21 19:51:26,483] [INFO] [leetcode_tracker]: Recalculating multi-level rankings for week 34 (2026-27)...
+[2026-08-21 19:51:28,052] [INFO] [leetcode_tracker]: Multi-level rankings and badges successfully updated!
+[2026-08-21 19:51:28,055] [INFO] [leetcode_tracker]: [URL_CHANGE_FETCH] Student ID: 311 | Reg No: TEST_URL_009 | Old URL: 'https://leetcode.com/u/bharath_k/' | New URL: 'https://leetcode.com/u/bharath_k/' | Old Username: 'bharath_k' | New Username: 'bharath_k' | Fetch Started: 2026-08-21T14:21:23.899460Z | Fetch Completed: 2026-08-21T14:21:28.054720Z | Fetched Username: 'bharath_k' | Result Status: SUCCESS | Error: 'None' | Timestamp: 2026-08-21T14:21:28.054720Z
+[2026-08-21 19:51:28,219] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:51:28,226] [INFO] [leetcode_tracker]: [SYNC] Loaded 2 active students
+[2026-08-21 19:51:28,227] [INFO] [leetcode_tracker]: [SYNC] Creating session: SYNC-20260821-142128
+[2026-08-21 19:51:28,232] [INFO] [leetcode_tracker]: [QUEUE] Job queued: SYNC-20260821-142128
+[2026-08-21 19:51:28,235] [INFO] [leetcode_tracker]: [SYNC] Sync job SYNC-20260821-142128 is already RUNNING. Reusing active job.
+[2026-08-21 19:51:28,238] [INFO] [leetcode_tracker]: [WORKER] Worker started for job: SYNC-20260821-142128
+[2026-08-21 19:51:28,466] [INFO] [leetcode_tracker]: [CANONICAL_PIPELINE] Starting streaming per-student sync for 300 students (Job: SYNC-20260821-142128)
+[2026-08-21 19:51:29,133] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:51:29,138] [INFO] [leetcode_tracker]: [SYNC] Loaded 2 active students
+[2026-08-21 19:51:29,522] [INFO] [leetcode_tracker]: [SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for TEST732201
+[2026-08-21 19:51:32,161] [ERROR] [leetcode_tracker]: Failed to record security audit log: (sqlite3.OperationalError) no such table: admin_audit_logs
+[SQL: INSERT INTO admin_audit_logs (audit_id, admin_user_id, admin_name, admin_email, admin_role, action, action_type, target_type, target_id, description, ip_address, user_agent, status, metadata_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('SEC-AE40A441', None, 'UNKNOWN', None, 'UNKNOWN', 'ACCESS_RESOURCE', 'SECURITY_ACCESS', 'Resource', 'Generate Universal Report', 'ACCESS_RESOURCE on Generate Universal Report -> BLOCKED (NOT_AUTHENTICATED)', 'ip_0912bd9c88b26169', 'Web Browser', 'BLOCKED', '{"route": "/api/reports/generate", "resource": "Generate Universal Report", "session_id": null, "denial_reason": "NOT_AUTHENTICATED", "correlation_id": "req_b55c640faa9c", "user_agent_category": "Web Browser"}', '2026-08-21 14:21:32.160778')]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2026-08-21 19:51:32,225] [ERROR] [leetcode_tracker]: Failed to record security audit log: (sqlite3.OperationalError) no such table: admin_audit_logs
+[SQL: INSERT INTO admin_audit_logs (audit_id, admin_user_id, admin_name, admin_email, admin_role, action, action_type, target_type, target_id, description, ip_address, user_agent, status, metadata_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('SEC-F7398363', None, 'UNKNOWN', None, 'UNKNOWN', 'ACCESS_RESOURCE', 'SECURITY_ACCESS', 'Resource', 'Export Excel Summary Report', 'ACCESS_RESOURCE on Export Excel Summary Report -> BLOCKED (NOT_AUTHENTICATED)', 'ip_0912bd9c88b26169', 'Web Browser', 'BLOCKED', '{"route": "/api/reports/export-excel", "resource": "Export Excel Summary Report", "session_id": null, "denial_reason": "NOT_AUTHENTICATED", "correlation_id": "req_9ab4236e8d07", "user_agent_category": "Web Browser"}', '2026-08-21 14:21:32.224816')]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2026-08-21 19:51:32,254] [ERROR] [leetcode_tracker]: Failed to record security audit log: (sqlite3.OperationalError) no such table: admin_audit_logs
+[SQL: INSERT INTO admin_audit_logs (audit_id, admin_user_id, admin_name, admin_email, admin_role, action, action_type, target_type, target_id, description, ip_address, user_agent, status, metadata_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('SEC-B5C7455D', None, 'UNKNOWN', None, 'UNKNOWN', 'ACCESS_RESOURCE', 'SECURITY_ACCESS', 'Resource', 'Export PDF Report', 'ACCESS_RESOURCE on Export PDF Report -> BLOCKED (NOT_AUTHENTICATED)', 'ip_0912bd9c88b26169', 'Web Browser', 'BLOCKED', '{"route": "/api/reports/export-pdf", "resource": "Export PDF Report", "session_id": null, "denial_reason": "NOT_AUTHENTICATED", "correlation_id": "req_7a40e83e20e5", "user_agent_category": "Web Browser"}', '2026-08-21 14:21:32.253494')]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2026-08-21 19:51:42,823] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:51:42,827] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:51:54,494] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 5), Last: Contest 514 (Session ID 16)
+[2026-08-21 19:52:10,440] [WARNING] [leetcode_tracker]: SECURITY ALERT: 5 blocked protected-resource attempts detected.
+Time: 21-08-2026 19:52 IST
+Source: ip_0912bd9c88b26169
+User/Role: User student_user (Student)
+Resource: Institutional Tracker Matrix
+Contest: Session 514
+Attempts: 5 blocked attempts in 10 minutes
+Reason: ROLE_NOT_ALLOWED
+Action: Request blocked
+[2026-08-21 19:52:11,053] [INFO] [leetcode_tracker]: [BREVO_DELIVERY_SUCCESS] Attempt 1/3 | MessageID: <202608211422.46596759626@smtp-relay.mailin.fr> | Recipient: a*****n@nandha.edu.in
+[2026-08-21 19:52:12,837] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:52:12,853] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:52:22,376] [INFO] [leetcode_tracker]: [ADMIN_LOGIN_SUCCESS] Administrator admin logged in successfully.
+[2026-08-21 19:52:22,384] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-12925] ADMIN_LOGIN by admin (nanthishvaran17@gmail.com)
+[2026-08-21 19:52:23,475] [WARNING] [leetcode_tracker]: [ADMIN_LOGIN_FAILURE] Invalid credentials for username: admin
+[2026-08-21 19:52:25,830] [INFO] [leetcode_tracker]: [OTP_VERIFICATION_REQUESTED] Verifying OTP for email_hash=48c1b560 request_id=invalid_req
+[2026-08-21 19:52:25,832] [WARNING] [leetcode_tracker]: [OTP_RECORD_NOT_FOUND] No active OTP record found for email_hash=48c1b560
+[2026-08-21 19:52:25,832] [WARNING] [leetcode_tracker]: [OTP_VERIFY_FAILURE] Failed OTP verification for nanthishvaran17@gmail.com: No active verification code found for this email address. Please request a new code.
+[2026-08-21 19:52:28,973] [ERROR] [leetcode_tracker]: Failed to record audit log: (sqlite3.OperationalError) no such table: admin_audit_logs
+[SQL: INSERT INTO admin_audit_logs (audit_id, admin_user_id, admin_name, admin_email, admin_role, action, action_type, target_type, target_id, description, ip_address, user_agent, status, metadata_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('AUD-2026-85008', None, 'SYSTEM', 'system@nandhaengg.org', 'SYSTEM', 'MANUAL_SCHEDULER_TRIGGERED', 'AUTOMATION', None, None, 'Manual Sunday automation pipeline executed by administrator', None, None, 'SUCCESS', 'null', '2026-08-21 14:22:28.972762')]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2026-08-21 19:52:29,296] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 514 (Session ID 2), Last: Contest 513 (Session ID 1)
+[2026-08-21 19:52:29,806] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 514 (Session ID 2), Last: Contest 513 (Session ID 1)
+[2026-08-21 19:52:29,876] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: insufficient, Current: Contest None (Session ID None), Last: Contest None (Session ID None)
+[2026-08-21 19:52:29,918] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 1), Last: Contest None (Session ID None)
+[2026-08-21 19:52:29,965] [INFO] [leetcode_tracker]: [SESSION_RESOLVER] Mode: db_auto, Current: Contest 515 (Session ID 3), Last: Contest 514 (Session ID 2)
+[2026-08-21 19:52:42,829] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:52:42,832] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:53:12,832] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:53:12,846] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:53:42,835] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:53:42,846] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:54:03,662] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 2
+[2026-08-21 19:54:03,705] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:54:03,714] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:54:04,265] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:54:04,377] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:54:04,559] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 3
+[2026-08-21 19:54:04,595] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 4
+[2026-08-21 19:54:04,907] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:54:04,924] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:54:05,558] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-24014] PAGE_NAVIGATE by admin (admin@college.edu)
+[2026-08-21 19:54:06,304] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 3
+[2026-08-21 19:54:06,398] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:54:06,410] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:54:06,640] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 4
+[2026-08-21 19:54:06,643] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 3
+[2026-08-21 19:54:06,724] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 4
+[2026-08-21 19:54:07,173] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:54:07,208] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:54:07,962] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-81292] PAGE_NAVIGATE by admin (admin@college.edu)
+[2026-08-21 19:54:08,282] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 3
+[2026-08-21 19:54:12,846] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:54:13,229] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:54:34,247] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:54:34,263] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:54:42,829] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:54:42,845] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:55:04,961] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:55:04,968] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:55:12,831] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:55:12,847] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:55:28,070] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:55:28,220] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:55:28,637] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:55:28,650] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:55:30,889] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:55:30,931] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:55:31,191] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 4
+[2026-08-21 19:55:31,233] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 5
+[2026-08-21 19:55:31,271] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:55:31,280] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:55:34,961] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:55:34,984] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:55:42,832] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:55:42,847] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:56:00,962] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:56:00,973] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:56:04,973] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:56:04,990] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:56:12,843] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:56:12,851] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:56:30,964] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:56:30,982] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:56:34,966] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:56:34,990] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:56:42,839] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:56:42,850] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:57:00,967] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:57:00,983] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:57:04,965] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:57:05,221] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:57:11,805] [WARNING] [leetcode_tracker]: [TRACKER_GQL_CONTEST_RETRY] Attempt 1 for nanthishvaran_07: 
+[2026-08-21 19:57:12,838] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:57:12,852] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:57:30,974] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:57:30,992] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:57:42,847] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:57:42,865] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:57:49,979] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:57:49,992] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:58:00,961] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:58:00,972] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:58:12,834] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:58:12,852] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:58:30,958] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:58:30,974] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:58:42,843] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:58:42,851] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:58:49,998] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:58:50,022] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:59:00,963] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:59:00,972] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:59:04,964] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:59:04,975] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:59:12,849] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:59:12,870] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:59:34,973] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:59:34,988] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:59:42,831] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:59:42,845] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 19:59:49,969] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 19:59:49,985] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 20:00:04,962] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 20:00:04,983] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 20:00:12,845] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 20:00:12,860] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 20:00:20,509] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-89054] AI_CONTROL_CENTER_EXECUTION by admin (admin@college.edu)
+[2026-08-21 20:00:34,965] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 20:00:34,983] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 20:00:36,497] [WARNING] [leetcode_tracker]: [BREVO_TRANSIENT_ERROR] Attempt 1/3: <urlopen error [Errno 11001] getaddrinfo failed>
+[2026-08-21 20:00:36,498] [INFO] [leetcode_tracker]: [BREVO_BACKOFF_RETRY] Retrying in 2s after timeout/connection error...
+[2026-08-21 20:00:41,590] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-73340] PAGE_NAVIGATE by admin (admin@college.edu)
+[2026-08-21 20:00:42,845] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 20:00:42,862] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 20:00:43,824] [INFO] [leetcode_tracker]: [BREVO_DELIVERY_SUCCESS] Attempt 2/3 | MessageID: <202608211430.82179931918@smtp-relay.mailin.fr> | Recipient: n*****7@gmail.com
+[2026-08-21 20:00:43,830] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-47592] CONFIRMED_SEND_EMAIL_ALERT by admin (admin@college.edu)
+[2026-08-21 20:00:49,978] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 20:00:50,003] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 20:01:04,964] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 20:01:04,972] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 20:01:10,945] [INFO] [leetcode_tracker]: [BREVO_DELIVERY_SUCCESS] Attempt 1/3 | MessageID: <202608211431.57782177655@smtp-relay.mailin.fr> | Recipient: n*****7@gmail.com
+[2026-08-21 20:01:12,849] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 20:01:12,863] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 20:01:28,798] [INFO] [leetcode_tracker]: [BREVO_DELIVERY_SUCCESS] Attempt 1/3 | MessageID: <202608211431.66652326517@smtp-relay.mailin.fr> | Recipient: 2*****1@nandhaengg.org
+[2026-08-21 20:01:34,036] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 20:01:34,043] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 20:01:34,972] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 20:01:34,987] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 20:01:36,051] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 4
+[2026-08-21 20:01:36,052] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 3
+[2026-08-21 20:01:42,831] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 20:01:42,837] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 20:01:47,267] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 2
+[2026-08-21 20:01:47,267] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-21 20:01:47,267] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0

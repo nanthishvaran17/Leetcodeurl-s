@@ -16,7 +16,8 @@ except Exception:
     DATA_DIR = "/tmp"
 
 # Replace relative path if sqlite or handle Render postgres:// connection strings
-db_url = os.environ.get("DATABASE_URL", settings.DATABASE_URL)
+raw_db_url = os.environ.get("DATABASE_URL")
+db_url = raw_db_url.strip() if raw_db_url and raw_db_url.strip() else (settings.DATABASE_URL or "sqlite:///./data/leetcode_tracker.db")
 
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
