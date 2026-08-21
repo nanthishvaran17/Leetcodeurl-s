@@ -58,60 +58,62 @@ def calculate_priority_score(
     total_platform_solved: int = 0
 ) -> Tuple[int, str, str]:
     """
-    Computes a transparent 0-100 priority score with a human-readable explanation and priority level.
-    Score Tiers:
-    - Critical : 80 - 100
-    - High     : 60 - 79
-    - Medium   : 35 - 59
-    - Low      : 0 - 34
+    Computes a transparent 0-100 priority score with a human-readable explanation and priority level:
+    - Critical (80 - 100): 0 solves on platform, complete disengagement, urgent 1-on-1 intervention
+    - High     (60 - 79) : Beginner / at-risk (< 20 solves) with contest absences or prolonged inactivity
+    - Medium   (35 - 59) : Developing solvers (20 - 99 solves) needing regular mentoring
+    - Low      (0 - 34)  : Active platform performers (>= 100 solves or steady 50+ solves)
     """
-    score = 15 # baseline
     reasons = []
 
-    if absent_count >= 2:
-        score += 50
-        reasons.append(f"{absent_count} consecutive weekly contest absences")
-    elif absent_count == 1:
-        score += 30
-        reasons.append("Absent from most recent weekly contest")
+    # 1. Platform mastery tiers
+    if total_platform_solved >= 100:
+        base_score = 10
+        if absent_count >= 2:
+            base_score += 15
+            reasons.append(f"Active performer ({total_platform_solved} solved) · Missed recent weekly contests")
+        else:
+            reasons.append(f"Consistent performer ({total_platform_solved} problems solved)")
+    elif 50 <= total_platform_solved < 100:
+        base_score = 20
+        if absent_count >= 2:
+            base_score += 20
+            reasons.append(f"Steady progress ({total_platform_solved} solved) · Missed recent contests")
+        else:
+            reasons.append(f"Steady progress ({total_platform_solved} problems solved)")
+    elif 20 <= total_platform_solved < 50:
+        base_score = 35
+        if absent_count >= 2:
+            base_score += 15
+            reasons.append(f"Developing solver ({total_platform_solved} solved) · {absent_count} contest absences")
+        else:
+            reasons.append(f"Developing solver ({total_platform_solved} solved)")
+    elif 1 <= total_platform_solved < 20:
+        base_score = 60
+        if absent_count >= 2 or days_inactive >= 14:
+            base_score += 15
+            reasons.append(f"At-risk beginner: Only {total_platform_solved} solved · {absent_count} contest absences")
+        else:
+            reasons.append(f"Beginner: Only {total_platform_solved} solved")
+    else:
+        # 0 Solved — Critical Alert
+        base_score = 90
+        reasons.append("Critical: 0 problems solved on platform · Immediate 1-on-1 intervention required")
 
-    if total_platform_solved == 0:
-        score += 35
-        reasons.append("0 total problems solved on platform")
-    elif total_platform_solved < 30:
-        score += 20
-        reasons.append(f"Only {total_platform_solved} total problems solved")
-    elif total_platform_solved < 100:
-        score += 10
-        reasons.append(f"Low overall solve count ({total_platform_solved})")
+    # Inactivity multiplier
+    if total_platform_solved < 50:
+        if days_inactive >= 21:
+            base_score += 10
+            reasons.append(f"Inactive for {days_inactive} days")
+        elif days_inactive >= 14:
+            base_score += 5
 
-    if is_silent or days_inactive >= 21:
-        score += 25
-        reasons.append(f"Inactive for {days_inactive} days")
-    elif days_inactive >= 10:
-        score += 15
-        reasons.append(f"No solving activity for {days_inactive} days")
+    # Rating drop
+    if rating_drop >= 100 and total_platform_solved < 100:
+        base_score += 10
+        reasons.append(f"Contest rating drop of {int(rating_drop)} pts")
 
-    if rating_drop >= 100:
-        score += 25
-        reasons.append(f"Contest rating declined by {int(rating_drop)} pts")
-    elif rating_drop >= 50:
-        score += 15
-        reasons.append(f"Contest rating declined by {int(rating_drop)} pts")
-
-    if virtual_count >= 2:
-        score += 15
-        reasons.append(f"{virtual_count} virtual participations (not official)")
-
-    if solved_count == 0:
-        score += 15
-        reasons.append("0/4 problems solved in last contest attempt")
-    elif solved_count == 1:
-        score += 5
-        reasons.append("Only 1/4 problem solved in last contest")
-
-    # Clamp score
-    final_score = max(5, min(100, score))
+    final_score = max(5, min(100, base_score))
 
     if final_score >= 80:
         level = "Critical"
@@ -122,7 +124,7 @@ def calculate_priority_score(
     else:
         level = "Low"
 
-    explanation = " • ".join(reasons) if reasons else "Routine performance monitoring required"
+    explanation = " • ".join(reasons) if reasons else "Routine performance monitoring"
     return final_score, level, explanation
 
 
@@ -150,7 +152,6 @@ def detect_and_sync_faculty_signals(db: Session, force: bool = False) -> Dict[st
             WeeklyPublicResult.student_id == s.id
         ).order_by(WeeklyPublicResult.id.desc()).limit(3).all()
 
-        # Check absence patterns across all statuses
         absent_streak = 0
         virtual_streak = 0
         last_solve_count = None
@@ -171,32 +172,33 @@ def detect_and_sync_faculty_signals(db: Session, force: bool = False) -> Dict[st
             days_inact = (now - stats.last_successful_sync).days
 
         rating_drop = 0.0
-        # Determine primary signal
-        signal_type = None
-        category = "PERFORMANCE_DROP"
 
-        if absent_streak >= 2:
-            signal_type = "CONSECUTIVE_ABSENT"
-            category = "LOW_PARTICIPATION"
-        elif tot_solved == 0:
+        # Determine appropriate primary signal based on platform mastery & contest participation
+        if tot_solved == 0:
             signal_type = "SILENT_DISENGAGED"
             category = "SILENT_DISENGAGED"
-        elif absent_streak == 1:
-            signal_type = "CONTEST_ABSENT"
-            category = "LOW_PARTICIPATION"
-        elif virtual_streak >= 2:
-            signal_type = "VIRTUAL_STREAK"
-            category = "LOW_PARTICIPATION"
-        elif days_inact >= 14:
-            signal_type = "SILENT_DISENGAGED"
-            category = "SILENT_DISENGAGED"
-        elif last_solve_count is not None and last_solve_count <= 1:
-            signal_type = "LOW_SOLVE_COUNT"
-            category = "PERFORMANCE_DROP"
-        else:
-            if tot_solved < 50:
+        elif tot_solved < 20:
+            if absent_streak >= 2:
+                signal_type = "CONSECUTIVE_ABSENT"
+                category = "LOW_PARTICIPATION"
+            else:
                 signal_type = "LOW_SOLVE_COUNT"
                 category = "PERFORMANCE_DROP"
+        elif tot_solved < 50:
+            if absent_streak >= 2:
+                signal_type = "CONSECUTIVE_ABSENT"
+                category = "LOW_PARTICIPATION"
+            else:
+                signal_type = "LOW_SOLVE_COUNT"
+                category = "PERFORMANCE_DROP"
+        else:
+            # 50+ solves
+            if absent_streak >= 2:
+                signal_type = "CONTEST_ABSENT"
+                category = "LOW_PARTICIPATION"
+            elif virtual_streak >= 2:
+                signal_type = "VIRTUAL_STREAK"
+                category = "LOW_PARTICIPATION"
             else:
                 signal_type = "ROUTINE_MONITORING"
                 category = "ROUTINE"
