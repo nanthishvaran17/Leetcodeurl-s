@@ -79,6 +79,8 @@ export interface StudentData {
   total_active_days?: number;
   consistency_score?: number;
   contest_status?: string;
+  contest_name?: string;
+  contest_number?: number;
   badge_list?: string[];
   public_contest_result?: {
     contest_name?: string;
@@ -407,7 +409,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
               const isSolver = isVerified && (totalSolved ?? 0) > 0;
 
               const publicScore = student.public_contest_result?.score_display || student.stats?.recent_contest_score || (isVerified ? 'Not Attended' : '—');
-              const recentContestName = student.public_contest_result?.contest_name || student.stats?.recent_contest_name || 'Weekly Contest';
+              const recentContestName = student.contest_name || student.public_contest_result?.contest_name || student.stats?.recent_contest_name || 'Weekly Contest';
 
               const contestRating = (isVerified && student.public_contest_result?.contest_rating)
                 ? student.public_contest_result.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
@@ -917,7 +919,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   <div className="flex items-center space-x-2 min-w-0">
                     <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 shrink-0" />
                     <h4 className="text-sm font-black text-gray-900 dark:text-white truncate">
-                      {viewingStudent.public_contest_result?.contest_name || viewingStudent.stats?.recent_contest_name || 'Weekly Contest'}
+                      {viewingStudent.contest_name || viewingStudent.public_contest_result?.contest_name || viewingStudent.stats?.recent_contest_name || 'Weekly Contest'}
                     </h4>
                   </div>
                   <span className="shrink-0 px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-400/30">
