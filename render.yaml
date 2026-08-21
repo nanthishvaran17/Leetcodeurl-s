@@ -13,3 +13,19 @@ services:
         value: Asia/Kolkata
       - key: VITE_FIREBASE_PROJECT_ID
         value: leetcode-student-data
+      # ── Secrets: set these in the Render Dashboard → Environment tab ──
+      # These entries tell Render to expect these env vars; set values in dashboard.
+      - key: JWT_SECRET
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: FROM_EMAIL
+        sync: false
+      - key: FROM_NAME
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: "https://leetcode-student-data.web.app,https://leetcode-student-data.firebaseapp.com"

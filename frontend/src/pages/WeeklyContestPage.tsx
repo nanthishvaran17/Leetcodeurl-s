@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { StatusNotificationModal, NotificationState } from '../components/StatusNotificationModal';
+import { LiveStudentMonitor } from '../components/LiveStudentMonitor';
 
 // Animated Count-Up component for headline stat numbers
 const AnimatedNumber: React.FC<{ value: number; suffix?: string; duration?: number }> = ({ value, suffix = '', duration = 600 }) => {
@@ -112,7 +113,7 @@ export const WeeklyContestPage: React.FC = () => {
   const [showAdminMonitor, setShowAdminMonitor] = useState<boolean>(false);
   const [adminActionMsg, setAdminActionMsg] = useState<string>('');
   const [isPerformingAdminAction, setIsPerformingAdminAction] = useState<boolean>(false);
-  const [adminSubTab, setAdminSubTab] = useState<'sync_ops' | 'rate_limiter' | 'error_resolver' | 'snapshot_audit' | 'live_logs' | 'simulation_sandbox'>('sync_ops');
+  const [adminSubTab, setAdminSubTab] = useState<'sync_ops' | 'rate_limiter' | 'error_resolver' | 'snapshot_audit' | 'live_logs' | 'simulation_sandbox' | 'live_monitor'>('sync_ops');
   const [invariantResults, setInvariantResults] = useState<any | null>(null);
 
   useEffect(() => {
@@ -624,9 +625,9 @@ export const WeeklyContestPage: React.FC = () => {
       setNotification({
         isOpen: true,
         type: 'success',
-        title: isSafeTest ? '⚡ Safe Test Email Delivered' : '✓ Weekly Excel Report Delivered Successfully',
-        message: `Attachment: ${fn}\n• Excel Validation: ✓ PASS\n• Attachment Integrity: ✓ PASS\n• Email Delivery: ✓ DELIVERED`,
-        details: `Execution ID: ${execId} • Filtered Students: ${studentCnt} • Size: ${sizeBytes.toLocaleString()} bytes\n\nℹ️ Note: Gmail inline preview may prompt downloading for formatted institutional .xlsx files. Download the file to open in Microsoft Excel, LibreOffice, or Google Sheets.`
+        title: isSafeTest ? 'Safe Test Email Delivered' : 'Weekly Excel Report Delivered Successfully',
+        message: `Attachment: ${fn}\n• Excel Validation: PASS\n• Attachment Integrity: PASS\n• Email Delivery: DELIVERED`,
+        details: `Execution ID: ${execId} • Filtered Students: ${studentCnt} • Size: ${sizeBytes.toLocaleString()} bytes\n\nNote: Gmail inline preview may prompt downloading for formatted institutional .xlsx files. Download the file to open in Microsoft Excel, LibreOffice, or Google Sheets.`
       });
     } catch (err: any) {
       const errMsg = err.response?.data?.detail || err.message || 'Failed to dispatch report email.';
@@ -1271,6 +1272,18 @@ export const WeeklyContestPage: React.FC = () => {
               <FlaskConical className="w-3.5 h-3.5 text-amber-400" />
               <span>Sandbox & Live Test Sim</span>
             </button>
+
+            <button
+              onClick={() => setAdminSubTab('live_monitor')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                adminSubTab === 'live_monitor'
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/40'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              <Search className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Live Student Monitor</span>
+            </button>
           </div>
 
           {/* Tab 1: Live Sync & Primary Controls */}
@@ -1587,6 +1600,13 @@ export const WeeklyContestPage: React.FC = () => {
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── LIVE STUDENT MONITOR PANEL ── */}
+      {showAdminMonitor && adminSubTab === 'live_monitor' && (
+        <div className="p-5 sm:p-6 rounded-3xl bg-slate-900 border border-slate-700 shadow-2xl animate-fade-in">
+          <LiveStudentMonitor />
         </div>
       )}
 
@@ -2776,7 +2796,7 @@ export const WeeklyContestPage: React.FC = () => {
                     disabled={isSendingEmail}
                     className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-black transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap"
                   >
-                    {isSendingEmail ? 'Sending...' : '⚡ Send Test'}
+                    {isSendingEmail ? 'Sending...' : 'Send Test'}
                   </button>
                 </div>
               </div>
@@ -2959,7 +2979,7 @@ export const WeeklyContestPage: React.FC = () => {
             </div>
 
             <div className="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 rounded-xl text-[11px] text-rose-700 dark:text-rose-300 font-bold">
-              ⚠️ This student will be marked as inactive and removed from public contest rankings. You can re-activate them anytime from Student Master.
+              This student will be marked as inactive and removed from public contest rankings. You can re-activate them anytime from Student Master.
             </div>
 
             <div className="flex items-center justify-end space-x-3 pt-2">
@@ -2999,7 +3019,7 @@ export const WeeklyContestPage: React.FC = () => {
             
             <div className="space-y-1.5">
               <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center justify-center gap-2">
-                <span>🔐 Authentication Required</span>
+                <span>Authentication Required</span>
               </h3>
               <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed px-2">
                 The institutional contest resource requires authentication. Please authenticate and try Sync again.

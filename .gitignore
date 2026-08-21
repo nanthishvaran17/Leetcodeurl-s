@@ -73,3 +73,21 @@ data/*.db-shm
 data/*.db-wal
 reports/certificates/*.pdf
 reports/certificates/*.png
+
+# Root-level DB files (SQLite) — never commit
+*.db
+*.db-shm
+*.db-wal
+
+# Root-level generated reports (large files)
+LeetCode_Weekly_Report_*.xlsx
+LeetCode_Weekly_Report_*.pdf
+report_*.xlsx
+report_*.pdf
+report_*.docx
+Contest*_Full_Reconciliation.csv
+scratch_output_report.docx
+Nandha_LeetCode_Engine_Complete_Manual.pdf
+production_verification_report.*
+verification_10_10_final_report.*
+

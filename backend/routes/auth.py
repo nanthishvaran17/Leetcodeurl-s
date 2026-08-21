@@ -14,7 +14,7 @@ from sqlalchemy import or_
 
 from backend.database import get_db
 from backend.config import settings
-from backend.models import User, AdminSession, AuditLog
+from backend.models import User, Student, AdminSession, AuditLog
 from backend.schemas import UserLogin, Token, UserOut, UserCreate, SendOtpRequest, VerifyOtpRequest
 from backend.services.otp_service import create_otp_transaction, verify_otp_transaction
 from backend.logger import logger
@@ -331,8 +331,8 @@ async def test_admin_otp_delivery(db: Session = Depends(get_db)):
 async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(get_db)):
     validate_csrf_origin(request)
     raw_input = (req.email or "").strip().lower()
-    if not raw_input:
-        raise HTTPException(status_code=400, detail="Please enter your official administrator email.")
+    if not raw_input or "@" not in raw_input:
+        raise HTTPException(status_code=400, detail="Please enter a valid official email address.")
 
     auth_admin_email = get_authoritative_admin_email()
     masked_auth_email = mask_email_str(auth_admin_email)
@@ -340,7 +340,7 @@ async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(
     logger.info(f"[OTP] stage=request_received raw_input='{raw_input}' authoritative_target='{masked_auth_email}'")
 
     # =========================================================================
-    # STEP 1: VERIFY ADMINISTRATOR IDENTITY AGAINST AUTHORITATIVE CONFIG / DB
+    # STEP 1: VERIFY ADMINISTRATOR / AUTHORIZED USER IDENTITY
     # =========================================================================
     is_direct_match = (raw_input == auth_admin_email) or (raw_input in EXACT_TWO_ADMIN_EMAILS)
     
@@ -348,17 +348,35 @@ async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(
         (User.email.ilike(raw_input)) | (User.username.ilike(raw_input))
     ).first()
 
-    if not is_direct_match:
-        if not user or (user.role or "").strip().upper() not in ("ADMIN", "SUPER ADMIN", "SUPER_ADMIN"):
-            logger.warning(f"[OTP] stage=rejected reason='unauthorized_identity' raw_input='{raw_input}'")
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied: Administrator email does not match the configured authoritative account."
-            )
+    student = None
+    if not user:
+        student = db.query(Student).filter(Student.email.ilike(raw_input)).first()
 
-    # Resolve target recipient: ALWAYS use authoritative admin email
-    target_recipient: str = auth_admin_email if (raw_input in (auth_admin_email, "admin", "nanthishvaran17")) else (str(user.email) if user and user.email else auth_admin_email)
+    if user and not user.is_active:
+        raise HTTPException(status_code=400, detail="Account is inactive. Please contact system administrator.")
+    if student and not student.is_active:
+        raise HTTPException(status_code=400, detail="Student account is inactive. Please contact department coordinator.")
+
+    if not is_direct_match and not user and not student:
+        logger.warning(f"[OTP] stage=rejected reason='unregistered_identity' raw_input='{raw_input}'")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid email address. Address is not registered in the system."
+        )
+
+    # Resolve target recipient
+    target_recipient: str = auth_admin_email if (raw_input in (auth_admin_email, "admin", "nanthishvaran17")) else (str(user.email) if user and user.email else (str(student.email) if student and student.email else auth_admin_email))
     masked_target = mask_email_str(target_recipient)
+
+    # Check if email provider is configured
+    from backend.services.email_service import get_active_email_provider
+    provider_info = get_active_email_provider()
+    if not provider_info.get("is_configured"):
+        logger.error(f"[OTP] stage=provider_check_failed recipient={masked_target} error='EMAIL_PROVIDER_NOT_CONFIGURED'")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="EMAIL_PROVIDER_NOT_CONFIGURED: Unable to send the verification code right now. Please try again or contact the administrator."
+        )
 
     t0 = _utcnow()
 
@@ -383,17 +401,21 @@ async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(
         send_fast_otp_email, target_recipient, plain_otp, str(otp_rec.request_id)
     )
 
+    from backend.services.otp_service import update_otp_delivery_status
+
     t1 = _utcnow()
     elapsed_ms = (t1 - t0).total_seconds() * 1000
 
     # CRITICAL: Verify provider accepted the email before returning success to UI
     if not email_sent:
+        update_otp_delivery_status(db, str(otp_rec.request_id), "FAILED", None)
         logger.error(f"[OTP] requestId={otp_rec.request_id} recipient={masked_target} stage=delivery_failed ({elapsed_ms:.0f}ms): {status_code_or_err}")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Unable to send verification code. {status_code_or_err or 'Delivery failed'}. Please try again."
         )
 
+    update_otp_delivery_status(db, str(otp_rec.request_id), "SENT", str(msg_id) if msg_id else None)
     logger.info(f"[OTP] requestId={otp_rec.request_id} recipient={masked_target} stage=smtp_accepted messageId={msg_id} ({elapsed_ms:.0f}ms)")
 
     # =========================================================================
@@ -411,7 +433,7 @@ async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(
 
     return {
         "success": True,
-        "status": "SMTP_ACCEPTED",
+        "status": "success",
         "message": f"Verification code sent successfully to {masked_target}.",
         "expires_in": 300,
         "expires_at": otp_rec.expires_at.isoformat() + "Z",
@@ -457,20 +479,49 @@ def verify_otp(req: VerifyOtpRequest, request: Request, response: Response, db: 
 
         raise HTTPException(status_code=400, detail=msg)
 
-    # 2. Lookup Admin Account in Database
+    # 2. Lookup Admin / Authorized Account in Database
     user = db.query(User).filter(User.email.ilike(clean_email)).first()
-    if not user:
-        raise HTTPException(status_code=403, detail="Access denied: No administrative account registered.")
+    
+    auth_admin = get_authoritative_admin_email()
+    if not user and (clean_email in EXACT_TWO_ADMIN_EMAILS or clean_email == auth_admin):
+        user = db.query(User).filter(User.role.ilike("admin"), User.is_active == True).first()
+        if user:
+            setattr(user, "email", str(clean_email))
+            db.commit()
+        else:
+            user = User(
+                username=clean_email.split('@')[0],
+                email=clean_email,
+                hashed_password=get_password_hash("admin123"),
+                role="Admin",
+                is_active=True
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
 
-    role_str = (user.role or "").strip().upper()
-    if role_str not in ("ADMIN", "SUPER ADMIN", "SUPER_ADMIN"):
-        raise HTTPException(status_code=403, detail="Access denied: Administrator privileges required.")
+    if not user:
+        student = db.query(Student).filter(Student.email.ilike(clean_email)).first()
+        if student:
+            s_token = create_access_token(data={"sub": student.email, "role": "Student", "email": student.email})
+            return {
+                "success": True,
+                "status": "success",
+                "message": "OTP verification successful.",
+                "access_token": s_token,
+                "token_type": "bearer",
+                "verified": True,
+                "user": {
+                    "id": student.id,
+                    "username": student.name,
+                    "email": student.email,
+                    "role": "Student"
+                }
+            }
+        raise HTTPException(status_code=403, detail="Access denied: No authorized account registered for this email.")
 
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Access denied: Account is inactive.")
-
-    if clean_email not in EXACT_TWO_ADMIN_EMAILS:
-        raise HTTPException(status_code=403, detail="Access denied: Unauthorized administrator.")
 
     try:
         setattr(user, "last_login", _utcnow())

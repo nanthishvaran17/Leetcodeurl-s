@@ -220,7 +220,8 @@ class TestEmailDeliverySystem(unittest.TestCase):
         """
         session = make_session(self.db, "FINALIZED")
 
-        with patch("backend.services.email_service.fetch_normalized_students", return_value=[]):
+        with patch("backend.services.email_service.fetch_normalized_students", return_value=[]), \
+             patch("backend.services.email_service.send_email", return_value=(True, None)):
             result = send_manual_report_email(
                 self.db,
                 session_id=session.id,
@@ -235,7 +236,7 @@ class TestEmailDeliverySystem(unittest.TestCase):
             EmailDispatchLog.recipient == "staff@test.nec.in"
         ).first()
         self.assertIsNotNone(log)
-        self.assertEqual(log.status, "QUEUED")
+        self.assertEqual(log.status, "SENT")
 
     # ── Test 8 ──────────────────────────────────────────────────────────────
     def test_large_attachment_handling(self):

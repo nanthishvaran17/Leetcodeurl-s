@@ -236,19 +236,58 @@ def trigger_automated_weekly_email_dispatch(session_id: Optional[int] = Query(No
     return res
 
 
+@router.post("/check-duplicate")
+def check_duplicate_report_email(payload: CheckDuplicateSchema, db: Session = Depends(get_db)):
+    """
+    Checks if an identical report has already been successfully delivered to any of the selected recipients.
+    Returns duplicate details for administrator confirmation.
+    """
+    duplicates = []
+    for email in payload.recipient_emails:
+        clean_email = email.strip().lower()
+        query = db.query(EmailDispatchLog).filter(
+            EmailDispatchLog.recipient.ilike(clean_email),
+            EmailDispatchLog.status == "SENT"
+        )
+        if payload.session_id:
+            query = query.filter(EmailDispatchLog.session_id == payload.session_id)
+        log = query.order_by(EmailDispatchLog.id.desc()).first()
+
+        if log:
+            duplicates.append({
+                "recipient": log.recipient,
+                "sent_at": log.sent_at.isoformat() if log.sent_at else log.created_at.isoformat(),
+                "email_id": log.email_id,
+                "subject": log.subject,
+                "session_id": log.session_id,
+                "dispatch_type": getattr(log, 'dispatch_type', 'MANUAL') or 'MANUAL'
+            })
+
+    return {
+        "has_duplicates": len(duplicates) > 0,
+        "duplicate_count": len(duplicates),
+        "duplicates": duplicates
+    }
+
 
 @router.get("/logs")
 def get_email_delivery_logs(
-    limit: int = Query(50, ge=1, le=200),
+    limit: int = Query(100, ge=1, le=500),
     status: Optional[str] = None,
+    dispatch_type: Optional[str] = None,
+    recipient: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """
-    Retrieves email delivery audit logs.
+    Retrieves email delivery audit logs with optional status, dispatch type, and recipient filters.
     """
     query = db.query(EmailDispatchLog)
-    if status:
+    if status and status.upper() != "ALL":
         query = query.filter(EmailDispatchLog.status == status.upper())
+    if dispatch_type and dispatch_type.upper() != "ALL":
+        query = query.filter(EmailDispatchLog.dispatch_type == dispatch_type.upper())
+    if recipient and recipient.strip():
+        query = query.filter(EmailDispatchLog.recipient.ilike(f"%{recipient.strip()}%"))
 
     logs = query.order_by(EmailDispatchLog.id.desc()).limit(limit).all()
     return [{
@@ -259,10 +298,14 @@ def get_email_delivery_logs(
         "recipient": l.recipient,
         "role": l.role,
         "subject": l.subject,
+        "dispatch_type": getattr(l, 'dispatch_type', 'AUTOMATED') or 'AUTOMATED',
+        "provider": getattr(l, 'provider', 'BREVO_API') or 'BREVO_API',
         "status": l.status,
         "attachment_count": l.attachment_count,
+        "total_attachment_bytes": getattr(l, 'total_attachment_bytes', 0) or 0,
         "error_message": l.error_message,
         "retry_count": l.retry_count,
+        "idempotency_key": l.idempotency_key,
         "sent_at": l.sent_at.isoformat() if l.sent_at else None,
         "created_at": l.created_at.isoformat() if l.created_at else None
     } for l in logs]

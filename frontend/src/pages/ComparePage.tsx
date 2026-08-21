@@ -806,12 +806,12 @@ export const ComparePage: React.FC = () => {
                     <span className="text-[10px] text-gray-400 font-bold">Quick Pick A:</span>
                     <button
                       onClick={() => {
-                        const opt = groupOptions.find(g => g.key.includes('2') || g.key.includes('II'));
+                        const opt = groupOptions.find(g => g.key.endsWith('II') && g.key.startsWith('1'));
                         if (opt) setGroupAKey(opt.key);
                       }}
                       className="px-2 py-0.5 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-300 text-[10px] font-bold"
                     >
-                      ⚡ 2nd Year CSE(CS)
+                      2nd Year CSE(CS)
                     </button>
                   </div>
                 )}
@@ -842,7 +842,7 @@ export const ComparePage: React.FC = () => {
                       }}
                       className="px-2 py-0.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 text-[10px] font-bold"
                     >
-                      ⚡ 2nd Year CSE(IOT)
+                      2nd Year CSE(IOT)
                     </button>
                   </div>
                 )}

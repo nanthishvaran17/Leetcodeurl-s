@@ -235,6 +235,25 @@ def run_migrations():
                         conn.commit()
                         print(f"[DB Migration] Added official_weekly_snapshots column: {col_name}")
 
+            # Check email_otp_records columns
+            try:
+                result_otp = conn.execute(
+                    __import__('sqlalchemy').text("PRAGMA table_info(email_otp_records)")
+                )
+                otp_cols = {row[1] for row in result_otp}
+                if otp_cols:
+                    otp_migrations = [
+                        ("delivery_status", "ALTER TABLE email_otp_records ADD COLUMN delivery_status VARCHAR(50) DEFAULT 'PENDING'"),
+                        ("provider_message_id", "ALTER TABLE email_otp_records ADD COLUMN provider_message_id VARCHAR(255)"),
+                    ]
+                    for col_name, sql in otp_migrations:
+                        if col_name not in otp_cols:
+                            conn.execute(__import__('sqlalchemy').text(sql))
+                            conn.commit()
+                            print(f"[DB Migration] Added email_otp_records column: {col_name}")
+            except Exception as _e_otp:
+                pass
+
             # Database-Level Snapshot Immutability Trigger (Prevents direct in-place mutation of dataset)
             try:
                 trigger_sql = """
@@ -280,3 +299,5 @@ def run_migrations():
             print("[DB Migration] Performance indexes verified/created successfully.")
     except Exception as e:
         print(f"[DB Migration] Warning: {e}")
+
+run_migrations()

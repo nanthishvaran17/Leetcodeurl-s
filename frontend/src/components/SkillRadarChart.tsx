@@ -47,7 +47,7 @@ export const SkillRadarChart: React.FC<SkillRadarChartProps> = ({ skills, totalS
     <div className="glass-card p-6 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-xl flex flex-col items-center space-y-4">
       <div className="text-center">
         <h3 className="font-extrabold text-sm text-gray-900 dark:text-white uppercase tracking-wider flex items-center justify-center space-x-2">
-          <span>🎯 DSA Skill Radar</span>
+          <span>DSA Skill Radar</span>
         </h3>
         <p className="text-[11px] text-gray-500">Algorithmic Topic Proficiency Breakdown</p>
       </div>

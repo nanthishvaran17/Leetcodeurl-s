@@ -369,22 +369,6 @@ export const ReportsPage: React.FC = () => {
               <Award className="w-4 h-4" />
               <span>Generate Merit Certificates</span>
             </button>
-
-            <button
-              onClick={() => setActiveTab('manual_email')}
-              className="flex items-center space-x-2 px-4.5 py-3 bg-gradient-to-r from-indigo-600 to-brand-600 hover:from-indigo-700 hover:to-brand-700 text-white rounded-2xl text-xs font-black shadow-xl shadow-indigo-600/30 transition-all transform hover:scale-105 cursor-pointer"
-            >
-              <Mail className="w-4 h-4 text-emerald-400" />
-              <span>Manual Email Send</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('auto_email')}
-              className="flex items-center space-x-2 px-4.5 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs font-black shadow-xl shadow-emerald-600/30 transition-all transform hover:scale-105 cursor-pointer"
-            >
-              <Clock className="w-4 h-4 text-amber-300" />
-              <span>Auto Scheduler Settings</span>
-            </button>
           </div>
         </div>
       </div>
@@ -404,35 +388,19 @@ export const ReportsPage: React.FC = () => {
         </button>
 
         <button
-          onClick={() => setActiveTab('manual_email')}
+          onClick={() => setActiveTab('email')}
           className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
-            activeTab === 'manual_email'
+            activeTab === 'email' || activeTab === 'manual_email' || activeTab === 'auto_email'
               ? 'bg-gradient-to-r from-indigo-600 to-brand-600 text-white shadow-md'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
           }`}
         >
           <Mail className="w-4 h-4 text-emerald-400" />
-          <span>⚡ Manual Instant Email Dispatch</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('auto_email')}
-          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
-            activeTab === 'auto_email'
-              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md font-black'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-          }`}
-        >
-          <Clock className="w-4 h-4 text-amber-500" />
-          <span>⏰ Automated Sunday Auto-Scheduler</span>
+          <span>Email Operations Center</span>
         </button>
       </div>
 
-      {activeTab === 'manual_email' ? (
-        <EmailDeliveryTab defaultSection="manual" />
-      ) : activeTab === 'auto_email' ? (
-        <EmailDeliveryTab defaultSection="automated" />
-      ) : activeTab === 'email' ? (
+      {activeTab === 'email' || activeTab === 'manual_email' || activeTab === 'auto_email' ? (
         <EmailDeliveryTab defaultSection="manual" />
       ) : (
         <>

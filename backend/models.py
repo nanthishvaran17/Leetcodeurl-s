@@ -577,6 +577,8 @@ class EmailDispatchLog(Base):
     recipient = Column(String(150), index=True, nullable=False)
     role = Column(String(50), default="HOD")
     subject = Column(String(255), nullable=False)
+    dispatch_type = Column(String(30), default="AUTOMATED") # MANUAL, AUTOMATED, TEST
+    provider = Column(String(50), default="BREVO_API")
     status = Column(String(30), default="QUEUED") # QUEUED, SENDING, SENT, FAILED, RETRYING
     attachment_count = Column(Integer, default=0)
     total_attachment_bytes = Column(Integer, default=0)
@@ -729,6 +731,8 @@ class EmailOTPRecord(Base):
     used_at = Column(DateTime, nullable=True)
     ip_address = Column(String(50), nullable=True)
     request_ip_hash = Column(String(128), nullable=True, index=True)
+    delivery_status = Column(String(50), default="PENDING")
+    provider_message_id = Column(String(255), nullable=True)
 
 
 class AdminSession(Base):

@@ -131,14 +131,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
     } catch (err: any) {
       const detailMsg = err.response?.data?.detail || err.message;
       triggerShake();
-      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+      if (detailMsg?.includes('EMAIL_PROVIDER_NOT_CONFIGURED')) {
+        setError('Unable to send the verification code right now. Please try again or contact the administrator.');
+      } else if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
         setError('Email request timed out. Please check your connection and try again.');
       } else if (err.response?.status === 403) {
         setError(detailMsg || 'Access denied: Administrator email does not match configured authoritative account.');
       } else if (err.response?.status === 502 || err.response?.status === 503) {
-        setError(detailMsg || 'Unable to deliver verification code. Please try again.');
+        setError('Unable to send the verification code right now. Please try again or contact the administrator.');
       } else {
-        setError(detailMsg || 'Authentication service is temporarily unavailable. Please try again.');
+        setError(detailMsg || 'Unable to send the verification code right now. Please try again or contact the administrator.');
       }
     } finally {
       setLoading(false);

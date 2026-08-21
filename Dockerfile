@@ -30,6 +30,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend source
 COPY backend/ ./backend/
 
+# Ensure scripts directory is available for CLI tools (e.g. resync_historical_contests.py)
+RUN mkdir -p ./backend/scripts && touch ./backend/scripts/__init__.py
+
+
 # Copy database and report directories (may be empty on first deploy — that's OK)
 COPY data/ ./data/
 COPY reports/ ./reports/

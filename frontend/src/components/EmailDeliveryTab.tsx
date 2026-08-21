@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Mail, Send, RefreshCw, CheckCircle2, XCircle, Clock, AlertTriangle,
   Trash2, Plus, Users, ChevronDown, X, Eye, Loader2, RotateCcw,
-  FileSpreadsheet, FileText, Archive
+  FileSpreadsheet, FileText, Play, Pause, Settings, ShieldCheck, Sparkles,
+  Filter, Search, Zap, Calendar, ArrowRight, ExternalLink, Check, CheckSquare, Square, Info
 } from 'lucide-react';
 import api from '../services/api';
 import { StatusNotificationModal, NotificationState } from './StatusNotificationModal';
@@ -27,10 +28,14 @@ interface EmailLog {
   recipient: string;
   role: string;
   subject: string;
-  status: string; // QUEUED | SENDING | SENT | FAILED | RETRYING
+  dispatch_type: 'MANUAL' | 'AUTOMATED' | 'TEST' | string;
+  provider: string;
+  status: 'SENT' | 'QUEUED' | 'SENDING' | 'RETRYING' | 'FAILED' | string;
   attachment_count: number;
+  total_attachment_bytes?: number;
   error_message: string | null;
   retry_count: number;
+  idempotency_key?: string;
   sent_at: string | null;
   created_at: string;
 }
@@ -42,53 +47,84 @@ interface WeeklySessionOption {
   status: string;
 }
 
+interface ScheduleConfigData {
+  schedule: {
+    id: number;
+    report_name: string;
+    day_of_week: string;
+    hour: number;
+    minute: number;
+    time_display: string;
+    timezone: string;
+    is_enabled: boolean;
+    recipients: string[];
+    recipients_count: number;
+    next_run: string;
+    last_run: string;
+    last_status: string;
+    last_report: string;
+    last_email: string;
+  };
+  scheduler_status: string;
+  email_service: string;
+  timezone: string;
+}
+
 const ROLE_COLORS: Record<string, string> = {
-  MANAGEMENT: 'bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/20 dark:text-purple-300',
-  HOD: 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-900/20 dark:text-indigo-300',
-  DEPARTMENT_COORDINATOR: 'bg-teal-100 text-teal-700 border-teal-300 dark:bg-teal-900/20 dark:text-teal-300',
-  ADMIN: 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/20 dark:text-amber-300',
-  MANUAL: 'bg-gray-100 text-gray-600 border-gray-300 dark:bg-gray-800 dark:text-gray-300',
+  MANAGEMENT: 'bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/30 dark:text-purple-300',
+  HOD: 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-900/30 dark:text-indigo-300',
+  DEPARTMENT_COORDINATOR: 'bg-teal-100 text-teal-700 border-teal-300 dark:bg-teal-900/30 dark:text-teal-300',
+  ADMIN: 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300',
+  MANUAL: 'bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300',
 };
 
-const STATUS_CONFIG: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
-  SENT:      { icon: <CheckCircle2 className="w-4 h-4" />, color: 'text-emerald-600 dark:text-emerald-400', label: '🟢 Delivered' },
-  QUEUED:    { icon: <Clock className="w-4 h-4 animate-pulse" />, color: 'text-amber-500 dark:text-amber-400', label: '⏳ Queued' },
-  SENDING:   { icon: <Loader2 className="w-4 h-4 animate-spin" />, color: 'text-blue-500 dark:text-blue-400', label: '📤 Sending...' },
-  RETRYING:  { icon: <RefreshCw className="w-4 h-4 animate-spin" />, color: 'text-orange-500 dark:text-orange-400', label: '🔄 Retrying' },
-  FAILED:    { icon: <XCircle className="w-4 h-4" />, color: 'text-red-500 dark:text-red-400', label: '🔴 Failed' },
+const STATUS_BADGES: Record<string, { icon: React.ReactNode; bg: string; text: string; border: string; label: string }> = {
+  SENT: {
+    icon: <CheckCircle2 className="w-3.5 h-3.5" />,
+    bg: 'bg-emerald-50 dark:bg-emerald-950/40',
+    text: 'text-emerald-700 dark:text-emerald-300',
+    border: 'border-emerald-200 dark:border-emerald-800',
+    label: '🟢 Delivered'
+  },
+  QUEUED: {
+    icon: <Clock className="w-3.5 h-3.5 animate-pulse" />,
+    bg: 'bg-amber-50 dark:bg-amber-950/40',
+    text: 'text-amber-700 dark:text-amber-300',
+    border: 'border-amber-200 dark:border-amber-800',
+    label: '⏳ Queued'
+  },
+  SENDING: {
+    icon: <Loader2 className="w-3.5 h-3.5 animate-spin" />,
+    bg: 'bg-blue-50 dark:bg-blue-950/40',
+    text: 'text-blue-700 dark:text-blue-300',
+    border: 'border-blue-200 dark:border-blue-800',
+    label: '📤 Sending'
+  },
+  RETRYING: {
+    icon: <RefreshCw className="w-3.5 h-3.5 animate-spin" />,
+    bg: 'bg-orange-50 dark:bg-orange-950/40',
+    text: 'text-orange-700 dark:text-orange-300',
+    border: 'border-orange-200 dark:border-orange-800',
+    label: '🔄 Retrying'
+  },
+  FAILED: {
+    icon: <XCircle className="w-3.5 h-3.5" />,
+    bg: 'bg-red-50 dark:bg-red-950/40',
+    text: 'text-red-700 dark:text-red-300',
+    border: 'border-red-200 dark:border-red-800',
+    label: '🔴 Failed'
+  },
 };
 
-export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated' | 'recipients' | 'history' }> = ({ defaultSection = 'manual' }) => {
+export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated' | 'recipients' | 'history' }> = ({
+  defaultSection = 'manual'
+}) => {
+  // Navigation & Data States
+  const [activeSection, setActiveSection] = useState<'manual' | 'automated' | 'recipients' | 'history'>(defaultSection);
   const [recipients, setRecipients] = useState<EmailRecipient[]>([]);
   const [logs, setLogs] = useState<EmailLog[]>([]);
   const [sessions, setSessions] = useState<WeeklySessionOption[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState<'manual' | 'automated' | 'recipients' | 'history'>(defaultSection);
-
-  useEffect(() => {
-    if (defaultSection) {
-      setActiveSection(defaultSection);
-    }
-  }, [defaultSection]);
-
-  // Manual send modal
-  const [showSendModal, setShowSendModal] = useState(false);
-  const [sendStep, setSendStep] = useState<'select' | 'preview' | 'sending' | 'done'>('select');
-  const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
-  const [selectedRecipientIds, setSelectedRecipientIds] = useState<Set<number>>(new Set());
-  const [customMessage, setCustomMessage] = useState('');
-  const [sendResult, setSendResult] = useState<string | null>(null);
-
-  // Add recipient modal
-  const [showAddRecipient, setShowAddRecipient] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newEmail, setNewEmail] = useState('');
-  const [newRole, setNewRole] = useState('HOD');
-  const [newDept, setNewDept] = useState('ALL');
-  const [addingRecipient, setAddingRecipient] = useState(false);
-  const [notification, setNotification] = useState<NotificationState | null>(null);
-
-  // Active Email Provider Diagnostics State
+  const [scheduleConfig, setScheduleConfig] = useState<ScheduleConfigData | null>(null);
   const [providerInfo, setProviderInfo] = useState<{
     status: string;
     active_provider: string;
@@ -97,505 +133,703 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
     sender_email: string;
     timeout_seconds: number;
     max_retries: number;
+    timestamp_ist?: string;
   } | null>(null);
 
-  // SMTP / Provider Test state
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<string>('');
+  const [notification, setNotification] = useState<NotificationState | null>(null);
+
+  // Manual Dispatch Form State
+  const [selectedReportType, setSelectedReportType] = useState<string>('WEEKLY_CONTEST');
+  const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
+  const [selectedRecipientEmails, setSelectedRecipientEmails] = useState<Set<string>>(new Set());
+  const [customMessage, setCustomMessage] = useState<string>('');
+
+  // Manual Send Workflow Modals & Overlays
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [duplicateList, setDuplicateList] = useState<any[]>([]);
+  const [isSendingManual, setIsSendingManual] = useState(false);
+  const [dispatchProgressStep, setDispatchProgressStep] = useState<number>(0);
+  const [dispatchResult, setDispatchResult] = useState<{ status: string; message: string; count?: number } | null>(null);
+
+  // Schedule Settings Modal State
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleDay, setScheduleDay] = useState('sunday');
+  const [scheduleHour, setScheduleHour] = useState(9);
+  const [scheduleMinute, setScheduleMinute] = useState(45);
+  const [scheduleEnabled, setScheduleEnabled] = useState(true);
+  const [savingSchedule, setSavingSchedule] = useState(false);
+
+  // Delivery Detail Drawer State
+  const [selectedLogDetail, setSelectedLogDetail] = useState<EmailLog | null>(null);
+  const [retryingLogId, setRetryingLogId] = useState<number | null>(null);
+
+  // Add Recipient Modal State
+  const [showAddRecipientModal, setShowAddRecipientModal] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newRole, setNewRole] = useState('HOD');
+  const [newDept, setNewDept] = useState('ALL');
+  const [addingRecipient, setAddingRecipient] = useState(false);
+
+  // Test Mode Diagnostics State
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [testRecipient, setTestRecipient] = useState('nanthishvaran17@gmail.com');
-  const [isTestingSmtp, setIsTestingSmtp] = useState(false);
-  const [smtpTestResult, setSmtpTestResult] = useState<{ success: boolean; message: string; error?: string; provider?: string } | null>(null);
+  const [isTestingProvider, setIsTestingProvider] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string; error?: string; provider?: string } | null>(null);
 
-  // Automated Cron Schedule Settings State
-  const [autoScheduleEnabled, setAutoScheduleEnabled] = useState<boolean>(true);
-  const [scheduleDay, setScheduleDay] = useState<string>('Sunday');
-  const [scheduleTime, setScheduleTime] = useState<string>('08:00');
-  const [scheduleFrequency, setScheduleFrequency] = useState<string>('WEEKLY_EXECUTIVE');
-  const [savingSchedule, setSavingSchedule] = useState<boolean>(false);
+  // Log Table Filter & Search States
+  const [logFilterStatus, setLogFilterStatus] = useState<string>('ALL');
+  const [logFilterDispatchType, setLogFilterDispatchType] = useState<string>('ALL');
+  const [logSearchQuery, setLogSearchQuery] = useState<string>('');
 
-  const handleSaveScheduleSettings = async () => {
-    setSavingSchedule(true);
+  useEffect(() => {
+    if (defaultSection) setActiveSection(defaultSection);
+  }, [defaultSection]);
+
+  // Main Data Fetching Function
+  const fetchAllData = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
+    setRefreshing(true);
     try {
-      await new Promise(r => setTimeout(r, 600));
+      const [rRes, lRes, sRes, pRes, schedRes] = await Promise.all([
+        api.get('/email/recipients').catch(() => ({ data: [] })),
+        api.get('/email/logs?limit=200').catch(() => ({ data: [] })),
+        api.get('/contests/sessions').catch(() => ({ data: [] })),
+        api.get('/email/provider-diagnostics').catch(() => ({ data: null })),
+        api.get('/system/schedule').catch(() => ({ data: null })),
+      ]);
+
+      const recs = Array.isArray(rRes.data) ? rRes.data : (rRes.data?.recipients || []);
+      setRecipients(recs);
+
+      // Pre-select all active recipients by default for manual send convenience
+      const activeEmails = new Set<string>(recs.filter((r: any) => r.is_active).map((r: any) => r.email));
+      setSelectedRecipientEmails(activeEmails);
+
+      const logsData = Array.isArray(lRes.data) ? lRes.data : (lRes.data?.deliveries || []);
+      setLogs(logsData);
+
+      const sessData = Array.isArray(sRes.data) ? sRes.data : (sRes.data?.sessions || []);
+      setSessions(sessData);
+      if (sessData.length > 0 && !selectedSessionId) {
+        setSelectedSessionId(sessData[0].sessionId);
+      }
+
+      if (pRes?.data) setProviderInfo(pRes.data);
+      if (schedRes?.data) {
+        setScheduleConfig(schedRes.data);
+        if (schedRes.data.schedule) {
+          setScheduleDay(schedRes.data.schedule.day_of_week.toLowerCase());
+          setScheduleHour(schedRes.data.schedule.hour);
+          setScheduleMinute(schedRes.data.schedule.minute);
+          setScheduleEnabled(schedRes.data.schedule.is_enabled);
+        }
+      }
+
+      const nowIST = new Date().toLocaleTimeString('en-US', {
+        timeZone: 'Asia/Kolkata',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+      setLastRefreshedAt(`${nowIST} IST`);
+    } catch (err) {
+      console.error('Failed to load Email Operations Center data:', err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [selectedSessionId]);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
+
+  // Real KPI Metrics Calculations (Derived strictly from backend data)
+  const metrics = useMemo(() => {
+    const totalLogs = logs.length;
+    const deliveredCount = logs.filter(l => l.status === 'SENT').length;
+    const failedCount = logs.filter(l => l.status === 'FAILED').length;
+    const pendingCount = logs.filter(l => ['QUEUED', 'SENDING', 'RETRYING'].includes(l.status)).length;
+    const activeRecipientsCount = recipients.filter(r => r.is_active).length;
+
+    const completedAttempts = deliveredCount + failedCount;
+    const successRate = completedAttempts > 0
+      ? ((deliveredCount / completedAttempts) * 100).toFixed(1)
+      : '100.0';
+
+    const lastSuccessLog = logs.find(l => l.status === 'SENT');
+    const lastFailedLog = logs.find(l => l.status === 'FAILED');
+
+    return {
+      totalLogs,
+      deliveredCount,
+      failedCount,
+      pendingCount,
+      activeRecipientsCount,
+      successRate,
+      lastSuccessTime: lastSuccessLog ? (lastSuccessLog.sent_at || lastSuccessLog.created_at) : null,
+      lastFailureTime: lastFailedLog ? (lastFailedLog.sent_at || lastFailedLog.created_at) : null,
+    };
+  }, [logs, recipients]);
+
+  // Format Helper for Timestamps
+  const formatTimestampIST = (isoString?: string | null) => {
+    if (!isoString) return '—';
+    try {
+      const d = new Date(isoString);
+      return d.toLocaleString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      }) + ' IST';
+    } catch (_e) {
+      return isoString;
+    }
+  };
+
+  // Toggle Recipient Selection for Manual Dispatch
+  const toggleRecipientSelection = (email: string) => {
+    setSelectedRecipientEmails(prev => {
+      const next = new Set(prev);
+      if (next.has(email)) next.delete(email);
+      else next.add(email);
+      return next;
+    });
+  };
+
+  const selectAllRecipients = () => {
+    const activeEmails = recipients.filter(r => r.is_active).map(r => r.email);
+    setSelectedRecipientEmails(new Set(activeEmails));
+  };
+
+  const clearAllRecipients = () => {
+    setSelectedRecipientEmails(new Set());
+  };
+
+  // Duplicate Check before Manual Dispatch
+  const handleInitiateManualDispatch = async () => {
+    if (selectedRecipientEmails.size === 0) {
+      setNotification({
+        isOpen: true,
+        type: 'warning',
+        title: 'No Recipients Selected',
+        message: 'Please select at least one recipient email address before dispatching.'
+      });
+      return;
+    }
+
+    const emailList = Array.from(selectedRecipientEmails);
+    try {
+      const res = await api.post('/email/check-duplicate', {
+        recipient_emails: emailList,
+        session_id: selectedSessionId
+      });
+
+      if (res.data?.has_duplicates) {
+        setDuplicateList(res.data.duplicates);
+        setShowDuplicateModal(true);
+      } else {
+        setShowConfirmModal(true);
+      }
+    } catch (_err) {
+      setShowConfirmModal(true);
+    }
+  };
+
+  // Execute Manual Dispatch
+  const handleExecuteManualDispatch = async () => {
+    setShowConfirmModal(false);
+    setShowDuplicateModal(false);
+    setIsSendingManual(true);
+    setDispatchProgressStep(1);
+
+    const emailList = Array.from(selectedRecipientEmails);
+
+    try {
+      await new Promise(r => setTimeout(r, 400));
+      setDispatchProgressStep(2); // Generating attachments
+      await new Promise(r => setTimeout(r, 400));
+      setDispatchProgressStep(3); // Connecting to Brevo
+
+      const res = await api.post('/email/send-manual', {
+        session_id: selectedSessionId,
+        recipient_emails: emailList,
+        custom_message: customMessage || null
+      });
+
+      setDispatchProgressStep(4);
+      await new Promise(r => setTimeout(r, 300));
+
+      if (res.data?.status === 'failed') {
+        setDispatchResult({
+          status: 'failed',
+          message: res.data.message || 'Email dispatch failed. Please verify API key / network connection.'
+        });
+      } else {
+        setDispatchResult({
+          status: 'success',
+          message: res.data?.message || `Successfully sent report to ${res.data?.dispatched_count || emailList.length} recipient(s).`,
+          count: res.data?.dispatched_count || emailList.length
+        });
+        setNotification({
+          isOpen: true,
+          type: 'success',
+          title: 'Report Dispatched',
+          message: `Manual report email successfully sent to ${emailList.length} recipient(s) via Brevo API.`
+        });
+      }
+
+      await fetchAllData(true);
+    } catch (err: any) {
+      const fallbackMsg = providerInfo?.active_provider === 'BREVO_API'
+        ? 'Email dispatch failed. Please check Brevo API key and network connectivity.'
+        : 'Email dispatch failed. Please check provider settings.';
+      setDispatchResult({
+        status: 'failed',
+        message: err.response?.data?.detail || fallbackMsg
+      });
+    } finally {
+      setIsSendingManual(false);
+      setDispatchProgressStep(0);
+    }
+  };
+
+  // Run Scheduled Job Now (Calls the exact canonical backend scheduler pipeline)
+  const handleRunScheduledJobNow = async () => {
+    setIsSendingManual(true);
+    try {
+      const res = await api.post('/system/schedule/test-run', { test_recipient: null });
+      if (res.data?.success) {
+        setNotification({
+          isOpen: true,
+          type: 'success',
+          title: 'Scheduled Job Executed',
+          message: `Canonical Sunday automation pipeline executed successfully! ${res.data.message || ''}`
+        });
+      } else {
+        setNotification({
+          isOpen: true,
+          type: 'error',
+          title: 'Job Execution Note',
+          message: res.data?.message || 'Pipeline execution completed with warnings.'
+        });
+      }
+      await fetchAllData(true);
+    } catch (err: any) {
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Job Execution Failed',
+        message: err.response?.data?.detail || err.message || 'Failed to trigger scheduler pipeline.'
+      });
+    } finally {
+      setIsSendingManual(false);
+    }
+  };
+
+  // Toggle Automation Pause / Resume
+  const handleToggleAutomation = async () => {
+    const nextState = !scheduleEnabled;
+    try {
+      const res = await api.post('/system/schedule/toggle', { is_enabled: nextState });
+      setScheduleEnabled(nextState);
       setNotification({
         isOpen: true,
         type: 'success',
-        title: 'Auto-Schedule Updated',
-        message: `Automated dispatch set to ${scheduleFrequency === 'WEEKLY_EXECUTIVE' ? 'Weekly Executive Summary' : scheduleFrequency === 'DAILY_ROSTER' ? 'Daily Roster Audit' : 'Monthly Benchmark'} on ${scheduleDay}s at ${scheduleTime} (${autoScheduleEnabled ? 'ENABLED' : 'PAUSED'}).`
+        title: nextState ? 'Automation Resumed 🟢' : 'Automation Paused ⏸',
+        message: res.data?.message || `Sunday report automation is now ${nextState ? 'ENABLED' : 'PAUSED'}.`
+      });
+      await fetchAllData(true);
+    } catch (err: any) {
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Toggle Failed',
+        message: err.response?.data?.detail || 'Failed to update schedule status.'
+      });
+    }
+  };
+
+  // Save Schedule Configuration
+  const handleSaveScheduleConfig = async () => {
+    setSavingSchedule(true);
+    try {
+      const activeRecs = recipients.filter(r => r.is_active).map(r => r.email);
+      const payload = {
+        report_name: "Weekly Executive LeetCode Report",
+        day_of_week: scheduleDay,
+        hour: scheduleHour,
+        minute: scheduleMinute,
+        timezone: "Asia/Kolkata",
+        recipients: activeRecs.length > 0 ? activeRecs : ["nanthishvaran17@gmail.com"],
+        is_enabled: scheduleEnabled
+      };
+
+      const res = await api.post('/system/schedule', payload);
+      setShowScheduleModal(false);
+      setNotification({
+        isOpen: true,
+        type: 'success',
+        title: 'Schedule Settings Saved 🟢',
+        message: `Next automated dispatch: ${res.data?.next_run || 'Sunday 09:45 AM IST'}`
+      });
+      await fetchAllData(true);
+    } catch (err: any) {
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Schedule Save Failed',
+        message: err.response?.data?.detail || 'Failed to save schedule configuration.'
       });
     } finally {
       setSavingSchedule(false);
     }
   };
 
-  const handleSendSmtpTest = async () => {
-    if (!testRecipient.trim()) return;
-    setIsTestingSmtp(true);
-    setSmtpTestResult(null);
+  // Retry Failed Email Dispatch
+  const handleRetryFailedLog = async (logId: number) => {
+    setRetryingLogId(logId);
     try {
-      const res = await api.post('/email/test', { recipient: testRecipient.trim() });
-      setSmtpTestResult({
-        success: res.data.success,
-        message: res.data.message,
-        error: res.data.error,
-        provider: res.data.provider
-      });
-    } catch (err: any) {
-      setSmtpTestResult({
-        success: false,
-        message: '🔴 EMAIL DISPATCH TEST FAILED',
-        error: err.response?.data?.detail || err.message || 'Connection or authentication error'
-      });
-    } finally {
-      setIsTestingSmtp(false);
-    }
-  };
-
-  const handleSendAdminTestReportEmail = async () => {
-    if (!testRecipient.trim()) return;
-    setIsTestingSmtp(true);
-    setSmtpTestResult(null);
-    try {
-      const res = await api.post('/email/test', { recipient: testRecipient.trim() });
-      if (res.data.success) {
-        setSmtpTestResult({
-          success: true,
-          message: `🟢 Test report email accepted and sent successfully to ${testRecipient}!`,
-          error: undefined,
-          provider: res.data.provider
-        });
-      } else {
-        setSmtpTestResult({
-          success: false,
-          message: '🔴 EMAIL TEST FAILED',
-          error: res.data.error || 'Email dispatch failed',
-          provider: res.data.provider
-        });
-      }
-      await fetchAll();
-    } catch (err: any) {
-      setSmtpTestResult({
-        success: false,
-        message: '🔴 PRE-FLIGHT TEST FAILED',
-        error: err.response?.data?.detail || err.message || 'Pre-flight test failed',
-      });
-    } finally {
-      setIsTestingSmtp(false);
-    }
-  };
-
-  const fetchAll = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [rRes, lRes, sRes, pRes] = await Promise.all([
-        api.get('/email/recipients').catch(() => ({ data: [] })),
-        api.get('/email/logs?limit=100').catch(() => ({ data: [] })),
-        api.get('/contests/sessions').catch(() => ({ data: [] })),
-        api.get('/email/provider-diagnostics').catch(() => ({ data: null })),
-      ]);
-
-      if (pRes?.data) {
-        setProviderInfo(pRes.data);
-      }
-
-      const rData = Array.isArray(rRes.data) ? rRes.data : (rRes.data?.recipients || []);
-      const lData = Array.isArray(lRes.data) ? lRes.data : (lRes.data?.deliveries || lRes.data?.items || []);
-      const sData = Array.isArray(sRes.data) ? sRes.data : (sRes.data?.sessions || []);
-
-      setRecipients(rData.map((r: any) => ({
-        ...r,
-        is_active: r.is_active ?? r.active ?? false,
-        receive_weekly_reports: r.receive_weekly_reports ?? r.weekly_enabled ?? false,
-        receive_hod_reports: r.receive_hod_reports ?? r.hod_enabled ?? false,
-        receive_error_reports: r.receive_error_reports ?? r.error_enabled ?? false,
-      })));
-      setLogs(lData.map((d: any) => ({
-        id: d.id,
-        email_id: d.message_id || d.email_id || `MSG-${d.id}`,
-        session_id: d.session_id || null,
-        recipient: d.recipient_email || d.recipient || 'Admin',
-        role: d.recipient_role || d.trigger_type || 'MANAGEMENT',
-        subject: d.subject || 'Weekly Contest Performance Report',
-        status: (d.status || 'SENT').toUpperCase(),
-        attachment_count: d.attachments_count || d.attachment_count || 0,
-        error_message: d.error_message,
-        retry_count: d.retry_count || 0,
-        sent_at: d.sent_at || d.created_at,
-        created_at: d.created_at
-      })));
-      setSessions(sData
-        .filter((s: any) => s && (s.status === 'FINALIZED' || s.status === 'COMPLETED' || s.status === 'LIVE' || s.status === 'SCHEDULED'))
-        .map((s: any) => ({
-          sessionId: s.sessionId || s.id,
-          sessionDate: s.sessionDate || s.session_date,
-          contestName: s.contestName || s.contest_name,
-          status: s.status
-        }))
-      );
-    } catch (err) {
-      console.error('Email delivery fetch error:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { fetchAll(); }, [fetchAll]);
-
-  // Summary KPIs
-  const totalSent = logs.filter(l => l.status === 'SENT').length;
-  const totalFailed = logs.filter(l => l.status === 'FAILED').length;
-  const totalQueued = logs.filter(l => l.status === 'QUEUED' || l.status === 'RETRYING').length;
-
-  const handleRetry = async (logId: number) => {
-    try {
-      await api.post(`/email/retry/${logId}`);
-      await fetchAll();
+      const res = await api.post(`/email/retry/${logId}`);
       setNotification({
         isOpen: true,
         type: 'success',
-        title: 'Retry Initiated',
-        message: `Email delivery retry request has been queued successfully.`
+        title: 'Retry Queued',
+        message: res.data?.message || `Queued retry attempt for dispatch #${logId}.`
       });
+      await fetchAllData(true);
     } catch (err: any) {
-      console.error('Retry error:', err);
       setNotification({
         isOpen: true,
         type: 'error',
-        title: 'Retry Request Failed',
-        message: err.response?.data?.detail || 'Unable to trigger email retry.'
+        title: 'Retry Failed',
+        message: err.response?.data?.detail || 'Could not queue retry for this email.'
       });
+    } finally {
+      setRetryingLogId(null);
     }
   };
 
-  const handleAddRecipient = async () => {
-    const cleanName = newName.trim();
-    const cleanEmail = newEmail.trim().toLowerCase();
-
-    // 1. Validate required name
-    if (!cleanName) {
+  // Add Recipient Handler
+  const handleCreateRecipient = async () => {
+    if (!newName.trim() || !newEmail.trim() || !newEmail.includes('@')) {
       setNotification({
         isOpen: true,
         type: 'warning',
-        title: 'Missing Full Name',
-        message: 'Please enter the recipient full name (e.g. Dr. K. Ramesh or HOD Cyber Security).'
+        title: 'Invalid Input',
+        message: 'Please provide a valid recipient name and email address.'
       });
       return;
     }
-
-    // 2. Validate required email
-    if (!cleanEmail) {
-      setNotification({
-        isOpen: true,
-        type: 'warning',
-        title: 'Missing Email Address',
-        message: 'Please enter an institutional or official email address for the recipient.'
-      });
-      return;
-    }
-
-    // 3. Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(cleanEmail)) {
-      setNotification({
-        isOpen: true,
-        type: 'warning',
-        title: 'Invalid Email Address',
-        message: `The email address '${cleanEmail}' is not formatted correctly. Please enter a valid email (e.g. name@nandha.edu.in).`
-      });
-      return;
-    }
-
-    // 4. Validate duplicate in active list
-    if (recipients.some(r => r.email.toLowerCase() === cleanEmail)) {
-      setNotification({
-        isOpen: true,
-        type: 'warning',
-        title: 'Recipient Already Exists',
-        message: `A report recipient with email address '${cleanEmail}' is already registered in the system.`
-      });
-      return;
-    }
-
     setAddingRecipient(true);
     try {
-      const res = await api.post('/email/recipients', {
-        name: cleanName,
-        email: cleanEmail,
+      await api.post('/email/recipients', {
+        name: newName.trim(),
+        email: newEmail.trim().toLowerCase(),
         role: newRole,
         department: newDept,
-        weekly_enabled: true,
-        hod_enabled: true,
-        error_enabled: true,
-        active: true
+        receive_weekly_reports: true,
+        receive_hod_reports: true,
+        receive_error_reports: true
       });
 
-      // Successful creation
-      setShowAddRecipient(false);
-      const savedName = cleanName;
-      const savedEmail = cleanEmail;
+      setShowAddRecipientModal(false);
       setNewName('');
       setNewEmail('');
-      setNewRole('HOD');
-      setNewDept('ALL');
-
-      await fetchAll();
-
       setNotification({
         isOpen: true,
         type: 'success',
-        title: 'Recipient Added Successfully',
-        message: res.data?.message || `Recipient '${savedName}' (${savedEmail}) has been successfully added to the report distribution list.`
+        title: 'Recipient Added',
+        message: `Successfully added ${newEmail} to report recipients.`
       });
+      await fetchAllData(true);
     } catch (err: any) {
-      console.error('Add recipient error:', err);
-      const backendError = err.response?.data?.detail || err.message || 'Failed to save recipient. Please try again.';
       setNotification({
         isOpen: true,
         type: 'error',
         title: 'Failed to Add Recipient',
-        message: backendError
+        message: err.response?.data?.detail || 'Could not save recipient.'
       });
     } finally {
       setAddingRecipient(false);
     }
   };
 
-  const handleDeleteRecipient = (id: number, email: string, name?: string) => {
-    setNotification({
-      isOpen: true,
-      type: 'warning',
-      isConfirm: true,
-      title: 'Delete Email Recipient',
-      message: `Are you sure you want to remove '${name || email}' (${email}) from the report distribution list?`,
-      confirmText: 'Yes, Delete',
-      cancelText: 'Cancel',
-      onConfirm: async () => {
-        try {
-          const res = await api.delete(`/email/recipients/${id}`);
-          await fetchAll();
-          setNotification({
-            isOpen: true,
-            type: 'success',
-            title: 'Recipient Removed',
-            message: res.data?.message || `Recipient (${email}) was removed successfully.`
-          });
-        } catch (err: any) {
-          console.error('Delete error:', err);
-          setNotification({
-            isOpen: true,
-            type: 'error',
-            title: 'Failed to Delete Recipient',
-            message: err.response?.data?.detail || 'Unable to delete recipient.'
-          });
-        }
-      }
-    });
-  };
-
-  const handleToggleRecipient = async (r: any) => {
+  // Toggle Recipient Active/Inactive Status
+  const handleToggleRecipientActive = async (id: number, currentStatus: boolean) => {
     try {
-      const newStatus = !(r.is_active ?? r.active);
-      await api.patch(`/email/recipients/${r.id}/status`, { active: newStatus });
-      setRecipients(prev => prev.map(x => x.id === r.id ? { ...x, is_active: newStatus, active: newStatus } : x));
-    } catch (err: any) {
-      console.error('Toggle error:', err);
+      await api.patch(`/email/recipients/${id}/status`, { active: !currentStatus });
+      await fetchAllData(true);
+    } catch (_err) {
       setNotification({
         isOpen: true,
         type: 'error',
         title: 'Status Update Failed',
-        message: err.response?.data?.detail || 'Could not update recipient status.'
+        message: 'Could not update recipient status.'
       });
     }
   };
 
-  const handleSendEmail = async () => {
-    if (!selectedRecipientIds.size) return;
-    setSendStep('sending');
-    const selectedEmails = recipients
-      .filter(r => selectedRecipientIds.has(r.id))
-      .map(r => r.email);
+  // Delete Recipient Handler
+  const handleDeleteRecipient = async (id: number) => {
     try {
-      const res = await api.post('/email/send-manual', {
-        session_id: selectedSessionId,
-        recipient_emails: selectedEmails,
-        custom_message: customMessage || null
-      });
-      if (res.data?.status === 'failed') {
-        setSendResult(res.data.message || 'Email dispatch failed.');
-      } else {
-        setSendResult(res.data?.message || 'Report email sent successfully.');
-      }
-      setSendStep('done');
-      await fetchAll();
-    } catch (err: any) {
-      setSendResult(err.response?.data?.detail || 'Email dispatch failed. Please check SMTP settings.');
-      setSendStep('done');
-    }
-  };
-
-  const [isTriggeringWeekly, setIsTriggeringWeekly] = useState(false);
-
-  const handleTriggerAutomatedDispatch = async () => {
-    setIsTriggeringWeekly(true);
-    try {
-      const res = await api.post('/email/trigger-weekly');
-      await fetchAll();
+      await api.delete(`/email/recipients/${id}`);
+      await fetchAllData(true);
       setNotification({
         isOpen: true,
         type: 'success',
-        title: 'Weekly Dispatch Triggered',
-        message: res.data?.message || 'Weekly report email dispatch has been queued successfully for all active recipients.'
+        title: 'Recipient Removed',
+        message: 'Recipient deleted successfully.'
       });
-    } catch (err: any) {
-      console.error('Trigger weekly error:', err);
+    } catch (_err) {
       setNotification({
         isOpen: true,
         type: 'error',
-        title: 'Dispatch Trigger Failed',
-        message: err.response?.data?.detail || 'Unable to trigger weekly report emails.'
+        title: 'Delete Failed',
+        message: 'Failed to remove recipient.'
       });
-    } finally {
-      setIsTriggeringWeekly(false);
     }
   };
 
-  const selectedSession = sessions.find(s => s.sessionId === selectedSessionId);
+  // Diagnostics Test Email Handler
+  const handleRunDiagnosticsTest = async (isFullReport = false) => {
+    if (!testRecipient.trim()) return;
+    setIsTestingProvider(true);
+    setTestResult(null);
+    try {
+      const endpoint = isFullReport ? '/email/send-manual' : '/email/test';
+      const payload = isFullReport
+        ? { recipient_emails: [testRecipient.trim()], is_safe_test: true }
+        : { recipient: testRecipient.trim() };
 
-  if (loading) {
+      const res = await api.post(endpoint, payload);
+      setTestResult({
+        success: true,
+        message: `🟢 ${isFullReport ? 'Test report email' : 'Provider test email'} sent successfully to ${testRecipient}!`,
+        provider: providerInfo?.active_provider || 'BREVO_API'
+      });
+      await fetchAllData(true);
+    } catch (err: any) {
+      setTestResult({
+        success: false,
+        message: '🔴 Diagnostics Test Failed',
+        error: err.response?.data?.detail || err.message || 'Connection error'
+      });
+    } finally {
+      setIsTestingProvider(false);
+    }
+  };
+
+  // Filtered Logs Calculation
+  const filteredLogs = useMemo(() => {
+    return logs.filter(log => {
+      if (logFilterStatus !== 'ALL' && log.status.toUpperCase() !== logFilterStatus.toUpperCase()) {
+        return false;
+      }
+      if (logFilterDispatchType !== 'ALL' && (log.dispatch_type || 'AUTOMATED').toUpperCase() !== logFilterDispatchType.toUpperCase()) {
+        return false;
+      }
+      if (logSearchQuery.trim()) {
+        const q = logSearchQuery.toLowerCase();
+        const rec = (log.recipient || '').toLowerCase();
+        const subj = (log.subject || '').toLowerCase();
+        const msgId = (log.email_id || '').toLowerCase();
+        if (!rec.includes(q) && !subj.includes(q) && !msgId.includes(q)) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [logs, logFilterStatus, logFilterDispatchType, logSearchQuery]);
+
+  if (loading && !refreshing) {
     return (
-      <div className="flex items-center justify-center py-20 space-x-3 text-gray-500">
-        <Loader2 className="w-5 h-5 animate-spin text-brand-500" />
-        <span className="text-sm font-medium">Loading email delivery data...</span>
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 space-y-4">
+        <Loader2 className="w-10 h-10 text-brand-500 animate-spin" />
+        <p className="text-sm font-bold text-gray-500 dark:text-gray-400">
+          Loading Email Operations Center telemetry...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* KPI Summary Bar */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: 'Emails Delivered', value: totalSent, color: 'emerald', icon: <CheckCircle2 className="w-5 h-5" /> },
-          { label: 'Pending / Queued', value: totalQueued, color: 'amber', icon: <Clock className="w-5 h-5" /> },
-          { label: 'Failed Deliveries', value: totalFailed, color: 'red', icon: <XCircle className="w-5 h-5" /> },
-          { label: 'Active Recipients', value: recipients.filter(r => r.is_active).length, color: 'indigo', icon: <Users className="w-5 h-5" /> },
-        ].map(kpi => (
-          <div key={kpi.label} className={`glass-card p-4 rounded-2xl border border-${kpi.color}-500/30 bg-white dark:bg-navy-900`}>
-            <div className={`flex items-center justify-between text-${kpi.color}-600 dark:text-${kpi.color}-400 mb-1`}>
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-gray-400 dark:text-gray-500">{kpi.label}</span>
-              {kpi.icon}
-            </div>
-            <div className={`text-2xl font-black text-${kpi.color}-600 dark:text-${kpi.color}-400`}>{kpi.value}</div>
-          </div>
-        ))}
-      </div>
+    <div className="space-y-8 pb-12 animate-fade-in">
+      
+      {/* 1. DASHBOARD HEADER & PROVIDER STATUS BAR */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-2xl border border-brand-500/30">
+        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Active Provider & Test Email Card */}
-      <div className="glass-card p-5 rounded-3xl border border-indigo-500/30 bg-white dark:bg-navy-900 shadow-xl space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="flex items-center space-x-2">
-            <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
-              <Mail className="w-5 h-5" />
+        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-2xl">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-black">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span>Brevo Official API • HTTPS Port 443</span>
             </div>
-            <div>
-              <h3 className="text-sm font-black text-gray-900 dark:text-white">Email Delivery &amp; Provider Diagnostics</h3>
-              <p className="text-[11px] text-gray-400">
-                Active Provider: <strong className="text-indigo-600 dark:text-indigo-400">{providerInfo?.active_provider === 'BREVO_API' ? 'Brevo Official API (Port 443 HTTPS)' : (providerInfo?.active_provider === 'RESEND_API' ? 'Resend API (HTTPS)' : 'Gmail SMTP (Port 587)')}</strong> • Timeout: {providerInfo?.timeout_seconds || 90}s (Auto-Retry Enabled)
-              </p>
-            </div>
+
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">
+              Email <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Operations Center</span>
+            </h1>
+
+            <p className="text-xs sm:text-sm text-gray-300 font-bold leading-relaxed">
+              Monitor, control, and verify institutional report delivery across manual and automated email workflows.
+            </p>
           </div>
-          <div className="flex items-center gap-1.5 self-start sm:self-auto">
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-              🟢 {providerInfo?.active_provider === 'BREVO_API' ? 'Brevo v3 API Active' : 'Provider Ready'}
-            </span>
+
+          {/* Provider Telemetry Card */}
+          <div className="w-full lg:w-auto bg-white/10 dark:bg-navy-900/60 backdrop-blur-md p-4 rounded-2xl border border-white/10 text-xs space-y-2">
+            <div className="flex items-center justify-between gap-4 pb-2 border-b border-white/10">
+              <span className="font-extrabold text-gray-300 uppercase tracking-wider text-[10px]">API Provider</span>
+              <span className="font-black text-emerald-400 flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Brevo v3 (Port 443)
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] text-gray-300">
+              <div>Timeout: <strong className="text-white">90s</strong></div>
+              <div>Retry: <strong className="text-emerald-400">3 Exponential</strong></div>
+              <div className="col-span-2 pt-1 text-[10.5px] text-gray-400">
+                Last Success: <strong className="text-gray-200">{metrics.lastSuccessTime ? formatTimestampIST(metrics.lastSuccessTime) : 'None'}</strong>
+              </div>
+            </div>
+            <div className="pt-2 flex items-center justify-between text-[10px] text-gray-400">
+              <span>Refreshed: {lastRefreshedAt || 'Just now'}</span>
+              <button
+                onClick={() => fetchAllData(true)}
+                disabled={refreshing}
+                className="flex items-center gap-1 text-brand-300 hover:text-white transition-colors cursor-pointer"
+              >
+                <RefreshCw className={`w-3 h-3 ${refreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
-          <div className="flex-1">
-            <label className="block text-[10px] font-extrabold uppercase text-gray-400 mb-1">Recipient</label>
-            <input
-              type="email"
-              value={testRecipient}
-              onChange={e => setTestRecipient(e.target.value)}
-              placeholder="YOUR_TEST_EMAIL@gmail.com"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-navy-800 text-xs font-bold text-gray-900 dark:text-white outline-none focus:border-indigo-500"
-            />
+      {/* 2. TOP KPI CARDS */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+        {/* Delivered */}
+        <div className="glass-card p-4 rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-transparent text-left">
+          <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 mb-1">
+            <span className="text-[10px] font-black uppercase tracking-wider">Delivered</span>
+            <CheckCircle2 className="w-4 h-4" />
           </div>
-          <button
-            onClick={handleSendSmtpTest}
-            disabled={isTestingSmtp || !testRecipient.trim()}
-            className="sm:self-end px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center space-x-2"
-          >
-            {isTestingSmtp ? (
-              <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>Testing SMTP...</span>
-              </>
+          <div className="text-2xl font-black text-gray-900 dark:text-white">
+            {metrics.deliveredCount.toLocaleString()}
+          </div>
+          <p className="text-[10px] text-gray-400 font-bold mt-1">Confirmed Dispatches</p>
+        </div>
+
+        {/* Pending / Queued */}
+        <div className="glass-card p-4 rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-transparent text-left">
+          <div className="flex items-center justify-between text-amber-600 dark:text-amber-400 mb-1">
+            <span className="text-[10px] font-black uppercase tracking-wider">Pending / Queued</span>
+            <Clock className="w-4 h-4" />
+          </div>
+          <div className="text-2xl font-black text-gray-900 dark:text-white">
+            {metrics.pendingCount.toLocaleString()}
+          </div>
+          <p className="text-[10px] text-gray-400 font-bold mt-1">Queued Jobs</p>
+        </div>
+
+        {/* Failed Deliveries */}
+        <div className="glass-card p-4 rounded-2xl border border-red-500/30 bg-gradient-to-br from-red-500/5 to-transparent text-left">
+          <div className="flex items-center justify-between text-red-600 dark:text-red-400 mb-1">
+            <span className="text-[10px] font-black uppercase tracking-wider">Failed</span>
+            <XCircle className="w-4 h-4" />
+          </div>
+          <div className="text-2xl font-black text-gray-900 dark:text-white">
+            {metrics.failedCount.toLocaleString()}
+          </div>
+          <p className="text-[10px] text-gray-400 font-bold mt-1">Failed Attempts</p>
+        </div>
+
+        {/* Active Recipients */}
+        <div className="glass-card p-4 rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-500/5 to-transparent text-left">
+          <div className="flex items-center justify-between text-indigo-600 dark:text-indigo-400 mb-1">
+            <span className="text-[10px] font-black uppercase tracking-wider">Active Recipients</span>
+            <Users className="w-4 h-4" />
+          </div>
+          <div className="text-2xl font-black text-gray-900 dark:text-white">
+            {metrics.activeRecipientsCount}
+          </div>
+          <p className="text-[10px] text-gray-400 font-bold mt-1">Configured Emails</p>
+        </div>
+
+        {/* Success Rate */}
+        <div className="glass-card p-4 rounded-2xl border border-teal-500/30 bg-gradient-to-br from-teal-500/5 to-transparent text-left">
+          <div className="flex items-center justify-between text-teal-600 dark:text-teal-400 mb-1">
+            <span className="text-[10px] font-black uppercase tracking-wider">Success Rate</span>
+            <ShieldCheck className="w-4 h-4" />
+          </div>
+          <div className="text-2xl font-black text-gray-900 dark:text-white">
+            {metrics.successRate}%
+          </div>
+          <p className="text-[10px] text-gray-400 font-bold mt-1">Delivered / Attempts</p>
+        </div>
+
+        {/* Automation Status */}
+        <div className="glass-card p-4 rounded-2xl border border-purple-500/30 bg-gradient-to-br from-purple-500/5 to-transparent text-left">
+          <div className="flex items-center justify-between text-purple-600 dark:text-purple-400 mb-1">
+            <span className="text-[10px] font-black uppercase tracking-wider">Automation</span>
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <div className="text-lg font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mt-0.5">
+            {scheduleEnabled ? (
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-black">
+                🟢 ACTIVE
+              </span>
             ) : (
-              <>
-                <Send className="w-3.5 h-3.5" />
-                <span>Send Quick SMTP Test</span>
-              </>
-            )}
-          </button>
-          <button
-            onClick={handleSendAdminTestReportEmail}
-            disabled={isTestingSmtp}
-            className="sm:self-end px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center space-x-2"
-          >
-            <Mail className="w-3.5 h-3.5" />
-            <span>Send Test Report to Admin Email</span>
-          </button>
-        </div>
-
-        {smtpTestResult && (
-          <div className={`p-3.5 rounded-2xl text-xs font-bold border ${
-            smtpTestResult.success
-              ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-900/30 text-emerald-700 dark:text-emerald-300'
-              : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-900/30 text-red-700 dark:text-red-300'
-          }`}>
-            <div className="flex items-center space-x-2">
-              <span>{smtpTestResult.message}</span>
-            </div>
-            {smtpTestResult.error && (
-              <p className="text-[11px] font-normal text-red-600 dark:text-red-400 mt-1 leading-relaxed">
-                {smtpTestResult.error}
-              </p>
+              <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-black">
+                ⏸ PAUSED
+              </span>
             )}
           </div>
-        )}
+          <p className="text-[10px] text-gray-400 font-bold mt-1.5">Sunday 09:45 AM IST</p>
+        </div>
       </div>
 
-      {/* ── SUB-MODE NAVIGATION BAR ────────────────────────── */}
-      <div className="flex items-center space-x-2 bg-gray-100 dark:bg-navy-950 p-1.5 rounded-2xl border border-gray-200 dark:border-gray-800 flex-wrap gap-2">
+      {/* 3. SECTION TAB NAVIGATION */}
+      <div className="flex items-center space-x-2 bg-gray-100 dark:bg-navy-900 p-1.5 rounded-2xl border border-gray-200 dark:border-gray-800 flex-wrap gap-1">
         <button
           onClick={() => setActiveSection('manual')}
           className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeSection === 'manual'
-              ? 'bg-gradient-to-r from-indigo-600 to-brand-600 text-white shadow-md'
+              ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
           }`}
         >
-          <Send className="w-4 h-4 text-emerald-400" />
-          <span>⚡ Manual Instant Dispatch</span>
+          <Zap className="w-4 h-4 text-amber-300" />
+          <span>Manual Instant Dispatch</span>
         </button>
 
         <button
           onClick={() => setActiveSection('automated')}
           className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeSection === 'automated'
-              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md'
+              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md font-black'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
           }`}
         >
-          <Clock className="w-4 h-4" />
-          <span>⏰ Automated Sunday Schedule & Time Settings</span>
+          <Calendar className="w-4 h-4" />
+          <span>Automated Weekly Dispatch</span>
         </button>
 
         <button
           onClick={() => setActiveSection('recipients')}
           className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeSection === 'recipients'
-              ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md'
+              ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-md'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
           }`}
         >
@@ -607,688 +841,1015 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           onClick={() => setActiveSection('history')}
           className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeSection === 'history'
-              ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md'
+              ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
           }`}
         >
           <FileText className="w-4 h-4" />
-          <span>Delivery History ({logs.length})</span>
+          <span>Delivery History &amp; Logs ({logs.length})</span>
+        </button>
+
+        <button
+          onClick={() => setShowDiagnostics(!showDiagnostics)}
+          className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ml-auto ${
+            showDiagnostics
+              ? 'bg-gray-800 text-white'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+          }`}
+        >
+          <Settings className="w-4 h-4 text-indigo-400" />
+          <span>🧪 Diagnostics &amp; Test Tools</span>
         </button>
       </div>
 
-      {/* ── MANUAL INSTANT DISPATCH CARD ─────────────────── */}
-      {activeSection === 'manual' && (
-        <div className="glass-card p-6 rounded-3xl border border-indigo-500/30 bg-white dark:bg-navy-900 shadow-xl space-y-4">
-          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3 flex-wrap gap-2">
-            <div className="flex items-center space-x-3">
-              <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
-                <Send className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-sm font-black text-gray-900 dark:text-white">Manual Instant Email Dispatch Center</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                  Trigger an immediate, on-demand report email dispatch to college management, HODs, or custom email lists.
-                </p>
+      {/* 4. DIAGNOSTICS & TEST TOOLS COLLAPSIBLE PANEL */}
+      {showDiagnostics && (
+        <div className="glass-card p-6 rounded-3xl border border-indigo-500/30 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-transparent space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-800">
+            <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 font-black text-sm">
+              <Settings className="w-4 h-4" />
+              <span>🧪 Provider Diagnostics &amp; Sandbox Test Tools</span>
+            </div>
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+              ⚠ Test Mode Active (Does not alter Sunday schedule)
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Quick Test Email Card */}
+            <div className="p-4 bg-white dark:bg-navy-900 rounded-2xl border border-gray-200 dark:border-gray-800 space-y-3">
+              <h4 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider">
+                Send Quick Test Email
+              </h4>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                Verify Brevo API connectivity and transactional email dispatch to a specific test address.
+              </p>
+
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  value={testRecipient}
+                  onChange={(e) => setTestRecipient(e.target.value)}
+                  placeholder="Enter test recipient email..."
+                  className="flex-1 px-3 py-2 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl text-xs font-medium text-gray-900 dark:text-white"
+                />
+                <button
+                  onClick={() => handleRunDiagnosticsTest(false)}
+                  disabled={isTestingProvider}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer disabled:opacity-50"
+                >
+                  {isTestingProvider ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                  <span>Quick Test</span>
+                </button>
               </div>
             </div>
 
-            <button
-              onClick={() => { setShowSendModal(true); setSendStep('select'); setSelectedSessionId(null); setSelectedRecipientIds(new Set()); setCustomMessage(''); setSendResult(null); }}
-              className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-brand-600 hover:from-indigo-700 hover:to-brand-700 text-white font-black text-xs rounded-2xl shadow-lg shadow-indigo-500/30 transition-all flex items-center space-x-2 cursor-pointer transform hover:scale-105"
-            >
-              <Send className="w-4 h-4" />
-              <span>Compose & Send Manual Email Report Now</span>
-            </button>
+            {/* Send Full Test Report Card */}
+            <div className="p-4 bg-white dark:bg-navy-900 rounded-2xl border border-gray-200 dark:border-gray-800 space-y-3">
+              <h4 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider">
+                Send Complete Test Report Package
+              </h4>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                Generates full multi-sheet Excel + PDF + DOCX report and dispatches to test recipient in safe mode.
+              </p>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleRunDiagnosticsTest(true)}
+                  disabled={isTestingProvider}
+                  className="w-full py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer disabled:opacity-50"
+                >
+                  {isTestingProvider ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-amber-300" />}
+                  <span>Send Full Test Report to {testRecipient}</span>
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-medium text-gray-600 dark:text-gray-300">
-            <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 space-y-1">
-              <span className="font-black text-gray-900 dark:text-white block">1. Select Report Session</span>
-              <p className="text-[11px] text-gray-400">Choose from recent weekly sessions or auto-generated executive snapshot.</p>
+          {/* Test Execution Feedback */}
+          {testResult && (
+            <div className={`p-3.5 rounded-2xl text-xs font-bold ${testResult.success ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800' : 'bg-red-50 text-red-800 border border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800'}`}>
+              <div className="flex items-center justify-between">
+                <span>{testResult.message}</span>
+                {testResult.provider && <span className="text-[10px] uppercase tracking-wider opacity-80">Provider: {testResult.provider}</span>}
+              </div>
+              {testResult.error && <p className="text-[11px] font-normal mt-1 opacity-90">{testResult.error}</p>}
             </div>
-            <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 space-y-1">
-              <span className="font-black text-gray-900 dark:text-white block">2. Target Distribution</span>
-              <p className="text-[11px] text-gray-400">Filter recipients by Role (Deans, HODs, Management) or pick specific emails.</p>
-            </div>
-            <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 space-y-1">
-              <span className="font-black text-gray-900 dark:text-white block">3. Add Custom Note</span>
-              <p className="text-[11px] text-gray-400">Attach an executive summary note or administrative instructions before dispatch.</p>
-            </div>
-          </div>
+          )}
         </div>
       )}
 
-      {/* ── AUTOMATED SCHEDULE CARD ───────────────────────── */}
-      {activeSection === 'automated' && (
-        <div className="glass-card p-6 rounded-3xl border border-amber-500/30 bg-white dark:bg-navy-900 shadow-xl space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-3">
-            <div className="flex items-center space-x-3">
-              <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                <Clock className="w-5 h-5" />
+      {/* 5. MANUAL INSTANT DISPATCH PANEL */}
+      {activeSection === 'manual' && (
+        <div className="glass-card p-6 sm:p-8 rounded-3xl border border-brand-500/30 shadow-xl space-y-6">
+          <div className="flex items-start justify-between flex-wrap gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-xs font-black">
+                <Zap className="w-3.5 h-3.5 text-amber-400" />
+                <span>MANUAL DISPATCH WORKFLOW</span>
               </div>
-              <div>
-                <h3 className="text-sm font-black text-gray-900 dark:text-white flex items-center space-x-2">
-                  <span>Automated Sunday Email Scheduler & Time Configuration</span>
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                  Configure automated background execution time, day of week, and trigger status for institutional reports.
-                </p>
-              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">
+                Manual Instant Dispatch
+              </h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-bold max-w-2xl">
+                Send a report immediately to selected recipients. This action runs once and does not modify the recurring Sunday schedule.
+              </p>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
-                autoScheduleEnabled
-                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/30'
-                  : 'bg-gray-100 text-gray-700 dark:bg-navy-950 dark:text-gray-400 border border-gray-300'
-              }`}>
-                {autoScheduleEnabled ? '🟢 AUTO CRON ACTIVE' : '⚪ MANUAL ONLY'}
+            <div className="px-3.5 py-2 rounded-2xl bg-gray-50 dark:bg-navy-900 border border-gray-200 dark:border-navy-700 text-right">
+              <span className="text-[10px] font-black uppercase text-gray-400 block">Delivery Mode</span>
+              <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Immediate One-Time
               </span>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Schedule Status Toggle */}
-            <div className="space-y-1">
-              <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase">Auto Dispatch Status</label>
-              <select
-                value={autoScheduleEnabled ? 'ENABLED' : 'DISABLED'}
-                onChange={(e) => setAutoScheduleEnabled(e.target.value === 'ENABLED')}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-navy-950 text-xs font-bold text-gray-900 dark:text-white"
-              >
-                <option value="ENABLED">🟢 Enabled (Auto-Trigger On Schedule)</option>
-                <option value="DISABLED">⚪ Disabled (Manual Trigger Only)</option>
-              </select>
-            </div>
-
-            {/* Schedule Frequency */}
-            <div className="space-y-1">
-              <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase">Report Frequency</label>
-              <select
-                value={scheduleFrequency}
-                onChange={(e) => setScheduleFrequency(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-navy-950 text-xs font-bold text-gray-900 dark:text-white"
-              >
-                <option value="WEEKLY_EXECUTIVE">Weekly Sunday Executive Summary</option>
-                <option value="DAILY_ROSTER">Daily Roster Audit Log</option>
-                <option value="MONTHLY_BENCHMARK">Monthly Benchmark Matrix</option>
-              </select>
-            </div>
-
-            {/* Schedule Day */}
-            <div className="space-y-1">
-              <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase">Trigger Day</label>
-              <select
-                value={scheduleDay}
-                onChange={(e) => setScheduleDay(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-navy-950 text-xs font-bold text-gray-900 dark:text-white"
-              >
-                <option value="Sunday">Every Sunday</option>
-                <option value="Monday">Every Monday</option>
-                <option value="Friday">Every Friday</option>
-              </select>
-            </div>
-
-            {/* Schedule Time */}
-            <div className="space-y-1">
-              <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase">Trigger Time (IST)</label>
-              <select
-                value={scheduleTime}
-                onChange={(e) => setScheduleTime(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-navy-950 text-xs font-bold text-gray-900 dark:text-white"
-              >
-                <option value="08:00">08:00 AM (Morning Summary)</option>
-                <option value="09:00">09:00 AM (Office Opening)</option>
-                <option value="18:00">06:00 PM (Evening Closing)</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800 flex-wrap gap-3">
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-              Next scheduled run: <strong className="text-gray-900 dark:text-white">{scheduleDay} at {scheduleTime} AM</strong> ({autoScheduleEnabled ? 'Active' : 'Paused'})
-            </p>
-
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={handleTriggerAutomatedDispatch}
-                disabled={isTriggeringWeekly}
-                className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
-              >
-                {isTriggeringWeekly ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                <span>Trigger Auto-Dispatch Right Now</span>
-              </button>
-
-              <button
-                onClick={handleSaveScheduleSettings}
-                disabled={savingSchedule}
-                className="px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs rounded-xl shadow-md transition-all flex items-center space-x-1.5 cursor-pointer"
-              >
-                {savingSchedule ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Clock className="w-3.5 h-3.5" />}
-                <span>Save Auto-Schedule Settings</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Action Buttons */}
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          onClick={() => { setShowSendModal(true); setSendStep('select'); setSelectedSessionId(null); setSelectedRecipientIds(new Set()); setCustomMessage(''); setSendResult(null); }}
-          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-brand-600 hover:from-indigo-700 hover:to-brand-700 text-white rounded-2xl text-xs font-black shadow-lg shadow-indigo-500/30 transition-all hover:scale-105"
-        >
-          <Send className="w-4 h-4" />
-          <span>Send Report by Email</span>
-        </button>
-
-        <button
-          onClick={handleTriggerAutomatedDispatch}
-          disabled={isTriggeringWeekly}
-          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs font-black shadow-lg shadow-emerald-500/30 transition-all hover:scale-105 disabled:opacity-50"
-        >
-          {isTriggeringWeekly ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Queueing Dispatch...</span>
-            </>
-          ) : (
-            <>
-              <Send className="w-4 h-4" />
-              <span>Trigger Automated Weekly Dispatch Now</span>
-            </>
-          )}
-        </button>
-
-        <button onClick={fetchAll} className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-navy-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold hover:bg-gray-50 dark:hover:bg-navy-700 transition-all">
-          <RefreshCw className="w-3.5 h-3.5" />
-          Refresh
-        </button>
-
-        {/* Section Tabs */}
-        <div className="flex items-center ml-auto border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
-          {(['manual', 'automated', 'recipients', 'history'] as const).map(s => (
-            <button
-              key={s}
-              onClick={() => setActiveSection(s)}
-              className={`px-4 py-2 text-[11px] font-black capitalize transition-all ${activeSection === s ? 'bg-brand-600 text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`}
-            >
-              {s === 'manual' ? 'Manual Send' : s === 'automated' ? 'Auto Schedule' : s === 'recipients' ? 'Recipients' : 'History'}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── STATUS / MANUAL SUMMARY SECTION ───────────────────── */}
-      {(activeSection === 'manual' || activeSection === 'automated') && (
-        <div className="glass-card rounded-3xl border border-gray-200 dark:border-gray-700/50 overflow-hidden">
-          <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-black text-gray-900 dark:text-white">Email Delivery Status</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Recent automated and manual report email deliveries</p>
-            </div>
-            {totalFailed > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/30 text-red-600 dark:text-red-400 text-xs font-bold">
-                <AlertTriangle className="w-3.5 h-3.5" />
-                {totalFailed} Failed
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column: Report Selection & Attachments */}
+            <div className="space-y-5 lg:col-span-1">
+              <div>
+                <label className="block text-xs font-black uppercase text-gray-500 dark:text-gray-400 mb-2">
+                  Select Institutional Report
+                </label>
+                <select
+                  value={selectedReportType}
+                  onChange={(e) => setSelectedReportType(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-2xl text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500"
+                >
+                  <option value="WEEKLY_CONTEST">Weekly Contest Executive Report (Excel + PDF + Word)</option>
+                  <option value="EXECUTIVE_SUMMARY">Executive Performance Summary</option>
+                  <option value="DEPARTMENT_MATRIX">Department Contest Performance Matrix</option>
+                </select>
               </div>
-            )}
-          </div>
-          {logs.length === 0 ? (
-            <div className="py-16 text-center">
-              <Mail className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-sm font-bold text-gray-400">No email deliveries yet</p>
-              <p className="text-xs text-gray-400 mt-1">Emails are dispatched automatically after weekly contest finalization</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-gray-100 dark:divide-gray-800 max-h-[400px] overflow-y-auto">
-              {logs.slice(0, 10).map(log => {
-                const sc = STATUS_CONFIG[log.status] || STATUS_CONFIG['QUEUED'];
-                return (
-                  <div key={log.id} className="px-5 py-4 flex items-center justify-between gap-3 hover:bg-gray-50 dark:hover:bg-navy-800/40 transition-colors">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className={`flex-shrink-0 ${sc.color}`}>{sc.icon}</div>
-                      <div className="min-w-0">
-                        <div className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{log.recipient}</div>
-                        <div className="text-[10px] text-gray-400 truncate">{log.subject}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className={`text-[10px] font-black ${sc.color}`}>{sc.label}</span>
-                      <span className="text-[10px] text-gray-400">📎 {log.attachment_count}</span>
-                      {(log.status === 'FAILED' || log.status === 'QUEUED' || log.status === 'RETRYING') && (
-                        <button
-                          onClick={() => handleRetry(log.id)}
-                          className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black transition-all"
-                        >
-                          <RotateCcw className="w-2.5 h-2.5" />
-                          Retry
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
 
-      {/* ── RECIPIENTS SECTION ──────────────────────────────────── */}
-      {activeSection === 'recipients' && (
-        <div className="glass-card rounded-3xl border border-gray-200 dark:border-gray-700/50 overflow-hidden">
-          <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-black text-gray-900 dark:text-white">👥 Recipient Configuration</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Manage who receives official weekly report emails</p>
-            </div>
-            <button
-              onClick={() => setShowAddRecipient(true)}
-              className="flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-black transition-all"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Add Recipient
-            </button>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead className="bg-gray-50 dark:bg-navy-800 border-b border-gray-100 dark:border-gray-700">
-                <tr>
-                  {['Name & Email', 'Role', 'Department', 'Weekly', 'HOD', 'Errors', 'Active', ''].map(h => (
-                    <th key={h} className="px-4 py-3 text-left font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-[10px]">{h}</th>
+              <div>
+                <label className="block text-xs font-black uppercase text-gray-500 dark:text-gray-400 mb-2">
+                  Target Weekly Contest Session
+                </label>
+                <select
+                  value={selectedSessionId || ''}
+                  onChange={(e) => setSelectedSessionId(Number(e.target.value))}
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-2xl text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500"
+                >
+                  {sessions.map(s => (
+                    <option key={s.sessionId} value={s.sessionId}>
+                      Session #{s.sessionId} — {s.contestName} ({s.sessionDate})
+                    </option>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
-                {recipients.map(r => (
-                  <tr key={r.id} className={`hover:bg-gray-50 dark:hover:bg-navy-800/30 transition-colors ${!r.is_active ? 'opacity-50' : ''}`}>
-                    <td className="px-4 py-3">
-                      <div className="font-bold text-gray-900 dark:text-white">{r.name}</div>
-                      <div className="text-gray-400 text-[10px]">{r.email}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full border font-bold text-[10px] ${ROLE_COLORS[r.role] || ROLE_COLORS['ADMIN']}`}>
+                </select>
+              </div>
+
+              {/* Dynamic Attachment Cards */}
+              <div className="p-4 bg-gray-50 dark:bg-navy-950/60 rounded-2xl border border-gray-200 dark:border-navy-800 space-y-2.5">
+                <span className="text-[11px] font-black uppercase tracking-wider text-gray-400 block">
+                  Generated Attachments (Dynamic Bundle)
+                </span>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-2.5 bg-white dark:bg-navy-900 rounded-xl border border-gray-200 dark:border-gray-800 text-xs font-bold">
+                    <span className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                      <FileSpreadsheet className="w-4 h-4" /> Performance_Report.xlsx
+                    </span>
+                    <span className="text-[10px] text-gray-400">Excel Multi-Sheet</span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-2.5 bg-white dark:bg-navy-900 rounded-xl border border-gray-200 dark:border-gray-800 text-xs font-bold">
+                    <span className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
+                      <FileText className="w-4 h-4" /> Executive_Summary.pdf
+                    </span>
+                    <span className="text-[10px] text-gray-400">Printable PDF</span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-2.5 bg-white dark:bg-navy-900 rounded-xl border border-gray-200 dark:border-gray-800 text-xs font-bold">
+                    <span className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                      <FileText className="w-4 h-4" /> Institutional_Summary.docx
+                    </span>
+                    <span className="text-[10px] text-gray-400">Word DOCX</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Custom Optional Message */}
+              <div>
+                <label className="block text-xs font-black uppercase text-gray-500 dark:text-gray-400 mb-1.5">
+                  Custom Administrator Note (Optional)
+                </label>
+                <textarea
+                  value={customMessage}
+                  onChange={(e) => setCustomMessage(e.target.value)}
+                  placeholder="Add an optional note to include in the email body..."
+                  rows={3}
+                  className="w-full p-3 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-2xl text-xs font-medium text-gray-900 dark:text-white"
+                />
+              </div>
+            </div>
+
+            {/* Right Column: Recipient Selection Grid */}
+            <div className="space-y-4 lg:col-span-2">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <label className="text-xs font-black uppercase text-gray-500 dark:text-gray-400 block">
+                    Select Target Recipients
+                  </label>
+                  <span className="text-xs font-bold text-brand-600 dark:text-brand-400">
+                    {selectedRecipientEmails.size} of {recipients.length} recipients selected
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={selectAllRecipients}
+                    className="text-[11px] font-extrabold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
+                  >
+                    Select All Active
+                  </button>
+                  <span className="text-gray-300">|</span>
+                  <button
+                    onClick={clearAllRecipients}
+                    className="text-[11px] font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer"
+                  >
+                    Clear Selection
+                  </button>
+                </div>
+              </div>
+
+              {/* Recipient Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[360px] overflow-y-auto pr-1">
+                {recipients.map(r => {
+                  const isSelected = selectedRecipientEmails.has(r.email);
+                  return (
+                    <div
+                      key={r.id}
+                      onClick={() => toggleRecipientSelection(r.email)}
+                      className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                        isSelected
+                          ? 'bg-brand-500/10 border-brand-500/40 shadow-sm'
+                          : 'bg-white dark:bg-navy-900 border-gray-200 dark:border-navy-700 hover:border-brand-500/30'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3 min-w-0">
+                        <div className="text-brand-600 dark:text-brand-400">
+                          {isSelected ? <CheckSquare className="w-5 h-5 text-brand-500" /> : <Square className="w-5 h-5 text-gray-400" />}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-black text-gray-900 dark:text-white truncate">
+                            {r.name}
+                          </p>
+                          <p className="text-[11px] text-gray-400 truncate">
+                            {r.email}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-black border uppercase ${ROLE_COLORS[r.role] || ROLE_COLORS.MANUAL}`}>
                         {r.role}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{r.department || 'ALL'}</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-base font-bold ${r.receive_weekly_reports ? 'text-emerald-500' : 'text-gray-300 dark:text-gray-600'}`}>{r.receive_weekly_reports ? '✓' : '✗'}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`text-base font-bold ${r.receive_hod_reports ? 'text-emerald-500' : 'text-gray-300 dark:text-gray-600'}`}>{r.receive_hod_reports ? '✓' : '✗'}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`text-base font-bold ${r.receive_error_reports ? 'text-emerald-500' : 'text-gray-300 dark:text-gray-600'}`}>{r.receive_error_reports ? '✓' : '✗'}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <button onClick={() => handleToggleRecipient(r)}
-                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${r.is_active ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
-                        <span className={`inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform ${r.is_active ? 'translate-x-5' : 'translate-x-1'}`} />
-                      </button>
-                    </td>
-                    <td className="px-4 py-3">
-                      <button onClick={() => handleDeleteRecipient(r.id, r.email, r.name)}
-                        className="flex items-center gap-1 p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all font-bold text-[10px] cursor-pointer">
-                        <Trash2 className="w-3.5 h-3.5" />
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {recipients.length === 0 && (
-              <div className="py-12 text-center text-xs text-gray-400">No recipients configured. Add recipients to enable report email delivery.</div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── HISTORY SECTION ─────────────────────────────────────── */}
-      {activeSection === 'history' && (
-        <div className="glass-card rounded-3xl border border-gray-200 dark:border-gray-700/50 overflow-hidden">
-          <div className="p-5 border-b border-gray-100 dark:border-gray-800">
-            <h2 className="text-base font-black text-gray-900 dark:text-white">📋 Email Delivery History</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Full audit log of all report email dispatch activity</p>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead className="bg-gray-50 dark:bg-navy-800 border-b border-gray-100 dark:border-gray-700">
-                <tr>
-                  {['Email ID', 'Recipient', 'Role', 'Subject', 'Status', 'Attachments', 'Sent At', 'Retries', 'Actions'].map(h => (
-                    <th key={h} className="px-4 py-3 text-left font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-[10px] whitespace-nowrap">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
-                {logs.map(log => {
-                  const sc = STATUS_CONFIG[log.status] || STATUS_CONFIG['QUEUED'];
-                  return (
-                    <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-navy-800/30 transition-colors">
-                      <td className="px-4 py-3 font-mono text-[10px] text-gray-400">{log.email_id}</td>
-                      <td className="px-4 py-3 font-bold text-gray-800 dark:text-gray-200 max-w-[140px] truncate">{log.recipient}</td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 rounded-full border font-bold text-[10px] ${ROLE_COLORS[log.role] || ROLE_COLORS['ADMIN']}`}>{log.role}</span>
-                      </td>
-                      <td className="px-4 py-3 text-gray-500 max-w-[200px] truncate">{log.subject}</td>
-                      <td className="px-4 py-3">
-                        <span className={`flex items-center gap-1 font-black ${sc.color}`}>
-                          {sc.icon} {sc.label}
-                        </span>
-                        {log.error_message && (
-                          <div className="text-[10px] text-red-400 mt-0.5 truncate max-w-[150px]" title={log.error_message}>{log.error_message}</div>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-gray-500">📎 {log.attachment_count} files</td>
-                      <td className="px-4 py-3 text-gray-400 text-[10px] whitespace-nowrap">
-                        {log.sent_at ? new Date(log.sent_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'short', timeStyle: 'short' }) : '—'}
-                      </td>
-                      <td className="px-4 py-3 text-gray-400">{log.retry_count}</td>
-                      <td className="px-4 py-3">
-                        {(log.status === 'FAILED' || log.status === 'QUEUED' || log.status === 'RETRYING') && (
-                          <button onClick={() => handleRetry(log.id)}
-                            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black transition-all whitespace-nowrap">
-                            <RotateCcw className="w-2.5 h-2.5" /> {log.status === 'QUEUED' ? 'Force Send' : 'Retry'}
-                          </button>
-                        )}
-                      </td>
-                    </tr>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
-            {logs.length === 0 && (
-              <div className="py-12 text-center text-xs text-gray-400">No delivery history found.</div>
-            )}
+              </div>
+
+              {/* Action Buttons Bar */}
+              <div className="pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between flex-wrap gap-4">
+                <div className="text-xs text-gray-400 font-medium flex items-center gap-1.5">
+                  <Info className="w-4 h-4 text-brand-400" />
+                  <span>Immediate dispatch via Brevo v3 API (HTTPS Port 443)</span>
+                </div>
+
+                <button
+                  onClick={handleInitiateManualDispatch}
+                  disabled={selectedRecipientEmails.size === 0 || isSendingManual}
+                  className="px-8 py-3.5 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white rounded-2xl text-xs font-black shadow-xl shadow-brand-500/25 transition-all transform hover:scale-[1.02] cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isSendingManual ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Zap className="w-4 h-4 text-amber-300" />
+                  )}
+                  <span>Send Report Now</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* ── ADD RECIPIENT MODAL ──────────────────────────────────── */}
-      {showAddRecipient && (
-        <div className="modal-overlay-responsive animate-modal-backdrop">
-          <div className="modal-container-responsive max-w-md bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 space-y-4 animate-modal-content">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-black text-gray-900 dark:text-white">Add Email Recipient</h2>
-              <button onClick={() => setShowAddRecipient(false)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+      {/* 6. AUTOMATED WEEKLY DISPATCH CONTROL CENTER */}
+      {activeSection === 'automated' && (
+        <div className="glass-card p-6 sm:p-8 rounded-3xl border border-amber-500/30 shadow-xl space-y-6">
+          <div className="flex items-start justify-between flex-wrap gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-black">
+                <Calendar className="w-3.5 h-3.5" />
+                <span>AUTOMATED CRON ENGINE</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">
+                Automated Weekly Dispatch Control Center
+              </h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-bold max-w-2xl">
+                Automatically generate and deliver the institutional executive report every Sunday according to the configured schedule.
+              </p>
             </div>
-            <div className="space-y-3">
-              {[
-                { label: 'Full Name', value: newName, set: setNewName, placeholder: 'e.g. Prof. Rajkumar' },
-                { label: 'Email Address', value: newEmail, set: setNewEmail, placeholder: 'e.g. hod@nandha.edu.in' },
-              ].map(f => (
-                <div key={f.label}>
-                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">{f.label}</label>
-                  <input
-                    type="text" value={f.value} onChange={e => f.set(e.target.value)}
-                    placeholder={f.placeholder}
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-navy-800 text-sm text-gray-900 dark:text-white outline-none focus:border-brand-500"
-                  />
+
+            <div className="flex items-center gap-2">
+              {scheduleEnabled ? (
+                <span className="px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-black flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+                  🟢 AUTOMATION ACTIVE
+                </span>
+              ) : (
+                <span className="px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-black flex items-center gap-1.5">
+                  ⏸ AUTOMATION PAUSED
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Cards Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Schedule Configuration Overview */}
+            <div className="p-5 bg-white dark:bg-navy-900 rounded-3xl border border-gray-200 dark:border-gray-800 space-y-3">
+              <h3 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-brand-500" /> Schedule Profile
+              </h3>
+
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between py-1 border-b border-gray-100 dark:border-gray-800">
+                  <span className="text-gray-400">Frequency:</span>
+                  <span className="font-black text-gray-900 dark:text-white">Weekly</span>
                 </div>
-              ))}
+                <div className="flex justify-between py-1 border-b border-gray-100 dark:border-gray-800">
+                  <span className="text-gray-400">Trigger Day:</span>
+                  <span className="font-black text-gray-900 dark:text-white">Sunday</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-gray-100 dark:border-gray-800">
+                  <span className="text-gray-400">Trigger Time:</span>
+                  <span className="font-black text-brand-600 dark:text-brand-400 font-mono">08:00 AM / 09:45 AM</span>
+                </div>
+                <div className="flex justify-between py-1">
+                  <span className="text-gray-400">Timezone:</span>
+                  <span className="font-black text-emerald-600 dark:text-emerald-400">IST — Asia/Kolkata</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Next Automated Run Card */}
+            <div className="p-5 bg-gradient-to-br from-brand-500/10 to-indigo-500/10 rounded-3xl border border-brand-500/30 space-y-3">
+              <h3 className="text-xs font-black text-brand-600 dark:text-brand-400 uppercase tracking-wider flex items-center gap-2">
+                <Clock className="w-4 h-4" /> Next Automated Dispatch
+              </h3>
+
+              <div>
+                <p className="text-lg font-black text-gray-900 dark:text-white">
+                  {scheduleConfig?.schedule?.next_run || 'Sunday, 08:00 AM IST'}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-bold mt-1">
+                  Strict Asia/Kolkata Execution Window
+                </p>
+              </div>
+
+              <div className="pt-2 flex items-center justify-between text-xs border-t border-brand-500/20">
+                <span className="text-gray-400">Status:</span>
+                <span className="font-black text-emerald-600 dark:text-emerald-400">
+                  🟢 Scheduled
+                </span>
+              </div>
+            </div>
+
+            {/* Last Execution Run Summary */}
+            <div className="p-5 bg-white dark:bg-navy-900 rounded-3xl border border-gray-200 dark:border-gray-800 space-y-3">
+              <h3 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                <RotateCcw className="w-4 h-4 text-purple-500" /> Last Execution Summary
+              </h3>
+
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between py-1 border-b border-gray-100 dark:border-gray-800">
+                  <span className="text-gray-400">Last Execution:</span>
+                  <span className="font-bold text-gray-900 dark:text-white">
+                    {scheduleConfig?.schedule?.last_run || 'Pending'}
+                  </span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-gray-100 dark:border-gray-800">
+                  <span className="text-gray-400">Status:</span>
+                  <span className="font-black text-emerald-600 dark:text-emerald-400">
+                    🟢 {scheduleConfig?.schedule?.last_status || 'SUCCESS'}
+                  </span>
+                </div>
+                <div className="flex justify-between py-1">
+                  <span className="text-gray-400">Last Report:</span>
+                  <span className="font-mono text-[11px] text-gray-700 dark:text-gray-300 truncate max-w-[140px]">
+                    {scheduleConfig?.schedule?.last_report || 'Weekly_Report.xlsx'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Automation Control Buttons Bar */}
+          <div className="p-5 bg-gray-50 dark:bg-navy-950 rounded-3xl border border-gray-200 dark:border-navy-800 flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleRunScheduledJobNow}
+                disabled={isSendingManual}
+                className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs font-black shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {isSendingManual ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-white" />}
+                <span>▶ Run Scheduled Job Now</span>
+              </button>
+
+              <button
+                onClick={handleToggleAutomation}
+                className={`px-5 py-3 rounded-2xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer border ${
+                  scheduleEnabled
+                    ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30 hover:bg-amber-500/20'
+                    : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20'
+                }`}
+              >
+                {scheduleEnabled ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                <span>{scheduleEnabled ? '⏸ Pause Automation' : '▶ Resume Automation'}</span>
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowScheduleModal(true)}
+              className="px-5 py-3 bg-gray-200 dark:bg-navy-800 hover:bg-gray-300 dark:hover:bg-navy-700 text-gray-900 dark:text-white rounded-2xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <Settings className="w-4 h-4" />
+              <span>⚙ Schedule Settings</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 7. REPORT RECIPIENTS MANAGEMENT PANEL */}
+      {activeSection === 'recipients' && (
+        <div className="glass-card p-6 sm:p-8 rounded-3xl border border-teal-500/30 shadow-xl space-y-6">
+          <div className="flex items-center justify-between flex-wrap gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">
+                👥 Report Recipients Management
+              </h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-bold">
+                Configure authorized management, HOD, and coordinator contact emails for institutional report dispatches.
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowAddRecipientModal(true)}
+              className="px-5 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white rounded-2xl text-xs font-black shadow-lg shadow-teal-600/20 flex items-center gap-2 transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Recipient</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {recipients.map(r => (
+              <div
+                key={r.id}
+                className={`p-5 rounded-3xl border transition-all space-y-3 ${
+                  r.is_active
+                    ? 'bg-white dark:bg-navy-900 border-gray-200 dark:border-navy-700 shadow-md'
+                    : 'bg-gray-50 dark:bg-navy-950/60 border-gray-200 dark:border-navy-800 opacity-60'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-sm font-black text-gray-900 dark:text-white">
+                      {r.name}
+                    </h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                      {r.email}
+                    </p>
+                  </div>
+                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-black border uppercase ${ROLE_COLORS[r.role] || ROLE_COLORS.MANUAL}`}>
+                    {r.role}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800 text-xs">
+                  <span className="text-gray-400">Department: <strong>{r.department || 'ALL'}</strong></span>
+                  <button
+                    onClick={() => handleToggleRecipientActive(r.id, r.is_active)}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-black cursor-pointer ${
+                      r.is_active
+                        ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                        : 'bg-gray-200 dark:bg-navy-800 text-gray-500'
+                    }`}
+                  >
+                    {r.is_active ? '🟢 Active' : '⚪ Inactive'}
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  <button
+                    onClick={() => handleDeleteRecipient(r.id)}
+                    className="p-1.5 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                    title="Remove Recipient"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 8. DELIVERY HISTORY & LOG DRAWER */}
+      {activeSection === 'history' && (
+        <div className="glass-card p-6 sm:p-8 rounded-3xl border border-purple-500/30 shadow-xl space-y-6">
+          <div className="flex items-center justify-between flex-wrap gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">
+                📊 Delivery Audit Logs &amp; Traceability
+              </h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-bold">
+                Real-time delivery audit logs, retry execution, message IDs, and provider response diagnostics.
+              </p>
+            </div>
+
+            <button
+              onClick={() => fetchAllData(true)}
+              className="px-4 py-2 bg-gray-100 dark:bg-navy-800 hover:bg-gray-200 dark:hover:bg-navy-700 text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              <span>Refresh Logs</span>
+            </button>
+          </div>
+
+          {/* Filters Bar */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex-1 min-w-[200px] relative">
+              <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={logSearchQuery}
+                onChange={(e) => setLogSearchQuery(e.target.value)}
+                placeholder="Search recipient, subject, or message ID..."
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-2xl text-xs font-medium text-gray-900 dark:text-white"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gray-400" />
+              <select
+                value={logFilterStatus}
+                onChange={(e) => setLogFilterStatus(e.target.value)}
+                className="px-3 py-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-2xl text-xs font-bold text-gray-900 dark:text-white"
+              >
+                <option value="ALL">All Statuses</option>
+                <option value="SENT">Delivered</option>
+                <option value="FAILED">Failed</option>
+                <option value="QUEUED">Queued</option>
+                <option value="RETRYING">Retrying</option>
+              </select>
+
+              <select
+                value={logFilterDispatchType}
+                onChange={(e) => setLogFilterDispatchType(e.target.value)}
+                className="px-3 py-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-2xl text-xs font-bold text-gray-900 dark:text-white"
+              >
+                <option value="ALL">All Types</option>
+                <option value="MANUAL">Manual</option>
+                <option value="AUTOMATED">Automated</option>
+                <option value="TEST">Test</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Delivery Logs Table */}
+          <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-navy-800">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-gray-50 dark:bg-navy-950 text-gray-500 dark:text-gray-400 uppercase font-black tracking-wider text-[10px] border-b border-gray-200 dark:border-navy-800">
+                  <th className="py-3.5 px-4">Status</th>
+                  <th className="py-3.5 px-4">Recipient</th>
+                  <th className="py-3.5 px-4">Report / Subject</th>
+                  <th className="py-3.5 px-4">Type</th>
+                  <th className="py-3.5 px-4">Sent At (IST)</th>
+                  <th className="py-3.5 px-4">Provider</th>
+                  <th className="py-3.5 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-navy-800">
+                {filteredLogs.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-gray-400 font-bold">
+                      No delivery logs match your filter criteria.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredLogs.map(log => {
+                    const statusCfg = STATUS_BADGES[log.status] || STATUS_BADGES.QUEUED;
+                    const isFailed = log.status === 'FAILED';
+                    return (
+                      <tr key={log.id} className="hover:bg-gray-50/80 dark:hover:bg-navy-900/60 transition-colors">
+                        <td className="py-3 px-4">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black border ${statusCfg.bg} ${statusCfg.text} ${statusCfg.border}`}>
+                            {statusCfg.icon}
+                            <span>{statusCfg.label}</span>
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 font-bold text-gray-900 dark:text-white">
+                          {log.recipient}
+                        </td>
+                        <td className="py-3 px-4 text-gray-600 dark:text-gray-300 truncate max-w-[240px]" title={log.subject}>
+                          {log.subject}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className={`px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase ${
+                            log.dispatch_type === 'MANUAL' ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20' :
+                            log.dispatch_type === 'TEST' ? 'bg-purple-500/10 text-purple-600 border border-purple-500/20' :
+                            'bg-blue-500/10 text-blue-600 border border-blue-500/20'
+                          }`}>
+                            {log.dispatch_type || 'AUTOMATED'}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-gray-500 font-medium whitespace-nowrap">
+                          {formatTimestampIST(log.sent_at || log.created_at)}
+                        </td>
+                        <td className="py-3 px-4 text-gray-400 font-mono text-[11px]">
+                          Brevo v3
+                        </td>
+                        <td className="py-3 px-4 text-right space-x-2">
+                          <button
+                            onClick={() => setSelectedLogDetail(log)}
+                            className="px-2.5 py-1 bg-gray-100 dark:bg-navy-800 hover:bg-gray-200 dark:hover:bg-navy-700 text-gray-700 dark:text-gray-200 rounded-xl text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
+                          >
+                            <Eye className="w-3 h-3" /> View
+                          </button>
+
+                          {isFailed && (
+                            <button
+                              onClick={() => handleRetryFailedLog(log.id)}
+                              disabled={retryingLogId === log.id}
+                              className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded-xl text-[11px] font-bold cursor-pointer inline-flex items-center gap-1 transition-all"
+                            >
+                              {retryingLogId === log.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
+                              Retry
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* 9. DELIVERY DETAIL DRAWER / MODAL */}
+      {selectedLogDetail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 relative">
+            <button
+              onClick={() => setSelectedLogDetail(null)}
+              className="absolute top-5 right-5 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white rounded-full transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center space-x-3 border-b border-gray-100 dark:border-gray-800 pb-4">
+              <div className="p-3 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400">
+                <Mail className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-gray-900 dark:text-white">
+                  Delivery Diagnostics Detail
+                </h3>
+                <p className="text-xs text-gray-400 font-mono">
+                  Message ID: {selectedLogDetail.email_id}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="flex justify-between py-1.5 border-b border-gray-100 dark:border-gray-800">
+                <span className="text-gray-400 font-bold">Delivery Status:</span>
+                <span className={`font-black ${selectedLogDetail.status === 'SENT' ? 'text-emerald-600' : 'text-red-500'}`}>
+                  {selectedLogDetail.status === 'SENT' ? 'DELIVERED' : 'FAILED'}
+                </span>
+              </div>
+
+              <div className="flex justify-between py-1.5 border-b border-gray-100 dark:border-gray-800">
+                <span className="text-gray-400 font-bold">Recipient:</span>
+                <span className="font-bold text-gray-900 dark:text-white">{selectedLogDetail.recipient}</span>
+              </div>
+
+              <div className="flex justify-between py-1.5 border-b border-gray-100 dark:border-gray-800">
+                <span className="text-gray-400 font-bold">Dispatch Type:</span>
+                <span className="font-black text-brand-600 dark:text-brand-400">{selectedLogDetail.dispatch_type || 'AUTOMATED'}</span>
+              </div>
+
+              <div className="flex justify-between py-1.5 border-b border-gray-100 dark:border-gray-800">
+                <span className="text-gray-400 font-bold">Provider &amp; Transport:</span>
+                <span className="font-mono text-gray-900 dark:text-white">Brevo v3 API (HTTPS Port 443)</span>
+              </div>
+
+              <div className="flex justify-between py-1.5 border-b border-gray-100 dark:border-gray-800">
+                <span className="text-gray-400 font-bold">Sent Timestamp:</span>
+                <span className="font-bold text-gray-900 dark:text-white">{formatTimestampIST(selectedLogDetail.sent_at || selectedLogDetail.created_at)}</span>
+              </div>
+
+              <div className="flex justify-between py-1.5 border-b border-gray-100 dark:border-gray-800">
+                <span className="text-gray-400 font-bold">Attachments:</span>
+                <span className="font-bold text-gray-900 dark:text-white">{selectedLogDetail.attachment_count} files ({((selectedLogDetail.total_attachment_bytes || 0) / 1024).toFixed(1)} KB)</span>
+              </div>
+
+              {selectedLogDetail.error_message && (
+                <div className="p-3 bg-red-50 dark:bg-red-950/40 rounded-2xl border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 space-y-1">
+                  <span className="font-black block uppercase text-[10px]">Error Details / Diagnostics</span>
+                  <p className="font-mono text-[11px]">{selectedLogDetail.error_message}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="pt-3 flex justify-end gap-2 border-t border-gray-100 dark:border-gray-800">
+              <button
+                onClick={() => setSelectedLogDetail(null)}
+                className="px-5 py-2.5 bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-200 rounded-2xl text-xs font-black hover:bg-gray-200 transition-all cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 10. CONFIRMATION & DUPLICATE MODALS */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center space-x-3 text-brand-600 dark:text-brand-400">
+              <Zap className="w-6 h-6 text-amber-400" />
+              <h3 className="text-lg font-black text-gray-900 dark:text-white">Confirm Manual Dispatch</h3>
+            </div>
+
+            <div className="text-xs text-gray-600 dark:text-gray-300 space-y-2 leading-relaxed">
+              <p>You are about to send the manual report immediately to <strong>{selectedRecipientEmails.size} selected recipient(s)</strong>.</p>
+              <p className="p-3 bg-amber-50 dark:bg-amber-950/40 rounded-2xl border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300">
+                Note: This is a manual one-time action and will <strong>NOT</strong> modify or replace the recurring Sunday automation schedule.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="px-5 py-2.5 bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold hover:bg-gray-200 cursor-pointer"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleExecuteManualDispatch}
+                className="px-6 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 text-white rounded-2xl text-xs font-black shadow-lg shadow-brand-500/25 hover:from-brand-500 hover:to-indigo-500 cursor-pointer"
+              >
+                Yes, Send Report Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDuplicateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center space-x-3 text-amber-600 dark:text-amber-400">
+              <AlertTriangle className="w-6 h-6" />
+              <h3 className="text-lg font-black text-gray-900 dark:text-white">Duplicate Delivery Detected</h3>
+            </div>
+
+            <div className="text-xs text-gray-600 dark:text-gray-300 space-y-2 leading-relaxed">
+              <p>This report has already been successfully delivered to target recipients:</p>
+              <div className="max-h-32 overflow-y-auto space-y-1 p-2.5 bg-gray-50 dark:bg-navy-950 rounded-xl border border-gray-200 dark:border-navy-800 text-[11px] font-mono">
+                {duplicateList.map((d, i) => (
+                  <div key={i} className="flex justify-between">
+                    <span>{d.recipient}</span>
+                    <span className="text-gray-400">{formatTimestampIST(d.sent_at)}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="font-bold text-amber-700 dark:text-amber-300">
+                Do you still want to re-send this report?
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => setShowDuplicateModal(false)}
+                className="px-5 py-2.5 bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold hover:bg-gray-200 cursor-pointer"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleExecuteManualDispatch}
+                className="px-6 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl text-xs font-black shadow-lg shadow-amber-600/25 cursor-pointer"
+              >
+                Send Again
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 11. SCHEDULE SETTINGS MODAL */}
+      {showScheduleModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+              <h3 className="text-base font-black text-gray-900 dark:text-white flex items-center gap-2">
+                <Settings className="w-5 h-5 text-brand-500" />
+                <span>Automated Schedule Settings</span>
+              </h3>
+              <button
+                onClick={() => setShowScheduleModal(false)}
+                className="text-gray-400 hover:text-gray-600 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              <div>
+                <label className="block font-black uppercase text-gray-500 mb-1">Automation Status</label>
+                <button
+                  type="button"
+                  onClick={() => setScheduleEnabled(!scheduleEnabled)}
+                  className={`w-full py-2.5 px-4 rounded-2xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer border ${
+                    scheduleEnabled
+                      ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30'
+                      : 'bg-amber-500/10 text-amber-600 border-amber-500/30'
+                  }`}
+                >
+                  {scheduleEnabled ? '🟢 AUTOMATION ENABLED' : '⏸ AUTOMATION PAUSED'}
+                </button>
+              </div>
+
+              <div>
+                <label className="block font-black uppercase text-gray-500 mb-1">Trigger Day</label>
+                <select
+                  value={scheduleDay}
+                  onChange={(e) => setScheduleDay(e.target.value)}
+                  className="w-full p-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl font-bold"
+                >
+                  <option value="sunday">Sunday (Official Weekly Window)</option>
+                  <option value="monday">Monday</option>
+                  <option value="saturday">Saturday</option>
+                </select>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">Role</label>
-                  <select value={newRole} onChange={e => setNewRole(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-navy-800 text-xs font-bold text-gray-900 dark:text-white outline-none focus:border-brand-500">
-                    <option value="MANAGEMENT">MANAGEMENT</option>
+                  <label className="block font-black uppercase text-gray-500 mb-1">Hour (IST)</label>
+                  <select
+                    value={scheduleHour}
+                    onChange={(e) => setScheduleHour(Number(e.target.value))}
+                    className="w-full p-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl font-bold"
+                  >
+                    <option value={8}>08:00 AM IST</option>
+                    <option value={9}>09:00 AM IST</option>
+                    <option value={10}>10:00 AM IST</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-black uppercase text-gray-500 mb-1">Minute (IST)</label>
+                  <select
+                    value={scheduleMinute}
+                    onChange={(e) => setScheduleMinute(Number(e.target.value))}
+                    className="w-full p-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl font-bold"
+                  >
+                    <option value={0}>:00 AM</option>
+                    <option value={15}>:15 AM</option>
+                    <option value={30}>:30 AM</option>
+                    <option value={45}>:45 AM</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="p-3 bg-gray-50 dark:bg-navy-950 rounded-xl border border-gray-200 dark:border-navy-800 text-gray-500">
+                Timezone strictly enforced: <strong>Asia/Kolkata (IST)</strong>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2 border-t border-gray-100 dark:border-gray-800">
+              <button
+                onClick={() => setShowScheduleModal(false)}
+                className="px-5 py-2.5 bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold cursor-pointer"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleSaveScheduleConfig}
+                disabled={savingSchedule}
+                className="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-2xl text-xs font-black shadow-lg shadow-brand-500/25 cursor-pointer disabled:opacity-50"
+              >
+                {savingSchedule ? 'Saving...' : 'Save Schedule'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 12. ADD RECIPIENT MODAL */}
+      {showAddRecipientModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+              <h3 className="text-base font-black text-gray-900 dark:text-white flex items-center gap-2">
+                <Plus className="w-5 h-5 text-teal-500" />
+                <span>Add Report Recipient</span>
+              </h3>
+              <button onClick={() => setShowAddRecipientModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block font-black uppercase text-gray-500 mb-1">Full Name</label>
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="e.g. Dr. S. Karthik"
+                  className="w-full p-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-black uppercase text-gray-500 mb-1">Email Address</label>
+                <input
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  placeholder="e.g. hod.cse@nandhaengg.org"
+                  className="w-full p-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl font-bold"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-black uppercase text-gray-500 mb-1">Role</label>
+                  <select
+                    value={newRole}
+                    onChange={(e) => setNewRole(e.target.value)}
+                    className="w-full p-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl font-bold"
+                  >
                     <option value="HOD">HOD</option>
-                    <option value="DEPARTMENT_COORDINATOR">DEPT COORDINATOR</option>
+                    <option value="MANAGEMENT">MANAGEMENT</option>
+                    <option value="DEPARTMENT_COORDINATOR">COORDINATOR</option>
                     <option value="ADMIN">ADMIN</option>
                   </select>
                 </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">Department</label>
-                  <select value={newDept} onChange={e => setNewDept(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-navy-800 text-xs font-bold text-gray-900 dark:text-white outline-none focus:border-brand-500">
-                    <option value="ALL">All Departments</option>
-                    <option value="CSE(CS)">CSE(CS) – Cyber Security</option>
-                    <option value="CSE(IoT)">CSE(IoT) – IoT</option>
+                  <label className="block font-black uppercase text-gray-500 mb-1">Department</label>
+                  <select
+                    value={newDept}
+                    onChange={(e) => setNewDept(e.target.value)}
+                    className="w-full p-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl font-bold"
+                  >
+                    <option value="ALL">ALL (College-wide)</option>
+                    <option value="CSE(CS)">CSE(CS)</option>
+                    <option value="CSE(IoT)">CSE(IoT)</option>
                   </select>
                 </div>
               </div>
             </div>
-            <div className="flex gap-3 pt-2">
-              <button onClick={() => setShowAddRecipient(false)} className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-navy-800 transition-all cursor-pointer">Cancel</button>
-              <button onClick={handleAddRecipient} disabled={addingRecipient}
-                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white text-sm font-black transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-md">
-                {addingRecipient ? <><Loader2 className="w-4 h-4 animate-spin" /> Adding...</> : <><Plus className="w-4 h-4" /> Add Recipient</>}
+
+            <div className="flex justify-end gap-3 pt-2 border-t border-gray-100 dark:border-gray-800">
+              <button
+                onClick={() => setShowAddRecipientModal(false)}
+                className="px-5 py-2.5 bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold cursor-pointer"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleCreateRecipient}
+                disabled={addingRecipient}
+                className="px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-2xl text-xs font-black shadow-lg shadow-teal-600/25 cursor-pointer disabled:opacity-50"
+              >
+                {addingRecipient ? 'Adding...' : 'Add Recipient'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── SEND REPORT EMAIL MODAL ─────────────────────────────── */}
-      {showSendModal && (
-        <div className="modal-overlay-responsive animate-modal-backdrop">
-          <div className="modal-container-responsive max-w-2xl bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden animate-modal-content">
-
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-navy-950 to-indigo-950 text-white shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white/10 rounded-xl"><Mail className="w-5 h-5" /></div>
-                <div>
-                  <h2 className="font-black text-sm">Send Report by Email</h2>
-                  <p className="text-[10px] text-blue-300">Select week • Choose recipients • Preview • Send</p>
-                </div>
-              </div>
-              {sendStep !== 'sending' && (
-                <button onClick={() => setShowSendModal(false)} className="text-white/60 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
-              )}
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6 space-y-5 flex-1 min-h-0 overflow-y-auto">
-              {/* Step: SELECT */}
-              {sendStep === 'select' && (
-                <>
-                  {/* Week Selection */}
-                  <div>
-                    <label className="block text-xs font-extrabold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2">Select Contest Week</label>
-                    <select value={selectedSessionId ?? ''} onChange={e => setSelectedSessionId(e.target.value ? Number(e.target.value) : null)}
-                      className="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-navy-800 text-sm font-bold text-gray-900 dark:text-white outline-none focus:border-brand-500">
-                      <option value="">Latest / Current Report</option>
-                      {sessions.map(s => (
-                        <option key={s.sessionId} value={s.sessionId}>
-                          {s.sessionDate} — {s.contestName} ({s.status})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Recipient Selection */}
-                  <div>
-                    <label className="block text-xs font-extrabold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2">Select Recipients</label>
-                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                      {recipients.filter(r => r.is_active).map(r => (
-                        <label key={r.id} className={`flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition-all ${selectedRecipientIds.has(r.id) ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}>
-                          <input type="checkbox" checked={selectedRecipientIds.has(r.id)}
-                            onChange={e => {
-                              const next = new Set(selectedRecipientIds);
-                              e.target.checked ? next.add(r.id) : next.delete(r.id);
-                              setSelectedRecipientIds(next);
-                            }}
-                            className="rounded" />
-                          <div className="flex-1 min-w-0">
-                            <div className="text-xs font-bold text-gray-900 dark:text-white">{r.name}</div>
-                            <div className="text-[10px] text-gray-400">{r.email}</div>
-                          </div>
-                          <span className={`px-2 py-0.5 rounded-full border font-bold text-[10px] flex-shrink-0 ${ROLE_COLORS[r.role] || ROLE_COLORS['ADMIN']}`}>{r.role}</span>
-                        </label>
-                      ))}
-                      {recipients.filter(r => r.is_active).length === 0 && (
-                        <div className="text-center py-6 text-xs text-gray-400">No active recipients. Add recipients in the Recipients tab first.</div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Custom Message */}
-                  <div>
-                    <label className="block text-xs font-extrabold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2">Optional Custom Note</label>
-                    <textarea
-                      value={customMessage} onChange={e => setCustomMessage(e.target.value)}
-                      placeholder="e.g. Please review the attached weekly summary before the HOD meeting on Monday..."
-                      rows={3}
-                      className="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-navy-800 text-sm text-gray-900 dark:text-white outline-none focus:border-brand-500 resize-none"
-                    />
-                  </div>
-
-                  {/* Go to Preview */}
-                  <button
-                    disabled={!selectedRecipientIds.size}
-                    onClick={() => setSendStep('preview')}
-                    className="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-brand-600 hover:from-indigo-700 hover:to-brand-700 text-white font-black text-sm transition-all disabled:opacity-40 flex items-center justify-center gap-2"
-                  >
-                    <Eye className="w-4 h-4" />
-                    Preview Email
-                  </button>
-                </>
-              )}
-
-              {/* Step: PREVIEW */}
-              {sendStep === 'preview' && (
-                <>
-                  <div className="border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
-                    {/* Email Preview Header */}
-                    <div className="bg-gray-50 dark:bg-navy-800 px-5 py-4 border-b border-gray-200 dark:border-gray-700 space-y-2">
-                      <div className="flex items-center gap-2 text-xs">
-                        <span className="font-bold text-gray-500 w-10">To:</span>
-                        <div className="flex flex-wrap gap-1">
-                          {recipients.filter(r => selectedRecipientIds.has(r.id)).map(r => (
-                            <span key={r.id} className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-full text-[10px] font-bold">{r.email}</span>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs">
-                        <span className="font-bold text-gray-500 w-10">Subj:</span>
-                        <span className="font-bold text-gray-900 dark:text-white">
-                          Nandha Engineering College – Weekly LeetCode Report – {selectedSession?.sessionDate || new Date().toLocaleDateString('en-IN')}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Attachments */}
-                    <div className="px-5 py-3 bg-blue-50 dark:bg-blue-900/10 border-b border-blue-100 dark:border-blue-900/20">
-                      <div className="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 uppercase mb-2">📎 Attachments (5 files)</div>
-                      <div className="flex flex-wrap gap-2">
-                        {[
-                          { name: 'Report.xlsx', icon: <FileSpreadsheet className="w-3 h-3" />, color: 'text-emerald-600' },
-                          { name: 'Report.pdf', icon: <FileText className="w-3 h-3" />, color: 'text-red-500' },
-                          { name: 'Report.docx', icon: <FileText className="w-3 h-3" />, color: 'text-blue-600' },
-                          { name: 'Report.csv', icon: <FileText className="w-3 h-3" />, color: 'text-teal-600' },
-                          { name: 'Report_All.zip', icon: <Archive className="w-3 h-3" />, color: 'text-amber-600' },
-                        ].map(f => (
-                          <div key={f.name} className={`flex items-center gap-1 px-2 py-1 bg-white dark:bg-navy-800 rounded-lg border border-gray-200 dark:border-gray-700 text-[10px] font-bold ${f.color}`}>
-                            {f.icon} {f.name}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Email Body Preview */}
-                    <div className="p-5 text-xs text-gray-700 dark:text-gray-300 space-y-2 max-h-52 overflow-y-auto">
-                      <p>Dear Sir/Madam,</p>
-                      <p>Please find attached the official Nandha Engineering College LeetCode Weekly Performance Report{selectedSession ? ` for ${selectedSession.sessionDate}` : ''}.</p>
-                      {customMessage && <p className="italic text-indigo-600 dark:text-indigo-400">{customMessage}</p>}
-                      <p className="font-bold text-gray-900 dark:text-white">📊 Report Summary is attached in the enclosed files.</p>
-                      <p className="text-gray-400 text-[10px]">The attached reports (Excel, PDF, Word, CSV) were generated from the finalized official snapshot.</p>
-                      <p className="text-gray-400 text-[10px]">— Nandha Engineering College • LeetCode Institutional Tracking System</p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <button onClick={() => setSendStep('select')} className="flex-1 py-2.5 rounded-2xl border border-gray-200 dark:border-gray-700 text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-navy-800 transition-all">
-                      ← Back
-                    </button>
-                    <button onClick={handleSendEmail}
-                      className="flex-1 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black text-sm transition-all flex items-center justify-center gap-2">
-                      <Send className="w-4 h-4" />
-                      Send Email Now
-                    </button>
-                  </div>
-                </>
-              )}
-
-              {/* Step: SENDING */}
-              {sendStep === 'sending' && (
-                <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                  <div className="relative">
-                    <div className="w-16 h-16 rounded-full bg-brand-500/10 flex items-center justify-center">
-                      <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
-                    </div>
-                  </div>
-                  <p className="font-black text-gray-900 dark:text-white">Queuing report dispatch...</p>
-                  <p className="text-xs text-gray-400 text-center">Generating report files & scheduling delivery to {selectedRecipientIds.size} recipient(s)</p>
-                </div>
-              )}
-
-              {/* Step: DONE */}
-              {sendStep === 'done' && (
-                <div className="flex flex-col items-center justify-center py-8 space-y-4 max-w-lg mx-auto">
-                  <div className={`w-16 h-16 rounded-full flex items-center justify-center ${sendResult?.toLowerCase().includes('fail') || sendResult?.toLowerCase().includes('error') ? 'bg-red-100 dark:bg-red-900/20' : 'bg-emerald-100 dark:bg-emerald-900/20'}`}>
-                    {sendResult?.toLowerCase().includes('fail') || sendResult?.toLowerCase().includes('error')
-                      ? <XCircle className="w-8 h-8 text-red-500" />
-                      : <CheckCircle2 className="w-8 h-8 text-emerald-500" />
-                    }
-                  </div>
-                  <div className="text-center space-y-1">
-                    <p className="font-black text-sm text-gray-900 dark:text-white leading-relaxed">{sendResult}</p>
-                    <p className="text-xs text-gray-400">
-                      Delivery logs and retry status are available in the Status & History tabs.
-                    </p>
-                  </div>
-
-                  {(sendResult?.toLowerCase().includes('fail') || sendResult?.toLowerCase().includes('error') || sendResult?.toLowerCase().includes('auth')) && (
-                    <div className="p-3.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 rounded-2xl text-[11px] text-amber-800 dark:text-amber-300 text-left space-y-1 w-full">
-                      <div className="font-bold flex items-center gap-1.5">
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                        <span>{providerInfo?.active_provider === 'BREVO_API' ? 'Brevo API Delivery Diagnostics' : 'SMTP Configuration Diagnostic'}</span>
-                      </div>
-                      {providerInfo?.active_provider === 'BREVO_API' ? (
-                        <div className="text-gray-600 dark:text-gray-400 text-[10.5px] leading-relaxed space-y-0.5">
-                          <p>✓ <strong>Provider:</strong> Brevo v3 Transactional API (HTTPS Port 443)</p>
-                          <p>✓ <strong>Timeout:</strong> {providerInfo?.timeout_seconds || 90}s with 3 exponential backoff retries</p>
-                          <p>✓ <strong>Sender:</strong> {providerInfo?.sender_email || 'nanthishvaran0106@gmail.com'}</p>
-                          <p className="text-amber-700 dark:text-amber-400 font-medium pt-1">
-                            If write timeout occurred, the request is automatically retried without duplicating emails. Check the Status &amp; History tab.
-                          </p>
-                        </div>
-                      ) : (
-                        <p className="text-gray-600 dark:text-gray-400 text-[10.5px] leading-relaxed">
-                          If using Gmail SMTP (`smtp.gmail.com:587`), ensure you are using a <b>16-character Google App Password</b> (generated in myaccount.google.com/apppasswords) rather than your standard Gmail password.
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-3 pt-2">
-                    <button
-                      onClick={() => setSendStep('select')}
-                      className="px-5 py-2.5 rounded-2xl border border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-navy-800 transition-all"
-                    >
-                      ← Try Again
-                    </button>
-                    <button
-                      onClick={() => setShowSendModal(false)}
-                      className="px-6 py-2.5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-black text-xs transition-all shadow-md"
-                    >
-                      Done
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+      {/* Global Status Notification Modal */}
+      {notification && (
+        <StatusNotificationModal
+          notification={notification}
+          onClose={() => setNotification(null)}
+        />
       )}
-
-      {/* ── CENTRALIZED CUSTOM NOTIFICATION MODAL ────────────────── */}
-      <StatusNotificationModal
-        notification={notification}
-        onClose={() => setNotification(null)}
-      />
     </div>
   );
 };

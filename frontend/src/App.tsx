@@ -165,7 +165,7 @@ export const App: React.FC = () => {
   const renderAccessRestricted = (resourceTitle: string) => (
     <AccessRestrictedView
       resourceName={resourceTitle}
-      onGoBack={() => handleTabChange('dashboard')}
+      onGoBack={() => handleTabChange(isAuthenticated ? 'dashboard' : 'landing')}
       onOpenLogin={() => setShowLoginModal(true)}
     />
   );

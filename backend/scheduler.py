@@ -325,8 +325,144 @@ def start_scheduler():
         replace_existing=True
     )
 
+    # ── DUAL-SYNC TRACKER JOB 1: Sunday 10:00 AM IST — Official Contest Batch Scrape ──
+    async def tracker_dual_sync_morning():
+        """Sunday 10:00 AM IST: Post-official contest mass scrape & GREEN/YELLOW/RED classification."""
+        logger.info("[TRACKER] Dual-Sync Job 1: Sunday 10:00 AM IST — Official Contest Batch Scrape starting...")
+        try:
+            db = SessionLocal()
+            from backend.leetcode_tracker import execute_dual_sync_job
+            # Call the tracker's batch sync logic directly
+            from fastapi import Query
+            result = await execute_dual_sync_job.__wrapped__(job_type="morning", db=db) if hasattr(execute_dual_sync_job, "__wrapped__") else None
+            if result is None:
+                # Import the core function directly
+                from backend.leetcode_tracker import (
+                    fetch_leetcode_contest_and_submissions,
+                    classify_student_contest_performance,
+                    get_now_ist, format_ist
+                )
+                from backend.models import Student, WeeklySession, WeeklyPublicResult
+                students = db.query(Student).filter(
+                    (Student.is_active == True) | (Student.is_active.is_(None))
+                ).all()
+                active_session = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+                official_cnt, virtual_cnt, absent_cnt = 0, 0, 0
+                for s in students:
+                    if not s.username:
+                        absent_cnt += 1
+                        continue
+                    try:
+                        gql = await fetch_leetcode_contest_and_submissions(s.username)
+                        res = classify_student_contest_performance(gql, active_session.contest_name if active_session else "Weekly Contest 515")
+                        if active_session:
+                            rec = db.query(WeeklyPublicResult).filter(
+                                WeeklyPublicResult.session_id == active_session.id,
+                                WeeklyPublicResult.student_id == s.id
+                            ).first()
+                            if not rec:
+                                rec = WeeklyPublicResult(
+                                    session_id=active_session.id,
+                                    student_id=s.id,
+                                    reg_no=s.reg_no,
+                                    name=s.name,
+                                    dept=s.department.name if s.department else "CSE-CS",
+                                    year=s.year_level or "III Year"
+                                )
+                                db.add(rec)
+                            rec.participation_status = res["attendance_status"]
+                            rec.total_contest_solved = res["solved_count"]
+                            rec.q1, rec.q2, rec.q3, rec.q4 = res["q1"], res["q2"], res["q3"], res["q4"]
+                        if res["badge_type"] == "GREEN": official_cnt += 1
+                        elif res["badge_type"] == "YELLOW": virtual_cnt += 1
+                        else: absent_cnt += 1
+                    except Exception as se:
+                        logger.warning(f"[TRACKER] Student {s.reg_no} sync error: {se}")
+                        absent_cnt += 1
+                if active_session:
+                    active_session.official_participants = official_cnt
+                    active_session.virtual_participants = virtual_cnt
+                    active_session.not_participated = absent_cnt
+                db.commit()
+                logger.info(f"[TRACKER] Dual-Sync Morning complete: Official={official_cnt}, Virtual={virtual_cnt}, Absent={absent_cnt}")
+        except Exception as e:
+            logger.error(f"[TRACKER] Dual-Sync Morning Job error: {e}")
+        finally:
+            try:
+                db.close()
+            except Exception:
+                pass
+
+    scheduler.add_job(
+        tracker_dual_sync_morning,
+        CronTrigger(day_of_week='sun', hour=10, minute=0, second=0, timezone=IST),
+        id='tracker_dual_sync_morning',
+        replace_existing=True
+    )
+
+    # ── DUAL-SYNC TRACKER JOB 2: Sunday 10:00 PM IST — Virtual Contest Consolidation ──
+    async def tracker_dual_sync_evening():
+        """Sunday 10:00 PM IST: End-of-day virtual contest delta scan & immutable snapshot finalization."""
+        logger.info("[TRACKER] Dual-Sync Job 2: Sunday 10:00 PM IST — Virtual Consolidation starting...")
+        try:
+            db = SessionLocal()
+            from backend.leetcode_tracker import (
+                fetch_leetcode_contest_and_submissions,
+                classify_student_contest_performance,
+            )
+            from backend.models import Student, WeeklySession, WeeklyPublicResult
+            students = db.query(Student).filter(
+                (Student.is_active == True) | (Student.is_active.is_(None))
+            ).all()
+            active_session = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+            virtual_updated = 0
+            for s in students:
+                if not s.username:
+                    continue
+                try:
+                    gql = await fetch_leetcode_contest_and_submissions(s.username)
+                    res = classify_student_contest_performance(gql, active_session.contest_name if active_session else "Weekly Contest 515")
+                    # Only update records that switched to VIRTUAL during post-9:30 window
+                    if active_session and res["badge_type"] == "YELLOW":
+                        rec = db.query(WeeklyPublicResult).filter(
+                            WeeklyPublicResult.session_id == active_session.id,
+                            WeeklyPublicResult.student_id == s.id
+                        ).first()
+                        if rec and rec.participation_status != "OFFICIAL_ATTENDED":
+                            rec.participation_status = "VIRTUAL_ATTENDED"
+                            rec.total_contest_solved = res["solved_count"]
+                            rec.q1, rec.q2, rec.q3, rec.q4 = res["q1"], res["q2"], res["q3"], res["q4"]
+                            virtual_updated += 1
+                except Exception as se:
+                    logger.warning(f"[TRACKER] Evening delta student {s.reg_no} error: {se}")
+            if active_session:
+                active_session.status = "FINALIZED"
+                active_session.virtual_participants = (active_session.virtual_participants or 0) + virtual_updated
+            db.commit()
+            logger.info(f"[TRACKER] Dual-Sync Evening complete: Virtual delta updates={virtual_updated}")
+        except Exception as e:
+            logger.error(f"[TRACKER] Dual-Sync Evening Job error: {e}")
+        finally:
+            try:
+                db.close()
+            except Exception:
+                pass
+
+    scheduler.add_job(
+        tracker_dual_sync_evening,
+        CronTrigger(day_of_week='sun', hour=22, minute=0, second=0, timezone=IST),
+        id='tracker_dual_sync_evening',
+        replace_existing=True
+    )
+
     scheduler.start()
-    logger.info("APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.")
+    logger.info(
+        "APScheduler started [Asia/Kolkata]: "
+        "Sun 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, "
+        "10:00 AM Sunday Report + TRACKER Dual-Sync Morning, "
+        "10:00 PM Virtual Final + TRACKER Dual-Sync Evening, "
+        "5m Discovery, 1h Verification, 2am Rating Updater registered."
+    )
 
 
 

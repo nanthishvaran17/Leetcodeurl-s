@@ -18,6 +18,8 @@ client = TestClient(app)
 
 @pytest.fixture(scope="module")
 def db_session():
+    from backend.database import run_migrations
+    run_migrations()
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
@@ -75,7 +77,7 @@ def test_02_otp_hashing_and_never_plaintext(db_session: Session):
     plain_otp, record = create_otp_transaction(db_session, email)
 
     assert plain_otp != record.otp_hash
-    assert len(record.otp_hash) == 64  # SHA-256 hex length
+    assert len(str(record.otp_hash)) == 64  # SHA-256 hex length
     assert record.email == email.lower().strip()
     assert record.used is False
     assert record.attempt_count == 0
@@ -105,7 +107,7 @@ def test_05_send_otp_api_inactive_account(db_session: Session):
 
 def test_06_verify_otp_api_success(db_session: Session):
     email = "teststudent_otp@nandhaengg.org"
-    plain_otp, record = create_otp_transaction(db_session, email)
+    plain_otp, record = create_otp_transaction(db_session, email, bypass_cooldown=True)
 
     res = client.post("/api/auth/verify-otp", json={"email": email, "otp": plain_otp})
     assert res.status_code == 200
@@ -121,7 +123,7 @@ def test_06_verify_otp_api_success(db_session: Session):
 
 def test_07_verify_otp_single_use_rejection(db_session: Session):
     email = "teststudent_otp@nandhaengg.org"
-    plain_otp, record = create_otp_transaction(db_session, email)
+    plain_otp, record = create_otp_transaction(db_session, email, bypass_cooldown=True)
 
     # First verification succeeds
     res1 = client.post("/api/auth/verify-otp", json={"email": email, "otp": plain_otp})
@@ -186,7 +188,7 @@ def test_12_contest_data_integrity_regression(db_session: Session):
 
     # Perform an OTP verification workflow
     email = "teststudent_otp@nandhaengg.org"
-    plain_otp, _ = create_otp_transaction(db_session, email)
+    plain_otp, _ = create_otp_transaction(db_session, email, bypass_cooldown=True)
     res = client.post("/api/auth/verify-otp", json={"email": email, "otp": plain_otp})
     assert res.status_code == 200
 

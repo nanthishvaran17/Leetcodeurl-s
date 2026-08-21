@@ -205,62 +205,62 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
       ]
     },
     {
-      title: "🏆 Contest Intelligence",
+      title: "Contest Intelligence",
       icon: Trophy,
       color: "from-amber-500/10 to-yellow-500/10 border-amber-500/30 text-amber-400",
       actions: [
-        { label: "🏁 Top 10 Latest Contest", query: "Who are the top 10 students in latest contest?" },
-        { label: "🚫 Scan Absentee Roster", query: "Find absent students in Weekly Contest 514" },
-        { label: "📈 Compare Contests 514 vs 515", query: "Compare Contest 514 and Contest 515 performance" }
+        { label: "Top 10 Latest Contest", query: "Who are the top 10 students in latest contest?" },
+        { label: "Scan Absentee Roster", query: "Find absent students in Weekly Contest 514" },
+        { label: "Compare Contests 514 vs 515", query: "Compare Contest 514 and Contest 515 performance" }
       ]
     },
     {
-      title: "📊 Performance Analytics",
+      title: "Performance Analytics",
       icon: Activity,
       color: "from-emerald-500/10 to-teal-500/10 border-emerald-500/30 text-emerald-400",
       actions: [
-        { label: "🥇 Overall College Top Solvers", query: "Who are the top 10 college solvers overall?" },
-        { label: "⚠️ Low Solvers (< 50 solved)", query: "Find low solvers with less than 50 problems" },
-        { label: "🕒 Check Last Fetch Time", query: "last fetch kaatu" }
+        { label: "Overall College Top Solvers", query: "Who are the top 10 college solvers overall?" },
+        { label: "Low Solvers (< 50 solved)", query: "Find low solvers with less than 50 problems" },
+        { label: "Check Last Fetch Time", query: "last fetch kaatu" }
       ]
     },
     {
-      title: "🔍 Database Audit & Bugs",
+      title: "Database Audit & Bugs",
       icon: AlertOctagon,
       color: "from-rose-500/10 to-red-500/10 border-rose-500/30 text-rose-400",
       actions: [
-        { label: "🐞 Run Deep Database Audit", query: "Check the entire database for bugs and duplicate URLs" },
-        { label: "🔗 Find Duplicate Usernames", query: "Find duplicate usernames or missing profiles" }
+        { label: "Run Deep Database Audit", query: "Check the entire database for bugs and duplicate URLs" },
+        { label: "Find Duplicate Usernames", query: "Find duplicate usernames or missing profiles" }
       ]
     },
     {
-      title: "📧 Email Actions & Safety",
+      title: "Email Actions & Safety",
       icon: Mail,
       color: "from-purple-500/10 to-pink-500/10 border-purple-500/30 text-purple-400",
       actions: [
-        { label: "✉️ Draft Warning Email (Requires Confirmation)", query: "mail panu low solvers-ukku" },
-        { label: "📢 Prepare Absentee Notification", query: "prepare an email for absent students" }
+        { label: "Draft Warning Email (Requires Confirmation)", query: "mail panu low solvers-ukku" },
+        { label: "Prepare Absentee Notification", query: "prepare an email for absent students" }
       ]
     },
     {
-      title: "📑 Report Exporters",
+      title: "Report Exporters",
       icon: FileText,
       color: "from-cyan-500/10 to-blue-500/10 border-cyan-500/30 text-cyan-400",
       actions: [
-        { label: "📄 Generate HOD Summary Report", query: "Generate HOD weekly summary report" },
-        { label: "🛡️ Verify Report Parity", query: "Are PDF and Excel reports in 100% parity?" }
+        { label: "Generate HOD Summary Report", query: "Generate HOD weekly summary report" },
+        { label: "Verify Report Parity", query: "Are PDF and Excel reports in 100% parity?" }
       ]
     }
   ];
 
   const quickActionsOps = [
-    { label: '🐞 Run Deep Audit', query: 'Check the entire database for bugs, duplicate usernames, and unverified profiles' },
-    { label: '✉️ Draft Warning Email', query: 'mail panu low solvers-ukku' },
-    { label: '📊 Compare 514 vs 515', query: 'Compare Contest 514 and Contest 515 performance' },
-    { label: '🚫 Scan Absentee Roster', query: 'Find absent students in Weekly Contest 515' },
-    { label: '👨‍🎓 Top Solvers', query: 'Who are the top 10 college solvers overall?' },
-    { label: '📄 HOD Summary Report', query: 'Generate HOD weekly summary report' },
-    { label: '🕒 Last Sync Telemetry', query: 'last fetch kaatu' }
+    { label: 'Run Deep Audit', query: 'Check the entire database for bugs, duplicate usernames, and unverified profiles' },
+    { label: 'Draft Warning Email', query: 'mail panu low solvers-ukku' },
+    { label: 'Compare 514 vs 515', query: 'Compare Contest 514 and Contest 515 performance' },
+    { label: 'Scan Absentee Roster', query: 'Find absent students in Weekly Contest 515' },
+    { label: 'Top Solvers', query: 'Who are the top 10 college solvers overall?' },
+    { label: 'HOD Summary Report', query: 'Generate HOD weekly summary report' },
+    { label: 'Last Sync Telemetry', query: 'last fetch kaatu' }
   ];
 
   const handleSend = async (textToSend?: string, modeOverride?: 'operations' | 'institutional') => {
