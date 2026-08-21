@@ -255,6 +255,57 @@ def run_migrations():
             except Exception as _e_otp:
                 pass
 
+            # ── faculty_action_queue: add new columns if missing ─────────────
+            try:
+                result_faq = conn.execute(
+                    __import__('sqlalchemy').text("PRAGMA table_info(faculty_action_queue)")
+                )
+                faq_cols = {row[1] for row in result_faq}
+                if faq_cols:
+                    faq_migrations = [
+                        ("priority_score",        "ALTER TABLE faculty_action_queue ADD COLUMN priority_score INTEGER DEFAULT 20"),
+                        ("signal_type",           "ALTER TABLE faculty_action_queue ADD COLUMN signal_type VARCHAR(80) DEFAULT 'ROUTINE_MONITORING'"),
+                        ("contest_id",            "ALTER TABLE faculty_action_queue ADD COLUMN contest_id VARCHAR(60)"),
+                        ("assigned_faculty_name", "ALTER TABLE faculty_action_queue ADD COLUMN assigned_faculty_name VARCHAR(150)"),
+                        ("due_date",              "ALTER TABLE faculty_action_queue ADD COLUMN due_date DATETIME"),
+                        ("follow_up_date",        "ALTER TABLE faculty_action_queue ADD COLUMN follow_up_date DATETIME"),
+                        ("next_review_date",      "ALTER TABLE faculty_action_queue ADD COLUMN next_review_date DATETIME"),
+                        ("action_taken",          "ALTER TABLE faculty_action_queue ADD COLUMN action_taken TEXT"),
+                        ("faculty_notes",         "ALTER TABLE faculty_action_queue ADD COLUMN faculty_notes TEXT"),
+                        ("evidence_remarks",      "ALTER TABLE faculty_action_queue ADD COLUMN evidence_remarks TEXT"),
+                        ("is_escalated",          "ALTER TABLE faculty_action_queue ADD COLUMN is_escalated BOOLEAN DEFAULT 0"),
+                        ("escalated_to",          "ALTER TABLE faculty_action_queue ADD COLUMN escalated_to VARCHAR(150)"),
+                        ("escalated_at",          "ALTER TABLE faculty_action_queue ADD COLUMN escalated_at DATETIME"),
+                        ("resolved_at",           "ALTER TABLE faculty_action_queue ADD COLUMN resolved_at DATETIME"),
+                    ]
+                    for col_name, sql in faq_migrations:
+                        if col_name not in faq_cols:
+                            conn.execute(__import__('sqlalchemy').text(sql))
+                            conn.commit()
+                            print(f"[DB Migration] Added faculty_action_queue column: {col_name}")
+            except Exception as _e_faq:
+                print(f"[DB Migration] faculty_action_queue migration note: {_e_faq}")
+
+            # ── faculty_action_audit_logs: create if missing ─────────────────
+            try:
+                conn.execute(__import__('sqlalchemy').text("""
+                    CREATE TABLE IF NOT EXISTS faculty_action_audit_logs (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        action_id INTEGER NOT NULL REFERENCES faculty_action_queue(id),
+                        user_id INTEGER REFERENCES users(id),
+                        user_name VARCHAR(150) DEFAULT 'System',
+                        event_type VARCHAR(50) NOT NULL,
+                        previous_value VARCHAR(200),
+                        new_value VARCHAR(200),
+                        reason TEXT,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )
+                """))
+                conn.commit()
+                print("[DB Migration] faculty_action_audit_logs table ensured.")
+            except Exception as _e_audit:
+                pass  # table already exists
+
             # Database-Level Snapshot Immutability Trigger (Prevents direct in-place mutation of dataset)
             try:
                 trigger_sql = """

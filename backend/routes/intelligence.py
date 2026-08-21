@@ -154,26 +154,33 @@ def get_faculty_actions_endpoint(
     priority: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     department_id: Optional[int] = Query(None),
+    dept_id: Optional[int] = Query(None),
     year_level: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
-    limit: int = Query(100, ge=1, le=500),
-    offset: int = Query(0, ge=0),
+    sort_by: Optional[str] = Query("priority_score"),
+    sort_dir: Optional[str] = Query("desc"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
+    limit: Optional[int] = Query(None),
+    offset: Optional[int] = Query(None),
     db: Session = Depends(get_db)
 ):
     """
     Returns filtered and sorted Faculty Action Queue with real student context.
     """
     from backend.services.faculty_action_engine import get_faculty_actions_list, detect_and_sync_faculty_signals
-    # First ensure at least initial signals are detected
+    eff_dept_id = department_id or dept_id
+    eff_limit = limit if limit is not None else page_size
+    eff_offset = offset if offset is not None else (page - 1) * page_size
     data = get_faculty_actions_list(
         db,
         priority=priority,
         status=status,
-        department_id=department_id,
+        department_id=eff_dept_id,
         year_level=year_level,
         search=search,
-        limit=limit,
-        offset=offset
+        limit=eff_limit,
+        offset=eff_offset
     )
     if data["total"] == 0 and not search and not priority and not status:
         detect_and_sync_faculty_signals(db)
@@ -181,12 +188,14 @@ def get_faculty_actions_endpoint(
             db,
             priority=priority,
             status=status,
-            department_id=department_id,
+            department_id=eff_dept_id,
             year_level=year_level,
             search=search,
-            limit=limit,
-            offset=offset
+            limit=eff_limit,
+            offset=eff_offset
         )
+    data["page"] = page
+    data["page_size"] = eff_limit
     return data
 
 
@@ -196,7 +205,37 @@ def post_detect_faculty_signals_endpoint(force: bool = Query(False), db: Session
     Triggers on-demand automated signal sweep across all active students in the database.
     """
     from backend.services.faculty_action_engine import detect_and_sync_faculty_signals
-    return detect_and_sync_faculty_signals(db, force=force)
+    res = detect_and_sync_faculty_signals(db, force=force)
+    return {
+        "status": res.get("status", "success"),
+        "new_signals_created": res.get("created", 0),
+        "existing_signals_updated": res.get("updated", 0),
+        "total_processed": res.get("created", 0) + res.get("updated", 0),
+        "message": f"{res.get('created', 0)} new signals created, {res.get('updated', 0)} updated."
+    }
+
+
+@router.put("/faculty/actions/{action_id}")
+def put_faculty_action_endpoint(action_id: int, req: FacultyActionUpdateRequest, db: Session = Depends(get_db)):
+    """
+    Updates action details (PUT), status, notes, follow-up date with audit trail.
+    """
+    from backend.services.faculty_action_engine import update_faculty_action_details
+    try:
+        return update_faculty_action_details(
+            db,
+            action_id=action_id,
+            status=req.status,
+            assigned_faculty_name=req.assigned_faculty_name,
+            action_taken=req.action_taken,
+            faculty_notes=req.faculty_notes,
+            evidence_remarks=req.evidence_remarks,
+            follow_up_date=req.follow_up_date,
+            next_review_date=req.next_review_date,
+            user_name=req.user_name or "Faculty Mentor"
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
 
 
 @router.get("/faculty/actions/{action_id}")

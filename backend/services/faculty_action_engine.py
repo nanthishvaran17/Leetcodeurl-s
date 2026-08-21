@@ -327,40 +327,62 @@ def get_faculty_actions_list(
                 is_overdue = True
                 overdue_days = (now - item.follow_up_date).days
 
+        dept_name = st.department.name if (st and st.department) else "CSE"
+        dept_code = st.department.code if (st and st.department) else "CSE"
+        total_solved = stats.total_solved if stats else 0
+        current_rating = int(stats.contest_rating) if (stats and stats.contest_rating) else 0
+        contests_attended = 0  # populated from signal detection context
+        # Days since last active — use last_updated on profile stats
+        days_ago = 0
+        if stats and stats.last_updated:
+            try:
+                days_ago = max(0, (now.date() - stats.last_updated.date()).days)
+            except Exception:
+                days_ago = 0
+
         results.append({
             "id": item.id,
             "student_id": item.student_id,
             "reg_no": st.reg_no if st else "N/A",
             "student_name": st.name if st else "Unknown",
-            "department": st.department.name if (st and st.department) else "CSE",
-            "dept_code": st.department.code if (st and st.department) else "CSE",
-            "year_level": st.year_level or "III",
+            "department_name": dept_name,
+            "department_code": dept_code,
+            "dept_code": dept_code,   # backward compat
+            "year_level": st.year_level or "III Year",
             "leetcode_username": st.username or "",
             "priority": item.priority,
-            "priority_score": item.priority_score,
-            "signal_type": item.signal_type,
+            "priority_score": item.priority_score or 0,
+            "priority_score_reason": item.reason or "",
+            "signal_type": item.signal_type or "",
             "contest_id": item.contest_id,
             "reason": item.reason,
-            "recommended_action": item.recommended_action,
+            "recommended_action": item.recommended_action or "",
             "status": item.status,
             "category": item.category,
-            "assigned_faculty_name": item.assigned_faculty_name or "Faculty Mentor",
+            "assigned_faculty_name": item.assigned_faculty_name,
             "due_date": item.due_date.strftime("%d %b %Y") if item.due_date else None,
             "follow_up_date": item.follow_up_date.strftime("%d %b %Y") if item.follow_up_date else None,
             "next_review_date": item.next_review_date.strftime("%d %b %Y") if item.next_review_date else None,
-            "is_overdue": is_overdue,
-            "overdue_days": overdue_days,
-            "is_escalated": item.is_escalated,
+            "is_overdue_followup": is_overdue,
+            "days_overdue": overdue_days,
+            "is_overdue": is_overdue,     # backward compat
+            "overdue_days": overdue_days,  # backward compat
+            "is_escalated": item.is_escalated or False,
             "escalated_to": item.escalated_to,
             "action_taken": item.action_taken,
             "faculty_notes": item.faculty_notes,
             "evidence_remarks": item.evidence_remarks,
             "created_at": item.created_at.strftime("%d %b %Y, %I:%M %p") if item.created_at else "",
             "updated_at": item.updated_at.strftime("%d %b %Y, %I:%M %p") if item.updated_at else "",
-            # Real student performance preview
+            # Real student performance preview (flat for frontend)
+            "total_solved": total_solved,
+            "current_rating": current_rating,
+            "contests_attended": contests_attended,
+            "last_active_days_ago": days_ago,
+            # Also nested for backward compat
             "stats": {
-                "total_solved": stats.total_solved if stats else 0,
-                "contest_rating": stats.contest_rating if stats else 0.0,
+                "total_solved": total_solved,
+                "contest_rating": current_rating,
                 "easy_solved": stats.easy_solved if stats else 0,
                 "medium_solved": stats.medium_solved if stats else 0,
                 "hard_solved": stats.hard_solved if stats else 0,
