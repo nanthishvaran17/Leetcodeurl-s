@@ -27,7 +27,7 @@ from backend.models import (
 )
 from backend.logger import logger
 
-router = APIRouter(prefix="/api/command-center", tags=["Command Center CRUD & Analytics"])
+router = APIRouter(prefix="/command-center", tags=["Command Center CRUD & Analytics"])
 
 
 # ── Pydantic Schemas ──────────────────────────────────────────────────────────

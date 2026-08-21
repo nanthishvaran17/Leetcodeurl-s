@@ -260,18 +260,23 @@ export const HODCommandCenter: React.FC = () => {
   const [queryText, setQueryText] = useState('');
   const [queryResponse, setQueryResponse] = useState<any>(null);
   const [queryLoading, setQueryLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadSummary = useCallback(async (quiet = false) => {
     if (!quiet) setLoading(true); else setRefreshing(true);
+    setLoadError(null);
     try {
       const data = await getCommandCenterSummary();
       setSummary(data);
       // Init what-if simulation
       const hp = data.department_health;
-      const sim = await simulateWhatIfScenario(hp.participation_score, targetPart, hp.at_risk_count);
-      setScenarioResult(sim);
-    } catch (err) {
+      if (hp) {
+        const sim = await simulateWhatIfScenario(hp.participation_score, targetPart, hp.at_risk_count);
+        setScenarioResult(sim);
+      }
+    } catch (err: any) {
       console.error('HOD summary load failed:', err);
+      setLoadError(err?.message || 'Failed to connect to database analytics engine');
     } finally {
       setLoading(false); setRefreshing(false);
     }
@@ -286,8 +291,8 @@ export const HODCommandCenter: React.FC = () => {
         dept_id: studentsDept ? Number(studentsDept) : undefined,
         year_level: studentsYear || undefined,
       });
-      setStudents(res.students);
-      setStudentsTotal(res.total);
+      setStudents(res.students || []);
+      setStudentsTotal(res.total || 0);
     } catch (err) {
       console.error('Students load failed:', err);
     } finally {
@@ -295,7 +300,7 @@ export const HODCommandCenter: React.FC = () => {
     }
   }, [studentsPage, studentsSearch, studentsDept, studentsYear]);
 
-  useEffect(() => { loadSummary(); getCommandCenterDepartments().then(setDepartments); }, []);
+  useEffect(() => { loadSummary(); getCommandCenterDepartments().then(setDepartments).catch(() => {}); }, []);
   useEffect(() => { if (tab === 'Student CRUD') loadStudents(); }, [tab, studentsPage, studentsSearch, studentsDept, studentsYear, loadStudents]);
 
   // Auto-refresh every 60s
@@ -319,8 +324,10 @@ export const HODCommandCenter: React.FC = () => {
     setTargetPart(val);
     if (!summary) return;
     const hp = summary.department_health;
-    const sim = await simulateWhatIfScenario(hp.participation_score, val, hp.at_risk_count);
-    setScenarioResult(sim);
+    if (hp) {
+      const sim = await simulateWhatIfScenario(hp.participation_score, val, hp.at_risk_count);
+      setScenarioResult(sim);
+    }
   };
 
   const handleAIQuery = async (e: React.FormEvent) => {
@@ -340,7 +347,7 @@ export const HODCommandCenter: React.FC = () => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-slate-400">
-        <RefreshCw size={28} className="animate-spin mb-4 opacity-40" />
+        <RefreshCw size={28} className="animate-spin mb-4 text-brand-500" />
         <p className="text-sm font-semibold">Computing institutional intelligence from database...</p>
       </div>
     );
@@ -371,7 +378,7 @@ export const HODCommandCenter: React.FC = () => {
             </h1>
 
             <p className="text-xs md:text-sm text-gray-300 font-medium leading-relaxed">
-              Coding Health Score (0-100) • Institutional Benchmarking • What-If Simulator • AI Query • {summary?.refreshed_at}
+              Coding Health Score (0-100) • Institutional Benchmarking • What-If Simulator • AI Query • {summary?.refreshed_at || 'Live Ground Truth'}
             </p>
           </div>
 
@@ -388,6 +395,19 @@ export const HODCommandCenter: React.FC = () => {
         </div>
       </div>
 
+      {/* Error Alert if summary failed */}
+      {loadError && (
+        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-sm flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={16} />
+            <span>{loadError}</span>
+          </div>
+          <button onClick={() => loadSummary()} className="px-3 py-1 bg-rose-500 text-white rounded-xl text-xs font-bold hover:bg-rose-600">
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* ── TABS ── */}
       <div className="flex gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 w-fit">
         {TABS.map(t => (
@@ -401,83 +421,92 @@ export const HODCommandCenter: React.FC = () => {
       {/* ══════════════════════════════════════════════════════════════════════
           TAB 1: OVERVIEW — Health Score Hero + Executive Summary
           ════════════════════════════════════════════════════════════════════ */}
-      {tab === 'Overview' && health && (
-        <>
-          {/* Health Score Hero */}
-          <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white border border-navy-800 shadow-2xl">
-            <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, rgba(99,102,241,0.3) 0%, transparent 60%)' }} />
-            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div className="space-y-2">
-                <span className="inline-block px-3 py-1 rounded-xl text-[10px] font-black bg-brand-500/20 text-brand-400 border border-brand-500/30 uppercase tracking-wider">
-                  NANDHA ENGINEERING COLLEGE · LIVE CODING HEALTH SCORE
-                </span>
-                <div className="flex items-baseline gap-3">
-                  <span className="text-5xl font-black">{health.health_score}</span>
-                  <span className="text-xl text-slate-400 font-bold">/ 100</span>
+      {tab === 'Overview' && (
+        health ? (
+          <>
+            {/* Health Score Hero */}
+            <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white border border-navy-800 shadow-2xl">
+              <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, rgba(99,102,241,0.3) 0%, transparent 60%)' }} />
+              <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="space-y-2">
+                  <span className="inline-block px-3 py-1 rounded-xl text-[10px] font-black bg-brand-500/20 text-brand-400 border border-brand-500/30 uppercase tracking-wider">
+                    NANDHA ENGINEERING COLLEGE · LIVE CODING HEALTH SCORE
+                  </span>
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-5xl font-black">{health.health_score}</span>
+                    <span className="text-xl text-slate-400 font-bold">/ 100</span>
+                  </div>
+                  <p className="text-xs text-slate-300">Computed from {health.total_students} active students across 5 weighted institutional dimensions.</p>
                 </div>
-                <p className="text-xs text-slate-300">Computed from {health.total_students} active students across 5 weighted institutional dimensions.</p>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { label: 'Total Students', value: health.total_students, color: 'text-white' },
+                    { label: 'Active (Solved > 0)', value: health.active_this_week, color: 'text-emerald-400' },
+                    { label: 'At-Risk', value: health.at_risk_count, color: 'text-rose-400' },
+                    { label: 'Improving', value: health.improving_count, color: 'text-indigo-400' },
+                  ].map(kpi => (
+                    <div key={kpi.label} className="bg-white/5 backdrop-blur-md rounded-2xl p-3.5 border border-white/10 text-center">
+                      <div className="text-[9px] font-extrabold uppercase text-slate-400 mb-0.5">{kpi.label}</div>
+                      <div className={`text-2xl font-black ${kpi.color}`}>{kpi.value}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {/* 5 Dimension Bars */}
+              <div className="relative z-10 grid grid-cols-5 gap-4 pt-5 mt-5 border-t border-white/10 text-xs">
                 {[
-                  { label: 'Total Students', value: health.total_students, color: 'text-white' },
-                  { label: 'Active (Solved > 0)', value: health.active_this_week, color: 'text-emerald-400' },
-                  { label: 'At-Risk', value: health.at_risk_count, color: 'text-rose-400' },
-                  { label: 'Improving', value: health.improving_count, color: 'text-indigo-400' },
-                ].map(kpi => (
-                  <div key={kpi.label} className="bg-white/5 backdrop-blur-md rounded-2xl p-3.5 border border-white/10 text-center">
-                    <div className="text-[9px] font-extrabold uppercase text-slate-400 mb-0.5">{kpi.label}</div>
-                    <div className={`text-2xl font-black ${kpi.color}`}>{kpi.value}</div>
+                  { label: 'Participation', score: health.participation_score, color: 'text-brand-400' },
+                  { label: 'Consistency', score: health.consistency_score, color: 'text-emerald-400' },
+                  { label: 'Growth', score: health.growth_score, color: 'text-indigo-400' },
+                  { label: 'Contest Perf.', score: health.contest_performance_score, color: 'text-purple-400' },
+                  { label: 'Difficulty', score: health.difficulty_progress_score, color: 'text-amber-400' },
+                ].map(dim => (
+                  <div key={dim.label}>
+                    <div className="flex justify-between font-bold text-slate-300 mb-1">
+                      <span>{dim.label}</span><strong className={dim.color}>{dim.score}%</strong>
+                    </div>
+                    <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                      <div className={`h-full rounded-full ${dim.color.replace('text-', 'bg-')}`} style={{ width: `${dim.score}%` }} />
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* 5 Dimension Bars */}
-            <div className="relative z-10 grid grid-cols-5 gap-4 pt-5 mt-5 border-t border-white/10 text-xs">
-              {[
-                { label: 'Participation', score: health.participation_score, color: 'text-brand-400' },
-                { label: 'Consistency', score: health.consistency_score, color: 'text-emerald-400' },
-                { label: 'Growth', score: health.growth_score, color: 'text-indigo-400' },
-                { label: 'Contest Perf.', score: health.contest_performance_score, color: 'text-purple-400' },
-                { label: 'Difficulty', score: health.difficulty_progress_score, color: 'text-amber-400' },
-              ].map(dim => (
-                <div key={dim.label}>
-                  <div className="flex justify-between font-bold text-slate-300 mb-1">
-                    <span>{dim.label}</span><strong className={dim.color}>{dim.score}%</strong>
-                  </div>
-                  <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full ${dim.color.replace('text-', 'bg-')}`} style={{ width: `${dim.score}%` }} />
-                  </div>
+            {/* Executive Summary */}
+            {execSum && (
+              <Card className="p-6 space-y-4">
+                <SectionHeader icon={<Sparkles size={20} />} title={execSum.executive_title} subtitle={`DB-derived intelligence · ${execSum.timestamp}`} color="text-indigo-500" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  {[
+                    { key: 'what_improved', label: '✅ What Improved', color: 'bg-emerald-500/5 border-emerald-500/20 text-emerald-600 dark:text-emerald-400' },
+                    { key: 'what_declined', label: '⚠️ What Declined', color: 'bg-red-500/5 border-red-500/20 text-red-600 dark:text-red-400' },
+                    { key: 'weakest_skill', label: '🎯 Weakest Skill Gap', color: 'bg-amber-500/5 border-amber-500/20 text-amber-600 dark:text-amber-400' },
+                    { key: 'recommended_intervention', label: '💡 Recommended Action', color: 'bg-brand-500/5 border-brand-500/20 text-brand-600 dark:text-brand-400' },
+                  ].map(({ key, label, color }) => (
+                    <div key={key} className={`p-4 rounded-2xl border ${color.split(' ').slice(0, 2).join(' ')}`}>
+                      <span className={`font-black uppercase tracking-wider text-[10px] block mb-1 ${color.split(' ').slice(2).join(' ')}`}>{label}</span>
+                      <p className="text-slate-700 dark:text-slate-300 leading-relaxed font-medium">{(execSum as any)[key]}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Executive Summary */}
-          {execSum && (
-            <Card className="p-6 space-y-4">
-              <SectionHeader icon={<Sparkles size={20} />} title={execSum.executive_title} subtitle={`DB-derived intelligence · ${execSum.timestamp}`} color="text-indigo-500" />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                {[
-                  { key: 'what_improved', label: '✅ What Improved', color: 'bg-emerald-500/5 border-emerald-500/20 text-emerald-600 dark:text-emerald-400' },
-                  { key: 'what_declined', label: '⚠️ What Declined', color: 'bg-red-500/5 border-red-500/20 text-red-600 dark:text-red-400' },
-                  { key: 'weakest_skill', label: '🎯 Weakest Skill Gap', color: 'bg-amber-500/5 border-amber-500/20 text-amber-600 dark:text-amber-400' },
-                  { key: 'recommended_intervention', label: '💡 Recommended Action', color: 'bg-brand-500/5 border-brand-500/20 text-brand-600 dark:text-brand-400' },
-                ].map(({ key, label, color }) => (
-                  <div key={key} className={`p-4 rounded-2xl border ${color.split(' ').slice(0, 2).join(' ')}`}>
-                    <span className={`font-black uppercase tracking-wider text-[10px] block mb-1 ${color.split(' ').slice(2).join(' ')}`}>{label}</span>
-                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed font-medium">{(execSum as any)[key]}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="bg-slate-50 dark:bg-navy-900/50 rounded-2xl border border-slate-200 dark:border-navy-700 p-4 text-xs">
-                <span className="font-black uppercase tracking-wider text-slate-400 dark:text-navy-400 text-[10px] block mb-1">📋 Management Action Item</span>
-                <p className="text-slate-700 dark:text-slate-300 font-semibold">{execSum.management_action_item}</p>
-              </div>
-            </Card>
-          )}
-        </>
+                <div className="bg-slate-50 dark:bg-navy-900/50 rounded-2xl border border-slate-200 dark:border-navy-700 p-4 text-xs">
+                  <span className="font-black uppercase tracking-wider text-slate-400 dark:text-navy-400 text-[10px] block mb-1">📋 Management Action Item</span>
+                  <p className="text-slate-700 dark:text-slate-300 font-semibold">{execSum.management_action_item}</p>
+                </div>
+              </Card>
+            )}
+          </>
+        ) : (
+          <Card className="p-8 text-center space-y-3">
+            <p className="text-slate-500 text-sm font-semibold">No summary data available.</p>
+            <button onClick={() => loadSummary()} className="px-4 py-2 bg-brand-500 text-white rounded-xl text-xs font-bold hover:bg-brand-600">
+              Refresh Data
+            </button>
+          </Card>
+        )
       )}
 
       {/* ══════════════════════════════════════════════════════════════════════

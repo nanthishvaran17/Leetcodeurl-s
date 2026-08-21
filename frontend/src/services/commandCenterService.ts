@@ -129,7 +129,7 @@ export interface DepartmentRecord {
 export async function getCommandCenterSummary(deptId?: number): Promise<CommandCenterSummary> {
   const params: Record<string, any> = {};
   if (deptId) params.dept_id = deptId;
-  const res = await api.get('/api/command-center/summary', { params });
+  const res = await api.get('/command-center/summary', { params });
   return res.data;
 }
 
@@ -145,7 +145,7 @@ export async function getCommandCenterStudents(params: {
   year_level?: string;
   include_inactive?: boolean;
 }): Promise<StudentListResponse> {
-  const res = await api.get('/api/command-center/students', { params });
+  const res = await api.get('/command-center/students', { params });
   return res.data;
 }
 
@@ -159,7 +159,7 @@ export async function addStudent(payload: StudentAddPayload): Promise<{
   reg_no: string;
   message: string;
 }> {
-  const res = await api.post('/api/command-center/students/add', payload);
+  const res = await api.post('/command-center/students/add', payload);
   return res.data;
 }
 
@@ -174,7 +174,7 @@ export async function updateStudent(regNo: string, payload: StudentUpdatePayload
   changed_fields: string[];
   resync_pending: boolean;
 }> {
-  const res = await api.put(`/api/command-center/students/${encodeURIComponent(regNo)}`, payload);
+  const res = await api.put(`/command-center/students/${encodeURIComponent(regNo)}`, payload);
   return res.data;
 }
 
@@ -188,7 +188,7 @@ export async function deleteStudent(regNo: string): Promise<{
   name: string;
   message: string;
 }> {
-  const res = await api.delete(`/api/command-center/students/${encodeURIComponent(regNo)}`);
+  const res = await api.delete(`/command-center/students/${encodeURIComponent(regNo)}`);
   return res.data;
 }
 
@@ -197,7 +197,7 @@ export async function deleteStudent(regNo: string): Promise<{
  * Reactivates a previously soft-deleted student.
  */
 export async function reactivateStudent(regNo: string): Promise<{ success: boolean; message: string }> {
-  const res = await api.post(`/api/command-center/students/${encodeURIComponent(regNo)}/reactivate`);
+  const res = await api.post(`/command-center/students/${encodeURIComponent(regNo)}/reactivate`);
   return res.data;
 }
 
@@ -206,7 +206,7 @@ export async function reactivateStudent(regNo: string): Promise<{ success: boole
  * Returns all real departments with live student counts.
  */
 export async function getCommandCenterDepartments(): Promise<DepartmentRecord[]> {
-  const res = await api.get('/api/command-center/departments');
+  const res = await api.get('/command-center/departments');
   return res.data;
 }
 
@@ -215,7 +215,7 @@ export async function getCommandCenterDepartments(): Promise<DepartmentRecord[]>
  * Returns real GROUP BY year_level benchmarking from DB.
  */
 export async function getYearMatrix(): Promise<YearBenchmark[]> {
-  const res = await api.get('/api/command-center/year-matrix');
+  const res = await api.get('/command-center/year-matrix');
   return res.data;
 }
 
@@ -229,6 +229,6 @@ export async function askCommandCenterAI(query: string): Promise<{
   data_confidence: string;
   traceable_metrics: string[];
 }> {
-  const res = await api.post('/api/command-center/ai-query', { query });
+  const res = await api.post('/command-center/ai-query', { query });
   return res.data;
 }
