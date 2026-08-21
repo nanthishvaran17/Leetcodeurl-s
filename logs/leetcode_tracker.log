@@ -66465,3 +66465,73 @@ Action: Request blocked
 [2026-08-21 07:01:49,590] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-INVALID999-RANDOM found=False doc_type=None
 [2026-08-21 07:01:49,625] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-732224CC031-EXCELLENCE (Official Certificate of Excellence) for Student: NANTHISH S (732224CC031)
 [2026-08-21 07:01:49,629] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-21 07:01:54,035] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 07:01:54,039] [INFO] [leetcode_tracker]: [SYNC] Loaded 298 active students
+[2026-08-21 07:02:54,033] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 07:02:54,036] [INFO] [leetcode_tracker]: [SYNC] Loaded 298 active students
+[2026-08-21 07:03:54,035] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 07:03:54,040] [INFO] [leetcode_tracker]: [SYNC] Loaded 298 active students
+[2026-08-21 07:04:54,047] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 07:04:54,057] [INFO] [leetcode_tracker]: [SYNC] Loaded 298 active students
+[2026-08-21 07:05:54,046] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 07:05:54,049] [INFO] [leetcode_tracker]: [SYNC] Loaded 298 active students
+[2026-08-21 07:06:54,044] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 07:06:54,047] [INFO] [leetcode_tracker]: [SYNC] Loaded 298 active students
+[2026-08-21 07:07:20,063] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 07:07:20,072] [INFO] [leetcode_tracker]: [SYNC] Loaded 298 active students
+[2026-08-21 07:07:20,769] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-21 07:07:21,960] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 07:07:22,072] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 07:07:22,085] [INFO] [leetcode_tracker]: [SYNC] Loaded 298 active students
+[2026-08-21 07:07:22,241] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-21 07:07:22,269] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-21 07:07:22,316] [INFO] [leetcode_tracker]: [SYNC] Loaded 298 active students
+[2026-08-21 07:07:27,018] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-92221] PAGE_NAVIGATE by admin (admin@college.edu)
+[2026-08-21 07:07:28,096] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-21 07:07:28,290] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 07:07:28,376] [INFO] [leetcode_tracker]: [SYNC] Loaded 298 active students
+[2026-08-21 07:07:28,459] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-21 07:07:28,794] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 07:07:28,858] [INFO] [leetcode_tracker]: [SYNC] Loaded 298 active students
+[2026-08-21 07:07:35,407] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-78211] PAGE_NAVIGATE by admin (admin@college.edu)
+[2026-08-21 07:07:35,661] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-21 07:07:46,323] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-21 07:08:30,948] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-21 07:08:30,949] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-21 07:08:31,280] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-21 07:08:31,287] [INFO] [leetcode_tracker]: Database contains 300 existing student records. Preserving database single source of truth.
+[2026-08-21 07:08:31,296] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-21 07:08:31,298] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-21 07:08:31,300] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-21 07:08:31,301] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-21 07:08:31,499] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 07:08
+[2026-08-21 07:09:00,053] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-21 07:09:00,414] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-21 07:09:00,439] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-FORENSIC found=True doc_type=FORENSIC_VERIFICATION_REPORT
+[2026-08-21 07:09:00,450] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-732224CC031-EXCELLENCE, reg=None
+[2026-08-21 07:09:00,530] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-732224CC031-EXCELLENCE (Official Certificate of Excellence) for Student: NANTHISH S (732224CC031)
+[2026-08-21 07:09:00,532] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57536 bytes for CERT-732224CC031-EXCELLENCE
+[2026-08-21 07:09:00,532] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched NANTHISH_S_732224CC031_CSE_CS_Certificate.pdf (57536 bytes)
+[2026-08-21 07:09:00,538] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-732224CC031-FORENSIC, reg=None
+[2026-08-21 07:09:00,634] [INFO] [leetcode_tracker]: [forensic_pdf_generated] Successfully generated 57569 bytes for CERT-732224CC031-FORENSIC
+[2026-08-21 07:09:00,634] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched NANTHISH_S_732224CC031_Forensic_Audit_Report.pdf (57569 bytes)
+[2026-08-21 07:09:00,647] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-21 07:09:00,658] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-FORENSIC found=True doc_type=FORENSIC_VERIFICATION_REPORT
+[2026-08-21 07:09:00,669] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-21 07:09:00,676] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-FORENSIC found=True doc_type=FORENSIC_VERIFICATION_REPORT
+[2026-08-21 07:09:00,685] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-21 07:09:00,692] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-21 07:09:00,697] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-21 07:09:00,704] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-21 07:09:00,708] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-FORENSIC found=True doc_type=FORENSIC_VERIFICATION_REPORT
+[2026-08-21 07:09:00,715] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-732224CC031-EXCELLENCE, reg=None
+[2026-08-21 07:09:00,759] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-732224CC031-EXCELLENCE (Official Certificate of Excellence) for Student: NANTHISH S (732224CC031)
+[2026-08-21 07:09:00,759] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57536 bytes for CERT-732224CC031-EXCELLENCE
+[2026-08-21 07:09:00,759] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched NANTHISH_S_732224CC031_CSE_CS_Certificate.pdf (57536 bytes)
+[2026-08-21 07:09:00,765] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-732224CC031-FORENSIC, reg=None
+[2026-08-21 07:09:00,809] [INFO] [leetcode_tracker]: [forensic_pdf_generated] Successfully generated 57569 bytes for CERT-732224CC031-FORENSIC
+[2026-08-21 07:09:00,810] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched NANTHISH_S_732224CC031_Forensic_Audit_Report.pdf (57569 bytes)
+[2026-08-21 07:09:00,818] [WARNING] [leetcode_tracker]: [CERT_RESOLVE_FAILED] No student found for id=CERT-INVALID999-RANDOM, reg=None
+[2026-08-21 07:09:00,818] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-INVALID999-RANDOM found=False doc_type=None
+[2026-08-21 07:09:00,858] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-732224CC031-EXCELLENCE (Official Certificate of Excellence) for Student: NANTHISH S (732224CC031)
+[2026-08-21 07:09:00,863] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE

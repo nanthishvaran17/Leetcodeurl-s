@@ -1553,3 +1553,27 @@ def send_manual_report_email(
         "queued_log_ids": queued_log_ids,
         "errors": errors if errors else None
     }
+
+
+def send_weekly_report_email(
+    db: Session,
+    recipient_emails: List[str],
+    subject: str,
+    body_html: str,
+    excel_bytes: bytes,
+    trigger_type: str = "MANUAL",
+    current_user: Optional[Any] = None
+) -> bool:
+    """Helper wrapper to dispatch weekly report email via IPv4 SMTP."""
+    attachments = [("Nandha_LeetCode_Weekly_Report.xlsx", excel_bytes)]
+    success = False
+    for recipient in recipient_emails:
+        delivered, _ = send_email(
+            recipient=recipient,
+            subject=subject,
+            html_body=body_html,
+            attachments=attachments
+        )
+        if delivered:
+            success = True
+    return success
