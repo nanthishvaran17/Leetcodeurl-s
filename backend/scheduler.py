@@ -38,6 +38,21 @@ from backend.services.weekly_session_manager import (
 tz = IST
 scheduler = AsyncIOScheduler(timezone=IST)
 
+async def sunday_0755_init_job():
+    """
+    Scheduled for Sunday 07:55 AM IST: Pre-contest session initialization,
+    dynamic contest discovery, active roster freezing, and pre-contest baseline recording.
+    """
+    logger.info("[SCHEDULER] Sunday 07:55 AM IST: Initializing upcoming WeeklySession and freezing active roster...")
+    db = SessionLocal()
+    try:
+        session = get_or_create_current_weekly_session(db)
+        logger.info(f"[SCHEDULER] Active session verified: {session.contest_name} ({session.session_date}), Status: {session.status}, Active Students: {session.total_students}")
+    except Exception as e:
+        logger.error(f"[SCHEDULER] Error in sunday_0755_init_job: {e}")
+    finally:
+        db.close()
+
 async def sunday_start_job():
     """
     Scheduled for Sunday 8:00 AM IST: Baseline snapshot and live student synchronization.
@@ -234,7 +249,15 @@ def start_scheduler():
         logger.info("APScheduler is already running. Skipping redundant start.")
         return
 
-    # Cron for Sunday 8:00 AM IST
+    # Cron for Sunday 7:55 AM IST — Session Initialization & Roster Freeze
+    scheduler.add_job(
+        sunday_0755_init_job,
+        CronTrigger(day_of_week='sun', hour=7, minute=55, timezone=tz),
+        id='sunday_0755_init',
+        replace_existing=True
+    )
+
+    # Cron for Sunday 8:00 AM IST — Contest Window Open & Live Delta Ingestion
     scheduler.add_job(
         sunday_start_job,
         CronTrigger(day_of_week='sun', hour=8, minute=0, timezone=tz),
@@ -242,7 +265,7 @@ def start_scheduler():
         replace_existing=True
     )
 
-    # Cron for Sunday 9:30 AM IST
+    # Cron for Sunday 9:30 AM IST — Ingestion Stop & Snapshot SHA-256 Lock
     scheduler.add_job(
         sunday_end_job,
         CronTrigger(day_of_week='sun', hour=9, minute=30, timezone=tz),
@@ -250,11 +273,19 @@ def start_scheduler():
         replace_existing=True
     )
 
-    # Cron for Sunday 9:45 AM IST — Public Contest Fetch + Email Dispatch
+    # Cron for Sunday 9:45 AM IST — Public Contest Verification, 4-Sheet Excel, PDF, & Email Queue
     scheduler.add_job(
         sunday_auto_email_job,
         CronTrigger(day_of_week='sun', hour=9, minute=45, timezone=tz),
         id='sunday_auto_email_945',
+        replace_existing=True
+    )
+
+    # Cron for Sunday 10:00 PM (22:00) IST — Virtual Practice Reconciliation & EOD Wrap-Up
+    scheduler.add_job(
+        sunday_2200_virtual_contest_job,
+        CronTrigger(day_of_week='sun', hour=22, minute=0, timezone=tz),
+        id='sunday_virtual_contest_2200',
         replace_existing=True
     )
 
