@@ -354,21 +354,37 @@ export const HODCommandCenter: React.FC = () => {
   return (
     <div className="space-y-5 pb-12 animate-fade-in font-sans">
 
-      {/* ── HEADER ── */}
-      <div className="flex flex-col sm:flex-row sm:items-start gap-4 justify-between">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <Building2 size={22} className="text-brand-500" />
-            Department Coding Command Center
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-navy-400 mt-1">
-            Nandha Engineering College · CSE (Cyber Security) & CSE (IoT) · {summary?.refreshed_at}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <button onClick={() => loadSummary(true)} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 text-slate-500 dark:text-navy-300 text-sm font-semibold hover:bg-slate-200 dark:hover:bg-navy-700 transition">
-            <RotateCcw size={13} className={refreshing ? 'animate-spin' : ''} />
-          </button>
+      {/* ── Executive Header Banner ── */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-2xl border border-brand-500/30">
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+          <div className="space-y-3 max-w-2xl">
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>INSTITUTIONAL CODING HEALTH ENGINE</span>
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl xl:text-4xl font-black tracking-tight flex items-center gap-3">
+              <Building2 className="w-7 h-7 sm:w-8 sm:h-8 text-brand-400 stroke-[2.5]" />
+              Department Coding Command Center & <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-indigo-300 to-cyan-300">Executive Hub</span>
+            </h1>
+
+            <p className="text-xs md:text-sm text-gray-300 font-medium leading-relaxed">
+              Coding Health Score (0-100) • Institutional Benchmarking • What-If Simulator • AI Query • {summary?.refreshed_at}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => loadSummary(true)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-navy-900/90 hover:bg-navy-800 text-white text-xs font-bold border border-gray-700/80 backdrop-blur-md shadow-inner transition-all cursor-pointer"
+              title="Refresh Intelligence Data"
+            >
+              <RotateCcw size={14} className={refreshing ? 'animate-spin text-brand-400' : 'text-gray-300'} />
+              <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+            </button>
+          </div>
         </div>
       </div>
 

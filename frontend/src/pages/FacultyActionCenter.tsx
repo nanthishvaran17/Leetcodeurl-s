@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   ShieldAlert, AlertTriangle, CheckCircle2, Clock, Search, RefreshCw,
   ChevronDown, ChevronUp, X, Send, Activity, User,
-  Calendar, Zap, FileText, ArrowUpRight, Bell, RotateCcw, Eye
+  Calendar, Zap, FileText, ArrowUpRight, Bell, RotateCcw, Eye, Sparkles
 } from 'lucide-react';
 import {
   getFacultyActionKPIs, getFacultyActionsList, updateFacultyAction,
@@ -402,35 +402,49 @@ export const FacultyActionCenter: React.FC = () => {
 
   return (
     <div className="space-y-5 pb-12 animate-fade-in font-sans">
-      {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-start gap-4 justify-between">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-800 dark:text-slate-100">
-            Faculty Action Center
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-navy-400 mt-1">
-            {kpis?.subtitle || 'Real-time student intervention & mentoring management'}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {syncMsg && (
-            <span className={`text-xs font-medium ${syncMsg.startsWith('✅') ? 'text-emerald-500' : 'text-red-400'}`}>
-              {syncMsg}
-            </span>
-          )}
-          <button
-            onClick={handleSync} disabled={syncing}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-500/10 border border-brand-500/30 text-brand-500 text-sm font-semibold hover:bg-brand-500/20 transition"
-          >
-            <RefreshCw size={13} className={syncing ? 'animate-spin' : ''} />
-            {syncing ? 'Syncing...' : 'Force Sync'}
-          </button>
-          <button
-            onClick={loadData}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 text-slate-500 dark:text-navy-300 text-sm font-semibold hover:bg-slate-200 dark:hover:bg-navy-700 transition"
-          >
-            <RotateCcw size={13} />
-          </button>
+      {/* ── Executive Header Banner ── */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-2xl border border-brand-500/30">
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+          <div className="space-y-3 max-w-2xl">
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>REAL-TIME INTERVENTION & MENTORING HUB</span>
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl xl:text-4xl font-black tracking-tight flex items-center gap-3">
+              <ShieldAlert className="w-7 h-7 sm:w-8 sm:h-8 text-rose-400 stroke-[2.5]" />
+              Faculty Action Center & <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-400 via-amber-300 to-brand-300">Mentoring Hub</span>
+            </h1>
+
+            <p className="text-xs md:text-sm text-gray-300 font-medium leading-relaxed">
+              {kpis?.subtitle || 'Real-time student intervention & mentoring management · Detect, Prioritize, Assign, Resolve'}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            {syncMsg && (
+              <span className={`text-xs font-bold px-3 py-1.5 rounded-xl bg-navy-900/90 border border-gray-700/80 ${syncMsg.startsWith('✅') ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {syncMsg}
+              </span>
+            )}
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-black shadow-md shadow-brand-600/30 transition-all cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw size={13} className={syncing ? 'animate-spin' : ''} />
+              <span>{syncing ? 'Syncing...' : 'Force Sync'}</span>
+            </button>
+            <button
+              onClick={loadData}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-navy-900/90 hover:bg-navy-800 text-white text-xs font-bold border border-gray-700/80 backdrop-blur-md shadow-inner transition-all cursor-pointer"
+              title="Reload Data"
+            >
+              <RotateCcw size={13} className="text-gray-300" />
+            </button>
+          </div>
         </div>
       </div>
 
