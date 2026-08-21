@@ -410,12 +410,12 @@ export const FacultyActionCenter: React.FC = () => {
           <div className="space-y-3 max-w-2xl">
             <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>REAL-TIME INTERVENTION & MENTORING HUB</span>
+              <span>STUDENT INTERVENTION & MENTORING</span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl xl:text-4xl font-black tracking-tight flex items-center gap-3">
               <ShieldAlert className="w-7 h-7 sm:w-8 sm:h-8 text-rose-400 stroke-[2.5]" />
-              Faculty Action Center & <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-400 via-amber-300 to-brand-300">Mentoring Hub</span>
+              Faculty <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-400 via-amber-300 to-brand-300">Action Center</span>
             </h1>
 
             <p className="text-xs md:text-sm text-gray-300 font-medium leading-relaxed">

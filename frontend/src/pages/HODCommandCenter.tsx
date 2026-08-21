@@ -369,12 +369,12 @@ export const HODCommandCenter: React.FC = () => {
           <div className="space-y-3 max-w-2xl">
             <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>INSTITUTIONAL CODING HEALTH ENGINE</span>
+              <span>EXECUTIVE INTELLIGENCE ENGINE</span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl xl:text-4xl font-black tracking-tight flex items-center gap-3">
               <Building2 className="w-7 h-7 sm:w-8 sm:h-8 text-brand-400 stroke-[2.5]" />
-              Department Coding Command Center & <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-indigo-300 to-cyan-300">Executive Hub</span>
+              Department Coding <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-indigo-300 to-cyan-300">Command Center</span>
             </h1>
 
             <p className="text-xs md:text-sm text-gray-300 font-medium leading-relaxed">
