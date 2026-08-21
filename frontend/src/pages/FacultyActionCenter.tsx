@@ -2,13 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   ShieldAlert, AlertTriangle, CheckCircle2, Clock, Search, RefreshCw,
   ChevronDown, ChevronUp, X, Send, Activity, User,
-  Calendar, Zap, FileText, ArrowUpRight, Bell, RotateCcw, Eye, Sparkles
+  Calendar, Zap, FileText, ArrowUpRight, Bell, RotateCcw, Eye, Sparkles, Award
 } from 'lucide-react';
 import {
   getFacultyActionKPIs, getFacultyActionsList, updateFacultyAction,
   escalateAction, getActionTimeline, triggerSignalDetection,
   FacultyActionKPIs, FacultyActionItem, ActionTimelineEvent, UpdateActionPayload
 } from '../services/intelligenceService';
+import { IDCardGenerator } from '../components/IDCardGenerator';
+import { StudentCodingProfileView } from '../components/StudentCodingProfileView';
 
 // ─── Priority Config ──────────────────────────────────────────────────────────
 const PRIORITY_CONFIG: Record<string, { tw: string; dot: string; icon: React.ReactNode }> = {
@@ -61,26 +63,65 @@ const PriorityBadge: React.FC<{ priority: string; score: number; reason: string 
   );
 };
 
-// ─── KPI Card ─────────────────────────────────────────────────────────────────
+// ─── Animated KPI Card ─────────────────────────────────────────────────────────
 const KPICard: React.FC<{
   label: string; value: number; colorClass: string; icon: React.ReactNode;
   active: boolean; onClick: () => void; subtitle?: string;
 }> = ({ label, value, colorClass, icon, active, onClick, subtitle }) => (
   <button
     onClick={onClick}
-    className={`flex-1 min-w-[120px] text-left rounded-2xl p-4 border transition-all duration-200 cursor-pointer ${
+    className={`flex-1 min-w-[130px] text-left rounded-2xl p-4 border transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer relative overflow-hidden group ${
       active
-        ? `${colorClass} border-current shadow-lg`
-        : 'bg-white/60 dark:bg-navy-800/60 border-slate-200 dark:border-navy-700 hover:bg-white dark:hover:bg-navy-800'
+        ? `${colorClass} ring-2 ring-current/40 shadow-xl shadow-brand-500/10`
+        : 'bg-white/80 dark:bg-navy-800/80 border-slate-200/80 dark:border-navy-700/80 hover:bg-white dark:hover:bg-navy-750 hover:shadow-md'
     }`}
   >
-    <div className="flex items-center gap-2 mb-2">
-      <span className={active ? '' : 'text-slate-400 dark:text-navy-400'}>{icon}</span>
-      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-navy-400">{label}</span>
+    <div className="flex items-center justify-between gap-2 mb-2">
+      <div className="flex items-center gap-1.5">
+        <span className={`p-1.5 rounded-lg ${active ? 'bg-current/15' : 'bg-slate-100 dark:bg-navy-700 text-slate-500 dark:text-navy-300'} transition-colors`}>{icon}</span>
+        <span className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">{label}</span>
+      </div>
+      {active && <span className="w-2 h-2 rounded-full bg-current animate-ping" />}
     </div>
-    <div className={`text-3xl font-black leading-none ${active ? '' : 'text-slate-800 dark:text-slate-100'}`}>{value}</div>
-    {subtitle && <div className="text-[10px] text-slate-400 dark:text-navy-400 mt-1.5">{subtitle}</div>}
+    <div className={`text-3xl font-black tracking-tight leading-none ${active ? '' : 'text-slate-800 dark:text-slate-100'}`}>
+      {value}
+    </div>
+    {subtitle && <div className="text-[10px] text-slate-400 dark:text-navy-400 mt-2 font-semibold truncate">{subtitle}</div>}
   </button>
+);
+
+// ─── Student Pass & Profile Modal ─────────────────────────────────────────────
+const StudentPassModal: React.FC<{ item: FacultyActionItem; onClose: () => void }> = ({ item, onClose }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md overflow-y-auto" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl bg-slate-900 border border-slate-700 shadow-2xl p-6 space-y-6 text-white my-auto">
+      <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div>
+          <div className="inline-flex items-center space-x-2 px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider border border-emerald-500/40 mb-1">
+            <span>OFFICIAL STUDENT VERIFICATION</span>
+          </div>
+          <h3 className="text-xl font-black">{item.student_name}</h3>
+          <p className="text-xs text-slate-400 font-mono">{item.reg_no} · {item.department_name} ({item.department_code}) · {item.year_level} Year</p>
+        </div>
+        <button onClick={onClose} className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition cursor-pointer">
+          <X size={18} />
+        </button>
+      </div>
+
+      <IDCardGenerator
+        studentName={item.student_name}
+        regNo={item.reg_no}
+        deptName={item.department_name}
+        yearLevel={item.year_level}
+        totalSolved={item.total_solved}
+        collegeRank={1}
+        streakCount={item.last_active_days_ago <= 1 ? 5 : 0}
+      />
+
+      <div className="border-t border-slate-800 pt-4">
+        <StudentCodingProfileView studentId={item.student_id} />
+      </div>
+    </div>
+  </div>
 );
 
 // ─── Update Modal ─────────────────────────────────────────────────────────────
@@ -339,6 +380,7 @@ export const FacultyActionCenter: React.FC = () => {
   // Modals
   const [updateItem, setUpdateItem] = useState<FacultyActionItem | null>(null);
   const [timelineItem, setTimelineItem] = useState<{ id: number; name: string } | null>(null);
+  const [passItem, setPassItem] = useState<FacultyActionItem | null>(null);
 
   // Row expand
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
@@ -592,14 +634,18 @@ export const FacultyActionCenter: React.FC = () => {
 
                       {/* Actions */}
                       <td className={tdCls} onClick={e => e.stopPropagation()}>
-                        <div className="flex gap-1.5">
-                          <button onClick={() => setUpdateItem(item)} title="Update"
-                            className="p-1.5 rounded-lg bg-violet-500/10 border border-violet-500/25 text-violet-400 hover:bg-violet-500/20 transition">
+                        <div className="flex gap-1.5 items-center">
+                          <button onClick={() => setUpdateItem(item)} title="Update Action Details"
+                            className="p-1.5 rounded-lg bg-violet-500/10 border border-violet-500/25 text-violet-400 hover:bg-violet-500/20 transition cursor-pointer">
                             <FileText size={12} />
                           </button>
-                          <button onClick={() => setTimelineItem({ id: item.id, name: item.student_name })} title="Timeline"
-                            className="p-1.5 rounded-lg bg-blue-500/10 border border-blue-500/25 text-blue-400 hover:bg-blue-500/20 transition">
+                          <button onClick={() => setTimelineItem({ id: item.id, name: item.student_name })} title="Intervention Timeline"
+                            className="p-1.5 rounded-lg bg-blue-500/10 border border-blue-500/25 text-blue-400 hover:bg-blue-500/20 transition cursor-pointer">
                             <Eye size={12} />
+                          </button>
+                          <button onClick={() => setPassItem(item)} title="View Digital Pass & AI Profile"
+                            className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20 transition cursor-pointer">
+                            <Award size={12} />
                           </button>
                         </div>
                       </td>
@@ -608,11 +654,11 @@ export const FacultyActionCenter: React.FC = () => {
                     {/* Expanded detail row */}
                     {isExpanded && (
                       <tr className="bg-brand-500/3 dark:bg-navy-900/40">
-                        <td colSpan={8} className="px-5 py-3">
-                          <div className="grid grid-cols-3 gap-5">
+                        <td colSpan={8} className="px-5 py-4">
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div>
                               <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-navy-400 mb-1">Recommended Action</div>
-                              <div className="text-xs text-brand-500 italic">{item.recommended_action || '—'}</div>
+                              <div className="text-xs text-brand-500 italic font-medium">{item.recommended_action || '—'}</div>
                             </div>
                             <div>
                               <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-navy-400 mb-1">Action Taken</div>
@@ -621,6 +667,11 @@ export const FacultyActionCenter: React.FC = () => {
                             <div>
                               <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-navy-400 mb-1">Faculty Notes</div>
                               <div className="text-xs text-slate-600 dark:text-slate-300">{item.faculty_notes || '—'}</div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button onClick={() => setPassItem(item)} className="px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold hover:bg-emerald-500/25 transition flex items-center gap-1.5 cursor-pointer">
+                                <Award size={13} /> View Digital Pass
+                              </button>
                             </div>
                           </div>
                         </td>
@@ -652,6 +703,7 @@ export const FacultyActionCenter: React.FC = () => {
       {/* ── Modals ── */}
       {updateItem && <UpdateModal item={updateItem} onClose={() => setUpdateItem(null)} onSaved={loadData} />}
       {timelineItem && <TimelineDrawer actionId={timelineItem.id} studentName={timelineItem.name} onClose={() => setTimelineItem(null)} />}
+      {passItem && <StudentPassModal item={passItem} onClose={() => setPassItem(null)} />}
     </div>
   );
 };

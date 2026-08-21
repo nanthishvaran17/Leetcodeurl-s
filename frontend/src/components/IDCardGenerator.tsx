@@ -205,9 +205,24 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
   };
 
   useEffect(() => {
-    if (canvasRef.current) {
-      drawCardOnCanvas(canvasRef.current);
+    const renderCanvas = () => {
+      if (canvasRef.current) {
+        drawCardOnCanvas(canvasRef.current);
+      }
+    };
+
+    renderCanvas();
+    const t1 = setTimeout(renderCanvas, 80);
+    const t2 = setTimeout(renderCanvas, 300);
+
+    if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(renderCanvas).catch(() => {});
     }
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, [studentName, regNo, deptName, yearLevel, totalSolved, collegeRank, streakCount]);
 
   const generateAndDownloadPass = () => {
@@ -216,7 +231,7 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     drawCardOnCanvas(canvas);
 
     const link = document.createElement('a');
-    link.download = `LeetCode_Student_Pass_${regNo}.png`;
+    link.download = `LeetCode_Student_Pass_${regNo || 'download'}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   };

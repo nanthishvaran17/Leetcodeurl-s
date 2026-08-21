@@ -54,46 +54,54 @@ def calculate_priority_score(
     rating_drop: float = 0.0,
     solved_count: Optional[int] = None,
     days_inactive: int = 0,
-    is_silent: bool = False
+    is_silent: bool = False,
+    total_platform_solved: int = 0
 ) -> Tuple[int, str, str]:
     """
     Computes a transparent 0-100 priority score with a human-readable explanation and priority level.
     Score Tiers:
-    - Critical : 90 - 100
-    - High     : 70 - 89
-    - Medium   : 40 - 69
-    - Low      : 0 - 39
+    - Critical : 80 - 100
+    - High     : 60 - 79
+    - Medium   : 35 - 59
+    - Low      : 0 - 34
     """
-    score = 20 # baseline
+    score = 15 # baseline
     reasons = []
 
     if absent_count >= 2:
-        score += 55
+        score += 50
         reasons.append(f"{absent_count} consecutive weekly contest absences")
     elif absent_count == 1:
-        score += 35
+        score += 30
         reasons.append("Absent from most recent weekly contest")
 
+    if total_platform_solved == 0:
+        score += 35
+        reasons.append("0 total problems solved on platform")
+    elif total_platform_solved < 30:
+        score += 20
+        reasons.append(f"Only {total_platform_solved} total problems solved")
+    elif total_platform_solved < 100:
+        score += 10
+        reasons.append(f"Low overall solve count ({total_platform_solved})")
+
     if is_silent or days_inactive >= 21:
-        score += 30
-        reasons.append(f"Inactive/Disengaged for {days_inactive} days")
+        score += 25
+        reasons.append(f"Inactive for {days_inactive} days")
     elif days_inactive >= 10:
         score += 15
         reasons.append(f"No solving activity for {days_inactive} days")
 
-    if rating_drop >= 120:
+    if rating_drop >= 100:
         score += 25
-        reasons.append(f"Contest rating declined by {int(rating_drop)} points")
-    elif rating_drop >= 60:
+        reasons.append(f"Contest rating declined by {int(rating_drop)} pts")
+    elif rating_drop >= 50:
         score += 15
-        reasons.append(f"Contest rating declined by {int(rating_drop)} points")
+        reasons.append(f"Contest rating declined by {int(rating_drop)} pts")
 
-    if virtual_count >= 3:
-        score += 20
-        reasons.append(f"{virtual_count} consecutive virtual participations (not official)")
-    elif virtual_count == 2:
-        score += 10
-        reasons.append("Repeated virtual participation")
+    if virtual_count >= 2:
+        score += 15
+        reasons.append(f"{virtual_count} virtual participations (not official)")
 
     if solved_count == 0:
         score += 15
@@ -105,11 +113,11 @@ def calculate_priority_score(
     # Clamp score
     final_score = max(5, min(100, score))
 
-    if final_score >= 90:
+    if final_score >= 80:
         level = "Critical"
-    elif final_score >= 70:
+    elif final_score >= 60:
         level = "High"
-    elif final_score >= 40:
+    elif final_score >= 35:
         level = "Medium"
     else:
         level = "Low"
@@ -123,10 +131,9 @@ def detect_and_sync_faculty_signals(db: Session, force: bool = False) -> Dict[st
     """
     Runs automated signal detection against all active students in DB.
     Idempotent: Uses unique constraint / deduplication key (student_id + signal_type + contest_id).
-    Updates existing actions or creates new pending actions with audit logs.
     """
     students = db.query(Student).filter(
-        (Student.is_active == True) | (Student.is_active.is_(None))
+        Student.is_active == True
     ).all()
 
     active_session = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
@@ -143,17 +150,20 @@ def detect_and_sync_faculty_signals(db: Session, force: bool = False) -> Dict[st
             WeeklyPublicResult.student_id == s.id
         ).order_by(WeeklyPublicResult.id.desc()).limit(3).all()
 
-        # Check absence patterns
+        # Check absence patterns across all statuses
         absent_streak = 0
         virtual_streak = 0
         last_solve_count = None
         for res in recent_public:
-            if res.participation_status == "ABSENT" or res.participation_status == "NOT_ATTENDED":
+            p_status = str(res.participation_status or "").upper()
+            if p_status in ("ABSENT", "NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "NOT_SUBMITTED"):
                 absent_streak += 1
-            elif res.participation_status == "VIRTUAL_ATTENDED" or res.participation_status == "VIRTUAL":
+            elif "VIRTUAL" in p_status:
                 virtual_streak += 1
             if last_solve_count is None:
                 last_solve_count = res.total_contest_solved
+
+        tot_solved = int(stats.total_solved) if stats and stats.total_solved is not None else 0
 
         # Inactivity & rating drop
         days_inact = 0
@@ -168,6 +178,9 @@ def detect_and_sync_faculty_signals(db: Session, force: bool = False) -> Dict[st
         if absent_streak >= 2:
             signal_type = "CONSECUTIVE_ABSENT"
             category = "LOW_PARTICIPATION"
+        elif tot_solved == 0:
+            signal_type = "SILENT_DISENGAGED"
+            category = "SILENT_DISENGAGED"
         elif absent_streak == 1:
             signal_type = "CONTEST_ABSENT"
             category = "LOW_PARTICIPATION"
@@ -181,13 +194,12 @@ def detect_and_sync_faculty_signals(db: Session, force: bool = False) -> Dict[st
             signal_type = "LOW_SOLVE_COUNT"
             category = "PERFORMANCE_DROP"
         else:
-            # Fallback routine signal for students with no stats
-            if not stats or (stats.total_solved or 0) == 0:
-                signal_type = "SILENT_DISENGAGED"
-                category = "SILENT_DISENGAGED"
-
-        if not signal_type:
-            continue
+            if tot_solved < 50:
+                signal_type = "LOW_SOLVE_COUNT"
+                category = "PERFORMANCE_DROP"
+            else:
+                signal_type = "ROUTINE_MONITORING"
+                category = "ROUTINE"
 
         score, level, explanation = calculate_priority_score(
             absent_count=absent_streak,
@@ -195,7 +207,8 @@ def detect_and_sync_faculty_signals(db: Session, force: bool = False) -> Dict[st
             rating_drop=rating_drop,
             solved_count=last_solve_count,
             days_inactive=days_inact,
-            is_silent=(days_inact >= 14)
+            is_silent=(days_inact >= 14 or tot_solved == 0),
+            total_platform_solved=tot_solved
         )
 
         rec_action = RECOMMENDED_ACTION_MAP.get(signal_type, "Contact student and review performance.")
@@ -203,18 +216,19 @@ def detect_and_sync_faculty_signals(db: Session, force: bool = False) -> Dict[st
         # Check existing action
         existing = db.query(FacultyActionQueueItem).filter(
             FacultyActionQueueItem.student_id == s.id,
-            FacultyActionQueueItem.signal_type == signal_type,
             FacultyActionQueueItem.contest_id == contest_id
         ).first()
 
         if existing:
             # Update score and reason if priority changed
-            if existing.priority_score != score or existing.status in ["Pending", "In Progress"]:
-                existing.priority_score = score
-                existing.priority = level
-                existing.reason = f"[{contest_name}] {explanation}"
-                existing.updated_at = now
-                updated_count += 1
+            existing.priority_score = score
+            existing.priority = level
+            existing.signal_type = signal_type
+            existing.category = category
+            existing.reason = f"[{contest_name}] {explanation}"
+            existing.recommended_action = rec_action
+            existing.updated_at = now
+            updated_count += 1
         else:
             # Default due date = 3 days from now
             due_dt = now + datetime.timedelta(days=3)
