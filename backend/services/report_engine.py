@@ -119,6 +119,7 @@ def build_universal_report(db: Session, config: ReportConfig) -> Dict[str, Any]:
         "dataQuality": data_quality.dict(),
         "topStudents": top_students,
         "allStudents": all_students_dict,
+        "rows": all_students_dict,
         "participations": participations_dict
     }
 
