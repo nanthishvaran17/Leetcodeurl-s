@@ -113,10 +113,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
 
     setLoading(true);
     try {
-      const res = await api.post('/auth/send-otp', { email: cleanEmail }, { timeout: 12000 });
-      setSuccessMsg(res.data.message || 'Verification code sent to your registered email address.');
+      const res = await api.post('/auth/send-otp', { email: cleanEmail }, { timeout: 15000 });
+      const masked = res.data.masked_email || maskEmail(cleanEmail);
+      setSuccessMsg(`Verification code accepted by email service. Check ${masked}.`);
       setRequestId(res.data.request_id || '');
-      setMaskedEmail(res.data.masked_email || maskEmail(cleanEmail));
+      setMaskedEmail(masked);
       if (res.data.expires_at) {
         setExpiresAtMs(new Date(res.data.expires_at).getTime());
       } else {
@@ -124,7 +125,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       }
       setStep('otp_verify');
       setOtpDigits(['', '', '', '', '', '']);
-      setResendCooldown(45);
+      setResendCooldown(30);
       setTimeout(() => {
         digitRefs[0].current?.focus();
       }, 150);
@@ -132,15 +133,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       const detailMsg = err.response?.data?.detail || err.message;
       triggerShake();
       if (detailMsg?.includes('EMAIL_PROVIDER_NOT_CONFIGURED')) {
-        setError('Unable to send the verification code right now. Please try again or contact the administrator.');
+        setError('Verification code could not be sent. Email provider is not configured.');
       } else if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
-        setError('Email request timed out. Please check your connection and try again.');
+        setError('Verification code could not be sent. Request timed out. Please try again.');
       } else if (err.response?.status === 403) {
-        setError(detailMsg || 'Access denied: Administrator email does not match configured authoritative account.');
+        setError(detailMsg || 'Access denied: Administrator email is not authorized.');
       } else if (err.response?.status === 502 || err.response?.status === 503) {
-        setError('Unable to send the verification code right now. Please try again or contact the administrator.');
+        setError(detailMsg || 'Verification code could not be sent. Please try again.');
       } else {
-        setError(detailMsg || 'Unable to send the verification code right now. Please try again or contact the administrator.');
+        setError(detailMsg || 'Verification code could not be sent. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -155,10 +156,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
 
     try {
       const cleanEmail = email.trim().toLowerCase();
-      const res = await api.post('/auth/resend-otp', { email: cleanEmail }, { timeout: 12000 });
-      setSuccessMsg(res.data.message || 'New verification code sent to your registered email address.');
+      const res = await api.post('/auth/resend-otp', { email: cleanEmail }, { timeout: 15000 });
+      const masked = res.data.masked_email || maskEmail(cleanEmail);
+      setSuccessMsg(`Verification code accepted by email service. Check ${masked}.`);
       setRequestId(res.data.request_id || '');
-      setMaskedEmail(res.data.masked_email || maskEmail(cleanEmail));
+      setMaskedEmail(masked);
       if (res.data.expires_at) {
         setExpiresAtMs(new Date(res.data.expires_at).getTime());
       } else {
@@ -166,14 +168,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       }
       setStep('otp_verify');
       setOtpDigits(['', '', '', '', '', '']);
-      setResendCooldown(45);
+      setResendCooldown(30);
       setTimeout(() => {
         digitRefs[0].current?.focus();
       }, 150);
     } catch (err: any) {
       const detailMsg = err.response?.data?.detail || err.message;
       triggerShake();
-      setError(detailMsg || 'Unable to send the verification code. Please try again.');
+      setError(detailMsg || 'Verification code could not be sent. Please try again.');
     } finally {
       setLoading(false);
     }

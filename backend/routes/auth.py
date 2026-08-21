@@ -408,15 +408,15 @@ async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(
 
     # CRITICAL: Verify provider accepted the email before returning success to UI
     if not email_sent:
-        update_otp_delivery_status(db, str(otp_rec.request_id), "FAILED", None)
-        logger.error(f"[OTP] requestId={otp_rec.request_id} recipient={masked_target} stage=delivery_failed ({elapsed_ms:.0f}ms): {status_code_or_err}")
+        update_otp_delivery_status(db, str(otp_rec.request_id), "DELIVERY_FAILED", None)
+        logger.error(f"[OTP_PROVIDER_RESPONSE] requestId={otp_rec.request_id} accepted=false error='{status_code_or_err}' elapsed={elapsed_ms:.0f}ms")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Unable to send verification code. {status_code_or_err or 'Delivery failed'}. Please try again."
+            detail="Verification code could not be sent. Please try again."
         )
 
-    update_otp_delivery_status(db, str(otp_rec.request_id), "SENT", str(msg_id) if msg_id else None)
-    logger.info(f"[OTP] requestId={otp_rec.request_id} recipient={masked_target} stage=smtp_accepted messageId={msg_id} ({elapsed_ms:.0f}ms)")
+    update_otp_delivery_status(db, str(otp_rec.request_id), "PROVIDER_ACCEPTED", str(msg_id) if msg_id else None)
+    logger.info(f"[OTP_PROVIDER_RESPONSE] requestId={otp_rec.request_id} accepted=true providerMessageId={msg_id} elapsed={elapsed_ms:.0f}ms")
 
     # =========================================================================
     # STEP 4: LOG AUDIT & RETURN SUCCESS
@@ -434,7 +434,7 @@ async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(
     return {
         "success": True,
         "status": "success",
-        "message": f"Verification code sent successfully to {masked_target}.",
+        "message": f"Verification code accepted by email service. Check {masked_target}.",
         "expires_in": 300,
         "expires_at": otp_rec.expires_at.isoformat() + "Z",
         "request_id": otp_rec.request_id,

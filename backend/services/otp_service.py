@@ -13,7 +13,7 @@ from backend.models import EmailOTPRecord
 OTP_EXPIRE_MINUTES = 5
 MAX_ATTEMPTS_PER_OTP = 5
 MAX_SEND_REQUESTS_5MIN = 3
-RESEND_COOLDOWN_SECONDS = 60
+RESEND_COOLDOWN_SECONDS = 30
 
 
 def generate_secure_otp() -> str:
@@ -125,7 +125,7 @@ def create_otp_transaction(
         expires_at=expires,
         ip_address=ip_address,
         request_ip_hash=ip_h,
-        delivery_status="PENDING"
+        delivery_status="GENERATED"
     )
 
     db.add(otp_record)
@@ -133,7 +133,7 @@ def create_otp_transaction(
     db.refresh(otp_record)
 
     from backend.logger import logger
-    logger.info(f"[OTP_REQUEST_CREATED] Created OTP transaction record req_id={req_id} for email_hash={e_hash[:8]}")
+    logger.info(f"[OTP_REQUEST] requestId={req_id} recipient={clean_email[0]}*****{clean_email[-1]} timestamp={now.isoformat()}Z status=GENERATED")
 
     return plain_otp, otp_record
 
@@ -195,6 +195,7 @@ def verify_otp_transaction(
     if exp and exp < now:
         logger.warning(f"[OTP_EXPIRED] OTP record req_id={record.request_id} expired at {record.expires_at}")
         setattr(record, 'used', True)
+        setattr(record, 'delivery_status', 'EXPIRED')
         db.commit()
         return False, "This verification code has expired. Please request a new code.", record
 
@@ -221,6 +222,7 @@ def verify_otp_transaction(
     logger.info(f"[OTP_HASH_MATCH] OTP hash match confirmed for req_id={record.request_id}")
     setattr(record, 'used', True)
     setattr(record, 'used_at', now)
+    setattr(record, 'delivery_status', 'VERIFIED')
     db.commit()
 
     logger.info(f"[OTP_VERIFICATION_SUCCESS] OTP transaction completed successfully for req_id={record.request_id}")
