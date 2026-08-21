@@ -643,14 +643,14 @@ export const FacultyActionCenter: React.FC = () => {
         <div className="rounded-2xl bg-white/80 dark:bg-navy-800/80 border border-slate-200 dark:border-navy-700 backdrop-blur-sm overflow-hidden">
           <table className="w-full table-fixed">
             <colgroup>
-              <col style={{ width: '20%' }} />
+              <col style={{ width: '22%' }} />
               <col style={{ width: '12%' }} />
               <col style={{ width: '8%' }} />
-              <col style={{ width: '18%' }} />
+              <col style={{ width: '20%' }} />
               <col style={{ width: '10%' }} />
               <col style={{ width: '13%' }} />
-              <col style={{ width: '9%' }} />
-              <col style={{ width: '10%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '7%' }} />
             </colgroup>
             <thead className="border-b border-slate-200 dark:border-navy-700 bg-slate-50/80 dark:bg-navy-900/50">
               <tr>
@@ -718,24 +718,14 @@ export const FacultyActionCenter: React.FC = () => {
 
                       {/* Actions */}
                       <td className={tdCls} onClick={e => e.stopPropagation()}>
-                        <div className="flex gap-2 items-center">
-                          <button
-                            onClick={() => setUpdateItem(item)}
-                            title="Update Mentoring Action"
-                            className="p-2 rounded-xl bg-violet-500/10 border border-violet-500/30 text-violet-400 hover:bg-violet-500/20 hover:text-violet-300 transition cursor-pointer shadow-sm flex items-center gap-1 text-xs font-bold"
-                          >
-                            <FileText size={13} />
-                            <span className="hidden xl:inline">Update</span>
-                          </button>
-                          <button
-                            onClick={() => setViewItem(item)}
-                            title="View Digital Pass & AI Profile"
-                            className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 transition cursor-pointer shadow-sm flex items-center gap-1 text-xs font-bold"
-                          >
-                            <Eye size={13} />
-                            <span className="hidden xl:inline">View</span>
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => setUpdateItem(item)}
+                          title="Update Mentoring Action"
+                          className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white transition cursor-pointer shadow-md shadow-violet-500/20 flex items-center gap-1.5 text-xs font-bold"
+                        >
+                          <FileText size={13} />
+                          <span>Update</span>
+                        </button>
                       </td>
                     </tr>
 
@@ -758,10 +748,10 @@ export const FacultyActionCenter: React.FC = () => {
                             </div>
                             <div className="flex items-center gap-2">
                               <button
-                                onClick={() => setViewItem(item)}
-                                className="px-3.5 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold hover:bg-emerald-500/25 transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                                onClick={() => setUpdateItem(item)}
+                                className="px-3.5 py-2 rounded-xl bg-violet-500/15 border border-violet-500/30 text-violet-400 text-xs font-bold hover:bg-violet-500/25 transition flex items-center gap-1.5 cursor-pointer shadow-sm"
                               >
-                                <Eye size={13} /> View Full Profile & Pass
+                                <FileText size={13} /> Edit Action & Follow-up
                               </button>
                             </div>
                           </div>
@@ -793,13 +783,6 @@ export const FacultyActionCenter: React.FC = () => {
 
       {/* ── Modals ── */}
       {updateItem && <UpdateModal item={updateItem} onClose={() => setUpdateItem(null)} onSaved={loadData} />}
-      {viewItem && (
-        <StudentViewModal
-          item={viewItem}
-          onClose={() => setViewItem(null)}
-          onOpenUpdate={() => setUpdateItem(viewItem)}
-        />
-      )}
     </div>
   );
 };
