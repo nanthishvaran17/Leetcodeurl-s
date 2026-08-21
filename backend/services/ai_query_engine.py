@@ -24,6 +24,21 @@ def answer_ai_department_query(db: Session, query_text: str, user_role: str = "H
             "traceable_metrics": []
         }
 
+    # Route Top 10, Top Department, HOD Summary, and Report Dispatch to Unified AIKnowledgeEngine
+    if any(k in q_lower for k in [
+        "top 10", "top ten", "top solver", "top student", "top department", 
+        "hod summary", "hod report", "send report", "email report", "mail report",
+        "leaderboard", "which department is top", "executive summary"
+    ]):
+        from backend.services.ai_knowledge_service import AIKnowledgeEngine
+        res = AIKnowledgeEngine.answer_query(db, query_text)
+        return {
+            "query": query_text,
+            "answer": res.get("answer", ""),
+            "data_confidence": res.get("confidence", "HIGH"),
+            "traceable_metrics": [str(res.get("evidence", "Verified Database Single Source of Truth"))]
+        }
+
     # Query 1: Which students need attention?
     if "attention" in q_lower or "at risk" in q_lower or "at-risk" in q_lower or "critical" in q_lower:
         kpis = get_faculty_kpis(db)
