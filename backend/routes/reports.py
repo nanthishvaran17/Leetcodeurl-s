@@ -293,37 +293,22 @@ from backend.models import OfficialWeeklySnapshot, WeeklySession
 from backend.routes.weekly_contests import matches_dept, matches_year
 import re
 
-def get_contest_filename_base(contest_name: str, dept: str = "ALL", year: str = "ALL", attendance: str = "ALL") -> str:
-    """Derives standard NEC_Weekly_Contest_{contest}[_{filters}]_{HHMM} filename dynamically."""
+def get_contest_filename_base(contest_name: str, session_date: str = None, dept: str = "ALL", year: str = "ALL", attendance: str = "ALL") -> str:
+    """
+    Derives standard professional institutional report filename:
+    Contest specific: Nandha_Engineering_College_LeetCode_Contest_<CONTEST_NUMBER>_<DATE>
+    General: Nandha_Engineering_College_LeetCode_Weekly_Report_<DATE>
+    """
     import re
     now_ist = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
-    hhmm = now_ist.strftime("%H%M")
-    
-    clean_cname = (contest_name or "WEEKLY_CONTEST").replace(" ", "_").upper()
-    if not clean_cname.startswith("WEEKLY_CONTEST"):
-        m = re.search(r'\d+', str(contest_name or ""))
-        if m:
-            clean_cname = f"WEEKLY_CONTEST_{m.group(0)}"
-        else:
-            clean_cname = "WEEKLY_CONTEST"
+    date_str = session_date.replace(".", "-") if session_date else now_ist.strftime("%Y-%m-%d")
 
-    parts = ["NEC", clean_cname]
-    if dept and dept.upper() != "ALL":
-        parts.append(dept.replace(" ", "_").replace("(", "").replace(")", "").upper())
-    if year and year.upper() != "ALL":
-        parts.append(f"YEAR_{year.replace(' ', '_').upper()}")
-    
-    att_label = "PUBLIC"
-    if attendance and attendance.upper() == "VIRTUAL_ATTENDED":
-        att_label = "VIRTUAL"
-    elif attendance and attendance.upper() == "PUBLIC_NOT_ATTENDED":
-        att_label = "NOT_ATTENDED"
-    elif attendance and attendance.upper() == "ALL":
-        att_label = "PUBLIC"
-    parts.append(att_label)
-    parts.append(hhmm)
-
-    return "_".join(parts)
+    m = re.search(r'\d+', str(contest_name or ""))
+    if m:
+        c_num = m.group(0)
+        return f"Nandha_Engineering_College_LeetCode_Contest_{c_num}_{date_str}"
+    else:
+        return f"Nandha_Engineering_College_LeetCode_Weekly_Report_{date_str}"
 
 def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: str = "ALL", attendance: str = "ALL"):
     # First check ReportHistory
@@ -331,7 +316,8 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
     if report:
         dataset = report.dataset
         contest_name = dataset.get("contestName") or dataset.get("title") or "Weekly Contest"
-        r_filename = get_contest_filename_base(contest_name, dept=dept, year=year, attendance=attendance)
+        session_date = dataset.get("sessionDate") or dataset.get("session_date")
+        r_filename = get_contest_filename_base(contest_name, session_date=session_date, dept=dept, year=year, attendance=attendance)
     else:
         dataset = None
 
