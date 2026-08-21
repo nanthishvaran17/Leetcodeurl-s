@@ -183,8 +183,8 @@ export const App: React.FC = () => {
 
       <div className={`flex-1 w-full py-4 sm:py-6 ${
         isAuthenticated && activeTab !== 'landing'
-          ? 'lg:grid lg:grid-cols-[310px_minmax(0,1fr)] xl:grid-cols-[330px_minmax(0,1fr)] lg:gap-7 px-3 sm:px-5 lg:px-8 w-full max-w-[1850px] mx-auto'
-          : 'px-3 sm:px-5 lg:px-8 w-full max-w-[1850px] mx-auto'
+          ? 'lg:grid lg:grid-cols-[310px_minmax(0,1fr)] xl:grid-cols-[330px_minmax(0,1fr)] lg:gap-7 px-3 sm:px-5 lg:px-7 2xl:px-8 w-full max-w-full mx-auto'
+          : 'px-3 sm:px-5 lg:px-7 2xl:px-8 w-full max-w-full mx-auto'
       }`}>
         
         {/* Left Sidebar (Only visible for authenticated users when not on landing page) */}

@@ -404,9 +404,8 @@ def repair_student_profile(
     # 4. Write to Audit Log
     audit = AuditLog(
         action="REPAIR_LEETCODE_PROFILE",
-        performed_by=req.admin_name or "Administrator",
-        target_entity=f"Student {student.reg_no}",
-        details=f"Updated LeetCode username from '{old_user}' to '{clean_user}'. Solved: {stats.total_solved}.",
+        user_name=req.admin_name or "Administrator",
+        details=f"Updated Student {student.reg_no} ({student.name}) LeetCode username from '{old_user}' to '{clean_user}'. Solved: {stats.total_solved}.",
         timestamp=datetime.datetime.now(datetime.timezone.utc)
     )
     db.add(audit)

@@ -1067,12 +1067,12 @@ export const StudentDataIssuesPage: React.FC = () => {
       {/* ── 8. REPAIR USERNAME MODAL ── */}
       <AnimatePresence>
         {repairStudent && (
-          <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-modal-backdrop">
+          <div className="fixed inset-0 w-screen h-screen z-[1000000] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.92, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.92, y: 15 }}
-              className="max-w-lg w-full p-6 rounded-3xl bg-slate-900 border border-slate-700 shadow-2xl space-y-4 text-slate-100"
+              className="max-w-lg w-full p-6 rounded-3xl bg-slate-900 border border-slate-700 shadow-2xl space-y-4 text-slate-100 my-auto"
             >
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <div className="flex items-center space-x-2.5">
