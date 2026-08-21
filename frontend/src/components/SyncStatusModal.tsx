@@ -358,9 +358,19 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
               </div>
 
               {/* Timestamp Footer Info */}
-              <div className="p-3 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-800 flex justify-between items-center text-[11px]">
-                <span className="font-bold text-gray-500">LAST SUCCESSFUL SYNC</span>
-                <span className="font-black text-gray-900 dark:text-white font-mono">{lastSyncTime}</span>
+              <div className="p-3 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-800 space-y-1.5 text-[11px]">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-gray-500 uppercase tracking-wider">Last Successful Sync</span>
+                  <span className="font-black text-gray-900 dark:text-white font-mono">{lastSyncTime}</span>
+                </div>
+                {(syncStatus?.triggered_by || syncStatus?.last_triggered_by) && (
+                  <div className="flex justify-between items-center pt-1 border-t border-gray-200/60 dark:border-navy-800">
+                    <span className="font-bold text-gray-500 uppercase tracking-wider">Initiated By / Device</span>
+                    <span className="font-extrabold text-brand-600 dark:text-brand-400 font-mono truncate max-w-[200px]">
+                      {syncStatus?.triggered_by || syncStatus?.last_triggered_by}
+                    </span>
+                  </div>
+                )}
               </div>
             </>
           )}

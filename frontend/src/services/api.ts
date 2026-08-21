@@ -63,7 +63,7 @@ api.interceptors.request.use(async (config) => {
 
 
 export const triggerFullSync = async (triggeredBy = 'admin') => {
-  const res = await api.post(`/sync/full?triggered_by=${triggeredBy}`);
+  const res = await api.post(`/sync/full?triggered_by=${encodeURIComponent(triggeredBy)}`);
   return res.data;
 };
 
@@ -85,6 +85,16 @@ export const triggerSingleStudentSync = async (studentId: number) => {
 export const getDataFreshness = async () => {
   const res = await api.get('/data/freshness');
   return res.data;
+};
+
+export const logActivity = async (action: string, description?: string, details?: any) => {
+  try {
+    await api.post('/admin/log-activity', {
+      action,
+      description: description || action,
+      metadata: details
+    }).catch(() => null);
+  } catch (_e) {}
 };
 
 export default api;

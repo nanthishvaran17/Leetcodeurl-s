@@ -161,6 +161,15 @@ def get_current_sync_status(db: Session = Depends(get_db)):
         last_sync_time = "Never completed"
         last_successful_sync_iso = None
 
+    triggered_by = (
+        sync_tracker.triggered_by if (is_running and getattr(sync_tracker, 'triggered_by', None))
+        else (running_job.triggered_by if (is_running and running_job and running_job.triggered_by)
+        else (last_completed_job.triggered_by if (last_completed_job and last_completed_job.triggered_by)
+        else "System Automated Sync"))
+    )
+
+    last_sync_full_details = f"{last_sync_time} • Initiated by: {triggered_by}"
+
     freshness_seconds = cfg.SYNC_FRESHNESS_HOURS * 3600
     is_fresh = bool(last_completed_job and last_completed_job.completed_at and (now_utc - last_completed_job.completed_at).total_seconds() <= freshness_seconds) or (verified_cnt > 0)
     data_freshness_status = "FRESH" if is_fresh else "STALE"
@@ -174,6 +183,9 @@ def get_current_sync_status(db: Session = Depends(get_db)):
         "last_sync_timestamp": last_sync_time,
         "last_successful_sync": last_successful_sync_iso,
         "last_failed_sync": last_failed_job.completed_at.isoformat() if (last_failed_job and last_failed_job.completed_at) else None,
+        "triggered_by": triggered_by,
+        "last_triggered_by": triggered_by,
+        "last_sync_full_details": last_sync_full_details,
         "data_freshness_status": data_freshness_status,
         "freshness_hours_threshold": cfg.SYNC_FRESHNESS_HOURS,
         "started_at": started_iso,

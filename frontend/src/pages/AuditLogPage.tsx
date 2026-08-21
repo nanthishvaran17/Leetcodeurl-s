@@ -167,11 +167,21 @@ export const AuditLogPage: React.FC = () => {
                     </td>
 
                     <td className="py-3 px-4 font-bold text-gray-900 dark:text-white">
-                      {log.action}
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase font-mono ${
+                        log.action === 'PAGE_NAVIGATE' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-300' :
+                        log.action.includes('SYNC') ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300' :
+                        log.action.includes('LOGIN') ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300' :
+                        'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 border border-gray-300'
+                      }`}>
+                        {log.action}
+                      </span>
                     </td>
 
                     <td className="py-3 px-4 text-gray-600 dark:text-gray-300 max-w-xs truncate">
-                      {log.description || '—'}
+                      <div>{log.description || '—'}</div>
+                      {log.ip_address && (
+                        <div className="text-[9.5px] font-mono text-gray-400">IP: {log.ip_address}</div>
+                      )}
                     </td>
 
                     <td className="py-3 px-4 text-center">

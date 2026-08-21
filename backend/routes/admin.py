@@ -77,11 +77,48 @@ def get_admin_audit_logs(
         "action_type": l.action_type,
         "target_type": l.target_type,
         "target_id": l.target_id,
-        "description": l.description,
-        "ip_address": l.ip_address,
         "status": l.status,
         "created_at": l.created_at.strftime("%Y-%m-%d %H:%M:%S") if l.created_at else None
     } for l in logs]
+
+
+class ActivityLogRequest(BaseModel):
+    action: str
+    description: Optional[str] = None
+    action_type: Optional[str] = "USER_ACTIVITY"
+    target_type: Optional[str] = None
+    target_id: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+
+@router.post("/log-activity")
+def log_user_activity(
+    req: ActivityLogRequest,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    POST /api/admin/log-activity
+    Logs admin / user navigation, page opens, and feature actions into AdminAuditLog database table.
+    """
+    user = get_admin_user_or_default(request, db)
+    ip_addr = request.client.host if request.client else "127.0.0.1"
+    user_agent = request.headers.get("user-agent", "Browser")
+
+    entry = log_admin_action(
+        db=db,
+        action=req.action,
+        action_type=req.action_type or "USER_ACTIVITY",
+        description=req.description or f"Activity: {req.action}",
+        current_user=user,
+        target_type=req.target_type,
+        target_id=req.target_id,
+        status="SUCCESS",
+        metadata_json=req.metadata,
+        ip_address=ip_addr,
+        user_agent=user_agent
+    )
+    return {"success": True, "audit_id": entry.audit_id if entry else "AUD-SYSTEM"}
 
 
 @router.get("/email-deliveries")

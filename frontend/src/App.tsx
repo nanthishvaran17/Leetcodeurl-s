@@ -29,7 +29,7 @@ import { ImportModal } from './components/ImportModal';
 import { AccessRestrictedView } from './components/AccessRestrictedView';
 import { AIAssistantWidget } from './components/AIAssistantWidget';
 import { StudentData } from './components/LeaderboardTable';
-import api from './services/api';
+import api, { logActivity } from './services/api';
 import { getCachedSummary, saveCachedSummary } from './data/canonicalRoster';
 
 import { useAuth } from './context/AuthContext';
@@ -59,7 +59,7 @@ export const App: React.FC = () => {
       triggerCloudSync();
     }, 4000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [isAuthenticated]);
 
 
   useEffect(() => {
@@ -99,6 +99,7 @@ export const App: React.FC = () => {
   };
 
   const handleTabChange = (tab: string) => {
+    logActivity('PAGE_NAVIGATE', `Navigated to ${tab.toUpperCase()} page`, { page: tab, role: user?.role });
     if (tab === 'alert-center') {
       setShowAlertCenterModal(true);
       return;

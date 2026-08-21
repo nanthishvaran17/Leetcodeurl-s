@@ -15,6 +15,7 @@ class LiveSyncTracker:
         self.current_job_id: Optional[str] = None
         self.is_running: bool = False
         self.status: str = "IDLE"
+        self.triggered_by: Optional[str] = "admin"
         self.total_students: int = 0
         self.students_processed: int = 0
         self.profiles_synced: int = 0
@@ -60,11 +61,12 @@ class LiveSyncTracker:
     def progress_percent(self) -> float:
         return self.progress_percentage
 
-    def start(self, job_id: str, total: int):
+    def start(self, job_id: str, total: int, triggered_by: Optional[str] = "admin"):
         now_iso = datetime.datetime.utcnow().isoformat()
         self.current_job_id = job_id
         self.is_running = True
         self.status = "RUNNING"
+        self.triggered_by = triggered_by or "admin"
         self.total_students = total
         self.students_processed = 0
         self.profiles_synced = 0
@@ -83,7 +85,7 @@ class LiveSyncTracker:
         self.completed_at = None
         self.error_summary = None
         self.recent_completed = []
-        self.recent_logs = [f"[WORKER] Live sync worker started for {total} active students."]
+        self.recent_logs = [f"[WORKER] Live sync worker started for {total} active students (Triggered by: {self.triggered_by})."]
 
     def set_current(self, student_name: str, username: Optional[str] = None):
         self.current_student = student_name
@@ -289,7 +291,14 @@ def start_full_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, A
     db.refresh(new_job)
     logger.info(f"[QUEUE] Job queued: {job_id}")
 
-    sync_tracker.start(job_id, total_count)
+    sync_tracker.start(job_id, total_count, triggered_by=triggered_by)
+
+    # Invalidate fast cache immediately on job start
+    try:
+        from backend.cache import cache
+        cache.clear()
+    except Exception:
+        pass
 
     # 3. Launch background worker task reliably
     dispatch_background_task(_run_full_sync_worker(job_id))
@@ -355,7 +364,7 @@ def start_stale_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, 
     db.add(new_job)
     db.commit()
 
-    sync_tracker.start(job_id, total_count)
+    sync_tracker.start(job_id, total_count, triggered_by=triggered_by)
     dispatch_background_task(_run_full_sync_worker(job_id, target_student_ids=target_ids))
 
     return {
@@ -401,7 +410,7 @@ def start_targeted_sync_job(db: Session, student_ids: List[int], triggered_by: s
     db.add(new_job)
     db.commit()
 
-    sync_tracker.start(job_id, total_count)
+    sync_tracker.start(job_id, total_count, triggered_by=triggered_by)
     dispatch_background_task(_run_full_sync_worker(job_id, target_student_ids=[s.id for s in valid_students]))
 
     return {

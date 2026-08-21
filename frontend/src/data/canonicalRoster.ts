@@ -10533,8 +10533,20 @@ export function saveCachedStudents(students: any[]): void {
   if (typeof window === 'undefined' || !Array.isArray(students) || students.length === 0) return;
   try {
     localStorage.setItem('nec_cached_students', JSON.stringify(students));
+    localStorage.setItem('nec_cached_students_timestamp', new Date().toISOString());
   } catch (e) {
     console.warn('Could not save cached students to localStorage:', e);
+  }
+}
+
+export function invalidateStudentCache(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem('nec_cached_students');
+    localStorage.removeItem('nec_cached_students_timestamp');
+    localStorage.removeItem('nec_cached_summary');
+  } catch (e) {
+    console.warn('Could not invalidate cached students in localStorage:', e);
   }
 }
 
@@ -10558,6 +10570,7 @@ export function saveCachedSummary(summary: any): void {
   if (typeof window === 'undefined' || !summary) return;
   try {
     localStorage.setItem('nec_cached_summary', JSON.stringify(summary));
+    localStorage.setItem('nec_cached_summary_timestamp', new Date().toISOString());
   } catch (e) {
     console.warn('Could not save cached summary to localStorage:', e);
   }

@@ -112,3 +112,21 @@ def get_ai_chat_history(
     except Exception:
         return []
 
+
+@router.post("/clear-history")
+def clear_ai_chat_history(
+    db: Session = Depends(get_db)
+):
+    """
+    POST /api/ai/clear-history
+    Clears saved AI chat interactions from database.
+    """
+    try:
+        from backend.models import AIChatHistory
+        db.query(AIChatHistory).delete()
+        db.commit()
+        return {"success": True, "message": "AI chat history cleared successfully."}
+    except Exception as e:
+        db.rollback()
+        return {"success": False, "message": str(e)}
+

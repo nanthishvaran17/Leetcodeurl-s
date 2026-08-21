@@ -66,6 +66,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     current_username?: string;
     is_running: boolean;
     last_sync_time?: string;
+    triggered_by?: string;
   } | null>(null);
   const pollTimerRef = useRef<any>(null);
 
@@ -159,7 +160,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             current_student: undefined,
             current_username: undefined,
             is_running: false,
-            last_sync_time: statusData.last_sync_timestamp
+            last_sync_time: statusData.last_sync_timestamp,
+            triggered_by: statusData.triggered_by || statusData.last_triggered_by
           });
         }
       } catch (err) {
@@ -201,7 +203,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           current_student: statusData.current_student,
           current_username: statusData.current_username,
           is_running: statusData.is_running,
-          last_sync_time: statusData.last_sync_timestamp
+          last_sync_time: statusData.last_sync_timestamp,
+          triggered_by: statusData.triggered_by || statusData.last_triggered_by
         });
 
         // Re-fetch student roster every 2 seconds during polling so cards update LIVE on screen
@@ -223,7 +226,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             current_student: undefined,
             current_username: undefined,
             is_running: false,
-            last_sync_time: statusData.last_sync_timestamp
+            last_sync_time: statusData.last_sync_timestamp,
+            triggered_by: statusData.triggered_by || statusData.last_triggered_by
           });
         }
       } catch (err) {
@@ -244,15 +248,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     if (refreshing || syncProgress?.is_running) return;
     setRefreshing(true);
     const initialTotal = students.length > 0 ? students.length : 300;
+    const devicePlatform = typeof window !== 'undefined' ? (window.navigator.platform || 'Browser') : 'Device';
+    const requesterTag = `Admin (${devicePlatform})`;
     setSyncProgress({
       total: initialTotal,
       processed: 0,
       successful: 0,
       failed: 0,
-      is_running: true
+      is_running: true,
+      triggered_by: requesterTag
     });
     try {
-      await triggerFullSync('admin');
+      await triggerFullSync(requesterTag);
       startSyncPolling();
     } catch (err) {
       console.error(err);
@@ -815,7 +822,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <p className="text-xs font-bold text-gray-500 dark:text-gray-400">
                   {syncProgress.is_running 
                     ? `Processing Profile: ${syncProgress.current_student || 'Initializing...'}`
-                    : `All student statistics are up to date${syncProgress.last_sync_time ? ` • Last synced: ${syncProgress.last_sync_time}` : ''}`
+                    : `All student statistics are up to date${syncProgress.last_sync_time ? ` • Last synced: ${syncProgress.last_sync_time}` : ''}${syncProgress.triggered_by ? ` • Initiated by: ${syncProgress.triggered_by}` : ''}`
                   }
                 </p>
               </div>
