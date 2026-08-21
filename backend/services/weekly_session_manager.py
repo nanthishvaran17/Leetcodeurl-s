@@ -44,6 +44,7 @@ def get_or_create_current_weekly_session(db: Session) -> WeeklySession:
         if not session:
             now_ist = get_current_ist_datetime()
             week_num = now_ist.isocalendar()[1]
+            active_roster_count = db.query(Student).filter(Student.is_active == True).count()
             session = WeeklySession(
                 academic_year="2026-27",
                 week_number=week_num,
@@ -54,7 +55,7 @@ def get_or_create_current_weekly_session(db: Session) -> WeeklySession:
                 start_time="08:00",
                 end_time="09:30",
                 status="SCHEDULED",
-                total_students=273
+                total_students=active_roster_count
             )
             db.add(session)
             db.commit()
