@@ -12,7 +12,7 @@ import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { SyncHistoryModal } from '../components/SyncHistoryModal';
 import { FailedSyncModal } from '../components/FailedSyncModal';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
-import api from '../services/api';
+import api, { triggerSingleStudentSync } from '../services/api';
 import { CANONICAL_ROSTER, getCanonicalSummary } from '../data/canonicalRoster';
 import { useNotification } from '../context/NotificationContext';
 
@@ -34,6 +34,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const [dataQuality, setDataQuality] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
+  // Single Student Refresh State
+  const [refreshingStudentId, setRefreshingStudentId] = useState<number | null>(null);
+
   // 24/7 Operations & Health Telemetry State
   const [systemHealth, setSystemHealth] = useState<any>(null);
   const [syncStatus, setSyncStatus] = useState<any>(null);
@@ -42,6 +45,20 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   // Modals state
   const [showSyncHistory, setShowSyncHistory] = useState(false);
   const [showFailedModal, setShowFailedModal] = useState(false);
+
+  const handleSingleStudentRefresh = async (studentId: number, studentName: string) => {
+    setRefreshingStudentId(studentId);
+    notify.info('Single Student Refresh', `Refreshing live LeetCode statistics for ${studentName}...`, { category: 'LIVE SYNC' });
+    try {
+      await triggerSingleStudentSync(studentId);
+      await fetchDashboardData();
+      notify.success('Student Statistics Refreshed', `Successfully updated live statistics for ${studentName}.`, { category: 'LIVE SYNC' });
+    } catch (err: any) {
+      notify.error('Refresh Failed', err.response?.data?.detail || `Failed to refresh statistics for ${studentName}.`, { category: 'LIVE SYNC' });
+    } finally {
+      setRefreshingStudentId(null);
+    }
+  };
 
   const [triggering, setTriggering] = useState(false);
   const [syncStarting, setSyncStarting] = useState(false);
@@ -677,9 +694,24 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   <p className="text-[10px] text-gray-400">Participation</p>
                   <p className="text-base font-black text-indigo-600 dark:text-indigo-400 mt-0.5">{dept.participation_rate}%</p>
                 </div>
-                <div className="p-2 rounded-xl bg-gray-50 dark:bg-navy-950 border">
-                  <p className="text-[10px] text-gray-400">Top Performer</p>
-                  <p className="text-xs font-black text-amber-500 truncate mt-0.5">{dept.top_student_name}</p>
+                <div className="p-2 rounded-xl bg-gray-50 dark:bg-navy-950 border flex flex-col justify-between">
+                  <div>
+                    <p className="text-[10px] text-gray-400">Top Performer</p>
+                    <p className="text-xs font-black text-amber-500 truncate mt-0.5" title={dept.top_student_name}>
+                      {dept.top_student_name}
+                    </p>
+                  </div>
+                  {dept.top_student_id && (
+                    <button
+                      onClick={() => handleSingleStudentRefresh(dept.top_student_id, dept.top_student_name)}
+                      disabled={refreshingStudentId === dept.top_student_id}
+                      className="mt-1 px-2 py-0.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[9.5px] font-black flex items-center justify-center space-x-1 w-full transition-all cursor-pointer border border-amber-400/30 disabled:opacity-50"
+                      title={`Recalculate & fetch live stats for ${dept.top_student_name}`}
+                    >
+                      <RefreshCw className={`w-2.5 h-2.5 ${refreshingStudentId === dept.top_student_id ? 'animate-spin' : ''}`} />
+                      <span>{refreshingStudentId === dept.top_student_id ? 'Syncing...' : 'Single Refresh'}</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

@@ -75,6 +75,7 @@ def compare_departments(db: Session = Depends(get_db)):
             "participation_rate": participation,
             "avg_solved": avg_solved,
             "avg_progress": avg_progress,
+            "top_student_id": top_stud.id if top_stud else None,
             "top_student_name": top_stud.name if top_stud else "N/A"
         })
 
