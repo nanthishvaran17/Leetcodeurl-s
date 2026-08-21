@@ -23,6 +23,7 @@ from backend.routes import (
     scheduled_reports, certificates, data_issues
 )
 from backend.routes import admin, email_reports, ai_assistant, leetcode, ai_control_center, intelligence
+from backend.routes import command_center
 from backend import leetcode_tracker
 
 app = FastAPI(
@@ -114,6 +115,7 @@ app.include_router(intelligence.router, prefix="/api")
 app.include_router(intelligence.router)
 app.include_router(data_issues.router, prefix="/api")
 app.include_router(data_issues.router)
+app.include_router(command_center.router)
 app.include_router(leetcode_tracker.router, prefix="/api")
 app.include_router(leetcode_tracker.router)
 
