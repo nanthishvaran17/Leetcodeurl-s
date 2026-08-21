@@ -172,10 +172,10 @@ def on_startup():
                 db_init.commit()
                 logger.info(f"[STARTUP_RECONCILE] Created admin user '{admin_username}' with secure password hash.")
             else:
-                admin_user.role = "Admin"
-                admin_user.is_active = True
-                if not verify_password(admin_pass, admin_user.hashed_password):
-                    admin_user.hashed_password = get_password_hash(admin_pass)
+                admin_user.role = "Admin"  # type: ignore[assignment]
+                admin_user.is_active = True  # type: ignore[assignment]
+                if not verify_password(admin_pass, str(admin_user.hashed_password)):
+                    admin_user.hashed_password = get_password_hash(admin_pass)  # type: ignore[assignment]
                     db_init.commit()
                     logger.info(f"[STARTUP_RECONCILE] Reconciled admin user '{admin_username}' password hash.")
 

@@ -18,10 +18,12 @@ class IPv4SMTP(smtplib.SMTP):
     def _get_socket(self, host, port, timeout):
         res = socket.getaddrinfo(host, port, socket.AF_INET, socket.SOCK_STREAM)
         err = None
+        global_timeout = getattr(socket, '_GLOBAL_DEFAULT_TIMEOUT', None)
         for af, socktype, proto, canonname, sa in res:
+            sock = None
             try:
                 sock = socket.socket(af, socktype, proto)
-                if timeout is not None and timeout != socket._GLOBAL_DEFAULT_TIMEOUT:
+                if timeout is not None and timeout != global_timeout:
                     sock.settimeout(timeout)
                 sock.connect(sa)
                 return sock
@@ -40,13 +42,16 @@ class IPv4SMTP_SSL(smtplib.SMTP_SSL):
     def _get_socket(self, host, port, timeout):
         res = socket.getaddrinfo(host, port, socket.AF_INET, socket.SOCK_STREAM)
         err = None
+        global_timeout = getattr(socket, '_GLOBAL_DEFAULT_TIMEOUT', None)
+        host_name = getattr(self, '_host', host) or host
         for af, socktype, proto, canonname, sa in res:
+            sock = None
             try:
                 sock = socket.socket(af, socktype, proto)
-                if timeout is not None and timeout != socket._GLOBAL_DEFAULT_TIMEOUT:
+                if timeout is not None and timeout != global_timeout:
                     sock.settimeout(timeout)
                 sock.connect(sa)
-                new_sock = self.context.wrap_socket(sock, server_hostname=self._host)
+                new_sock = self.context.wrap_socket(sock, server_hostname=host_name)
                 return new_sock
             except socket.error as e:
                 err = e
