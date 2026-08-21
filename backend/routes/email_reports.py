@@ -35,6 +35,11 @@ class ManualSendSchema(BaseModel):
 class TestEmailSchema(BaseModel):
     recipient: str
 
+class CheckDuplicateSchema(BaseModel):
+    recipient_emails: List[str]
+    session_id: Optional[int] = None
+
+
 
 @router.get("/provider-diagnostics")
 def get_email_provider_diagnostics():
