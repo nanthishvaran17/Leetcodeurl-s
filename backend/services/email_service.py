@@ -491,11 +491,6 @@ def send_email(
 
     # Priority 2: BREVO_API_KEY (HTTPS Port 443)
     brevo_key = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
-    if not brevo_key:
-        try:
-            brevo_key = 'wrDobdfWB9qOxlJv-e64910bfafe3e010a198b55863b85bb90a7d818c92f44d569007f34370916cb0-bisyekx'[::-1]
-        except Exception:
-            pass
 
     if brevo_key:
         ok, err = send_email_via_brevo(brevo_key, from_email, recipient, subject, html_body, attachments, text_body)
@@ -818,11 +813,6 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
 
     # Resolve Brevo API key once for both paths
     brevo_key = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
-    if not brevo_key:
-        try:
-            brevo_key = 'wrDobdfWB9qOxlJv-e64910bfafe3e010a198b55863b85bb90a7d818c92f44d569007f34370916cb0-bisyekx'[::-1]
-        except Exception:
-            pass
 
     # ================================================================
     # DUAL HIGH-RELIABILITY TRANSPORT ENGINE
