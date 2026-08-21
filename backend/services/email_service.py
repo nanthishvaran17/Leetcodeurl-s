@@ -436,46 +436,10 @@ def send_email(
 
     last_error = None
 
-    # Priority 1: RESEND_API_KEY (HTTPS Port 443)
-    resend_key = os.environ.get("RESEND_API_KEY", "").strip()
-    if resend_key:
-        ok, err = send_email_via_resend(resend_key, from_email, recipient, subject, html_body, attachments, text_body)
-        if ok:
-            record_email_delivery_diagnostic(
-                recipient=recipient,
-                smtp_server="RESEND_HTTPS_API",
-                smtp_response="200 OK Accepted by Resend API",
-                delivery_status=STATUS_SMTP_ACCEPTED,
-                error_code=None,
-                is_permanent=False
-            )
-            return True, None
-        last_error = err
+    is_render = bool(os.environ.get("RENDER") or os.environ.get("RENDER_EXTERNAL_URL") or os.environ.get("IS_RENDER"))
 
-    # Priority 2: BREVO_API_KEY (HTTPS Port 443)
-    brevo_key = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
-    if not brevo_key:
-        try:
-            brevo_key = 'wrDobdfWB9qOxlJv-e64910bfafe3e010a198b55863b85bb90a7d818c92f44d569007f34370916cb0-bisyekx'[::-1]
-        except Exception:
-            pass
-
-    if brevo_key:
-        ok, err = send_email_via_brevo(brevo_key, from_email, recipient, subject, html_body, attachments, text_body)
-        if ok:
-            record_email_delivery_diagnostic(
-                recipient=recipient,
-                smtp_server="BREVO_HTTPS_API",
-                smtp_response="201 Created Accepted by Brevo API",
-                delivery_status=STATUS_SMTP_ACCEPTED,
-                error_code=None,
-                is_permanent=False
-            )
-            return True, None
-        last_error = err
-
-    # Priority 3: Direct Gmail SMTP (if SMTP_USERNAME & SMTP_PASSWORD configured)
-    if smtp_user and smtp_pass:
+    # Priority 1 (Local): Direct Gmail SMTP (Port 587) for instant delivery
+    if (not is_render) and smtp_user and smtp_pass:
         try:
             msg = MIMEMultipart('alternative')
             msg['From'] = f"Nandha Engineering College — LeetCode Tracker <{from_email}>"
@@ -510,7 +474,7 @@ def send_email(
                     server.quit()
                 except Exception:
                     pass
-            
+
             logger.info(f"[GMAIL_SMTP_SUCCESS] Email accepted for delivery to {recipient} via {smtp_host}:{smtp_port}")
             record_email_delivery_diagnostic(
                 recipient=recipient,
@@ -521,42 +485,31 @@ def send_email(
                 is_permanent=False
             )
             return True, None
+        except Exception as smtp_local_err:
+            logger.warning(f"[GMAIL_SMTP_LOCAL_FAILED] Falling back to Brevo HTTPS API: {smtp_local_err}")
+            last_error = str(smtp_local_err)
 
-        except smtplib.SMTPRecipientsRefused as r_err:
-            refused_info = str(r_err)
-            logger.error(f"[SMTP_RECIPIENT_REFUSED] Destination rejected {recipient}: {refused_info}")
+    # Priority 2: BREVO_API_KEY (HTTPS Port 443)
+    brevo_key = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
+    if not brevo_key:
+        try:
+            brevo_key = 'wrDobdfWB9qOxlJv-e64910bfafe3e010a198b55863b85bb90a7d818c92f44d569007f34370916cb0-bisyekx'[::-1]
+        except Exception:
+            pass
+
+    if brevo_key:
+        ok, err = send_email_via_brevo(brevo_key, from_email, recipient, subject, html_body, attachments, text_body)
+        if ok:
             record_email_delivery_diagnostic(
                 recipient=recipient,
-                smtp_server=f"{smtp_host}:{smtp_port}",
-                smtp_response=f"550 RecipientRefused: {refused_info}",
-                delivery_status=STATUS_DELIVERY_REJECTED,
-                error_code="550_5.1.10_RECIPIENT_NOT_FOUND",
-                is_permanent=True
+                smtp_server="BREVO_HTTPS_API",
+                smtp_response="201 Created Accepted by Brevo API",
+                delivery_status=STATUS_SMTP_ACCEPTED,
+                error_code=None,
+                is_permanent=False
             )
-            return False, f"DELIVERY_REJECTED: Email could not be delivered. Recipient address was rejected by the destination mail server (550 5.1.10 RecipientNotFound). Please verify or correct the email address."
-
-        except smtplib.SMTPResponseException as resp_err:
-            code = resp_err.smtp_code
-            err_msg = resp_err.smtp_error.decode('utf-8', errors='ignore') if isinstance(resp_err.smtp_error, bytes) else str(resp_err.smtp_error)
-            is_perm = code in (550, 551, 552, 553, 554) or "5.1.10" in err_msg or "RecipientNotFound" in err_msg or "User unknown" in err_msg
-            d_status = STATUS_DELIVERY_REJECTED if is_perm else STATUS_DELIVERY_FAILED
-            e_code = f"SMTP_{code}_PERMANENT" if is_perm else f"SMTP_{code}_TRANSIENT"
-            record_email_delivery_diagnostic(
-                recipient=recipient,
-                smtp_server=f"{smtp_host}:{smtp_port}",
-                smtp_response=f"{code} {err_msg}",
-                delivery_status=d_status,
-                error_code=e_code,
-                is_permanent=is_perm
-            )
-            if is_perm:
-                return False, f"DELIVERY_REJECTED: Email could not be delivered. Recipient address was rejected by the destination mail server ({code} {err_msg})."
-            else:
-                logger.warning(f"[GMAIL_SMTP_TRANSIENT_FAILED] Code {code}: {err_msg}.")
-
-        except Exception as smtp_err:
-            logger.warning(f"[GMAIL_SMTP_FAILED] Direct SMTP attempt failed: {smtp_err}.")
-            last_error = str(smtp_err)
+            return True, None
+        last_error = err
 
     record_email_delivery_diagnostic(
         recipient=recipient,
@@ -872,10 +825,57 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
             pass
 
     # ================================================================
-    # PRIMARY TRANSPORT: Brevo HTTPS API (Port 443)
+    # DUAL HIGH-RELIABILITY TRANSPORT ENGINE
+    # 1. Direct Gmail SMTP (Instant Primary Inbox Delivery when local)
+    # 2. Brevo HTTPS API (Port 443 Fallback & Cloud Deployment)
     # ================================================================
+    
+    # Try Gmail SMTP First if available locally
+    if (not is_render) and smtp_user and smtp_pass:
+        t_smtp_start = time.time()
+        logger.info(f"[{now_iso}] [OTP] stage=direct_gmail_smtp host={smtp_host}:{smtp_port}")
+        try:
+            msg = MIMEMultipart('alternative')
+            msg['Message-ID'] = generated_msg_id
+            msg['Date'] = email.utils.formatdate(localtime=True)
+            msg['From'] = f"Nandha Engineering College \u2014 LeetCode Tracker <{from_email}>"
+            msg['To'] = clean_rec
+            msg['Subject'] = subject
+            msg.attach(MIMEText(text_body, 'plain', 'utf-8'))
+            msg.attach(MIMEText(html_body, 'html', 'utf-8'))
+
+            ctx = ssl.create_default_context()
+            server = smtplib.SMTP(smtp_host, smtp_port, timeout=8.0)
+            try:
+                server.ehlo()
+                server.starttls(context=ctx)
+                server.ehlo()
+                server.login(smtp_user, smtp_pass)
+                refused = server.sendmail(from_email, [clean_rec], msg.as_string())
+            finally:
+                try:
+                    server.quit()
+                except Exception:
+                    pass
+            
+            dur = (time.time() - t_smtp_start) * 1000
+            now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
+            logger.info(f"[{now_iso}] [OTP] stage=smtp_accepted messageId={generated_msg_id} in {dur:.0f}ms")
+            record_email_delivery_diagnostic(
+                recipient=clean_rec,
+                smtp_server=f"{smtp_host}:{smtp_port}",
+                smtp_response="250 2.0.0 OK Message accepted for delivery",
+                delivery_status=STATUS_SMTP_ACCEPTED,
+                error_code=None,
+                is_permanent=False
+            )
+            return True, STATUS_SMTP_ACCEPTED, generated_msg_id
+        except Exception as direct_smtp_err:
+            logger.warning(f"[{now_iso}] [OTP] Direct Gmail SMTP failed ({direct_smtp_err}), falling back to Brevo HTTPS API...")
+
+    # Secondary / Production Primary: Brevo HTTPS API (Port 443)
     if brevo_key:
-        logger.info(f"[{now_iso}] [OTP] stage=brevo_api_primary using Brevo HTTPS API (Port 443)")
+        logger.info(f"[{now_iso}] [OTP] stage=brevo_api using Brevo HTTPS API (Port 443)")
         try:
             t_brevo_start = time.time()
             ok, msg_id = send_email_via_brevo(brevo_key, from_email, clean_rec, subject, html_body, None, text_body, max_retries=2)
@@ -894,21 +894,9 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
                 return True, STATUS_SMTP_ACCEPTED, str(msg_id)
             else:
                 logger.error(f"[{now_iso}] [OTP] stage=brevo_failed error={msg_id}")
-                is_perm = "invalid" in str(msg_id).lower() or "rejected" in str(msg_id).lower() or "not found" in str(msg_id).lower()
-                record_email_delivery_diagnostic(
-                    recipient=clean_rec,
-                    smtp_server="BREVO_HTTPS_API",
-                    smtp_response=str(msg_id),
-                    delivery_status=STATUS_DELIVERY_REJECTED if is_perm else STATUS_DELIVERY_FAILED,
-                    error_code="BREVO_RECIPIENT_REJECTED" if is_perm else "BREVO_API_ERROR",
-                    is_permanent=is_perm
-                )
-                return False, f"Brevo email delivery failed: {msg_id}", None
         except Exception as brevo_err:
             now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
             logger.error(f"[{now_iso}] [OTP] Brevo exception: {brevo_err}")
-    else:
-        logger.warning(f"[{now_iso}] [OTP] BREVO_API_KEY not configured. Falling back to SMTP if available.")
 
     # ================================================================
     # LOCAL DEV PATH: Gmail SMTP FIRST (ports 587/465 available locally)
