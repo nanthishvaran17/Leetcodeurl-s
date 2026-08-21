@@ -218,10 +218,26 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
     student.stats.last_attempt_at = now_utc
     student.stats.retry_count = (student.stats.retry_count or 0)
 
+    # Handle empty/missing username explicitly
+    if not student.username or not str(student.username).strip():
+        student.stats.status = "PENDING_USERNAME"
+        student.stats.sync_status = "pending_username"
+        student.stats.validation_status = "pending_username"
+        student.stats.total_solved = None
+        student.stats.easy_solved = None
+        student.stats.medium_solved = None
+        student.stats.hard_solved = None
+        student.stats.contest_rating = None
+        student.stats.error_message = "Awaiting valid LeetCode username assignment"
+        student.stats.error_code = "PENDING_USERNAME"
+        db.commit()
+        db.refresh(student)
+        return student
+
     # 1. Identity Mapping Verification
     fetched_username = stats_dict.get("username")
     expected_username = student.username
-    if expected_username and fetched_username and expected_username.lower() != fetched_username.lower():
+    if expected_username and fetched_username and expected_username.strip().lower() != fetched_username.strip().lower():
         err_msg = f"CRITICAL IDENTITY MISMATCH: Fetched username '{fetched_username}' does not match expected student username '{expected_username}' for Reg {student.reg_no}"
         logger.error(err_msg)
         student.stats.sync_status = "mismatch"
@@ -258,7 +274,6 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
             db.commit()
             db.refresh(student)
             return student
-
 
     if is_success:
         student.stats.total_solved = tot
@@ -321,31 +336,45 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
             existing_p.contest_rating_after = p.get("contest_rating_after")
             existing_p.verified_at = now_utc
             existing_p.source = p.get("source", "leetcode_api")
-            # Audit trail: record the LeetCode username used to fetch this data.
-            # Essential for detecting stale data after a LeetCode ID change.
             try:
                 existing_p.source_username = fetched_username
             except AttributeError:
-                pass  # Column added by migration; safe to skip on first run
-
+                pass
 
     else:
-        # OLD DATA FALLBACK: DO NOT erase previous total_solved / contest ratings!
-        # Preserve old stats, only update sync_status & error_message.
-        student.stats.status = status or "failed"
-        student.stats.sync_status = "failed"
-        student.stats.validation_status = "pending"  # Was not verified this round
-        student.stats.error_message = stats_dict.get("error") or stats_dict.get("error_message") or "Sync failed"
-        # Determine error_code from status
+        # Check if student previously had verified stats
+        has_prev_verified = bool(student.stats.last_successful_sync and student.stats.total_solved is not None)
         raw_status = stats_dict.get("status", "")
-        if "timeout" in str(stats_dict.get("error", "")).lower():
+        err_detail = stats_dict.get("error") or stats_dict.get("error_message") or "Sync failed"
+
+        if has_prev_verified:
+            # Stale record: Preserve previous verified numbers!
+            student.stats.status = "STALE"
+            student.stats.sync_status = "stale"
+            student.stats.validation_status = "stale"
+            student.stats.error_message = f"Refresh failed: {err_detail}"
+        else:
+            # Genuinely unverified / failed record: Never invent zero!
+            student.stats.status = status or "failed"
+            student.stats.sync_status = "failed"
+            student.stats.validation_status = "failed"
+            student.stats.total_solved = None
+            student.stats.easy_solved = None
+            student.stats.medium_solved = None
+            student.stats.hard_solved = None
+            student.stats.contest_rating = None
+            student.stats.error_message = err_detail
+
+        # Determine error_code from status
+        if "timeout" in str(err_detail).lower():
             student.stats.error_code = "NETWORK_TIMEOUT"
-        elif raw_status == "PROFILE NOT FOUND":
+        elif raw_status == "PROFILE NOT FOUND" or "404" in str(err_detail):
             student.stats.error_code = "PROFILE_NOT_FOUND"
         elif raw_status in ("MISSING LINK", "INVALID LINK"):
             student.stats.error_code = raw_status.replace(" ", "_")
         else:
             student.stats.error_code = "FETCH_FAILED"
+
         student.stats.retry_count = (student.stats.retry_count or 0) + 1
         student.stats.fetch_duration = stats_dict.get("fetch_duration")
 

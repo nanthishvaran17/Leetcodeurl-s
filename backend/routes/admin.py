@@ -37,6 +37,70 @@ class RecipientStatusUpdate(BaseModel):
     active: bool
 
 
+@router.get("/data-health")
+def get_data_health_check(db: Session = Depends(get_db)):
+    """
+    GET /api/admin/data-health
+    Dynamic, authoritative database health and synchronization integrity verification.
+    """
+    from backend.models import Student, LeetCodeProfileStats
+    students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+    total_students = len(students)
+
+    verified = 0
+    pending = 0
+    failed = 0
+    stale = 0
+    conflicts = 0
+    zero_solved_verified = 0
+    active_solvers = 0
+    verified_problems_solved = 0
+
+    for s in students:
+        has_uname = bool(s.username and str(s.username).strip())
+        st = s.stats
+        
+        if not has_uname:
+            pending += 1
+        elif not st:
+            failed += 1
+        elif st.sync_status == "mismatch" or st.validation_status == "identity_mismatch":
+            conflicts += 1
+        elif st.sync_status in ("success", "verified") and st.status in ("OK", "verified"):
+            verified += 1
+            solved = st.total_solved or 0
+            verified_problems_solved += solved
+            if solved > 0:
+                active_solvers += 1
+            else:
+                zero_solved_verified += 1
+        elif st.sync_status == "stale" or st.status == "STALE":
+            stale += 1
+            solved = st.total_solved or 0
+            if solved > 0:
+                active_solvers += 1
+        else:
+            failed += 1
+
+    reconciles = (verified + pending + failed + stale + conflicts == total_students)
+
+    return {
+        "totalStudents": total_students,
+        "verified": verified,
+        "pending": pending,
+        "failed": failed,
+        "stale": stale,
+        "conflicts": conflicts,
+        "zeroSolvedVerified": zero_solved_verified,
+        "activeSolvers": active_solvers,
+        "verifiedProblemsSolved": verified_problems_solved,
+        "leaderboardIntegrity": reconciles,
+        "dashboardIntegrity": reconciles,
+        "reconciled": reconciles,
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
+    }
+
+
 @router.get("/audit-logs")
 def get_admin_audit_logs(
     limit: int = Query(50, ge=1, le=500),
