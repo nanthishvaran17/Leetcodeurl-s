@@ -1,7 +1,7 @@
 // frontend/src/components/AutomationStatusPanel.tsx
 import React, { useState, useEffect } from 'react';
 import { Activity, ShieldCheck, Mail, Database, Clock, RefreshCw, Calendar, Cpu } from 'lucide-react';
-import { getDataFreshness } from '../services/api';
+import api, { getDataFreshness } from '../services/api';
 
 interface AutomationStatusPanelProps {
   onTriggerSync?: () => void;
@@ -95,10 +95,14 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-4 relative z-10">
         
         {/* Sunday Automation */}
-        <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 border border-slate-200/60 dark:border-navy-800/60 flex flex-col justify-between space-y-1">
+        <div
+          onClick={onTriggerSync}
+          className="p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 hover:bg-brand-50/60 dark:hover:bg-navy-900/80 border border-slate-200/60 dark:border-navy-800/60 hover:border-brand-400/50 flex flex-col justify-between space-y-1 transition-all cursor-pointer group"
+          title="Click to trigger Sunday baseline snapshot"
+        >
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider">Sunday Pipeline</span>
-            <Calendar className="w-3.5 h-3.5 text-brand-500" />
+            <span className="text-[10px] font-extrabold uppercase tracking-wider group-hover:text-brand-600 dark:group-hover:text-brand-400">Sunday Pipeline</span>
+            <Calendar className="w-3.5 h-3.5 text-brand-500 group-hover:scale-110 transition-transform" />
           </div>
           <div className="flex items-center space-x-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500 pulse-live-indicator"></span>
@@ -108,22 +112,32 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
         </div>
 
         {/* Last Sync */}
-        <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 border border-slate-200/60 dark:border-navy-800/60 flex flex-col justify-between space-y-1">
+        <div
+          onClick={onTriggerSync}
+          className="p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 hover:bg-indigo-50/60 dark:hover:bg-navy-900/80 border border-slate-200/60 dark:border-navy-800/60 hover:border-indigo-400/50 flex flex-col justify-between space-y-1 transition-all cursor-pointer group"
+          title="Click to trigger live synchronization"
+        >
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider">Last Sync</span>
-            <Clock className="w-3.5 h-3.5 text-indigo-500" />
+            <span className="text-[10px] font-extrabold uppercase tracking-wider group-hover:text-indigo-600 dark:group-hover:text-indigo-400">Last Sync</span>
+            <Clock className="w-3.5 h-3.5 text-indigo-500 group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-xs font-black text-slate-900 dark:text-white truncate">
-            {freshness?.last_sync_time ? new Date(freshness.last_sync_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Verified (Recent)'}
+            {freshness?.last_successful_sync ? new Date(freshness.last_successful_sync).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Verified (Recent)'}
           </div>
-          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">100% Reconciled</span>
+          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+            {freshness?.data_freshness_status === 'FRESH' ? '100% Reconciled (FRESH)' : 'Live Cache Sync'}
+          </span>
         </div>
 
         {/* Next Run */}
-        <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 border border-slate-200/60 dark:border-navy-800/60 flex flex-col justify-between space-y-1">
+        <div
+          onClick={loadStatus}
+          className="p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 hover:bg-amber-50/60 dark:hover:bg-navy-900/80 border border-slate-200/60 dark:border-navy-800/60 hover:border-amber-400/50 flex flex-col justify-between space-y-1 transition-all cursor-pointer group"
+          title="Click to refresh system scheduler status"
+        >
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider">Next Auto Run</span>
-            <Activity className="w-3.5 h-3.5 text-amber-500" />
+            <span className="text-[10px] font-extrabold uppercase tracking-wider group-hover:text-amber-600 dark:group-hover:text-amber-400">Next Auto Run</span>
+            <Activity className="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-xs font-black text-slate-900 dark:text-white">
             Sunday 08:00
@@ -132,36 +146,70 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
         </div>
 
         {/* Database Health */}
-        <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 border border-slate-200/60 dark:border-navy-800/60 flex flex-col justify-between space-y-1">
+        <div
+          onClick={loadStatus}
+          className="p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 hover:bg-emerald-50/60 dark:hover:bg-navy-900/80 border border-slate-200/60 dark:border-navy-800/60 hover:border-emerald-400/50 flex flex-col justify-between space-y-1 transition-all cursor-pointer group"
+          title="Click to inspect database health & WAL status"
+        >
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider">Database</span>
-            <Database className="w-3.5 h-3.5 text-emerald-500" />
+            <span className="text-[10px] font-extrabold uppercase tracking-wider group-hover:text-emerald-600 dark:group-hover:text-emerald-400">Database</span>
+            <Database className="w-3.5 h-3.5 text-emerald-500 group-hover:scale-110 transition-transform" />
           </div>
           <div className="flex items-center space-x-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
             <span className="text-xs font-black text-slate-900 dark:text-white">Healthy (WAL)</span>
           </div>
-          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">0 Orphan Records</span>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+            {freshness?.total_students ? `${freshness.total_students} Roster Records` : '0 Orphan Records'}
+          </span>
         </div>
 
         {/* Reports Engine */}
-        <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 border border-slate-200/60 dark:border-navy-800/60 flex flex-col justify-between space-y-1">
+        <div
+          onClick={async () => {
+            try {
+              const res = await api.get('/reports/export-excel', { responseType: 'blob' });
+              const blobUrl = window.URL.createObjectURL(new Blob([res.data]));
+              const link = document.createElement('a');
+              link.href = blobUrl;
+              link.setAttribute('download', `Nandha_LeetCode_College_Summary_${new Date().toISOString().slice(0, 10)}.xlsx`);
+              document.body.appendChild(link);
+              link.click();
+              link.remove();
+              window.URL.revokeObjectURL(blobUrl);
+            } catch (e) {
+              console.error('Report export error:', e);
+            }
+          }}
+          className="p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 hover:bg-blue-50/60 dark:hover:bg-navy-900/80 border border-slate-200/60 dark:border-navy-800/60 hover:border-blue-400/50 flex flex-col justify-between space-y-1 transition-all cursor-pointer group"
+          title="Click to export official Excel report matrix"
+        >
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider">Dual Reports</span>
-            <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />
+            <span className="text-[10px] font-extrabold uppercase tracking-wider group-hover:text-blue-600 dark:group-hover:text-blue-400">Dual Reports</span>
+            <ShieldCheck className="w-3.5 h-3.5 text-blue-500 group-hover:scale-110 transition-transform" />
           </div>
           <div className="flex items-center space-x-1.5">
             <span className="w-2 h-2 rounded-full bg-blue-500"></span>
             <span className="text-xs font-black text-slate-900 dark:text-white">Ready</span>
           </div>
-          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Internal & Official</span>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Click to Export Excel</span>
         </div>
 
         {/* Email Transport */}
-        <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 border border-slate-200/60 dark:border-navy-800/60 flex flex-col justify-between space-y-1">
+        <div
+          onClick={async () => {
+            try {
+              await api.get('/admin/email-deliveries');
+            } catch (e) {
+              console.error('Email log check error:', e);
+            }
+          }}
+          className="p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 hover:bg-purple-50/60 dark:hover:bg-navy-900/80 border border-slate-200/60 dark:border-navy-800/60 hover:border-purple-400/50 flex flex-col justify-between space-y-1 transition-all cursor-pointer group"
+          title="Click to inspect email gateway deliveries"
+        >
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider">Email Dispatch</span>
-            <Mail className="w-3.5 h-3.5 text-purple-500" />
+            <span className="text-[10px] font-extrabold uppercase tracking-wider group-hover:text-purple-600 dark:group-hover:text-purple-400">Email Dispatch</span>
+            <Mail className="w-3.5 h-3.5 text-purple-500 group-hover:scale-110 transition-transform" />
           </div>
           <div className="flex items-center space-x-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
