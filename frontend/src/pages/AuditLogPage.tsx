@@ -291,6 +291,48 @@ export const AuditLogPage: React.FC = () => {
                   <div className="font-mono font-bold text-gray-900 dark:text-white text-xs mt-0.5">{selectedLog.created_at || 'Just now'}</div>
                 </div>
               </div>
+
+              {/* Target Resource & Action Type */}
+              {(selectedLog.target_type || selectedLog.action_type) && (
+                <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-800">
+                  <div>
+                    <span className="font-extrabold text-gray-400 uppercase tracking-wider text-[10px]">Target Resource</span>
+                    <div className="font-mono font-bold text-indigo-600 dark:text-indigo-300 text-xs mt-0.5">
+                      {selectedLog.target_type || 'System Resource'} {selectedLog.target_id ? `(#${selectedLog.target_id})` : ''}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="font-extrabold text-gray-400 uppercase tracking-wider text-[10px]">Action Classification</span>
+                    <div className="font-mono font-bold text-gray-900 dark:text-white text-xs mt-0.5">{selectedLog.action_type || 'GENERAL'}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* User Agent / Device Signature */}
+              {selectedLog.user_agent && (
+                <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-800 space-y-1">
+                  <span className="font-extrabold text-gray-400 uppercase tracking-wider text-[10px] flex items-center gap-1">
+                    <Laptop className="w-3 h-3 text-indigo-500" />
+                    <span>Browser & Device Signature</span>
+                  </span>
+                  <div className="font-mono text-[10.5px] text-gray-600 dark:text-gray-300 break-all leading-tight">
+                    {selectedLog.user_agent}
+                  </div>
+                </div>
+              )}
+
+              {/* Metadata JSON Inspector */}
+              {selectedLog.metadata && Object.keys(selectedLog.metadata).length > 0 && (
+                <div className="p-4 rounded-2xl bg-slate-950 text-slate-200 border border-slate-800 space-y-1.5 font-mono">
+                  <span className="font-extrabold text-slate-400 uppercase tracking-wider text-[10px] flex items-center gap-1">
+                    <Terminal className="w-3 h-3 text-emerald-400" />
+                    <span>Event Payload Metadata (JSON)</span>
+                  </span>
+                  <pre className="text-[10.5px] text-emerald-400 overflow-x-auto p-2 bg-black/40 rounded-xl max-h-40 no-scrollbar">
+                    {JSON.stringify(selectedLog.metadata, null, 2)}
+                  </pre>
+                </div>
+              )}
             </div>
 
             <div className="pt-2 flex justify-end">

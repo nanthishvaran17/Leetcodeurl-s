@@ -77,6 +77,10 @@ def get_admin_audit_logs(
         "action_type": l.action_type,
         "target_type": l.target_type,
         "target_id": l.target_id,
+        "description": l.description,
+        "ip_address": l.ip_address,
+        "user_agent": l.user_agent,
+        "metadata": l.metadata_json,
         "status": l.status,
         "created_at": l.created_at.strftime("%Y-%m-%d %H:%M:%S") if l.created_at else None
     } for l in logs]

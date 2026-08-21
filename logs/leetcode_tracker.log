@@ -66291,3 +66291,88 @@ Action: Request blocked
 [2026-08-21 06:50:35,052] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
 [2026-08-21 06:51:05,032] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
 [2026-08-21 06:51:05,043] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 06:51:35,041] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 06:51:35,046] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 06:51:48,948] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-21 06:51:50,100] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 06:51:50,116] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 06:51:50,131] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 06:51:50,394] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-21 06:51:50,408] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 06:51:50,417] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-21 06:51:52,177] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-53931] PAGE_NAVIGATE by admin (admin@college.edu)
+[2026-08-21 06:51:53,159] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-21 06:51:53,347] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 06:51:53,477] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-21 06:51:53,516] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 06:51:53,835] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 06:51:53,845] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 06:51:54,576] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-26007] PAGE_NAVIGATE by admin (admin@college.edu)
+[2026-08-21 06:51:54,792] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-21 06:52:20,068] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 06:52:20,076] [INFO] [leetcode_tracker]: [SYNC] Loaded 300 active students
+[2026-08-21 06:52:26,929] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-13780] PAGE_NAVIGATE by admin (admin@college.edu)
+[2026-08-21 06:52:51,036] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 06:52:51,050] [INFO] [leetcode_tracker]: [SYNC] Loaded 298 active students
+[2026-08-21 06:53:12,515] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-57613] PAGE_NAVIGATE by admin (admin@college.edu)
+[2026-08-21 06:53:20,081] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 06:53:20,099] [INFO] [leetcode_tracker]: [SYNC] Loaded 298 active students
+[2026-08-21 06:53:50,070] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 06:53:50,079] [INFO] [leetcode_tracker]: [SYNC] Loaded 298 active students
+[2026-08-21 06:53:54,468] [INFO] [leetcode_tracker]: Audit Log Recorded: [AUD-2026-82414] PAGE_NAVIGATE by admin (admin@college.edu)
+[2026-08-21 06:53:55,298] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 06:53:55,419] [INFO] [leetcode_tracker]: [SYNC] Loaded 298 active students
+[2026-08-21 06:53:55,509] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-21 06:53:55,537] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 3
+[2026-08-21 06:53:55,565] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 2
+[2026-08-21 06:53:55,735] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 06:53:55,751] [INFO] [leetcode_tracker]: [SYNC] Loaded 298 active students
+[2026-08-21 06:54:21,048] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 06:54:21,053] [INFO] [leetcode_tracker]: [SYNC] Loaded 298 active students
+[2026-08-21 06:54:51,047] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 06:54:51,052] [INFO] [leetcode_tracker]: [SYNC] Loaded 298 active students
+[2026-08-21 06:55:13,238] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 1
+[2026-08-21 06:55:13,239] [INFO] [leetcode_tracker]: WebSocket client disconnected. Remaining clients: 0
+[2026-08-21 06:55:15,896] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-21 06:55:15,897] [INFO] [leetcode_tracker]: Initializing database & tables...
+[2026-08-21 06:55:16,226] [INFO] [leetcode_tracker]: Checking student roster count in single source of truth database...
+[2026-08-21 06:55:16,232] [INFO] [leetcode_tracker]: Database contains 300 existing student records. Preserving database single source of truth.
+[2026-08-21 06:55:16,240] [INFO] [leetcode_tracker]: Starting background scheduler...
+[2026-08-21 06:55:16,241] [INFO] [leetcode_tracker]: APScheduler started [Asia/Kolkata]: Sunday 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, 10:00 AM Sunday Report, 10:00 PM Virtual Final Report, 5m Discovery, 1h Verification, 2am Rating Updater registered.
+[2026-08-21 06:55:16,245] [INFO] [leetcode_tracker]: Registered APScheduler job 'sunday_auto_email_945' for sunday 09:45 IST (replace_existing=True)
+[2026-08-21 06:55:16,245] [INFO] [leetcode_tracker]: Backend Application ready and listening!
+[2026-08-21 06:55:17,555] [INFO] [leetcode_tracker]: Checking WeeklySession ID 21 (WEEK-2026-08-23) status: 'SCHEDULED' at IST 06:55
+[2026-08-21 06:55:19,616] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 1
+[2026-08-21 06:55:19,639] [INFO] [leetcode_tracker]: WebSocket client connected. Total clients: 2
+[2026-08-21 06:55:21,048] [INFO] [leetcode_tracker]: [SYNC] Loading active institutional student roster from database...
+[2026-08-21 06:55:21,052] [INFO] [leetcode_tracker]: [SYNC] Loaded 298 active students
+[2026-08-21 06:55:31,005] [INFO] [leetcode_tracker]: LeetCode Performance Tracker API is fully ready & live sync engine active.
+[2026-08-21 06:55:31,346] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-21 06:55:31,355] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-FORENSIC found=True doc_type=FORENSIC_VERIFICATION_REPORT
+[2026-08-21 06:55:31,367] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-732224CC031-EXCELLENCE, reg=None
+[2026-08-21 06:55:31,420] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-732224CC031-EXCELLENCE (Official Certificate of Excellence) for Student: NANTHISH S (732224CC031)
+[2026-08-21 06:55:31,423] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57536 bytes for CERT-732224CC031-EXCELLENCE
+[2026-08-21 06:55:31,423] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched NANTHISH_S_732224CC031_CSE_CS_Certificate.pdf (57536 bytes)
+[2026-08-21 06:55:31,446] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-732224CC031-FORENSIC, reg=None
+[2026-08-21 06:55:31,500] [INFO] [leetcode_tracker]: [forensic_pdf_generated] Successfully generated 57571 bytes for CERT-732224CC031-FORENSIC
+[2026-08-21 06:55:31,500] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched NANTHISH_S_732224CC031_Forensic_Audit_Report.pdf (57571 bytes)
+[2026-08-21 06:55:31,508] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-21 06:55:31,515] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-FORENSIC found=True doc_type=FORENSIC_VERIFICATION_REPORT
+[2026-08-21 06:55:31,522] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-21 06:55:31,528] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-FORENSIC found=True doc_type=FORENSIC_VERIFICATION_REPORT
+[2026-08-21 06:55:31,536] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-21 06:55:31,542] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-21 06:55:31,547] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-21 06:55:31,553] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
+[2026-08-21 06:55:31,559] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-FORENSIC found=True doc_type=FORENSIC_VERIFICATION_REPORT
+[2026-08-21 06:55:31,565] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-732224CC031-EXCELLENCE, reg=None
+[2026-08-21 06:55:31,601] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-732224CC031-EXCELLENCE (Official Certificate of Excellence) for Student: NANTHISH S (732224CC031)
+[2026-08-21 06:55:31,601] [INFO] [leetcode_tracker]: [certificate_pdf_generated] Successfully generated 57536 bytes for CERT-732224CC031-EXCELLENCE
+[2026-08-21 06:55:31,601] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched NANTHISH_S_732224CC031_CSE_CS_Certificate.pdf (57536 bytes)
+[2026-08-21 06:55:31,607] [INFO] [leetcode_tracker]: [certificate_pdf_resolve] Looking up certificate for id=CERT-732224CC031-FORENSIC, reg=None
+[2026-08-21 06:55:31,653] [INFO] [leetcode_tracker]: [forensic_pdf_generated] Successfully generated 57571 bytes for CERT-732224CC031-FORENSIC
+[2026-08-21 06:55:31,653] [INFO] [leetcode_tracker]: [certificate_pdf_download_success] Dispatched NANTHISH_S_732224CC031_Forensic_Audit_Report.pdf (57571 bytes)
+[2026-08-21 06:55:31,662] [WARNING] [leetcode_tracker]: [CERT_RESOLVE_FAILED] No student found for id=CERT-INVALID999-RANDOM, reg=None
+[2026-08-21 06:55:31,663] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-INVALID999-RANDOM found=False doc_type=None
+[2026-08-21 06:55:31,703] [INFO] [leetcode_tracker]: [CERTIFICATE_GENERATED] Verification ID: CERT-732224CC031-EXCELLENCE (Official Certificate of Excellence) for Student: NANTHISH S (732224CC031)
+[2026-08-21 06:55:31,709] [INFO] [leetcode_tracker]: [CERT_VERIFY] id=CERT-732224CC031-EXCELLENCE found=True doc_type=CERTIFICATE_OF_EXCELLENCE
