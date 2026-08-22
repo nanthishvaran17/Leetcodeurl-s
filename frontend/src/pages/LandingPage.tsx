@@ -398,7 +398,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             transition={{ delay: 0.3, duration: 0.5 }}
             className="text-sm md:text-base text-gray-100 font-medium max-w-2xl leading-relaxed drop-shadow"
           >
-            Real-time automated performance monitoring across Computer Science and Engineering (Cyber Security) and Computer Science and Engineering (IoT) departments. Sunday session tracking, multi-level rankings, official Excel matrix reporting, and automated email dispatch.
+            Real-time automated performance monitoring across all institutional departments (CSE, Cyber Security, IoT, IT, AIDS, AIML, ECE, EEE, AGRI, MECH, CIVIL, BME). Sunday session tracking, multi-level rankings, official Excel matrix reporting, and automated email dispatch.
           </motion.p>
 
 
