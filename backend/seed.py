@@ -555,7 +555,13 @@ def seed_database():
                 if not prog:
                     prog = WeeklyStudentProgress(
                         student_id=stud.id,
+                        week_number=34,
+                        academic_year="2026-27",
+                        total_solved=0,
                         weekly_progress=0,
+                        easy_solved=0,
+                        medium_solved=0,
+                        hard_solved=0,
                         streak_count=0,
                         consistency_score=0.0
                     )

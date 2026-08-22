@@ -297,7 +297,7 @@ class WeeklyStudentProgress(Base):
     __tablename__ = "weekly_student_progress"
     
     id = Column(Integer, primary_key=True, index=True)
-    week_number = Column(Integer, nullable=False)
+    week_number = Column(Integer, nullable=True, default=34)
     academic_year = Column(String(20), default="2026-27")
     student_id = Column(Integer, ForeignKey("students.id"), nullable=False)
     
