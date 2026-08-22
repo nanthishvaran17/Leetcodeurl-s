@@ -258,8 +258,7 @@ def get_students(
     cache_key = f"students_list:{dept_id}:{year_level}:{section_id}:{search}:{session_id}:{sort_by}:{min_solved}:{max_solved}:{verified_only}:{page}:{limit}"
     cached_data = cache.get(cache_key)
     if cached_data is not None:
-        from starlette.responses import Response
-        return Response(content=cached_data, media_type="application/json")
+        return cached_data
 
     query = db.query(Student).outerjoin(Student.stats).options(
         joinedload(Student.department),

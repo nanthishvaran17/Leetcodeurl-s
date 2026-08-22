@@ -54,19 +54,6 @@ export const App: React.FC = () => {
   const [summaryData, setSummaryData] = useState<any>(() => getCachedSummary());
 
   useEffect(() => {
-    // Proactive Cloud Backend Warm-Up & 24/7 Keep-Alive Ping
-    const warmUpBackend = async () => {
-      try {
-        await api.get('/health', { timeout: 45000 });
-      } catch (_e) {
-        // Safe ignore - background warm-up
-      }
-    };
-    warmUpBackend();
-
-    // Heartbeat ping every 3.5 minutes to keep cloud container active 24/7
-    const heartbeatTimer = setInterval(warmUpBackend, 3.5 * 60 * 1000);
-
     fetchSummary();
     const timer = setTimeout(() => {
       triggerCloudSync();
@@ -74,7 +61,6 @@ export const App: React.FC = () => {
 
     return () => {
       clearTimeout(timer);
-      clearInterval(heartbeatTimer);
     };
   }, [isAuthenticated]);
 
