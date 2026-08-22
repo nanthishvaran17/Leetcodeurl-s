@@ -271,13 +271,7 @@ async def websocket_leaderboard_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
-@app.get("/api/health")
-def health_check():
-    return {
-        "status": "HEALTHY",
-        "app_name": settings.APP_NAME,
-        "timezone": settings.TIMEZONE
-    }
+
 
 # Production Static Build Mount (Serves Frontend SPA bundle on single port)
 FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
