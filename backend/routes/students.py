@@ -883,14 +883,23 @@ def update_student(
     db.commit()
     db.refresh(student)
 
-    # Perform synchronous fresh fetch for immediate UI update & response
+    # Trigger background verification+sync immediately after update so the profile
+    # is verified without blocking the HTTP response. The background task opens its
+    # own DB session — it must NEVER reuse the request session.
     if username_changed:
-        from backend.services.live_sync_service import sync_single_student as _sss
-        try:
-            _sss(student.id, db, force_refresh=True)
-            db.refresh(student)
-        except Exception as _sync_err:
-            logger.warning(f"[UPDATE_STUDENT_SYNC] Direct sync note for student_id={student.id}: {_sync_err}")
+        student_id_for_sync = student.id
+        def _bg_sync_updated_student():
+            from backend.database import SessionLocal as _SL
+            from backend.services.live_sync_service import sync_single_student as _sss
+            _bg_db = _SL()
+            try:
+                _sss(student_id_for_sync, _bg_db, force_refresh=True)
+            except Exception as _e:
+                logger.warning(f"[UPDATE_STUDENT_SYNC] Background sync note for student_id={student_id_for_sync}: {_e}")
+            finally:
+                _bg_db.close()
+        background_tasks.add_task(_bg_sync_updated_student)
+        logger.info(f"[UPDATE_STUDENT] Background sync queued for updated student {student.reg_no} (username={student.username})")
 
     # ── Cloud Firestore sync (best-effort) ────────────────────────────────────
     try:
