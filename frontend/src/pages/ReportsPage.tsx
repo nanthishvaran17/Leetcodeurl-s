@@ -458,9 +458,19 @@ export const ReportsPage: React.FC = () => {
               onChange={(e) => setSelectedDept(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border border-gray-300 dark:border-gray-700 text-xs font-bold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="ALL">All Departments</option>
-              <option value="CSE(CS)">CSE(CS) - Cyber Security</option>
-              <option value="CSE(IOT)">CSE(IoT) - Internet of Things</option>
+              <option value="ALL">All Departments (12 Cohorts)</option>
+              <option value="CSE">Computer Science and Engineering (CSE)</option>
+              <option value="CSE(CS)">CSE (Cyber Security)</option>
+              <option value="CSE(IOT)">CSE (Internet of Things)</option>
+              <option value="IT">Information Technology (IT)</option>
+              <option value="AIDS">Artificial Intelligence & Data Science (AIDS)</option>
+              <option value="AIML">Artificial Intelligence & Machine Learning (AIML)</option>
+              <option value="ECE">Electronics and Communication Engineering (ECE)</option>
+              <option value="EEE">Electrical and Electronics Engineering (EEE)</option>
+              <option value="AGRI">Agricultural Engineering (AGRI)</option>
+              <option value="MECH">Mechanical Engineering (MECH)</option>
+              <option value="CIVIL">Civil Engineering (CIVIL)</option>
+              <option value="BME">Biomedical Engineering (BME)</option>
             </select>
           </div>
 

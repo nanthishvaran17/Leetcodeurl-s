@@ -82,6 +82,19 @@ def readiness_check(response: Response):
             "version": "2.0.0"
         }
 
+from fastapi import Depends
+from sqlalchemy.orm import Session
+from backend.database import get_db
+from backend.services.heartbeat_service import get_deep_health_telemetry
+
+@app.api_route("/health/deep", methods=["GET"])
+@app.api_route("/api/health/deep", methods=["GET"])
+def deep_health_check(db: Session = Depends(get_db)):
+    """
+    Deep Diagnostic Health Probe verifying database, worker, scheduler, and telemetry.
+    """
+    return get_deep_health_telemetry(db)
+
 # CORS Configuration
 origins = [
     "http://localhost:3000",

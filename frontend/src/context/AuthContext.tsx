@@ -170,6 +170,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
 
           setUser(userData);
+          localStorage.setItem('user', JSON.stringify(userData));
         } catch (err: any) {
           console.error("Firestore user sync error:", err);
           const emailLower = (fbUser.email || '').toLowerCase().trim();
@@ -183,12 +184,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             isProfileLinked: false
           };
           setUser(fallbackUser);
+          localStorage.setItem('user', JSON.stringify(fallbackUser));
         }
       }
     });
 
     return () => unsubscribe();
   }, []);
+
+  // 5-Minute Inactivity Auto-Logout Security Engine
+  useEffect(() => {
+    if (!user) return;
+
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const INACTIVITY_LIMIT_MS = 5 * 60 * 1000; // 5 Minutes (300,000 ms)
+
+    const resetInactivityTimer = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        console.warn("[SECURITY] 5-minute inactivity reached. Automatically signing out...");
+        logout();
+      }, INACTIVITY_LIMIT_MS);
+    };
+
+    // User interaction events that reset the 5-minute idle timer
+    const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+    activityEvents.forEach(evt => window.addEventListener(evt, resetInactivityTimer, { passive: true }));
+
+    // Start initial 5-minute countdown
+    resetInactivityTimer();
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      activityEvents.forEach(evt => window.removeEventListener(evt, resetInactivityTimer));
+    };
+  }, [user]);
 
   const login = (newToken: string, newUser: any) => {
     if (newToken) {
@@ -254,6 +284,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('admin_user');
+    sessionStorage.clear();
 
     try {
       await api.post('/auth/logout');
@@ -261,8 +293,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Ignore API logout error
     }
     try {
-      if (auth) {
-        await firebaseSignOut(auth);
+      const activeAuth = auth || getOrInitAuth();
+      if (activeAuth) {
+        await firebaseSignOut(activeAuth);
       }
     } catch (_err) {
       // Ignore firebase sign out error

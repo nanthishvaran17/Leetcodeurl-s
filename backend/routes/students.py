@@ -4,7 +4,7 @@ from typing import List, Optional
 import asyncio
 import datetime
 
-from backend.database import get_db
+from backend.database import get_db, SessionLocal
 from backend.models import Student, LeetCodeProfileStats, Department, Section, AuditLog, WeeklyStudentProgress
 from backend.schemas import StudentOut, StudentCreate, StudentUpdate, ContestResultOut
 from backend.routes.auth import get_current_user

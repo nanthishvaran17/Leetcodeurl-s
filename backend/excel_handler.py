@@ -53,6 +53,9 @@ def validate_excel_import(db: Session, file_bytes: bytes) -> Dict[str, Any]:
     dept_code_map = {d.code.upper(): d for d in db.query(Department).all()}
     
     custom_aliases = {
+        "CSE": "CSE",
+        "COMPUTER SCIENCE": "CSE",
+        "COMPUTER SCIENCE AND ENGINEERING": "CSE",
         "CSE(CS)": "CSE(CS)",
         "CSE-CS": "CSE(CS)",
         "CSE_CS": "CSE(CS)",
@@ -61,7 +64,32 @@ def validate_excel_import(db: Session, file_bytes: bytes) -> Dict[str, Any]:
         "CSE(IOT)": "CSE(IOT)",
         "ECE-IOT": "CSE(IOT)",
         "IOT": "CSE(IOT)",
-        "COMPUTER SCIENCE AND ENGINEERING (IOT)": "CSE(IOT)"
+        "COMPUTER SCIENCE AND ENGINEERING (IOT)": "CSE(IOT)",
+        "IT": "IT",
+        "INFORMATION TECHNOLOGY": "IT",
+        "AIDS": "AIDS",
+        "AI&DS": "AIDS",
+        "AI & DS": "AIDS",
+        "ARTIFICIAL INTELLIGENCE AND DATA SCIENCE": "AIDS",
+        "AIML": "AIML",
+        "AI&ML": "AIML",
+        "AI & ML": "AIML",
+        "ARTIFICIAL INTELLIGENCE AND MACHINE LEARNING": "AIML",
+        "ECE": "ECE",
+        "ELECTRONICS AND COMMUNICATION ENGINEERING": "ECE",
+        "EEE": "EEE",
+        "ELECTRICAL AND ELECTRONICS ENGINEERING": "EEE",
+        "AGRI": "AGRI",
+        "AGRICULTURAL ENGINEERING": "AGRI",
+        "AGRICULTURE": "AGRI",
+        "MECH": "MECH",
+        "MECHANICAL": "MECH",
+        "MECHANICAL ENGINEERING": "MECH",
+        "CIVIL": "CIVIL",
+        "CIVIL ENGINEERING": "CIVIL",
+        "BME": "BME",
+        "BIOMEDICAL": "BME",
+        "BIOMEDICAL ENGINEERING": "BME"
     }
 
     for idx, row in df.iterrows():

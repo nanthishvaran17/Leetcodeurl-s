@@ -173,9 +173,19 @@ export const GrowthIntelligencePage: React.FC = () => {
               onChange={(e) => setDeptFilter(e.target.value)}
               className="px-3.5 py-2 rounded-2xl bg-navy-900/90 text-white text-xs font-bold border border-gray-700/80 backdrop-blur-md shadow-inner outline-none cursor-pointer hover:border-brand-500 max-w-full"
             >
-              <option value="ALL">All Departments</option>
+              <option value="ALL">All Departments (12 Cohorts)</option>
+              <option value="CSE">Computer Science and Engineering (CSE)</option>
               <option value="CSE(CS)">CSE (Cyber Security)</option>
-              <option value="CSE(IoT)">CSE (IoT)</option>
+              <option value="CSE(IOT)">CSE (Internet of Things)</option>
+              <option value="IT">Information Technology (IT)</option>
+              <option value="AIDS">Artificial Intelligence & Data Science (AIDS)</option>
+              <option value="AIML">Artificial Intelligence & Machine Learning (AIML)</option>
+              <option value="ECE">Electronics and Communication Engineering (ECE)</option>
+              <option value="EEE">Electrical and Electronics Engineering (EEE)</option>
+              <option value="AGRI">Agricultural Engineering (AGRI)</option>
+              <option value="MECH">Mechanical Engineering (MECH)</option>
+              <option value="CIVIL">Civil Engineering (CIVIL)</option>
+              <option value="BME">Biomedical Engineering (BME)</option>
             </select>
 
             <select

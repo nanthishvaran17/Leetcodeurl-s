@@ -141,7 +141,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           <div className="space-y-3 max-w-2xl">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
               <Layers className="w-3.5 h-3.5 text-amber-400" />
-              <span>DEPARTMENT ANALYTICS • CYBER SECURITY & IOT COHORTS</span>
+              <span>DEPARTMENT ANALYTICS • INSTITUTIONAL EDITION (ALL 12 DEPARTMENTS)</span>
             </div>
 
             <h1 className="text-3xl md:text-4xl font-black tracking-tight">

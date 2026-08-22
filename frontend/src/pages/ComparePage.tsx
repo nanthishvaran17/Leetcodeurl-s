@@ -47,12 +47,32 @@ export const ComparePage: React.FC = () => {
     fetchStudents();
   }, [selectedDept, selectedYear]);
 
+  const DEFAULT_DEPARTMENTS = [
+    { id: 5, name: 'Computer Science and Engineering', code: 'CSE' },
+    { id: 1, name: 'Computer Science and Engineering (Cyber Security)', code: 'CSE(CS)' },
+    { id: 2, name: 'Computer Science and Engineering (IoT)', code: 'CSE(IOT)' },
+    { id: 10, name: 'Information Technology', code: 'IT' },
+    { id: 14, name: 'Artificial Intelligence and Data Science', code: 'AIDS' },
+    { id: 20, name: 'Artificial Intelligence and Machine Learning', code: 'AIML' },
+    { id: 8, name: 'Electronics and Communication Engineering', code: 'ECE' },
+    { id: 11, name: 'Electrical and Electronics Engineering', code: 'EEE' },
+    { id: 17, name: 'Agricultural Engineering', code: 'AGRI' },
+    { id: 12, name: 'Mechanical Engineering', code: 'MECH' },
+    { id: 13, name: 'Civil Engineering', code: 'CIVIL' },
+    { id: 16, name: 'Biomedical Engineering', code: 'BME' }
+  ];
+
   const fetchDepartments = async () => {
     try {
       const res = await api.get('/departments');
-      setDepartments(res.data);
+      if (res.data && Array.isArray(res.data) && res.data.length >= 2) {
+        setDepartments(res.data);
+      } else {
+        setDepartments(DEFAULT_DEPARTMENTS);
+      }
     } catch (err) {
-      console.error(err);
+      console.warn("Using default department fallback list in ComparePage:", err);
+      setDepartments(DEFAULT_DEPARTMENTS);
     }
   };
 

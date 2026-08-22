@@ -54,6 +54,8 @@ async def _sync_single_student_canonical(
 ):
     async with sem:
         now_dt = datetime.datetime.utcnow()
+        streak_count = 0
+        total_active_days = 0
         db_student = SessionLocal()
         try:
             st = db_student.query(Student).filter(Student.id == student.id).first()
