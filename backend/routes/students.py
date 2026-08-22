@@ -27,13 +27,12 @@ from sqlalchemy import desc, asc, nullslast
 def get_leaderboard_fast(
     dept_id: Optional[int] = None,
     year_level: Optional[str] = None,
-    limit: Optional[int] = Query(100, ge=1, le=1000),
+    limit: Optional[int] = Query(None, ge=1, le=10000),
     db: Session = Depends(get_db)
 ):
     """
-    Ultra-fast leaderboard endpoint for the LandingPage.
-    Returns slim pre-serialized JSON — ~10x smaller payload and ~10x faster than /students.
-    Cache TTL: 120s. Pre-serializes to dict to avoid re-serialization on every call.
+    Ultra-fast leaderboard endpoint for the LandingPage & Department Dashboard.
+    Returns slim pre-serialized JSON for all matching students.
     """
     cache_key = f"leaderboard_fast:{dept_id}:{year_level}:{limit}"
     cached_bytes = cache.get(cache_key)

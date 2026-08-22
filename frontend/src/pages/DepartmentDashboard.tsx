@@ -29,23 +29,48 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
     fetchStudents();
   }, []);
 
+  const DEFAULT_DEPARTMENTS = [
+    { id: 5, name: 'Computer Science and Engineering', code: 'CSE' },
+    { id: 1, name: 'Computer Science and Engineering (Cyber Security)', code: 'CSE(CS)' },
+    { id: 2, name: 'Computer Science and Engineering (IoT)', code: 'CSE(IOT)' },
+    { id: 10, name: 'Information Technology', code: 'IT' },
+    { id: 14, name: 'Artificial Intelligence and Data Science', code: 'AIDS' },
+    { id: 20, name: 'Artificial Intelligence and Machine Learning', code: 'AIML' },
+    { id: 8, name: 'Electronics and Communication Engineering', code: 'ECE' },
+    { id: 11, name: 'Electrical and Electronics Engineering', code: 'EEE' },
+    { id: 17, name: 'Agricultural Engineering', code: 'AGRI' },
+    { id: 12, name: 'Mechanical Engineering', code: 'MECH' },
+    { id: 13, name: 'Civil Engineering', code: 'CIVIL' },
+    { id: 16, name: 'Biomedical Engineering', code: 'BME' }
+  ];
+
   const fetchDepartments = async () => {
     try {
       const res = await api.get('/departments');
-      setDepartments(res.data);
+      if (res.data && Array.isArray(res.data) && res.data.length >= 2) {
+        setDepartments(res.data);
+      } else {
+        setDepartments(DEFAULT_DEPARTMENTS);
+      }
     } catch (err) {
-      console.error(err);
+      console.warn("Using default department fallback list:", err);
+      setDepartments(DEFAULT_DEPARTMENTS);
     }
   };
 
   const fetchStudents = async () => {
     try {
-      const res = await api.get('/students?limit=500');
+      const res = await api.get('/students/leaderboard-fast');
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setStudents(res.data);
+      } else {
+        const res2 = await api.get('/students');
+        if (res2.data && Array.isArray(res2.data)) {
+          setStudents(res2.data);
+        }
       }
     } catch (err) {
-      console.error(err);
+      console.error("fetchStudents error:", err);
     }
   };
 
@@ -213,8 +238,11 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                 className="w-full appearance-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-xs font-bold py-3 pl-3.5 pr-9 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 cursor-pointer"
               >
                 <option value="all">All Departments</option>
-                <option value="cyber_security">CSE (Cyber Security)</option>
-                <option value="iot">CSE (IoT)</option>
+                {departments.map((dept) => (
+                  <option key={dept.id || dept.code} value={dept.code || String(dept.id)}>
+                    {dept.code ? `${dept.code} — ${dept.name}` : dept.name}
+                  </option>
+                ))}
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
                 <ChevronDown className="w-4 h-4" />
@@ -237,7 +265,8 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                 }}
                 className="w-full appearance-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-xs font-bold py-3 pl-3.5 pr-9 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 cursor-pointer"
               >
-                <option value="all">All Years</option>
+                <option value="all">All Academic Years</option>
+                <option value="I">I Year</option>
                 <option value="II">II Year</option>
                 <option value="III">III Year</option>
                 <option value="IV">IV Year</option>
@@ -341,14 +370,12 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
       <div className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h3 className="font-extrabold text-sm text-gray-900 dark:text-white">
-            {selectedDept === 'cyber_security'
-              ? 'Computer Science and Engineering (Cyber Security)'
-              : selectedDept === 'iot'
-              ? 'Computer Science and Engineering (IoT)'
-              : 'All Departments'}
+            {selectedDept === 'all' || selectedDept === 'ALL'
+              ? 'All Departments'
+              : (departments.find(d => String(d.id) === String(selectedDept) || d.code === selectedDept)?.name || selectedDept)}
             {' • '}
             {yearLevel === 'all' || yearLevel === 'ALL'
-              ? 'All Years'
+              ? 'All Academic Years'
               : `${yearLevel} Year`}
             {nameSearch.trim() && (
               <span className="text-brand-500 dark:text-brand-400">

@@ -281,8 +281,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   };
 
   const DEFAULT_DEPARTMENTS = [
+    { id: 5, name: 'Computer Science and Engineering', code: 'CSE' },
     { id: 1, name: 'Computer Science and Engineering (Cyber Security)', code: 'CSE(CS)' },
-    { id: 2, name: 'Computer Science and Engineering (IoT)', code: 'CSE(IOT)' }
+    { id: 2, name: 'Computer Science and Engineering (IoT)', code: 'CSE(IOT)' },
+    { id: 10, name: 'Information Technology', code: 'IT' },
+    { id: 14, name: 'Artificial Intelligence and Data Science', code: 'AIDS' },
+    { id: 20, name: 'Artificial Intelligence and Machine Learning', code: 'AIML' },
+    { id: 8, name: 'Electronics and Communication Engineering', code: 'ECE' },
+    { id: 11, name: 'Electrical and Electronics Engineering', code: 'EEE' },
+    { id: 17, name: 'Agricultural Engineering', code: 'AGRI' },
+    { id: 12, name: 'Mechanical Engineering', code: 'MECH' },
+    { id: 13, name: 'Civil Engineering', code: 'CIVIL' },
+    { id: 16, name: 'Biomedical Engineering', code: 'BME' }
   ];
 
   const fetchDepartments = async () => {
@@ -636,8 +646,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 className="w-full h-11 appearance-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-xs font-bold py-2.5 pl-3 pr-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 cursor-pointer truncate"
               >
                 <option value="all">All Departments</option>
-                <option value="cyber_security">Computer Science and Engineering (Cyber Security)</option>
-                <option value="iot">Computer Science and Engineering (IoT)</option>
+                {departments.map((dept) => (
+                  <option key={dept.id || dept.code} value={dept.code || String(dept.id)}>
+                    {dept.code ? `${dept.code} — ${dept.name}` : dept.name}
+                  </option>
+                ))}
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-gray-400">
                 <ChevronDown className="w-3.5 h-3.5" />
@@ -660,7 +673,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 }}
                 className="w-full h-11 appearance-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-xs font-bold py-2.5 pl-3 pr-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 cursor-pointer truncate"
               >
-                <option value="all">All Years</option>
+                <option value="all">All Academic Years</option>
+                <option value="I">I Year</option>
                 <option value="II">II Year</option>
                 <option value="III">III Year</option>
                 <option value="IV">IV Year</option>
@@ -764,14 +778,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <div className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h3 className="font-black text-lg text-gray-900 dark:text-white">
-            {selectedDept === 'cyber_security'
-              ? 'Computer Science and Engineering (Cyber Security)'
-              : selectedDept === 'iot'
-              ? 'Computer Science and Engineering (IoT)'
-              : 'All Departments'}
+            {selectedDept === 'all' || selectedDept === 'ALL'
+              ? 'All Departments'
+              : (departments.find(d => String(d.id) === String(selectedDept) || d.code === selectedDept)?.name || selectedDept)}
             {' • '}
             {yearLevel === 'all' || yearLevel === 'ALL'
-              ? 'All Years'
+              ? 'All Academic Years'
               : `${yearLevel} Year`}
             {solvedFilter !== 'all' && solvedFilter !== 'ALL'
               ? ` • ${{
