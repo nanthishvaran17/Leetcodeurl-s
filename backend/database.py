@@ -34,12 +34,13 @@ elif db_url.startswith("sqlite:///./"):
 engine_kwargs = {}
 if "postgresql" in db_url or "postgres" in db_url:
     engine_kwargs.update({
-        "pool_size": 5,
-        "max_overflow": 10,
+        "pool_size": 25,
+        "max_overflow": 35,
+        "pool_timeout": 60,
         "pool_pre_ping": True,
-        "pool_recycle": 60,
+        "pool_recycle": 300,
         "connect_args": {
-            "connect_timeout": 5,
+            "connect_timeout": 10,
             "keepalives": 1,
             "keepalives_idle": 30,
             "keepalives_interval": 10,
@@ -232,6 +233,36 @@ def run_migrations():
                 )
                 conn.commit()
 
+            # Check users table columns for WhatsApp integration
+            result_users = conn.execute(
+                __import__('sqlalchemy').text("PRAGMA table_info(users)")
+            )
+            users_cols = {row[1] for row in result_users}
+            if users_cols:
+                if "phone_number" not in users_cols:
+                    conn.execute(__import__('sqlalchemy').text("ALTER TABLE users ADD COLUMN phone_number VARCHAR(30)"))
+                    conn.commit()
+                    print("[DB Migration] Added users column: phone_number")
+                if "whatsapp_verified" not in users_cols:
+                    conn.execute(__import__('sqlalchemy').text("ALTER TABLE users ADD COLUMN whatsapp_verified BOOLEAN DEFAULT 0"))
+                    conn.commit()
+                    print("[DB Migration] Added users column: whatsapp_verified")
+
+            # Check students table columns for WhatsApp integration
+            result_students = conn.execute(
+                __import__('sqlalchemy').text("PRAGMA table_info(students)")
+            )
+            st_cols = {row[1] for row in result_students}
+            if st_cols:
+                if "phone_number" not in st_cols:
+                    conn.execute(__import__('sqlalchemy').text("ALTER TABLE students ADD COLUMN phone_number VARCHAR(30)"))
+                    conn.commit()
+                    print("[DB Migration] Added students column: phone_number")
+                if "whatsapp_verified" not in st_cols:
+                    conn.execute(__import__('sqlalchemy').text("ALTER TABLE students ADD COLUMN whatsapp_verified BOOLEAN DEFAULT 0"))
+                    conn.commit()
+                    print("[DB Migration] Added students column: whatsapp_verified")
+
             # Promote nanthishvaran17@gmail.com to Admin role
             admin_check = conn.execute(
                 __import__('sqlalchemy').text("SELECT id, role FROM users WHERE email = 'nanthishvaran17@gmail.com'")
@@ -287,6 +318,39 @@ def run_migrations():
                             conn.commit()
                             print(f"[DB Migration] Added email_otp_records column: {col_name}")
             except Exception as _e_otp:
+                pass
+
+            # Check email_dispatch_logs columns
+            try:
+                result_edl = conn.execute(
+                    __import__('sqlalchemy').text("PRAGMA table_info(email_dispatch_logs)")
+                )
+                edl_cols = {row[1] for row in result_edl}
+                if edl_cols:
+                    edl_migrations = [
+                        ("email_id", "ALTER TABLE email_dispatch_logs ADD COLUMN email_id VARCHAR(100)"),
+                        ("report_id", "ALTER TABLE email_dispatch_logs ADD COLUMN report_id VARCHAR(100)"),
+                        ("session_id", "ALTER TABLE email_dispatch_logs ADD COLUMN session_id INTEGER"),
+                        ("idempotency_key", "ALTER TABLE email_dispatch_logs ADD COLUMN idempotency_key VARCHAR(255)"),
+                        ("recipient", "ALTER TABLE email_dispatch_logs ADD COLUMN recipient VARCHAR(150)"),
+                        ("role", "ALTER TABLE email_dispatch_logs ADD COLUMN role VARCHAR(50) DEFAULT 'HOD'"),
+                        ("subject", "ALTER TABLE email_dispatch_logs ADD COLUMN subject VARCHAR(255)"),
+                        ("dispatch_type", "ALTER TABLE email_dispatch_logs ADD COLUMN dispatch_type VARCHAR(30) DEFAULT 'AUTOMATED'"),
+                        ("provider", "ALTER TABLE email_dispatch_logs ADD COLUMN provider VARCHAR(50) DEFAULT 'BREVO_API'"),
+                        ("status", "ALTER TABLE email_dispatch_logs ADD COLUMN status VARCHAR(30) DEFAULT 'QUEUED'"),
+                        ("attachment_count", "ALTER TABLE email_dispatch_logs ADD COLUMN attachment_count INTEGER DEFAULT 0"),
+                        ("total_attachment_bytes", "ALTER TABLE email_dispatch_logs ADD COLUMN total_attachment_bytes INTEGER DEFAULT 0"),
+                        ("error_message", "ALTER TABLE email_dispatch_logs ADD COLUMN error_message TEXT"),
+                        ("retry_count", "ALTER TABLE email_dispatch_logs ADD COLUMN retry_count INTEGER DEFAULT 0"),
+                        ("sent_at", "ALTER TABLE email_dispatch_logs ADD COLUMN sent_at DATETIME"),
+                        ("created_at", "ALTER TABLE email_dispatch_logs ADD COLUMN created_at DATETIME"),
+                    ]
+                    for col_name, sql in edl_migrations:
+                        if col_name not in edl_cols:
+                            conn.execute(__import__('sqlalchemy').text(sql))
+                            conn.commit()
+                            print(f"[DB Migration] Added email_dispatch_logs column: {col_name}")
+            except Exception as _e_edl:
                 pass
 
             # ── faculty_action_queue: add new columns if missing ─────────────
@@ -357,6 +421,23 @@ def run_migrations():
             except Exception as _trg_err:
                 print(f"[DB Migration] Trigger registration note: {_trg_err}")
 
+            # ── faculty_student_assignments: create if missing ────────────────
+            try:
+                conn.execute(__import__('sqlalchemy').text("""
+                    CREATE TABLE IF NOT EXISTS faculty_student_assignments (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        faculty_id INTEGER NOT NULL REFERENCES users(id),
+                        student_id INTEGER NOT NULL UNIQUE REFERENCES students(id),
+                        assigned_by_id INTEGER REFERENCES users(id),
+                        is_active BOOLEAN DEFAULT 1,
+                        assigned_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )
+                """))
+                conn.commit()
+                print("[DB Migration] faculty_student_assignments table ensured.")
+            except Exception as _e_fsa:
+                pass
+
             # Performance Indexes Creation
             indexes = [
                 ("idx_students_dept_year", "CREATE INDEX IF NOT EXISTS idx_students_dept_year ON students(department_id, year_level)"),
@@ -364,6 +445,8 @@ def run_migrations():
                 ("idx_students_name", "CREATE INDEX IF NOT EXISTS idx_students_name ON students(name)"),
                 ("idx_students_reg_no", "CREATE INDEX IF NOT EXISTS idx_students_reg_no ON students(reg_no)"),
                 ("idx_students_username", "CREATE INDEX IF NOT EXISTS idx_students_username ON students(username)"),
+                ("idx_faculty_assign_fac_stud", "CREATE INDEX IF NOT EXISTS idx_faculty_assign_fac_stud ON faculty_student_assignments(faculty_id, student_id)"),
+                ("idx_faculty_assign_stud", "CREATE INDEX IF NOT EXISTS idx_faculty_assign_stud ON faculty_student_assignments(student_id)"),
                 ("idx_profile_stats_student_id", "CREATE INDEX IF NOT EXISTS idx_profile_stats_student_id ON leetcode_profile_stats(student_id)"),
                 ("idx_profile_stats_total_solved", "CREATE INDEX IF NOT EXISTS idx_profile_stats_total_solved ON leetcode_profile_stats(total_solved)"),
                 ("idx_profile_stats_contest_rating", "CREATE INDEX IF NOT EXISTS idx_profile_stats_contest_rating ON leetcode_profile_stats(contest_rating)"),

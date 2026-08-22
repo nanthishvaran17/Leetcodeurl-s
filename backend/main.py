@@ -20,7 +20,9 @@ from backend.routes import (
     auth, students, departments, sessions,
     leaderboard, analytics, reports, settings as settings_route,
     audit, public, sync, history, risk, goals, system_health, weekly_contests,
-    scheduled_reports, certificates, data_issues
+    scheduled_reports, certificates, data_issues, faculty_assignments, institutional_dashboards,
+    email_campaigns, bot_notifications, anti_cheat, placement_eligibility, gamification, accreditation,
+    whatsapp_webhook
 )
 from backend.routes import admin, email_reports, ai_assistant, leetcode, ai_control_center, intelligence
 from backend.routes import command_center
@@ -159,6 +161,23 @@ app.include_router(command_center.router, prefix="/api")
 app.include_router(command_center.router)
 app.include_router(leetcode_tracker.router, prefix="/api")
 app.include_router(leetcode_tracker.router)
+app.include_router(faculty_assignments.router, prefix="/api")
+app.include_router(faculty_assignments.router)
+app.include_router(institutional_dashboards.router, prefix="/api")
+app.include_router(institutional_dashboards.router)
+app.include_router(email_campaigns.router, prefix="/api")
+app.include_router(email_campaigns.router)
+app.include_router(bot_notifications.router, prefix="/api")
+app.include_router(bot_notifications.router)
+app.include_router(anti_cheat.router, prefix="/api")
+app.include_router(anti_cheat.router)
+app.include_router(placement_eligibility.router, prefix="/api")
+app.include_router(placement_eligibility.router)
+app.include_router(gamification.router, prefix="/api")
+app.include_router(gamification.router)
+app.include_router(accreditation.router, prefix="/api")
+app.include_router(accreditation.router)
+app.include_router(whatsapp_webhook.router)
 
 # Mount Static File Directories
 is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")

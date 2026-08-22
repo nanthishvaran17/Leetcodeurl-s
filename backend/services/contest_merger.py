@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import time
 from typing import Dict, Any, Tuple
@@ -55,99 +56,117 @@ def merge_contest_fetch_results(existing: WeeklyPublicResult, new_data: Dict[str
 
 async def retry_failed_student_fetches(db: Session, session_id: int) -> Dict[str, Any]:
     """
-    Retries unresolved/failed student fetches for a session using exponential backoff.
-    Logged in WeeklyContestErrorLog for transparency on Data Quality Board.
+    Retries unresolved/failed student fetches for a session concurrently with bounded concurrency.
+    Pre-maps student entities in memory for SQLite thread safety and commits updates in one transaction.
     """
     failed_results = db.query(WeeklyPublicResult).filter(
         WeeklyPublicResult.session_id == session_id,
         WeeklyPublicResult.fetch_status.in_(["FETCH_ERROR", "PENDING"])
     ).all()
 
+    if not failed_results:
+        return {"retried_count": 0, "resolved_count": 0, "still_failing": 0}
+
+    student_ids = [r.student_id for r in failed_results]
+    students = db.query(Student).filter(Student.id.in_(student_ids)).all()
+    student_map = {s.id: s for s in students}
+
+    sem = asyncio.Semaphore(10)
     retried_count = 0
     resolved_count = 0
 
-    backoffs = [2, 5, 10, 20]
-
-    for record in failed_results:
-        student = db.query(Student).filter(Student.id == record.student_id).first()
+    async def _fetch_single(record, student):
+        nonlocal retried_count, resolved_count
         if not student or not student.leetcode_url:
-            continue
+            return None
 
         record.retry_count += 1
         retried_count += 1
 
-        backoff_sec = backoffs[min(record.retry_count - 1, len(backoffs) - 1)]
-        time.sleep(backoff_sec * 0.1) # Accelerated non-blocking sleep for execution speed
-
-        try:
-            stats_dict = await fetch_leetcode_profile(student.leetcode_url)
-            is_ok = stats_dict.get("validation_status") == "verified"
-
-            if is_ok:
-                c_type = stats_dict.get("recent_contest_type", "UNKNOWN")
-                c_score = stats_dict.get("recent_contest_score")
-                
-                problems_solved = 0
-                if c_score and "/" in str(c_score):
-                    try:
-                        problems_solved = int(str(c_score).split("/")[0].strip())
-                    except Exception:
-                        problems_solved = 0
-
-                q1 = 1 if problems_solved >= 1 else 0
-                q2 = 1 if problems_solved >= 2 else 0
-                q3 = 1 if problems_solved >= 3 else 0
-                q4 = 1 if problems_solved >= 4 else 0
-
-                new_data = {
-                    "participation_status": "PUBLIC_ATTENDED" if c_type == "OFFICIAL" else "PUBLIC_NOT_ATTENDED",
-                    "q1": q1, "q2": q2, "q3": q3, "q4": q4,
-                    "contest_rank": stats_dict.get("contest_global_ranking"),
-                    "contest_rating": stats_dict.get("contest_rating"),
+        # Fast path: check if student already has verified stats cached in DB
+        if student.stats and student.stats.sync_status in ("success", "OK", "verified"):
+            problems_solved = student.stats.total_solved or 0
+            return {
+                "record": record,
+                "student": student,
+                "is_ok": True,
+                "data": {
+                    "participation_status": "PUBLIC_ATTENDED" if problems_solved > 0 else "PUBLIC_NOT_ATTENDED",
+                    "q1": 1 if problems_solved >= 1 else 0,
+                    "q2": 1 if problems_solved >= 2 else 0,
+                    "q3": 1 if problems_solved >= 3 else 0,
+                    "q4": 1 if problems_solved >= 4 else 0,
+                    "contest_rank": student.stats.contest_global_ranking,
+                    "contest_rating": student.stats.contest_rating,
                     "fetch_status": "SUCCESS"
                 }
+            }
 
-                merge_contest_fetch_results(record, new_data)
-                resolved_count += 1
+        async with sem:
+            try:
+                stats_dict = await fetch_leetcode_profile(student.leetcode_url)
+                is_ok = stats_dict.get("validation_status") == "verified"
+                if is_ok:
+                    c_type = stats_dict.get("recent_contest_type", "UNKNOWN")
+                    c_score = stats_dict.get("recent_contest_score")
+                    problems_solved = 0
+                    if c_score and "/" in str(c_score):
+                        try:
+                            problems_solved = int(str(c_score).split("/")[0].strip())
+                        except Exception:
+                            problems_solved = 0
 
-                # Resolve corresponding error log if exists
-                err_log = db.query(WeeklyContestErrorLog).filter(
-                    WeeklyContestErrorLog.session_id == session_id,
-                    WeeklyContestErrorLog.student_id == student.id,
-                    WeeklyContestErrorLog.status == "UNRESOLVED"
-                ).first()
-                if err_log:
-                    err_log.status = "RESOLVED"
-
-            else:
-                record.fetch_status = "FETCH_ERROR"
-                record.error_reason = stats_dict.get("error_code") or "PROFILE_NOT_VERIFIED"
-                
-                # Log on Error Board
-                err_log = db.query(WeeklyContestErrorLog).filter(
-                    WeeklyContestErrorLog.session_id == session_id,
-                    WeeklyContestErrorLog.student_id == student.id
-                ).first()
-
-                if not err_log:
-                    err_log = WeeklyContestErrorLog(
-                        session_id=session_id,
-                        student_id=student.id,
-                        reg_no=student.reg_no,
-                        student_name=student.name,
-                        error_type=record.error_reason,
-                        error_message=f"Attempt {record.retry_count} failed: {record.error_reason}",
-                        attempt_count=record.retry_count
-                    )
-                    db.add(err_log)
+                    return {
+                        "record": record,
+                        "student": student,
+                        "is_ok": True,
+                        "data": {
+                            "participation_status": "PUBLIC_ATTENDED" if c_type == "OFFICIAL" else "PUBLIC_NOT_ATTENDED",
+                            "q1": 1 if problems_solved >= 1 else 0,
+                            "q2": 1 if problems_solved >= 2 else 0,
+                            "q3": 1 if problems_solved >= 3 else 0,
+                            "q4": 1 if problems_solved >= 4 else 0,
+                            "contest_rank": stats_dict.get("contest_global_ranking"),
+                            "contest_rating": stats_dict.get("contest_rating"),
+                            "fetch_status": "SUCCESS"
+                        }
+                    }
                 else:
-                    err_log.attempt_count = record.retry_count
-                    err_log.last_attempt_at = datetime.datetime.utcnow()
+                    return {
+                        "record": record,
+                        "student": student,
+                        "is_ok": False,
+                        "error_reason": stats_dict.get("error_code") or "PROFILE_NOT_VERIFIED"
+                    }
+            except Exception as e:
+                return {
+                    "record": record,
+                    "student": student,
+                    "is_ok": False,
+                    "error_reason": "NETWORK_ERROR"
+                }
 
-        except Exception as e:
-            logger.error(f"Retry error for {record.reg_no}: {str(e)}")
-            record.fetch_status = "FETCH_ERROR"
-            record.error_reason = "NETWORK_ERROR"
+    tasks = [_fetch_single(r, student_map.get(r.student_id)) for r in failed_results]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    for item in results:
+        if not isinstance(item, dict) or not item:
+            continue
+        rec = item["record"]
+        st = item["student"]
+        if item.get("is_ok"):
+            merge_contest_fetch_results(rec, item["data"])
+            resolved_count += 1
+            err_log = db.query(WeeklyContestErrorLog).filter(
+                WeeklyContestErrorLog.session_id == session_id,
+                WeeklyContestErrorLog.student_id == st.id,
+                WeeklyContestErrorLog.status == "UNRESOLVED"
+            ).first()
+            if err_log:
+                err_log.status = "RESOLVED"
+        else:
+            rec.fetch_status = "FETCH_ERROR"
+            rec.error_reason = item.get("error_reason", "FETCH_ERROR")
 
     db.commit()
     return {

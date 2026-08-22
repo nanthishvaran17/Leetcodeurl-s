@@ -852,39 +852,49 @@ def run_sunday_2200_virtual_contest_workflow(db: Session, contest_id: Optional[s
     c_id = contest_id or f"weekly-contest-{datetime.date.today().strftime('%W')}"
     c_name = "Weekly Contest"
 
-    students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+    from sqlalchemy.orm import joinedload
+    students = db.query(Student).options(joinedload(Student.department)).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+    
+    # Bulk fetch existing contest participation records
+    vir_recs_map = {
+        r.student_id: r for r in db.query(StudentContestParticipation).filter(
+            StudentContestParticipation.contest_id == c_id,
+            StudentContestParticipation.participation_mode == "VIRTUAL"
+        ).all()
+    }
+    pub_recs_map = {
+        r.student_id: r for r in db.query(StudentContestParticipation).filter(
+            StudentContestParticipation.contest_id == c_id,
+            StudentContestParticipation.participation_mode == "PUBLIC"
+        ).all()
+    }
+
     vir_rows = []
     combined_rows = []
     vq4, vq3, vq2, vq1, v_not_att, v_fetch_fail, v_mode_unc = 0, 0, 0, 0, 0, 0, 0
-    validation_logs = []
+    now_dt = datetime.datetime.utcnow()
 
     for idx, s in enumerate(students, start=1):
-        vir_rec_query = db.query(StudentContestParticipation).filter(
-            StudentContestParticipation.student_id == s.id,
-            StudentContestParticipation.contest_id == c_id,
-            StudentContestParticipation.participation_mode == "VIRTUAL"
-        ).first()
-
-        if vir_rec_query:
-            status = vir_rec_query.status
-            q_solved = vir_rec_query.questions_solved
-            err_msg = vir_rec_query.error_message
+        rec = vir_recs_map.get(s.id)
+        if rec:
+            status = rec.status
+            q_solved = rec.questions_solved
         else:
             status = "NOT_ATTENDED"
-            q_solved = None
-            err_msg = None
-
-        rec = record_contest_participation(
-            db=db,
-            student_id=s.id,
-            contest_id=c_id,
-            contest_name=c_name,
-            participation_mode="VIRTUAL",
-            questions_solved=q_solved if q_solved is not None else 0,
-            questions_total=4,
-            status=status,
-            error_message=err_msg
-        )
+            q_solved = 0
+            rec = StudentContestParticipation(
+                student_id=s.id,
+                contest_id=c_id,
+                contest_name=c_name,
+                participation_mode="VIRTUAL",
+                questions_solved=0,
+                questions_total=4,
+                status=status,
+                score_display="Not Attended",
+                attended=False,
+                fetched_at=now_dt
+            )
+            db.add(rec)
 
         if status == "ATTENDED" and q_solved is not None:
             if q_solved >= 4: vq4 += 1
@@ -924,10 +934,41 @@ def run_sunday_2200_virtual_contest_workflow(db: Session, contest_id: Optional[s
             "fetched_at": rec.fetched_at.strftime("%Y-%m-%d %H:%M:%S") if rec.fetched_at else None
         })
 
-        dto = build_student_contest_dto(db, s, c_id)
-        dto["batch"] = batch
-        dto["fetched_at"] = rec.fetched_at.strftime("%Y-%m-%d %H:%M:%S") if rec.fetched_at else None
+        pub_rec = pub_recs_map.get(s.id)
+        from backend.services.contest_service import calculate_overall_mode
+        pub_status = pub_rec.status if pub_rec else "NOT_ATTENDED"
+        overall_mode = calculate_overall_mode(pub_status, status)
+
+        dto = {
+            "student_id": s.id,
+            "reg_no": s.reg_no,
+            "student_name": s.name,
+            "department": dept_code,
+            "year": s.year_level,
+            "batch": batch,
+            "username": s.username or "N/A",
+            "overall_participation_mode": overall_mode,
+            "public_contest_result": {
+                "contest_name": pub_rec.contest_name if pub_rec else "Weekly Contest",
+                "questions_solved": pub_rec.questions_solved if pub_rec else 0,
+                "questions_total": 4,
+                "score_display": pub_rec.score_display if pub_rec else "Not Attended",
+                "status": pub_status,
+                "fetched_at": pub_rec.fetched_at.strftime("%Y-%m-%d %H:%M:%S") if (pub_rec and pub_rec.fetched_at) else None
+            },
+            "virtual_contest_result": {
+                "contest_name": c_name,
+                "questions_solved": rec.questions_solved,
+                "questions_total": 4,
+                "score_display": rec.score_display,
+                "status": status,
+                "fetched_at": rec.fetched_at.strftime("%Y-%m-%d %H:%M:%S") if rec.fetched_at else None
+            },
+            "fetched_at": rec.fetched_at.strftime("%Y-%m-%d %H:%M:%S") if rec.fetched_at else None
+        }
         combined_rows.append(dto)
+
+    db.commit()
 
     vir_excel_data = {
         "report_date": today_str,
@@ -940,6 +981,7 @@ def run_sunday_2200_virtual_contest_workflow(db: Session, contest_id: Optional[s
         "rows": vir_rows
     }
 
+    validation_logs = []
     import os
     os.makedirs("reports", exist_ok=True)
     vir_excel_path = f"reports/Virtual_Contest_{today_str}.xlsx"

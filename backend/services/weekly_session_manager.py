@@ -4,7 +4,7 @@ import hashlib
 import json
 import asyncio
 from typing import Dict, Any, Optional, List
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from backend.models import (
     WeeklySession, WeeklyPublicResult, WeeklyVirtualResult, 
     WeeklyContestErrorLog, OfficialWeeklySnapshot, Student
@@ -92,19 +92,21 @@ async def trigger_start_snapshot_0800(db: Session, session_id: int):
     session.baseline_snapshot_id = f"start_{session_id}"
     db.commit()
 
-    students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+    students = db.query(Student).options(joinedload(Student.department)).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
     session.total_students = len(students)
     db.commit()
 
     now_dt = datetime.datetime.utcnow()
-    for student in students:
-        existing_res = db.query(WeeklyPublicResult).filter(
-            WeeklyPublicResult.session_id == session_id,
-            WeeklyPublicResult.student_id == student.id
-        ).first()
+    existing_student_ids = {
+        r[0] for r in db.query(WeeklyPublicResult.student_id).filter(
+            WeeklyPublicResult.session_id == session_id
+        ).all()
+    }
 
-        if not existing_res:
-            res = WeeklyPublicResult(
+    new_results = []
+    for student in students:
+        if student.id not in existing_student_ids:
+            new_results.append(WeeklyPublicResult(
                 session_id=session_id,
                 student_id=student.id,
                 reg_no=student.reg_no,
@@ -120,9 +122,10 @@ async def trigger_start_snapshot_0800(db: Session, session_id: int):
                 fetch_status="PENDING",
                 data_fetch_status="DATA_UNAVAILABLE",
                 confidence="UNVERIFIED"
-            )
-            db.add(res)
+            ))
 
+    if new_results:
+        db.add_all(new_results)
     db.commit()
     logger.info(f"08:00 AM Start Snapshot initialized for Session ID {session_id} with {len(students)} students.")
 

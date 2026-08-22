@@ -43,6 +43,8 @@ class Student(Base):
     year_level = Column(String(10), nullable=False) # II, III, IV
     section_id = Column(Integer, ForeignKey("sections.id"), nullable=True)
     email = Column(String(150), nullable=True)
+    phone_number = Column(String(30), unique=True, index=True, nullable=True)
+    whatsapp_verified = Column(Boolean, default=False)
     
     leetcode_url = Column(String(255), nullable=True)
     username = Column(String(100), index=True, nullable=True)
@@ -63,6 +65,7 @@ class Student(Base):
     contest_participations = relationship("ContestParticipation", back_populates="student", cascade="all, delete-orphan")
     contest_snapshots = relationship("StudentContestSnapshot", back_populates="student", cascade="all, delete-orphan")
     contest_participation_records = relationship("StudentContestParticipation", back_populates="student", cascade="all, delete-orphan")
+    faculty_assignment = relationship("FacultyStudentAssignment", back_populates="student", uselist=False, cascade="all, delete-orphan")
 
 class LeetCodeProfileStats(Base):
     __tablename__ = "leetcode_profile_stats"
@@ -331,6 +334,8 @@ class User(Base):
     email = Column(String(150), unique=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
     role = Column(String(30), default="Faculty") # Super Admin, HOD, Faculty, CR, Viewer
+    phone_number = Column(String(30), unique=True, index=True, nullable=True)
+    whatsapp_verified = Column(Boolean, default=False)
     
     department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
     section_id = Column(Integer, ForeignKey("sections.id"), nullable=True)
@@ -342,6 +347,29 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     department = relationship("Department", back_populates="users")
+    assigned_students = relationship(
+        "FacultyStudentAssignment",
+        foreign_keys="FacultyStudentAssignment.faculty_id",
+        back_populates="faculty",
+        cascade="all, delete-orphan"
+    )
+
+class FacultyStudentAssignment(Base):
+    __tablename__ = "faculty_student_assignments"
+    __table_args__ = (
+        UniqueConstraint("student_id", name="uix_faculty_student_assignment"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    faculty_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), unique=True, nullable=False, index=True)
+    assigned_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    is_active = Column(Boolean, default=True, index=True)
+    assigned_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    faculty = relationship("User", foreign_keys=[faculty_id], back_populates="assigned_students")
+    student = relationship("Student", back_populates="faculty_assignment")
+    assigned_by = relationship("User", foreign_keys=[assigned_by_id])
 
 class MentorNote(Base):
     __tablename__ = "mentor_notes"
@@ -1643,6 +1671,61 @@ class FacultyActionAuditLog(Base):
 
     action_item = relationship("FacultyActionQueueItem", back_populates="audit_logs")
     user = relationship("User")
+
+
+class EmailCampaign(Base):
+    """
+    Institutional Email Campaign model for bulk notifications and reports.
+    Supports campaigns targeting up to 3,500+ students, faculty, and HODs.
+    """
+    __tablename__ = "email_campaigns"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    campaign_name = Column(String(200), nullable=False, index=True)
+    subject = Column(String(255), nullable=False)
+    body_html = Column(Text, nullable=False)
+    sender_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    scope_type = Column(String(50), nullable=False)  # ALL_INSTITUTION, ALL_HODS, ALL_FACULTY, ALL_STUDENTS, DEPT_ALL, DEPT_FACULTY, DEPT_STUDENTS, MY_MENTEES, CUSTOM
+    scope_id = Column(Integer, nullable=True)  # department_id or faculty_id
+    status = Column(String(50), default="QUEUED", index=True)  # QUEUED, PROCESSING, COMPLETED, PAUSED, FAILED
+    
+    total_recipients = Column(Integer, default=0)
+    queued_count = Column(Integer, default=0)
+    sent_count = Column(Integer, default=0)
+    delivered_count = Column(Integer, default=0)
+    failed_count = Column(Integer, default=0)
+    bounced_count = Column(Integer, default=0)
+    skipped_duplicates = Column(Integer, default=0)
+    
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+
+    sender = relationship("User")
+    queue_items = relationship("EmailQueueItem", back_populates="campaign", cascade="all, delete-orphan")
+
+
+class EmailQueueItem(Base):
+    """
+    Individual queued email record for bulk dispatch tracking.
+    """
+    __tablename__ = "email_queue_items"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    campaign_id = Column(Integer, ForeignKey("email_campaigns.id"), nullable=False, index=True)
+    recipient_email = Column(String(255), nullable=False, index=True)
+    recipient_name = Column(String(200), nullable=True)
+    recipient_role = Column(String(50), nullable=True)
+    status = Column(String(50), default="PENDING", index=True)  # PENDING, SENDING, DELIVERED, FAILED, BOUNCED, SKIPPED
+    attempts = Column(Integer, default=0)
+    error_message = Column(Text, nullable=True)
+    last_attempt_at = Column(DateTime, nullable=True)
+    delivered_at = Column(DateTime, nullable=True)
+
+    campaign = relationship("EmailCampaign", back_populates="queue_items")
+
 
 
 

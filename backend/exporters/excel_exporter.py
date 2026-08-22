@@ -22,13 +22,19 @@ ALIGN_CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
 ALIGN_LEFT = Alignment(horizontal="left", vertical="center", wrap_text=True)
 ALIGN_RIGHT = Alignment(horizontal="right", vertical="center")
 
+_THIN_SIDE = Side(style='thin', color='CBD5E1')
+_THIN_BORDER = Border(left=_THIN_SIDE, right=_THIN_SIDE, top=_THIN_SIDE, bottom=_THIN_SIDE)
+_BOX_BORDER_NAVY = Border(left=Side(style='medium', color='1B365D'), right=Side(style='medium', color='1B365D'), top=Side(style='medium', color='1B365D'), bottom=Side(style='medium', color='1B365D'))
+
+FONT_REGULAR = Font(name=FONT_TNR, size=9)
+FONT_BOLD = Font(name=FONT_TNR, size=9, bold=True)
+FONT_WHITE_BOLD = Font(name=FONT_TNR, size=9, bold=True, color="FFFFFF")
+
 def _apply_thin_border(cell):
-    s = Side(style='thin', color='CBD5E1')
-    cell.border = Border(left=s, right=s, top=s, bottom=s)
+    cell.border = _THIN_BORDER
 
 def _apply_box_border(cell, color='1B365D'):
-    s = Side(style='medium', color=color)
-    cell.border = Border(left=s, right=s, top=s, bottom=s)
+    cell.border = _BOX_BORDER_NAVY
 
 def _to_int(val, default=0) -> int:
     try:
@@ -411,7 +417,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
 
         for c_i, v in enumerate(r_data, 1):
             cell = ws3.cell(row=cur_r, column=c_i, value=v)
-            cell.font = Font(name=FONT_TNR, size=9)
+            cell.font = FONT_REGULAR
             cell.alignment = ALIGN_LEFT if c_i == 3 else ALIGN_CENTER
             if is_att and c_i in (6, 11):
                 cell.fill = GREEN_FILL
@@ -496,7 +502,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
             ]
             for c_i, v in enumerate(r_data, 1):
                 cell = ws4.cell(row=cur_r, column=c_i, value=v)
-                cell.font = Font(name=FONT_TNR, size=9)
+                cell.font = FONT_REGULAR
                 cell.alignment = ALIGN_LEFT if c_i == 3 else ALIGN_CENTER
                 if c_i in (6, 11):
                     cell.fill = GREEN_FILL

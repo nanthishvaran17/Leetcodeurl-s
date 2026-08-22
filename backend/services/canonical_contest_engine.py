@@ -71,8 +71,12 @@ def build_canonical_contest_dataset(
     if not session_obj:
         raise ValueError(f"Contest Session ID {session_id} not found in database.")
 
-    # 1. Fetch Authoritative Master Students
-    student_query = db.query(Student).filter(
+    # 1. Fetch Authoritative Master Students with eager loaded department
+    from sqlalchemy.orm import joinedload
+    student_query = db.query(Student).options(
+        joinedload(Student.department),
+        joinedload(Student.stats)
+    ).filter(
         (Student.is_active == True) | (Student.is_active.is_(None))
     )
     all_master_students = student_query.order_by(Student.id.asc()).all()

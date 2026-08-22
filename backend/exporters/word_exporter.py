@@ -315,17 +315,26 @@ def export_word_from_dataset(dataset: dict) -> bytes:
 
         doc.add_paragraph().paragraph_format.space_after = Pt(10)
 
-    # 5. Full Roster Table
+    # 5. Full Roster Table (Executive Roster Summary)
     all_students = dataset.get("allStudents")
     if all_students:
-        doc.add_heading("IV. Student Performance Master Roster", level=2)
+        total_students_count = len(all_students)
+        display_roster = all_students[:250]
+        
+        doc.add_heading(f"IV. Student Performance Master Roster (Top {len(display_roster)} of {total_students_count:,})", level=2)
         p_h4 = doc.paragraphs[-1]
         for r in p_h4.runs:
             r.font.name = "Times New Roman"
             r.font.color.rgb = RGBColor(15, 23, 42)
 
+        if total_students_count > len(display_roster):
+            p_note = doc.add_paragraph(f"* Note: Showing top {len(display_roster)} performers. The complete {total_students_count:,}-student roster is available in the attached Master Excel file.")
+            p_note.runs[0].font.italic = True
+            p_note.runs[0].font.size = Pt(8.5)
+            p_note.runs[0].font.color.rgb = RGBColor(100, 116, 139)
+
         headers = ["S.No", "Reg No", "Student Name", "Dept", "Year", "Total Solved", "Status"]
-        table_all = doc.add_table(rows=1 + len(all_students), cols=len(headers))
+        table_all = doc.add_table(rows=1 + len(display_roster), cols=len(headers))
         table_all.alignment = WD_TABLE_ALIGNMENT.CENTER
 
         hdr_cells = table_all.rows[0].cells
@@ -339,7 +348,7 @@ def export_word_from_dataset(dataset: dict) -> bytes:
             run.font.color.rgb = RGBColor(255, 255, 255)
             set_cell_background(hdr_cells[i], "0F172A")
 
-        for idx, s in enumerate(all_students, start=1):
+        for idx, s in enumerate(display_roster, start=1):
             row_cells = table_all.rows[idx].cells
             row_vals = [
                 str(idx),
@@ -371,9 +380,10 @@ def export_word_from_dataset(dataset: dict) -> bytes:
         doc.add_paragraph().paragraph_format.space_after = Pt(10)
 
     # 6. Official Contest Participations Table
-    participations = dataset.get("participations")
+    raw_participations = dataset.get("participations") or []
+    participations = [p for p in raw_participations if p.get("status") in ("ATTENDED", "PUBLIC_ATTENDED", "OFFICIAL_ATTENDED") or (p.get("problems_solved") or 0) > 0][:250]
     if participations:
-        doc.add_heading("V. Official Contest Participation Log", level=2)
+        doc.add_heading(f"V. Official Contest Participation Log ({len(participations)} Verified Attendees)", level=2)
         p_h5 = doc.paragraphs[-1]
         for r in p_h5.runs:
             r.font.name = "Times New Roman"

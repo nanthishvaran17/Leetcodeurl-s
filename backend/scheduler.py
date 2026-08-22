@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 from zoneinfo import ZoneInfo
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -35,6 +36,8 @@ from backend.services.weekly_session_manager import (
     resume_active_weekly_session
 )
 
+from backend.services.sunday_autopilot import sunday_autopilot
+
 tz = IST
 scheduler = AsyncIOScheduler(timezone=IST)
 
@@ -43,13 +46,13 @@ async def sunday_0755_init_job():
     Scheduled for Sunday 07:55 AM IST: Pre-contest session initialization,
     dynamic contest discovery, active roster freezing, and pre-contest baseline recording.
     """
-    logger.info("[SCHEDULER] Sunday 07:55 AM IST: Initializing upcoming WeeklySession and freezing active roster...")
+    logger.info("[SCHEDULER] Sunday 07:55 AM IST: Autopilot Phase 1 Pre-Flight Initiated...")
     db = SessionLocal()
     try:
-        session = get_or_create_current_weekly_session(db)
-        logger.info(f"[SCHEDULER] Active session verified: {session.contest_name} ({session.session_date}), Status: {session.status}, Active Students: {session.total_students}")
+        res = sunday_autopilot.phase_1_preflight_0755(db)
+        logger.info(f"[SCHEDULER] Sunday 07:55 AM Pre-Flight Completed: {res}")
     except Exception as e:
-        logger.error(f"[SCHEDULER] Error in sunday_0755_init_job: {e}")
+        logger.error(f"[SCHEDULER] Error in sunday_0755_init_job: {e}", exc_info=True)
     finally:
         db.close()
 
@@ -57,153 +60,83 @@ async def sunday_start_job():
     """
     Scheduled for Sunday 8:00 AM IST: Baseline snapshot and live student synchronization.
     """
-    logger.info("[SCHEDULER] Sunday sync window detected (08:00 AM – 09:30 AM IST [Asia/Kolkata]). Starting live sync pipeline...")
+    logger.info("[SCHEDULER] Sunday 08:00 AM IST: Autopilot Phase 2 Baseline Snapshot & LIVE Mode Start...")
     db = SessionLocal()
     try:
-        session = get_or_create_current_weekly_session(db)
-        await trigger_start_snapshot_0800(db, session.id)
-        
-        from backend.services.live_sync_service import start_full_sync_job
-        logger.info(f"[SYNC] Creating sync session for WeeklySession ID {session.id}...")
-        sync_res = start_full_sync_job(db, triggered_by="sunday_scheduler_0800")
-        logger.info(f"[QUEUE] Sunday 8:00 AM sync job dispatched: status={sync_res.get('status')}, job_id={sync_res.get('job_id')}")
+        res = await sunday_autopilot.phase_2_baseline_0800(db)
+        logger.info(f"[SCHEDULER] Sunday 08:00 AM Baseline Completed: {res}")
     except Exception as e:
-        logger.error(f"[SCHEDULER] Error in sunday_start_job execution: {e}")
+        logger.error(f"[SCHEDULER] Error in sunday_start_job: {e}", exc_info=True)
     finally:
         db.close()
+
+async def sunday_live_monitoring_job():
+    """
+    Scheduled every 1 minute during Sunday 08:00–09:30 AM IST: Live student solves tracking.
+    """
+    now_ist = datetime.datetime.now(tz=IST)
+    if now_ist.weekday() == 6 and (datetime.time(8, 0, 0) <= now_ist.time() <= datetime.time(9, 30, 0)):
+        db = SessionLocal()
+        try:
+            await sunday_autopilot.phase_3_live_monitoring_cycle(db)
+        except Exception as e:
+            logger.debug(f"[SCHEDULER] Live polling tick note: {e}")
+        finally:
+            db.close()
 
 async def sunday_end_job():
     """
-    Scheduled for Sunday 9:30 AM IST: Final snapshot, snapshot lock, report generation & email dispatch.
+    Scheduled for Sunday 9:30 AM IST: Final snapshot, 5-state reconciliation, and immutability lock.
     """
-    logger.info("Executing Scheduled Job: Sunday 9:30 AM End Snapshot...")
+    logger.info("[SCHEDULER] Sunday 09:30 AM IST: Autopilot Phase 4 Final Snapshot & Data Lock...")
     db = SessionLocal()
     try:
-        session = get_or_create_current_weekly_session(db)
-        snapshot = await trigger_final_snapshot_0930(db, session.id)
-
-        dataset = snapshot.dataset
-        verified = dataset.get("metrics", {}).get("officialAttended", 0)
-        total = dataset.get("metrics", {}).get("totalStudents", 0)
-        
-        from backend.exporters.excel_exporter import export_excel_from_dataset
-        from backend.exporters.pdf_exporter import export_pdf_from_dataset
-        
-        excel_bytes = export_excel_from_dataset(dataset)
-        pdf_bytes = export_pdf_from_dataset(dataset)
-
-        # Email list
-        recipients = [e.strip() for e in settings.REPORT_RECIPIENT_EMAILS.split(",") if e.strip()]
-        if recipients:
-            subject = f"Weekly LeetCode Session Report – Week {session.week_number} ({session.session_date})"
-            body = f"""
-            <h2>College LeetCode Weekly Performance Summary</h2>
-            <p>Dear Faculty / HOD,</p>
-            <p>The weekly Sunday LeetCode session (08:00 AM – 09:30 AM IST) for <b>{session.session_date}</b> has been completed.</p>
-            <p>Please find attached the detailed Excel Report and PDF Summary Report generated from verified data.</p>
-            <br/>
-            <p>Regards,<br/><b>LeetCode Automated Tracking Platform</b></p>
-            """
-            send_weekly_report_email(
-                db=db,
-                recipient_emails=recipients,
-                subject=subject,
-                body_html=body,
-                excel_bytes=excel_bytes,
-                pdf_bytes=pdf_bytes,
-                session_id=session.id
-            )
+        res = await sunday_autopilot.phase_4_finalization_0930(db)
+        logger.info(f"[SCHEDULER] Sunday 09:30 AM Finalization Completed: {res}")
     except Exception as e:
-        logger.error(f"Error in sunday_end_job: {e}")
+        logger.error(f"[SCHEDULER] Error in sunday_end_job: {e}", exc_info=True)
     finally:
         db.close()
 
-async def sunday_auto_email_job():
+async def sunday_0935_report_job():
     """
-    Scheduled for Sunday 9:45 AM IST: Automatically dispatches weekly contest report emails
-    to all active DB recipients, 15 minutes after the 9:30 AM final snapshot completes.
+    Scheduled for Sunday 9:35 AM IST: Multi-Format Report Generation (Master Excel, PDF, Word, Depts).
     """
-    logger.info("Executing Scheduled Job: Sunday 9:45 AM Public Contest & Auto Email Dispatch...")
+    logger.info("[SCHEDULER] Sunday 09:35 AM IST: Autopilot Phase 5 Report Generation...")
     db = SessionLocal()
     try:
-        from backend.services.weekly_report_service import run_sunday_0945_public_contest_workflow
-        res = run_sunday_0945_public_contest_workflow(db)
-        logger.info(f"Sunday 9:45 AM Public Contest Workflow Completed: {res}")
+        res = sunday_autopilot.phase_5_report_generation_0935(db)
+        logger.info(f"[SCHEDULER] Sunday 09:35 AM Report Generation Completed: {res}")
     except Exception as e:
-        logger.error(f"Error in sunday_0945_public_contest_workflow execution: {e}")
-
-    try:
-        import datetime
-        from backend.models import WeeklySession
-        today_str = datetime.date.today().isoformat()
-
-        # Find today's completed/finalized session
-        session = db.query(WeeklySession).filter(
-            WeeklySession.session_date == today_str
-        ).first()
-
-        if not session:
-            logger.warning("Sunday 9:45 AM email: No session found for today. Skipping auto dispatch.")
-            return
-
-        if session.status not in ("COMPLETED", "FINALIZED"):
-            logger.warning(f"Sunday 9:45 AM email: Session status is '{session.status}', not COMPLETED/FINALIZED. Skipping auto dispatch.")
-            return
-
-        # Generate report bytes from the finalized snapshot dataset
-        from backend.models import OfficialWeeklySnapshot
-        from backend.exporters.excel_exporter import export_excel_from_dataset
-        from backend.exporters.pdf_exporter import export_pdf_from_dataset
-
-        snapshot = db.query(OfficialWeeklySnapshot).filter(
-            OfficialWeeklySnapshot.session_id == session.id
-        ).order_by(OfficialWeeklySnapshot.id.desc()).first()
-
-        if not snapshot or not snapshot.dataset:
-            logger.warning("Sunday 9:45 AM email: No finalized snapshot dataset found. Skipping.")
-            return
-
-        dataset = snapshot.dataset
-
-        try:
-            excel_bytes = export_excel_from_dataset(dataset)
-        except Exception as exc:
-            logger.error(f"Sunday 9:45 AM email: Excel export failed: {exc}")
-            excel_bytes = None
-
-        try:
-            pdf_bytes = export_pdf_from_dataset(dataset)
-        except Exception as exc:
-            logger.error(f"Sunday 9:45 AM email: PDF export failed: {exc}")
-            pdf_bytes = None
-
-        # Dispatch to all active recipients via queue system
-        from backend.services.email_service import queue_weekly_report_dispatches
-        result = queue_weekly_report_dispatches(
-            db=db,
-            session_id=session.id,
-            report_type="WEEKLY_CONTEST_AUTO"
-        )
-        logger.info(f"Sunday 9:45 AM Auto Email: Dispatch result: {result}")
-
-    except Exception as e:
-        logger.error(f"Error in sunday_auto_email_job: {e}")
+        logger.error(f"[SCHEDULER] Error in sunday_0935_report_job: {e}", exc_info=True)
     finally:
         db.close()
 
+async def sunday_0940_email_job():
+    """
+    Scheduled for Sunday 9:40 AM IST: Idempotent Email Dispatch to HODs & Management.
+    """
+    logger.info("[SCHEDULER] Sunday 09:40 AM IST: Autopilot Phase 6 Email Dispatch...")
+    db = SessionLocal()
+    try:
+        res = sunday_autopilot.phase_6_email_dispatch_0940(db)
+        logger.info(f"[SCHEDULER] Sunday 09:40 AM Email Dispatch Completed: {res}")
+    except Exception as e:
+        logger.error(f"[SCHEDULER] Error in sunday_0940_email_job: {e}", exc_info=True)
+    finally:
+        db.close()
 
 async def sunday_2200_virtual_contest_job():
     """
     Scheduled for Sunday 10:00 PM IST: End-of-Day Virtual contest fetch, combined report generation & final email.
     """
-    logger.info("Executing Scheduled Job: Sunday 10:00 PM Virtual Contest Final Workflow...")
+    logger.info("[SCHEDULER] Sunday 10:00 PM IST: Autopilot Phase 7 Virtual Contest Sync & Reconciliation...")
     db = SessionLocal()
     try:
-        from backend.services.weekly_report_service import run_sunday_2200_virtual_contest_workflow
-        res = run_sunday_2200_virtual_contest_workflow(db)
-        logger.info(f"Sunday 10:00 PM Virtual Contest Workflow Completed: {res}")
+        res = sunday_autopilot.phase_7_virtual_sync_2200(db)
+        logger.info(f"[SCHEDULER] Sunday 10:00 PM Virtual Contest Completed: {res}")
     except Exception as e:
-        logger.error(f"Error in sunday_2200_virtual_contest_job: {e}")
+        logger.error(f"[SCHEDULER] Error in sunday_2200_virtual_contest_job: {e}", exc_info=True)
     finally:
         db.close()
 
@@ -249,7 +182,7 @@ def start_scheduler():
         logger.info("APScheduler is already running. Skipping redundant start.")
         return
 
-    # Cron for Sunday 7:55 AM IST — Session Initialization & Roster Freeze
+    # 1. Sunday 07:55 AM IST — Pre-Flight, Discovery & Roster Freeze
     scheduler.add_job(
         sunday_0755_init_job,
         CronTrigger(day_of_week='sun', hour=7, minute=55, timezone=tz),
@@ -257,7 +190,7 @@ def start_scheduler():
         replace_existing=True
     )
 
-    # Cron for Sunday 8:00 AM IST — Contest Window Open & Live Delta Ingestion
+    # 2. Sunday 08:00 AM IST — Baseline Snapshot & LIVE Mode Start
     scheduler.add_job(
         sunday_start_job,
         CronTrigger(day_of_week='sun', hour=8, minute=0, timezone=tz),
@@ -265,7 +198,15 @@ def start_scheduler():
         replace_existing=True
     )
 
-    # Cron for Sunday 9:30 AM IST — Ingestion Stop & Snapshot SHA-256 Lock
+    # 3. Sunday 08:00–09:30 AM IST (Every 1 min) — Live Solves & Telemetry Monitoring
+    scheduler.add_job(
+        sunday_live_monitoring_job,
+        IntervalTrigger(minutes=1, timezone=tz),
+        id='sunday_live_telemetry_loop',
+        replace_existing=True
+    )
+
+    # 4. Sunday 09:30 AM IST — Final Snapshot, 5-State Reconciliation & Data Lock
     scheduler.add_job(
         sunday_end_job,
         CronTrigger(day_of_week='sun', hour=9, minute=30, timezone=tz),
@@ -273,21 +214,35 @@ def start_scheduler():
         replace_existing=True
     )
 
-    # Cron for Sunday 9:45 AM IST — Public Contest Verification, 4-Sheet Excel, PDF, & Email Queue
+    # 5. Sunday 09:35 AM IST — Multi-Format Report Generation (Excel, PDF, Word, Depts)
     scheduler.add_job(
-        sunday_auto_email_job,
-        CronTrigger(day_of_week='sun', hour=9, minute=45, timezone=tz),
-        id='sunday_auto_email_945',
+        sunday_0935_report_job,
+        CronTrigger(day_of_week='sun', hour=9, minute=35, timezone=tz),
+        id='sunday_0935_report',
         replace_existing=True
     )
 
-    # Cron for Sunday 10:00 PM (22:00) IST — Virtual Practice Reconciliation & EOD Wrap-Up
+    # 6. Sunday 09:40 AM IST — Automated Idempotent Email Dispatch
+    scheduler.add_job(
+        sunday_0940_email_job,
+        CronTrigger(day_of_week='sun', hour=9, minute=40, timezone=tz),
+        id='sunday_0940_email',
+        replace_existing=True
+    )
+
+    # 7. Sunday 10:00 PM (22:00) IST — Virtual Contest Reconciliation & EOD Summary
     scheduler.add_job(
         sunday_2200_virtual_contest_job,
         CronTrigger(day_of_week='sun', hour=22, minute=0, timezone=tz),
         id='sunday_virtual_contest_2200',
         replace_existing=True
     )
+
+    # Startup recovery check in background
+    try:
+        asyncio.create_task(sunday_autopilot.resume_or_recover_on_startup())
+    except Exception as _rec_err:
+        logger.warning(f"[SCHEDULER] Startup recovery scheduling note: {_rec_err}")
 
     # Cron for Sunday 10:00 AM IST — Official Sunday Report Generation
     async def sunday_1000_report_job():

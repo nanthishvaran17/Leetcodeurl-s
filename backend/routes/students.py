@@ -27,6 +27,7 @@ from sqlalchemy import desc, asc, nullslast
 def get_leaderboard_fast(
     dept_id: Optional[int] = None,
     year_level: Optional[str] = None,
+    limit: Optional[int] = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db)
 ):
     """
@@ -34,7 +35,7 @@ def get_leaderboard_fast(
     Returns slim pre-serialized JSON — ~10x smaller payload and ~10x faster than /students.
     Cache TTL: 120s. Pre-serializes to dict to avoid re-serialization on every call.
     """
-    cache_key = f"leaderboard_fast:{dept_id}:{year_level}"
+    cache_key = f"leaderboard_fast:{dept_id}:{year_level}:{limit}"
     cached_bytes = cache.get(cache_key)
     if cached_bytes is not None:
         from starlette.responses import Response
@@ -104,8 +105,10 @@ def get_leaderboard_fast(
         clean_yr = year_level.strip().upper().replace('YEAR', '').strip()
         query = query.filter(func.upper(Student.year_level) == clean_yr)
 
-    # Sort by solved desc for leaderboard
+    # Sort by solved desc for leaderboard with limit
     query = query.order_by(nullslast(desc(LeetCodeProfileStats.total_solved)), Student.name.asc())
+    if limit:
+        query = query.limit(limit)
     students = query.all()
 
     if not students:

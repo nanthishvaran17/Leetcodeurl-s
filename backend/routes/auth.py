@@ -154,6 +154,18 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
                 ).first()
                 if user:
                     return user
+                if payload.get("role") in ["Student", "student"]:
+                    st = db.query(Student).filter(
+                        or_(Student.username == username, Student.email == email_claim)
+                    ).first()
+                    return User(
+                        id=st.id if st else 0,
+                        username=username or (st.username if st else "student"),
+                        email=email_claim or (st.email if st else None),
+                        role="Student",
+                        department_id=st.department_id if st else None,
+                        is_active=True
+                    )
         except Exception:
             pass
 
@@ -231,8 +243,12 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
     ).first()
 
     if sess_rec:
-        setattr(sess_rec, "last_used_at", now)
-        db.commit()
+        if not sess_rec.last_used_at or (now - sess_rec.last_used_at).total_seconds() > 60:
+            try:
+                setattr(sess_rec, "last_used_at", now)
+                db.commit()
+            except Exception:
+                db.rollback()
         user = db.query(User).filter(User.id == sess_rec.user_id, User.is_active == True).first()
         return user
 

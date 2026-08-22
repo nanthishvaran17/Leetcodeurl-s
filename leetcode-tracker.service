@@ -1,0 +1,16 @@
+[Unit]
+Description=Nandha LeetCode Institutional Tracker Autopilot Daemon
+After=network.target postgresql.service redis.service
+
+[Service]
+Type=simple
+User=leetcode_admin
+WorkingDirectory=/opt/nandha_leetcode_intelligence
+ExecStart=/opt/nandha_leetcode_intelligence/venv/bin/python sunday_autopilot_engine.py
+Restart=always
+RestartSec=10
+Environment=PYTHONUNBUFFERED=1
+Environment=TZ=Asia/Kolkata
+
+[Install]
+WantedBy=multi-user.target

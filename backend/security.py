@@ -261,13 +261,14 @@ def extract_current_user_optional(request: Request, db: Session) -> Optional[Use
 def require_security_access(
     required_roles: Optional[List[str]] = None,
     resource_name: Optional[str] = None,
-    dept_scoped: bool = False
+    dept_scoped: bool = False,
+    faculty_scoped: bool = False
 ):
     """
-    FastAPI Dependency Factory that enforces server-side authentication & role authorization
-    BEFORE executing database queries or endpoints.
+    FastAPI Dependency Factory that enforces server-side authentication, role authorization,
+    department isolation, and faculty-student ownership boundaries BEFORE executing queries.
     
-    Fail closed: Does not trust any frontend role claim.
+    Fail closed: Does not trust any frontend role claim or query param.
     """
     async def dependency(request: Request, db: Session = Depends(get_db)) -> User:
         nonlocal resource_name
@@ -335,12 +336,21 @@ def require_security_access(
                 detail="Access restricted: Insufficient role permissions."
             )
 
-        # 3. DEPARTMENT SCOPE CHECK FOR PROFESSOR / HOD / FACULTY
+        # 3. DEPARTMENT SCOPE CHECK FOR HOD / FACULTY / STAFF
         if dept_scoped and user_role_clean in ["hod", "faculty", "staff", "professor"]:
-            req_dept = request.query_params.get("dept") or request.query_params.get("department")
+            req_dept = request.query_params.get("dept") or request.query_params.get("department") or request.query_params.get("dept_id")
             if req_dept and user.department_id:
                 user_dept_code = user.department.code if user.department else None
-                if user_dept_code and req_dept.upper() != user_dept_code.upper() and req_dept.upper() != "ALL":
+                user_dept_id = str(user.department_id)
+                req_dept_str = str(req_dept).strip()
+
+                is_match = (
+                    req_dept_str.upper() == "ALL" or
+                    (user_dept_code and req_dept_str.upper() == user_dept_code.upper()) or
+                    (req_dept_str == user_dept_id)
+                )
+
+                if not is_match:
                     log_security_access_event(
                         db, request, user, action="ACCESS_RESOURCE",
                         resource=target_resource, result="BLOCKED",
@@ -354,6 +364,27 @@ def require_security_access(
                         detail="Access restricted: You are only authorized to access data within your assigned department."
                     )
 
+        # 4. FACULTY-STUDENT OWNERSHIP CHECK
+        if faculty_scoped and user_role_clean in ["faculty", "staff"]:
+            student_id_param = request.path_params.get("student_id") or request.query_params.get("student_id")
+            if student_id_param:
+                try:
+                    sid = int(student_id_param)
+                    from backend.services.faculty_assignment_service import faculty_assignment_service
+                    assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, user.id)
+                    if sid not in assigned_ids:
+                        log_security_access_event(
+                            db, request, user, action="ACCESS_RESOURCE",
+                            resource=target_resource, result="BLOCKED",
+                            denial_reason="STUDENT_NOT_ASSIGNED_TO_FACULTY", session_id=session_id
+                        )
+                        raise HTTPException(
+                            status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Access restricted: This student is not assigned to your mentorship allocation (Max 20 students)."
+                        )
+                except ValueError:
+                    pass
+
         log_security_access_event(
             db, request, user, action="ACCESS_RESOURCE",
             resource=target_resource, result="SUCCESS", session_id=session_id
@@ -361,6 +392,14 @@ def require_security_access(
         return user
 
     return dependency
+
+def require_role(*allowed_roles: str, dept_scoped: bool = False, faculty_scoped: bool = False):
+    """Convenience wrapper for require_security_access with role list."""
+    return require_security_access(
+        required_roles=list(allowed_roles),
+        dept_scoped=dept_scoped,
+        faculty_scoped=faculty_scoped
+    )
 
 def get_current_user_optional(request: Request, db: Session = Depends(get_db)) -> Optional[User]:
     """Safely resolves current authenticated user from HttpOnly cookie or Bearer header."""
