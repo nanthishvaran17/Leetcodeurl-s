@@ -53,20 +53,8 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         if sorted_s:
             top_college_ranker = sorted_s[0].name
 
-    if current_session:
-        snapshots = db.query(WeeklySessionSnapshot).filter(WeeklySessionSnapshot.session_id == current_session.id).all()
-        if snapshots:
-            for sn in snapshots:
-                if sn.status == "STARTED" or (sn.problems_added or 0) > 0:
-                    active_students += 1
-                else:
-                    not_started_students += 1
-        else:
-            active_students = sum(1 for s in students if s.stats and (s.stats.total_solved or 0) > 0)
-            not_started_students = total_students - active_students
-    else:
-        active_students = sum(1 for s in students if s.stats and (s.stats.total_solved or 0) > 0)
-        not_started_students = total_students - active_students
+    active_students = sum(1 for s in students if s.stats and (s.stats.total_solved or 0) > 0)
+    not_started_students = total_students - active_students
 
     avg_solved = round(total_problems / total_students, 1) if total_students > 0 else 0.0
     
