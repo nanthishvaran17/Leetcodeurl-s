@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 from collections import defaultdict
 
 from backend.database import get_db
-from backend.models import Student, StudentStatSnapshot, Department, Section, LeetCodeProfileStats
+from backend.models import Student, StudentStatSnapshot, Department
 from backend.schemas import StudentStatSnapshotOut, ImproverOut
 
 router = APIRouter(prefix="/api", tags=["History & Growth Intelligence"])
