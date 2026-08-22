@@ -27,6 +27,9 @@ interface Improver {
   year_level: string;
   section_name?: string;
   total_solved: number;
+  easy_solved: number;
+  medium_solved: number;
+  hard_solved: number;
   delta_solved: number;
   delta_easy: number;
   delta_medium: number;
@@ -41,6 +44,12 @@ interface CollegeDelta {
   delta_easy: number;
   delta_medium: number;
   delta_hard: number;
+  total_students: number;
+  active_students: number;
+  total_solved: number;
+  easy_solved: number;
+  medium_solved: number;
+  hard_solved: number;
 }
 
 interface StatSnapshot {
@@ -70,8 +79,11 @@ export const GrowthIntelligencePage: React.FC = () => {
   const [yearFilter, setYearFilter] = useState<string>('ALL');
   const [improvers, setImprovers] = useState<Improver[]>([]);
   const [collegeDelta, setCollegeDelta] = useState<CollegeDelta | null>(null);
+  const [departments, setDepartments] = useState<Array<{ id: number; code: string; name: string }>>([]);
+  const [availableYears, setAvailableYears] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Time Machine state
   const [searchStudentId, setSearchStudentId] = useState<string>('');
@@ -85,34 +97,57 @@ export const GrowthIntelligencePage: React.FC = () => {
     fetchGrowthData();
   }, [period, deptFilter, yearFilter]);
 
+  useEffect(() => {
+    api.get('/growth/options')
+      .then((response) => {
+        setDepartments(response.data?.departments || []);
+        setAvailableYears(response.data?.years || []);
+      })
+      .catch((err) => console.error('Growth filter options fetch error:', err));
+  }, []);
+
   const fetchGrowthData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const [impRes, deltaRes] = await Promise.all([
         api.get(`/growth/improvers?period=${period}&limit=25&dept=${deptFilter}&year=${yearFilter}`),
         api.get(`/growth/college-delta?period=${period}&dept=${deptFilter}&year=${yearFilter}`)
       ]);
-      setImprovers(impRes.data || []);
+      setImprovers(sortImprovers(impRes.data || []));
       setCollegeDelta(deltaRes.data || null);
     } catch (err) {
       console.error("Growth data fetch error:", err);
+      setError('Unable to load student analytics. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const sortImprovers = (data: Improver[]): Improver[] => [...data].sort((left, right) =>
+    right.delta_solved - left.delta_solved ||
+    right.delta_hard - left.delta_hard ||
+    right.delta_medium - left.delta_medium ||
+    right.delta_easy - left.delta_easy ||
+    right.delta_rating - left.delta_rating ||
+    right.total_solved - left.total_solved ||
+    left.name.localeCompare(right.name)
+  );
+
   const handleManualRefresh = async () => {
     setIsRefreshing(true);
+    setError(null);
     try {
       const [impRes, deltaRes] = await Promise.all([
         api.get(`/growth/improvers?period=${period}&limit=25&dept=${deptFilter}&year=${yearFilter}`),
         api.get(`/growth/college-delta?period=${period}&dept=${deptFilter}&year=${yearFilter}`)
       ]);
-      setImprovers(impRes.data || []);
+      setImprovers(sortImprovers(impRes.data || []));
       setCollegeDelta(deltaRes.data || null);
       notify.success('Growth Telemetry Refreshed', 'Successfully synchronized 100% verified solve deltas and performance velocity.', { category: 'GROWTH ENGINE' });
     } catch (err) {
       console.error("Refresh error:", err);
+      setError('Unable to load student analytics. Please try again.');
       notify.error('Refresh Failed', 'Unable to reach backend telemetry engine.', { category: 'GROWTH ENGINE' });
     } finally {
       setIsRefreshing(false);
@@ -173,19 +208,12 @@ export const GrowthIntelligencePage: React.FC = () => {
               onChange={(e) => setDeptFilter(e.target.value)}
               className="px-3.5 py-2 rounded-2xl bg-navy-900/90 text-white text-xs font-bold border border-gray-700/80 backdrop-blur-md shadow-inner outline-none cursor-pointer hover:border-brand-500 max-w-full"
             >
-              <option value="ALL">All Departments (12 Cohorts)</option>
-              <option value="CSE">Computer Science and Engineering (CSE)</option>
-              <option value="CSE(CS)">CSE (Cyber Security)</option>
-              <option value="CSE(IOT)">CSE (Internet of Things)</option>
-              <option value="IT">Information Technology (IT)</option>
-              <option value="AIDS">Artificial Intelligence & Data Science (AIDS)</option>
-              <option value="AIML">Artificial Intelligence & Machine Learning (AIML)</option>
-              <option value="ECE">Electronics and Communication Engineering (ECE)</option>
-              <option value="EEE">Electrical and Electronics Engineering (EEE)</option>
-              <option value="AGRI">Agricultural Engineering (AGRI)</option>
-              <option value="MECH">Mechanical Engineering (MECH)</option>
-              <option value="CIVIL">Civil Engineering (CIVIL)</option>
-              <option value="BME">Biomedical Engineering (BME)</option>
+              <option value="ALL">All Departments</option>
+              {departments.map((department) => (
+                <option key={department.id} value={department.code}>
+                  {department.code} {department.name ? `(${department.name})` : ''}
+                </option>
+              ))}
             </select>
 
             <select
@@ -194,9 +222,9 @@ export const GrowthIntelligencePage: React.FC = () => {
               className="px-3.5 py-2 rounded-2xl bg-navy-900/90 text-white text-xs font-bold border border-gray-700/80 backdrop-blur-md shadow-inner outline-none cursor-pointer hover:border-brand-500 max-w-full"
             >
               <option value="ALL">All Academic Years</option>
-              <option value="II">II Year</option>
-              <option value="III">III Year</option>
-              <option value="IV">IV Year</option>
+              {availableYears.map((year) => (
+                <option key={year} value={year}>{year} Year</option>
+              ))}
             </select>
 
             <div className="flex items-center space-x-1 bg-navy-900/90 p-1.5 rounded-2xl border border-gray-700/80 shadow-inner backdrop-blur-md">
@@ -229,6 +257,12 @@ export const GrowthIntelligencePage: React.FC = () => {
         </div>
       </div>
 
+      {error && (
+        <div className="rounded-2xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
+          {error}
+        </div>
+      )}
+
       {/* College Aggregate Delta Metrics KPI Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         
@@ -251,7 +285,7 @@ export const GrowthIntelligencePage: React.FC = () => {
             <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></span>
           </div>
           <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
-            +{collegeDelta?.delta_easy ?? 0}
+            +{collegeDelta?.easy_solved ?? 0}
           </div>
           <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Foundation skill building</p>
         </div>
@@ -262,7 +296,7 @@ export const GrowthIntelligencePage: React.FC = () => {
             <span className="w-3 h-3 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50"></span>
           </div>
           <div className="text-3xl font-black text-amber-600 dark:text-amber-400">
-            +{collegeDelta?.delta_medium ?? 0}
+            +{collegeDelta?.medium_solved ?? 0}
           </div>
           <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Interview readiness problems</p>
         </div>
@@ -273,7 +307,7 @@ export const GrowthIntelligencePage: React.FC = () => {
             <span className="w-3 h-3 rounded-full bg-rose-500 shadow-sm shadow-rose-500/50"></span>
           </div>
           <div className="text-3xl font-black text-rose-600 dark:text-rose-400">
-            +{collegeDelta?.delta_hard ?? 0}
+            +{collegeDelta?.hard_solved ?? 0}
           </div>
           <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Advanced DSA mastery</p>
         </div>
@@ -299,7 +333,7 @@ export const GrowthIntelligencePage: React.FC = () => {
           </div>
 
           <span className="px-4 py-1.5 rounded-2xl bg-gray-100 dark:bg-navy-950 text-gray-800 dark:text-gray-200 font-black text-xs border border-gray-200 dark:border-gray-800 self-start md:self-auto">
-            {improvers.length} Active Solvers in Period
+            {collegeDelta?.active_students ?? 0} Active Solvers in Period
           </span>
         </div>
 
@@ -310,7 +344,7 @@ export const GrowthIntelligencePage: React.FC = () => {
           </div>
         ) : improvers.length === 0 ? (
           <div className="text-center py-16 text-gray-500 dark:text-gray-400 text-xs font-semibold bg-gray-50 dark:bg-navy-950/40 rounded-2xl border border-dashed border-gray-300 dark:border-gray-800">
-            No solve delta recorded for this period yet. Trigger a sync or check back after students solve problems!
+            No activity found for the selected filters.
           </div>
         ) : (
           <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-gray-800">
@@ -381,13 +415,13 @@ export const GrowthIntelligencePage: React.FC = () => {
                     <td className="py-4 px-4">
                       <div className="flex items-center space-x-2 text-xs font-black">
                         <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                          +{imp.delta_easy} E
+                          {imp.easy_solved} E (+{imp.delta_easy})
                         </span>
                         <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                          +{imp.delta_medium} M
+                          {imp.medium_solved} M (+{imp.delta_medium})
                         </span>
                         <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
-                          +{imp.delta_hard} H
+                          {imp.hard_solved} H (+{imp.delta_hard})
                         </span>
                       </div>
                     </td>
