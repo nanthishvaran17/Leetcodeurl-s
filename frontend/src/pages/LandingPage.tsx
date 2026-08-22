@@ -143,7 +143,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     const checkInitialSync = async () => {
       try {
         const statusData = await getSyncStatus();
-        const totalCount = statusData.total_students || statusData.total || 300;
+        const totalCount = statusData.total_students || statusData.total || 1395;
         if (statusData.is_running) {
           setSyncProgress({
             total: totalCount,
@@ -157,16 +157,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             last_sync_time: statusData.last_sync_timestamp
           });
           startPollingProgress();
-        } else if (statusData.status === 'COMPLETED' || statusData.operation === 'COMPLETED') {
-          const compProcessed = statusData.students_processed ?? statusData.completed ?? totalCount;
+        } else {
           setSyncProgress({
             total: totalCount,
-            processed: compProcessed,
-            successful: summaryData?.verified_profiles ?? statusData.successful ?? 244,
-            failed: summaryData?.failed_sync ?? statusData.failed ?? 37,
-            pending_usernames: summaryData?.pending_sync ?? statusData.pending_usernames ?? 19,
-            current_student: undefined,
-            current_username: undefined,
+            processed: totalCount,
+            successful: statusData.successful ?? totalCount,
+            failed: statusData.failed ?? 0,
+            pending_usernames: statusData.pending_usernames ?? 0,
             is_running: false,
             last_sync_time: statusData.last_sync_timestamp,
             triggered_by: statusData.triggered_by || statusData.last_triggered_by
