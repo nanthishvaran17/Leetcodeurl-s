@@ -381,33 +381,33 @@ def get_or_create_custom_session(date: str = Query(..., description="Date YYYY-M
 def list_weekly_sessions(db: Session = Depends(get_db)):
     """
     Retrieves list of all canonical historical weekly contest sessions.
-    Executes root-level session reconciliation to guarantee zero corrupt legacy sessions.
+    Pure read-only query optimized for sub-millisecond responses.
     """
     try:
-        seed_institutional_historical_sessions(db)
+        sessions = db.query(WeeklySession).all()
+        sessions.sort(
+            key=lambda s: int(re.search(r'\d+', s.contest_name).group(0)) if (s.contest_name and re.search(r'\d+', s.contest_name)) else s.id,
+            reverse=True
+        )
+
+        return [{
+            "sessionId": s.id,
+            "sessionCode": s.session_code,
+            "contestName": s.contest_name,
+            "sessionDate": s.session_date,
+            "status": s.status,
+            "totalStudents": s.total_students,
+            "officialParticipants": s.official_participants,
+            "notParticipated": s.not_participated,
+            "virtualParticipants": s.virtual_participants,
+            "failedVerification": s.failed_verification,
+            "finalizedAt": s.finalized_at.isoformat() if s.finalized_at else None
+        } for s in sessions]
     except Exception as e:
+        db.rollback()
         from backend.logger import logger
-        logger.warning(f"Session reconciliation warning: {e}")
-
-    sessions = db.query(WeeklySession).all()
-    sessions.sort(
-        key=lambda s: int(re.search(r'\d+', s.contest_name).group(0)) if re.search(r'\d+', s.contest_name or "") else s.id,
-        reverse=True
-    )
-
-    return [{
-        "sessionId": s.id,
-        "sessionCode": s.session_code,
-        "contestName": s.contest_name,
-        "sessionDate": s.session_date,
-        "status": s.status,
-        "totalStudents": s.total_students,
-        "officialParticipants": s.official_participants,
-        "notParticipated": s.not_participated,
-        "virtualParticipants": s.virtual_participants,
-        "failedVerification": s.failed_verification,
-        "finalizedAt": s.finalized_at.isoformat() if s.finalized_at else None
-    } for s in sessions]
+        logger.error(f"Error querying weekly sessions: {e}")
+        return []
 
 def normalize_department_filter(target_dept: Optional[str]) -> Optional[str]:
     if not target_dept:

@@ -526,11 +526,33 @@ def seed_institutional_historical_sessions(db: Session):
             sessions_by_num[c_num].append((res_count, sess))
             continue
 
-        # If not a valid Sunday contest session, purge it!
-        logger.info(f"Purging non-canonical session ID {sess.id} ('{sess.contest_name}', date {sess.session_date})")
-        db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == sess.id).delete(synchronize_session=False)
-        db.delete(sess)
+def _safe_purge_or_merge_session(db: Session, old_sess_id: int, target_sess_id: Optional[int] = None):
+    """Safely cascades or reassigns all child table foreign keys before deleting duplicate session."""
+    try:
+        if target_sess_id:
+            db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == old_sess_id).update({WeeklyPublicResult.session_id: target_sess_id}, synchronize_session=False)
+            db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == old_sess_id).update({WeeklyVirtualResult.session_id: target_sess_id}, synchronize_session=False)
+            db.query(WeeklyContestErrorLog).filter(WeeklyContestErrorLog.session_id == old_sess_id).update({WeeklyContestErrorLog.session_id: target_sess_id}, synchronize_session=False)
+            db.query(OfficialWeeklySnapshot).filter(OfficialWeeklySnapshot.session_id == old_sess_id).update({OfficialWeeklySnapshot.session_id: target_sess_id}, synchronize_session=False)
+            db.query(StudentContestSnapshot).filter(StudentContestSnapshot.session_id == old_sess_id).update({StudentContestSnapshot.session_id: target_sess_id}, synchronize_session=False)
+        else:
+            db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == old_sess_id).delete(synchronize_session=False)
+            db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == old_sess_id).delete(synchronize_session=False)
+            db.query(WeeklyContestErrorLog).filter(WeeklyContestErrorLog.session_id == old_sess_id).delete(synchronize_session=False)
+            db.query(OfficialWeeklySnapshot).filter(OfficialWeeklySnapshot.session_id == old_sess_id).delete(synchronize_session=False)
+            db.query(StudentContestSnapshot).filter(StudentContestSnapshot.session_id == old_sess_id).delete(synchronize_session=False)
+        
+        old_sess = db.query(WeeklySession).filter(WeeklySession.id == old_sess_id).first()
+        if old_sess:
+            db.delete(old_sess)
         db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.warning(f"Safe session purge/merge note for session {old_sess_id}: {e}")
+
+        # If not a valid Sunday contest session, purge it safely!
+        logger.info(f"Purging non-canonical session ID {sess.id} ('{sess.contest_name}', date {sess.session_date})")
+        _safe_purge_or_merge_session(db, sess.id)
 
     # Step 2: For each canonical contest number, select the canonical session (highest result count)
     canonical_by_num = {}
@@ -554,15 +576,10 @@ def seed_institutional_historical_sessions(db: Session):
 
         canonical_by_num[c_num] = canonical_sess
 
-        # Merge & delete any remaining duplicate sessions for this c_num
+        # Merge & delete any remaining duplicate sessions for this c_num safely
         for _, dup_sess in s_list[1:]:
             logger.info(f"Merging duplicate session ID {dup_sess.id} into canonical ID {canonical_sess.id} for Contest {c_num}")
-            db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == dup_sess.id).update(
-                {WeeklyPublicResult.session_id: canonical_sess.id}, synchronize_session=False
-            )
-            db.commit()
-            db.delete(dup_sess)
-            db.commit()
+            _safe_purge_or_merge_session(db, dup_sess.id, target_sess_id=canonical_sess.id)
 
     # Step 3: Ensure canonical session exists for every target Sunday date
     for c_date in canonical_sunday_dates:
