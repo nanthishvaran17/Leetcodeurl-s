@@ -32,9 +32,11 @@ app = FastAPI(
     version="2.0.0"
 )
 
-# Health Endpoint for Render / Cloud Monitors & API Diagnostics
-@app.get("/health")
-@app.get("/api/health")
+# Health Endpoint for Render / Cloud Monitors (UptimeRobot HEAD & GET requests) & API Diagnostics
+@app.api_route("/health", methods=["GET", "HEAD"])
+@app.api_route("/api/health", methods=["GET", "HEAD"])
+@app.api_route("/", methods=["GET", "HEAD"])
+@app.api_route("/api", methods=["GET", "HEAD"])
 def health_check():
     return {
         "status": "healthy",
