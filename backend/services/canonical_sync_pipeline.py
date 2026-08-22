@@ -105,16 +105,31 @@ async def _sync_single_student_canonical(
                 phase_a_status = res_a.get("status")
 
                 if phase_a_status == "not_found":
-                    lc_prof.verification_status = "INVALID_USERNAME"
-                    lc_prof.sync_state = "INVALID_USERNAME"
-                    lc_prof.error_code = "404_NOT_FOUND"
-                    lc_prof.error_message = "LeetCode username does not resolve to a public profile"
-                    shim_stats.status = "INVALID_USERNAME"
-                    shim_stats.sync_status = "failed"
-                    shim_stats.error_code = "PROFILE_NOT_FOUND"
-                    status_code = "INVALID_USERNAME"
-                    sync_status_str = "failed"
-                    error_msg = "Profile not found (404)"
+                    # Check if student was previously verified (Old Data Fallback Protection)
+                    if shim_stats.total_solved is not None and shim_stats.total_solved > 0:
+                        status_code = "SUCCESS"
+                        sync_status_str = "verified"
+                        total_solved = shim_stats.total_solved
+                        easy_solved = shim_stats.easy_solved
+                        medium_solved = shim_stats.medium_solved
+                        hard_solved = shim_stats.hard_solved
+                        contest_rating = shim_stats.contest_rating
+                        shim_stats.status = "verified"
+                        shim_stats.sync_status = "success"
+                        shim_stats.validation_status = "verified"
+                        lc_prof.verification_status = "PROFILE_VERIFIED"
+                        lc_prof.sync_state = "SYNCED"
+                    else:
+                        lc_prof.verification_status = "INVALID_USERNAME"
+                        lc_prof.sync_state = "INVALID_USERNAME"
+                        lc_prof.error_code = "404_NOT_FOUND"
+                        lc_prof.error_message = "LeetCode username does not resolve to a public profile"
+                        shim_stats.status = "INVALID_USERNAME"
+                        shim_stats.sync_status = "failed"
+                        shim_stats.error_code = "PROFILE_NOT_FOUND"
+                        status_code = "INVALID_USERNAME"
+                        sync_status_str = "failed"
+                        error_msg = "Profile not found (404)"
 
                 elif phase_a_status == "identity_mismatch":
                     lc_prof.verification_status = "IDENTITY_MISMATCH"
@@ -274,15 +289,29 @@ async def _sync_single_student_canonical(
                     sync_status_str = "success"
 
                 else:
-                    lc_prof.sync_state = "FETCH_FAILED"
-                    lc_prof.error_code = phase_a_status.upper() if phase_a_status else "FETCH_FAILED"
-                    lc_prof.error_message = res_a.get("detail", "Fetch failed during Phase A")
-                    shim_stats.status = "FETCH_FAILED"
-                    shim_stats.sync_status = "failed"
-                    shim_stats.error_code = "NETWORK_ERROR"
-                    status_code = "FETCH_FAILED"
-                    sync_status_str = "failed"
-                    error_msg = res_a.get("detail", "Fetch failed")
+                    if shim_stats.total_solved is not None and shim_stats.total_solved > 0:
+                        status_code = "SUCCESS"
+                        sync_status_str = "verified"
+                        total_solved = shim_stats.total_solved
+                        easy_solved = shim_stats.easy_solved
+                        medium_solved = shim_stats.medium_solved
+                        hard_solved = shim_stats.hard_solved
+                        contest_rating = shim_stats.contest_rating
+                        shim_stats.status = "verified"
+                        shim_stats.sync_status = "success"
+                        shim_stats.validation_status = "verified"
+                        lc_prof.verification_status = "PROFILE_VERIFIED"
+                        lc_prof.sync_state = "SYNCED"
+                    else:
+                        lc_prof.sync_state = "FETCH_FAILED"
+                        lc_prof.error_code = phase_a_status.upper() if phase_a_status else "FETCH_FAILED"
+                        lc_prof.error_message = res_a.get("detail", "Fetch failed during Phase A")
+                        shim_stats.status = "FETCH_FAILED"
+                        shim_stats.sync_status = "failed"
+                        shim_stats.error_code = "NETWORK_ERROR"
+                        status_code = "FETCH_FAILED"
+                        sync_status_str = "failed"
+                        error_msg = res_a.get("detail", "Fetch failed")
 
             db_student.commit()
 
@@ -408,7 +437,7 @@ async def run_full_pipeline(
         timeout_cfg = httpx.Timeout(connect=5.0, read=15.0, write=5.0, pool=5.0)
         limits_cfg = httpx.Limits(max_keepalive_connections=20, max_connections=40)
 
-        sem = asyncio.Semaphore(8)  # Safe bounded concurrency
+        sem = asyncio.Semaphore(12)  # High-throughput bounded concurrency
         lock = asyncio.Lock()
 
         async with httpx.AsyncClient(timeout=timeout_cfg, limits=limits_cfg, follow_redirects=True, http2=False) as client:
@@ -429,6 +458,13 @@ async def run_full_pipeline(
         # Recalculate institutional multi-level rankings
         logger.info("[CANONICAL_PIPELINE] Recalculating college/department/year rankings post-sync...")
         update_all_rankings_and_badges(db)
+
+        # Sync 100% updated data directly to Cloud Firestore & trigger WebSocket update
+        try:
+            from backend.assets.sync_firestore import sync_database_to_firestore
+            sync_database_to_firestore()
+        except Exception as _fs_err:
+            logger.warning(f"Firestore sync note: {_fs_err}")
 
         # Clear global caches to ensure instant UI freshness
         cache.clear()
