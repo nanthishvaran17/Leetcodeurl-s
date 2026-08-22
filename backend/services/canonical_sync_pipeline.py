@@ -434,10 +434,10 @@ async def run_full_pipeline(
         if progress_callback and hasattr(progress_callback, "start"):
             progress_callback.start(effective_job_id, total_students)
 
-        timeout_cfg = httpx.Timeout(connect=5.0, read=15.0, write=5.0, pool=5.0)
-        limits_cfg = httpx.Limits(max_keepalive_connections=20, max_connections=40)
+        timeout_cfg = httpx.Timeout(connect=2.5, read=5.0, write=2.5, pool=2.5)
+        limits_cfg = httpx.Limits(max_keepalive_connections=150, max_connections=300)
 
-        sem = asyncio.Semaphore(12)  # High-throughput bounded concurrency
+        sem = asyncio.Semaphore(100)  # Turbo Hyper-speed 100x parallel workers
         lock = asyncio.Lock()
 
         async with httpx.AsyncClient(timeout=timeout_cfg, limits=limits_cfg, follow_redirects=True, http2=False) as client:

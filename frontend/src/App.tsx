@@ -32,11 +32,20 @@ import { StudentData } from './components/LeaderboardTable';
 import api, { logActivity } from './services/api';
 import { getCachedSummary, saveCachedSummary } from './data/canonicalRoster';
 
+import { HallOfFameKioskPage } from './pages/HallOfFameKioskPage';
+import { AccreditationStudioPage } from './pages/AccreditationStudioPage';
 import { useAuth } from './context/AuthContext';
 
 export const App: React.FC = () => {
-  // Direct Public Certificate Verification Route Interceptor
+  // Direct Public Route Interceptors
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+  if (pathname === '/hall-of-fame' || pathname === '/kiosk' || pathname === '/tv') {
+    return <HallOfFameKioskPage />;
+  }
+  if (pathname === '/accreditation-studio' || pathname === '/accreditation' || pathname === '/naac-nba') {
+    return <AccreditationStudioPage />;
+  }
+
   const verifyPrefixes = ['/verify/', '/verify-certificate/', '/certificate/verify/', '/certificates/verify/', '/verify-contest/'];
   const matchedPrefix = verifyPrefixes.find(p => pathname.startsWith(p));
   if (matchedPrefix) {

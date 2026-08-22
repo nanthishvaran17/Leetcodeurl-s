@@ -888,6 +888,22 @@ def sync_single_student(student_id: int, db: Session, force_refresh: bool = True
         res = loop.run_until_complete(fetch_leetcode_profile(student.username, force_refresh=force_refresh))
 
         job_id = f"SINGLE-{student_id}-{int(datetime.datetime.utcnow().timestamp())}"
+        job = db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
+        if not job:
+            job = SyncJob(
+                job_id=job_id,
+                job_type="SINGLE_STUDENT",
+                triggered_by="single_sync",
+                status="RUNNING",
+                total_records=1,
+                processed_count=0,
+                success_count=0,
+                error_count=0,
+                started_at=datetime.datetime.utcnow()
+            )
+            db.add(job)
+            db.commit()
+
         is_success, is_partial, is_error = _process_single_student_sync(db, job_id, student, res)
 
         update_all_rankings_and_badges(db)

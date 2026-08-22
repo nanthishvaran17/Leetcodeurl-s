@@ -1,5 +1,5 @@
 [Unit]
-Description=Nandha LeetCode Institutional Tracker Autopilot Daemon
+Description=Nandha LeetCode Institutional Tracker & Sunday Autopilot Engine
 After=network.target postgresql.service redis.service
 
 [Service]

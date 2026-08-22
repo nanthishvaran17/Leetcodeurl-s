@@ -1,7 +1,7 @@
 import { StudentData } from '../components/LeaderboardTable';
 
 export type NormalizedDepartment = string;
-export type NormalizedAcademicYear = 'all' | 'I' | 'II' | 'III' | 'IV' | string;
+export type NormalizedAcademicYear = 'all' | 'II' | 'III' | 'IV' | string;
 export type PerformanceRangeKey = 'all' | '500_plus' | '251_500' | '101_250' | '1_100' | 'not_started';
 export type SortByKey = 'top_solved' | 'low_solved' | 'name_asc' | 'name_desc' | 'streak' | 'rating' | string;
 
@@ -154,8 +154,8 @@ export function matchesNameSearch(student: StudentData, search: string): boolean
   const name = String(student.name || '').toLowerCase();
   const regNo = String(student.reg_no || '').toLowerCase();
   const username = String(student.username || (student as any).leetcode_username || '').toLowerCase();
-  const deptStr = typeof student.department === 'string' 
-    ? String(student.department).toLowerCase() 
+  const deptStr = typeof student.department === 'string'
+    ? String(student.department).toLowerCase()
     : String((student.department?.name || '') + ' ' + (student.department?.code || '')).toLowerCase();
   const batchStr = String((student as any).batch || '').toLowerCase();
 

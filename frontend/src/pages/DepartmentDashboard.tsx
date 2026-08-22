@@ -61,7 +61,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   const fetchStudents = async () => {
     try {
       const res = await api.get('/students/leaderboard-fast');
-      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+      if (res.data && Array.isArray(res.data)) {
         setStudents(res.data);
       } else {
         const res2 = await api.get('/students');
@@ -71,6 +71,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
       }
     } catch (err) {
       console.error("fetchStudents error:", err);
+      setStudents([]);
     }
   };
 

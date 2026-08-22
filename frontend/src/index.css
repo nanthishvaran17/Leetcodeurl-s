@@ -39,12 +39,16 @@
 }
 
 .card-ai-control {
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  content-visibility: auto;
+  contain-intrinsic-size: 380px;
+  will-change: transform;
+  transform: translateZ(0);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .card-ai-control:hover {
-  transform: translateY(-3px);
+  transform: translateY(-3px) translateZ(0);
   border-color: rgba(14, 165, 233, 0.35);
   box-shadow: 0 16px 32px -8px rgba(14, 165, 233, 0.12);
 }

@@ -31,11 +31,13 @@ elif db_url.startswith("sqlite:///./"):
         pass
     db_url = f"sqlite:///{db_path}"
 
+from sqlalchemy.pool import NullPool, QueuePool
+
 engine_kwargs = {}
 if "postgresql" in db_url or "postgres" in db_url:
     engine_kwargs.update({
-        "pool_size": 25,
-        "max_overflow": 35,
+        "pool_size": 50,
+        "max_overflow": 50,
         "pool_timeout": 60,
         "pool_pre_ping": True,
         "pool_recycle": 300,
@@ -49,6 +51,7 @@ if "postgresql" in db_url or "postgres" in db_url:
     })
 else:
     engine_kwargs.update({
+        "poolclass": NullPool,
         "connect_args": {"check_same_thread": False, "timeout": 60}
     })
 

@@ -27,7 +27,7 @@ from sqlalchemy import desc, asc, nullslast
 def get_leaderboard_fast(
     dept_id: Optional[int] = None,
     year_level: Optional[str] = None,
-    limit: Optional[int] = Query(None, ge=1, le=10000),
+    limit: Optional[int] = None,
     db: Session = Depends(get_db)
 ):
     """
@@ -106,7 +106,7 @@ def get_leaderboard_fast(
 
     # Sort by solved desc for leaderboard with limit
     query = query.order_by(nullslast(desc(LeetCodeProfileStats.total_solved)), Student.name.asc())
-    if limit:
+    if isinstance(limit, int) and limit > 0:
         query = query.limit(limit)
     students = query.all()
 

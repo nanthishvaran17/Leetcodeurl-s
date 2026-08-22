@@ -90,9 +90,9 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         countdown_sec = int((next_sunday - now_ist).total_seconds())
         session_phase = "SCHEDULED_NEXT_WEEK"
 
-    verified_profiles = sum(1 for s in students if s.stats and (s.stats.total_solved is not None or s.stats.sync_status in ('success', 'OK', 'verified', 'stale')))
-    pending_sync = sum(1 for s in students if not s.stats or (s.stats.sync_status in ('pending', 'not_started') and s.stats.total_solved is None))
-    failed_sync = sum(1 for s in students if s.stats and s.stats.sync_status == 'failed' and s.stats.total_solved is None)
+    verified_profiles = sum(1 for s in students if s.stats and s.stats.sync_status in ('success', 'OK', 'verified', 'stale') and (s.stats.total_solved or 0) > 0)
+    pending_sync = sum(1 for s in students if not s.stats or s.stats.sync_status in ('pending', 'not_started') or (s.stats.total_solved or 0) == 0)
+    failed_sync = sum(1 for s in students if s.stats and s.stats.sync_status in ('failed', 'mismatch', 'MISSING LINK'))
 
     resp = {
         "total_students": int(total_students),
