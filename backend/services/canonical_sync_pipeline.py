@@ -173,6 +173,27 @@ async def _sync_single_student_canonical(
                     shim_stats.last_successful_sync = now_dt
                     shim_stats.last_verified_at = now_dt
 
+                    # Phase A.1: Calendar & Activity Streaks
+                    streak_count = data.get("streak")
+                    total_active_days = data.get("total_active_days")
+                    cal_json = data.get("submission_calendar_json")
+
+                    lc_activity = db_student.query(LeetCodeActivity).filter(LeetCodeActivity.student_id == st.id).first()
+                    if not lc_activity:
+                        lc_activity = LeetCodeActivity(student_id=st.id)
+                        db_student.add(lc_activity)
+
+                    if streak_count is not None:
+                        lc_activity.current_streak = streak_count
+                        lc_activity.longest_streak = max(lc_activity.longest_streak or 0, streak_count)
+                        shim_stats.max_streak = streak_count
+                    if total_active_days is not None:
+                        lc_activity.total_active_days = total_active_days
+                        shim_stats.active_days = total_active_days
+                    if cal_json:
+                        lc_activity.submission_calendar_json = cal_json
+                    lc_activity.fetched_at = now_dt
+
                     # Badges
                     for b in data.get("badges", []):
                         badge_id = b.get("badge_id")
@@ -305,6 +326,8 @@ async def _sync_single_student_canonical(
                         "medium_solved": medium_solved,
                         "hard_solved": hard_solved,
                         "contest_rating": contest_rating,
+                        "streak_count": streak_count if 'streak_count' in locals() and streak_count is not None else 0,
+                        "total_active_days": total_active_days if 'total_active_days' in locals() and total_active_days is not None else 0,
                         "status": status_code,
                         "sync_status": sync_status_str
                     },

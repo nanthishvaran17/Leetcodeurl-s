@@ -162,15 +162,17 @@ def get_leaderboard_fast(
         contest_rating = round(s.contest_rating, 1) if (is_verified and s and s.contest_rating) else None
 
         streak = 0
-        if st.lc_activity:
-            streak = st.lc_activity.current_streak or 0
+        if st.lc_activity and st.lc_activity.current_streak is not None:
+            streak = st.lc_activity.current_streak
+        elif s and s.max_streak is not None:
+            streak = s.max_streak
 
         prog = prog_map.get(st.id)
         college_rank = prog.college_rank if (prog and is_verified) else None
         dept_rank = prog.dept_rank if (prog and is_verified) else None
         weekly_progress = prog.weekly_progress if (prog and is_verified) else 0
-        if not st.lc_activity and prog:
-            streak = prog.streak_count if is_verified else 0
+        if streak == 0 and prog and is_verified:
+            streak = prog.streak_count or 0
 
         # Contest status — priority: rating history > public result
         contest_status = "NOT_ATTENDED"
@@ -456,10 +458,14 @@ def get_students(
             st_out.profile_url = f"https://leetcode.com/u/{st.username}/" if (is_verified and st.username) else None
             st_out.sync_state = "SYNCED" if is_verified else ("INVALID_USERNAME" if is_invalid else "PENDING_USERNAME")
 
-        if st.lc_activity:
+        if st.lc_activity and st.lc_activity.current_streak is not None:
             st_out.streak_count = st.lc_activity.current_streak or 0
             st_out.longest_streak = st.lc_activity.longest_streak or 0
             st_out.total_active_days = st.lc_activity.total_active_days or 0
+        elif st.stats and st.stats.max_streak is not None:
+            st_out.streak_count = st.stats.max_streak
+            st_out.longest_streak = st.stats.max_streak
+            st_out.total_active_days = st.stats.active_days or 0
 
         latest_prog = prog_map.get(st.id)
         if latest_prog:
@@ -468,7 +474,7 @@ def get_students(
             st_out.year_rank = latest_prog.year_rank if is_verified else None
             st_out.section_rank = latest_prog.section_rank if is_verified else None
             st_out.weekly_progress = latest_prog.weekly_progress if is_verified else 0
-            if not st.lc_activity:
+            if (st_out.streak_count is None or st_out.streak_count == 0) and latest_prog.streak_count:
                 st_out.streak_count = latest_prog.streak_count if is_verified else 0
             st_out.consistency_score = latest_prog.consistency_score if is_verified else 0.0
             st_out.badge_list = latest_prog.badge_list or []

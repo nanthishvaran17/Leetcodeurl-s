@@ -626,6 +626,28 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
         st.contest_rating = contest_rating
         st.contest_global_ranking = global_ranking
 
+        streak_val = res.get("max_streak") or res.get("streak")
+        active_days_val = res.get("active_days") or res.get("total_active_days")
+        if streak_val is not None:
+            st.max_streak = streak_val
+        if active_days_val is not None:
+            st.active_days = active_days_val
+
+        # Sync LeetCodeActivity model
+        from backend.models import LeetCodeActivity
+        lc_act = db.query(LeetCodeActivity).filter(LeetCodeActivity.student_id == student.id).first()
+        if not lc_act:
+            lc_act = LeetCodeActivity(student_id=student.id)
+            db.add(lc_act)
+        if streak_val is not None:
+            lc_act.current_streak = streak_val
+            lc_act.longest_streak = max(lc_act.longest_streak or 0, streak_val)
+        if active_days_val is not None:
+            lc_act.total_active_days = active_days_val
+        if res.get("submission_calendar_json"):
+            lc_act.submission_calendar_json = res.get("submission_calendar_json")
+        lc_act.fetched_at = now
+
         # Create historical StudentContestSnapshot if contest data is present
         if res.get("recent_contest_name"):
             q_solved_int = 0

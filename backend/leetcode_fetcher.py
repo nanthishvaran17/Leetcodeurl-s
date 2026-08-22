@@ -76,7 +76,7 @@ def extract_leetcode_username(url_or_username: Optional[str]) -> Tuple[Optional[
 
 GRAPHQL_URL = "https://leetcode.com/graphql"
 
-# ── PROFILE + STATS + BADGES + LANGUAGES (Phase A) ─────────────────────────
+# ── PROFILE + STATS + BADGES + LANGUAGES + CALENDAR (Phase A) ─────────────
 USER_PROFILE_QUERY = """
 query userPublicProfile($username: String!) {
   matchedUser(username: $username) {
@@ -90,6 +90,11 @@ query userPublicProfile($username: String!) {
       company
       countryName
       reputation
+    }
+    userCalendar {
+      streak
+      totalActiveDays
+      submissionCalendar
     }
     submitStats: submitStatsGlobal {
       acSubmissionNum {
@@ -677,6 +682,13 @@ async def fetch_profile_and_stats(
         for lp in languages_raw if isinstance(lp, dict)
     ]
 
+    # Calendar & streak
+    user_cal = matched.get("userCalendar") or {}
+    cal_streak = user_cal.get("streak")
+    cal_active_days = user_cal.get("totalActiveDays")
+    cal_sub_raw = user_cal.get("submissionCalendar")
+    cal_json_str = cal_sub_raw if isinstance(cal_sub_raw, str) else (json.dumps(cal_sub_raw) if cal_sub_raw else "{}")
+
     return {
         "status": "ok",
         "data": {
@@ -696,6 +708,10 @@ async def fetch_profile_and_stats(
             "hard_solved":            solved_map.get("Hard"),
             "badges":                 badges,
             "languages":              languages,
+            "streak":                 cal_streak,
+            "max_streak":             cal_streak,
+            "total_active_days":      cal_active_days,
+            "submission_calendar_json": cal_json_str,
         }
     }
 

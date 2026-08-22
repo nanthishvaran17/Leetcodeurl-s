@@ -35,6 +35,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
   const [expiresAtMs, setExpiresAtMs] = useState<number | null>(null);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [isShaking, setIsShaking] = useState(false);
+  const [isWakingServer, setIsWakingServer] = useState(false);
+
+  // Detect slow response (Render cloud cold-start)
+  useEffect(() => {
+    let t: any = null;
+    if (loading) {
+      t = setTimeout(() => {
+        setIsWakingServer(true);
+      }, 2500);
+    } else {
+      setIsWakingServer(false);
+    }
+    return () => clearTimeout(t);
+  }, [loading]);
 
   const digitRefs = [
     useRef<HTMLInputElement>(null),
@@ -113,7 +127,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
 
     setLoading(true);
     try {
-      const res = await api.post('/auth/send-otp', { email: cleanEmail }, { timeout: 15000 });
+      const res = await api.post('/auth/send-otp', { email: cleanEmail }, { timeout: 60000 });
       const masked = res.data.masked_email || maskEmail(cleanEmail);
       setSuccessMsg(`Verification email accepted by the email service. Check ${masked} inbox & spam folder.`);
       setRequestId(res.data.request_id || '');
@@ -135,11 +149,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       if (detailMsg?.includes('EMAIL_PROVIDER_NOT_CONFIGURED')) {
         setError('Verification code could not be sent. Email provider is not configured.');
       } else if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
-        setError('Verification code could not be sent. Request timed out. Please try again.');
+        setError('Server cold start took longer than expected. Cloud is waking up — please click again.');
       } else if (err.response?.status === 403) {
         setError(detailMsg || 'Access denied: Administrator email is not authorized.');
       } else if (err.response?.status === 502 || err.response?.status === 503) {
-        setError(detailMsg || 'Verification code could not be sent. Please try again.');
+        setError('Server is spinning up from idle state. Please wait 5 seconds and try again.');
       } else {
         setError(detailMsg || 'Verification code could not be sent. Please try again.');
       }
@@ -246,7 +260,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
         email: email.trim().toLowerCase(),
         otp: cleanOtp,
         request_id: requestId
-      });
+      }, { timeout: 60000 });
 
       login(res.data.access_token, res.data.user);
       setStep('success');
@@ -255,7 +269,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       }, 1000);
     } catch (err: any) {
       triggerShake();
-      setError(err.response?.data?.detail || 'Invalid verification code. Please check the code and try again.');
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        setError('Server is waking up from idle mode. Please click verify again.');
+      } else {
+        setError(err.response?.data?.detail || 'Invalid verification code. Please check the code and try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -270,7 +288,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
     const cleanPass = password.trim();
 
     try {
-      const res = await api.post('/auth/login', { username: cleanUser, password: cleanPass }, { timeout: 45000 });
+      const res = await api.post('/auth/login', { username: cleanUser, password: cleanPass }, { timeout: 60000 });
       login(res.data.access_token, res.data.user);
       setStep('success');
       setTimeout(() => {
@@ -281,7 +299,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       if (err.response?.data?.detail) {
         setError(err.response.data.detail);
       } else if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
-        setError('Server cold start in progress. Please wait a moment and click Sign In again.');
+        setError('Cloud server cold start in progress. The server is now awake — please click Sign In again!');
+      } else if (err.response?.status === 502 || err.response?.status === 503) {
+        setError('Server is spinning up. Please wait 5 seconds and click Sign In again.');
       } else {
         setError('Invalid username or password.');
       }
@@ -446,6 +466,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
         <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs flex items-center space-x-2 animate-fadeIn shadow-sm">
           <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
           <span className="font-semibold">{successMsg}</span>
+        </div>
+      )}
+
+      {/* Cloud Server Cold-Start Waking Banner */}
+      {loading && isWakingServer && (
+        <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 text-xs flex items-center space-x-2.5 animate-pulse shadow-sm">
+          <Sparkles className="w-4 h-4 shrink-0 text-amber-500 animate-spin" />
+          <span className="font-semibold text-[11px] leading-tight">
+            ⚡ <strong>Waking up 24/7 Cloud Server...</strong> (Takes ~15-25s on first connect. Please hold on...)
+          </span>
         </div>
       )}
 

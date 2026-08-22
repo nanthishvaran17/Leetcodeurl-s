@@ -83,10 +83,14 @@ def get_leaderboard(
             st_out.profile_url = f"https://leetcode.com/u/{st.username}/" if st.username else None
             st_out.sync_state = "SYNCED"
 
-        if st.lc_activity:
+        if st.lc_activity and st.lc_activity.current_streak is not None:
             st_out.streak_count = st.lc_activity.current_streak or 0
             st_out.longest_streak = st.lc_activity.longest_streak or 0
             st_out.total_active_days = st.lc_activity.total_active_days or 0
+        elif st.stats and st.stats.max_streak is not None:
+            st_out.streak_count = st.stats.max_streak
+            st_out.longest_streak = st.stats.max_streak
+            st_out.total_active_days = st.stats.active_days or 0
 
         latest_prog = prog_map.get(st.id)
         if latest_prog:
@@ -95,7 +99,7 @@ def get_leaderboard(
             st_out.year_rank = latest_prog.year_rank
             st_out.section_rank = latest_prog.section_rank
             st_out.weekly_progress = latest_prog.weekly_progress
-            if not st.lc_activity:
+            if (st_out.streak_count is None or st_out.streak_count == 0) and latest_prog.streak_count:
                 st_out.streak_count = latest_prog.streak_count
             st_out.consistency_score = latest_prog.consistency_score
             st_out.badge_list = latest_prog.badge_list or []
