@@ -64,8 +64,8 @@ export const App: React.FC = () => {
     };
     warmUpBackend();
 
-    // Heartbeat ping every 9 minutes to keep cloud container active 24/7
-    const heartbeatTimer = setInterval(warmUpBackend, 9 * 60 * 1000);
+    // Heartbeat ping every 3.5 minutes to keep cloud container active 24/7
+    const heartbeatTimer = setInterval(warmUpBackend, 3.5 * 60 * 1000);
 
     fetchSummary();
     const timer = setTimeout(() => {

@@ -56,6 +56,9 @@ origins = [
     "https://leetcodeurl-s-1.onrender.com",
     "https://leetcodeurl-s.onrender.com",
 ]
+from fastapi.middleware.gzip import GZipMiddleware
+app.add_middleware(GZipMiddleware, minimum_size=500)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
