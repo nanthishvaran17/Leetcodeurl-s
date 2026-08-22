@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List, Optional
 import datetime
+from zoneinfo import ZoneInfo
 
 from backend.database import get_db
 from backend.models import Student, StudentStatSnapshot, Department, Section, LeetCodeProfileStats
@@ -67,7 +68,6 @@ def get_student_history(
     }
 
 @router.get("/growth/improvers", response_model=List[ImproverOut])
-@router.get("/growth/improvers", response_model=List[ImproverOut])
 def get_top_improvers(
     period: str = Query("7d", pattern="^(today|7d|30d|all)$"),
     dept: Optional[str] = None,
@@ -83,7 +83,10 @@ def get_top_improvers(
     """
     now = datetime.datetime.now(datetime.timezone.utc)
     if period == "today":
-        cutoff = now - datetime.timedelta(days=1)
+        local_today = now.astimezone(ZoneInfo("Asia/Kolkata")).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        cutoff = local_today.astimezone(datetime.timezone.utc)
     elif period == "7d":
         cutoff = now - datetime.timedelta(days=7)
     elif period == "30d":
@@ -125,13 +128,29 @@ def get_top_improvers(
     if effective_year and effective_year.strip().upper() not in ['ALL', 'ALL YEARS', 'ALL ACADEMIC YEARS', '']:
         query = query.filter(func.upper(Student.year_level) == effective_year.strip().upper())
 
-    results = query.order_by(subq.c.sum_delta_total.desc()).limit(limit).all()
+    current_total_solved = db.query(LeetCodeProfileStats.total_solved).filter(
+        LeetCodeProfileStats.student_id == Student.id
+    ).correlate(Student).scalar_subquery()
+
+    results = query.order_by(
+        subq.c.sum_delta_total.desc(),
+        subq.c.sum_delta_hard.desc(),
+        subq.c.sum_delta_medium.desc(),
+        subq.c.sum_delta_easy.desc(),
+        subq.c.sum_delta_rating.desc(),
+        func.coalesce(current_total_solved, 0).desc(),
+        Student.name.asc()
+    ).limit(limit).all()
 
     improvers = []
     for st, d_tot, d_ez, d_med, d_hd, d_rat in results:
         dept_code = st.department.code if st.department else "CSE"
         sec_name = st.section.name if st.section else "A"
-        cur_solved = st.stats.total_solved if st.stats else 0
+        cur_solved = (
+            (st.stats.easy_solved or 0) +
+            (st.stats.medium_solved or 0) +
+            (st.stats.hard_solved or 0)
+        ) if st.stats else 0
         cur_rating = st.stats.contest_rating if st.stats else None
 
         # Sanitize rating delta (ignore baseline uninitialized artifacts)
@@ -147,6 +166,9 @@ def get_top_improvers(
             year_level=st.year_level,
             section_name=sec_name,
             total_solved=cur_solved,
+            easy_solved=st.stats.easy_solved or 0 if st.stats else 0,
+            medium_solved=st.stats.medium_solved or 0 if st.stats else 0,
+            hard_solved=st.stats.hard_solved or 0 if st.stats else 0,
             delta_solved=int(d_tot or 0),
             delta_easy=int(d_ez or 0),
             delta_medium=int(d_med or 0),
@@ -156,6 +178,26 @@ def get_top_improvers(
         ))
 
     return improvers
+
+@router.get("/growth/options")
+def get_growth_options(db: Session = Depends(get_db)):
+    """Return filter values from the active student records."""
+    departments = db.query(Department.id, Department.code, Department.name).join(
+        Student, Student.department_id == Department.id
+    ).filter(
+        (Student.is_active == True) | (Student.is_active.is_(None))
+    ).distinct().order_by(Department.name.asc()).all()
+    years = db.query(Student.year_level).filter(
+        ((Student.is_active == True) | (Student.is_active.is_(None))) &
+        Student.year_level.isnot(None)
+    ).distinct().order_by(Student.year_level.asc()).all()
+    return {
+        "departments": [
+            {"id": department_id, "code": code, "name": name}
+            for department_id, code, name in departments
+        ],
+        "years": [year for (year,) in years]
+    }
 
 @router.get("/growth/college-delta")
 def get_college_delta(
@@ -172,7 +214,10 @@ def get_college_delta(
     """
     now = datetime.datetime.now(datetime.timezone.utc)
     if period == "today":
-        cutoff = now - datetime.timedelta(days=1)
+        local_today = now.astimezone(ZoneInfo("Asia/Kolkata")).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        cutoff = local_today.astimezone(datetime.timezone.utc)
     elif period == "7d":
         cutoff = now - datetime.timedelta(days=7)
     elif period == "30d":
@@ -180,35 +225,76 @@ def get_college_delta(
     else:
         cutoff = datetime.datetime(2020, 1, 1)
 
+    effective_dept = dept or ""
+    effective_year = year or year_level or ""
+
+    filtered_students = db.query(Student).filter(
+        (Student.is_active == True) | (Student.is_active.is_(None))
+    )
+    if dept_id:
+        filtered_students = filtered_students.filter(Student.department_id == dept_id)
+    elif effective_dept and effective_dept.upper() not in ['ALL', 'ALL DEPARTMENTS', '']:
+        dept_value = effective_dept.strip().upper()
+        filtered_students = filtered_students.join(Student.department).filter(
+            (func.upper(Department.code) == dept_value) |
+            (func.upper(Department.name) == dept_value)
+        )
+    if effective_year and effective_year.strip().upper() not in ['ALL', 'ALL YEARS', 'ALL ACADEMIC YEARS', '']:
+        filtered_students = filtered_students.filter(
+            func.upper(Student.year_level) == effective_year.strip().upper().replace(' YEAR', '')
+        )
+    filtered_student_ids = filtered_students.with_entities(Student.id).statement
+
     query = db.query(
         func.coalesce(func.sum(StudentStatSnapshot.delta_total), 0).label("tot"),
         func.coalesce(func.sum(StudentStatSnapshot.delta_easy), 0).label("ez"),
         func.coalesce(func.sum(StudentStatSnapshot.delta_medium), 0).label("med"),
         func.coalesce(func.sum(StudentStatSnapshot.delta_hard), 0).label("hd")
-    ).filter(StudentStatSnapshot.captured_at >= cutoff)
-
-    # Department & Year filtering
-    effective_dept = dept or ""
-    effective_year = year or year_level or ""
-
-    if dept_id or (effective_dept and effective_dept.upper() not in ['ALL', 'ALL DEPARTMENTS', '']) or (effective_year and effective_year.strip().upper() not in ['ALL', 'ALL YEARS', 'ALL ACADEMIC YEARS', '']):
-        query = query.join(Student, StudentStatSnapshot.student_id == Student.id)
-        if dept_id:
-            query = query.filter(Student.department_id == dept_id)
-        elif effective_dept and effective_dept.upper() not in ['ALL', 'ALL DEPARTMENTS', '']:
-            query = query.join(Department, Student.department_id == Department.id).filter(
-                (Department.code.ilike(f"%{effective_dept.strip()}%")) |
-                (Department.name.ilike(f"%{effective_dept.strip()}%"))
-            )
-        if effective_year and effective_year.strip().upper() not in ['ALL', 'ALL YEARS', 'ALL ACADEMIC YEARS', '']:
-            query = query.filter(func.upper(Student.year_level) == effective_year.strip().upper())
+    ).filter(
+        StudentStatSnapshot.captured_at >= cutoff,
+        StudentStatSnapshot.student_id.in_(filtered_student_ids)
+    )
 
     result = query.first()
+
+    student_rows = filtered_students.all()
+    current_total = sum(
+        ((student.stats.easy_solved or 0) + (student.stats.medium_solved or 0) + (student.stats.hard_solved or 0))
+        if student.stats else 0
+        for student in student_rows
+    )
+    current_easy = sum((student.stats.easy_solved or 0) for student in student_rows if student.stats)
+    current_medium = sum((student.stats.medium_solved or 0) for student in student_rows if student.stats)
+    current_hard = sum((student.stats.hard_solved or 0) for student in student_rows if student.stats)
+    active_query = db.query(StudentStatSnapshot.student_id).filter(
+        StudentStatSnapshot.student_id.in_(filtered_student_ids),
+        StudentStatSnapshot.captured_at >= cutoff,
+        StudentStatSnapshot.delta_total > 0
+    ).distinct()
+    active_students = active_query.count() if period != "all" else sum(
+        1 for student in student_rows
+        if student.stats and ((student.stats.easy_solved or 0) + (student.stats.medium_solved or 0) + (student.stats.hard_solved or 0)) > 0
+    )
+    if period == "all":
+        selected_total, selected_easy, selected_medium, selected_hard = current_total, current_easy, current_medium, current_hard
+    else:
+        selected_total = int(result.tot) if result else 0
+        selected_easy = int(result.ez) if result else 0
+        selected_medium = int(result.med) if result else 0
+        selected_hard = int(result.hd) if result else 0
 
     return {
         "period": period,
         "delta_total": int(result.tot) if result else 0,
         "delta_easy": int(result.ez) if result else 0,
         "delta_medium": int(result.med) if result else 0,
-        "delta_hard": int(result.hd) if result else 0
+        "delta_hard": int(result.hd) if result else 0,
+        "total_students": len(student_rows),
+        "active_students": active_students,
+        "active_solvers": active_students,
+        "total_solved": selected_total,
+        "easy_solved": selected_easy,
+        "medium_solved": selected_medium,
+        "hard_solved": selected_hard,
+        "growth": int(result.tot) if result else 0
     }

@@ -297,6 +297,9 @@ class ImproverOut(BaseModel):
     year_level: str
     section_name: Optional[str] = "A"
     total_solved: Optional[int] = 0
+    easy_solved: int = 0
+    medium_solved: int = 0
+    hard_solved: int = 0
     delta_solved: int
     delta_easy: int
     delta_medium: int
