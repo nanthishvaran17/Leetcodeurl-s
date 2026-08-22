@@ -71,7 +71,7 @@ def get_leaderboard(
 
     results = []
     for st in students:
-        st_out = StudentOut.from_orm(st)
+        st_out = StudentOut.model_validate(st)
         if st.lc_profile:
             st_out.canonical_username = st.lc_profile.canonical_username
             st_out.profile_url = st.lc_profile.profile_url
@@ -150,7 +150,7 @@ def get_top_performers(db: Session = Depends(get_db)):
 
     st_outs = []
     for st in students:
-        st_out = StudentOut.from_orm(st)
+        st_out = StudentOut.model_validate(st)
         latest_prog = prog_map.get(st.id)
         if latest_prog:
             st_out.weekly_progress = latest_prog.weekly_progress

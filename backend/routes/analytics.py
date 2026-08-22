@@ -107,7 +107,7 @@ def compare_students(ids: str = Query(..., description="Comma separated student 
 
     comparison_data = []
     for s in students:
-        st_out = StudentOut.from_orm(s)
+        st_out = StudentOut.model_validate(s)
         latest_prog = prog_map.get(s.id)
         if latest_prog:
             st_out.college_rank = latest_prog.college_rank

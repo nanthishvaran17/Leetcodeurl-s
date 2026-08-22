@@ -105,7 +105,7 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         "average_weekly_progress": float(avg_progress),
         "highest_contest_rating": float(highest_rating) if highest_rating is not None else 0.0,
         "top_college_ranker": str(top_college_ranker) if top_college_ranker else "N/A",
-        "current_session": WeeklySessionOut.from_orm(current_session) if current_session else None,
+        "current_session": WeeklySessionOut.model_validate(current_session) if current_session else None,
         "is_session_live": is_session_live,
         "session_phase": session_phase,
         "next_session_countdown_seconds": int(max(countdown_sec, 0)),

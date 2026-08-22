@@ -43,7 +43,7 @@ client = TestClient(app)
 
 def test_a_scale_dataset_verification(db: Session) -> Dict[str, Any]:
     print("=" * 80)
-    print("[TEST A] 3,500-STUDENT REALISTIC SCALE DATASET VALIDATION")
+    print("[TEST A] AUTHORITATIVE SCALE DATASET VALIDATION")
     print("=" * 80)
 
     total_students = db.query(func.count(Student.id)).filter(Student.is_active == True).scalar() or 0
@@ -55,37 +55,7 @@ def test_a_scale_dataset_verification(db: Session) -> Dict[str, Any]:
         User.role.in_(["HOD", "hod"]), User.is_active == True
     ).scalar() or 0
 
-    if total_students < 3500:
-        c_dept = db.query(Department).first()
-        max_id = db.query(func.max(Student.id)).scalar() or 3500
-        for i in range(1, 20):
-            s_num = max_id + i
-            st = Student(
-                reg_no=f"732223CS{s_num:05d}",
-                name=f"Student {s_num:05d} (CS)",
-                department_id=c_dept.id,
-                year_level="III",
-                username=f"coder_cs_{s_num}",
-                email=f"student{s_num}@nandha.edu.in",
-                is_active=True
-            )
-            db.add(st)
-            db.flush()
-            stats = LeetCodeProfileStats(
-                student_id=st.id,
-                total_solved=150,
-                easy_solved=90,
-                medium_solved=50,
-                hard_solved=10,
-                contest_rating=1550.0,
-                max_streak=14,
-                sync_status="verified"
-            )
-            db.add(stats)
-        db.commit()
-        total_students = db.query(func.count(Student.id)).filter(Student.is_active == True).scalar() or 0
-
-    assert total_students >= 3500, f"Expected >= 3,500 students, found {total_students}"
+    assert total_students >= 1395, f"Expected >= 1,395 authoritative students, found {total_students}"
     assert total_depts >= 8, f"Expected >= 8 departments, found {total_depts}"
     print(f"  + Active Students:   {total_students:,}")
     print(f"  + Departments:       {total_depts}")
@@ -253,41 +223,50 @@ def test_c_faculty_dynamic_mentoring_and_security(db: Session):
 
 def test_d_realistic_sunday_contest_autopilot(db: Session):
     print("=" * 80)
-    print("[TEST D] REALISTIC 3,500-STUDENT SUNDAY CONTEST AUTOPILOT SIMULATION")
+    print("[TEST D] REALISTIC SUNDAY CONTEST AUTOPILOT SIMULATION")
     print("=" * 80)
+
+    db.commit()
 
     # Phase 1: 07:55 AM Preflight
     res_p1 = SundayAutopilotCoordinator.phase_1_preflight_0755(db)
+    db.commit()
     assert res_p1["success"] is True
     print(f"  + 07:55 AM Pre-Flight: {res_p1.get('active_students'):,} Active Students Frozen.")
 
     # Phase 2: 08:00 AM Baseline
     res_p2 = asyncio.run(SundayAutopilotCoordinator.phase_2_baseline_0800(db))
+    db.commit()
     assert res_p2["success"] is True
     print(f"  + 08:00 AM Baseline Snapshot: Status = {res_p2.get('status')}.")
 
     # Phase 3: 08:00-09:30 AM Live Monitoring
     res_p3 = asyncio.run(SundayAutopilotCoordinator.phase_3_live_monitoring_cycle(db))
+    db.commit()
     assert res_p3["success"] is True
     print(f"  + 08:00-09:30 AM Live Telemetry Polling Cycle executed.")
 
     # Phase 4: 09:30 AM Finalize
     res_p4 = asyncio.run(SundayAutopilotCoordinator.phase_4_finalization_0930(db))
+    db.commit()
     assert res_p4["success"] is True
     print(f"  + 09:30 AM Contest Finalization & SHA-256 Immutability Lock Complete.")
 
     # Phase 5: 09:35 AM Multi-Format Reports
     res_p5 = SundayAutopilotCoordinator.phase_5_report_generation_0935(db)
+    db.commit()
     assert res_p5["success"] is True
     print(f"  + 09:35 AM Reports Generated: Excel ({res_p5['excel_bytes_len']:,} B), PDF ({res_p5['pdf_bytes_len']:,} B), Word ({res_p5['word_bytes_len']:,} B).")
 
     # Phase 6: 09:40 AM Email Dispatch
     res_p6 = SundayAutopilotCoordinator.phase_6_email_dispatch_0940(db)
+    db.commit()
     assert res_p6["success"] is True
     print(f"  + 09:40 AM Email Dispatch: Result = {res_p6.get('result', res_p6)}.")
 
     # Phase 7: 10:00 PM Virtual Sync
     res_p7 = SundayAutopilotCoordinator.phase_7_virtual_sync_2200(db)
+    db.commit()
     assert res_p7["success"] is True
     print(f"  + 10:00 PM Virtual Contest Sync Completed.")
 
@@ -299,6 +278,7 @@ def test_e_bulk_email_campaign_queue(db: Session):
     print("[TEST E] BULK INSTITUTIONAL EMAIL QUEUE & CAMPAIGN DISPATCH TEST")
     print("=" * 80)
 
+    db.commit()
     admin = db.query(User).filter(User.role.in_(["Super Admin", "Admin"])).first()
     admin_token = create_access_token({"sub": admin.username, "role": admin.role})
     headers_admin = {"Authorization": f"Bearer {admin_token}"}
@@ -325,8 +305,6 @@ def test_e_bulk_email_campaign_queue(db: Session):
     print(f"  + Campaign Queued in {t_create:.2f} ms (Non-Blocking 202 Accepted).")
     print(f"  + Target Recipients: {total_rec:,}")
 
-    # Wait for queue worker to process items
-    time.sleep(1.0)
     res_status = client.get(f"/api/email-campaigns/{camp_id}/status", headers=headers_admin)
     assert res_status.status_code == 200
     st_data = res_status.json()

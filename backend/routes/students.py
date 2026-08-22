@@ -413,7 +413,7 @@ def get_students(
 
     results = []
     for st in students:
-        st_out = StudentOut.from_orm(st)
+        st_out = StudentOut.model_validate(st)
 
         # Rule 1 & 2: Canonical accuracy check — zero out fake/guessed data on invalid/pending profiles
         is_verified = bool(st.stats and st.stats.sync_status in ("success", "verified") and st.stats.status == "verified" and st.stats.total_solved is not None)
@@ -671,7 +671,7 @@ def get_student_detail(student_id: int, db: Session = Depends(get_db)):
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
     
-    st_out = StudentOut.from_orm(student)
+    st_out = StudentOut.model_validate(student)
     latest_prog = db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id == student.id).order_by(WeeklyStudentProgress.id.desc()).first()
     if latest_prog:
         st_out.college_rank = latest_prog.college_rank
@@ -754,7 +754,7 @@ def create_student(
         background_tasks.add_task(_bg_sync_new_student)
         logger.info(f"[CREATE_STUDENT] Background sync queued for new student {student.reg_no} (username={username})")
 
-    return StudentOut.from_orm(student)
+    return StudentOut.model_validate(student)
 
 from pydantic import BaseModel
 
@@ -922,7 +922,7 @@ def update_student(
     update_all_rankings_and_badges(db)
     cache.clear()
 
-    return StudentOut.from_orm(student)
+    return StudentOut.model_validate(student)
 
 
 @router.delete("/{student_id}")

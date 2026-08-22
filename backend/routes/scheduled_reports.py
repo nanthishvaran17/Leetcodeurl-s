@@ -59,7 +59,7 @@ def save_scheduled_report_configuration(
     try:
         res = save_report_schedule(
             db=db,
-            data=payload.dict(),
+            data=payload.model_dump(),
             admin_email="Administrator"
         )
         return res

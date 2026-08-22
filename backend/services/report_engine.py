@@ -61,8 +61,8 @@ def build_universal_report(db: Session, config: ReportConfig) -> Dict[str, Any]:
             distribution[cat] = 1
 
     # Top Solvers
-    top_students = [s.dict() for s in students if s.status == "VERIFIED"][:10]
-    all_students_dict = [s.dict() for s in students]
+    top_students = [s.model_dump() for s in students if s.status == "VERIFIED"][:10]
+    all_students_dict = [s.model_dump() for s in students]
 
     # Department Breakdown
     dept_breakdown = {}
@@ -79,7 +79,7 @@ def build_universal_report(db: Session, config: ReportConfig) -> Dict[str, Any]:
     participations_dict = []
     if config.report_type in ("CONTEST_PERFORMANCE", "OFFICIAL_CONTEST"):
         contests = fetch_normalized_contests(db, dept_filter=config.department, year_filter=config.year)
-        participations_dict = [c.dict() for c in contests]
+        participations_dict = [c.model_dump() for c in contests]
 
     # Title formatting
     title = f"{config.report_type.replace('_', ' ').title()}"
@@ -98,7 +98,7 @@ def build_universal_report(db: Session, config: ReportConfig) -> Dict[str, Any]:
         "verifiedAt": datetime.datetime.utcnow().isoformat(),
         "dataStatus": "READY" if total_students > 0 else "PARTIAL",
         "message": None,
-        "config": config.dict(),
+        "config": config.model_dump(),
         "metrics": {
             "totalStudents": total_students,
             "verifiedStudents": verified_students,
@@ -116,7 +116,7 @@ def build_universal_report(db: Session, config: ReportConfig) -> Dict[str, Any]:
         },
         "distribution": distribution,
         "departmentSummary": dept_breakdown,
-        "dataQuality": data_quality.dict(),
+        "dataQuality": data_quality.model_dump(),
         "topStudents": top_students,
         "allStudents": all_students_dict,
         "rows": all_students_dict,
@@ -128,7 +128,7 @@ def build_universal_report(db: Session, config: ReportConfig) -> Dict[str, Any]:
         report_id=report_id,
         report_type=config.report_type,
         title=title,
-        filters=config.dict(),
+        filters=config.model_dump(),
         dataset=dataset,
         status="GENERATED"
     )

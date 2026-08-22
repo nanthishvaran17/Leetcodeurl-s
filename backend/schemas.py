@@ -1,5 +1,5 @@
 import datetime
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from typing import List, Optional, Any, Dict
 
 # Department Schemas
@@ -13,9 +13,7 @@ class DepartmentCreate(DepartmentBase):
 class DepartmentOut(DepartmentBase):
     id: int
     created_at: datetime.datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Section Schemas
 class SectionBase(BaseModel):
@@ -28,9 +26,7 @@ class SectionCreate(SectionBase):
 
 class SectionOut(SectionBase):
     id: int
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Student Schemas
 class StudentBase(BaseModel):
@@ -81,10 +77,7 @@ class LeetCodeStatsOut(BaseModel):
     retry_count: Optional[int] = 0
     fetch_duration: Optional[float] = None
     last_updated: Optional[datetime.datetime] = None
-
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ContestResultOut(BaseModel):
     contest_name: Optional[str] = "Weekly Contest"
@@ -115,9 +108,7 @@ class CanonicalProfileOut(BaseModel):
     error_message: Optional[str] = None
     last_verified_at: Optional[datetime.datetime] = None
     last_synced_at: Optional[datetime.datetime] = None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class CanonicalProblemStatsOut(BaseModel):
     total_solved: Optional[int] = None
@@ -126,9 +117,7 @@ class CanonicalProblemStatsOut(BaseModel):
     hard_solved: Optional[int] = None
     total_submission_count: Optional[int] = None
     profile_global_ranking: Optional[int] = None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class CanonicalContestOut(BaseModel):
     contest_rating: Optional[float] = None
@@ -137,17 +126,13 @@ class CanonicalContestOut(BaseModel):
     top_percentage: Optional[float] = None
     most_recent_contest_name: Optional[str] = None
     most_recent_contest_type: Optional[str] = None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class CanonicalActivityOut(BaseModel):
     total_active_days: Optional[int] = None
     current_streak: Optional[int] = None
     longest_streak: Optional[int] = None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class StudentOut(StudentBase):
     id: int
@@ -182,10 +167,7 @@ class StudentOut(StudentBase):
     virtual_contest_result: Optional[ContestResultOut] = None
     overall_participation_mode: Optional[str] = "NONE"
     contest_status: Optional[str] = None
-
-    class Config:
-        from_attributes = True
-
+    model_config = ConfigDict(from_attributes=True)
 
 # Auth & User Schemas
 class UserLogin(BaseModel):
@@ -214,9 +196,7 @@ class UserOut(BaseModel):
     section_id: Optional[int] = None
     is_active: bool
     last_login: Optional[datetime.datetime] = None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Weekly Session Schemas
 class WeeklySessionOut(BaseModel):
@@ -229,9 +209,7 @@ class WeeklySessionOut(BaseModel):
     status: str
     created_at: datetime.datetime
     completed_at: Optional[datetime.datetime] = None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Dashboard Summary Schema
 class DashboardSummary(BaseModel):
@@ -252,9 +230,7 @@ class DashboardSummary(BaseModel):
     verified_profiles: Optional[int] = 0
     pending_sync: Optional[int] = 0
     failed_sync: Optional[int] = 0
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Audit Log Schema
 class AuditLogOut(BaseModel):
@@ -264,9 +240,7 @@ class AuditLogOut(BaseModel):
     details: Optional[str]
     ip_address: Optional[str]
     timestamp: datetime.datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class StudentStatSnapshotOut(BaseModel):
     id: int
@@ -285,9 +259,7 @@ class StudentStatSnapshotOut(BaseModel):
     captured_at: datetime.datetime
     sync_run_id: Optional[str] = None
     source: Optional[str] = "leetcode_public_profile"
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ImproverOut(BaseModel):
     student_id: int
@@ -341,7 +313,3 @@ class AIAssistantResponse(BaseModel):
     source: str
     dataStatus: str
     requestId: str
-
-
-
-

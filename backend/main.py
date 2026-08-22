@@ -1,11 +1,15 @@
 import os
 import asyncio
-from fastapi import FastAPI
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Response, Depends, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from backend.config import settings
-from backend.database import engine, Base
+from backend.database import engine, Base, get_db
 from backend.seed import seed_database
 try:
     from backend.scheduler import start_scheduler
@@ -27,18 +31,124 @@ from backend.routes import (
 from backend.routes import admin, email_reports, ai_assistant, leetcode, ai_control_center, intelligence
 from backend.routes import command_center
 from backend import leetcode_tracker
+from backend.services.heartbeat_service import get_deep_health_telemetry
+from backend.websocket_manager import manager
+
+
+# =====================================================================
+# 1. NON-BLOCKING ASYNCHRONOUS INITIALIZATION & LIFESPAN
+# =====================================================================
+
+async def _deferred_startup_tasks():
+    """Executes background DB migrations, admin reconcile, and scheduler asynchronously after port binding."""
+    logger.info("[STARTUP] Running background post-bind initialization...")
+    try:
+        from backend.migrate_db import run_db_migrations
+        run_db_migrations()
+        from backend.database import run_migrations
+        run_migrations()
+    except Exception as _mig_err:
+        logger.warning(f"[STARTUP] Database migration note: {_mig_err}")
+
+    try:
+        from backend.database import SessionLocal
+        from backend.models import Student, User, LeetCodeProfileStats, SyncJob
+        from backend.routes.auth import get_password_hash, verify_password
+
+        with SessionLocal() as db_init:
+            try:
+                admin_username = getattr(settings, "ADMIN_USERNAME", "admin").strip()
+                admin_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
+                admin_pass = getattr(settings, "ADMIN_PASSWORD", "admin123").strip() or "admin123"
+
+                admin_user = db_init.query(User).filter(
+                    (User.username.ilike(admin_username)) | (User.email.ilike(admin_email))
+                ).first()
+
+                if not admin_user:
+                    admin_user = User(
+                        username=admin_username,
+                        email=admin_email,
+                        hashed_password=get_password_hash(admin_pass),
+                        role="Admin",
+                        is_active=True
+                    )
+                    db_init.add(admin_user)
+                    db_init.commit()
+                    logger.info(f"[STARTUP] Reconciled initial admin user: {admin_username}")
+                else:
+                    admin_user.role = "Admin"
+                    admin_user.is_active = True
+                    if not verify_password(admin_pass, str(admin_user.hashed_password)):
+                        admin_user.hashed_password = get_password_hash(admin_pass)
+                        db_init.commit()
+            except Exception as _adm_err:
+                logger.warning(f"[STARTUP] Admin reconcile note: {_adm_err}")
+
+            try:
+                # Clean up any zombie sync locks from previous server restarts
+                stale_jobs = db_init.query(SyncJob).filter(SyncJob.status == "RUNNING").all()
+                if stale_jobs:
+                    for sj in stale_jobs:
+                        sj.status = "INTERRUPTED"
+                    db_init.commit()
+            except Exception as _sj_err:
+                logger.warning(f"[STARTUP] Sync job recovery note: {_sj_err}")
+
+            try:
+                from backend.services.weekly_session_manager import resume_active_weekly_session
+                await resume_active_weekly_session(db_init)
+            except Exception as _sess_err:
+                logger.warning(f"[STARTUP] Weekly session resume note: {_sess_err}")
+
+    except Exception as e:
+        logger.warning(f"[STARTUP] Deferred DB init note: {e}")
+
+    try:
+        from backend.assets.sync_firestore import initialize_pending_records
+        await asyncio.to_thread(initialize_pending_records)
+    except Exception as _init_err:
+        logger.warning(f"[STARTUP] Firestore pending init note: {_init_err}")
+
+    is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")
+    if not is_vercel and SCHEDULER_AVAILABLE:
+        try:
+            logger.info("[STARTUP] Starting background scheduler...")
+            start_scheduler()
+            from backend.services.schedule_service import get_or_create_default_schedule, register_apscheduler_job
+            with SessionLocal() as _sched_db:
+                _cfg = get_or_create_default_schedule(_sched_db)
+                register_apscheduler_job(_cfg)
+        except Exception as e:
+            logger.warning(f"[STARTUP] Scheduler initialization note: {e}")
+
+    logger.info("[READY] LeetCode Tracker API is fully ready & background engines active.")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """FastAPI modern lifespan handler replacing deprecated on_event handlers."""
+    logger.info("[STARTUP] FastAPI process alive. Port binding established immediately.")
+    asyncio.create_task(_deferred_startup_tasks())
+    yield
+    logger.info("[SHUTDOWN] FastAPI process receiving termination signal. Releasing resources gracefully...")
+    try:
+        engine.dispose()
+    except Exception as _dis_err:
+        logger.warning(f"[SHUTDOWN] Engine disposal note: {_dis_err}")
+    logger.info("[SHUTDOWN] Graceful shutdown complete.")
+
 
 app = FastAPI(
     title="College LeetCode Weekly Tracker API",
     description="Backend API for LeetCode weekly tracking, analytics, leaderboards, Excel/PDF reporting and notifications.",
-    version="2.0.0"
+    version="2.0.0",
+    lifespan=lifespan
 )
 
-from fastapi import Response
-from sqlalchemy import text
 
 # =====================================================================
-# 1. LIGHTWEIGHT PRODUCTION HEALTH & READINESS PROBES
+# 2. LIGHTWEIGHT PRODUCTION HEALTH & READINESS PROBES
 # =====================================================================
 
 @app.api_route("/health", methods=["GET", "HEAD"])
@@ -82,11 +192,6 @@ def readiness_check(response: Response):
             "version": "2.0.0"
         }
 
-from fastapi import Depends
-from sqlalchemy.orm import Session
-from backend.database import get_db
-from backend.services.heartbeat_service import get_deep_health_telemetry
-
 @app.api_route("/health/deep", methods=["GET"])
 @app.api_route("/api/health/deep", methods=["GET"])
 def deep_health_check(db: Session = Depends(get_db)):
@@ -94,6 +199,7 @@ def deep_health_check(db: Session = Depends(get_db)):
     Deep Diagnostic Health Probe verifying database, worker, scheduler, and telemetry.
     """
     return get_deep_health_telemetry(db)
+
 
 # CORS Configuration
 origins = [
@@ -106,7 +212,6 @@ origins = [
     "https://leetcodeurl-s-1.onrender.com",
     "https://leetcodeurl-s.onrender.com",
 ]
-from fastapi.middleware.gzip import GZipMiddleware
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
 app.add_middleware(
@@ -207,116 +312,6 @@ try:
 except Exception as e:
     logger.warning(f"Could not mount static reports directory: {e}")
 
-# =====================================================================
-# 2. NON-BLOCKING ASYNCHRONOUS INITIALIZATION & GRACEFUL SHUTDOWN
-# =====================================================================
-
-async def _deferred_startup_tasks():
-    """Executes background DB migrations, admin reconcile, and scheduler asynchronously after port binding."""
-    logger.info("[STARTUP] Running background post-bind initialization...")
-    try:
-        from backend.migrate_db import run_db_migrations
-        run_db_migrations()
-        from backend.database import run_migrations
-        run_migrations()
-    except Exception as _mig_err:
-        logger.warning(f"[STARTUP] Database migration note: {_mig_err}")
-
-    try:
-        from backend.database import SessionLocal
-        from backend.models import Student, User, LeetCodeProfileStats, SyncJob
-        from backend.routes.auth import get_password_hash, verify_password
-
-        with SessionLocal() as db_init:
-            try:
-                admin_username = getattr(settings, "ADMIN_USERNAME", "admin").strip()
-                admin_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
-                admin_pass = getattr(settings, "ADMIN_PASSWORD", "admin123").strip() or "admin123"
-
-                admin_user = db_init.query(User).filter(
-                    (User.username.ilike(admin_username)) | (User.email.ilike(admin_email))
-                ).first()
-
-                if not admin_user:
-                    admin_user = User(
-                        username=admin_username,
-                        email=admin_email,
-                        hashed_password=get_password_hash(admin_pass),
-                        role="Admin",
-                        is_active=True
-                    )
-                    db_init.add(admin_user)
-                    db_init.commit()
-                    logger.info(f"[STARTUP] Reconciled initial admin user: {admin_username}")
-                else:
-                    admin_user.role = "Admin"
-                    admin_user.is_active = True
-                    if not verify_password(admin_pass, str(admin_user.hashed_password)):
-                        admin_user.hashed_password = get_password_hash(admin_pass)
-                        db_init.commit()
-            except Exception as _adm_err:
-                logger.warning(f"[STARTUP] Admin reconcile note: {_adm_err}")
-
-            try:
-                # Clean up any zombie sync locks from previous server restarts
-                stale_jobs = db_init.query(SyncJob).filter(SyncJob.status == "RUNNING").all()
-                if stale_jobs:
-                    for sj in stale_jobs:
-                        sj.status = "INTERRUPTED"
-                    db_init.commit()
-            except Exception as _sj_err:
-                logger.warning(f"[STARTUP] Sync job recovery note: {_sj_err}")
-
-            try:
-                from backend.services.weekly_session_manager import resume_active_weekly_session
-                await resume_active_weekly_session(db_init)
-            except Exception as _sess_err:
-                logger.warning(f"[STARTUP] Weekly session resume note: {_sess_err}")
-
-    except Exception as e:
-        logger.warning(f"[STARTUP] Deferred DB init note: {e}")
-
-    try:
-        from backend.assets.sync_firestore import initialize_pending_records
-        await asyncio.to_thread(initialize_pending_records)
-    except Exception as _init_err:
-        logger.warning(f"[STARTUP] Firestore pending init note: {_init_err}")
-
-    if not is_vercel and SCHEDULER_AVAILABLE:
-        try:
-            logger.info("[STARTUP] Starting background scheduler...")
-            start_scheduler()
-            from backend.services.schedule_service import get_or_create_default_schedule, register_apscheduler_job
-            with SessionLocal() as _sched_db:
-                _cfg = get_or_create_default_schedule(_sched_db)
-                register_apscheduler_job(_cfg)
-        except Exception as e:
-            logger.warning(f"[STARTUP] Scheduler initialization note: {e}")
-
-    logger.info("[READY] LeetCode Tracker API is fully ready & background engines active.")
-
-
-@app.on_event("startup")
-def on_startup():
-    """Instant non-blocking startup (< 5ms) to immediately bind port and answer liveness probes."""
-    logger.info("[STARTUP] FastAPI process alive. Port binding established immediately.")
-    asyncio.create_task(_deferred_startup_tasks())
-
-
-@app.on_event("shutdown")
-def on_shutdown():
-    """Graceful shutdown handler for zero-downtime container replacement."""
-    logger.info("[SHUTDOWN] FastAPI process receiving termination signal. Releasing resources gracefully...")
-    try:
-        engine.dispose()
-    except Exception as _dis_err:
-        logger.warning(f"[SHUTDOWN] Engine disposal note: {_dis_err}")
-    logger.info("[SHUTDOWN] Graceful shutdown complete.")
-
-
-from fastapi import WebSocket, WebSocketDisconnect
-from backend.websocket_manager import manager
-
 @app.websocket("/ws/leaderboard")
 async def websocket_leaderboard_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
@@ -328,12 +323,9 @@ async def websocket_leaderboard_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
-
-
 # Production Static Build Mount (Serves Frontend SPA bundle on single port)
 FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
 if os.path.exists(FRONTEND_DIST):
     app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")
 
 logger.info("LeetCode Performance Tracker API is fully ready & live sync engine active.")
-

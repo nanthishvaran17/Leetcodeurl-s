@@ -374,7 +374,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig) -> Dict[
         "verifiedAt": datetime.datetime.utcnow().isoformat(),
         "dataStatus": "READY" if total_students > 0 else "PARTIAL",
         "data_status": "READY" if total_students > 0 else "PARTIAL",
-        "config": config.dict(),
+        "config": config.model_dump(),
         "contestSummary": {
             "latestContest": contest_name,
             "contestDate": contest_date,
@@ -451,7 +451,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig) -> Dict[
         report_id=report_id,
         report_type="CONTEST_PERFORMANCE",
         title=title,
-        filters=config.dict(),
+        filters=config.model_dump(),
         dataset=dataset,
         status="GENERATED"
     )

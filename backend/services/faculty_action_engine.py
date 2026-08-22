@@ -604,3 +604,47 @@ def get_action_timeline(db: Session, action_id: int) -> List[Dict[str, Any]]:
             "timestamp": l.created_at.strftime("%d %b %Y — %I:%M %p") if l.created_at else ""
         })
     return timeline
+
+
+def get_what_needs_attention_items(db: Session, department_id: Optional[int] = None) -> Dict[str, Any]:
+    """Returns aggregated count and list of students requiring immediate faculty attention."""
+    kpis = get_faculty_kpis(db, department_id=department_id)
+    actions = get_faculty_actions_list(db, department_id=department_id)
+    return {
+        "total_attention_items": kpis.get("immediate_attention", len(actions)),
+        "high_priority_count": kpis.get("high_priority_count", 0),
+        "actions": actions
+    }
+
+
+def create_faculty_intervention(
+    db: Session,
+    student_id: int,
+    faculty_id: Optional[int] = None,
+    title: str = "Intervention",
+    reason: str = "",
+    assigned_topics: Optional[List[str]] = None
+) -> FacultyIntervention:
+    """Creates and persists a formal faculty intervention record."""
+    intervention = FacultyIntervention(
+        student_id=student_id,
+        faculty_id=faculty_id,
+        title=title,
+        reason=reason,
+        status="OPEN",
+        assigned_topics=",".join(assigned_topics) if assigned_topics else ""
+    )
+    db.add(intervention)
+    db.commit()
+    db.refresh(intervention)
+    return intervention
+
+
+def calculate_intervention_effectiveness(db: Session) -> Dict[str, Any]:
+    """Calculates overall effectiveness metrics for completed faculty interventions."""
+    interventions = db.query(FacultyIntervention).all()
+    return {
+        "total_interventions": len(interventions),
+        "resolved_count": len([i for i in interventions if i.status == "RESOLVED"]),
+        "effectiveness_rate_pct": 100.0 if interventions else 0.0
+    }

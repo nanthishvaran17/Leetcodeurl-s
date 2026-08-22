@@ -70,16 +70,6 @@ def get_or_create_current_weekly_session(db: Session) -> WeeklySession:
 async def trigger_start_snapshot_0800(db: Session, session_id: int):
     """
     Executed at 08:00 AM IST: Creates baseline student tracking records.
-    Sets participation_status = PENDING for all students (nobody marked NOT ATTENDED yet).
-    """
-    session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
-    if not session:
-        logger.error(f"WeeklySession ID {session_id} not found.")
-        return
-
-async def trigger_start_snapshot_0800(db: Session, session_id: int):
-    """
-    Executed at 08:00 AM IST: Creates baseline student tracking records.
     Sets state = PENDING & participation_status = PENDING for all students (nobody marked NOT ATTENDED prematurely).
     Idempotent: Resumes existing records without duplicating.
     """

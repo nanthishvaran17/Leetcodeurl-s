@@ -67,16 +67,18 @@ class TestInstitutionalAutopilotPipeline(unittest.TestCase):
         """
         db = SessionLocal()
         try:
-            # Clean existing assignments for test faculty
-            db.query(FacultyStudentAssignment).filter(
-                FacultyStudentAssignment.faculty_id == self.faculty.id
-            ).delete()
-            db.commit()
-
             # Find 30 students in the same department
             cse_students = db.query(Student).filter(
                 Student.department_id == self.faculty.department_id
             ).limit(30).all()
+            cse_student_ids = [s.id for s in cse_students]
+
+            # Clean existing assignments for test faculty and target students
+            db.query(FacultyStudentAssignment).filter(
+                (FacultyStudentAssignment.faculty_id == self.faculty.id) |
+                (FacultyStudentAssignment.student_id.in_(cse_student_ids))
+            ).delete(synchronize_session=False)
+            db.commit()
 
             # Seed 19 initial student assignments
             for i in range(19):

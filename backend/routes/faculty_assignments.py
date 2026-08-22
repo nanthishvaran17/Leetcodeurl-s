@@ -23,12 +23,12 @@ router = APIRouter(prefix="/faculty-assignments", tags=["Faculty Assignments"])
 
 class AssignStudentsRequest(BaseModel):
     faculty_id: int
-    student_ids: List[int] = Field(..., min_items=1)
+    student_ids: List[int] = Field(..., min_length=1)
 
 
 class UnassignStudentsRequest(BaseModel):
     faculty_id: int
-    student_ids: List[int] = Field(..., min_items=1)
+    student_ids: List[int] = Field(..., min_length=1)
 
 
 class AutoDistributeRequest(BaseModel):

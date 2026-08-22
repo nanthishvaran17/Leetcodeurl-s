@@ -1,5 +1,5 @@
 import os
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List, Optional
 
 class Settings(BaseSettings):
@@ -56,10 +56,7 @@ class Settings(BaseSettings):
     COLLEGE_ADDRESS: str = "ERODE - 638 052, TAMIL NADU"
     COLLEGE_LOGO_URL: str = "/logo.png"
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        extra = "ignore"
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 settings = Settings()
 

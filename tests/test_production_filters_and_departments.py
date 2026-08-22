@@ -94,12 +94,16 @@ def test_production_filters_and_departments():
 
     # 4. API Leaderboard-Fast Total Student Load
     print("\n--- [AUDIT 4] LEADERBOARD-FAST FULL ENROLLED STUDENT RETRIEVAL ---")
+    with SessionLocal() as db:
+        expected_population = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count()
+    
     resp_fast = client.get("/api/students/leaderboard-fast")
     assert resp_fast.status_code == 200
     fast_data = resp_fast.json()
-    print(f"  + Total Students Returned by /leaderboard-fast: {len(fast_data)}")
-    assert len(fast_data) >= 3500, "Leaderboard-fast must return the complete student dataset (> 3,500 students)"
-    print("  + [AUDIT 4 PASSED]: Full 3,500+ student dataset loaded without 100-student cap.")
+    print(f"  + Total Students Returned by /leaderboard-fast: {len(fast_data)} (Expected Authoritative: {expected_population})")
+    assert len(fast_data) == expected_population, f"Leaderboard-fast must return the full authoritative population ({expected_population}), got {len(fast_data)}"
+    assert len(fast_data) >= 1395, "Authoritative population must contain at least 1,395 students"
+    print(f"  + [AUDIT 4 PASSED]: Full authoritative {expected_population} student dataset loaded without truncation.")
 
     # 5. Search Matching & Filter Combinations
     print("\n--- [AUDIT 5] MULTI-FIELD SEARCH MATCHING ---")
@@ -139,7 +143,8 @@ def test_production_filters_and_departments():
         print(f"  + Verified Profiles:                {db_verified}")
         print(f"  + Active Problem Solvers:           {db_active}")
         print(f"  + Total Problems Solved:            {int(total_solved_sum)}")
-        assert db_total >= 3500
+        assert db_total >= 1395, f"Authoritative student count must be >= 1,395, got {db_total}"
+        assert db_total == expected_population, f"Database total ({db_total}) must match expected population ({expected_population})"
     print("  + [AUDIT 6 PASSED]: Consistent single source of truth for all dashboard totals.")
 
     print("\n" + "=" * 80)

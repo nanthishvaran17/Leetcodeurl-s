@@ -28,7 +28,7 @@ def handle_ai_assistant_query(
         raise HTTPException(status_code=400, detail="Message prompt cannot be empty.")
 
     page_context = req.context.page if req.context else None
-    context_filters = req.context.dict() if req.context else {}
+    context_filters = req.context.model_dump() if req.context else {}
 
     # Process query using Unified AIKnowledgeEngine
     response_data = AIKnowledgeEngine.answer_query(
