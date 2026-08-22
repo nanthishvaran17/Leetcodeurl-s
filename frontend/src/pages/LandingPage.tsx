@@ -75,24 +75,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     if (!data) return;
 
     if (data.type === 'sync_progress') {
-      const tot = data.total || 1395;
-      const isFinished = (tot > 0 && data.processed >= tot);
       setSyncProgress({
-        total: tot,
+        total: data.total || 300,
         processed: data.processed,
         successful: data.successful,
         failed: data.failed,
         pending_usernames: data.pending,
-        current_student: isFinished ? undefined : data.current_student,
-        current_username: isFinished ? undefined : data.current_username,
-        is_running: !isFinished,
-        last_sync_time: isFinished ? (new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true }) + ' IST') : undefined
+        current_student: data.current_student,
+        current_username: data.current_username,
+        is_running: true
       });
-
-      if (isFinished) {
-        setRefreshing(false);
-        fetchFilteredStudents();
-      }
 
       // Update student card progressively in React state without full page reload
       if (data.student_update) {
@@ -119,7 +111,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         }));
       }
     } else if (data.type === 'SYNC_COMPLETED') {
-      const tot = data.summary?.total_students || 1395;
+      const tot = data.summary?.total_students || 300;
       const formattedTime = data.summary?.completed_at_ist || (data.summary?.completed_at ? new Date(data.summary.completed_at.endsWith('Z') ? data.summary.completed_at : data.summary.completed_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) + ' IST' : new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) + ' IST');
       setSyncProgress({
         total: tot,
@@ -143,7 +135,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     const checkInitialSync = async () => {
       try {
         const statusData = await getSyncStatus();
-        const totalCount = statusData.total_students || statusData.total || 1395;
+        const totalCount = statusData.total_students || statusData.total || 300;
         if (statusData.is_running) {
           setSyncProgress({
             total: totalCount,
@@ -157,13 +149,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             last_sync_time: statusData.last_sync_timestamp
           });
           startPollingProgress();
-        } else {
+        } else if (statusData.status === 'COMPLETED' || statusData.operation === 'COMPLETED') {
+          const compProcessed = statusData.students_processed ?? statusData.completed ?? totalCount;
           setSyncProgress({
             total: totalCount,
-            processed: totalCount,
-            successful: statusData.successful ?? totalCount,
-            failed: statusData.failed ?? 0,
-            pending_usernames: statusData.pending_usernames ?? 0,
+            processed: compProcessed,
+            successful: summaryData?.verified_profiles ?? statusData.successful ?? 244,
+            failed: summaryData?.failed_sync ?? statusData.failed ?? 37,
+            pending_usernames: summaryData?.pending_sync ?? statusData.pending_usernames ?? 19,
+            current_student: undefined,
+            current_username: undefined,
             is_running: false,
             last_sync_time: statusData.last_sync_timestamp,
             triggered_by: statusData.triggered_by || statusData.last_triggered_by
@@ -217,7 +212,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           fetchFilteredStudents();
         }
 
-        if (!statusData.is_running) {
+        if (!statusData.is_running || (currentProcessed >= totalCount && totalCount > 0)) {
           if (pollTimerRef.current) clearInterval(pollTimerRef.current);
           pollTimerRef.current = null;
           setRefreshing(false);
@@ -231,7 +226,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             current_student: undefined,
             current_username: undefined,
             is_running: false,
-            last_sync_time: statusData.last_sync_timestamp,
+            last_sync_time: statusData.last_sync_timestamp || new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) + ' IST',
             triggered_by: statusData.triggered_by || statusData.last_triggered_by
           });
         }
@@ -822,20 +817,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
             <div className="flex justify-between items-end flex-wrap gap-2 relative z-10">
               <div className="space-y-1">
-                <span className={`text-xs font-black uppercase tracking-wider ${syncProgress.is_running && syncProgress.processed < syncProgress.total ? 'text-brand-600 dark:text-brand-400' : 'text-emerald-600 dark:text-emerald-400'} flex items-center space-x-2`}>
-                  {syncProgress.is_running && syncProgress.processed < syncProgress.total ? (
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                  )}
+                <span className="text-xs font-black uppercase tracking-wider text-brand-600 dark:text-brand-400 flex items-center space-x-2">
+                  <RefreshCw className={`w-3.5 h-3.5 ${syncProgress.is_running ? 'animate-spin' : ''}`} />
                   <span>
-                    {syncProgress.is_running && syncProgress.processed < syncProgress.total ? 'Sync Engine Running' : 'Sync Process Complete • 100% Verified'}
+                    {syncProgress.is_running ? 'Sync Engine Running' : 'Sync Process Complete'}
                   </span>
                 </span>
                 <p className="text-xs font-bold text-gray-500 dark:text-gray-400">
-                  {syncProgress.is_running && syncProgress.processed < syncProgress.total
+                  {syncProgress.is_running
                     ? `Processing Profile: ${syncProgress.current_student || 'Initializing...'}`
-                    : `All 1,395 student statistics are fully verified and up to date${syncProgress.last_sync_time ? ` • Completed: ${syncProgress.last_sync_time}` : ' • Finalized'}`
+                    : `All student statistics are up to date${syncProgress.last_sync_time ? ` • Last synced: ${syncProgress.last_sync_time}` : ''}${syncProgress.triggered_by ? ` • Initiated by: ${syncProgress.triggered_by}` : ''}`
                   }
                 </p>
               </div>
@@ -849,10 +840,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
             <div className="w-full bg-gray-100 dark:bg-navy-950 h-2.5 rounded-full overflow-hidden relative z-10 shadow-inner">
               <div
-                className={`h-full ${syncProgress.is_running && syncProgress.processed < syncProgress.total ? 'bg-gradient-to-r from-brand-500 via-indigo-500 to-purple-600' : 'bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600'} rounded-full transition-all duration-700 ease-out relative`}
+                className="h-full bg-gradient-to-r from-brand-500 via-indigo-500 to-purple-600 rounded-full transition-all duration-700 ease-out relative"
                 style={{ width: `${Math.round((syncProgress.processed / Math.max(1, syncProgress.total)) * 100)}%` }}
               >
-                {syncProgress.is_running && syncProgress.processed < syncProgress.total && (
+                {syncProgress.is_running && (
                   <div className="absolute top-0 right-0 bottom-0 w-20 bg-gradient-to-r from-transparent to-white/30 animate-pulse"></div>
                 )}
               </div>

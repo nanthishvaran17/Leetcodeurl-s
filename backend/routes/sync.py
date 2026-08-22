@@ -137,17 +137,17 @@ def get_current_sync_status(db: Session = Depends(get_db)):
         current_username = None
         progress_pct = 100.0
     else:
-        operation = "COMPLETED" if verified_cnt > 0 else "IDLE"
-        status_text = "● Sync Engine Completed & Verified" if verified_cnt > 0 else "● Sync Engine Ready"
+        operation = "IDLE"
+        status_text = "● Sync Engine Ready"
         total_students = tot
-        students_processed = tot if verified_cnt > 0 else 0
-        profiles_synced = verified_cnt
-        successful = verified_cnt
-        failed = failed_cnt
-        pending_usernames = pending_cnt
+        students_processed = 0
+        profiles_synced = 0
+        successful = 0
+        failed = 0
+        pending_usernames = 0
         current_student = None
         current_username = None
-        progress_pct = 100.0 if verified_cnt > 0 else 0.0
+        progress_pct = 0.0
 
     from backend.time_utils import format_ist, now_utc as get_now_utc, ensure_utc
 

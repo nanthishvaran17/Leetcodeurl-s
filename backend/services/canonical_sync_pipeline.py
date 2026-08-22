@@ -472,7 +472,8 @@ async def run_full_pipeline(
         end_time = datetime.datetime.utcnow()
         duration_sec = round((end_time - start_time).total_seconds(), 2)
 
-        from backend.services.live_sync_service import sync_tracker
+        from backend.services.live_sync_service import sync_tracker, broadcast_sync_event
+        sync_tracker.finish("COMPLETED")
 
         from backend.time_utils import format_ist
         summary = {
@@ -488,6 +489,13 @@ async def run_full_pipeline(
             "completed_at": end_time.isoformat(),
             "completed_at_ist": format_ist(end_time, "%d %b %Y, %I:%M %p IST")
         }
+
+        # Broadcast SYNC_COMPLETED to all connected WebSocket clients
+        await broadcast_sync_event({
+            "type": "SYNC_COMPLETED",
+            "job_id": effective_job_id,
+            "summary": summary
+        })
 
         if progress_callback and hasattr(progress_callback, "finish"):
             progress_callback.finish("COMPLETED")

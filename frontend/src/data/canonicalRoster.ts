@@ -23,7 +23,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1592.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:03.860310"
+      "last_verified_at": "2026-08-22T15:44:54.051799"
     },
     "streak_count": 7,
     "college_rank": 1,
@@ -58,7 +58,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1700.2,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:39.243061"
+      "last_verified_at": "2026-08-22T15:45:17.598803"
     },
     "streak_count": 212,
     "college_rank": 2,
@@ -93,7 +93,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1923.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.395730"
+      "last_verified_at": "2026-08-22T15:45:23.308017"
     },
     "streak_count": 148,
     "college_rank": 3,
@@ -128,7 +128,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1435.3,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.570518"
+      "last_verified_at": "2026-08-22T15:45:13.701763"
     },
     "streak_count": 104,
     "college_rank": 4,
@@ -163,7 +163,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1669.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.067190"
+      "last_verified_at": "2026-08-22T15:45:12.727141"
     },
     "streak_count": 110,
     "college_rank": 5,
@@ -198,7 +198,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1546.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.503890"
+      "last_verified_at": "2026-08-22T15:45:29.777639"
     },
     "streak_count": 13,
     "college_rank": 6,
@@ -233,7 +233,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1340.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.531761"
+      "last_verified_at": "2026-08-22T15:45:13.640423"
     },
     "streak_count": 48,
     "college_rank": 7,
@@ -268,7 +268,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1641.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:24.497103"
+      "last_verified_at": "2026-08-22T15:45:04.191130"
     },
     "streak_count": 137,
     "college_rank": 8,
@@ -303,7 +303,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1356.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.288801"
+      "last_verified_at": "2026-08-22T15:45:03.355025"
     },
     "streak_count": 157,
     "college_rank": 9,
@@ -338,7 +338,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1912.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.731512"
+      "last_verified_at": "2026-08-22T15:45:26.942337"
     },
     "streak_count": 19,
     "college_rank": 10,
@@ -373,7 +373,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1772.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.858793"
+      "last_verified_at": "2026-08-22T15:45:12.377690"
     },
     "streak_count": 13,
     "college_rank": 11,
@@ -408,7 +408,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.401500"
+      "last_verified_at": "2026-08-22T15:45:13.360582"
     },
     "streak_count": 35,
     "college_rank": 12,
@@ -443,7 +443,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1273.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.831780"
+      "last_verified_at": "2026-08-22T15:45:17.291832"
     },
     "streak_count": 12,
     "college_rank": 13,
@@ -478,7 +478,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1419.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.955490"
+      "last_verified_at": "2026-08-22T15:45:22.766742"
     },
     "streak_count": 85,
     "college_rank": 14,
@@ -513,7 +513,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1916.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.579349"
+      "last_verified_at": "2026-08-22T15:45:13.738995"
     },
     "streak_count": 11,
     "college_rank": 15,
@@ -548,7 +548,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:39.508787"
+      "last_verified_at": "2026-08-22T15:45:18.229235"
     },
     "streak_count": 4,
     "college_rank": 16,
@@ -583,7 +583,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1679.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:22.910357"
+      "last_verified_at": "2026-08-22T15:45:03.668493"
     },
     "streak_count": 108,
     "college_rank": 17,
@@ -618,7 +618,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1611.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.962886"
+      "last_verified_at": "2026-08-22T15:45:27.807047"
     },
     "streak_count": 37,
     "college_rank": 18,
@@ -653,7 +653,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1796.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.549494"
+      "last_verified_at": "2026-08-22T15:45:21.908539"
     },
     "streak_count": 81,
     "college_rank": 19,
@@ -688,7 +688,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1363.6,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.168338"
+      "last_verified_at": "2026-08-22T15:45:29.014754"
     },
     "streak_count": 20,
     "college_rank": 20,
@@ -723,7 +723,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1790.3,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.359031"
+      "last_verified_at": "2026-08-22T15:45:13.145004"
     },
     "streak_count": 20,
     "college_rank": 21,
@@ -758,7 +758,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1403.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.699960"
+      "last_verified_at": "2026-08-22T15:45:22.403724"
     },
     "streak_count": 33,
     "college_rank": 22,
@@ -793,7 +793,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:39.274223"
+      "last_verified_at": "2026-08-22T15:45:17.662545"
     },
     "streak_count": 14,
     "college_rank": 23,
@@ -828,7 +828,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:39.573565"
+      "last_verified_at": "2026-08-22T15:45:18.371070"
     },
     "streak_count": 4,
     "college_rank": 24,
@@ -863,7 +863,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1465.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.022001"
+      "last_verified_at": "2026-08-22T15:45:12.642861"
     },
     "streak_count": 116,
     "college_rank": 25,
@@ -898,7 +898,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1672.6,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.927587"
+      "last_verified_at": "2026-08-22T15:45:30.543349"
     },
     "streak_count": 30,
     "college_rank": 26,
@@ -933,7 +933,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1582.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:40.630423"
+      "last_verified_at": "2026-08-22T15:45:19.750022"
     },
     "streak_count": 17,
     "college_rank": 27,
@@ -968,7 +968,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.865811"
+      "last_verified_at": "2026-08-22T15:45:12.485948"
     },
     "streak_count": 8,
     "college_rank": 28,
@@ -1003,7 +1003,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.893258"
+      "last_verified_at": "2026-08-22T15:45:12.497762"
     },
     "streak_count": 8,
     "college_rank": 29,
@@ -1038,7 +1038,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:26.889472"
+      "last_verified_at": "2026-08-22T15:45:05.553138"
     },
     "streak_count": 19,
     "college_rank": 30,
@@ -1073,7 +1073,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.422451"
+      "last_verified_at": "2026-08-22T15:45:10.148936"
     },
     "streak_count": 109,
     "college_rank": 31,
@@ -1108,7 +1108,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1621.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.609368"
+      "last_verified_at": "2026-08-22T15:45:15.146974"
     },
     "streak_count": 6,
     "college_rank": 32,
@@ -1143,7 +1143,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1582.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.044343"
+      "last_verified_at": "2026-08-22T15:45:12.718968"
     },
     "streak_count": 110,
     "college_rank": 33,
@@ -1178,7 +1178,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1476.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.744844"
+      "last_verified_at": "2026-08-22T15:45:13.954196"
     },
     "streak_count": 34,
     "college_rank": 34,
@@ -1206,19 +1206,19 @@ export const CANONICAL_ROSTER: any[] = [
     "sync_state": "SYNCED",
     "profile_url": "https://leetcode.com/u/Yaswanth_1601/",
     "stats": {
-      "total_solved": 274,
+      "total_solved": 275,
       "easy_solved": 169,
-      "medium_solved": 80,
+      "medium_solved": 81,
       "hard_solved": 25,
       "contest_rating": 1515.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.918461"
+      "last_verified_at": "2026-08-22T15:45:14.143441"
     },
     "streak_count": 32,
     "college_rank": 35,
     "dept_rank": 35,
-    "weekly_progress": 274,
+    "weekly_progress": 275,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
     "contest_score_display": "0 / 4",
@@ -1248,7 +1248,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.135293"
+      "last_verified_at": "2026-08-22T15:45:16.224486"
     },
     "streak_count": 53,
     "college_rank": 36,
@@ -1283,7 +1283,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1684.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:26.683968"
+      "last_verified_at": "2026-08-22T15:57:52.283458"
     },
     "streak_count": 18,
     "college_rank": 37,
@@ -1318,7 +1318,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1412.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.401406"
+      "last_verified_at": "2026-08-22T15:45:16.662323"
     },
     "streak_count": 9,
     "college_rank": 38,
@@ -1353,7 +1353,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1588.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.715731"
+      "last_verified_at": "2026-08-22T15:45:30.170638"
     },
     "streak_count": 62,
     "college_rank": 39,
@@ -1388,7 +1388,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1485.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:40.982072"
+      "last_verified_at": "2026-08-22T15:45:20.597187"
     },
     "streak_count": 5,
     "college_rank": 40,
@@ -1423,7 +1423,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1290.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:39.356375"
+      "last_verified_at": "2026-08-22T15:45:17.703726"
     },
     "streak_count": 5,
     "college_rank": 41,
@@ -1458,7 +1458,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1355.2,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:39.438781"
+      "last_verified_at": "2026-08-22T15:45:18.044271"
     },
     "streak_count": 10,
     "college_rank": 42,
@@ -1493,7 +1493,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1638.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.861266"
+      "last_verified_at": "2026-08-22T15:45:14.105002"
     },
     "streak_count": 40,
     "college_rank": 43,
@@ -1528,7 +1528,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1658.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:31.328725"
+      "last_verified_at": "2026-08-22T15:45:07.809601"
     },
     "streak_count": 26,
     "college_rank": 44,
@@ -1563,7 +1563,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:39.862955"
+      "last_verified_at": "2026-08-22T15:45:18.938363"
     },
     "streak_count": 16,
     "college_rank": 45,
@@ -1598,7 +1598,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1338.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:29.003972"
+      "last_verified_at": "2026-08-22T15:45:06.568575"
     },
     "streak_count": 9,
     "college_rank": 46,
@@ -1633,7 +1633,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.619885"
+      "last_verified_at": "2026-08-22T15:45:12.838829"
     },
     "streak_count": 15,
     "college_rank": 47,
@@ -1668,7 +1668,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.016926"
+      "last_verified_at": "2026-08-22T15:45:30.901123"
     },
     "streak_count": 28,
     "college_rank": 48,
@@ -1703,7 +1703,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1464.6,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:28.058992"
+      "last_verified_at": "2026-08-22T15:45:05.948978"
     },
     "streak_count": 7,
     "college_rank": 49,
@@ -1738,7 +1738,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1549.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.774841"
+      "last_verified_at": "2026-08-22T15:45:26.021477"
     },
     "streak_count": 27,
     "college_rank": 50,
@@ -1773,7 +1773,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1515.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.470960"
+      "last_verified_at": "2026-08-22T15:45:21.366469"
     },
     "streak_count": 25,
     "college_rank": 51,
@@ -1808,7 +1808,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1445.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:23.326902"
+      "last_verified_at": "2026-08-22T15:45:03.840280"
     },
     "streak_count": 21,
     "college_rank": 52,
@@ -1843,7 +1843,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.770171"
+      "last_verified_at": "2026-08-22T15:45:12.253799"
     },
     "streak_count": 33,
     "college_rank": 53,
@@ -1878,7 +1878,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1793.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.235719"
+      "last_verified_at": "2026-08-22T15:45:12.866142"
     },
     "streak_count": 29,
     "college_rank": 54,
@@ -1913,7 +1913,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1419.2,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:45.128453"
+      "last_verified_at": "2026-08-22T15:45:13.838490"
     },
     "streak_count": 79,
     "college_rank": 55,
@@ -1948,7 +1948,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1561.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.931707"
+      "last_verified_at": "2026-08-22T15:45:30.616060"
     },
     "streak_count": 31,
     "college_rank": 56,
@@ -1983,7 +1983,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1451.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.386137"
+      "last_verified_at": "2026-08-22T15:45:25.482766"
     },
     "streak_count": 7,
     "college_rank": 57,
@@ -2018,7 +2018,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1521.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:27.734465"
+      "last_verified_at": "2026-08-22T15:45:05.775913"
     },
     "streak_count": 6,
     "college_rank": 58,
@@ -2053,7 +2053,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1398.3,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:39.044709"
+      "last_verified_at": "2026-08-22T15:45:17.476873"
     },
     "streak_count": 11,
     "college_rank": 59,
@@ -2088,7 +2088,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1424.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:16.517201"
+      "last_verified_at": "2026-08-22T15:45:01.130239"
     },
     "streak_count": 6,
     "college_rank": 60,
@@ -2123,7 +2123,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1618.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:19.341084"
+      "last_verified_at": "2026-08-22T15:45:01.999000"
     },
     "streak_count": 19,
     "college_rank": 61,
@@ -2158,7 +2158,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1364.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.301354"
+      "last_verified_at": "2026-08-22T15:45:25.330865"
     },
     "streak_count": 70,
     "college_rank": 62,
@@ -2193,7 +2193,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1545.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:26.284397"
+      "last_verified_at": "2026-08-22T15:57:51.626212"
     },
     "streak_count": 10,
     "college_rank": 63,
@@ -2228,7 +2228,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.447334"
+      "last_verified_at": "2026-08-22T15:45:16.728201"
     },
     "streak_count": 7,
     "college_rank": 64,
@@ -2263,7 +2263,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1495.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.413404"
+      "last_verified_at": "2026-08-22T15:45:26.460618"
     },
     "streak_count": 28,
     "college_rank": 65,
@@ -2298,7 +2298,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.548394"
+      "last_verified_at": "2026-08-22T15:45:15.070665"
     },
     "streak_count": 10,
     "college_rank": 66,
@@ -2333,7 +2333,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1355.3,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.333546"
+      "last_verified_at": "2026-08-22T15:45:16.397408"
     },
     "streak_count": 5,
     "college_rank": 67,
@@ -2368,7 +2368,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1613.6,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.040648"
+      "last_verified_at": "2026-08-22T15:45:26.367389"
     },
     "streak_count": 6,
     "college_rank": 68,
@@ -2403,7 +2403,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:48.069639"
+      "last_verified_at": "2026-08-22T15:46:14.602279"
     },
     "streak_count": 40,
     "college_rank": 69,
@@ -2438,7 +2438,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:40.420891"
+      "last_verified_at": "2026-08-22T15:45:19.593518"
     },
     "streak_count": 6,
     "college_rank": 70,
@@ -2473,7 +2473,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1610.3,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.451200"
+      "last_verified_at": "2026-08-22T15:45:16.799133"
     },
     "streak_count": 27,
     "college_rank": 71,
@@ -2508,7 +2508,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1543.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:39.620358"
+      "last_verified_at": "2026-08-22T15:45:18.536597"
     },
     "streak_count": 6,
     "college_rank": 72,
@@ -2543,7 +2543,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1538.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.635204"
+      "last_verified_at": "2026-08-22T15:45:29.919529"
     },
     "streak_count": 23,
     "college_rank": 73,
@@ -2578,7 +2578,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:03.924154"
+      "last_verified_at": "2026-08-22T15:44:54.059827"
     },
     "streak_count": 6,
     "college_rank": 74,
@@ -2613,7 +2613,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1474.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:28.156265"
+      "last_verified_at": "2026-08-22T15:45:06.148437"
     },
     "streak_count": 9,
     "college_rank": 75,
@@ -2648,7 +2648,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.657786"
+      "last_verified_at": "2026-08-22T15:45:15.228916"
     },
     "streak_count": 9,
     "college_rank": 76,
@@ -2683,7 +2683,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1804.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:26.584091"
+      "last_verified_at": "2026-08-22T15:57:52.235483"
     },
     "streak_count": 9,
     "college_rank": 77,
@@ -2718,7 +2718,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:33.418524"
+      "last_verified_at": "2026-08-22T15:45:09.471926"
     },
     "streak_count": 44,
     "college_rank": 78,
@@ -2753,7 +2753,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1782.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.303372"
+      "last_verified_at": "2026-08-22T15:45:13.110443"
     },
     "streak_count": 4,
     "college_rank": 79,
@@ -2788,7 +2788,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.787510"
+      "last_verified_at": "2026-08-22T15:45:13.976297"
     },
     "streak_count": 43,
     "college_rank": 80,
@@ -2823,7 +2823,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1521.2,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:03.973417"
+      "last_verified_at": "2026-08-22T15:44:54.067202"
     },
     "streak_count": 40,
     "college_rank": 81,
@@ -2858,7 +2858,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:02.505521"
+      "last_verified_at": "2026-08-22T15:46:25.005487"
     },
     "streak_count": 5,
     "college_rank": 82,
@@ -2893,7 +2893,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1625.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.624493"
+      "last_verified_at": "2026-08-22T15:45:13.752342"
     },
     "streak_count": 9,
     "college_rank": 83,
@@ -2928,7 +2928,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:23.497046"
+      "last_verified_at": "2026-08-22T15:45:03.920874"
     },
     "streak_count": 9,
     "college_rank": 84,
@@ -2963,7 +2963,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:39.655399"
+      "last_verified_at": "2026-08-22T15:45:18.543269"
     },
     "streak_count": 5,
     "college_rank": 85,
@@ -2998,7 +2998,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:39.693870"
+      "last_verified_at": "2026-08-22T15:45:18.737372"
     },
     "streak_count": 4,
     "college_rank": 86,
@@ -3033,7 +3033,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1421.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.296878"
+      "last_verified_at": "2026-08-22T15:45:25.323899"
     },
     "streak_count": 38,
     "college_rank": 87,
@@ -3068,7 +3068,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1314.3,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:45.158748"
+      "last_verified_at": "2026-08-22T15:45:28.132871"
     },
     "streak_count": 13,
     "college_rank": 88,
@@ -3103,7 +3103,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1381.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.748933"
+      "last_verified_at": "2026-08-22T15:45:17.575279"
     },
     "streak_count": 19,
     "college_rank": 89,
@@ -3138,7 +3138,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1768.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.275115"
+      "last_verified_at": "2026-08-22T15:45:13.088587"
     },
     "streak_count": 20,
     "college_rank": 90,
@@ -3173,7 +3173,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1367.2,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.148825"
+      "last_verified_at": "2026-08-22T15:45:28.899209"
     },
     "streak_count": 29,
     "college_rank": 91,
@@ -3208,7 +3208,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:39.470462"
+      "last_verified_at": "2026-08-22T15:45:18.073095"
     },
     "streak_count": 4,
     "college_rank": 92,
@@ -3243,7 +3243,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1408.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.513455"
+      "last_verified_at": "2026-08-22T15:45:21.528555"
     },
     "streak_count": 24,
     "college_rank": 93,
@@ -3278,7 +3278,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:49.488633"
+      "last_verified_at": "2026-08-22T15:45:23.206300"
     },
     "streak_count": 38,
     "college_rank": 94,
@@ -3313,7 +3313,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1533.3,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.061521"
+      "last_verified_at": "2026-08-22T15:45:05.850737"
     },
     "streak_count": 43,
     "college_rank": 95,
@@ -3348,7 +3348,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1426.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.134951"
+      "last_verified_at": "2026-08-22T15:45:31.181532"
     },
     "streak_count": 6,
     "college_rank": 96,
@@ -3383,7 +3383,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1495.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:40.928070"
+      "last_verified_at": "2026-08-22T15:45:20.342477"
     },
     "streak_count": 4,
     "college_rank": 97,
@@ -3418,7 +3418,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1561.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.639401"
+      "last_verified_at": "2026-08-22T15:45:29.952403"
     },
     "streak_count": 7,
     "college_rank": 98,
@@ -3453,7 +3453,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1367.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.793265"
+      "last_verified_at": "2026-08-22T15:45:17.270225"
     },
     "streak_count": 6,
     "college_rank": 99,
@@ -3488,7 +3488,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.159490"
+      "last_verified_at": "2026-08-22T15:45:24.966743"
     },
     "streak_count": 6,
     "college_rank": 100,
@@ -3523,7 +3523,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1547.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.505510"
+      "last_verified_at": "2026-08-22T15:45:10.288715"
     },
     "streak_count": 43,
     "college_rank": 101,
@@ -3558,7 +3558,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:21.734572"
+      "last_verified_at": "2026-08-22T15:45:03.037698"
     },
     "streak_count": 7,
     "college_rank": 102,
@@ -3593,7 +3593,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.004234"
+      "last_verified_at": "2026-08-22T15:44:54.074258"
     },
     "streak_count": 10,
     "college_rank": 103,
@@ -3628,7 +3628,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1508.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:39.502799"
+      "last_verified_at": "2026-08-22T15:45:18.221486"
     },
     "streak_count": 5,
     "college_rank": 104,
@@ -3663,7 +3663,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1500.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:26.849433"
+      "last_verified_at": "2026-08-22T15:57:52.352760"
     },
     "streak_count": 41,
     "college_rank": 105,
@@ -3698,7 +3698,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1419.2,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:40.902716"
+      "last_verified_at": "2026-08-22T15:45:20.039665"
     },
     "streak_count": 4,
     "college_rank": 106,
@@ -3733,7 +3733,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1519.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.794073"
+      "last_verified_at": "2026-08-22T15:45:15.614858"
     },
     "streak_count": 8,
     "college_rank": 107,
@@ -3768,7 +3768,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1411.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:27.975024"
+      "last_verified_at": "2026-08-22T15:45:05.915104"
     },
     "streak_count": 12,
     "college_rank": 108,
@@ -3803,7 +3803,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:40.777981"
+      "last_verified_at": "2026-08-22T15:45:19.890607"
     },
     "streak_count": 5,
     "college_rank": 109,
@@ -3838,7 +3838,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1565.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.038128"
+      "last_verified_at": "2026-08-22T15:44:54.082040"
     },
     "streak_count": 9,
     "college_rank": 110,
@@ -3873,7 +3873,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:24.394409"
+      "last_verified_at": "2026-08-22T15:45:04.070858"
     },
     "streak_count": 25,
     "college_rank": 111,
@@ -3908,7 +3908,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1360.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:28.859582"
+      "last_verified_at": "2026-08-22T15:45:06.407620"
     },
     "streak_count": 4,
     "college_rank": 112,
@@ -3943,7 +3943,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.369251"
+      "last_verified_at": "2026-08-22T15:45:12.690301"
     },
     "streak_count": 11,
     "college_rank": 113,
@@ -3978,7 +3978,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1377.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:17.424015"
+      "last_verified_at": "2026-08-22T15:45:01.251209"
     },
     "streak_count": 3,
     "college_rank": 114,
@@ -4013,7 +4013,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1376.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.107917"
+      "last_verified_at": "2026-08-22T15:45:30.919588"
     },
     "streak_count": 85,
     "college_rank": 115,
@@ -4048,7 +4048,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1351.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:31.692822"
+      "last_verified_at": "2026-08-22T15:45:08.187303"
     },
     "streak_count": 22,
     "college_rank": 116,
@@ -4083,7 +4083,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1542.6,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:39.040278"
+      "last_verified_at": "2026-08-22T15:45:17.470212"
     },
     "streak_count": 6,
     "college_rank": 117,
@@ -4118,7 +4118,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1290.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.660359"
+      "last_verified_at": "2026-08-22T15:45:13.798432"
     },
     "streak_count": 18,
     "college_rank": 118,
@@ -4153,7 +4153,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1552.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.599348"
+      "last_verified_at": "2026-08-22T15:45:15.103883"
     },
     "streak_count": 25,
     "college_rank": 119,
@@ -4188,7 +4188,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1411.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.369685"
+      "last_verified_at": "2026-08-22T15:45:16.474410"
     },
     "streak_count": 12,
     "college_rank": 120,
@@ -4223,7 +4223,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.456098"
+      "last_verified_at": "2026-08-22T15:45:11.460899"
     },
     "streak_count": 12,
     "college_rank": 121,
@@ -4258,7 +4258,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1270.2,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.065941"
+      "last_verified_at": "2026-08-22T15:44:54.088976"
     },
     "streak_count": 3,
     "college_rank": 122,
@@ -4293,7 +4293,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:23.795264"
+      "last_verified_at": "2026-08-22T15:45:03.931066"
     },
     "streak_count": 7,
     "college_rank": 123,
@@ -4328,7 +4328,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1496.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.881622"
+      "last_verified_at": "2026-08-22T15:45:27.377367"
     },
     "streak_count": 13,
     "college_rank": 124,
@@ -4363,7 +4363,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.100186"
+      "last_verified_at": "2026-08-22T15:44:54.096804"
     },
     "streak_count": 5,
     "college_rank": 125,
@@ -4398,7 +4398,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.993632"
+      "last_verified_at": "2026-08-22T15:45:30.828630"
     },
     "streak_count": 6,
     "college_rank": 126,
@@ -4433,7 +4433,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1292.3,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.268684"
+      "last_verified_at": "2026-08-22T15:45:29.085023"
     },
     "streak_count": 25,
     "college_rank": 127,
@@ -4468,7 +4468,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:02.491141"
+      "last_verified_at": "2026-08-22T15:46:24.896297"
     },
     "streak_count": 11,
     "college_rank": 128,
@@ -4503,7 +4503,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:26.384357"
+      "last_verified_at": "2026-08-22T15:57:51.637757"
     },
     "streak_count": 20,
     "college_rank": 129,
@@ -4538,7 +4538,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1537.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.396588"
+      "last_verified_at": "2026-08-22T15:45:13.303912"
     },
     "streak_count": 27,
     "college_rank": 130,
@@ -4573,7 +4573,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.256827"
+      "last_verified_at": "2026-08-22T15:45:31.591091"
     },
     "streak_count": 27,
     "college_rank": 131,
@@ -4608,7 +4608,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.812113"
+      "last_verified_at": "2026-08-22T15:45:15.643507"
     },
     "streak_count": 7,
     "college_rank": 132,
@@ -4643,7 +4643,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1350.6,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.976601"
+      "last_verified_at": "2026-08-22T15:45:26.127994"
     },
     "streak_count": 5,
     "college_rank": 133,
@@ -4678,7 +4678,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1368.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.338390"
+      "last_verified_at": "2026-08-22T15:45:16.454695"
     },
     "streak_count": 2,
     "college_rank": 134,
@@ -4713,7 +4713,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.099921"
+      "last_verified_at": "2026-08-22T15:45:12.800724"
     },
     "streak_count": 7,
     "college_rank": 135,
@@ -4748,7 +4748,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1525.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.514442"
+      "last_verified_at": "2026-08-22T15:45:16.906726"
     },
     "streak_count": 5,
     "college_rank": 136,
@@ -4783,7 +4783,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1582.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.132266"
+      "last_verified_at": "2026-08-22T15:44:54.104806"
     },
     "streak_count": 6,
     "college_rank": 137,
@@ -4818,7 +4818,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1345.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.238587"
+      "last_verified_at": "2026-08-22T15:45:26.380125"
     },
     "streak_count": 9,
     "college_rank": 138,
@@ -4853,7 +4853,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.160161"
+      "last_verified_at": "2026-08-22T15:45:16.254764"
     },
     "streak_count": 8,
     "college_rank": 139,
@@ -4888,7 +4888,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:17.096196"
+      "last_verified_at": "2026-08-22T15:45:01.187376"
     },
     "streak_count": 5,
     "college_rank": 140,
@@ -4923,7 +4923,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1492.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.617531"
+      "last_verified_at": "2026-08-22T15:45:23.880842"
     },
     "streak_count": 6,
     "college_rank": 141,
@@ -4958,7 +4958,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:02.933312"
+      "last_verified_at": "2026-08-22T15:46:25.638721"
     },
     "streak_count": 6,
     "college_rank": 142,
@@ -4993,7 +4993,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.442160"
+      "last_verified_at": "2026-08-22T15:44:56.933578"
     },
     "streak_count": 11,
     "college_rank": 143,
@@ -5028,7 +5028,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.159121"
+      "last_verified_at": "2026-08-22T15:44:54.113050"
     },
     "streak_count": 8,
     "college_rank": 144,
@@ -5063,7 +5063,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:02.466660"
+      "last_verified_at": "2026-08-22T15:46:24.461837"
     },
     "streak_count": 4,
     "college_rank": 145,
@@ -5098,7 +5098,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.534746"
+      "last_verified_at": "2026-08-22T15:45:14.945732"
     },
     "streak_count": 5,
     "college_rank": 146,
@@ -5133,7 +5133,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:27.584692"
+      "last_verified_at": "2026-08-22T15:45:05.563216"
     },
     "streak_count": 17,
     "college_rank": 147,
@@ -5168,7 +5168,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.976257"
+      "last_verified_at": "2026-08-22T15:45:12.547530"
     },
     "streak_count": 36,
     "college_rank": 148,
@@ -5203,7 +5203,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1353.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:40.292193"
+      "last_verified_at": "2026-08-22T15:45:19.284232"
     },
     "streak_count": 5,
     "college_rank": 149,
@@ -5238,7 +5238,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1528.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.519812"
+      "last_verified_at": "2026-08-22T15:45:17.067538"
     },
     "streak_count": 6,
     "college_rank": 150,
@@ -5273,7 +5273,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:25.096508"
+      "last_verified_at": "2026-08-22T15:57:51.394488"
     },
     "streak_count": 23,
     "college_rank": 151,
@@ -5308,7 +5308,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1351.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.184508"
+      "last_verified_at": "2026-08-22T15:44:54.121861"
     },
     "streak_count": 5,
     "college_rank": 152,
@@ -5343,7 +5343,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1452.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:30.464046"
+      "last_verified_at": "2026-08-22T15:45:07.507252"
     },
     "streak_count": 18,
     "college_rank": 153,
@@ -5378,7 +5378,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.032154"
+      "last_verified_at": "2026-08-22T15:45:15.759953"
     },
     "streak_count": 6,
     "college_rank": 154,
@@ -5413,7 +5413,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.334078"
+      "last_verified_at": "2026-08-22T15:45:10.037572"
     },
     "streak_count": 10,
     "college_rank": 155,
@@ -5448,7 +5448,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1588.3,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:40.940261"
+      "last_verified_at": "2026-08-22T15:45:20.587254"
     },
     "streak_count": 5,
     "college_rank": 156,
@@ -5483,7 +5483,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.606358"
+      "last_verified_at": "2026-08-22T15:45:13.745957"
     },
     "streak_count": 33,
     "college_rank": 157,
@@ -5518,7 +5518,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:23.312936"
+      "last_verified_at": "2026-08-22T15:45:03.829459"
     },
     "streak_count": 6,
     "college_rank": 158,
@@ -5553,7 +5553,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.604995"
+      "last_verified_at": "2026-08-22T15:45:15.127474"
     },
     "streak_count": 37,
     "college_rank": 159,
@@ -5588,7 +5588,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.491935"
+      "last_verified_at": "2026-08-22T15:45:11.647608"
     },
     "streak_count": 13,
     "college_rank": 160,
@@ -5623,7 +5623,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1544.2,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:22.367768"
+      "last_verified_at": "2026-08-22T15:45:03.375066"
     },
     "streak_count": 12,
     "college_rank": 161,
@@ -5658,7 +5658,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1387.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.462277"
+      "last_verified_at": "2026-08-22T15:45:23.680144"
     },
     "streak_count": 4,
     "college_rank": 162,
@@ -5693,7 +5693,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:40.370636"
+      "last_verified_at": "2026-08-22T15:45:19.317837"
     },
     "streak_count": 5,
     "college_rank": 163,
@@ -5728,7 +5728,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.596887"
+      "last_verified_at": "2026-08-22T15:45:10.676400"
     },
     "streak_count": 7,
     "college_rank": 164,
@@ -5763,7 +5763,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:14.233237"
+      "last_verified_at": "2026-08-22T15:45:00.900598"
     },
     "streak_count": 6,
     "college_rank": 165,
@@ -5798,7 +5798,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:27.048576"
+      "last_verified_at": "2026-08-22T15:45:44.973570"
     },
     "streak_count": 8,
     "college_rank": 166,
@@ -5833,7 +5833,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:07.621487"
+      "last_verified_at": "2026-08-22T15:45:36.936102"
     },
     "streak_count": 34,
     "college_rank": 167,
@@ -5868,7 +5868,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.488635"
+      "last_verified_at": "2026-08-22T15:44:57.125064"
     },
     "streak_count": 6,
     "college_rank": 168,
@@ -5903,7 +5903,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:22.517581"
+      "last_verified_at": "2026-08-22T15:45:03.417302"
     },
     "streak_count": 7,
     "college_rank": 169,
@@ -5938,7 +5938,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:23.009022"
+      "last_verified_at": "2026-08-22T15:45:03.759767"
     },
     "streak_count": 12,
     "college_rank": 170,
@@ -5973,7 +5973,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.538116"
+      "last_verified_at": "2026-08-22T15:45:13.668061"
     },
     "streak_count": 5,
     "college_rank": 171,
@@ -6008,7 +6008,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1469.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.214281"
+      "last_verified_at": "2026-08-22T15:45:25.154216"
     },
     "streak_count": 14,
     "college_rank": 172,
@@ -6043,7 +6043,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1351.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.988912"
+      "last_verified_at": "2026-08-22T15:45:30.741037"
     },
     "streak_count": 6,
     "college_rank": 173,
@@ -6078,7 +6078,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:26.516235"
+      "last_verified_at": "2026-08-22T15:57:52.231148"
     },
     "streak_count": 17,
     "college_rank": 174,
@@ -6113,7 +6113,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:30.076479"
+      "last_verified_at": "2026-08-22T15:45:07.318605"
     },
     "streak_count": 8,
     "college_rank": 175,
@@ -6148,7 +6148,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1478.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.088373"
+      "last_verified_at": "2026-08-22T15:45:24.912300"
     },
     "streak_count": 10,
     "college_rank": 176,
@@ -6183,7 +6183,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:49.925455"
+      "last_verified_at": "2026-08-22T15:46:15.970392"
     },
     "streak_count": 11,
     "college_rank": 177,
@@ -6218,7 +6218,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.603247"
+      "last_verified_at": "2026-08-22T15:45:17.221593"
     },
     "streak_count": 1,
     "college_rank": 178,
@@ -6253,7 +6253,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1432.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.627584"
+      "last_verified_at": "2026-08-22T15:45:25.955417"
     },
     "streak_count": 41,
     "college_rank": 179,
@@ -6288,7 +6288,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1512.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.893462"
+      "last_verified_at": "2026-08-22T15:45:17.427061"
     },
     "streak_count": 3,
     "college_rank": 180,
@@ -6323,7 +6323,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1411.3,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:10.264106"
+      "last_verified_at": "2026-08-22T15:45:37.752857"
     },
     "streak_count": 5,
     "college_rank": 181,
@@ -6358,7 +6358,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1434.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.366192"
+      "last_verified_at": "2026-08-22T15:45:29.138931"
     },
     "streak_count": 13,
     "college_rank": 182,
@@ -6393,7 +6393,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.472236"
+      "last_verified_at": "2026-08-22T15:45:11.518008"
     },
     "streak_count": 7,
     "college_rank": 183,
@@ -6428,7 +6428,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.338938"
+      "last_verified_at": "2026-08-22T15:45:10.045370"
     },
     "streak_count": 13,
     "college_rank": 184,
@@ -6463,7 +6463,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.942844"
+      "last_verified_at": "2026-08-22T15:45:30.667048"
     },
     "streak_count": 6,
     "college_rank": 185,
@@ -6498,7 +6498,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.224361"
+      "last_verified_at": "2026-08-22T15:44:54.129225"
     },
     "streak_count": 5,
     "college_rank": 186,
@@ -6533,7 +6533,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.501168"
+      "last_verified_at": "2026-08-22T15:45:10.281203"
     },
     "streak_count": 6,
     "college_rank": 187,
@@ -6568,7 +6568,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1375.6,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.213065"
+      "last_verified_at": "2026-08-22T15:45:31.428050"
     },
     "streak_count": 3,
     "college_rank": 188,
@@ -6603,7 +6603,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1442.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.701940"
+      "last_verified_at": "2026-08-22T15:45:30.059654"
     },
     "streak_count": 11,
     "college_rank": 189,
@@ -6638,7 +6638,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1336.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:40.322193"
+      "last_verified_at": "2026-08-22T15:45:19.290412"
     },
     "streak_count": 4,
     "college_rank": 190,
@@ -6673,7 +6673,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.407768"
+      "last_verified_at": "2026-08-22T15:45:14.744048"
     },
     "streak_count": 6,
     "college_rank": 191,
@@ -6708,7 +6708,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:30.983160"
+      "last_verified_at": "2026-08-22T15:45:07.710237"
     },
     "streak_count": 6,
     "college_rank": 192,
@@ -6743,7 +6743,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:52.393415"
+      "last_verified_at": "2026-08-22T15:45:34.220818"
     },
     "streak_count": 6,
     "college_rank": 193,
@@ -6778,7 +6778,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1456.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:14.710355"
+      "last_verified_at": "2026-08-22T15:45:00.950494"
     },
     "streak_count": 4,
     "college_rank": 194,
@@ -6813,7 +6813,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.141231"
+      "last_verified_at": "2026-08-22T15:45:16.239535"
     },
     "streak_count": 7,
     "college_rank": 195,
@@ -6848,7 +6848,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1446.2,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.979062"
+      "last_verified_at": "2026-08-22T15:45:22.776797"
     },
     "streak_count": 7,
     "college_rank": 196,
@@ -6883,7 +6883,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:17.925360"
+      "last_verified_at": "2026-08-22T15:45:01.439517"
     },
     "streak_count": 6,
     "college_rank": 197,
@@ -6918,7 +6918,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1480.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:20.260428"
+      "last_verified_at": "2026-08-22T15:45:02.423171"
     },
     "streak_count": 5,
     "college_rank": 198,
@@ -6953,7 +6953,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1390.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.510048"
+      "last_verified_at": "2026-08-22T15:45:10.403081"
     },
     "streak_count": 6,
     "college_rank": 199,
@@ -6988,7 +6988,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1626.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.935971"
+      "last_verified_at": "2026-08-22T15:45:11.025050"
     },
     "streak_count": 4,
     "college_rank": 200,
@@ -7023,7 +7023,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:29.258500"
+      "last_verified_at": "2026-08-22T15:45:06.732611"
     },
     "streak_count": 9,
     "college_rank": 201,
@@ -7058,7 +7058,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:31.108802"
+      "last_verified_at": "2026-08-22T15:45:07.719878"
     },
     "streak_count": 7,
     "college_rank": 202,
@@ -7093,7 +7093,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:31.209270"
+      "last_verified_at": "2026-08-22T15:45:07.755818"
     },
     "streak_count": 6,
     "college_rank": 203,
@@ -7128,7 +7128,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1574.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:32.869523"
+      "last_verified_at": "2026-08-22T15:45:08.599367"
     },
     "streak_count": 6,
     "college_rank": 204,
@@ -7163,7 +7163,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1459.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:31.273382"
+      "last_verified_at": "2026-08-22T15:45:07.802933"
     },
     "streak_count": 8,
     "college_rank": 205,
@@ -7198,7 +7198,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.695405"
+      "last_verified_at": "2026-08-22T15:45:11.931105"
     },
     "streak_count": 4,
     "college_rank": 206,
@@ -7233,7 +7233,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:40.572649"
+      "last_verified_at": "2026-08-22T15:45:19.722770"
     },
     "streak_count": 3,
     "college_rank": 207,
@@ -7268,7 +7268,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:28.935952"
+      "last_verified_at": "2026-08-22T15:45:06.526246"
     },
     "streak_count": 8,
     "college_rank": 208,
@@ -7303,7 +7303,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:21.900187"
+      "last_verified_at": "2026-08-22T15:45:03.249558"
     },
     "streak_count": 2,
     "college_rank": 209,
@@ -7338,7 +7338,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1433.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:14.027288"
+      "last_verified_at": "2026-08-22T15:57:46.241593"
     },
     "streak_count": 9,
     "college_rank": 210,
@@ -7373,7 +7373,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1799.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.083349"
+      "last_verified_at": "2026-08-22T15:45:19.032798"
     },
     "streak_count": 17,
     "college_rank": 211,
@@ -7408,7 +7408,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:19.515588"
+      "last_verified_at": "2026-08-22T15:45:02.194211"
     },
     "streak_count": 7,
     "college_rank": 212,
@@ -7443,7 +7443,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.378513"
+      "last_verified_at": "2026-08-22T15:44:56.749065"
     },
     "streak_count": 12,
     "college_rank": 213,
@@ -7478,7 +7478,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.860870"
+      "last_verified_at": "2026-08-22T15:45:17.324588"
     },
     "streak_count": 3,
     "college_rank": 214,
@@ -7513,7 +7513,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1638.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.549974"
+      "last_verified_at": "2026-08-22T15:44:54.137761"
     },
     "streak_count": 14,
     "college_rank": 215,
@@ -7548,7 +7548,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:20.320228"
+      "last_verified_at": "2026-08-22T15:45:02.556002"
     },
     "streak_count": 1,
     "college_rank": 216,
@@ -7583,7 +7583,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:31.427551"
+      "last_verified_at": "2026-08-22T15:45:08.063605"
     },
     "streak_count": 7,
     "college_rank": 217,
@@ -7618,7 +7618,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1305.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.759637"
+      "last_verified_at": "2026-08-22T15:45:27.014717"
     },
     "streak_count": 9,
     "college_rank": 218,
@@ -7653,7 +7653,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:39.192370"
+      "last_verified_at": "2026-08-22T15:45:17.570187"
     },
     "streak_count": 4,
     "college_rank": 219,
@@ -7688,7 +7688,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1298.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.008269"
+      "last_verified_at": "2026-08-22T15:45:28.829831"
     },
     "streak_count": 20,
     "college_rank": 220,
@@ -7723,7 +7723,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1377.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.541569"
+      "last_verified_at": "2026-08-22T15:45:23.705117"
     },
     "streak_count": 13,
     "college_rank": 221,
@@ -7758,7 +7758,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:40.845738"
+      "last_verified_at": "2026-08-22T15:45:19.900915"
     },
     "streak_count": 3,
     "college_rank": 222,
@@ -7793,7 +7793,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1343.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:21.192427"
+      "last_verified_at": "2026-08-22T15:45:02.947266"
     },
     "streak_count": 9,
     "college_rank": 223,
@@ -7828,7 +7828,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1417.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.407470"
+      "last_verified_at": "2026-08-22T15:45:29.245335"
     },
     "streak_count": 6,
     "college_rank": 224,
@@ -7863,7 +7863,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.544700"
+      "last_verified_at": "2026-08-22T15:45:15.049601"
     },
     "streak_count": 6,
     "college_rank": 225,
@@ -7898,7 +7898,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.586057"
+      "last_verified_at": "2026-08-22T15:44:59.138262"
     },
     "streak_count": 5,
     "college_rank": 226,
@@ -7933,7 +7933,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:01.809877"
+      "last_verified_at": "2026-08-22T15:46:23.139384"
     },
     "streak_count": 5,
     "college_rank": 227,
@@ -7968,7 +7968,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1351.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:11.733180"
+      "last_verified_at": "2026-08-22T15:57:46.172349"
     },
     "streak_count": 5,
     "college_rank": 228,
@@ -8003,7 +8003,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1500.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.786968"
+      "last_verified_at": "2026-08-22T15:45:17.262706"
     },
     "streak_count": 2,
     "college_rank": 229,
@@ -8038,7 +8038,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1356.2,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:39.718678"
+      "last_verified_at": "2026-08-22T15:45:18.750737"
     },
     "streak_count": 4,
     "college_rank": 230,
@@ -8073,7 +8073,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1335.6,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:21.564487"
+      "last_verified_at": "2026-08-22T15:45:03.009996"
     },
     "streak_count": 4,
     "college_rank": 231,
@@ -8108,7 +8108,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1424.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.442997"
+      "last_verified_at": "2026-08-22T15:45:16.686175"
     },
     "streak_count": 5,
     "college_rank": 232,
@@ -8143,7 +8143,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.168181"
+      "last_verified_at": "2026-08-22T15:45:31.301053"
     },
     "streak_count": 5,
     "college_rank": 233,
@@ -8178,7 +8178,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:24.776595"
+      "last_verified_at": "2026-08-22T15:45:04.360189"
     },
     "streak_count": 7,
     "college_rank": 234,
@@ -8213,7 +8213,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:24.903637"
+      "last_verified_at": "2026-08-22T15:57:51.384856"
     },
     "streak_count": 8,
     "college_rank": 235,
@@ -8248,7 +8248,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.912947"
+      "last_verified_at": "2026-08-22T15:45:24.412009"
     },
     "streak_count": 7,
     "college_rank": 236,
@@ -8283,7 +8283,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.152323"
+      "last_verified_at": "2026-08-22T15:44:58.137677"
     },
     "streak_count": 6,
     "college_rank": 237,
@@ -8318,7 +8318,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:54.249769"
+      "last_verified_at": "2026-08-22T15:46:18.235699"
     },
     "streak_count": 1,
     "college_rank": 238,
@@ -8353,7 +8353,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.690622"
+      "last_verified_at": "2026-08-22T15:45:11.908203"
     },
     "streak_count": 3,
     "college_rank": 239,
@@ -8388,7 +8388,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1532.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.092549"
+      "last_verified_at": "2026-08-22T15:45:23.022388"
     },
     "streak_count": 14,
     "college_rank": 240,
@@ -8423,7 +8423,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.257861"
+      "last_verified_at": "2026-08-22T15:44:58.268111"
     },
     "streak_count": 6,
     "college_rank": 241,
@@ -8458,7 +8458,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1513.2,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.088168"
+      "last_verified_at": "2026-08-22T15:45:23.016038"
     },
     "streak_count": 13,
     "college_rank": 242,
@@ -8493,7 +8493,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.314413"
+      "last_verified_at": "2026-08-22T15:45:11.267614"
     },
     "streak_count": 4,
     "college_rank": 243,
@@ -8528,7 +8528,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.082527"
+      "last_verified_at": "2026-08-22T15:45:12.783877"
     },
     "streak_count": 11,
     "college_rank": 244,
@@ -8563,7 +8563,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:20.301779"
+      "last_verified_at": "2026-08-22T15:45:02.539549"
     },
     "streak_count": 5,
     "college_rank": 245,
@@ -8598,7 +8598,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1422.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.617211"
+      "last_verified_at": "2026-08-22T15:44:54.145524"
     },
     "streak_count": 6,
     "college_rank": 246,
@@ -8633,7 +8633,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:28.460511"
+      "last_verified_at": "2026-08-22T15:45:06.330430"
     },
     "streak_count": 7,
     "college_rank": 247,
@@ -8668,7 +8668,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:30.591979"
+      "last_verified_at": "2026-08-22T15:45:07.517040"
     },
     "streak_count": 6,
     "college_rank": 248,
@@ -8703,7 +8703,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.876297"
+      "last_verified_at": "2026-08-22T15:45:27.349673"
     },
     "streak_count": 6,
     "college_rank": 249,
@@ -8738,7 +8738,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:12.824759"
+      "last_verified_at": "2026-08-22T15:57:46.217935"
     },
     "streak_count": 3,
     "college_rank": 250,
@@ -8773,7 +8773,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1487.3,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.480568"
+      "last_verified_at": "2026-08-22T15:45:29.525768"
     },
     "streak_count": 6,
     "college_rank": 251,
@@ -8808,7 +8808,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:17.212441"
+      "last_verified_at": "2026-08-22T15:45:01.227011"
     },
     "streak_count": 5,
     "college_rank": 252,
@@ -8843,7 +8843,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:45.773754"
+      "last_verified_at": "2026-08-22T15:45:28.629931"
     },
     "streak_count": 6,
     "college_rank": 253,
@@ -8878,7 +8878,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1544.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.319752"
+      "last_verified_at": "2026-08-22T15:45:21.149934"
     },
     "streak_count": 5,
     "college_rank": 254,
@@ -8913,7 +8913,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:03.111077"
+      "last_verified_at": "2026-08-22T15:46:25.645394"
     },
     "streak_count": 4,
     "college_rank": 255,
@@ -8948,7 +8948,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1469.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.386038"
+      "last_verified_at": "2026-08-22T15:45:29.216130"
     },
     "streak_count": 4,
     "college_rank": 256,
@@ -8983,7 +8983,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:25.519339"
+      "last_verified_at": "2026-08-22T15:57:51.427848"
     },
     "streak_count": 7,
     "college_rank": 257,
@@ -9018,7 +9018,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.865819"
+      "last_verified_at": "2026-08-22T15:45:17.331827"
     },
     "streak_count": 10,
     "college_rank": 258,
@@ -9053,7 +9053,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1414.6,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:12.098537"
+      "last_verified_at": "2026-08-22T15:57:46.180370"
     },
     "streak_count": 4,
     "college_rank": 259,
@@ -9088,7 +9088,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1641.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:12.154225"
+      "last_verified_at": "2026-08-22T15:57:46.190844"
     },
     "streak_count": 3,
     "college_rank": 260,
@@ -9123,7 +9123,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.985740"
+      "last_verified_at": "2026-08-22T15:57:46.003861"
     },
     "streak_count": 9,
     "college_rank": 261,
@@ -9158,7 +9158,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1348.3,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:13.227837"
+      "last_verified_at": "2026-08-22T15:57:46.230602"
     },
     "streak_count": 6,
     "college_rank": 262,
@@ -9193,7 +9193,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:56.217520"
+      "last_verified_at": "2026-08-22T15:46:20.128538"
     },
     "streak_count": 10,
     "college_rank": 263,
@@ -9228,7 +9228,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1391.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:45.525966"
+      "last_verified_at": "2026-08-22T15:45:28.425103"
     },
     "streak_count": 9,
     "college_rank": 264,
@@ -9263,7 +9263,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:33.804145"
+      "last_verified_at": "2026-08-22T15:45:09.657019"
     },
     "streak_count": 9,
     "college_rank": 265,
@@ -9298,7 +9298,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.636454"
+      "last_verified_at": "2026-08-22T15:44:54.153565"
     },
     "streak_count": 8,
     "college_rank": 266,
@@ -9333,7 +9333,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1355.6,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:15.617092"
+      "last_verified_at": "2026-08-22T15:45:01.085594"
     },
     "streak_count": 4,
     "college_rank": 267,
@@ -9368,7 +9368,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1457.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.596550"
+      "last_verified_at": "2026-08-22T15:45:23.872621"
     },
     "streak_count": 5,
     "college_rank": 268,
@@ -9403,7 +9403,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1473.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:40.402941"
+      "last_verified_at": "2026-08-22T15:45:19.438567"
     },
     "streak_count": 6,
     "college_rank": 269,
@@ -9438,7 +9438,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1602.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.505348"
+      "last_verified_at": "2026-08-22T15:45:31.965416"
     },
     "streak_count": 11,
     "college_rank": 270,
@@ -9473,7 +9473,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1278.3,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.105638"
+      "last_verified_at": "2026-08-22T15:44:57.827706"
     },
     "streak_count": 6,
     "college_rank": 271,
@@ -9508,7 +9508,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.981174"
+      "last_verified_at": "2026-08-22T15:45:26.305530"
     },
     "streak_count": 13,
     "college_rank": 272,
@@ -9543,7 +9543,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1359.6,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.154053"
+      "last_verified_at": "2026-08-22T15:45:24.938791"
     },
     "streak_count": 11,
     "college_rank": 273,
@@ -9578,7 +9578,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1468.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.060937"
+      "last_verified_at": "2026-08-22T15:45:24.779130"
     },
     "streak_count": 8,
     "college_rank": 274,
@@ -9613,7 +9613,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1540.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:11.692699"
+      "last_verified_at": "2026-08-22T15:57:46.163047"
     },
     "streak_count": 4,
     "college_rank": 275,
@@ -9648,7 +9648,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.120477"
+      "last_verified_at": "2026-08-22T15:45:12.834226"
     },
     "streak_count": 8,
     "college_rank": 276,
@@ -9683,7 +9683,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.739090"
+      "last_verified_at": "2026-08-22T15:44:54.194564"
     },
     "streak_count": 6,
     "college_rank": 277,
@@ -9718,7 +9718,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1626.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:20.382824"
+      "last_verified_at": "2026-08-22T15:45:02.569060"
     },
     "streak_count": 3,
     "college_rank": 278,
@@ -9753,7 +9753,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:26.695488"
+      "last_verified_at": "2026-08-22T15:57:52.323329"
     },
     "streak_count": 5,
     "college_rank": 279,
@@ -9788,7 +9788,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1538.6,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:11.308671"
+      "last_verified_at": "2026-08-22T15:57:46.155745"
     },
     "streak_count": 5,
     "college_rank": 280,
@@ -9823,7 +9823,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1399.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.663465"
+      "last_verified_at": "2026-08-22T15:44:54.161820"
     },
     "streak_count": 6,
     "college_rank": 281,
@@ -9858,7 +9858,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1475.6,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.684895"
+      "last_verified_at": "2026-08-22T15:44:54.170183"
     },
     "streak_count": 6,
     "college_rank": 282,
@@ -9893,7 +9893,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:19.430858"
+      "last_verified_at": "2026-08-22T15:45:02.183436"
     },
     "streak_count": 5,
     "college_rank": 283,
@@ -9928,7 +9928,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:22.542300"
+      "last_verified_at": "2026-08-22T15:45:03.514541"
     },
     "streak_count": 12,
     "college_rank": 284,
@@ -9963,7 +9963,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1459.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:12.847572"
+      "last_verified_at": "2026-08-22T15:57:46.221921"
     },
     "streak_count": 4,
     "college_rank": 285,
@@ -9998,7 +9998,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.490824"
+      "last_verified_at": "2026-08-22T15:45:10.217963"
     },
     "streak_count": 14,
     "college_rank": 286,
@@ -10033,7 +10033,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1300.2,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.333445"
+      "last_verified_at": "2026-08-22T15:45:20.558667"
     },
     "streak_count": 5,
     "college_rank": 287,
@@ -10068,7 +10068,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1291.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.592588"
+      "last_verified_at": "2026-08-22T15:44:57.360347"
     },
     "streak_count": 5,
     "college_rank": 288,
@@ -10103,7 +10103,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.722092"
+      "last_verified_at": "2026-08-22T15:44:54.186750"
     },
     "streak_count": 5,
     "college_rank": 289,
@@ -10138,7 +10138,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1289.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.689077"
+      "last_verified_at": "2026-08-22T15:45:22.212103"
     },
     "streak_count": 5,
     "college_rank": 290,
@@ -10173,7 +10173,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.452164"
+      "last_verified_at": "2026-08-22T15:45:11.442793"
     },
     "streak_count": 5,
     "college_rank": 291,
@@ -10208,7 +10208,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1345.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.704407"
+      "last_verified_at": "2026-08-22T15:44:54.179142"
     },
     "streak_count": 17,
     "college_rank": 292,
@@ -10243,7 +10243,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1483.6,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.894004"
+      "last_verified_at": "2026-08-22T15:45:24.404190"
     },
     "streak_count": 10,
     "college_rank": 293,
@@ -10278,7 +10278,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:24.717051"
+      "last_verified_at": "2026-08-22T15:57:51.358728"
     },
     "streak_count": 3,
     "college_rank": 294,
@@ -10313,7 +10313,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.812261"
+      "last_verified_at": "2026-08-22T15:45:26.072563"
     },
     "streak_count": 6,
     "college_rank": 295,
@@ -10348,7 +10348,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1393.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.665437"
+      "last_verified_at": "2026-08-22T15:44:59.314945"
     },
     "streak_count": 5,
     "college_rank": 296,
@@ -10383,7 +10383,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1454.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.215209"
+      "last_verified_at": "2026-08-22T15:45:23.031328"
     },
     "streak_count": 5,
     "college_rank": 297,
@@ -10418,7 +10418,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1517.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:32.896608"
+      "last_verified_at": "2026-08-22T15:45:08.743623"
     },
     "streak_count": 5,
     "college_rank": 298,
@@ -10453,7 +10453,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1393.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.441602"
+      "last_verified_at": "2026-08-22T15:45:25.534037"
     },
     "streak_count": 6,
     "college_rank": 299,
@@ -10488,7 +10488,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1342.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:45.208482"
+      "last_verified_at": "2026-08-22T15:45:13.867316"
     },
     "streak_count": 9,
     "college_rank": 300,
@@ -10523,7 +10523,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1347.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:30.274382"
+      "last_verified_at": "2026-08-22T15:45:07.400264"
     },
     "streak_count": 21,
     "college_rank": 301,
@@ -10558,7 +10558,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.548543"
+      "last_verified_at": "2026-08-22T15:45:10.464177"
     },
     "streak_count": 4,
     "college_rank": 302,
@@ -10593,7 +10593,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1351.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.571309"
+      "last_verified_at": "2026-08-22T15:45:23.776420"
     },
     "streak_count": 4,
     "college_rank": 303,
@@ -10628,7 +10628,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1637.2,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.462585"
+      "last_verified_at": "2026-08-22T15:45:21.282473"
     },
     "streak_count": 5,
     "college_rank": 304,
@@ -10663,7 +10663,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1396.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.734448"
+      "last_verified_at": "2026-08-22T15:45:32.361934"
     },
     "streak_count": 5,
     "college_rank": 305,
@@ -10698,7 +10698,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:23.026290"
+      "last_verified_at": "2026-08-22T15:45:03.770972"
     },
     "streak_count": 8,
     "college_rank": 306,
@@ -10733,7 +10733,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1349.2,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:28.076612"
+      "last_verified_at": "2026-08-22T15:45:06.072722"
     },
     "streak_count": 6,
     "college_rank": 307,
@@ -10768,7 +10768,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1379.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.012278"
+      "last_verified_at": "2026-08-22T15:45:24.676890"
     },
     "streak_count": 8,
     "college_rank": 308,
@@ -10803,7 +10803,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1356.2,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.556149"
+      "last_verified_at": "2026-08-22T15:45:23.722299"
     },
     "streak_count": 3,
     "college_rank": 309,
@@ -10838,7 +10838,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:20.835418"
+      "last_verified_at": "2026-08-22T15:45:02.770232"
     },
     "streak_count": 3,
     "college_rank": 310,
@@ -10873,7 +10873,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:30.448855"
+      "last_verified_at": "2026-08-22T15:45:07.496782"
     },
     "streak_count": 14,
     "college_rank": 311,
@@ -10908,7 +10908,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:12.492799"
+      "last_verified_at": "2026-08-22T15:57:46.206299"
     },
     "streak_count": 5,
     "college_rank": 312,
@@ -10943,7 +10943,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:30.847707"
+      "last_verified_at": "2026-08-22T15:45:07.664104"
     },
     "streak_count": 7,
     "college_rank": 313,
@@ -10978,7 +10978,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.753467"
+      "last_verified_at": "2026-08-22T15:45:30.338640"
     },
     "streak_count": 4,
     "college_rank": 314,
@@ -11013,7 +11013,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:17.624112"
+      "last_verified_at": "2026-08-22T15:45:01.356997"
     },
     "streak_count": 5,
     "college_rank": 315,
@@ -11048,7 +11048,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.479556"
+      "last_verified_at": "2026-08-22T15:45:13.501011"
     },
     "streak_count": 5,
     "college_rank": 316,
@@ -11083,7 +11083,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.961304"
+      "last_verified_at": "2026-08-22T15:45:18.280541"
     },
     "streak_count": 6,
     "college_rank": 317,
@@ -11118,7 +11118,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1434.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:19.681048"
+      "last_verified_at": "2026-08-22T15:45:02.203434"
     },
     "streak_count": 9,
     "college_rank": 318,
@@ -11153,7 +11153,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:10.690310"
+      "last_verified_at": "2026-08-22T15:45:38.586486"
     },
     "streak_count": 26,
     "college_rank": 319,
@@ -11188,7 +11188,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:22.765447"
+      "last_verified_at": "2026-08-22T15:45:03.545838"
     },
     "streak_count": 8,
     "college_rank": 320,
@@ -11223,7 +11223,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1471.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.994263"
+      "last_verified_at": "2026-08-22T15:45:26.361494"
     },
     "streak_count": 10,
     "college_rank": 321,
@@ -11258,7 +11258,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:33.510897"
+      "last_verified_at": "2026-08-22T15:45:09.501213"
     },
     "streak_count": 5,
     "college_rank": 322,
@@ -11293,7 +11293,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1465.3,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.109740"
+      "last_verified_at": "2026-08-22T15:45:28.870088"
     },
     "streak_count": 6,
     "college_rank": 323,
@@ -11328,7 +11328,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:39.964600"
+      "last_verified_at": "2026-08-22T15:45:18.946553"
     },
     "streak_count": 4,
     "college_rank": 324,
@@ -11363,7 +11363,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.468931"
+      "last_verified_at": "2026-08-22T15:45:25.602376"
     },
     "streak_count": 23,
     "college_rank": 325,
@@ -11398,11 +11398,46 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1311.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.067341"
+      "last_verified_at": "2026-08-22T15:45:24.810970"
     },
     "streak_count": 15,
     "college_rank": 326,
     "dept_rank": 326,
+    "weekly_progress": 96,
+    "contest_status": "ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "0 / 4",
+    "contest_name": "Weekly Contest 516",
+    "contest_number": 516,
+    "has_virtual": false
+  },
+  {
+    "id": 527,
+    "name": "ELAKKIYA V",
+    "reg_no": "732224IT024",
+    "username": "elakkiyaveeranK",
+    "year_level": "III",
+    "department_id": 10,
+    "department": {
+      "id": 10,
+      "name": "Information Technology",
+      "code": "IT"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/elakkiyaveeranK/",
+    "stats": {
+      "total_solved": 96,
+      "easy_solved": 40,
+      "medium_solved": 48,
+      "hard_solved": 8,
+      "contest_rating": null,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-22T15:45:26.373627"
+    },
+    "streak_count": 12,
+    "college_rank": 327,
+    "dept_rank": 327,
     "weekly_progress": 96,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -11433,11 +11468,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:52.870009"
+      "last_verified_at": "2026-08-22T15:45:24.796414"
     },
     "streak_count": 5,
-    "college_rank": 327,
-    "dept_rank": 327,
+    "college_rank": 328,
+    "dept_rank": 328,
     "weekly_progress": 96,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -11468,11 +11503,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1427.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.664598"
+      "last_verified_at": "2026-08-22T15:45:17.235866"
     },
     "streak_count": 3,
-    "college_rank": 328,
-    "dept_rank": 328,
+    "college_rank": 329,
+    "dept_rank": 329,
     "weekly_progress": 96,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -11503,11 +11538,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.479788"
+      "last_verified_at": "2026-08-22T15:45:14.780648"
     },
     "streak_count": 5,
-    "college_rank": 329,
-    "dept_rank": 329,
+    "college_rank": 330,
+    "dept_rank": 330,
     "weekly_progress": 96,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -11538,11 +11573,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:31.945270"
+      "last_verified_at": "2026-08-22T15:45:08.373885"
     },
     "streak_count": 19,
-    "college_rank": 330,
-    "dept_rank": 330,
+    "college_rank": 331,
+    "dept_rank": 331,
     "weekly_progress": 95,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -11573,11 +11608,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1480.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.684375"
+      "last_verified_at": "2026-08-22T15:45:22.204487"
     },
     "streak_count": 41,
-    "college_rank": 331,
-    "dept_rank": 331,
+    "college_rank": 332,
+    "dept_rank": 332,
     "weekly_progress": 95,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -11608,11 +11643,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.139701"
+      "last_verified_at": "2026-08-22T15:45:11.073402"
     },
     "streak_count": 6,
-    "college_rank": 332,
-    "dept_rank": 332,
+    "college_rank": 333,
+    "dept_rank": 333,
     "weekly_progress": 95,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -11643,11 +11678,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.112709"
+      "last_verified_at": "2026-08-22T15:45:14.320704"
     },
     "streak_count": 3,
-    "college_rank": 333,
-    "dept_rank": 333,
+    "college_rank": 334,
+    "dept_rank": 334,
     "weekly_progress": 95,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -11678,11 +11713,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.129842"
+      "last_verified_at": "2026-08-22T15:45:16.132531"
     },
     "streak_count": 5,
-    "college_rank": 334,
-    "dept_rank": 334,
+    "college_rank": 335,
+    "dept_rank": 335,
     "weekly_progress": 95,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -11713,11 +11748,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:57.074691"
+      "last_verified_at": "2026-08-22T15:46:20.785372"
     },
     "streak_count": 4,
-    "college_rank": 335,
-    "dept_rank": 335,
+    "college_rank": 336,
+    "dept_rank": 336,
     "weekly_progress": 94,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -11748,11 +11783,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:57.108680"
+      "last_verified_at": "2026-08-22T15:46:20.801057"
     },
     "streak_count": 4,
-    "college_rank": 336,
-    "dept_rank": 336,
+    "college_rank": 337,
+    "dept_rank": 337,
     "weekly_progress": 94,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -11783,11 +11818,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1356.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.210632"
+      "last_verified_at": "2026-08-22T15:44:58.189516"
     },
     "streak_count": 6,
-    "college_rank": 337,
-    "dept_rank": 337,
+    "college_rank": 338,
+    "dept_rank": 338,
     "weekly_progress": 94,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -11818,11 +11853,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:32.697634"
+      "last_verified_at": "2026-08-22T15:45:08.555212"
     },
     "streak_count": 12,
-    "college_rank": 338,
-    "dept_rank": 338,
+    "college_rank": 339,
+    "dept_rank": 339,
     "weekly_progress": 94,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -11853,11 +11888,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1461.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.466413"
+      "last_verified_at": "2026-08-22T15:45:29.457028"
     },
     "streak_count": 7,
-    "college_rank": 339,
-    "dept_rank": 339,
+    "college_rank": 340,
+    "dept_rank": 340,
     "weekly_progress": 94,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -11888,11 +11923,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:18.508662"
+      "last_verified_at": "2026-08-22T15:45:01.499932"
     },
     "streak_count": 18,
-    "college_rank": 340,
-    "dept_rank": 340,
+    "college_rank": 341,
+    "dept_rank": 341,
     "weekly_progress": 94,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -11923,11 +11958,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1497.2,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.440215"
+      "last_verified_at": "2026-08-22T15:44:58.357148"
     },
     "streak_count": 7,
-    "college_rank": 341,
-    "dept_rank": 341,
+    "college_rank": 342,
+    "dept_rank": 342,
     "weekly_progress": 93,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -11958,11 +11993,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1453.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.661832"
+      "last_verified_at": "2026-08-22T15:45:22.197701"
     },
     "streak_count": 4,
-    "college_rank": 342,
-    "dept_rank": 342,
+    "college_rank": 343,
+    "dept_rank": 343,
     "weekly_progress": 93,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -11993,11 +12028,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.640598"
+      "last_verified_at": "2026-08-22T15:45:11.880378"
     },
     "streak_count": 4,
-    "college_rank": 343,
-    "dept_rank": 343,
+    "college_rank": 344,
+    "dept_rank": 344,
     "weekly_progress": 93,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -12028,11 +12063,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:42.739597"
+      "last_verified_at": "2026-08-22T15:46:05.286390"
     },
     "streak_count": 8,
-    "college_rank": 344,
-    "dept_rank": 344,
+    "college_rank": 345,
+    "dept_rank": 345,
     "weekly_progress": 93,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -12063,11 +12098,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1537.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.441060"
+      "last_verified_at": "2026-08-22T15:45:23.552176"
     },
     "streak_count": 7,
-    "college_rank": 345,
-    "dept_rank": 345,
+    "college_rank": 346,
+    "dept_rank": 346,
     "weekly_progress": 93,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -12098,11 +12133,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1379.3,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:40.231656"
+      "last_verified_at": "2026-08-22T15:45:18.989602"
     },
     "streak_count": 5,
-    "college_rank": 346,
-    "dept_rank": 346,
+    "college_rank": 347,
+    "dept_rank": 347,
     "weekly_progress": 93,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -12133,11 +12168,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.441692"
+      "last_verified_at": "2026-08-22T15:45:13.491219"
     },
     "streak_count": 4,
-    "college_rank": 347,
-    "dept_rank": 347,
+    "college_rank": 348,
+    "dept_rank": 348,
     "weekly_progress": 93,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -12168,11 +12203,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.489244"
+      "last_verified_at": "2026-08-22T15:45:13.616739"
     },
     "streak_count": 6,
-    "college_rank": 348,
-    "dept_rank": 348,
+    "college_rank": 349,
+    "dept_rank": 349,
     "weekly_progress": 93,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -12203,11 +12238,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1572.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.399263"
+      "last_verified_at": "2026-08-22T15:45:31.752694"
     },
     "streak_count": 6,
-    "college_rank": 349,
-    "dept_rank": 349,
+    "college_rank": 350,
+    "dept_rank": 350,
     "weekly_progress": 93,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -12238,11 +12273,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:03.953777"
+      "last_verified_at": "2026-08-22T15:45:36.540208"
     },
     "streak_count": 7,
-    "college_rank": 350,
-    "dept_rank": 350,
+    "college_rank": 351,
+    "dept_rank": 351,
     "weekly_progress": 92,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -12273,11 +12308,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:26.348632"
+      "last_verified_at": "2026-08-22T15:45:44.549801"
     },
     "streak_count": 26,
-    "college_rank": 351,
-    "dept_rank": 351,
+    "college_rank": 352,
+    "dept_rank": 352,
     "weekly_progress": 92,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -12308,47 +12343,12 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.763932"
+      "last_verified_at": "2026-08-22T15:45:12.128182"
     },
     "streak_count": 6,
-    "college_rank": 352,
-    "dept_rank": 352,
-    "weekly_progress": 92,
-    "contest_status": "ATTENDED",
-    "contest_solved": 0,
-    "contest_score_display": "0 / 4",
-    "contest_name": "Weekly Contest 516",
-    "contest_number": 516,
-    "has_virtual": false
-  },
-  {
-    "id": 527,
-    "name": "ELAKKIYA V",
-    "reg_no": "732224IT024",
-    "username": "elakkiyaveeranK",
-    "year_level": "III",
-    "department_id": 10,
-    "department": {
-      "id": 10,
-      "name": "Information Technology",
-      "code": "IT"
-    },
-    "sync_state": "SYNCED",
-    "profile_url": "https://leetcode.com/u/elakkiyaveeranK/",
-    "stats": {
-      "total_solved": 91,
-      "easy_solved": 39,
-      "medium_solved": 44,
-      "hard_solved": 8,
-      "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.143398"
-    },
-    "streak_count": 12,
     "college_rank": 353,
     "dept_rank": 353,
-    "weekly_progress": 91,
+    "weekly_progress": 92,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
     "contest_score_display": "0 / 4",
@@ -12378,7 +12378,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1355.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.560854"
+      "last_verified_at": "2026-08-22T15:45:17.101038"
     },
     "streak_count": 1,
     "college_rank": 354,
@@ -12413,7 +12413,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.758966"
+      "last_verified_at": "2026-08-22T15:44:54.201513"
     },
     "streak_count": 2,
     "college_rank": 355,
@@ -12448,7 +12448,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.410335"
+      "last_verified_at": "2026-08-22T15:45:10.106655"
     },
     "streak_count": 5,
     "college_rank": 356,
@@ -12483,7 +12483,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.250410"
+      "last_verified_at": "2026-08-22T15:45:11.238064"
     },
     "streak_count": 8,
     "college_rank": 357,
@@ -12518,7 +12518,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.696362"
+      "last_verified_at": "2026-08-22T15:45:13.805025"
     },
     "streak_count": 6,
     "college_rank": 358,
@@ -12553,7 +12553,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:01.814644"
+      "last_verified_at": "2026-08-22T15:46:23.261564"
     },
     "streak_count": 12,
     "college_rank": 359,
@@ -12588,7 +12588,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1578.3,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:32.711731"
+      "last_verified_at": "2026-08-22T15:45:08.564505"
     },
     "streak_count": 8,
     "college_rank": 360,
@@ -12623,7 +12623,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1352.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.638300"
+      "last_verified_at": "2026-08-22T15:45:23.907486"
     },
     "streak_count": 5,
     "college_rank": 361,
@@ -12658,7 +12658,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:20.610188"
+      "last_verified_at": "2026-08-22T15:45:02.762153"
     },
     "streak_count": 5,
     "college_rank": 362,
@@ -12693,7 +12693,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1474.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.020651"
+      "last_verified_at": "2026-08-22T15:45:20.639393"
     },
     "streak_count": 16,
     "college_rank": 363,
@@ -12728,7 +12728,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1609.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.779677"
+      "last_verified_at": "2026-08-22T15:44:54.208088"
     },
     "streak_count": 5,
     "college_rank": 364,
@@ -12763,7 +12763,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1381.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.602480"
+      "last_verified_at": "2026-08-22T15:45:25.772634"
     },
     "streak_count": 4,
     "college_rank": 365,
@@ -12798,7 +12798,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.111730"
+      "last_verified_at": "2026-08-22T15:44:57.935427"
     },
     "streak_count": 5,
     "college_rank": 366,
@@ -12833,7 +12833,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1426.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.147901"
+      "last_verified_at": "2026-08-22T15:44:57.948770"
     },
     "streak_count": 3,
     "college_rank": 367,
@@ -12868,7 +12868,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.648657"
+      "last_verified_at": "2026-08-22T15:45:26.538336"
     },
     "streak_count": 6,
     "college_rank": 368,
@@ -12903,7 +12903,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:55.046603"
+      "last_verified_at": "2026-08-22T15:45:35.262998"
     },
     "streak_count": 10,
     "college_rank": 369,
@@ -12938,7 +12938,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:16.449574"
+      "last_verified_at": "2026-08-22T15:45:01.107896"
     },
     "streak_count": 3,
     "college_rank": 370,
@@ -12973,7 +12973,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.861508"
+      "last_verified_at": "2026-08-22T15:45:30.473951"
     },
     "streak_count": 7,
     "college_rank": 371,
@@ -13008,7 +13008,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:17.827992"
+      "last_verified_at": "2026-08-22T15:45:01.388644"
     },
     "streak_count": 6,
     "college_rank": 372,
@@ -13043,7 +13043,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:02.549753"
+      "last_verified_at": "2026-08-22T15:46:25.250305"
     },
     "streak_count": 5,
     "college_rank": 373,
@@ -13078,7 +13078,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.173789"
+      "last_verified_at": "2026-08-22T15:45:31.333173"
     },
     "streak_count": 5,
     "college_rank": 374,
@@ -13113,7 +13113,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:19.793268"
+      "last_verified_at": "2026-08-22T15:45:02.257737"
     },
     "streak_count": 6,
     "college_rank": 375,
@@ -13148,7 +13148,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1573.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.294886"
+      "last_verified_at": "2026-08-22T15:44:58.285199"
     },
     "streak_count": 5,
     "college_rank": 376,
@@ -13183,7 +13183,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:30.716626"
+      "last_verified_at": "2026-08-22T15:45:07.557032"
     },
     "streak_count": 8,
     "college_rank": 377,
@@ -13218,7 +13218,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1411.2,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.957096"
+      "last_verified_at": "2026-08-22T15:45:27.744632"
     },
     "streak_count": 14,
     "college_rank": 378,
@@ -13253,7 +13253,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.522870"
+      "last_verified_at": "2026-08-22T15:45:23.686041"
     },
     "streak_count": 6,
     "college_rank": 379,
@@ -13288,7 +13288,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:27.669865"
+      "last_verified_at": "2026-08-22T15:45:05.712362"
     },
     "streak_count": 4,
     "college_rank": 380,
@@ -13323,7 +13323,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:11.180393"
+      "last_verified_at": "2026-08-22T15:57:46.149940"
     },
     "streak_count": 4,
     "college_rank": 381,
@@ -13358,7 +13358,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1351.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.797523"
+      "last_verified_at": "2026-08-22T15:44:54.215773"
     },
     "streak_count": 2,
     "college_rank": 382,
@@ -13393,7 +13393,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:15.547450"
+      "last_verified_at": "2026-08-22T15:45:00.959283"
     },
     "streak_count": 3,
     "college_rank": 383,
@@ -13428,7 +13428,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.436011"
+      "last_verified_at": "2026-08-22T15:45:13.445806"
     },
     "streak_count": 5,
     "college_rank": 384,
@@ -13463,7 +13463,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.345053"
+      "last_verified_at": "2026-08-22T15:45:10.077647"
     },
     "streak_count": 5,
     "college_rank": 385,
@@ -13498,7 +13498,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.636228"
+      "last_verified_at": "2026-08-22T15:45:32.089930"
     },
     "streak_count": 4,
     "college_rank": 386,
@@ -13533,7 +13533,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:24.022261"
+      "last_verified_at": "2026-08-22T15:45:43.819176"
     },
     "streak_count": 21,
     "college_rank": 387,
@@ -13568,7 +13568,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:12.303499"
+      "last_verified_at": "2026-08-22T15:57:46.202307"
     },
     "streak_count": 3,
     "college_rank": 388,
@@ -13603,7 +13603,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.168232"
+      "last_verified_at": "2026-08-22T15:45:11.231395"
     },
     "streak_count": 4,
     "college_rank": 389,
@@ -13638,7 +13638,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.507196"
+      "last_verified_at": "2026-08-22T15:44:57.173272"
     },
     "streak_count": 5,
     "college_rank": 390,
@@ -13673,7 +13673,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.171526"
+      "last_verified_at": "2026-08-22T15:45:09.792669"
     },
     "streak_count": 4,
     "college_rank": 391,
@@ -13708,7 +13708,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:01.923350"
+      "last_verified_at": "2026-08-22T15:46:23.604146"
     },
     "streak_count": 4,
     "college_rank": 392,
@@ -13743,7 +13743,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.804659"
+      "last_verified_at": "2026-08-22T15:45:14.087670"
     },
     "streak_count": 4,
     "college_rank": 393,
@@ -13778,7 +13778,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:21.024225"
+      "last_verified_at": "2026-08-22T15:45:02.811123"
     },
     "streak_count": 1,
     "college_rank": 394,
@@ -13813,7 +13813,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.870869"
+      "last_verified_at": "2026-08-22T15:45:27.319090"
     },
     "streak_count": 4,
     "college_rank": 395,
@@ -13848,7 +13848,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1336.3,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.725276"
+      "last_verified_at": "2026-08-22T15:45:24.122989"
     },
     "streak_count": 5,
     "college_rank": 396,
@@ -13883,12 +13883,47 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.327610"
+      "last_verified_at": "2026-08-22T15:45:16.299540"
     },
     "streak_count": 5,
     "college_rank": 397,
     "dept_rank": 397,
     "weekly_progress": 83,
+    "contest_status": "ATTENDED",
+    "contest_solved": 0,
+    "contest_score_display": "0 / 4",
+    "contest_name": "Weekly Contest 516",
+    "contest_number": 516,
+    "has_virtual": false
+  },
+  {
+    "id": 195,
+    "name": "DARSANI PRIYA RJ",
+    "reg_no": "732224CS034",
+    "username": "darsanipriya_13",
+    "year_level": "III",
+    "department_id": 5,
+    "department": {
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
+    },
+    "sync_state": "SYNCED",
+    "profile_url": "https://leetcode.com/u/darsanipriya_13/",
+    "stats": {
+      "total_solved": 82,
+      "easy_solved": 43,
+      "medium_solved": 33,
+      "hard_solved": 6,
+      "contest_rating": 1355.6,
+      "sync_status": "success",
+      "status": "verified",
+      "last_verified_at": "2026-08-22T15:57:52.223744"
+    },
+    "streak_count": 12,
+    "college_rank": 398,
+    "dept_rank": 398,
+    "weekly_progress": 82,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
     "contest_score_display": "0 / 4",
@@ -13918,11 +13953,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.816598"
+      "last_verified_at": "2026-08-22T15:44:54.223309"
     },
     "streak_count": 8,
-    "college_rank": 398,
-    "dept_rank": 398,
+    "college_rank": 399,
+    "dept_rank": 399,
     "weekly_progress": 82,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -13953,11 +13988,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.703143"
+      "last_verified_at": "2026-08-22T15:45:15.266672"
     },
     "streak_count": 4,
-    "college_rank": 399,
-    "dept_rank": 399,
+    "college_rank": 400,
+    "dept_rank": 400,
     "weekly_progress": 82,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -13988,11 +14023,11 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1397.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.041247"
+      "last_verified_at": "2026-08-22T15:45:20.775892"
     },
     "streak_count": 2,
-    "college_rank": 400,
-    "dept_rank": 400,
+    "college_rank": 401,
+    "dept_rank": 401,
     "weekly_progress": 81,
     "contest_status": "ATTENDED",
     "contest_solved": 0,
@@ -14023,44 +14058,9 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.836004"
+      "last_verified_at": "2026-08-22T15:45:24.196243"
     },
     "streak_count": 7,
-    "college_rank": 401,
-    "dept_rank": 401,
-    "weekly_progress": 81,
-    "contest_status": "ATTENDED",
-    "contest_solved": 0,
-    "contest_score_display": "0 / 4",
-    "contest_name": "Weekly Contest 516",
-    "contest_number": 516,
-    "has_virtual": false
-  },
-  {
-    "id": 195,
-    "name": "DARSANI PRIYA RJ",
-    "reg_no": "732224CS034",
-    "username": "darsanipriya_13",
-    "year_level": "III",
-    "department_id": 5,
-    "department": {
-      "id": 5,
-      "name": "Computer Science and Engineering",
-      "code": "CSE"
-    },
-    "sync_state": "SYNCED",
-    "profile_url": "https://leetcode.com/u/darsanipriya_13/",
-    "stats": {
-      "total_solved": 81,
-      "easy_solved": 42,
-      "medium_solved": 33,
-      "hard_solved": 6,
-      "contest_rating": 1355.6,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:26.449408"
-    },
-    "streak_count": 11,
     "college_rank": 402,
     "dept_rank": 402,
     "weekly_progress": 81,
@@ -14093,7 +14093,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1381.6,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:09.605890"
+      "last_verified_at": "2026-08-22T15:44:57.464414"
     },
     "streak_count": 6,
     "college_rank": 403,
@@ -14128,7 +14128,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:32.361711"
+      "last_verified_at": "2026-08-22T15:45:08.385572"
     },
     "streak_count": 6,
     "college_rank": 404,
@@ -14163,7 +14163,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.835173"
+      "last_verified_at": "2026-08-22T15:44:54.230581"
     },
     "streak_count": 4,
     "college_rank": 405,
@@ -14198,7 +14198,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.827424"
+      "last_verified_at": "2026-08-22T15:57:45.988844"
     },
     "streak_count": 5,
     "college_rank": 406,
@@ -14233,7 +14233,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:40.130130"
+      "last_verified_at": "2026-08-22T15:45:18.954459"
     },
     "streak_count": 5,
     "college_rank": 407,
@@ -14268,7 +14268,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.539952"
+      "last_verified_at": "2026-08-22T15:45:14.980185"
     },
     "streak_count": 6,
     "college_rank": 408,
@@ -14303,7 +14303,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1417.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.525410"
+      "last_verified_at": "2026-08-22T15:44:57.182437"
     },
     "streak_count": 6,
     "college_rank": 409,
@@ -14338,7 +14338,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.168660"
+      "last_verified_at": "2026-08-22T15:45:25.092393"
     },
     "streak_count": 7,
     "college_rank": 410,
@@ -14373,7 +14373,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1356.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:12.178113"
+      "last_verified_at": "2026-08-22T15:57:46.198183"
     },
     "streak_count": 2,
     "college_rank": 411,
@@ -14408,7 +14408,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.756497"
+      "last_verified_at": "2026-08-22T15:45:24.148078"
     },
     "streak_count": 5,
     "college_rank": 412,
@@ -14443,7 +14443,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1426.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.853880"
+      "last_verified_at": "2026-08-22T15:44:54.238197"
     },
     "streak_count": 6,
     "college_rank": 413,
@@ -14478,7 +14478,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1309.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.713393"
+      "last_verified_at": "2026-08-22T15:45:24.037200"
     },
     "streak_count": 5,
     "college_rank": 414,
@@ -14513,7 +14513,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1436.2,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.444231"
+      "last_verified_at": "2026-08-22T15:44:58.518052"
     },
     "streak_count": 5,
     "college_rank": 415,
@@ -14548,7 +14548,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1467.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:11.711320"
+      "last_verified_at": "2026-08-22T15:45:00.090254"
     },
     "streak_count": 2,
     "college_rank": 416,
@@ -14583,7 +14583,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1462.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.046385"
+      "last_verified_at": "2026-08-22T15:45:20.810648"
     },
     "streak_count": 5,
     "college_rank": 417,
@@ -14618,7 +14618,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.178097"
+      "last_verified_at": "2026-08-22T15:45:09.800854"
     },
     "streak_count": 4,
     "college_rank": 418,
@@ -14653,7 +14653,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:33.622405"
+      "last_verified_at": "2026-08-22T15:45:09.526496"
     },
     "streak_count": 6,
     "college_rank": 419,
@@ -14688,7 +14688,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:42.180654"
+      "last_verified_at": "2026-08-22T15:46:03.368353"
     },
     "streak_count": 7,
     "college_rank": 420,
@@ -14723,7 +14723,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.278799"
+      "last_verified_at": "2026-08-22T15:45:11.247246"
     },
     "streak_count": 4,
     "college_rank": 421,
@@ -14758,7 +14758,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.852326"
+      "last_verified_at": "2026-08-22T15:45:10.743864"
     },
     "streak_count": 4,
     "college_rank": 422,
@@ -14793,7 +14793,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.803268"
+      "last_verified_at": "2026-08-22T15:45:27.066159"
     },
     "streak_count": 4,
     "college_rank": 423,
@@ -14828,7 +14828,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.877252"
+      "last_verified_at": "2026-08-22T15:44:54.245925"
     },
     "streak_count": 3,
     "college_rank": 424,
@@ -14863,7 +14863,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.817088"
+      "last_verified_at": "2026-08-22T15:44:59.576596"
     },
     "streak_count": 4,
     "college_rank": 425,
@@ -14898,7 +14898,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:14.207281"
+      "last_verified_at": "2026-08-22T15:57:46.247353"
     },
     "streak_count": 5,
     "college_rank": 426,
@@ -14933,7 +14933,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1523.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.243071"
+      "last_verified_at": "2026-08-22T15:45:23.153439"
     },
     "streak_count": 15,
     "college_rank": 427,
@@ -14968,7 +14968,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:09.036375"
+      "last_verified_at": "2026-08-22T15:45:37.453466"
     },
     "streak_count": 3,
     "college_rank": 428,
@@ -15003,7 +15003,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1480.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.543027"
+      "last_verified_at": "2026-08-22T15:45:10.440573"
     },
     "streak_count": 7,
     "college_rank": 429,
@@ -15038,7 +15038,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:29.453653"
+      "last_verified_at": "2026-08-22T15:45:06.903623"
     },
     "streak_count": 6,
     "college_rank": 430,
@@ -15073,7 +15073,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.524259"
+      "last_verified_at": "2026-08-22T15:44:51.206148"
     },
     "streak_count": 3,
     "college_rank": 431,
@@ -15108,7 +15108,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1459.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.408116"
+      "last_verified_at": "2026-08-22T15:45:23.399988"
     },
     "streak_count": 5,
     "college_rank": 432,
@@ -15143,7 +15143,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1636.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:20.281600"
+      "last_verified_at": "2026-08-22T15:45:02.524458"
     },
     "streak_count": 3,
     "college_rank": 433,
@@ -15178,7 +15178,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.706380"
+      "last_verified_at": "2026-08-22T15:45:22.057470"
     },
     "streak_count": 5,
     "college_rank": 434,
@@ -15213,7 +15213,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.933005"
+      "last_verified_at": "2026-08-22T15:45:24.484559"
     },
     "streak_count": 15,
     "college_rank": 435,
@@ -15248,7 +15248,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:01.864727"
+      "last_verified_at": "2026-08-22T15:46:23.400731"
     },
     "streak_count": 5,
     "college_rank": 436,
@@ -15283,7 +15283,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.232729"
+      "last_verified_at": "2026-08-22T15:46:21.219125"
     },
     "streak_count": 7,
     "college_rank": 437,
@@ -15318,7 +15318,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.290194"
+      "last_verified_at": "2026-08-22T15:46:21.308177"
     },
     "streak_count": 7,
     "college_rank": 438,
@@ -15353,7 +15353,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:28.921221"
+      "last_verified_at": "2026-08-22T15:45:46.803981"
     },
     "streak_count": 3,
     "college_rank": 439,
@@ -15388,7 +15388,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.643454"
+      "last_verified_at": "2026-08-22T15:45:29.974138"
     },
     "streak_count": 4,
     "college_rank": 440,
@@ -15423,7 +15423,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.077778"
+      "last_verified_at": "2026-08-22T15:45:16.104310"
     },
     "streak_count": 6,
     "college_rank": 441,
@@ -15458,7 +15458,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:02.436723"
+      "last_verified_at": "2026-08-22T15:46:24.410364"
     },
     "streak_count": 5,
     "college_rank": 442,
@@ -15493,7 +15493,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.345745"
+      "last_verified_at": "2026-08-22T15:46:06.403830"
     },
     "streak_count": 0,
     "college_rank": 443,
@@ -15528,7 +15528,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:18.877225"
+      "last_verified_at": "2026-08-22T15:45:01.771792"
     },
     "streak_count": 5,
     "college_rank": 444,
@@ -15563,7 +15563,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:33.393375"
+      "last_verified_at": "2026-08-22T15:45:09.167480"
     },
     "streak_count": 4,
     "college_rank": 445,
@@ -15598,7 +15598,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1483.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.522028"
+      "last_verified_at": "2026-08-22T15:45:21.759772"
     },
     "streak_count": 11,
     "college_rank": 446,
@@ -15633,7 +15633,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:47.597922"
+      "last_verified_at": "2026-08-22T15:46:14.218779"
     },
     "streak_count": 45,
     "college_rank": 447,
@@ -15668,7 +15668,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.896811"
+      "last_verified_at": "2026-08-22T15:44:54.253366"
     },
     "streak_count": 2,
     "college_rank": 448,
@@ -15703,7 +15703,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.693088"
+      "last_verified_at": "2026-08-22T15:44:59.362813"
     },
     "streak_count": 3,
     "college_rank": 449,
@@ -15738,7 +15738,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:01.918233"
+      "last_verified_at": "2026-08-22T15:46:23.505170"
     },
     "streak_count": 4,
     "college_rank": 450,
@@ -15773,7 +15773,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:12.512517"
+      "last_verified_at": "2026-08-22T15:57:46.213491"
     },
     "streak_count": 3,
     "college_rank": 451,
@@ -15808,7 +15808,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1507.2,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:14.009376"
+      "last_verified_at": "2026-08-22T15:57:46.237035"
     },
     "streak_count": 5,
     "college_rank": 452,
@@ -15843,7 +15843,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:02.263700"
+      "last_verified_at": "2026-08-22T15:46:24.143909"
     },
     "streak_count": 5,
     "college_rank": 453,
@@ -15878,7 +15878,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:02.431689"
+      "last_verified_at": "2026-08-22T15:46:24.353706"
     },
     "streak_count": 3,
     "college_rank": 454,
@@ -15913,7 +15913,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.544384"
+      "last_verified_at": "2026-08-22T15:44:57.262761"
     },
     "streak_count": 3,
     "college_rank": 455,
@@ -15948,7 +15948,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1370.6,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.844112"
+      "last_verified_at": "2026-08-22T15:45:26.081930"
     },
     "streak_count": 10,
     "college_rank": 456,
@@ -15983,7 +15983,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1440.3,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:21.831960"
+      "last_verified_at": "2026-08-22T15:45:03.213824"
     },
     "streak_count": 6,
     "college_rank": 457,
@@ -16018,7 +16018,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:07.539175"
+      "last_verified_at": "2026-08-22T15:45:36.926772"
     },
     "streak_count": 2,
     "college_rank": 458,
@@ -16053,7 +16053,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.682561"
+      "last_verified_at": "2026-08-22T15:45:10.720449"
     },
     "streak_count": 4,
     "college_rank": 459,
@@ -16088,7 +16088,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:45.838056"
+      "last_verified_at": "2026-08-22T15:45:28.781944"
     },
     "streak_count": 6,
     "college_rank": 460,
@@ -16123,7 +16123,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.365778"
+      "last_verified_at": "2026-08-22T15:45:31.729447"
     },
     "streak_count": 3,
     "college_rank": 461,
@@ -16158,7 +16158,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1394.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.056540"
+      "last_verified_at": "2026-08-22T15:45:20.821469"
     },
     "streak_count": 10,
     "college_rank": 462,
@@ -16193,7 +16193,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:29.817110"
+      "last_verified_at": "2026-08-22T15:45:07.136967"
     },
     "streak_count": 3,
     "college_rank": 463,
@@ -16228,7 +16228,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:26.867658"
+      "last_verified_at": "2026-08-22T15:45:05.425871"
     },
     "streak_count": 7,
     "college_rank": 464,
@@ -16263,7 +16263,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.914920"
+      "last_verified_at": "2026-08-22T15:44:54.260754"
     },
     "streak_count": 4,
     "college_rank": 465,
@@ -16298,7 +16298,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1378.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.282008"
+      "last_verified_at": "2026-08-22T15:45:20.993665"
     },
     "streak_count": 7,
     "college_rank": 466,
@@ -16333,7 +16333,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:33.068582"
+      "last_verified_at": "2026-08-22T15:45:08.778297"
     },
     "streak_count": 2,
     "college_rank": 467,
@@ -16368,7 +16368,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:29.113121"
+      "last_verified_at": "2026-08-22T15:45:06.698143"
     },
     "streak_count": 4,
     "college_rank": 468,
@@ -16403,7 +16403,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.703240"
+      "last_verified_at": "2026-08-22T15:45:26.722744"
     },
     "streak_count": 4,
     "college_rank": 469,
@@ -16438,7 +16438,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:01.620854"
+      "last_verified_at": "2026-08-22T15:46:23.088055"
     },
     "streak_count": 6,
     "college_rank": 470,
@@ -16473,7 +16473,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1305.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.335582"
+      "last_verified_at": "2026-08-22T15:45:21.196101"
     },
     "streak_count": 5,
     "college_rank": 471,
@@ -16508,7 +16508,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.943870"
+      "last_verified_at": "2026-08-22T15:45:27.503823"
     },
     "streak_count": 3,
     "college_rank": 472,
@@ -16543,7 +16543,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:32.874193"
+      "last_verified_at": "2026-08-22T15:45:08.607788"
     },
     "streak_count": 5,
     "college_rank": 473,
@@ -16578,7 +16578,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.285463"
+      "last_verified_at": "2026-08-22T15:45:14.517978"
     },
     "streak_count": 4,
     "college_rank": 474,
@@ -16613,7 +16613,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.251061"
+      "last_verified_at": "2026-08-22T15:45:13.013931"
     },
     "streak_count": 6,
     "college_rank": 475,
@@ -16648,7 +16648,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1460.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:00.493262"
+      "last_verified_at": "2026-08-22T15:45:32.962125"
     },
     "streak_count": 4,
     "college_rank": 476,
@@ -16683,7 +16683,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.985214"
+      "last_verified_at": "2026-08-22T15:45:15.708021"
     },
     "streak_count": 6,
     "college_rank": 477,
@@ -16718,7 +16718,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1425.2,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.933001"
+      "last_verified_at": "2026-08-22T15:44:54.268201"
     },
     "streak_count": 6,
     "college_rank": 478,
@@ -16753,7 +16753,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.495634"
+      "last_verified_at": "2026-08-22T15:45:56.760249"
     },
     "streak_count": 4,
     "college_rank": 479,
@@ -16788,7 +16788,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.692645"
+      "last_verified_at": "2026-08-22T15:45:57.317866"
     },
     "streak_count": 10,
     "college_rank": 480,
@@ -16823,7 +16823,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.610686"
+      "last_verified_at": "2026-08-22T15:46:01.392807"
     },
     "streak_count": 8,
     "college_rank": 481,
@@ -16858,7 +16858,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:31.927066"
+      "last_verified_at": "2026-08-22T15:45:08.234845"
     },
     "streak_count": 7,
     "college_rank": 482,
@@ -16893,7 +16893,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.605892"
+      "last_verified_at": "2026-08-22T15:46:01.311981"
     },
     "streak_count": 8,
     "college_rank": 483,
@@ -16928,7 +16928,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:45.066550"
+      "last_verified_at": "2026-08-22T15:45:13.829398"
     },
     "streak_count": 4,
     "college_rank": 484,
@@ -16963,7 +16963,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.252757"
+      "last_verified_at": "2026-08-22T15:45:20.162384"
     },
     "streak_count": 8,
     "college_rank": 485,
@@ -16998,7 +16998,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:02.920794"
+      "last_verified_at": "2026-08-22T15:46:25.506118"
     },
     "streak_count": 4,
     "college_rank": 486,
@@ -17033,7 +17033,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:01.658611"
+      "last_verified_at": "2026-08-22T15:46:23.133496"
     },
     "streak_count": 4,
     "college_rank": 487,
@@ -17068,7 +17068,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.864411"
+      "last_verified_at": "2026-08-22T15:45:27.201545"
     },
     "streak_count": 5,
     "college_rank": 488,
@@ -17103,7 +17103,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:02.765626"
+      "last_verified_at": "2026-08-22T15:46:25.256423"
     },
     "streak_count": 4,
     "college_rank": 489,
@@ -17138,7 +17138,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:09.687027"
+      "last_verified_at": "2026-08-22T15:44:57.499882"
     },
     "streak_count": 3,
     "college_rank": 490,
@@ -17173,7 +17173,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.506272"
+      "last_verified_at": "2026-08-22T15:45:11.689242"
     },
     "streak_count": 5,
     "college_rank": 491,
@@ -17208,7 +17208,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.779043"
+      "last_verified_at": "2026-08-22T15:45:30.368474"
     },
     "streak_count": 4,
     "college_rank": 492,
@@ -17243,7 +17243,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.808332"
+      "last_verified_at": "2026-08-22T15:45:30.384358"
     },
     "streak_count": 5,
     "college_rank": 493,
@@ -17278,7 +17278,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.418891"
+      "last_verified_at": "2026-08-22T15:44:56.891904"
     },
     "streak_count": 6,
     "college_rank": 494,
@@ -17313,7 +17313,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:56.519457"
+      "last_verified_at": "2026-08-22T15:46:20.288646"
     },
     "streak_count": 7,
     "college_rank": 495,
@@ -17348,7 +17348,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:56.763422"
+      "last_verified_at": "2026-08-22T15:46:20.354128"
     },
     "streak_count": 2,
     "college_rank": 496,
@@ -17383,7 +17383,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.125051"
+      "last_verified_at": "2026-08-22T15:45:16.110782"
     },
     "streak_count": 4,
     "college_rank": 497,
@@ -17418,7 +17418,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.316484"
+      "last_verified_at": "2026-08-22T15:45:59.223489"
     },
     "streak_count": 4,
     "college_rank": 498,
@@ -17453,7 +17453,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.495813"
+      "last_verified_at": "2026-08-22T15:45:10.228241"
     },
     "streak_count": 3,
     "college_rank": 499,
@@ -17488,7 +17488,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1393.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.313672"
+      "last_verified_at": "2026-08-22T15:45:29.093265"
     },
     "streak_count": 6,
     "college_rank": 500,
@@ -17523,7 +17523,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.950522"
+      "last_verified_at": "2026-08-22T15:44:54.275475"
     },
     "streak_count": 3,
     "college_rank": 501,
@@ -17558,7 +17558,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:58.534312"
+      "last_verified_at": "2026-08-22T15:45:30.597994"
     },
     "streak_count": 4,
     "college_rank": 502,
@@ -17593,7 +17593,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:18.653455"
+      "last_verified_at": "2026-08-22T15:44:38.765070"
     },
     "streak_count": 3,
     "college_rank": 503,
@@ -17628,7 +17628,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:33.267657"
+      "last_verified_at": "2026-08-22T15:45:08.989180"
     },
     "streak_count": 5,
     "college_rank": 504,
@@ -17663,7 +17663,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:08.570398"
+      "last_verified_at": "2026-08-22T15:45:37.110122"
     },
     "streak_count": 3,
     "college_rank": 505,
@@ -17698,7 +17698,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.911492"
+      "last_verified_at": "2026-08-22T15:45:10.882838"
     },
     "streak_count": 5,
     "college_rank": 506,
@@ -17733,7 +17733,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:08.600998"
+      "last_verified_at": "2026-08-22T15:45:37.240791"
     },
     "streak_count": 1,
     "college_rank": 507,
@@ -17768,7 +17768,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:18.039053"
+      "last_verified_at": "2026-08-22T15:45:01.447413"
     },
     "streak_count": 3,
     "college_rank": 508,
@@ -17803,7 +17803,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.948173"
+      "last_verified_at": "2026-08-22T15:45:57.759605"
     },
     "streak_count": 2,
     "college_rank": 509,
@@ -17838,7 +17838,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.727506"
+      "last_verified_at": "2026-08-22T15:44:59.534541"
     },
     "streak_count": 5,
     "college_rank": 510,
@@ -17873,7 +17873,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:33.323910"
+      "last_verified_at": "2026-08-22T15:45:09.155544"
     },
     "streak_count": 5,
     "college_rank": 511,
@@ -17908,7 +17908,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.758496"
+      "last_verified_at": "2026-08-22T15:45:15.403908"
     },
     "streak_count": 4,
     "college_rank": 512,
@@ -17943,7 +17943,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.617065"
+      "last_verified_at": "2026-08-22T15:45:11.723378"
     },
     "streak_count": 3,
     "college_rank": 513,
@@ -17978,7 +17978,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1409.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:09.954067"
+      "last_verified_at": "2026-08-22T15:44:57.808385"
     },
     "streak_count": 6,
     "college_rank": 514,
@@ -18013,7 +18013,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:33.143399"
+      "last_verified_at": "2026-08-22T15:45:08.918796"
     },
     "streak_count": 4,
     "college_rank": 515,
@@ -18048,7 +18048,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:53.324777"
+      "last_verified_at": "2026-08-22T15:45:34.671669"
     },
     "streak_count": 2,
     "college_rank": 516,
@@ -18083,7 +18083,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:04.968590"
+      "last_verified_at": "2026-08-22T15:44:55.598546"
     },
     "streak_count": 2,
     "college_rank": 517,
@@ -18118,7 +18118,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.036184"
+      "last_verified_at": "2026-08-22T15:45:15.798724"
     },
     "streak_count": 4,
     "college_rank": 518,
@@ -18153,7 +18153,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:54.531858"
+      "last_verified_at": "2026-08-22T15:45:35.196083"
     },
     "streak_count": 2,
     "college_rank": 519,
@@ -18188,7 +18188,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.923216"
+      "last_verified_at": "2026-08-22T15:45:14.166340"
     },
     "streak_count": 3,
     "college_rank": 520,
@@ -18223,7 +18223,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.528119"
+      "last_verified_at": "2026-08-22T15:45:29.807685"
     },
     "streak_count": 3,
     "college_rank": 521,
@@ -18258,7 +18258,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.566737"
+      "last_verified_at": "2026-08-22T15:45:54.201233"
     },
     "streak_count": 5,
     "college_rank": 522,
@@ -18293,7 +18293,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.958209"
+      "last_verified_at": "2026-08-22T15:45:57.781641"
     },
     "streak_count": 2,
     "college_rank": 523,
@@ -18328,7 +18328,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1420.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.887846"
+      "last_verified_at": "2026-08-22T15:45:24.254528"
     },
     "streak_count": 9,
     "college_rank": 524,
@@ -18363,7 +18363,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.004927"
+      "last_verified_at": "2026-08-22T15:44:55.643489"
     },
     "streak_count": 8,
     "college_rank": 525,
@@ -18398,7 +18398,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.851756"
+      "last_verified_at": "2026-08-22T15:45:26.120718"
     },
     "streak_count": 2,
     "college_rank": 526,
@@ -18433,7 +18433,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:04.136323"
+      "last_verified_at": "2026-08-22T15:45:36.581963"
     },
     "streak_count": 2,
     "college_rank": 527,
@@ -18468,7 +18468,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.073527"
+      "last_verified_at": "2026-08-22T15:45:16.098258"
     },
     "streak_count": 6,
     "college_rank": 528,
@@ -18503,7 +18503,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.035026"
+      "last_verified_at": "2026-08-22T15:44:55.651288"
     },
     "streak_count": 5,
     "college_rank": 529,
@@ -18538,7 +18538,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:11.139725"
+      "last_verified_at": "2026-08-22T15:57:46.014834"
     },
     "streak_count": 2,
     "college_rank": 530,
@@ -18573,7 +18573,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:28.714778"
+      "last_verified_at": "2026-08-22T15:45:46.094663"
     },
     "streak_count": 25,
     "college_rank": 531,
@@ -18608,7 +18608,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.768574"
+      "last_verified_at": "2026-08-22T15:45:15.576269"
     },
     "streak_count": 4,
     "college_rank": 532,
@@ -18643,7 +18643,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.570824"
+      "last_verified_at": "2026-08-22T15:45:10.599252"
     },
     "streak_count": 3,
     "college_rank": 533,
@@ -18678,7 +18678,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.531219"
+      "last_verified_at": "2026-08-22T15:45:31.986952"
     },
     "streak_count": 5,
     "college_rank": 534,
@@ -18713,7 +18713,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1363.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.016630"
+      "last_verified_at": "2026-08-22T15:45:20.627536"
     },
     "streak_count": 4,
     "college_rank": 535,
@@ -18748,7 +18748,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.490199"
+      "last_verified_at": "2026-08-22T15:44:58.761561"
     },
     "streak_count": 5,
     "college_rank": 536,
@@ -18783,7 +18783,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1415.6,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.908019"
+      "last_verified_at": "2026-08-22T15:57:45.998319"
     },
     "streak_count": 38,
     "college_rank": 537,
@@ -18818,7 +18818,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:45.796720"
+      "last_verified_at": "2026-08-22T15:45:28.640608"
     },
     "streak_count": 3,
     "college_rank": 538,
@@ -18853,7 +18853,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.175991"
+      "last_verified_at": "2026-08-22T15:45:14.382849"
     },
     "streak_count": 1,
     "college_rank": 539,
@@ -18888,7 +18888,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1442.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.364717"
+      "last_verified_at": "2026-08-22T15:45:56.412262"
     },
     "streak_count": 3,
     "college_rank": 540,
@@ -18923,7 +18923,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:29.472263"
+      "last_verified_at": "2026-08-22T15:45:07.062312"
     },
     "streak_count": 3,
     "college_rank": 541,
@@ -18958,7 +18958,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.929283"
+      "last_verified_at": "2026-08-22T15:45:14.277344"
     },
     "streak_count": 4,
     "college_rank": 542,
@@ -18993,7 +18993,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:00.722953"
+      "last_verified_at": "2026-08-22T15:45:33.303712"
     },
     "streak_count": 2,
     "college_rank": 543,
@@ -19028,7 +19028,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.161652"
+      "last_verified_at": "2026-08-22T15:44:56.049600"
     },
     "streak_count": 2,
     "college_rank": 544,
@@ -19063,7 +19063,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.262782"
+      "last_verified_at": "2026-08-22T15:44:58.273931"
     },
     "streak_count": 2,
     "college_rank": 545,
@@ -19098,7 +19098,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:33.215616"
+      "last_verified_at": "2026-08-22T15:45:08.957574"
     },
     "streak_count": 3,
     "college_rank": 546,
@@ -19133,7 +19133,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:53.992345"
+      "last_verified_at": "2026-08-22T15:46:17.815325"
     },
     "streak_count": 1,
     "college_rank": 547,
@@ -19168,7 +19168,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.368454"
+      "last_verified_at": "2026-08-22T15:45:14.584326"
     },
     "streak_count": 5,
     "college_rank": 548,
@@ -19203,7 +19203,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:02.810369"
+      "last_verified_at": "2026-08-22T15:46:25.355760"
     },
     "streak_count": 4,
     "college_rank": 549,
@@ -19238,7 +19238,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.484401"
+      "last_verified_at": "2026-08-22T15:45:14.884315"
     },
     "streak_count": 10,
     "college_rank": 550,
@@ -19273,7 +19273,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:11.339936"
+      "last_verified_at": "2026-08-22T15:45:39.821526"
     },
     "streak_count": 5,
     "college_rank": 551,
@@ -19308,7 +19308,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:12.490580"
+      "last_verified_at": "2026-08-22T15:45:40.569965"
     },
     "streak_count": 47,
     "college_rank": 552,
@@ -19343,7 +19343,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:09.820850"
+      "last_verified_at": "2026-08-22T15:44:57.572066"
     },
     "streak_count": 5,
     "college_rank": 553,
@@ -19378,7 +19378,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.624494"
+      "last_verified_at": "2026-08-22T15:45:26.512018"
     },
     "streak_count": 6,
     "college_rank": 554,
@@ -19413,7 +19413,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.952389"
+      "last_verified_at": "2026-08-22T15:45:13.595249"
     },
     "streak_count": 4,
     "college_rank": 555,
@@ -19448,7 +19448,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.601554"
+      "last_verified_at": "2026-08-22T15:45:32.062961"
     },
     "streak_count": 2,
     "college_rank": 556,
@@ -19483,7 +19483,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.817664"
+      "last_verified_at": "2026-08-22T15:45:12.358951"
     },
     "streak_count": 5,
     "college_rank": 557,
@@ -19518,7 +19518,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.451043"
+      "last_verified_at": "2026-08-22T15:45:54.027958"
     },
     "streak_count": 1,
     "college_rank": 558,
@@ -19553,7 +19553,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1369.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.327097"
+      "last_verified_at": "2026-08-22T15:45:09.999037"
     },
     "streak_count": 4,
     "college_rank": 559,
@@ -19588,7 +19588,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1524.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:00.234531"
+      "last_verified_at": "2026-08-22T15:46:22.425823"
     },
     "streak_count": 3,
     "college_rank": 560,
@@ -19623,7 +19623,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1524.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:00.317170"
+      "last_verified_at": "2026-08-22T15:46:22.432221"
     },
     "streak_count": 3,
     "college_rank": 561,
@@ -19658,7 +19658,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.218149"
+      "last_verified_at": "2026-08-22T15:45:19.941007"
     },
     "streak_count": 3,
     "college_rank": 562,
@@ -19693,7 +19693,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.948878"
+      "last_verified_at": "2026-08-22T15:45:24.652652"
     },
     "streak_count": 5,
     "college_rank": 563,
@@ -19728,7 +19728,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.256803"
+      "last_verified_at": "2026-08-22T15:45:09.990341"
     },
     "streak_count": 3,
     "college_rank": 564,
@@ -19763,7 +19763,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:08.162770"
+      "last_verified_at": "2026-08-22T15:45:37.088805"
     },
     "streak_count": 2,
     "college_rank": 565,
@@ -19798,7 +19798,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:02.160725"
+      "last_verified_at": "2026-08-22T15:46:24.027339"
     },
     "streak_count": 3,
     "college_rank": 566,
@@ -19833,7 +19833,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:08.958097"
+      "last_verified_at": "2026-08-22T15:45:37.273577"
     },
     "streak_count": 2,
     "college_rank": 567,
@@ -19868,7 +19868,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:08.974433"
+      "last_verified_at": "2026-08-22T15:45:37.444400"
     },
     "streak_count": 1,
     "college_rank": 568,
@@ -19903,7 +19903,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.627434"
+      "last_verified_at": "2026-08-22T15:45:57.160240"
     },
     "streak_count": 4,
     "college_rank": 569,
@@ -19938,7 +19938,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.282248"
+      "last_verified_at": "2026-08-22T15:45:31.684155"
     },
     "streak_count": 3,
     "college_rank": 570,
@@ -19973,7 +19973,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:20.582312"
+      "last_verified_at": "2026-08-22T15:45:02.612743"
     },
     "streak_count": 3,
     "college_rank": 571,
@@ -20008,7 +20008,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1399.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:57.889057"
+      "last_verified_at": "2026-08-22T15:46:21.001513"
     },
     "streak_count": 2,
     "college_rank": 572,
@@ -20043,7 +20043,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1717.3,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.517632"
+      "last_verified_at": "2026-08-22T15:45:21.688680"
     },
     "streak_count": 3,
     "college_rank": 573,
@@ -20078,7 +20078,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.750868"
+      "last_verified_at": "2026-08-22T15:45:54.708797"
     },
     "streak_count": 2,
     "college_rank": 574,
@@ -20113,7 +20113,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.303736"
+      "last_verified_at": "2026-08-22T15:45:56.351459"
     },
     "streak_count": 2,
     "college_rank": 575,
@@ -20148,7 +20148,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.345131"
+      "last_verified_at": "2026-08-22T15:45:56.395205"
     },
     "streak_count": 2,
     "college_rank": 576,
@@ -20183,7 +20183,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.675724"
+      "last_verified_at": "2026-08-22T15:45:57.258101"
     },
     "streak_count": 1,
     "college_rank": 577,
@@ -20218,7 +20218,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.815495"
+      "last_verified_at": "2026-08-22T15:45:57.548290"
     },
     "streak_count": 2,
     "college_rank": 578,
@@ -20253,7 +20253,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:10.928332"
+      "last_verified_at": "2026-08-22T15:45:39.055147"
     },
     "streak_count": 2,
     "college_rank": 579,
@@ -20288,7 +20288,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:21.343784"
+      "last_verified_at": "2026-08-22T15:45:02.956468"
     },
     "streak_count": 4,
     "college_rank": 580,
@@ -20323,7 +20323,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:03.851344"
+      "last_verified_at": "2026-08-22T15:45:36.422781"
     },
     "streak_count": 2,
     "college_rank": 581,
@@ -20358,7 +20358,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:45.135945"
+      "last_verified_at": "2026-08-22T15:45:28.125111"
     },
     "streak_count": 3,
     "college_rank": 582,
@@ -20393,7 +20393,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:07.994813"
+      "last_verified_at": "2026-08-22T15:45:36.946048"
     },
     "streak_count": 2,
     "college_rank": 583,
@@ -20428,7 +20428,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.788460"
+      "last_verified_at": "2026-08-22T15:46:21.845880"
     },
     "streak_count": 3,
     "college_rank": 584,
@@ -20463,7 +20463,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:37.888070"
+      "last_verified_at": "2026-08-22T15:45:52.052689"
     },
     "streak_count": 5,
     "college_rank": 585,
@@ -20498,7 +20498,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:59.555421"
+      "last_verified_at": "2026-08-22T15:46:22.295603"
     },
     "streak_count": 2,
     "college_rank": 586,
@@ -20533,7 +20533,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:59.573390"
+      "last_verified_at": "2026-08-22T15:46:22.305089"
     },
     "streak_count": 2,
     "college_rank": 587,
@@ -20568,7 +20568,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:20.087573"
+      "last_verified_at": "2026-08-22T15:45:02.414487"
     },
     "streak_count": 2,
     "college_rank": 588,
@@ -20603,7 +20603,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:20.104760"
+      "last_verified_at": "2026-08-22T15:45:42.416721"
     },
     "streak_count": 46,
     "college_rank": 589,
@@ -20638,7 +20638,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:23.698800"
+      "last_verified_at": "2026-08-22T15:45:43.550742"
     },
     "streak_count": 16,
     "college_rank": 590,
@@ -20673,7 +20673,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:03.703829"
+      "last_verified_at": "2026-08-22T15:45:36.401660"
     },
     "streak_count": 2,
     "college_rank": 591,
@@ -20708,7 +20708,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:27.289743"
+      "last_verified_at": "2026-08-22T15:45:45.001968"
     },
     "streak_count": 4,
     "college_rank": 592,
@@ -20743,7 +20743,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:27.307266"
+      "last_verified_at": "2026-08-22T15:45:45.087571"
     },
     "streak_count": 4,
     "college_rank": 593,
@@ -20778,7 +20778,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.811940"
+      "last_verified_at": "2026-08-22T15:45:12.335251"
     },
     "streak_count": 1,
     "college_rank": 594,
@@ -20813,7 +20813,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:38.638478"
+      "last_verified_at": "2026-08-22T15:45:52.984505"
     },
     "streak_count": 5,
     "college_rank": 595,
@@ -20848,7 +20848,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1297.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.286653"
+      "last_verified_at": "2026-08-22T15:45:23.219634"
     },
     "streak_count": 5,
     "college_rank": 596,
@@ -20883,7 +20883,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.956630"
+      "last_verified_at": "2026-08-22T15:45:55.638541"
     },
     "streak_count": 1,
     "college_rank": 597,
@@ -20918,7 +20918,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.960703"
+      "last_verified_at": "2026-08-22T15:45:55.756180"
     },
     "streak_count": 2,
     "college_rank": 598,
@@ -20953,7 +20953,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:19.698918"
+      "last_verified_at": "2026-08-22T15:45:02.249785"
     },
     "streak_count": 3,
     "college_rank": 599,
@@ -20988,7 +20988,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.411579"
+      "last_verified_at": "2026-08-22T15:45:59.498057"
     },
     "streak_count": 3,
     "college_rank": 600,
@@ -21023,7 +21023,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.051855"
+      "last_verified_at": "2026-08-22T15:44:55.777938"
     },
     "streak_count": 3,
     "college_rank": 601,
@@ -21058,7 +21058,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:45.376309"
+      "last_verified_at": "2026-08-22T15:45:28.282379"
     },
     "streak_count": 3,
     "college_rank": 602,
@@ -21093,7 +21093,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:29.985155"
+      "last_verified_at": "2026-08-22T15:45:07.271848"
     },
     "streak_count": 4,
     "college_rank": 603,
@@ -21128,7 +21128,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:08.613734"
+      "last_verified_at": "2026-08-22T15:45:37.252124"
     },
     "streak_count": 2,
     "college_rank": 604,
@@ -21163,7 +21163,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:20.855714"
+      "last_verified_at": "2026-08-22T15:45:02.778554"
     },
     "streak_count": 3,
     "college_rank": 605,
@@ -21198,7 +21198,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:56.939316"
+      "last_verified_at": "2026-08-22T15:46:20.568226"
     },
     "streak_count": 5,
     "college_rank": 606,
@@ -21233,7 +21233,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:57.004912"
+      "last_verified_at": "2026-08-22T15:46:20.654186"
     },
     "streak_count": 5,
     "college_rank": 607,
@@ -21268,7 +21268,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:05.303377"
+      "last_verified_at": "2026-08-22T15:45:36.600193"
     },
     "streak_count": 2,
     "college_rank": 608,
@@ -21303,7 +21303,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.643085"
+      "last_verified_at": "2026-08-22T15:45:32.132382"
     },
     "streak_count": 3,
     "college_rank": 609,
@@ -21338,7 +21338,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.336610"
+      "last_verified_at": "2026-08-22T15:45:59.321425"
     },
     "streak_count": 2,
     "college_rank": 610,
@@ -21373,7 +21373,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:02.253357"
+      "last_verified_at": "2026-08-22T15:45:36.012475"
     },
     "streak_count": 1,
     "college_rank": 611,
@@ -21408,7 +21408,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.469918"
+      "last_verified_at": "2026-08-22T15:44:56.966201"
     },
     "streak_count": 6,
     "college_rank": 612,
@@ -21443,7 +21443,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:25.417546"
+      "last_verified_at": "2026-08-22T15:57:51.418554"
     },
     "streak_count": 4,
     "college_rank": 613,
@@ -21478,7 +21478,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:04.016987"
+      "last_verified_at": "2026-08-22T15:45:36.550364"
     },
     "streak_count": 2,
     "college_rank": 614,
@@ -21513,7 +21513,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:37.415512"
+      "last_verified_at": "2026-08-22T15:45:51.418611"
     },
     "streak_count": 1,
     "college_rank": 615,
@@ -21548,7 +21548,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1332.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.904549"
+      "last_verified_at": "2026-08-22T15:45:22.624229"
     },
     "streak_count": 5,
     "college_rank": 616,
@@ -21583,7 +21583,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1478.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.992118"
+      "last_verified_at": "2026-08-22T15:46:22.006128"
     },
     "streak_count": 3,
     "college_rank": 617,
@@ -21618,7 +21618,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:38.818993"
+      "last_verified_at": "2026-08-22T15:45:53.169345"
     },
     "streak_count": 1,
     "college_rank": 618,
@@ -21653,7 +21653,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:59.014887"
+      "last_verified_at": "2026-08-22T15:46:22.035876"
     },
     "streak_count": 3,
     "college_rank": 619,
@@ -21688,7 +21688,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:59.037043"
+      "last_verified_at": "2026-08-22T15:46:22.041523"
     },
     "streak_count": 3,
     "college_rank": 620,
@@ -21723,7 +21723,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.858900"
+      "last_verified_at": "2026-08-22T15:45:55.439491"
     },
     "streak_count": 2,
     "college_rank": 621,
@@ -21758,7 +21758,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:02.486716"
+      "last_verified_at": "2026-08-22T15:46:24.468115"
     },
     "streak_count": 1,
     "college_rank": 622,
@@ -21793,7 +21793,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.285433"
+      "last_verified_at": "2026-08-22T15:45:25.174568"
     },
     "streak_count": 3,
     "college_rank": 623,
@@ -21828,7 +21828,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1353.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:29.567544"
+      "last_verified_at": "2026-08-22T15:45:07.073566"
     },
     "streak_count": 7,
     "college_rank": 624,
@@ -21863,7 +21863,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:42.065632"
+      "last_verified_at": "2026-08-22T15:46:03.165936"
     },
     "streak_count": 5,
     "college_rank": 625,
@@ -21898,7 +21898,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.406740"
+      "last_verified_at": "2026-08-22T15:45:11.300844"
     },
     "streak_count": 4,
     "college_rank": 626,
@@ -21933,7 +21933,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:38.712543"
+      "last_verified_at": "2026-08-22T15:45:53.119327"
     },
     "streak_count": 2,
     "college_rank": 627,
@@ -21968,7 +21968,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.510148"
+      "last_verified_at": "2026-08-22T15:45:56.870805"
     },
     "streak_count": 2,
     "college_rank": 628,
@@ -22003,7 +22003,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:10.277406"
+      "last_verified_at": "2026-08-22T15:45:37.823237"
     },
     "streak_count": 1,
     "college_rank": 629,
@@ -22038,7 +22038,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.351376"
+      "last_verified_at": "2026-08-22T15:46:21.483358"
     },
     "streak_count": 2,
     "college_rank": 630,
@@ -22073,7 +22073,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:31.797138"
+      "last_verified_at": "2026-08-22T15:45:08.218260"
     },
     "streak_count": 3,
     "college_rank": 631,
@@ -22108,7 +22108,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:54.695561"
+      "last_verified_at": "2026-08-22T15:46:18.311097"
     },
     "streak_count": 2,
     "college_rank": 632,
@@ -22143,7 +22143,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:35.520971"
+      "last_verified_at": "2026-08-22T15:45:50.826907"
     },
     "streak_count": 1,
     "college_rank": 633,
@@ -22178,7 +22178,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:21.996027"
+      "last_verified_at": "2026-08-22T15:45:03.314207"
     },
     "streak_count": 3,
     "college_rank": 634,
@@ -22213,7 +22213,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.612051"
+      "last_verified_at": "2026-08-22T15:45:54.280944"
     },
     "streak_count": 4,
     "college_rank": 635,
@@ -22248,7 +22248,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.111505"
+      "last_verified_at": "2026-08-22T15:45:58.214580"
     },
     "streak_count": 3,
     "college_rank": 636,
@@ -22283,7 +22283,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:12.839582"
+      "last_verified_at": "2026-08-22T15:45:41.016989"
     },
     "streak_count": 3,
     "college_rank": 637,
@@ -22318,7 +22318,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.072247"
+      "last_verified_at": "2026-08-22T15:44:55.784787"
     },
     "streak_count": 3,
     "college_rank": 638,
@@ -22353,7 +22353,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.763157"
+      "last_verified_at": "2026-08-22T15:45:15.539407"
     },
     "streak_count": 2,
     "college_rank": 639,
@@ -22388,7 +22388,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:37.973523"
+      "last_verified_at": "2026-08-22T15:45:52.286991"
     },
     "streak_count": 5,
     "college_rank": 640,
@@ -22423,7 +22423,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.104089"
+      "last_verified_at": "2026-08-22T15:45:11.034822"
     },
     "streak_count": 5,
     "college_rank": 641,
@@ -22458,7 +22458,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.341246"
+      "last_verified_at": "2026-08-22T15:45:53.623236"
     },
     "streak_count": 2,
     "college_rank": 642,
@@ -22493,7 +22493,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.455033"
+      "last_verified_at": "2026-08-22T15:45:56.603954"
     },
     "streak_count": 3,
     "college_rank": 643,
@@ -22528,7 +22528,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.811471"
+      "last_verified_at": "2026-08-22T15:45:57.533332"
     },
     "streak_count": 4,
     "college_rank": 644,
@@ -22563,7 +22563,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:22.785292"
+      "last_verified_at": "2026-08-22T15:45:03.578807"
     },
     "streak_count": 3,
     "college_rank": 645,
@@ -22598,7 +22598,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.790970"
+      "last_verified_at": "2026-08-22T15:46:02.359566"
     },
     "streak_count": 1,
     "college_rank": 646,
@@ -22633,7 +22633,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.411674"
+      "last_verified_at": "2026-08-22T15:44:58.325674"
     },
     "streak_count": 5,
     "college_rank": 647,
@@ -22668,7 +22668,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.041153"
+      "last_verified_at": "2026-08-22T15:45:16.051425"
     },
     "streak_count": 6,
     "college_rank": 648,
@@ -22703,7 +22703,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.683024"
+      "last_verified_at": "2026-08-22T15:46:21.758874"
     },
     "streak_count": 3,
     "college_rank": 649,
@@ -22738,7 +22738,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.688594"
+      "last_verified_at": "2026-08-22T15:46:21.764760"
     },
     "streak_count": 3,
     "college_rank": 650,
@@ -22773,7 +22773,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:38.525338"
+      "last_verified_at": "2026-08-22T15:45:52.891738"
     },
     "streak_count": 1,
     "college_rank": 651,
@@ -22808,7 +22808,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:42.572307"
+      "last_verified_at": "2026-08-22T15:46:05.242546"
     },
     "streak_count": 2,
     "college_rank": 652,
@@ -22843,7 +22843,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:55.630506"
+      "last_verified_at": "2026-08-22T15:46:19.097223"
     },
     "streak_count": 2,
     "college_rank": 653,
@@ -22878,7 +22878,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.981651"
+      "last_verified_at": "2026-08-22T15:45:55.775235"
     },
     "streak_count": 2,
     "college_rank": 654,
@@ -22913,7 +22913,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.325219"
+      "last_verified_at": "2026-08-22T15:45:56.379749"
     },
     "streak_count": 2,
     "college_rank": 655,
@@ -22948,7 +22948,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.090799"
+      "last_verified_at": "2026-08-22T15:44:55.806012"
     },
     "streak_count": 1,
     "college_rank": 656,
@@ -22983,7 +22983,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.450274"
+      "last_verified_at": "2026-08-22T15:46:06.941208"
     },
     "streak_count": 2,
     "college_rank": 657,
@@ -23018,7 +23018,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1352.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.654395"
+      "last_verified_at": "2026-08-22T15:45:23.934677"
     },
     "streak_count": 4,
     "college_rank": 658,
@@ -23053,7 +23053,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.292124"
+      "last_verified_at": "2026-08-22T15:45:25.275214"
     },
     "streak_count": 2,
     "college_rank": 659,
@@ -23088,7 +23088,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1374.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.388018"
+      "last_verified_at": "2026-08-22T15:44:58.314550"
     },
     "streak_count": 5,
     "college_rank": 660,
@@ -23123,7 +23123,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:51.483924"
+      "last_verified_at": "2026-08-22T15:45:23.793243"
     },
     "streak_count": 1,
     "college_rank": 661,
@@ -23158,7 +23158,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:27.075738"
+      "last_verified_at": "2026-08-22T15:45:44.983980"
     },
     "streak_count": 2,
     "college_rank": 662,
@@ -23193,7 +23193,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:30.375371"
+      "last_verified_at": "2026-08-22T15:45:47.307724"
     },
     "streak_count": 1,
     "college_rank": 663,
@@ -23228,7 +23228,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:30.617945"
+      "last_verified_at": "2026-08-22T15:45:47.343870"
     },
     "streak_count": 3,
     "college_rank": 664,
@@ -23263,7 +23263,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:20.031907"
+      "last_verified_at": "2026-08-22T15:45:02.283359"
     },
     "streak_count": 2,
     "college_rank": 665,
@@ -23298,7 +23298,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.668685"
+      "last_verified_at": "2026-08-22T15:45:22.036357"
     },
     "streak_count": 1,
     "college_rank": 666,
@@ -23333,7 +23333,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:24.378200"
+      "last_verified_at": "2026-08-22T15:45:04.019872"
     },
     "streak_count": 4,
     "college_rank": 667,
@@ -23368,7 +23368,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:23.904426"
+      "last_verified_at": "2026-08-22T15:45:43.734808"
     },
     "streak_count": 5,
     "college_rank": 668,
@@ -23403,7 +23403,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:33.695322"
+      "last_verified_at": "2026-08-22T15:45:09.558201"
     },
     "streak_count": 3,
     "college_rank": 669,
@@ -23438,7 +23438,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:54.504514"
+      "last_verified_at": "2026-08-22T15:46:18.264785"
     },
     "streak_count": 2,
     "college_rank": 670,
@@ -23473,7 +23473,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:30.827040"
+      "last_verified_at": "2026-08-22T15:45:47.447412"
     },
     "streak_count": 2,
     "college_rank": 671,
@@ -23508,7 +23508,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:31.116208"
+      "last_verified_at": "2026-08-22T15:45:47.566713"
     },
     "streak_count": 4,
     "college_rank": 672,
@@ -23543,7 +23543,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.183518"
+      "last_verified_at": "2026-08-22T15:45:09.839577"
     },
     "streak_count": 3,
     "college_rank": 673,
@@ -23578,7 +23578,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:53.894505"
+      "last_verified_at": "2026-08-22T15:45:25.788937"
     },
     "streak_count": 2,
     "college_rank": 674,
@@ -23613,7 +23613,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.037191"
+      "last_verified_at": "2026-08-22T15:45:28.862583"
     },
     "streak_count": 2,
     "college_rank": 675,
@@ -23648,7 +23648,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:37.622368"
+      "last_verified_at": "2026-08-22T15:45:51.746193"
     },
     "streak_count": 4,
     "college_rank": 676,
@@ -23683,7 +23683,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.821746"
+      "last_verified_at": "2026-08-22T15:45:55.304979"
     },
     "streak_count": 1,
     "college_rank": 677,
@@ -23718,7 +23718,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.113209"
+      "last_verified_at": "2026-08-22T15:45:56.119903"
     },
     "streak_count": 5,
     "college_rank": 678,
@@ -23753,7 +23753,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:55.756965"
+      "last_verified_at": "2026-08-22T15:46:19.305546"
     },
     "streak_count": 1,
     "college_rank": 679,
@@ -23788,7 +23788,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:01.019161"
+      "last_verified_at": "2026-08-22T15:46:22.622331"
     },
     "streak_count": 1,
     "college_rank": 680,
@@ -23823,7 +23823,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:09.533739"
+      "last_verified_at": "2026-08-22T15:44:57.426605"
     },
     "streak_count": 2,
     "college_rank": 681,
@@ -23858,7 +23858,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1395.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.295208"
+      "last_verified_at": "2026-08-22T15:45:21.131487"
     },
     "streak_count": 4,
     "college_rank": 682,
@@ -23893,7 +23893,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.524927"
+      "last_verified_at": "2026-08-22T15:44:58.828662"
     },
     "streak_count": 3,
     "college_rank": 683,
@@ -23928,7 +23928,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.579266"
+      "last_verified_at": "2026-08-22T15:44:59.068152"
     },
     "streak_count": 2,
     "college_rank": 684,
@@ -23963,7 +23963,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.506127"
+      "last_verified_at": "2026-08-22T15:46:21.509721"
     },
     "streak_count": 10,
     "college_rank": 685,
@@ -23998,7 +23998,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1414.6,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.823781"
+      "last_verified_at": "2026-08-22T15:45:22.589316"
     },
     "streak_count": 3,
     "college_rank": 686,
@@ -24033,7 +24033,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.804380"
+      "last_verified_at": "2026-08-22T15:45:55.142979"
     },
     "streak_count": 2,
     "college_rank": 687,
@@ -24068,7 +24068,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:25.264309"
+      "last_verified_at": "2026-08-22T15:57:51.406513"
     },
     "streak_count": 5,
     "college_rank": 688,
@@ -24103,7 +24103,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:51.995109"
+      "last_verified_at": "2026-08-22T15:46:17.180460"
     },
     "streak_count": 3,
     "college_rank": 689,
@@ -24138,7 +24138,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:09.601272"
+      "last_verified_at": "2026-08-22T15:44:57.433352"
     },
     "streak_count": 1,
     "college_rank": 690,
@@ -24173,7 +24173,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.534347"
+      "last_verified_at": "2026-08-22T15:44:58.996927"
     },
     "streak_count": 5,
     "college_rank": 691,
@@ -24208,7 +24208,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1370.5,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.783221"
+      "last_verified_at": "2026-08-22T15:45:22.414506"
     },
     "streak_count": 6,
     "college_rank": 692,
@@ -24243,7 +24243,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:38.542852"
+      "last_verified_at": "2026-08-22T15:45:52.901555"
     },
     "streak_count": 3,
     "college_rank": 693,
@@ -24278,7 +24278,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:08.942258"
+      "last_verified_at": "2026-08-22T15:45:37.263268"
     },
     "streak_count": 2,
     "college_rank": 694,
@@ -24313,7 +24313,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:01.015007"
+      "last_verified_at": "2026-08-22T15:46:22.561989"
     },
     "streak_count": 4,
     "college_rank": 695,
@@ -24348,7 +24348,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.728970"
+      "last_verified_at": "2026-08-22T15:45:57.430628"
     },
     "streak_count": 5,
     "college_rank": 696,
@@ -24383,7 +24383,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.399253"
+      "last_verified_at": "2026-08-22T15:44:56.792087"
     },
     "streak_count": 1,
     "college_rank": 697,
@@ -24418,7 +24418,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:09.457455"
+      "last_verified_at": "2026-08-22T15:44:57.395896"
     },
     "streak_count": 6,
     "college_rank": 698,
@@ -24453,7 +24453,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:53.550856"
+      "last_verified_at": "2026-08-22T15:46:17.639487"
     },
     "streak_count": 1,
     "college_rank": 699,
@@ -24488,7 +24488,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1352.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.469080"
+      "last_verified_at": "2026-08-22T15:44:58.661877"
     },
     "streak_count": 3,
     "college_rank": 700,
@@ -24523,7 +24523,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.499080"
+      "last_verified_at": "2026-08-22T15:46:21.488687"
     },
     "streak_count": 2,
     "college_rank": 701,
@@ -24558,7 +24558,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:33.903515"
+      "last_verified_at": "2026-08-22T15:45:50.248931"
     },
     "streak_count": 3,
     "college_rank": 702,
@@ -24593,7 +24593,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:38.744174"
+      "last_verified_at": "2026-08-22T15:45:53.126207"
     },
     "streak_count": 2,
     "college_rank": 703,
@@ -24628,7 +24628,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.130140"
+      "last_verified_at": "2026-08-22T15:45:53.482163"
     },
     "streak_count": 2,
     "college_rank": 704,
@@ -24663,7 +24663,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.463642"
+      "last_verified_at": "2026-08-22T15:45:54.158440"
     },
     "streak_count": 2,
     "college_rank": 705,
@@ -24698,7 +24698,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:48.018500"
+      "last_verified_at": "2026-08-22T15:46:14.530388"
     },
     "streak_count": 3,
     "college_rank": 706,
@@ -24733,7 +24733,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:17.491570"
+      "last_verified_at": "2026-08-22T15:45:01.326272"
     },
     "streak_count": 1,
     "college_rank": 707,
@@ -24768,7 +24768,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.674976"
+      "last_verified_at": "2026-08-22T15:45:22.047438"
     },
     "streak_count": 7,
     "college_rank": 708,
@@ -24803,7 +24803,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:51.704147"
+      "last_verified_at": "2026-08-22T15:45:23.895344"
     },
     "streak_count": 2,
     "college_rank": 709,
@@ -24838,7 +24838,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:31.619827"
+      "last_verified_at": "2026-08-22T15:45:08.104068"
     },
     "streak_count": 3,
     "college_rank": 710,
@@ -24873,7 +24873,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:52.681490"
+      "last_verified_at": "2026-08-22T15:45:34.278401"
     },
     "streak_count": 2,
     "college_rank": 711,
@@ -24908,7 +24908,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:55.007337"
+      "last_verified_at": "2026-08-22T15:46:18.634427"
     },
     "streak_count": 1,
     "college_rank": 712,
@@ -24943,7 +24943,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:37.935452"
+      "last_verified_at": "2026-08-22T15:45:52.137079"
     },
     "streak_count": 1,
     "college_rank": 713,
@@ -24978,7 +24978,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.193112"
+      "last_verified_at": "2026-08-22T15:45:56.337428"
     },
     "streak_count": 3,
     "college_rank": 714,
@@ -25013,7 +25013,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.953937"
+      "last_verified_at": "2026-08-22T15:45:57.770976"
     },
     "streak_count": 4,
     "college_rank": 715,
@@ -25048,7 +25048,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:11.214006"
+      "last_verified_at": "2026-08-22T15:45:39.529850"
     },
     "streak_count": 1,
     "college_rank": 716,
@@ -25083,7 +25083,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:24.307625"
+      "last_verified_at": "2026-08-22T15:45:43.860635"
     },
     "streak_count": 2,
     "college_rank": 717,
@@ -25118,7 +25118,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:07.018378"
+      "last_verified_at": "2026-08-22T15:45:36.795635"
     },
     "streak_count": 1,
     "college_rank": 718,
@@ -25153,7 +25153,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:53.992818"
+      "last_verified_at": "2026-08-22T15:45:35.067380"
     },
     "streak_count": 2,
     "college_rank": 719,
@@ -25188,7 +25188,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.737218"
+      "last_verified_at": "2026-08-22T15:45:12.079462"
     },
     "streak_count": 6,
     "college_rank": 720,
@@ -25223,7 +25223,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.002127"
+      "last_verified_at": "2026-08-22T15:45:28.789193"
     },
     "streak_count": 2,
     "college_rank": 721,
@@ -25258,7 +25258,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.661748"
+      "last_verified_at": "2026-08-22T15:45:54.580034"
     },
     "streak_count": 6,
     "college_rank": 722,
@@ -25293,7 +25293,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:59.605169"
+      "last_verified_at": "2026-08-22T15:46:22.318978"
     },
     "streak_count": 2,
     "college_rank": 723,
@@ -25328,7 +25328,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:59.615757"
+      "last_verified_at": "2026-08-22T15:46:22.326075"
     },
     "streak_count": 2,
     "college_rank": 724,
@@ -25363,7 +25363,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:18.758071"
+      "last_verified_at": "2026-08-22T15:45:01.597880"
     },
     "streak_count": 1,
     "college_rank": 725,
@@ -25398,7 +25398,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:55.971018"
+      "last_verified_at": "2026-08-22T15:46:19.621096"
     },
     "streak_count": 1,
     "college_rank": 726,
@@ -25433,7 +25433,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:56.060964"
+      "last_verified_at": "2026-08-22T15:46:19.862486"
     },
     "streak_count": 1,
     "college_rank": 727,
@@ -25468,7 +25468,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:48.021824"
+      "last_verified_at": "2026-08-22T15:45:22.484456"
     },
     "streak_count": 1,
     "college_rank": 728,
@@ -25503,7 +25503,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:02.683620"
+      "last_verified_at": "2026-08-22T15:45:36.122078"
     },
     "streak_count": 4,
     "college_rank": 729,
@@ -25538,7 +25538,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.123988"
+      "last_verified_at": "2026-08-22T15:44:55.973674"
     },
     "streak_count": 1,
     "college_rank": 730,
@@ -25573,7 +25573,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:53.396566"
+      "last_verified_at": "2026-08-22T15:46:17.487396"
     },
     "streak_count": 4,
     "college_rank": 731,
@@ -25608,7 +25608,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:33.893367"
+      "last_verified_at": "2026-08-22T15:45:09.705556"
     },
     "streak_count": 5,
     "college_rank": 732,
@@ -25643,7 +25643,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.793509"
+      "last_verified_at": "2026-08-22T15:46:21.851730"
     },
     "streak_count": 1,
     "college_rank": 733,
@@ -25678,7 +25678,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:38.489927"
+      "last_verified_at": "2026-08-22T15:45:52.799186"
     },
     "streak_count": 3,
     "college_rank": 734,
@@ -25713,7 +25713,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.979885"
+      "last_verified_at": "2026-08-22T15:46:21.993906"
     },
     "streak_count": 2,
     "college_rank": 735,
@@ -25748,7 +25748,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.259135"
+      "last_verified_at": "2026-08-22T15:46:06.297747"
     },
     "streak_count": 2,
     "college_rank": 736,
@@ -25783,7 +25783,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:01.023348"
+      "last_verified_at": "2026-08-22T15:46:22.628330"
     },
     "streak_count": 3,
     "college_rank": 737,
@@ -25818,7 +25818,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:01.035925"
+      "last_verified_at": "2026-08-22T15:46:22.669476"
     },
     "streak_count": 3,
     "college_rank": 738,
@@ -25853,7 +25853,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:12.238279"
+      "last_verified_at": "2026-08-22T15:45:40.482942"
     },
     "streak_count": 2,
     "college_rank": 739,
@@ -25888,7 +25888,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1392.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.166519"
+      "last_verified_at": "2026-08-22T15:45:20.979124"
     },
     "streak_count": 3,
     "college_rank": 740,
@@ -25923,7 +25923,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:29.969448"
+      "last_verified_at": "2026-08-22T15:45:07.211371"
     },
     "streak_count": 3,
     "college_rank": 741,
@@ -25958,7 +25958,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:27.643275"
+      "last_verified_at": "2026-08-22T15:45:45.261594"
     },
     "streak_count": 3,
     "college_rank": 742,
@@ -25993,7 +25993,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.527225"
+      "last_verified_at": "2026-08-22T15:45:21.897861"
     },
     "streak_count": 3,
     "college_rank": 743,
@@ -26028,7 +26028,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:33.886768"
+      "last_verified_at": "2026-08-22T15:45:50.165351"
     },
     "streak_count": 1,
     "college_rank": 744,
@@ -26063,7 +26063,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:36.675836"
+      "last_verified_at": "2026-08-22T15:45:51.187427"
     },
     "streak_count": 3,
     "college_rank": 745,
@@ -26098,7 +26098,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.405237"
+      "last_verified_at": "2026-08-22T15:45:53.846794"
     },
     "streak_count": 2,
     "college_rank": 746,
@@ -26133,7 +26133,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:02.507324"
+      "last_verified_at": "2026-08-22T15:45:38.658390"
     },
     "streak_count": 1,
     "college_rank": 747,
@@ -26168,7 +26168,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:52.477861"
+      "last_verified_at": "2026-08-22T15:46:17.234656"
     },
     "streak_count": 2,
     "college_rank": 748,
@@ -26203,7 +26203,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:23.611761"
+      "last_verified_at": "2026-08-22T15:45:43.436612"
     },
     "streak_count": 1,
     "college_rank": 749,
@@ -26238,7 +26238,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:49.855253"
+      "last_verified_at": "2026-08-22T15:45:23.512718"
     },
     "streak_count": 1,
     "college_rank": 750,
@@ -26273,7 +26273,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:24.153910"
+      "last_verified_at": "2026-08-22T15:45:43.827726"
     },
     "streak_count": 2,
     "college_rank": 751,
@@ -26308,7 +26308,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:02.143226"
+      "last_verified_at": "2026-08-22T15:46:23.897201"
     },
     "streak_count": 3,
     "college_rank": 752,
@@ -26343,7 +26343,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1432.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.325146"
+      "last_verified_at": "2026-08-22T15:45:23.284410"
     },
     "streak_count": 3,
     "college_rank": 753,
@@ -26378,7 +26378,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:50.720662"
+      "last_verified_at": "2026-08-22T15:46:16.396457"
     },
     "streak_count": 1,
     "college_rank": 754,
@@ -26413,7 +26413,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:48.373567"
+      "last_verified_at": "2026-08-22T15:45:22.515426"
     },
     "streak_count": 2,
     "college_rank": 755,
@@ -26448,7 +26448,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:09.898504"
+      "last_verified_at": "2026-08-22T15:44:57.597744"
     },
     "streak_count": 4,
     "college_rank": 756,
@@ -26483,7 +26483,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:29.272598"
+      "last_verified_at": "2026-08-22T15:45:06.833299"
     },
     "streak_count": 6,
     "college_rank": 757,
@@ -26518,7 +26518,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.045652"
+      "last_verified_at": "2026-08-22T15:45:16.057544"
     },
     "streak_count": 5,
     "college_rank": 758,
@@ -26553,7 +26553,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:42.297819"
+      "last_verified_at": "2026-08-22T15:46:04.912033"
     },
     "streak_count": 3,
     "college_rank": 759,
@@ -26588,7 +26588,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.697136"
+      "last_verified_at": "2026-08-22T15:45:30.029618"
     },
     "streak_count": 3,
     "college_rank": 760,
@@ -26623,7 +26623,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.365920"
+      "last_verified_at": "2026-08-22T15:45:53.739300"
     },
     "streak_count": 3,
     "college_rank": 761,
@@ -26658,7 +26658,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:56.677476"
+      "last_verified_at": "2026-08-22T15:45:36.154751"
     },
     "streak_count": 2,
     "college_rank": 762,
@@ -26693,7 +26693,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:55.645300"
+      "last_verified_at": "2026-08-22T15:46:19.138259"
     },
     "streak_count": 1,
     "college_rank": 763,
@@ -26728,7 +26728,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:58.893213"
+      "last_verified_at": "2026-08-22T15:45:30.976671"
     },
     "streak_count": 6,
     "college_rank": 764,
@@ -26763,7 +26763,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.203405"
+      "last_verified_at": "2026-08-22T15:45:58.575785"
     },
     "streak_count": 2,
     "college_rank": 765,
@@ -26798,7 +26798,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.377987"
+      "last_verified_at": "2026-08-22T15:45:59.487785"
     },
     "streak_count": 3,
     "college_rank": 766,
@@ -26833,7 +26833,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:53.450755"
+      "last_verified_at": "2026-08-22T15:46:17.517656"
     },
     "streak_count": 2,
     "college_rank": 767,
@@ -26868,7 +26868,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:23.814109"
+      "last_verified_at": "2026-08-22T15:45:43.590122"
     },
     "streak_count": 5,
     "college_rank": 768,
@@ -26903,7 +26903,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:24.506435"
+      "last_verified_at": "2026-08-22T15:45:44.055290"
     },
     "streak_count": 2,
     "college_rank": 769,
@@ -26938,7 +26938,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:54.220399"
+      "last_verified_at": "2026-08-22T15:46:18.136400"
     },
     "streak_count": 1,
     "college_rank": 770,
@@ -26973,7 +26973,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1414.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.950074"
+      "last_verified_at": "2026-08-22T15:45:22.726971"
     },
     "streak_count": 4,
     "college_rank": 771,
@@ -27008,7 +27008,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:42.495471"
+      "last_verified_at": "2026-08-22T15:46:05.124285"
     },
     "streak_count": 1,
     "college_rank": 772,
@@ -27043,7 +27043,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:36.952881"
+      "last_verified_at": "2026-08-22T15:45:14.303467"
     },
     "streak_count": 4,
     "college_rank": 773,
@@ -27078,7 +27078,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.597994"
+      "last_verified_at": "2026-08-22T15:45:57.052811"
     },
     "streak_count": 1,
     "college_rank": 774,
@@ -27113,7 +27113,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.093849"
+      "last_verified_at": "2026-08-22T15:45:57.996819"
     },
     "streak_count": 1,
     "college_rank": 775,
@@ -27148,7 +27148,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.565821"
+      "last_verified_at": "2026-08-22T15:44:57.313233"
     },
     "streak_count": 3,
     "college_rank": 776,
@@ -27183,7 +27183,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.601802"
+      "last_verified_at": "2026-08-22T15:46:01.272697"
     },
     "streak_count": 1,
     "college_rank": 777,
@@ -27218,7 +27218,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:51.598331"
+      "last_verified_at": "2026-08-22T15:45:23.802661"
     },
     "streak_count": 2,
     "college_rank": 778,
@@ -27253,7 +27253,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.328836"
+      "last_verified_at": "2026-08-22T15:46:21.399915"
     },
     "streak_count": 1,
     "college_rank": 779,
@@ -27288,7 +27288,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.335029"
+      "last_verified_at": "2026-08-22T15:46:21.448170"
     },
     "streak_count": 1,
     "college_rank": 780,
@@ -27323,7 +27323,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.512509"
+      "last_verified_at": "2026-08-22T15:46:21.536112"
     },
     "streak_count": 3,
     "college_rank": 781,
@@ -27358,7 +27358,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.827934"
+      "last_verified_at": "2026-08-22T15:46:21.869013"
     },
     "streak_count": 3,
     "college_rank": 782,
@@ -27393,7 +27393,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:38.656531"
+      "last_verified_at": "2026-08-22T15:45:53.024797"
     },
     "streak_count": 3,
     "college_rank": 783,
@@ -27428,7 +27428,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.548001"
+      "last_verified_at": "2026-08-22T15:45:56.962524"
     },
     "streak_count": 2,
     "college_rank": 784,
@@ -27463,7 +27463,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:56.091224"
+      "last_verified_at": "2026-08-22T15:46:19.932005"
     },
     "streak_count": 1,
     "college_rank": 785,
@@ -27498,7 +27498,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.143529"
+      "last_verified_at": "2026-08-22T15:44:55.992711"
     },
     "streak_count": 2,
     "college_rank": 786,
@@ -27533,7 +27533,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:29.798432"
+      "last_verified_at": "2026-08-22T15:45:07.100183"
     },
     "streak_count": 3,
     "college_rank": 787,
@@ -27568,7 +27568,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:48.188682"
+      "last_verified_at": "2026-08-22T15:45:22.505494"
     },
     "streak_count": 1,
     "college_rank": 788,
@@ -27603,7 +27603,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:56.814295"
+      "last_verified_at": "2026-08-22T15:46:20.487101"
     },
     "streak_count": 2,
     "college_rank": 789,
@@ -27638,7 +27638,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:56.831202"
+      "last_verified_at": "2026-08-22T15:46:20.538156"
     },
     "streak_count": 2,
     "college_rank": 790,
@@ -27673,7 +27673,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:52.807101"
+      "last_verified_at": "2026-08-22T15:46:17.293896"
     },
     "streak_count": 2,
     "college_rank": 791,
@@ -27708,7 +27708,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:53.256532"
+      "last_verified_at": "2026-08-22T15:46:17.390447"
     },
     "streak_count": 1,
     "college_rank": 792,
@@ -27743,7 +27743,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:23.560757"
+      "last_verified_at": "2026-08-22T15:45:43.336896"
     },
     "streak_count": 3,
     "college_rank": 793,
@@ -27778,7 +27778,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.810375"
+      "last_verified_at": "2026-08-22T15:46:02.433619"
     },
     "streak_count": 4,
     "college_rank": 794,
@@ -27813,7 +27813,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:51.985996"
+      "last_verified_at": "2026-08-22T15:45:34.153105"
     },
     "streak_count": 1,
     "college_rank": 795,
@@ -27848,7 +27848,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:45.061888"
+      "last_verified_at": "2026-08-22T15:45:27.941857"
     },
     "streak_count": 2,
     "college_rank": 796,
@@ -27883,7 +27883,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1531.7,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:02.034194"
+      "last_verified_at": "2026-08-22T15:46:23.663878"
     },
     "streak_count": 2,
     "college_rank": 797,
@@ -27918,7 +27918,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:35.122769"
+      "last_verified_at": "2026-08-22T15:45:50.789704"
     },
     "streak_count": 3,
     "college_rank": 798,
@@ -27953,7 +27953,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:36.766789"
+      "last_verified_at": "2026-08-22T15:45:51.240750"
     },
     "streak_count": 7,
     "college_rank": 799,
@@ -27988,7 +27988,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.354452"
+      "last_verified_at": "2026-08-22T15:45:53.663749"
     },
     "streak_count": 3,
     "college_rank": 800,
@@ -28023,7 +28023,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:42.871103"
+      "last_verified_at": "2026-08-22T15:46:05.872993"
     },
     "streak_count": 3,
     "college_rank": 801,
@@ -28058,7 +28058,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:01.384757"
+      "last_verified_at": "2026-08-22T15:46:22.758997"
     },
     "streak_count": 2,
     "college_rank": 802,
@@ -28093,7 +28093,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.097889"
+      "last_verified_at": "2026-08-22T15:45:58.149476"
     },
     "streak_count": 2,
     "college_rank": 803,
@@ -28128,7 +28128,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:01.412153"
+      "last_verified_at": "2026-08-22T15:46:22.861885"
     },
     "streak_count": 2,
     "college_rank": 804,
@@ -28163,7 +28163,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:01.505848"
+      "last_verified_at": "2026-08-22T15:46:22.938666"
     },
     "streak_count": 1,
     "college_rank": 805,
@@ -28198,7 +28198,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.530150"
+      "last_verified_at": "2026-08-22T15:46:00.859037"
     },
     "streak_count": 2,
     "college_rank": 806,
@@ -28233,7 +28233,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:56.542096"
+      "last_verified_at": "2026-08-22T15:46:20.293142"
     },
     "streak_count": 1,
     "college_rank": 807,
@@ -28268,7 +28268,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:52.365756"
+      "last_verified_at": "2026-08-22T15:46:17.184998"
     },
     "streak_count": 2,
     "college_rank": 808,
@@ -28303,7 +28303,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:52.964315"
+      "last_verified_at": "2026-08-22T15:46:17.325199"
     },
     "streak_count": 1,
     "college_rank": 809,
@@ -28338,7 +28338,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:49.689720"
+      "last_verified_at": "2026-08-22T15:45:33.442500"
     },
     "streak_count": 1,
     "college_rank": 810,
@@ -28373,7 +28373,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:57.998393"
+      "last_verified_at": "2026-08-22T15:46:21.132927"
     },
     "streak_count": 3,
     "college_rank": 811,
@@ -28408,7 +28408,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1416.1,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.709469"
+      "last_verified_at": "2026-08-22T15:45:26.840391"
     },
     "streak_count": 6,
     "college_rank": 812,
@@ -28443,7 +28443,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.011456"
+      "last_verified_at": "2026-08-22T15:46:21.173613"
     },
     "streak_count": 3,
     "college_rank": 813,
@@ -28478,7 +28478,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:54.885756"
+      "last_verified_at": "2026-08-22T15:46:18.539483"
     },
     "streak_count": 2,
     "college_rank": 814,
@@ -28513,7 +28513,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:54.940573"
+      "last_verified_at": "2026-08-22T15:46:18.598557"
     },
     "streak_count": 2,
     "college_rank": 815,
@@ -28548,7 +28548,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.847580"
+      "last_verified_at": "2026-08-22T15:46:21.926366"
     },
     "streak_count": 1,
     "college_rank": 816,
@@ -28583,7 +28583,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:38.105314"
+      "last_verified_at": "2026-08-22T15:45:52.470028"
     },
     "streak_count": 5,
     "college_rank": 817,
@@ -28618,7 +28618,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.852266"
+      "last_verified_at": "2026-08-22T15:46:21.932693"
     },
     "streak_count": 1,
     "college_rank": 818,
@@ -28653,7 +28653,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1414.6,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.290928"
+      "last_verified_at": "2026-08-22T15:45:23.275721"
     },
     "streak_count": 2,
     "college_rank": 819,
@@ -28688,7 +28688,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:00.442378"
+      "last_verified_at": "2026-08-22T15:46:22.486610"
     },
     "streak_count": 2,
     "college_rank": 820,
@@ -28723,7 +28723,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:55.913006"
+      "last_verified_at": "2026-08-22T15:46:19.549157"
     },
     "streak_count": 2,
     "college_rank": 821,
@@ -28758,7 +28758,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.527232"
+      "last_verified_at": "2026-08-22T15:46:07.270985"
     },
     "streak_count": 2,
     "college_rank": 822,
@@ -28793,7 +28793,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:48.391523"
+      "last_verified_at": "2026-08-22T15:45:32.869415"
     },
     "streak_count": 1,
     "college_rank": 823,
@@ -28828,7 +28828,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:53.475515"
+      "last_verified_at": "2026-08-22T15:46:17.565338"
     },
     "streak_count": 2,
     "college_rank": 824,
@@ -28863,7 +28863,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:27.090515"
+      "last_verified_at": "2026-08-22T15:45:44.993107"
     },
     "streak_count": 2,
     "college_rank": 825,
@@ -28898,7 +28898,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.518931"
+      "last_verified_at": "2026-08-22T15:46:21.624011"
     },
     "streak_count": 1,
     "college_rank": 826,
@@ -28933,7 +28933,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.535255"
+      "last_verified_at": "2026-08-22T15:46:21.652383"
     },
     "streak_count": 1,
     "college_rank": 827,
@@ -28968,7 +28968,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:36.901070"
+      "last_verified_at": "2026-08-22T15:45:51.330946"
     },
     "streak_count": 1,
     "college_rank": 828,
@@ -29003,7 +29003,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.986045"
+      "last_verified_at": "2026-08-22T15:45:55.785468"
     },
     "streak_count": 2,
     "college_rank": 829,
@@ -29038,7 +29038,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.164493"
+      "last_verified_at": "2026-08-22T15:45:24.996075"
     },
     "streak_count": 3,
     "college_rank": 830,
@@ -29073,7 +29073,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.208899"
+      "last_verified_at": "2026-08-22T15:45:25.131819"
     },
     "streak_count": 3,
     "college_rank": 831,
@@ -29108,7 +29108,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.992704"
+      "last_verified_at": "2026-08-22T15:45:22.463740"
     },
     "streak_count": 1,
     "college_rank": 832,
@@ -29143,7 +29143,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:51.865365"
+      "last_verified_at": "2026-08-22T15:46:17.128188"
     },
     "streak_count": 2,
     "college_rank": 833,
@@ -29178,7 +29178,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:12.613334"
+      "last_verified_at": "2026-08-22T15:45:40.633446"
     },
     "streak_count": 4,
     "college_rank": 834,
@@ -29213,7 +29213,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:50.152140"
+      "last_verified_at": "2026-08-22T15:45:23.524625"
     },
     "streak_count": 2,
     "college_rank": 835,
@@ -29248,7 +29248,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.529062"
+      "last_verified_at": "2026-08-22T15:44:58.836743"
     },
     "streak_count": 3,
     "college_rank": 836,
@@ -29283,7 +29283,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1362.8,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.607206"
+      "last_verified_at": "2026-08-22T15:44:59.186250"
     },
     "streak_count": 1,
     "college_rank": 837,
@@ -29318,7 +29318,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:27.663700"
+      "last_verified_at": "2026-08-22T15:45:45.440170"
     },
     "streak_count": 2,
     "college_rank": 838,
@@ -29353,7 +29353,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:33.701511"
+      "last_verified_at": "2026-08-22T15:45:50.155285"
     },
     "streak_count": 2,
     "college_rank": 839,
@@ -29388,7 +29388,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:54.928171"
+      "last_verified_at": "2026-08-22T15:46:18.573237"
     },
     "streak_count": 1,
     "college_rank": 840,
@@ -29423,7 +29423,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:59.338787"
+      "last_verified_at": "2026-08-22T15:46:22.203046"
     },
     "streak_count": 1,
     "college_rank": 841,
@@ -29458,7 +29458,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.500697"
+      "last_verified_at": "2026-08-22T15:45:21.290064"
     },
     "streak_count": 3,
     "college_rank": 842,
@@ -29493,7 +29493,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:01.609350"
+      "last_verified_at": "2026-08-22T15:46:22.994300"
     },
     "streak_count": 2,
     "college_rank": 843,
@@ -29528,7 +29528,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.838211"
+      "last_verified_at": "2026-08-22T15:45:22.204632"
     },
     "streak_count": 2,
     "college_rank": 844,
@@ -29563,7 +29563,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:53.554535"
+      "last_verified_at": "2026-08-22T15:46:17.736239"
     },
     "streak_count": 1,
     "college_rank": 845,
@@ -29598,7 +29598,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:25.745141"
+      "last_verified_at": "2026-08-22T15:45:44.418125"
     },
     "streak_count": 1,
     "college_rank": 846,
@@ -29633,7 +29633,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:28.379780"
+      "last_verified_at": "2026-08-22T15:45:46.002169"
     },
     "streak_count": 2,
     "college_rank": 847,
@@ -29668,7 +29668,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:33.586446"
+      "last_verified_at": "2026-08-22T15:45:50.100126"
     },
     "streak_count": 3,
     "college_rank": 848,
@@ -29703,7 +29703,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:54.154944"
+      "last_verified_at": "2026-08-22T15:45:35.114874"
     },
     "streak_count": 1,
     "college_rank": 849,
@@ -29738,7 +29738,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:54.823603"
+      "last_verified_at": "2026-08-22T15:46:18.476111"
     },
     "streak_count": 1,
     "college_rank": 850,
@@ -29773,7 +29773,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:55.263730"
+      "last_verified_at": "2026-08-22T15:46:18.720340"
     },
     "streak_count": 3,
     "college_rank": 851,
@@ -29808,7 +29808,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:51.756156"
+      "last_verified_at": "2026-08-22T15:46:17.076666"
     },
     "streak_count": 2,
     "college_rank": 852,
@@ -29843,7 +29843,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.716713"
+      "last_verified_at": "2026-08-22T15:46:07.643896"
     },
     "streak_count": 3,
     "college_rank": 853,
@@ -29878,7 +29878,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:51.877990"
+      "last_verified_at": "2026-08-22T15:46:17.132815"
     },
     "streak_count": 1,
     "college_rank": 854,
@@ -29913,7 +29913,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:52.376084"
+      "last_verified_at": "2026-08-22T15:46:17.189656"
     },
     "streak_count": 1,
     "college_rank": 855,
@@ -29948,7 +29948,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:48.922734"
+      "last_verified_at": "2026-08-22T15:45:33.150692"
     },
     "streak_count": 3,
     "college_rank": 856,
@@ -29983,7 +29983,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:18.776332"
+      "last_verified_at": "2026-08-22T15:45:42.402132"
     },
     "streak_count": 3,
     "college_rank": 857,
@@ -30018,7 +30018,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:52.581923"
+      "last_verified_at": "2026-08-22T15:46:17.284652"
     },
     "streak_count": 1,
     "college_rank": 858,
@@ -30053,7 +30053,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:49.464238"
+      "last_verified_at": "2026-08-22T15:45:33.264168"
     },
     "streak_count": 1,
     "college_rank": 859,
@@ -30088,7 +30088,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:53.339849"
+      "last_verified_at": "2026-08-22T15:46:17.444998"
     },
     "streak_count": 1,
     "college_rank": 860,
@@ -30123,7 +30123,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.181895"
+      "last_verified_at": "2026-08-22T15:44:56.055981"
     },
     "streak_count": 2,
     "college_rank": 861,
@@ -30158,7 +30158,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:26.773349"
+      "last_verified_at": "2026-08-22T15:45:44.644965"
     },
     "streak_count": 1,
     "college_rank": 862,
@@ -30193,7 +30193,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:26.823303"
+      "last_verified_at": "2026-08-22T15:45:44.805728"
     },
     "streak_count": 1,
     "college_rank": 863,
@@ -30228,7 +30228,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1349.4,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:41.796618"
+      "last_verified_at": "2026-08-22T15:45:22.577821"
     },
     "streak_count": 4,
     "college_rank": 864,
@@ -30263,7 +30263,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:42.226751"
+      "last_verified_at": "2026-08-22T15:46:03.570194"
     },
     "streak_count": 2,
     "college_rank": 865,
@@ -30298,7 +30298,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1590.2,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.255603"
+      "last_verified_at": "2026-08-22T15:45:23.208799"
     },
     "streak_count": 3,
     "college_rank": 866,
@@ -30333,7 +30333,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:55.360473"
+      "last_verified_at": "2026-08-22T15:46:18.826196"
     },
     "streak_count": 3,
     "college_rank": 867,
@@ -30368,7 +30368,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.430852"
+      "last_verified_at": "2026-08-22T15:45:56.518293"
     },
     "streak_count": 2,
     "college_rank": 868,
@@ -30403,7 +30403,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:50.326614"
+      "last_verified_at": "2026-08-22T15:45:33.857906"
     },
     "streak_count": 2,
     "college_rank": 869,
@@ -30438,7 +30438,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:26.233755"
+      "last_verified_at": "2026-08-22T15:45:44.528865"
     },
     "streak_count": 3,
     "college_rank": 870,
@@ -30473,7 +30473,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.720143"
+      "last_verified_at": "2026-08-22T15:45:15.287557"
     },
     "streak_count": 3,
     "college_rank": 871,
@@ -30508,7 +30508,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:54.086093"
+      "last_verified_at": "2026-08-22T15:46:17.965356"
     },
     "streak_count": 3,
     "college_rank": 872,
@@ -30543,7 +30543,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.555461"
+      "last_verified_at": "2026-08-22T15:46:21.700941"
     },
     "streak_count": 2,
     "college_rank": 873,
@@ -30578,7 +30578,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:54.546076"
+      "last_verified_at": "2026-08-22T15:45:35.228269"
     },
     "streak_count": 1,
     "college_rank": 874,
@@ -30613,7 +30613,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.652624"
+      "last_verified_at": "2026-08-22T15:46:21.707831"
     },
     "streak_count": 2,
     "college_rank": 875,
@@ -30648,7 +30648,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.868916"
+      "last_verified_at": "2026-08-22T15:45:10.843569"
     },
     "streak_count": 1,
     "college_rank": 876,
@@ -30683,7 +30683,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:02.280940"
+      "last_verified_at": "2026-08-22T15:46:24.149888"
     },
     "streak_count": 2,
     "college_rank": 877,
@@ -30718,7 +30718,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:56.509466"
+      "last_verified_at": "2026-08-22T15:45:28.136725"
     },
     "streak_count": 2,
     "college_rank": 878,
@@ -30753,7 +30753,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:57.693260"
+      "last_verified_at": "2026-08-22T15:45:29.879414"
     },
     "streak_count": 5,
     "college_rank": 879,
@@ -30788,7 +30788,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.771798"
+      "last_verified_at": "2026-08-22T15:45:54.939258"
     },
     "streak_count": 3,
     "college_rank": 880,
@@ -30823,7 +30823,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:55.500612"
+      "last_verified_at": "2026-08-22T15:46:18.923730"
     },
     "streak_count": 1,
     "college_rank": 881,
@@ -30858,7 +30858,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.070790"
+      "last_verified_at": "2026-08-22T15:45:57.979588"
     },
     "streak_count": 3,
     "college_rank": 882,
@@ -30893,7 +30893,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:11.718452"
+      "last_verified_at": "2026-08-22T15:45:39.942754"
     },
     "streak_count": 2,
     "college_rank": 883,
@@ -30928,7 +30928,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:12.135104"
+      "last_verified_at": "2026-08-22T15:45:40.386488"
     },
     "streak_count": 2,
     "college_rank": 884,
@@ -30963,7 +30963,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:16.002085"
+      "last_verified_at": "2026-08-22T15:45:41.679701"
     },
     "streak_count": 2,
     "college_rank": 885,
@@ -30998,7 +30998,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.750492"
+      "last_verified_at": "2026-08-22T15:46:01.909475"
     },
     "streak_count": 1,
     "college_rank": 886,
@@ -31033,7 +31033,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:49.512495"
+      "last_verified_at": "2026-08-22T15:45:33.349903"
     },
     "streak_count": 3,
     "college_rank": 887,
@@ -31068,7 +31068,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:03.685142"
+      "last_verified_at": "2026-08-22T15:45:36.391541"
     },
     "streak_count": 1,
     "college_rank": 888,
@@ -31103,7 +31103,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:57.933097"
+      "last_verified_at": "2026-08-22T15:46:21.028656"
     },
     "streak_count": 2,
     "college_rank": 889,
@@ -31138,7 +31138,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:57.961396"
+      "last_verified_at": "2026-08-22T15:46:21.034640"
     },
     "streak_count": 2,
     "college_rank": 890,
@@ -31173,7 +31173,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.972216"
+      "last_verified_at": "2026-08-22T15:46:02.745142"
     },
     "streak_count": 3,
     "college_rank": 891,
@@ -31208,7 +31208,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:53.833346"
+      "last_verified_at": "2026-08-22T15:46:17.806391"
     },
     "streak_count": 1,
     "college_rank": 892,
@@ -31243,7 +31243,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.769089"
+      "last_verified_at": "2026-08-22T15:44:59.550824"
     },
     "streak_count": 3,
     "college_rank": 893,
@@ -31278,7 +31278,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:28.949327"
+      "last_verified_at": "2026-08-22T15:45:46.941976"
     },
     "streak_count": 2,
     "college_rank": 894,
@@ -31313,7 +31313,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:30.392275"
+      "last_verified_at": "2026-08-22T15:45:47.319119"
     },
     "streak_count": 1,
     "college_rank": 895,
@@ -31348,7 +31348,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:31.582458"
+      "last_verified_at": "2026-08-22T15:45:47.865157"
     },
     "streak_count": 2,
     "college_rank": 896,
@@ -31383,7 +31383,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:32.137211"
+      "last_verified_at": "2026-08-22T15:45:48.401683"
     },
     "streak_count": 2,
     "college_rank": 897,
@@ -31418,7 +31418,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:32.666502"
+      "last_verified_at": "2026-08-22T15:45:48.736348"
     },
     "streak_count": 1,
     "college_rank": 898,
@@ -31453,7 +31453,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:54.646354"
+      "last_verified_at": "2026-08-22T15:46:18.288948"
     },
     "streak_count": 1,
     "college_rank": 899,
@@ -31488,7 +31488,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:59.214994"
+      "last_verified_at": "2026-08-22T15:46:22.134707"
     },
     "streak_count": 1,
     "college_rank": 900,
@@ -31523,7 +31523,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:59.229122"
+      "last_verified_at": "2026-08-22T15:46:22.194247"
     },
     "streak_count": 1,
     "college_rank": 901,
@@ -31558,7 +31558,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.646896"
+      "last_verified_at": "2026-08-22T15:45:54.443001"
     },
     "streak_count": 2,
     "college_rank": 902,
@@ -31593,7 +31593,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:55.578366"
+      "last_verified_at": "2026-08-22T15:46:19.013281"
     },
     "streak_count": 2,
     "college_rank": 903,
@@ -31628,7 +31628,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:58.766609"
+      "last_verified_at": "2026-08-22T15:45:36.878459"
     },
     "streak_count": 2,
     "college_rank": 904,
@@ -31663,7 +31663,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:55.993501"
+      "last_verified_at": "2026-08-22T15:46:19.858041"
     },
     "streak_count": 3,
     "college_rank": 905,
@@ -31698,7 +31698,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:02.084598"
+      "last_verified_at": "2026-08-22T15:45:35.650671"
     },
     "streak_count": 1,
     "college_rank": 906,
@@ -31733,7 +31733,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:56.701647"
+      "last_verified_at": "2026-08-22T15:46:20.317219"
     },
     "streak_count": 1,
     "college_rank": 907,
@@ -31768,7 +31768,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.849033"
+      "last_verified_at": "2026-08-22T15:46:02.691241"
     },
     "streak_count": 1,
     "college_rank": 908,
@@ -31803,7 +31803,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.723219"
+      "last_verified_at": "2026-08-22T15:44:59.484960"
     },
     "streak_count": 2,
     "college_rank": 909,
@@ -31838,7 +31838,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:29.763097"
+      "last_verified_at": "2026-08-22T15:45:47.156206"
     },
     "streak_count": 2,
     "college_rank": 910,
@@ -31873,7 +31873,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:54.130393"
+      "last_verified_at": "2026-08-22T15:45:25.808605"
     },
     "streak_count": 1,
     "college_rank": 911,
@@ -31908,7 +31908,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.812902"
+      "last_verified_at": "2026-08-22T15:46:21.862212"
     },
     "streak_count": 3,
     "college_rank": 912,
@@ -31943,7 +31943,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:55.585916"
+      "last_verified_at": "2026-08-22T15:45:35.389044"
     },
     "streak_count": 3,
     "college_rank": 913,
@@ -31978,7 +31978,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:55.294701"
+      "last_verified_at": "2026-08-22T15:46:18.764073"
     },
     "streak_count": 1,
     "college_rank": 914,
@@ -32013,7 +32013,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.872521"
+      "last_verified_at": "2026-08-22T15:45:55.453513"
     },
     "streak_count": 3,
     "college_rank": 915,
@@ -32048,7 +32048,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.928156"
+      "last_verified_at": "2026-08-22T15:45:55.530671"
     },
     "streak_count": 2,
     "college_rank": 916,
@@ -32083,7 +32083,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:56.074668"
+      "last_verified_at": "2026-08-22T15:46:19.885262"
     },
     "streak_count": 1,
     "college_rank": 917,
@@ -32118,7 +32118,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.502420"
+      "last_verified_at": "2026-08-22T15:46:07.245596"
     },
     "streak_count": 3,
     "college_rank": 918,
@@ -32153,7 +32153,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:01.587926"
+      "last_verified_at": "2026-08-22T15:46:22.944597"
     },
     "streak_count": 1,
     "college_rank": 919,
@@ -32188,7 +32188,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:01.494653"
+      "last_verified_at": "2026-08-22T15:45:33.965409"
     },
     "streak_count": 3,
     "college_rank": 920,
@@ -32223,7 +32223,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:01.948756"
+      "last_verified_at": "2026-08-22T15:45:35.563224"
     },
     "streak_count": 1,
     "college_rank": 921,
@@ -32258,7 +32258,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:51.830392"
+      "last_verified_at": "2026-08-22T15:46:17.123386"
     },
     "streak_count": 2,
     "college_rank": 922,
@@ -32293,7 +32293,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:21.760625"
+      "last_verified_at": "2026-08-22T15:45:42.971240"
     },
     "streak_count": 1,
     "college_rank": 923,
@@ -32328,7 +32328,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.783917"
+      "last_verified_at": "2026-08-22T15:46:02.276294"
     },
     "streak_count": 3,
     "college_rank": 924,
@@ -32363,7 +32363,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:50.227155"
+      "last_verified_at": "2026-08-22T15:45:23.583230"
     },
     "streak_count": 1,
     "college_rank": 925,
@@ -32398,7 +32398,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:50.654643"
+      "last_verified_at": "2026-08-22T15:45:33.903692"
     },
     "streak_count": 1,
     "college_rank": 926,
@@ -32433,7 +32433,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.672303"
+      "last_verified_at": "2026-08-22T15:45:17.231301"
     },
     "streak_count": 3,
     "college_rank": 927,
@@ -32468,7 +32468,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.661142"
+      "last_verified_at": "2026-08-22T15:44:59.299727"
     },
     "streak_count": 2,
     "college_rank": 928,
@@ -32503,7 +32503,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:54.015394"
+      "last_verified_at": "2026-08-22T15:46:17.877479"
     },
     "streak_count": 1,
     "college_rank": 929,
@@ -32538,7 +32538,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:33.979839"
+      "last_verified_at": "2026-08-22T15:45:50.429643"
     },
     "streak_count": 2,
     "college_rank": 930,
@@ -32573,7 +32573,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:37.940755"
+      "last_verified_at": "2026-08-22T15:45:52.223622"
     },
     "streak_count": 1,
     "college_rank": 931,
@@ -32608,7 +32608,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.219736"
+      "last_verified_at": "2026-08-22T15:46:06.099221"
     },
     "streak_count": 2,
     "college_rank": 932,
@@ -32643,7 +32643,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:59.494160"
+      "last_verified_at": "2026-08-22T15:45:32.261693"
     },
     "streak_count": 1,
     "college_rank": 933,
@@ -32678,7 +32678,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:11.628452"
+      "last_verified_at": "2026-08-22T15:45:39.934305"
     },
     "streak_count": 1,
     "college_rank": 934,
@@ -32713,7 +32713,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:12.723887"
+      "last_verified_at": "2026-08-22T15:45:40.952011"
     },
     "streak_count": 3,
     "college_rank": 935,
@@ -32748,7 +32748,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:16.275909"
+      "last_verified_at": "2026-08-22T15:45:42.016756"
     },
     "streak_count": 2,
     "college_rank": 936,
@@ -32783,7 +32783,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:20.543985"
+      "last_verified_at": "2026-08-22T15:45:42.571529"
     },
     "streak_count": 3,
     "college_rank": 937,
@@ -32818,7 +32818,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:23.657017"
+      "last_verified_at": "2026-08-22T15:45:43.510852"
     },
     "streak_count": 5,
     "college_rank": 938,
@@ -32853,7 +32853,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:25.271721"
+      "last_verified_at": "2026-08-22T15:45:44.384316"
     },
     "streak_count": 2,
     "college_rank": 939,
@@ -32888,7 +32888,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:42.073183"
+      "last_verified_at": "2026-08-22T15:46:03.303696"
     },
     "streak_count": 1,
     "college_rank": 940,
@@ -32923,7 +32923,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:53.517778"
+      "last_verified_at": "2026-08-22T15:45:25.390321"
     },
     "streak_count": 1,
     "college_rank": 941,
@@ -32958,7 +32958,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:42.805750"
+      "last_verified_at": "2026-08-22T15:46:05.489674"
     },
     "streak_count": 1,
     "college_rank": 942,
@@ -32993,7 +32993,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:00.996475"
+      "last_verified_at": "2026-08-22T15:45:37.822837"
     },
     "streak_count": 4,
     "college_rank": 943,
@@ -33028,7 +33028,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:10.911762"
+      "last_verified_at": "2026-08-22T15:45:39.045991"
     },
     "streak_count": 1,
     "college_rank": 944,
@@ -33063,7 +33063,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:13.548027"
+      "last_verified_at": "2026-08-22T15:45:41.110687"
     },
     "streak_count": 1,
     "college_rank": 945,
@@ -33098,7 +33098,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:15.444160"
+      "last_verified_at": "2026-08-22T15:45:41.624377"
     },
     "streak_count": 2,
     "college_rank": 946,
@@ -33133,7 +33133,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:48.899756"
+      "last_verified_at": "2026-08-22T15:45:33.076569"
     },
     "streak_count": 1,
     "college_rank": 947,
@@ -33168,7 +33168,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:53.193577"
+      "last_verified_at": "2026-08-22T15:46:17.353340"
     },
     "streak_count": 1,
     "college_rank": 948,
@@ -33203,7 +33203,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:22.246031"
+      "last_verified_at": "2026-08-22T15:45:43.064167"
     },
     "streak_count": 3,
     "college_rank": 949,
@@ -33238,7 +33238,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:57.984084"
+      "last_verified_at": "2026-08-22T15:46:21.096562"
     },
     "streak_count": 2,
     "college_rank": 950,
@@ -33273,7 +33273,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:29.992692"
+      "last_verified_at": "2026-08-22T15:45:47.296762"
     },
     "streak_count": 1,
     "college_rank": 951,
@@ -33308,7 +33308,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:31.284044"
+      "last_verified_at": "2026-08-22T15:45:47.810582"
     },
     "streak_count": 1,
     "college_rank": 952,
@@ -33343,7 +33343,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:32.683248"
+      "last_verified_at": "2026-08-22T15:45:49.093069"
     },
     "streak_count": 1,
     "college_rank": 953,
@@ -33378,7 +33378,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:37.002560"
+      "last_verified_at": "2026-08-22T15:45:51.409169"
     },
     "streak_count": 1,
     "college_rank": 954,
@@ -33413,7 +33413,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:38.622847"
+      "last_verified_at": "2026-08-22T15:45:52.933054"
     },
     "streak_count": 2,
     "college_rank": 955,
@@ -33448,7 +33448,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:56.914040"
+      "last_verified_at": "2026-08-22T15:45:36.287784"
     },
     "streak_count": 3,
     "college_rank": 956,
@@ -33483,7 +33483,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.474398"
+      "last_verified_at": "2026-08-22T15:46:07.112871"
     },
     "streak_count": 2,
     "college_rank": 957,
@@ -33518,7 +33518,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:11.115306"
+      "last_verified_at": "2026-08-22T15:45:39.465293"
     },
     "streak_count": 1,
     "college_rank": 958,
@@ -33553,7 +33553,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:11.609856"
+      "last_verified_at": "2026-08-22T15:45:39.924178"
     },
     "streak_count": 3,
     "college_rank": 959,
@@ -33588,7 +33588,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:11.893532"
+      "last_verified_at": "2026-08-22T15:45:40.101000"
     },
     "streak_count": 1,
     "college_rank": 960,
@@ -33623,7 +33623,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:12.014453"
+      "last_verified_at": "2026-08-22T15:45:40.335608"
     },
     "streak_count": 1,
     "college_rank": 961,
@@ -33658,7 +33658,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:53.329014"
+      "last_verified_at": "2026-08-22T15:46:17.440345"
     },
     "streak_count": 2,
     "college_rank": 962,
@@ -33693,7 +33693,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:50.180445"
+      "last_verified_at": "2026-08-22T15:45:33.516855"
     },
     "streak_count": 4,
     "college_rank": 963,
@@ -33728,7 +33728,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:42.001667"
+      "last_verified_at": "2026-08-22T15:46:03.080655"
     },
     "streak_count": 3,
     "college_rank": 964,
@@ -33763,7 +33763,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:28.577115"
+      "last_verified_at": "2026-08-22T15:45:46.041019"
     },
     "streak_count": 1,
     "college_rank": 965,
@@ -33798,7 +33798,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1477.0,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.981055"
+      "last_verified_at": "2026-08-22T15:45:27.899442"
     },
     "streak_count": 2,
     "college_rank": 966,
@@ -33833,7 +33833,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.201810"
+      "last_verified_at": "2026-08-22T15:44:56.063505"
     },
     "streak_count": 2,
     "college_rank": 967,
@@ -33868,7 +33868,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:59.593825"
+      "last_verified_at": "2026-08-22T15:46:22.311940"
     },
     "streak_count": 2,
     "college_rank": 968,
@@ -33903,7 +33903,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.002786"
+      "last_verified_at": "2026-08-22T15:45:55.866565"
     },
     "streak_count": 1,
     "college_rank": 969,
@@ -33938,7 +33938,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:49.622724"
+      "last_verified_at": "2026-08-22T15:46:15.847532"
     },
     "streak_count": 6,
     "college_rank": 970,
@@ -33973,7 +33973,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:50.908626"
+      "last_verified_at": "2026-08-22T15:46:16.596673"
     },
     "streak_count": 1,
     "college_rank": 971,
@@ -34008,7 +34008,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:48.944536"
+      "last_verified_at": "2026-08-22T15:45:22.792993"
     },
     "streak_count": 1,
     "college_rank": 972,
@@ -34043,7 +34043,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:49.441072"
+      "last_verified_at": "2026-08-22T15:45:22.987863"
     },
     "streak_count": 1,
     "college_rank": 973,
@@ -34078,7 +34078,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:45.546105"
+      "last_verified_at": "2026-08-22T15:45:14.152943"
     },
     "streak_count": 1,
     "college_rank": 974,
@@ -34113,7 +34113,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:53.429088"
+      "last_verified_at": "2026-08-22T15:45:34.773270"
     },
     "streak_count": 1,
     "college_rank": 975,
@@ -34148,7 +34148,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:32.120148"
+      "last_verified_at": "2026-08-22T15:45:48.322077"
     },
     "streak_count": 4,
     "college_rank": 976,
@@ -34183,7 +34183,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:32.372748"
+      "last_verified_at": "2026-08-22T15:45:48.570752"
     },
     "streak_count": 2,
     "college_rank": 977,
@@ -34218,7 +34218,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:42.187161"
+      "last_verified_at": "2026-08-22T15:46:03.419091"
     },
     "streak_count": 2,
     "college_rank": 978,
@@ -34253,7 +34253,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:55.679704"
+      "last_verified_at": "2026-08-22T15:45:26.867257"
     },
     "streak_count": 1,
     "college_rank": 979,
@@ -34288,7 +34288,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:55.894917"
+      "last_verified_at": "2026-08-22T15:45:27.134724"
     },
     "streak_count": 2,
     "college_rank": 980,
@@ -34323,7 +34323,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:55.613443"
+      "last_verified_at": "2026-08-22T15:46:19.048400"
     },
     "streak_count": 2,
     "college_rank": 981,
@@ -34358,7 +34358,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:11.159949"
+      "last_verified_at": "2026-08-22T15:57:46.020288"
     },
     "streak_count": 2,
     "college_rank": 982,
@@ -34393,7 +34393,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.472641"
+      "last_verified_at": "2026-08-22T15:45:56.618550"
     },
     "streak_count": 2,
     "college_rank": 983,
@@ -34428,7 +34428,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:48.009849"
+      "last_verified_at": "2026-08-22T15:45:22.474699"
     },
     "streak_count": 1,
     "college_rank": 984,
@@ -34463,7 +34463,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:50.204125"
+      "last_verified_at": "2026-08-22T15:45:23.568147"
     },
     "streak_count": 2,
     "college_rank": 985,
@@ -34498,7 +34498,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.145857"
+      "last_verified_at": "2026-08-22T15:46:21.179359"
     },
     "streak_count": 3,
     "college_rank": 986,
@@ -34533,7 +34533,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:26.247878"
+      "last_verified_at": "2026-08-22T15:45:44.538053"
     },
     "streak_count": 2,
     "college_rank": 987,
@@ -34568,7 +34568,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:38.247142"
+      "last_verified_at": "2026-08-22T15:45:52.563065"
     },
     "streak_count": 1,
     "college_rank": 988,
@@ -34603,7 +34603,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:42.501327"
+      "last_verified_at": "2026-08-22T15:46:05.185975"
     },
     "streak_count": 1,
     "college_rank": 989,
@@ -34638,7 +34638,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.138984"
+      "last_verified_at": "2026-08-22T15:45:56.131129"
     },
     "streak_count": 2,
     "college_rank": 990,
@@ -34673,7 +34673,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:00.726305"
+      "last_verified_at": "2026-08-22T15:46:22.492869"
     },
     "streak_count": 3,
     "college_rank": 991,
@@ -34708,7 +34708,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:55.812025"
+      "last_verified_at": "2026-08-22T15:46:19.348056"
     },
     "streak_count": 2,
     "college_rank": 992,
@@ -34743,7 +34743,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:00.245029"
+      "last_verified_at": "2026-08-22T15:45:32.747237"
     },
     "streak_count": 2,
     "college_rank": 993,
@@ -34778,7 +34778,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:11.279599"
+      "last_verified_at": "2026-08-22T15:45:39.671524"
     },
     "streak_count": 2,
     "college_rank": 994,
@@ -34813,7 +34813,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:24.259815"
+      "last_verified_at": "2026-08-22T15:45:04.009920"
     },
     "streak_count": 2,
     "college_rank": 995,
@@ -34848,7 +34848,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.221006"
+      "last_verified_at": "2026-08-22T15:44:56.227265"
     },
     "streak_count": 2,
     "college_rank": 996,
@@ -34883,7 +34883,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.727875"
+      "last_verified_at": "2026-08-22T15:46:01.897942"
     },
     "streak_count": 1,
     "college_rank": 997,
@@ -34918,7 +34918,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:28.120834"
+      "last_verified_at": "2026-08-22T15:45:45.508440"
     },
     "streak_count": 1,
     "college_rank": 998,
@@ -34953,7 +34953,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:34.755474"
+      "last_verified_at": "2026-08-22T15:45:50.523831"
     },
     "streak_count": 1,
     "college_rank": 999,
@@ -34988,7 +34988,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:54.353183"
+      "last_verified_at": "2026-08-22T15:45:35.168579"
     },
     "streak_count": 1,
     "college_rank": 1000,
@@ -35023,7 +35023,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:56.697312"
+      "last_verified_at": "2026-08-22T15:45:36.264233"
     },
     "streak_count": 1,
     "college_rank": 1001,
@@ -35058,7 +35058,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:57.766155"
+      "last_verified_at": "2026-08-22T15:45:29.900802"
     },
     "streak_count": 1,
     "college_rank": 1002,
@@ -35093,7 +35093,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:58.076343"
+      "last_verified_at": "2026-08-22T15:45:30.586840"
     },
     "streak_count": 2,
     "college_rank": 1003,
@@ -35128,7 +35128,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:59.426484"
+      "last_verified_at": "2026-08-22T15:45:32.203425"
     },
     "streak_count": 1,
     "college_rank": 1004,
@@ -35163,7 +35163,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.308540"
+      "last_verified_at": "2026-08-22T15:45:56.365126"
     },
     "streak_count": 1,
     "college_rank": 1005,
@@ -35198,7 +35198,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.830156"
+      "last_verified_at": "2026-08-22T15:45:57.563395"
     },
     "streak_count": 1,
     "college_rank": 1006,
@@ -35233,7 +35233,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.352184"
+      "last_verified_at": "2026-08-22T15:45:59.408647"
     },
     "streak_count": 1,
     "college_rank": 1007,
@@ -35268,7 +35268,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:48.166564"
+      "last_verified_at": "2026-08-22T15:45:22.494852"
     },
     "streak_count": 2,
     "college_rank": 1008,
@@ -35303,7 +35303,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:51.936305"
+      "last_verified_at": "2026-08-22T15:46:17.175896"
     },
     "streak_count": 1,
     "college_rank": 1009,
@@ -35338,7 +35338,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:16.230683"
+      "last_verified_at": "2026-08-22T15:45:41.763750"
     },
     "streak_count": 3,
     "college_rank": 1010,
@@ -35373,7 +35373,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:52.412740"
+      "last_verified_at": "2026-08-22T15:46:17.229420"
     },
     "streak_count": 2,
     "college_rank": 1011,
@@ -35408,7 +35408,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:37.829661"
+      "last_verified_at": "2026-08-22T15:45:51.981626"
     },
     "streak_count": 2,
     "college_rank": 1012,
@@ -35443,7 +35443,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:37.980578"
+      "last_verified_at": "2026-08-22T15:45:52.378772"
     },
     "streak_count": 1,
     "college_rank": 1013,
@@ -35478,7 +35478,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.985732"
+      "last_verified_at": "2026-08-22T15:46:21.999400"
     },
     "streak_count": 3,
     "college_rank": 1014,
@@ -35513,7 +35513,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:55.344614"
+      "last_verified_at": "2026-08-22T15:46:18.800374"
     },
     "streak_count": 1,
     "college_rank": 1015,
@@ -35548,7 +35548,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.169804"
+      "last_verified_at": "2026-08-22T15:45:56.154652"
     },
     "streak_count": 1,
     "college_rank": 1016,
@@ -35583,7 +35583,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:00.881587"
+      "last_verified_at": "2026-08-22T15:46:22.498992"
     },
     "streak_count": 2,
     "college_rank": 1017,
@@ -35618,7 +35618,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:59.882869"
+      "last_verified_at": "2026-08-22T15:45:32.516503"
     },
     "streak_count": 2,
     "college_rank": 1018,
@@ -35653,7 +35653,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:01.162048"
+      "last_verified_at": "2026-08-22T15:45:33.782365"
     },
     "streak_count": 2,
     "college_rank": 1019,
@@ -35688,7 +35688,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.693057"
+      "last_verified_at": "2026-08-22T15:46:07.432863"
     },
     "streak_count": 3,
     "college_rank": 1020,
@@ -35723,7 +35723,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:16.184192"
+      "last_verified_at": "2026-08-22T15:45:41.715441"
     },
     "streak_count": 2,
     "college_rank": 1021,
@@ -35758,7 +35758,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.829074"
+      "last_verified_at": "2026-08-22T15:46:02.535995"
     },
     "streak_count": 1,
     "college_rank": 1022,
@@ -35793,7 +35793,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:50.794870"
+      "last_verified_at": "2026-08-22T15:45:33.945414"
     },
     "streak_count": 1,
     "college_rank": 1023,
@@ -35828,7 +35828,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:28.738109"
+      "last_verified_at": "2026-08-22T15:45:46.114606"
     },
     "streak_count": 1,
     "college_rank": 1024,
@@ -35863,7 +35863,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:29.052938"
+      "last_verified_at": "2026-08-22T15:45:47.048758"
     },
     "streak_count": 1,
     "college_rank": 1025,
@@ -35898,7 +35898,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:31.011875"
+      "last_verified_at": "2026-08-22T15:45:47.471071"
     },
     "streak_count": 1,
     "college_rank": 1026,
@@ -35933,7 +35933,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:53.698842"
+      "last_verified_at": "2026-08-22T15:45:34.867646"
     },
     "streak_count": 1,
     "college_rank": 1027,
@@ -35968,7 +35968,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:38.505000"
+      "last_verified_at": "2026-08-22T15:45:52.809218"
     },
     "streak_count": 2,
     "college_rank": 1028,
@@ -36003,7 +36003,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:55.537895"
+      "last_verified_at": "2026-08-22T15:46:18.968663"
     },
     "streak_count": 2,
     "college_rank": 1029,
@@ -36038,7 +36038,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:59.741953"
+      "last_verified_at": "2026-08-22T15:46:22.332357"
     },
     "streak_count": 1,
     "college_rank": 1030,
@@ -36073,7 +36073,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.143681"
+      "last_verified_at": "2026-08-22T15:45:56.142739"
     },
     "streak_count": 1,
     "college_rank": 1031,
@@ -36108,7 +36108,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:59.721390"
+      "last_verified_at": "2026-08-22T15:45:32.337572"
     },
     "streak_count": 2,
     "college_rank": 1032,
@@ -36143,7 +36143,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:59.815876"
+      "last_verified_at": "2026-08-22T15:45:32.456724"
     },
     "streak_count": 2,
     "college_rank": 1033,
@@ -36178,7 +36178,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:10.367297"
+      "last_verified_at": "2026-08-22T15:45:37.839237"
     },
     "streak_count": 1,
     "college_rank": 1034,
@@ -36213,7 +36213,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.446134"
+      "last_verified_at": "2026-08-22T15:45:59.721692"
     },
     "streak_count": 2,
     "college_rank": 1035,
@@ -36248,7 +36248,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:25.945431"
+      "last_verified_at": "2026-08-22T15:57:51.568945"
     },
     "streak_count": 1,
     "college_rank": 1036,
@@ -36283,7 +36283,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.775776"
+      "last_verified_at": "2026-08-22T15:46:07.954350"
     },
     "streak_count": 1,
     "college_rank": 1037,
@@ -36318,7 +36318,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:15.508428"
+      "last_verified_at": "2026-08-22T15:45:41.670206"
     },
     "streak_count": 2,
     "college_rank": 1038,
@@ -36353,7 +36353,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.356928"
+      "last_verified_at": "2026-08-22T15:44:56.740374"
     },
     "streak_count": 2,
     "college_rank": 1039,
@@ -36388,7 +36388,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:20.686327"
+      "last_verified_at": "2026-08-22T15:45:42.620347"
     },
     "streak_count": 1,
     "college_rank": 1040,
@@ -36423,7 +36423,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:24.713593"
+      "last_verified_at": "2026-08-22T15:45:44.076018"
     },
     "streak_count": 1,
     "college_rank": 1041,
@@ -36458,7 +36458,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:25.438320"
+      "last_verified_at": "2026-08-22T15:45:44.398184"
     },
     "streak_count": 1,
     "college_rank": 1042,
@@ -36493,7 +36493,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.978687"
+      "last_verified_at": "2026-08-22T15:46:02.948222"
     },
     "streak_count": 1,
     "college_rank": 1043,
@@ -36528,7 +36528,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.176386"
+      "last_verified_at": "2026-08-22T15:46:21.188876"
     },
     "streak_count": 1,
     "college_rank": 1044,
@@ -36563,7 +36563,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.204308"
+      "last_verified_at": "2026-08-22T15:46:21.195103"
     },
     "streak_count": 1,
     "college_rank": 1045,
@@ -36598,7 +36598,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:54.027837"
+      "last_verified_at": "2026-08-22T15:46:17.883143"
     },
     "streak_count": 3,
     "college_rank": 1046,
@@ -36633,7 +36633,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:29.352333"
+      "last_verified_at": "2026-08-22T15:45:47.130342"
     },
     "streak_count": 2,
     "college_rank": 1047,
@@ -36668,7 +36668,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:33.315931"
+      "last_verified_at": "2026-08-22T15:45:49.755556"
     },
     "streak_count": 1,
     "college_rank": 1048,
@@ -36703,7 +36703,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:42.264595"
+      "last_verified_at": "2026-08-22T15:46:03.846234"
     },
     "streak_count": 1,
     "college_rank": 1049,
@@ -36738,7 +36738,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:08.584472"
+      "last_verified_at": "2026-08-22T15:45:37.119222"
     },
     "streak_count": 1,
     "college_rank": 1050,
@@ -36773,7 +36773,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:57.049681"
+      "last_verified_at": "2026-08-22T15:45:28.821645"
     },
     "streak_count": 1,
     "college_rank": 1051,
@@ -36808,7 +36808,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:57.365236"
+      "last_verified_at": "2026-08-22T15:45:28.916477"
     },
     "streak_count": 1,
     "college_rank": 1052,
@@ -36843,7 +36843,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:59.758198"
+      "last_verified_at": "2026-08-22T15:46:22.338178"
     },
     "streak_count": 2,
     "college_rank": 1053,
@@ -36878,7 +36878,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:58.655906"
+      "last_verified_at": "2026-08-22T15:45:30.830190"
     },
     "streak_count": 1,
     "college_rank": 1054,
@@ -36913,7 +36913,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:00.019882"
+      "last_verified_at": "2026-08-22T15:45:32.556993"
     },
     "streak_count": 1,
     "college_rank": 1055,
@@ -36948,7 +36948,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:23.888311"
+      "last_verified_at": "2026-08-22T15:45:43.701201"
     },
     "streak_count": 2,
     "college_rank": 1056,
@@ -36983,7 +36983,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:25.064557"
+      "last_verified_at": "2026-08-22T15:45:44.265098"
     },
     "streak_count": 2,
     "college_rank": 1057,
@@ -37018,7 +37018,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:06.576635"
+      "last_verified_at": "2026-08-22T15:45:36.765815"
     },
     "streak_count": 1,
     "college_rank": 1058,
@@ -37053,7 +37053,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:36.208766"
+      "last_verified_at": "2026-08-22T15:45:50.969911"
     },
     "streak_count": 1,
     "college_rank": 1059,
@@ -37088,7 +37088,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:08.063842"
+      "last_verified_at": "2026-08-22T15:45:37.077469"
     },
     "streak_count": 1,
     "college_rank": 1060,
@@ -37123,7 +37123,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:57.572617"
+      "last_verified_at": "2026-08-22T15:45:29.323648"
     },
     "streak_count": 1,
     "college_rank": 1061,
@@ -37158,7 +37158,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:58.553245"
+      "last_verified_at": "2026-08-22T15:45:30.604349"
     },
     "streak_count": 2,
     "college_rank": 1062,
@@ -37193,7 +37193,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.407438"
+      "last_verified_at": "2026-08-22T15:46:06.679507"
     },
     "streak_count": 1,
     "college_rank": 1063,
@@ -37228,7 +37228,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:56.364773"
+      "last_verified_at": "2026-08-22T15:46:20.281567"
     },
     "streak_count": 1,
     "college_rank": 1064,
@@ -37263,7 +37263,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:44.772003"
+      "last_verified_at": "2026-08-22T15:46:08.253481"
     },
     "streak_count": 1,
     "college_rank": 1065,
@@ -37298,7 +37298,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:22.904556"
+      "last_verified_at": "2026-08-22T15:45:43.141312"
     },
     "streak_count": 1,
     "college_rank": 1066,
@@ -37333,7 +37333,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:50.249992"
+      "last_verified_at": "2026-08-22T15:45:23.596621"
     },
     "streak_count": 2,
     "college_rank": 1067,
@@ -37368,7 +37368,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:24.817999"
+      "last_verified_at": "2026-08-22T15:45:44.240367"
     },
     "streak_count": 1,
     "college_rank": 1068,
@@ -37403,7 +37403,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:45.059855"
+      "last_verified_at": "2026-08-22T15:46:08.892098"
     },
     "streak_count": 1,
     "college_rank": 1069,
@@ -37438,7 +37438,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:45.316335"
+      "last_verified_at": "2026-08-22T15:46:09.093861"
     },
     "streak_count": 3,
     "college_rank": 1070,
@@ -37473,7 +37473,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:26.474201"
+      "last_verified_at": "2026-08-22T15:45:44.636072"
     },
     "streak_count": 1,
     "college_rank": 1071,
@@ -37508,7 +37508,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:54.200833"
+      "last_verified_at": "2026-08-22T15:46:18.086170"
     },
     "streak_count": 1,
     "college_rank": 1072,
@@ -37543,7 +37543,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:27.404847"
+      "last_verified_at": "2026-08-22T15:45:45.098608"
     },
     "streak_count": 1,
     "college_rank": 1073,
@@ -37578,7 +37578,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.275124"
+      "last_verified_at": "2026-08-22T15:46:10.399561"
     },
     "streak_count": 1,
     "college_rank": 1074,
@@ -37613,7 +37613,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:32.840685"
+      "last_verified_at": "2026-08-22T15:45:49.585908"
     },
     "streak_count": 2,
     "college_rank": 1075,
@@ -37648,7 +37648,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:37.605043"
+      "last_verified_at": "2026-08-22T15:45:51.486484"
     },
     "streak_count": 1,
     "college_rank": 1076,
@@ -37683,7 +37683,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.289668"
+      "last_verified_at": "2026-08-22T15:45:53.613481"
     },
     "streak_count": 1,
     "college_rank": 1077,
@@ -37718,7 +37718,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:59.888768"
+      "last_verified_at": "2026-08-22T15:46:22.410477"
     },
     "streak_count": 1,
     "college_rank": 1078,
@@ -37753,7 +37753,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.424733"
+      "last_verified_at": "2026-08-22T15:45:56.426445"
     },
     "streak_count": 1,
     "college_rank": 1079,
@@ -37788,7 +37788,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.457399"
+      "last_verified_at": "2026-08-22T15:45:31.774123"
     },
     "streak_count": 1,
     "college_rank": 1080,
@@ -37823,7 +37823,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:49.921826"
+      "last_verified_at": "2026-08-22T15:46:15.931021"
     },
     "streak_count": 2,
     "college_rank": 1081,
@@ -37858,7 +37858,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:00.708201"
+      "last_verified_at": "2026-08-22T15:45:37.679984"
     },
     "streak_count": 1,
     "college_rank": 1082,
@@ -37893,7 +37893,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.473021"
+      "last_verified_at": "2026-08-22T15:46:00.273483"
     },
     "streak_count": 1,
     "college_rank": 1083,
@@ -37928,7 +37928,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:18.495703"
+      "last_verified_at": "2026-08-22T15:45:42.208799"
     },
     "streak_count": 2,
     "college_rank": 1084,
@@ -37963,7 +37963,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:48.965380"
+      "last_verified_at": "2026-08-22T15:45:33.185213"
     },
     "streak_count": 1,
     "college_rank": 1085,
@@ -37998,7 +37998,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:44.734581"
+      "last_verified_at": "2026-08-22T15:46:08.228513"
     },
     "streak_count": 1,
     "college_rank": 1086,
@@ -38033,7 +38033,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:21.427918"
+      "last_verified_at": "2026-08-22T15:45:42.882327"
     },
     "streak_count": 1,
     "college_rank": 1087,
@@ -38068,7 +38068,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:44.881423"
+      "last_verified_at": "2026-08-22T15:46:08.277361"
     },
     "streak_count": 1,
     "college_rank": 1088,
@@ -38103,7 +38103,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.180545"
+      "last_verified_at": "2026-08-22T15:44:58.173552"
     },
     "streak_count": 0,
     "college_rank": 1089,
@@ -38138,7 +38138,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:44.971282"
+      "last_verified_at": "2026-08-22T15:46:08.667848"
     },
     "streak_count": 1,
     "college_rank": 1090,
@@ -38173,7 +38173,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:52.844292"
+      "last_verified_at": "2026-08-22T15:45:34.349953"
     },
     "streak_count": 1,
     "college_rank": 1091,
@@ -38208,7 +38208,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.121405"
+      "last_verified_at": "2026-08-22T15:46:09.666779"
     },
     "streak_count": 2,
     "college_rank": 1092,
@@ -38243,7 +38243,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.261579"
+      "last_verified_at": "2026-08-22T15:46:10.389148"
     },
     "streak_count": 1,
     "college_rank": 1093,
@@ -38278,7 +38278,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:42.135403"
+      "last_verified_at": "2026-08-22T15:46:03.311814"
     },
     "streak_count": 2,
     "college_rank": 1094,
@@ -38313,7 +38313,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:45.240979"
+      "last_verified_at": "2026-08-22T15:45:13.876148"
     },
     "streak_count": 0,
     "college_rank": 1095,
@@ -38348,7 +38348,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:37.756117"
+      "last_verified_at": "2026-08-22T15:45:51.918953"
     },
     "streak_count": 2,
     "college_rank": 1096,
@@ -38383,7 +38383,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.560450"
+      "last_verified_at": "2026-08-22T15:46:12.044406"
     },
     "streak_count": 1,
     "college_rank": 1097,
@@ -38418,7 +38418,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.894737"
+      "last_verified_at": "2026-08-22T15:46:21.939959"
     },
     "streak_count": 2,
     "college_rank": 1098,
@@ -38453,7 +38453,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:55.168296"
+      "last_verified_at": "2026-08-22T15:46:18.680778"
     },
     "streak_count": 1,
     "college_rank": 1099,
@@ -38488,7 +38488,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:57.420038"
+      "last_verified_at": "2026-08-22T15:45:36.427088"
     },
     "streak_count": 1,
     "college_rank": 1100,
@@ -38523,7 +38523,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.922926"
+      "last_verified_at": "2026-08-22T15:45:12.508801"
     },
     "streak_count": 1,
     "college_rank": 1101,
@@ -38558,7 +38558,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:59.309409"
+      "last_verified_at": "2026-08-22T15:45:31.969430"
     },
     "streak_count": 1,
     "college_rank": 1102,
@@ -38593,7 +38593,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:00.905337"
+      "last_verified_at": "2026-08-22T15:46:22.551289"
     },
     "streak_count": 2,
     "college_rank": 1103,
@@ -38628,7 +38628,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.552919"
+      "last_verified_at": "2026-08-22T15:45:56.976854"
     },
     "streak_count": 3,
     "college_rank": 1104,
@@ -38663,7 +38663,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.566399"
+      "last_verified_at": "2026-08-22T15:45:56.989711"
     },
     "streak_count": 3,
     "college_rank": 1105,
@@ -38698,7 +38698,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:49.961899"
+      "last_verified_at": "2026-08-22T15:46:15.976641"
     },
     "streak_count": 1,
     "college_rank": 1106,
@@ -38733,7 +38733,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.543838"
+      "last_verified_at": "2026-08-22T15:46:01.041478"
     },
     "streak_count": 1,
     "college_rank": 1107,
@@ -38768,7 +38768,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:11.000777"
+      "last_verified_at": "2026-08-22T15:45:39.105105"
     },
     "streak_count": 1,
     "college_rank": 1108,
@@ -38803,7 +38803,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.665078"
+      "last_verified_at": "2026-08-22T15:46:07.325501"
     },
     "streak_count": 2,
     "college_rank": 1109,
@@ -38838,7 +38838,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:12.823130"
+      "last_verified_at": "2026-08-22T15:45:40.961998"
     },
     "streak_count": 1,
     "college_rank": 1110,
@@ -38873,7 +38873,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.759862"
+      "last_verified_at": "2026-08-22T15:46:07.739596"
     },
     "streak_count": 1,
     "college_rank": 1111,
@@ -38908,7 +38908,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:57.174163"
+      "last_verified_at": "2026-08-22T15:46:20.861851"
     },
     "streak_count": 1,
     "college_rank": 1112,
@@ -38943,7 +38943,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:57.362100"
+      "last_verified_at": "2026-08-22T15:46:20.878889"
     },
     "streak_count": 1,
     "college_rank": 1113,
@@ -38978,7 +38978,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:21.148099"
+      "last_verified_at": "2026-08-22T15:45:42.822130"
     },
     "streak_count": 1,
     "college_rank": 1114,
@@ -39013,7 +39013,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:44.960506"
+      "last_verified_at": "2026-08-22T15:46:08.630677"
     },
     "streak_count": 1,
     "college_rank": 1115,
@@ -39048,7 +39048,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:45.376068"
+      "last_verified_at": "2026-08-22T15:46:09.125353"
     },
     "streak_count": 1,
     "college_rank": 1116,
@@ -39083,7 +39083,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1372.2,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.948250"
+      "last_verified_at": "2026-08-22T15:45:27.568976"
     },
     "streak_count": 1,
     "college_rank": 1117,
@@ -39118,7 +39118,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:27.755323"
+      "last_verified_at": "2026-08-22T15:45:45.450705"
     },
     "streak_count": 1,
     "college_rank": 1118,
@@ -39153,7 +39153,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:28.970070"
+      "last_verified_at": "2026-08-22T15:45:46.956779"
     },
     "streak_count": 1,
     "college_rank": 1119,
@@ -39188,7 +39188,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.232510"
+      "last_verified_at": "2026-08-22T15:46:10.246550"
     },
     "streak_count": 1,
     "college_rank": 1120,
@@ -39223,7 +39223,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.333658"
+      "last_verified_at": "2026-08-22T15:46:10.519727"
     },
     "streak_count": 1,
     "college_rank": 1121,
@@ -39258,7 +39258,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:33.567227"
+      "last_verified_at": "2026-08-22T15:45:49.856541"
     },
     "streak_count": 1,
     "college_rank": 1122,
@@ -39293,7 +39293,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.497301"
+      "last_verified_at": "2026-08-22T15:46:11.854957"
     },
     "streak_count": 1,
     "college_rank": 1123,
@@ -39328,7 +39328,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.473883"
+      "last_verified_at": "2026-08-22T15:45:29.484349"
     },
     "streak_count": 1,
     "college_rank": 1124,
@@ -39363,7 +39363,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:38.933286"
+      "last_verified_at": "2026-08-22T15:45:53.425041"
     },
     "streak_count": 1,
     "college_rank": 1125,
@@ -39398,7 +39398,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.240919"
+      "last_verified_at": "2026-08-22T15:44:56.235828"
     },
     "streak_count": 4,
     "college_rank": 1126,
@@ -39433,7 +39433,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.259057"
+      "last_verified_at": "2026-08-22T15:44:56.270840"
     },
     "streak_count": 1,
     "college_rank": 1127,
@@ -39468,7 +39468,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.418784"
+      "last_verified_at": "2026-08-22T15:46:06.693014"
     },
     "streak_count": 1,
     "college_rank": 1128,
@@ -39503,7 +39503,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.301406"
+      "last_verified_at": "2026-08-22T15:45:59.040237"
     },
     "streak_count": 1,
     "college_rank": 1129,
@@ -39538,7 +39538,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:49.975875"
+      "last_verified_at": "2026-08-22T15:46:16.034233"
     },
     "streak_count": 2,
     "college_rank": 1130,
@@ -39573,7 +39573,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.566045"
+      "last_verified_at": "2026-08-22T15:46:07.282909"
     },
     "streak_count": 1,
     "college_rank": 1131,
@@ -39608,7 +39608,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:12.341371"
+      "last_verified_at": "2026-08-22T15:45:40.493447"
     },
     "streak_count": 1,
     "college_rank": 1132,
@@ -39643,7 +39643,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.738080"
+      "last_verified_at": "2026-08-22T15:46:07.658633"
     },
     "streak_count": 1,
     "college_rank": 1133,
@@ -39678,7 +39678,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.791801"
+      "last_verified_at": "2026-08-22T15:46:07.968167"
     },
     "streak_count": 1,
     "college_rank": 1134,
@@ -39713,7 +39713,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.831490"
+      "last_verified_at": "2026-08-22T15:46:07.983178"
     },
     "streak_count": 1,
     "college_rank": 1135,
@@ -39748,7 +39748,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:44.136475"
+      "last_verified_at": "2026-08-22T15:46:08.002236"
     },
     "streak_count": 1,
     "college_rank": 1136,
@@ -39783,7 +39783,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:44.699704"
+      "last_verified_at": "2026-08-22T15:46:08.209890"
     },
     "streak_count": 1,
     "college_rank": 1137,
@@ -39818,7 +39818,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:20.990202"
+      "last_verified_at": "2026-08-22T15:45:42.656948"
     },
     "streak_count": 1,
     "college_rank": 1138,
@@ -39853,7 +39853,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:57.460676"
+      "last_verified_at": "2026-08-22T15:46:20.908426"
     },
     "streak_count": 4,
     "college_rank": 1139,
@@ -39888,7 +39888,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:44.766692"
+      "last_verified_at": "2026-08-22T15:46:08.240138"
     },
     "streak_count": 1,
     "college_rank": 1140,
@@ -39923,7 +39923,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.278915"
+      "last_verified_at": "2026-08-22T15:44:56.381483"
     },
     "streak_count": 1,
     "college_rank": 1141,
@@ -39958,7 +39958,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:24.655765"
+      "last_verified_at": "2026-08-22T15:45:44.066326"
     },
     "streak_count": 1,
     "college_rank": 1142,
@@ -39993,7 +39993,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:34.250408"
+      "last_verified_at": "2026-08-22T15:45:09.848323"
     },
     "streak_count": 1,
     "college_rank": 1143,
@@ -40028,7 +40028,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:45.347360"
+      "last_verified_at": "2026-08-22T15:46:09.108320"
     },
     "streak_count": 2,
     "college_rank": 1144,
@@ -40063,7 +40063,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:45.916270"
+      "last_verified_at": "2026-08-22T15:46:09.250784"
     },
     "streak_count": 1,
     "college_rank": 1145,
@@ -40098,7 +40098,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1351.6,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.017139"
+      "last_verified_at": "2026-08-22T15:46:09.329503"
     },
     "streak_count": 1,
     "college_rank": 1146,
@@ -40133,7 +40133,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.168408"
+      "last_verified_at": "2026-08-22T15:46:09.970594"
     },
     "streak_count": 1,
     "college_rank": 1147,
@@ -40168,7 +40168,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.449804"
+      "last_verified_at": "2026-08-22T15:46:11.586000"
     },
     "streak_count": 1,
     "college_rank": 1148,
@@ -40203,7 +40203,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.530752"
+      "last_verified_at": "2026-08-22T15:46:11.922271"
     },
     "streak_count": 1,
     "college_rank": 1149,
@@ -40238,7 +40238,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.875656"
+      "last_verified_at": "2026-08-22T15:46:12.833470"
     },
     "streak_count": 1,
     "college_rank": 1150,
@@ -40273,7 +40273,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:56.342793"
+      "last_verified_at": "2026-08-22T15:45:28.068097"
     },
     "streak_count": 1,
     "college_rank": 1151,
@@ -40308,7 +40308,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.194390"
+      "last_verified_at": "2026-08-22T15:46:06.072205"
     },
     "streak_count": 1,
     "college_rank": 1152,
@@ -40343,7 +40343,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.372804"
+      "last_verified_at": "2026-08-22T15:46:06.553711"
     },
     "streak_count": 1,
     "college_rank": 1153,
@@ -40378,7 +40378,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:01.042912"
+      "last_verified_at": "2026-08-22T15:45:33.526357"
     },
     "streak_count": 2,
     "college_rank": 1154,
@@ -40413,7 +40413,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.705918"
+      "last_verified_at": "2026-08-22T15:46:07.634497"
     },
     "streak_count": 1,
     "college_rank": 1155,
@@ -40448,7 +40448,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:14.642718"
+      "last_verified_at": "2026-08-22T15:45:41.595256"
     },
     "streak_count": 1,
     "college_rank": 1156,
@@ -40483,7 +40483,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:44.704372"
+      "last_verified_at": "2026-08-22T15:46:08.219046"
     },
     "streak_count": 1,
     "college_rank": 1157,
@@ -40518,7 +40518,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:44.818842"
+      "last_verified_at": "2026-08-22T15:46:08.263501"
     },
     "streak_count": 1,
     "college_rank": 1158,
@@ -40553,7 +40553,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:44.887115"
+      "last_verified_at": "2026-08-22T15:46:08.419164"
     },
     "streak_count": 1,
     "college_rank": 1159,
@@ -40588,7 +40588,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:44.894627"
+      "last_verified_at": "2026-08-22T15:46:08.434328"
     },
     "streak_count": 1,
     "college_rank": 1160,
@@ -40623,7 +40623,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:57.639325"
+      "last_verified_at": "2026-08-22T15:46:20.956340"
     },
     "streak_count": 1,
     "college_rank": 1161,
@@ -40658,7 +40658,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:57.819007"
+      "last_verified_at": "2026-08-22T15:46:20.997465"
     },
     "streak_count": 1,
     "college_rank": 1162,
@@ -40693,7 +40693,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:44.996218"
+      "last_verified_at": "2026-08-22T15:46:08.792131"
     },
     "streak_count": 1,
     "college_rank": 1163,
@@ -40728,7 +40728,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:45.126103"
+      "last_verified_at": "2026-08-22T15:46:08.907964"
     },
     "streak_count": 1,
     "college_rank": 1164,
@@ -40763,7 +40763,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:45.178374"
+      "last_verified_at": "2026-08-22T15:46:09.080262"
     },
     "streak_count": 1,
     "college_rank": 1165,
@@ -40798,7 +40798,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:45.432631"
+      "last_verified_at": "2026-08-22T15:46:09.138019"
     },
     "streak_count": 1,
     "college_rank": 1166,
@@ -40833,7 +40833,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:26.795425"
+      "last_verified_at": "2026-08-22T15:45:44.793300"
     },
     "streak_count": 1,
     "college_rank": 1167,
@@ -40868,7 +40868,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": 1469.9,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.745027"
+      "last_verified_at": "2026-08-22T15:44:59.542410"
     },
     "streak_count": 1,
     "college_rank": 1168,
@@ -40903,7 +40903,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:30.991893"
+      "last_verified_at": "2026-08-22T15:45:47.459281"
     },
     "streak_count": 1,
     "college_rank": 1169,
@@ -40938,7 +40938,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:31.869264"
+      "last_verified_at": "2026-08-22T15:45:48.066644"
     },
     "streak_count": 1,
     "college_rank": 1170,
@@ -40973,7 +40973,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:51.410827"
+      "last_verified_at": "2026-08-22T15:46:16.985939"
     },
     "streak_count": 1,
     "college_rank": 1171,
@@ -41008,7 +41008,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.337573"
+      "last_verified_at": "2026-08-22T15:46:10.722152"
     },
     "streak_count": 1,
     "college_rank": 1172,
@@ -41043,7 +41043,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.367262"
+      "last_verified_at": "2026-08-22T15:46:11.219865"
     },
     "streak_count": 1,
     "college_rank": 1173,
@@ -41078,7 +41078,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:36.149489"
+      "last_verified_at": "2026-08-22T15:45:50.897246"
     },
     "streak_count": 1,
     "college_rank": 1174,
@@ -41113,7 +41113,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:36.640797"
+      "last_verified_at": "2026-08-22T15:45:51.026058"
     },
     "streak_count": 1,
     "college_rank": 1175,
@@ -41148,7 +41148,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.493016"
+      "last_verified_at": "2026-08-22T15:46:11.787011"
     },
     "streak_count": 1,
     "college_rank": 1176,
@@ -41183,7 +41183,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:42.391407"
+      "last_verified_at": "2026-08-22T15:46:05.034434"
     },
     "streak_count": 1,
     "college_rank": 1177,
@@ -41218,7 +41218,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:47.072340"
+      "last_verified_at": "2026-08-22T15:46:13.534179"
     },
     "streak_count": 1,
     "college_rank": 1178,
@@ -41253,7 +41253,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:47.469397"
+      "last_verified_at": "2026-08-22T15:46:14.005475"
     },
     "streak_count": 1,
     "college_rank": 1179,
@@ -41288,7 +41288,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:47.783775"
+      "last_verified_at": "2026-08-22T15:46:14.443336"
     },
     "streak_count": 1,
     "college_rank": 1180,
@@ -41323,7 +41323,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.641216"
+      "last_verified_at": "2026-08-22T15:45:54.430640"
     },
     "streak_count": 1,
     "college_rank": 1181,
@@ -41358,7 +41358,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:09.445196"
+      "last_verified_at": "2026-08-22T15:45:37.561875"
     },
     "streak_count": 2,
     "college_rank": 1182,
@@ -41393,7 +41393,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:48.635089"
+      "last_verified_at": "2026-08-22T15:46:15.051284"
     },
     "streak_count": 1,
     "college_rank": 1183,
@@ -41428,7 +41428,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.298621"
+      "last_verified_at": "2026-08-22T15:44:56.596205"
     },
     "streak_count": 1,
     "college_rank": 1184,
@@ -41463,7 +41463,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:49.251910"
+      "last_verified_at": "2026-08-22T15:46:15.512140"
     },
     "streak_count": 1,
     "college_rank": 1185,
@@ -41498,7 +41498,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:49.636081"
+      "last_verified_at": "2026-08-22T15:46:15.852960"
     },
     "streak_count": 1,
     "college_rank": 1186,
@@ -41533,7 +41533,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:49.722770"
+      "last_verified_at": "2026-08-22T15:46:15.859002"
     },
     "streak_count": 1,
     "college_rank": 1187,
@@ -41568,7 +41568,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:01.626631"
+      "last_verified_at": "2026-08-22T15:45:34.125646"
     },
     "streak_count": 1,
     "college_rank": 1188,
@@ -41603,7 +41603,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:50.700050"
+      "last_verified_at": "2026-08-22T15:46:16.365331"
     },
     "streak_count": 1,
     "college_rank": 1189,
@@ -41638,7 +41638,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:51.104612"
+      "last_verified_at": "2026-08-22T15:46:16.801154"
     },
     "streak_count": 1,
     "college_rank": 1190,
@@ -41673,7 +41673,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:12.936638"
+      "last_verified_at": "2026-08-22T15:45:41.069145"
     },
     "streak_count": 1,
     "college_rank": 1191,
@@ -41708,7 +41708,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.385277"
+      "last_verified_at": "2026-08-22T15:45:26.422655"
     },
     "streak_count": 0,
     "college_rank": 1192,
@@ -41743,7 +41743,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:32.965567"
+      "last_verified_at": "2026-08-22T15:45:49.698144"
     },
     "streak_count": 1,
     "college_rank": 1193,
@@ -41778,7 +41778,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.320160"
+      "last_verified_at": "2026-08-22T15:44:56.619372"
     },
     "streak_count": 1,
     "college_rank": 1194,
@@ -41813,7 +41813,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.371569"
+      "last_verified_at": "2026-08-22T15:46:11.481244"
     },
     "streak_count": 1,
     "college_rank": 1195,
@@ -41848,7 +41848,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.717482"
+      "last_verified_at": "2026-08-22T15:46:12.490887"
     },
     "streak_count": 1,
     "college_rank": 1196,
@@ -41883,7 +41883,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:42.384666"
+      "last_verified_at": "2026-08-22T15:46:05.021439"
     },
     "streak_count": 1,
     "college_rank": 1197,
@@ -41918,7 +41918,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.994950"
+      "last_verified_at": "2026-08-22T15:46:13.465713"
     },
     "streak_count": 2,
     "college_rank": 1198,
@@ -41953,7 +41953,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:56.017482"
+      "last_verified_at": "2026-08-22T15:45:27.332659"
     },
     "streak_count": 1,
     "college_rank": 1199,
@@ -41988,7 +41988,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:56.036519"
+      "last_verified_at": "2026-08-22T15:45:27.631788"
     },
     "streak_count": 1,
     "college_rank": 1200,
@@ -42023,7 +42023,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:47.258666"
+      "last_verified_at": "2026-08-22T15:46:13.810140"
     },
     "streak_count": 1,
     "college_rank": 1201,
@@ -42058,7 +42058,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:47.481105"
+      "last_verified_at": "2026-08-22T15:46:14.189012"
     },
     "streak_count": 1,
     "college_rank": 1202,
@@ -42093,7 +42093,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:56.591663"
+      "last_verified_at": "2026-08-22T15:45:36.034721"
     },
     "streak_count": 1,
     "college_rank": 1203,
@@ -42128,7 +42128,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:09.305277"
+      "last_verified_at": "2026-08-22T15:45:37.463107"
     },
     "streak_count": 1,
     "college_rank": 1204,
@@ -42163,7 +42163,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:59.410001"
+      "last_verified_at": "2026-08-22T15:45:32.177807"
     },
     "streak_count": 1,
     "college_rank": 1205,
@@ -42198,7 +42198,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.139225"
+      "last_verified_at": "2026-08-22T15:45:19.399063"
     },
     "streak_count": 2,
     "college_rank": 1206,
@@ -42233,7 +42233,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:00.376528"
+      "last_verified_at": "2026-08-22T15:45:32.895427"
     },
     "streak_count": 1,
     "college_rank": 1207,
@@ -42268,7 +42268,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.743300"
+      "last_verified_at": "2026-08-22T15:45:57.440203"
     },
     "streak_count": 1,
     "college_rank": 1208,
@@ -42303,7 +42303,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:49.776819"
+      "last_verified_at": "2026-08-22T15:46:15.903750"
     },
     "streak_count": 1,
     "college_rank": 1209,
@@ -42338,7 +42338,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:50.477114"
+      "last_verified_at": "2026-08-22T15:46:16.340403"
     },
     "streak_count": 1,
     "college_rank": 1210,
@@ -42373,7 +42373,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:02.235652"
+      "last_verified_at": "2026-08-22T15:45:36.004038"
     },
     "streak_count": 1,
     "college_rank": 1211,
@@ -42408,7 +42408,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:12.427964"
+      "last_verified_at": "2026-08-22T15:45:40.560354"
     },
     "streak_count": 1,
     "college_rank": 1212,
@@ -42443,7 +42443,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:51.208623"
+      "last_verified_at": "2026-08-22T15:46:16.805990"
     },
     "streak_count": 1,
     "college_rank": 1213,
@@ -42478,7 +42478,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:03.276372"
+      "last_verified_at": "2026-08-22T15:45:36.139790"
     },
     "streak_count": 1,
     "college_rank": 1214,
@@ -42513,7 +42513,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:49.014078"
+      "last_verified_at": "2026-08-22T15:45:22.972931"
     },
     "streak_count": 1,
     "college_rank": 1215,
@@ -42548,7 +42548,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.754601"
+      "last_verified_at": "2026-08-22T15:46:01.950799"
     },
     "streak_count": 1,
     "college_rank": 1216,
@@ -42583,7 +42583,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:44.953807"
+      "last_verified_at": "2026-08-22T15:46:08.614313"
     },
     "streak_count": 1,
     "college_rank": 1217,
@@ -42618,7 +42618,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:06.656744"
+      "last_verified_at": "2026-08-22T15:45:36.775937"
     },
     "streak_count": 1,
     "college_rank": 1218,
@@ -42653,7 +42653,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:45.954438"
+      "last_verified_at": "2026-08-22T15:46:09.263630"
     },
     "streak_count": 1,
     "college_rank": 1219,
@@ -42688,7 +42688,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:06.761084"
+      "last_verified_at": "2026-08-22T15:45:36.786573"
     },
     "streak_count": 1,
     "college_rank": 1220,
@@ -42723,7 +42723,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:02.039399"
+      "last_verified_at": "2026-08-22T15:46:23.738899"
     },
     "streak_count": 2,
     "college_rank": 1221,
@@ -42758,7 +42758,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:38.043095"
+      "last_verified_at": "2026-08-22T15:45:52.424051"
     },
     "streak_count": 1,
     "college_rank": 1222,
@@ -42793,7 +42793,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:08.557433"
+      "last_verified_at": "2026-08-22T15:45:37.100191"
     },
     "streak_count": 1,
     "college_rank": 1223,
@@ -42828,7 +42828,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:47.402082"
+      "last_verified_at": "2026-08-22T15:46:13.873280"
     },
     "streak_count": 2,
     "college_rank": 1224,
@@ -42863,7 +42863,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:56.524782"
+      "last_verified_at": "2026-08-22T15:45:36.025639"
     },
     "streak_count": 1,
     "college_rank": 1225,
@@ -42898,7 +42898,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:51.682006"
+      "last_verified_at": "2026-08-22T15:46:17.061045"
     },
     "streak_count": 1,
     "college_rank": 1226,
@@ -42933,7 +42933,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.808860"
+      "last_verified_at": "2026-08-22T15:45:55.239856"
     },
     "streak_count": 1,
     "college_rank": 1227,
@@ -42968,7 +42968,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:48.423734"
+      "last_verified_at": "2026-08-22T15:46:15.002691"
     },
     "streak_count": 1,
     "college_rank": 1228,
@@ -43003,7 +43003,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:48.794797"
+      "last_verified_at": "2026-08-22T15:46:15.086742"
     },
     "streak_count": 1,
     "college_rank": 1229,
@@ -43038,7 +43038,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:49.177432"
+      "last_verified_at": "2026-08-22T15:46:15.335537"
     },
     "streak_count": 1,
     "college_rank": 1230,
@@ -43073,7 +43073,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:05.338942"
+      "last_verified_at": "2026-08-22T15:44:56.647697"
     },
     "streak_count": 1,
     "college_rank": 1231,
@@ -43108,7 +43108,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:49.599965"
+      "last_verified_at": "2026-08-22T15:46:15.799144"
     },
     "streak_count": 1,
     "college_rank": 1232,
@@ -43143,7 +43143,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:56.104302"
+      "last_verified_at": "2026-08-22T15:46:20.016242"
     },
     "streak_count": 1,
     "college_rank": 1233,
@@ -43178,7 +43178,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:01.734674"
+      "last_verified_at": "2026-08-22T15:45:38.161536"
     },
     "streak_count": 1,
     "college_rank": 1234,
@@ -43213,7 +43213,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:50.839455"
+      "last_verified_at": "2026-08-22T15:46:16.537343"
     },
     "streak_count": 1,
     "college_rank": 1235,
@@ -43248,7 +43248,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.596431"
+      "last_verified_at": "2026-08-22T15:46:01.164495"
     },
     "streak_count": 1,
     "college_rank": 1236,
@@ -43283,7 +43283,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:51.011777"
+      "last_verified_at": "2026-08-22T15:46:16.702245"
     },
     "streak_count": 1,
     "college_rank": 1237,
@@ -43318,7 +43318,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.743359"
+      "last_verified_at": "2026-08-22T15:46:07.674381"
     },
     "streak_count": 1,
     "college_rank": 1238,
@@ -43353,7 +43353,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.936755"
+      "last_verified_at": "2026-08-22T15:46:07.992530"
     },
     "streak_count": 2,
     "college_rank": 1239,
@@ -43388,7 +43388,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:38.319998"
+      "last_verified_at": "2026-08-22T15:45:16.272739"
     },
     "streak_count": 1,
     "college_rank": 1240,
@@ -43423,7 +43423,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.776374"
+      "last_verified_at": "2026-08-22T15:46:02.155674"
     },
     "streak_count": 1,
     "college_rank": 1241,
@@ -43458,7 +43458,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:44.966019"
+      "last_verified_at": "2026-08-22T15:46:08.646677"
     },
     "streak_count": 1,
     "college_rank": 1242,
@@ -43493,7 +43493,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:51.275346"
+      "last_verified_at": "2026-08-22T15:46:16.888929"
     },
     "streak_count": 1,
     "college_rank": 1243,
@@ -43528,7 +43528,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:44.976641"
+      "last_verified_at": "2026-08-22T15:46:08.780636"
     },
     "streak_count": 1,
     "college_rank": 1244,
@@ -43563,7 +43563,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:25.620130"
+      "last_verified_at": "2026-08-22T15:45:44.407848"
     },
     "streak_count": 1,
     "college_rank": 1245,
@@ -43598,7 +43598,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:04.536304"
+      "last_verified_at": "2026-08-22T15:45:36.591098"
     },
     "streak_count": 1,
     "college_rank": 1246,
@@ -43633,7 +43633,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:52.177557"
+      "last_verified_at": "2026-08-22T15:45:23.980230"
     },
     "streak_count": 0,
     "college_rank": 1247,
@@ -43668,7 +43668,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.061393"
+      "last_verified_at": "2026-08-22T15:46:09.400623"
     },
     "streak_count": 1,
     "college_rank": 1248,
@@ -43703,7 +43703,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:32.530547"
+      "last_verified_at": "2026-08-22T15:45:48.653739"
     },
     "streak_count": 1,
     "college_rank": 1249,
@@ -43738,7 +43738,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:12.128266"
+      "last_verified_at": "2026-08-22T15:57:46.186136"
     },
     "streak_count": 1,
     "college_rank": 1250,
@@ -43773,7 +43773,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:55.356639"
+      "last_verified_at": "2026-08-22T15:45:35.296476"
     },
     "streak_count": 1,
     "college_rank": 1251,
@@ -43808,7 +43808,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.741415"
+      "last_verified_at": "2026-08-22T15:45:12.101731"
     },
     "streak_count": 1,
     "college_rank": 1252,
@@ -43843,7 +43843,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.843482"
+      "last_verified_at": "2026-08-22T15:46:12.650710"
     },
     "streak_count": 1,
     "college_rank": 1253,
@@ -43878,7 +43878,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:17.076221"
+      "last_verified_at": "2026-08-22T15:45:01.177487"
     },
     "streak_count": 0,
     "college_rank": 1254,
@@ -43913,7 +43913,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:47.907678"
+      "last_verified_at": "2026-08-22T15:46:14.496458"
     },
     "streak_count": 1,
     "college_rank": 1255,
@@ -43948,7 +43948,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:56.976826"
+      "last_verified_at": "2026-08-22T15:45:36.305386"
     },
     "streak_count": 1,
     "college_rank": 1256,
@@ -43983,7 +43983,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:42.994155"
+      "last_verified_at": "2026-08-22T15:46:05.998708"
     },
     "streak_count": 1,
     "college_rank": 1257,
@@ -44018,7 +44018,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.034549"
+      "last_verified_at": "2026-08-22T15:45:24.768860"
     },
     "streak_count": 1,
     "college_rank": 1258,
@@ -44053,7 +44053,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:09.604262"
+      "last_verified_at": "2026-08-22T15:45:37.683510"
     },
     "streak_count": 1,
     "college_rank": 1259,
@@ -44088,7 +44088,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:59.053968"
+      "last_verified_at": "2026-08-22T15:45:31.081252"
     },
     "streak_count": 1,
     "college_rank": 1260,
@@ -44123,7 +44123,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:37.303387"
+      "last_verified_at": "2026-08-22T15:45:14.575105"
     },
     "streak_count": 1,
     "college_rank": 1261,
@@ -44158,7 +44158,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:40.671404"
+      "last_verified_at": "2026-08-22T15:45:57.248966"
     },
     "streak_count": 1,
     "college_rank": 1262,
@@ -44193,7 +44193,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:49.524436"
+      "last_verified_at": "2026-08-22T15:46:15.551539"
     },
     "streak_count": 1,
     "college_rank": 1263,
@@ -44228,7 +44228,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:28:01.135603"
+      "last_verified_at": "2026-08-22T15:46:22.750374"
     },
     "streak_count": 1,
     "college_rank": 1264,
@@ -44263,7 +44263,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:00.592844"
+      "last_verified_at": "2026-08-22T15:45:37.651598"
     },
     "streak_count": 1,
     "college_rank": 1265,
@@ -44298,7 +44298,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:49.916008"
+      "last_verified_at": "2026-08-22T15:46:15.909879"
     },
     "streak_count": 1,
     "college_rank": 1266,
@@ -44333,7 +44333,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:01.180319"
+      "last_verified_at": "2026-08-22T15:45:33.950023"
     },
     "streak_count": 1,
     "college_rank": 1267,
@@ -44368,7 +44368,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:50.264105"
+      "last_verified_at": "2026-08-22T15:46:16.090604"
     },
     "streak_count": 1,
     "college_rank": 1268,
@@ -44403,7 +44403,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:50.313708"
+      "last_verified_at": "2026-08-22T15:46:16.097048"
     },
     "streak_count": 1,
     "college_rank": 1269,
@@ -44436,9 +44436,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:02.217400"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:35.920279"
     },
     "streak_count": 0,
     "college_rank": 1270,
@@ -44471,9 +44471,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:47.978488"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:32.486969"
     },
     "streak_count": 0,
     "college_rank": 1271,
@@ -44506,9 +44506,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:56.149388"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:20.124530"
     },
     "streak_count": 0,
     "college_rank": 1272,
@@ -44541,9 +44541,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.679894"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:07.336408"
     },
     "streak_count": 0,
     "college_rank": 1273,
@@ -44576,9 +44576,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:56.317478"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:20.210113"
     },
     "streak_count": 0,
     "college_rank": 1274,
@@ -44612,7 +44612,7 @@ export const CANONICAL_ROSTER: any[] = [
       "hard_solved": 0,
       "contest_rating": null,
       "sync_status": "failed",
-      "status": "INVALID_USERNAME",
+      "status": "FETCH_FAILED",
       "last_verified_at": null
     },
     "streak_count": 0,
@@ -44646,9 +44646,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:43.571196"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:25.766849"
     },
     "streak_count": 0,
     "college_rank": 1276,
@@ -44681,9 +44681,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:45.318517"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:13.981999"
     },
     "streak_count": 0,
     "college_rank": 1277,
@@ -44718,7 +44718,7 @@ export const CANONICAL_ROSTER: any[] = [
       "contest_rating": null,
       "sync_status": "success",
       "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:26.143097"
+      "last_verified_at": "2026-08-22T15:57:51.615393"
     },
     "streak_count": 0,
     "college_rank": 1278,
@@ -44751,9 +44751,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.615120"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:01.574619"
     },
     "streak_count": 0,
     "college_rank": 1279,
@@ -44786,9 +44786,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:56.783402"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:20.432282"
     },
     "streak_count": 1,
     "college_rank": 1280,
@@ -44821,9 +44821,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:56.796321"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:20.480465"
     },
     "streak_count": 1,
     "college_rank": 1281,
@@ -44856,9 +44856,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.685928"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:01.777258"
     },
     "streak_count": 0,
     "college_rank": 1282,
@@ -44891,9 +44891,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:13.607785"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:42.011751"
     },
     "streak_count": 0,
     "college_rank": 1283,
@@ -44926,9 +44926,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:14.220867"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:41.234016"
     },
     "streak_count": 0,
     "college_rank": 1284,
@@ -44961,9 +44961,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:57.010195"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:20.658495"
     },
     "streak_count": 0,
     "college_rank": 1285,
@@ -44996,9 +44996,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:57.047796"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:20.712686"
     },
     "streak_count": 0,
     "college_rank": 1286,
@@ -45031,8 +45031,8 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "mismatch",
-      "status": "IDENTITY_MISMATCH",
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
       "last_verified_at": null
     },
     "streak_count": 0,
@@ -45066,9 +45066,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:09.937692"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:44:57.619352"
     },
     "streak_count": 0,
     "college_rank": 1288,
@@ -45137,7 +45137,7 @@ export const CANONICAL_ROSTER: any[] = [
       "hard_solved": 0,
       "contest_rating": null,
       "sync_status": "failed",
-      "status": "INVALID_USERNAME",
+      "status": "FETCH_FAILED",
       "last_verified_at": null
     },
     "streak_count": 0,
@@ -45171,9 +45171,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:44.478009"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:08.011346"
     },
     "streak_count": 1,
     "college_rank": 1291,
@@ -45241,9 +45241,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:48.988181"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:22.962656"
     },
     "streak_count": 0,
     "college_rank": 1293,
@@ -45276,9 +45276,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:21.414764"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:42.874176"
     },
     "streak_count": 0,
     "college_rank": 1294,
@@ -45311,8 +45311,8 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "mismatch",
-      "status": "IDENTITY_MISMATCH",
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
       "last_verified_at": null
     },
     "streak_count": 0,
@@ -45346,8 +45346,8 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "mismatch",
-      "status": "IDENTITY_MISMATCH",
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
       "last_verified_at": null
     },
     "streak_count": 0,
@@ -45451,9 +45451,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.266857"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:44:58.279639"
     },
     "streak_count": 0,
     "college_rank": 1299,
@@ -45486,9 +45486,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:03.832820"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:36.411908"
     },
     "streak_count": 0,
     "college_rank": 1300,
@@ -45556,9 +45556,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:03.869937"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:36.434620"
     },
     "streak_count": 0,
     "college_rank": 1302,
@@ -45626,9 +45626,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.926244"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:02.737309"
     },
     "streak_count": 0,
     "college_rank": 1304,
@@ -45661,9 +45661,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:44.799062"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:13.119730"
     },
     "streak_count": 0,
     "college_rank": 1305,
@@ -45696,9 +45696,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:25.965622"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:44.427918"
     },
     "streak_count": 0,
     "college_rank": 1306,
@@ -45731,9 +45731,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:26.111429"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:44.436365"
     },
     "streak_count": 0,
     "college_rank": 1307,
@@ -45766,9 +45766,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.983019"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:02.960998"
     },
     "streak_count": 0,
     "college_rank": 1308,
@@ -45801,9 +45801,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:51.380503"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:16.979112"
     },
     "streak_count": 0,
     "college_rank": 1309,
@@ -45836,9 +45836,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:10.697710"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:44:59.475617"
     },
     "streak_count": 0,
     "college_rank": 1310,
@@ -45871,9 +45871,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.159687"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:21.183983"
     },
     "streak_count": 0,
     "college_rank": 1311,
@@ -45907,7 +45907,7 @@ export const CANONICAL_ROSTER: any[] = [
       "hard_solved": 0,
       "contest_rating": null,
       "sync_status": "failed",
-      "status": "INVALID_USERNAME",
+      "status": "FETCH_FAILED",
       "last_verified_at": null
     },
     "streak_count": 0,
@@ -45941,9 +45941,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:58.297303"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:21.335932"
     },
     "streak_count": 0,
     "college_rank": 1313,
@@ -45976,9 +45976,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:05.382679"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:36.609538"
     },
     "streak_count": 0,
     "college_rank": 1314,
@@ -46011,9 +46011,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:45.633701"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:28.617169"
     },
     "streak_count": 0,
     "college_rank": 1315,
@@ -46046,9 +46046,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:42.023764"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:03.093922"
     },
     "streak_count": 0,
     "college_rank": 1316,
@@ -46081,9 +46081,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:53.040545"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:24.953669"
     },
     "streak_count": 0,
     "college_rank": 1317,
@@ -46116,9 +46116,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.066623"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:09.463350"
     },
     "streak_count": 0,
     "college_rank": 1318,
@@ -46151,9 +46151,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:54.204341"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:18.127865"
     },
     "streak_count": 0,
     "college_rank": 1319,
@@ -46186,9 +46186,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.110789"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:09.525372"
     },
     "streak_count": 0,
     "college_rank": 1320,
@@ -46221,9 +46221,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:53.180449"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:25.091752"
     },
     "streak_count": 0,
     "college_rank": 1321,
@@ -46256,9 +46256,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.116031"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:09.655463"
     },
     "streak_count": 0,
     "college_rank": 1322,
@@ -46327,7 +46327,7 @@ export const CANONICAL_ROSTER: any[] = [
       "hard_solved": 0,
       "contest_rating": null,
       "sync_status": "failed",
-      "status": "INVALID_USERNAME",
+      "status": "FETCH_FAILED",
       "last_verified_at": null
     },
     "streak_count": 0,
@@ -46361,9 +46361,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.201664"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:10.106681"
     },
     "streak_count": 0,
     "college_rank": 1325,
@@ -46396,9 +46396,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:31.200118"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:47.577160"
     },
     "streak_count": 0,
     "college_rank": 1326,
@@ -46466,9 +46466,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:53.828809"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:25.778075"
     },
     "streak_count": 0,
     "college_rank": 1328,
@@ -46501,9 +46501,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:39.119425"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:17.518431"
     },
     "streak_count": 0,
     "college_rank": 1329,
@@ -46536,9 +46536,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.328551"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:10.455137"
     },
     "streak_count": 0,
     "college_rank": 1330,
@@ -46571,9 +46571,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:32.742116"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:49.110248"
     },
     "streak_count": 0,
     "college_rank": 1331,
@@ -46606,9 +46606,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.362720"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:11.122967"
     },
     "streak_count": 0,
     "college_rank": 1332,
@@ -46641,9 +46641,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:34.808630"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:50.701565"
     },
     "streak_count": 0,
     "college_rank": 1333,
@@ -46676,9 +46676,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:36.660302"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:51.103448"
     },
     "streak_count": 0,
     "college_rank": 1334,
@@ -46711,9 +46711,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:35.699268"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:12.051674"
     },
     "streak_count": 0,
     "college_rank": 1335,
@@ -46746,9 +46746,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.214127"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:14.591781"
     },
     "streak_count": 0,
     "college_rank": 1336,
@@ -46782,7 +46782,7 @@ export const CANONICAL_ROSTER: any[] = [
       "hard_solved": 0,
       "contest_rating": null,
       "sync_status": "failed",
-      "status": "INVALID_USERNAME",
+      "status": "FETCH_FAILED",
       "last_verified_at": null
     },
     "streak_count": 0,
@@ -46816,9 +46816,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.594486"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:12.296979"
     },
     "streak_count": 1,
     "college_rank": 1338,
@@ -46851,8 +46851,8 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "mismatch",
-      "status": "IDENTITY_MISMATCH",
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
       "last_verified_at": null
     },
     "streak_count": 0,
@@ -46886,9 +46886,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.764920"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:12.551766"
     },
     "streak_count": 0,
     "college_rank": 1340,
@@ -46921,9 +46921,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:46.829484"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:12.601534"
     },
     "streak_count": 0,
     "college_rank": 1341,
@@ -46991,9 +46991,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:55.694159"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:35.500219"
     },
     "streak_count": 0,
     "college_rank": 1343,
@@ -47026,9 +47026,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:42.460435"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:05.044690"
     },
     "streak_count": 0,
     "college_rank": 1344,
@@ -47096,9 +47096,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.532490"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:16.825404"
     },
     "streak_count": 0,
     "college_rank": 1346,
@@ -47131,9 +47131,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:47.076945"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:13.661326"
     },
     "streak_count": 0,
     "college_rank": 1347,
@@ -47166,9 +47166,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:46.554449"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:16.836293"
     },
     "streak_count": 0,
     "college_rank": 1348,
@@ -47201,9 +47201,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:42.236007"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:23.080236"
     },
     "streak_count": 0,
     "college_rank": 1349,
@@ -47236,9 +47236,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:47.099570"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:13.769045"
     },
     "streak_count": 1,
     "college_rank": 1350,
@@ -47271,8 +47271,8 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "mismatch",
-      "status": "IDENTITY_MISMATCH",
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
       "last_verified_at": null
     },
     "streak_count": 0,
@@ -47306,9 +47306,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:42.536842"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:05.194588"
     },
     "streak_count": 0,
     "college_rank": 1352,
@@ -47341,9 +47341,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:56.193192"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:35.814832"
     },
     "streak_count": 0,
     "college_rank": 1353,
@@ -47376,9 +47376,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:51.641479"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:17.015196"
     },
     "streak_count": 1,
     "college_rank": 1354,
@@ -47411,9 +47411,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:47.476192"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:14.072274"
     },
     "streak_count": 0,
     "college_rank": 1355,
@@ -47446,9 +47446,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:47.699908"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:14.373099"
     },
     "streak_count": 0,
     "college_rank": 1356,
@@ -47481,9 +47481,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:39.661704"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:18.674369"
     },
     "streak_count": 0,
     "college_rank": 1357,
@@ -47516,9 +47516,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:47.800817"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:14.490068"
     },
     "streak_count": 0,
     "college_rank": 1358,
@@ -47551,9 +47551,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:47.923028"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:14.504908"
     },
     "streak_count": 0,
     "college_rank": 1359,
@@ -47587,7 +47587,7 @@ export const CANONICAL_ROSTER: any[] = [
       "hard_solved": 0,
       "contest_rating": null,
       "sync_status": "failed",
-      "status": "INVALID_USERNAME",
+      "status": "FETCH_FAILED",
       "last_verified_at": null
     },
     "streak_count": 0,
@@ -47622,7 +47622,7 @@ export const CANONICAL_ROSTER: any[] = [
       "hard_solved": 0,
       "contest_rating": null,
       "sync_status": "failed",
-      "status": "INVALID_USERNAME",
+      "status": "FETCH_FAILED",
       "last_verified_at": null
     },
     "streak_count": 0,
@@ -47656,9 +47656,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:39.756644"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:54.763847"
     },
     "streak_count": 0,
     "college_rank": 1362,
@@ -47691,9 +47691,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:59.545536"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:22.209511"
     },
     "streak_count": 0,
     "college_rank": 1363,
@@ -47726,9 +47726,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.033214"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:06.005904"
     },
     "streak_count": 0,
     "college_rank": 1364,
@@ -47761,9 +47761,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:26:57.786028"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:36.714357"
     },
     "streak_count": 0,
     "college_rank": 1365,
@@ -47796,9 +47796,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.099252"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:06.013071"
     },
     "streak_count": 1,
     "college_rank": 1366,
@@ -47831,9 +47831,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:48.088822"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:14.652508"
     },
     "streak_count": 1,
     "college_rank": 1367,
@@ -47866,9 +47866,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:48.203197"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:14.790589"
     },
     "streak_count": 0,
     "college_rank": 1368,
@@ -47901,9 +47901,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:48.265644"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:14.842041"
     },
     "streak_count": 0,
     "college_rank": 1369,
@@ -47936,9 +47936,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:51.663199"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:17.044975"
     },
     "streak_count": 1,
     "college_rank": 1370,
@@ -47971,9 +47971,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:48.310997"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:14.877250"
     },
     "streak_count": 0,
     "college_rank": 1371,
@@ -48006,9 +48006,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:59.895356"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:22.419218"
     },
     "streak_count": 0,
     "college_rank": 1372,
@@ -48041,9 +48041,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.292588"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:06.306034"
     },
     "streak_count": 1,
     "college_rank": 1373,
@@ -48077,7 +48077,7 @@ export const CANONICAL_ROSTER: any[] = [
       "hard_solved": 0,
       "contest_rating": null,
       "sync_status": "failed",
-      "status": "INVALID_USERNAME",
+      "status": "FETCH_FAILED",
       "last_verified_at": null
     },
     "streak_count": 0,
@@ -48111,9 +48111,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:48.574729"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:15.046073"
     },
     "streak_count": 0,
     "college_rank": 1375,
@@ -48146,9 +48146,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:48.788483"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:15.080772"
     },
     "streak_count": 0,
     "college_rank": 1376,
@@ -48181,9 +48181,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:48.839882"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:15.163893"
     },
     "streak_count": 1,
     "college_rank": 1377,
@@ -48216,9 +48216,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:48.889357"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:15.168764"
     },
     "streak_count": 1,
     "college_rank": 1378,
@@ -48251,9 +48251,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:49.097644"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:15.315706"
     },
     "streak_count": 0,
     "college_rank": 1379,
@@ -48286,9 +48286,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:00.155877"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:32.564730"
     },
     "streak_count": 0,
     "college_rank": 1380,
@@ -48321,9 +48321,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.392064"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:06.609443"
     },
     "streak_count": 0,
     "college_rank": 1381,
@@ -48356,9 +48356,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:49.472396"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:15.534033"
     },
     "streak_count": 0,
     "college_rank": 1382,
@@ -48392,7 +48392,7 @@ export const CANONICAL_ROSTER: any[] = [
       "hard_solved": 0,
       "contest_rating": null,
       "sync_status": "failed",
-      "status": "INVALID_USERNAME",
+      "status": "FETCH_FAILED",
       "last_verified_at": null
     },
     "streak_count": 0,
@@ -48427,7 +48427,7 @@ export const CANONICAL_ROSTER: any[] = [
       "hard_solved": 0,
       "contest_rating": null,
       "sync_status": "failed",
-      "status": "INVALID_USERNAME",
+      "status": "FETCH_FAILED",
       "last_verified_at": null
     },
     "streak_count": 0,
@@ -48462,7 +48462,7 @@ export const CANONICAL_ROSTER: any[] = [
       "hard_solved": 0,
       "contest_rating": null,
       "sync_status": "failed",
-      "status": "INVALID_USERNAME",
+      "status": "FETCH_FAILED",
       "last_verified_at": null
     },
     "streak_count": 0,
@@ -48497,7 +48497,7 @@ export const CANONICAL_ROSTER: any[] = [
       "hard_solved": 0,
       "contest_rating": null,
       "sync_status": "failed",
-      "status": "INVALID_USERNAME",
+      "status": "FETCH_FAILED",
       "last_verified_at": null
     },
     "streak_count": 0,
@@ -48531,9 +48531,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:49.969326"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:16.028763"
     },
     "streak_count": 0,
     "college_rank": 1387,
@@ -48567,7 +48567,7 @@ export const CANONICAL_ROSTER: any[] = [
       "hard_solved": 0,
       "contest_rating": null,
       "sync_status": "failed",
-      "status": "INVALID_USERNAME",
+      "status": "FETCH_FAILED",
       "last_verified_at": null
     },
     "streak_count": 0,
@@ -48601,9 +48601,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:50.204020"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:16.039709"
     },
     "streak_count": 0,
     "college_rank": 1389,
@@ -48636,9 +48636,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:01.749896"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:35.236192"
     },
     "streak_count": 0,
     "college_rank": 1390,
@@ -48671,9 +48671,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:01.765663"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:45:35.503381"
     },
     "streak_count": 0,
     "college_rank": 1391,
@@ -48706,9 +48706,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:50.737019"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:16.455876"
     },
     "streak_count": 1,
     "college_rank": 1392,
@@ -48741,9 +48741,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:41.535220"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:00.890298"
     },
     "streak_count": 0,
     "college_rank": 1393,
@@ -48776,9 +48776,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:43.521602"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:07.258795"
     },
     "streak_count": 0,
     "college_rank": 1394,
@@ -48811,9 +48811,9 @@ export const CANONICAL_ROSTER: any[] = [
       "medium_solved": 0,
       "hard_solved": 0,
       "contest_rating": null,
-      "sync_status": "success",
-      "status": "verified",
-      "last_verified_at": "2026-08-22T15:27:51.076196"
+      "sync_status": "failed",
+      "status": "FETCH_FAILED",
+      "last_verified_at": "2026-08-22T15:46:16.750399"
     },
     "streak_count": 1,
     "college_rank": 1395,
@@ -48830,8 +48830,8 @@ export const CANONICAL_ROSTER: any[] = [
 
 export const CANONICAL_SUMMARY: any = {
   "total_students": 1395,
-  "total_solved_sum": 90557,
-  "total_problems_solved": 90557,
+  "total_solved_sum": 90564,
+  "total_problems_solved": 90564,
   "active_students": 1269,
   "active_solvers": 1269,
   "verified_profiles": 1269,
