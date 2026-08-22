@@ -122,7 +122,24 @@ async def _deferred_startup_tasks():
         except Exception as e:
             logger.warning(f"[STARTUP] Scheduler initialization note: {e}")
 
-    logger.info("[READY] LeetCode Tracker API is fully ready & background engines active.")
+async def _keep_alive_ping_loop():
+    """
+    24/7 Keep-Alive Self-Pinging Background Heartbeat.
+    Pings the public Render backend URL every 8 minutes so Render free-tier NEVER spins down
+    and remains 100% warm with 0ms cold-start latency!
+    """
+    import httpx
+    render_url = os.environ.get("RENDER_EXTERNAL_URL") or "https://leetcodeurl-s-1.onrender.com"
+    health_endpoint = f"{render_url.rstrip('/')}/api/health"
+    await asyncio.sleep(45)  # Wait 45s after startup before starting ping loop
+    while True:
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                res = await client.get(health_endpoint)
+                logger.info(f"[KEEP_ALIVE_HEARTBEAT] 24/7 Server Ping status={res.status_code}")
+        except Exception as e:
+            logger.debug(f"[KEEP_ALIVE_HEARTBEAT] Ping notice: {e}")
+        await asyncio.sleep(8 * 60)  # Ping every 8 minutes to prevent 15-minute idle sleep
 
 
 @asynccontextmanager
@@ -130,6 +147,7 @@ async def lifespan(app: FastAPI):
     """FastAPI modern lifespan handler replacing deprecated on_event handlers."""
     logger.info("[STARTUP] FastAPI process alive. Port binding established immediately.")
     asyncio.create_task(_deferred_startup_tasks())
+    asyncio.create_task(_keep_alive_ping_loop())
     yield
     logger.info("[SHUTDOWN] FastAPI process receiving termination signal. Releasing resources gracefully...")
     try:
