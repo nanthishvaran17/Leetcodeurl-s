@@ -315,14 +315,12 @@ def send_email_via_brevo(
     html_body: str,
     attachments: Optional[List[Tuple[str, bytes]]] = None,
     text_body: Optional[str] = None,
-    max_retries: int = 3
+    max_retries: int = 2,
+    timeout_seconds: Optional[int] = None
 ) -> Tuple[bool, Optional[str]]:
     """
     Sends transactional email via Brevo Official HTTPS API (POST /v3/smtp/email).
-    Configured with:
-    - 90s connection/write timeout for large report attachments (PDF + Excel + DOCX)
-    - Exponential backoff retry loop with jitter (2s, 5s, 15s) for transient network timeouts
-    - Message ID extraction and safe error diagnostics
+    Optimized for ultra-fast OTP delivery (< 500ms) with lightweight payloads.
     """
     brevo_configured_sender = (os.environ.get("BREVO_SENDER_EMAIL") or getattr(settings, "BREVO_SENDER_EMAIL", "nanthishvaran0106@gmail.com")).strip()
     sender_email = brevo_configured_sender if (brevo_configured_sender and "@" in brevo_configured_sender) else "nanthishvaran0106@gmail.com"
@@ -347,7 +345,8 @@ def send_email_via_brevo(
         payload["attachment"] = brevo_attachments
 
     req_data = json.dumps(payload).encode("utf-8")
-    backoff_delays = [2, 5, 15]
+    backoff_delays = [1, 2]
+    actual_timeout = timeout_seconds or (45 if attachments else 8)
 
     for attempt in range(1, max_retries + 1):
         try:
@@ -362,8 +361,7 @@ def send_email_via_brevo(
                 method="POST"
             )
 
-            # 90-second production timeout for multi-megabyte attachment write operations
-            with urllib.request.urlopen(req, timeout=90) as resp:
+            with urllib.request.urlopen(req, timeout=actual_timeout) as resp:
                 resp_bytes = resp.read()
                 resp_json = {}
                 try:

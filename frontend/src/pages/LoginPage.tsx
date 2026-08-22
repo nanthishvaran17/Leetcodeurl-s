@@ -37,13 +37,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
   const [isShaking, setIsShaking] = useState(false);
   const [isWakingServer, setIsWakingServer] = useState(false);
 
-  // Detect slow response (Render cloud cold-start)
+  // Detect slow network response
   useEffect(() => {
     let t: any = null;
     if (loading) {
       t = setTimeout(() => {
         setIsWakingServer(true);
-      }, 2500);
+      }, 5000);
     } else {
       setIsWakingServer(false);
     }
@@ -469,12 +469,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
         </div>
       )}
 
-      {/* Cloud Server Cold-Start Waking Banner */}
+      {/* Secure Channel Progress Banner */}
       {loading && isWakingServer && (
-        <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 text-xs flex items-center space-x-2.5 animate-pulse shadow-sm">
-          <Sparkles className="w-4 h-4 shrink-0 text-amber-500 animate-spin" />
+        <div className="p-3 rounded-2xl bg-indigo-50 dark:bg-navy-900 border border-indigo-200 dark:border-indigo-800 text-indigo-800 dark:text-indigo-300 text-xs flex items-center space-x-2.5 animate-pulse shadow-sm">
+          <Sparkles className="w-4 h-4 shrink-0 text-brand-500 animate-spin" />
           <span className="font-semibold text-[11px] leading-tight">
-            ⚡ <strong>Waking up 24/7 Cloud Server...</strong> (Takes ~15-25s on first connect. Please hold on...)
+            ⚡ <strong>Securing Encrypted 24/7 Channel...</strong> Finalizing verification with cloud services.
           </span>
         </div>
       )}
