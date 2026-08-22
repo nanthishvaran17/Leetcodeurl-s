@@ -29,7 +29,7 @@ const API_BASE = getApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE,
-  timeout: 35000, // 35s timeout to handle Render free-tier cold starts
+  timeout: 60000, // 60s timeout to seamlessly handle Render free-tier cold starts
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -60,6 +60,32 @@ api.interceptors.request.use(async (config) => {
   }
   return config;
 });
+
+// Resilient Response Interceptor: Automatic Retry for Render Cold Starts & Network Glitches
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const config = error.config;
+    if (!config || (config._retryCount && config._retryCount >= 2)) {
+      return Promise.reject(error);
+    }
+
+    // Identify cold-start or gateway timeout conditions
+    const isTimeout = error.code === 'ECONNABORTED' || (error.message && error.message.includes('timeout'));
+    const isGatewayError = error.response && [502, 503, 504].includes(error.response.status);
+    const isNetworkError = !error.response && Boolean(error.request);
+
+    if (isTimeout || isGatewayError || isNetworkError) {
+      config._retryCount = (config._retryCount || 0) + 1;
+      const delayMs = config._retryCount * 2000;
+      console.warn(`[API_COLD_START_RETRY] Retrying request to ${config.url} (Attempt ${config._retryCount}/2) in ${delayMs}ms...`);
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      return api(config);
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 
 export const triggerFullSync = async (triggeredBy = 'admin') => {
