@@ -34,21 +34,38 @@ elif db_url.startswith("sqlite:///./"):
 engine_kwargs = {}
 if "postgresql" in db_url or "postgres" in db_url:
     engine_kwargs.update({
-        "pool_size": 10,
-        "max_overflow": 20,
+        "pool_size": 5,
+        "max_overflow": 10,
         "pool_pre_ping": True,
-        "pool_recycle": 300,
+        "pool_recycle": 60,
+        "connect_args": {
+            "connect_timeout": 5,
+            "keepalives": 1,
+            "keepalives_idle": 30,
+            "keepalives_interval": 10,
+            "keepalives_count": 5
+        }
     })
 else:
     engine_kwargs.update({
         "connect_args": {"check_same_thread": False, "timeout": 60}
     })
 
-engine = create_engine(
-    db_url,
-    echo=False,
-    **engine_kwargs
-)
+try:
+    engine = create_engine(
+        db_url,
+        echo=False,
+        **engine_kwargs
+    )
+except Exception as _e_init:
+    # Fallback to local SQLite if remote PostgreSQL URL is completely unreachable
+    sqlite_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "leetcode_tracker.db")
+    db_url = f"sqlite:///{sqlite_path}"
+    engine = create_engine(
+        db_url,
+        echo=False,
+        connect_args={"check_same_thread": False, "timeout": 60}
+    )
 
 from sqlalchemy import event
 

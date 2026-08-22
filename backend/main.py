@@ -153,61 +153,67 @@ def on_startup():
         from backend.routes.auth import get_password_hash, verify_password
 
         with SessionLocal() as db_init:
-            # Reconcile Admin Credentials on Startup
-            admin_username = getattr(settings, "ADMIN_USERNAME", "admin").strip()
-            admin_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
-            admin_pass = getattr(settings, "ADMIN_PASSWORD", "admin123").strip() or "admin123"
+            try:
+                # Reconcile Admin Credentials on Startup
+                admin_username = getattr(settings, "ADMIN_USERNAME", "admin").strip()
+                admin_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
+                admin_pass = getattr(settings, "ADMIN_PASSWORD", "admin123").strip() or "admin123"
 
-            admin_user = db_init.query(User).filter(
-                (User.username.ilike(admin_username)) | (User.email.ilike(admin_email))
-            ).first()
+                admin_user = db_init.query(User).filter(
+                    (User.username.ilike(admin_username)) | (User.email.ilike(admin_email))
+                ).first()
 
-            if not admin_user:
-                admin_user = User(
-                    username=admin_username,
-                    email=admin_email,
-                    hashed_password=get_password_hash(admin_pass),
-                    role="Admin",
-                    is_active=True
-                )
-                db_init.add(admin_user)
-                db_init.commit()
-                logger.info(f"[STARTUP_RECONCILE] Created admin user '{admin_username}' with secure password hash.")
-            else:
-                admin_user.role = "Admin"  # type: ignore[assignment]
-                admin_user.is_active = True  # type: ignore[assignment]
-                if not verify_password(admin_pass, str(admin_user.hashed_password)):
-                    admin_user.hashed_password = get_password_hash(admin_pass)  # type: ignore[assignment]
+                if not admin_user:
+                    admin_user = User(
+                        username=admin_username,
+                        email=admin_email,
+                        hashed_password=get_password_hash(admin_pass),
+                        role="Admin",
+                        is_active=True
+                    )
+                    db_init.add(admin_user)
                     db_init.commit()
-                    logger.info(f"[STARTUP_RECONCILE] Reconciled admin user '{admin_username}' password hash.")
+                    logger.info(f"[STARTUP_RECONCILE] Created admin user '{admin_username}' with secure password hash.")
+                else:
+                    admin_user.role = "Admin"  # type: ignore[assignment]
+                    admin_user.is_active = True  # type: ignore[assignment]
+                    if not verify_password(admin_pass, str(admin_user.hashed_password)):
+                        admin_user.hashed_password = get_password_hash(admin_pass)  # type: ignore[assignment]
+                        db_init.commit()
+                        logger.info(f"[STARTUP_RECONCILE] Reconciled admin user '{admin_username}' password hash.")
+            except Exception as _adm_err:
+                logger.warning(f"Admin user reconciliation note: {_adm_err}")
 
-            logger.info("Checking student roster count in single source of truth database...")
-            existing_student_cnt = db_init.query(Student).count()
+            try:
+                logger.info("Checking student roster count in single source of truth database...")
+                existing_student_cnt = db_init.query(Student).count()
 
-            if existing_student_cnt == 0:
-                logger.info("Brand new database detected (0 students). Seeding initial institutional roster...")
-                try:
-                    seed_database()
-                    logger.info("Initial database seeding completed successfully.")
-                except Exception as _seed_err:
-                    logger.error(f"Error seeding database: {_seed_err}")
-            else:
-                logger.info(f"Database contains {existing_student_cnt} existing student records. Preserving database single source of truth.")
+                if existing_student_cnt == 0:
+                    logger.info("Brand new database detected (0 students). Seeding initial institutional roster...")
+                    try:
+                        seed_database()
+                        logger.info("Initial database seeding completed successfully.")
+                    except Exception as _seed_err:
+                        logger.error(f"Error seeding database: {_seed_err}")
+                else:
+                    logger.info(f"Database contains {existing_student_cnt} existing student records. Preserving database single source of truth.")
 
-            # Check if verified student profile statistics are populated
-            verified_stats_cnt = db_init.query(LeetCodeProfileStats).filter(
-                (LeetCodeProfileStats.status.in_(["verified", "success"])) | (LeetCodeProfileStats.total_solved > 0)
-            ).count()
+                # Check if verified student profile statistics are populated
+                verified_stats_cnt = db_init.query(LeetCodeProfileStats).filter(
+                    (LeetCodeProfileStats.status.in_(["verified", "success"])) | (LeetCodeProfileStats.total_solved > 0)
+                ).count()
 
-            if verified_stats_cnt == 0:
-                logger.info("Unseeded or pending profile stats detected (0 verified profiles). Initializing student profile statistics roster...")
-                try:
-                    from backend.assets.reseed_all_stats import reseed_all_student_stats
-                    reseed_all_student_stats(sync_firestore=False)
-                    from backend.assets.sync_firestore import sync_database_to_firestore
-                    asyncio.create_task(asyncio.to_thread(sync_database_to_firestore))
-                except Exception as _reseed_err:
-                    logger.warning(f"Reseed all stats note: {_reseed_err}")
+                if verified_stats_cnt == 0:
+                    logger.info("Unseeded or pending profile stats detected (0 verified profiles). Initializing student profile statistics roster...")
+                    try:
+                        from backend.assets.reseed_all_stats import reseed_all_student_stats
+                        reseed_all_student_stats(sync_firestore=False)
+                        from backend.assets.sync_firestore import sync_database_to_firestore
+                        asyncio.create_task(asyncio.to_thread(sync_database_to_firestore))
+                    except Exception as _reseed_err:
+                        logger.warning(f"Reseed all stats note: {_reseed_err}")
+            except Exception as _st_err:
+                logger.warning(f"Student roster check note: {_st_err}")
     except Exception as e:
         logger.warning(f"Database seed/reseed skipped or noted: {e}")
 
