@@ -698,6 +698,22 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
         )
         db.add(item)
 
+        # Store the change from the last successful snapshot, not just the current totals.
+        previous_snapshot = db.query(StudentStatSnapshot).filter(
+            StudentStatSnapshot.student_id == student.id
+        ).order_by(StudentStatSnapshot.captured_at.desc()).first()
+        previous_total = previous_snapshot.total_solved or 0 if previous_snapshot else 0
+        previous_easy = previous_snapshot.easy_solved or 0 if previous_snapshot else 0
+        previous_medium = previous_snapshot.medium_solved or 0 if previous_snapshot else 0
+        previous_hard = previous_snapshot.hard_solved or 0 if previous_snapshot else 0
+        previous_rating = previous_snapshot.contest_rating or 0.0 if previous_snapshot else 0.0
+
+        delta_total = max(0, (st.total_solved or 0) - previous_total)
+        delta_easy = max(0, (st.easy_solved or 0) - previous_easy)
+        delta_medium = max(0, (st.medium_solved or 0) - previous_medium)
+        delta_hard = max(0, (st.hard_solved or 0) - previous_hard)
+        delta_rating = round((st.contest_rating or 0.0) - previous_rating, 1)
+
         # Create a NEW immutable historical snapshot record for every successful fetch
         snapshot = StudentStatSnapshot(
             student_id=student.id,
@@ -707,6 +723,11 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
             hard_solved=st.hard_solved,
             contest_rating=st.contest_rating,
             global_rank=st.contest_global_ranking,
+            delta_total=delta_total,
+            delta_easy=delta_easy,
+            delta_medium=delta_medium,
+            delta_hard=delta_hard,
+            delta_rating=delta_rating,
             captured_at=now,
             sync_run_id=job_id,
             source="leetcode_live_sync"
