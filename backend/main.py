@@ -22,7 +22,7 @@ from backend.routes import (
     audit, public, sync, history, risk, goals, system_health, weekly_contests,
     scheduled_reports, certificates, data_issues, faculty_assignments, institutional_dashboards,
     email_campaigns, bot_notifications, anti_cheat, placement_eligibility, gamification, accreditation,
-    whatsapp_webhook
+    whatsapp_webhook, deep_tech_intelligence
 )
 from backend.routes import admin, email_reports, ai_assistant, leetcode, ai_control_center, intelligence
 from backend.routes import command_center
@@ -178,6 +178,8 @@ app.include_router(gamification.router)
 app.include_router(accreditation.router, prefix="/api")
 app.include_router(accreditation.router)
 app.include_router(whatsapp_webhook.router)
+app.include_router(deep_tech_intelligence.router, prefix="/api")
+app.include_router(deep_tech_intelligence.router)
 
 # Mount Static File Directories
 is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")
