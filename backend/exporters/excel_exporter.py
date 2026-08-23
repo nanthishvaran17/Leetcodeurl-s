@@ -135,20 +135,26 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     wb = openpyxl.Workbook()
     wb.remove(wb.active)  # Remove default blank sheet
 
-    rows = dataset.get("all_rows") or dataset.get("rows") or []
+    rows = dataset.get("rows") or []
     metrics = dataset.get("metrics", {})
     contest_name = dataset.get("contestName") or metrics.get("contestName") or "Weekly Contest 516"
     contest_date_str = dataset.get("sessionDate") or dataset.get("session_date") or "23.08.2026"
     snapshot_id = str(dataset.get("snapshotId") or dataset.get("snapshot_id") or dataset.get("reportId") or "SESSION_21_OFFICIAL")
     gen_time_str = dataset.get("generatedAtIST") or datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST")
 
-    dept_header_text = "ALL 11 INSTITUTIONAL DEPARTMENTS & COHORTS"
+    departments_set = sorted(list({str(r.get("dept") or r.get("department") or "CSE").upper() for r in rows}))
+    if len(departments_set) == 1:
+        dept_header_text = f"DEPARTMENT OF {departments_set[0]}"
+    elif len(departments_set) < len(OFFICIAL_DEPTS) and len(departments_set) > 0:
+        dept_header_text = "DEPARTMENTS: " + ", ".join(departments_set)
+    else:
+        dept_header_text = "ALL 11 INSTITUTIONAL DEPARTMENTS & COHORTS"
 
     metadata_block = {
         "Contest Name": contest_name,
         "Session Date": contest_date_str,
         "Academic Year": "2026–2027",
-        "Total Institutional Scope": f"{len(rows)} Students",
+        "Total Scope": f"{len(rows)} Students",
         "Official Window": "08:00 AM – 09:30 AM IST",
         "Generated At": gen_time_str
     }
