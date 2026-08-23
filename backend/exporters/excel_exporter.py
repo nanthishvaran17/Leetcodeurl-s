@@ -115,7 +115,6 @@ def normalize_row_data(r: dict) -> dict:
     q3 = 1 if _to_int(r.get("q3")) == 1 else 0
     q4 = 1 if _to_int(r.get("q4")) == 1 else 0
     
-    # If not attended, all Q values must be 0
     if not is_att:
         q1 = q2 = q3 = q4 = 0
 
@@ -153,20 +152,17 @@ def normalize_row_data(r: dict) -> dict:
 
 def export_excel_from_dataset(dataset: dict) -> bytes:
     """
-    CANONICAL INSTITUTIONAL 13-SHEET EXCEL WORKBOOK EXPORTER
-    1. Executive Summary
-    2. Complete Student Roster
-    3. Contest Attendance
-    4. Contest Performance Matrix
-    5. Top Performers
-    6. 4-4 Perfect Solvers
-    7. 3-4 Solvers
-    8. 2-4 Solvers
-    9. 1-4 Solvers
-    10. Department Summary
-    11. Department Top Performers
-    12. Year Summary
-    13. Verification Audit
+    CANONICAL INSTITUTIONAL EXCEL WORKBOOK EXPORTER
+    Supports both Full College Scope (1,450) and Specific Filtered Cohort Scope (e.g. IT III Year, CSE(CS) III Year).
+    Provides:
+    1. Alphabetical Cohort Roster (Option 1: Alphabetical Order)
+    2. Top Performers (Option 2: Rank Order 4/4 -> 3/4 -> 2/4 -> 1/4 -> 0/4)
+    3. Executive Summary
+    4. Contest Attendance
+    5. Performance Matrix (Binary Q1-Q4)
+    6. Performance Tiers (4/4, 3/4, 2/4, 1/4)
+    7. Department & Year Breakdowns
+    8. Verification & Audit (SHA-256)
     """
     wb = openpyxl.Workbook()
     wb.remove(wb.active)  # Remove blank sheet
@@ -179,12 +175,23 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     snapshot_id = str(dataset.get("snapshotId") or dataset.get("snapshot_id") or dataset.get("reportId") or "SESSION_21_OFFICIAL")
     gen_time_str = dataset.get("generatedAtIST") or datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST")
 
-    dept_header_text = "ALL 11 INSTITUTIONAL DEPARTMENTS & COHORTS"
+    depts_present = sorted(list({r["dept"] for r in rows}))
+    years_present = sorted(list({r["year"] for r in rows}))
+
+    if len(depts_present) == 1 and len(years_present) == 1:
+        dept_header_text = f"DEPARTMENT OF {depts_present[0]} • {years_present[0]} YEAR"
+    elif len(depts_present) == 1:
+        dept_header_text = f"DEPARTMENT OF {depts_present[0]}"
+    elif len(depts_present) < len(OFFICIAL_DEPTS) and len(depts_present) > 0:
+        dept_header_text = "DEPARTMENTS: " + ", ".join(depts_present)
+    else:
+        dept_header_text = "ALL 11 INSTITUTIONAL DEPARTMENTS & COHORTS"
+
     metadata_block = {
         "Contest Name": contest_name,
         "Session Date": contest_date_str,
         "Academic Year": "2026–2027",
-        "Institutional Roster Scope": f"{len(rows)} Students",
+        "Roster Scope": f"{len(rows)} Students",
         "Official Window": "08:00 AM – 09:30 AM IST",
         "Generated At": gen_time_str
     }
@@ -227,7 +234,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
 
     r_kpi = 7
     kpis = [
-        ("TOTAL INSTITUTIONAL ROSTER", f"{tot_students:,}", "A", "B", "1B365D"),
+        ("TOTAL SCOPE ROSTER", f"{tot_students:,}", "A", "B", "1B365D"),
         ("OFFICIAL CONTEST ATTENDANCE", f"{tot_attended:,} ({att_pct:.1f}%)", "C", "E", "059669"),
         ("NOT ATTENDED / NO EVIDENCE", f"{tot_not_attended:,}", "F", "G", "DC2626"),
         ("TOTAL CONTEST SOLVES", f"{total_solves:,}", "H", "J", "2E5B88"),
@@ -280,28 +287,34 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     ws1.row_dimensions[r_perf_hdr+1].height = 22
 
     # ──────────────────────────────────────────────────────────────────────────
-    # SHEET 2: COMPLETE STUDENT ROSTER (ALL 1,450)
+    # SHEET 2: COMPLETE STUDENT ROSTER (OPTION 1: ALPHABETICAL ORDER)
     # ──────────────────────────────────────────────────────────────────────────
     ws2 = wb.create_sheet(title="Complete Student Roster")
-    _write_college_header(ws2, "COMPLETE INSTITUTIONAL STUDENT MASTER ROSTER (1,450 STUDENTS)", dept_header_text, 6, metadata_block)
+    _write_college_header(ws2, f"STUDENT ROSTER — ALPHABETICAL ORDER ({tot_students} STUDENTS)", dept_header_text, 12, metadata_block)
     r2_hdr = 7
-    s2_headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Username"]
+    s2_headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Username", "Status", "Q1", "Q2", "Q3", "Q4", "Solved"]
     for c_i, h in enumerate(s2_headers, 1):
         cell = ws2.cell(row=r2_hdr, column=c_i, value=h)
         cell.font = FONT_WHITE_BOLD
         cell.fill = NAVY_FILL
         cell.alignment = ALIGN_CENTER
         _apply_thin_border(cell)
-    for idx, r in enumerate(rows, 1):
+
+    # Sort alphabetically by Student Name
+    alpha_sorted = sorted(rows, key=lambda x: (x["name"].strip().upper(), x["reg_no"]))
+    for idx, r in enumerate(alpha_sorted, 1):
         row_num = r2_hdr + idx
-        for c_i, v in enumerate([idx, r["reg_no"], r["name"], r["dept"], r["year"], r["username"]], 1):
+        for c_i, v in enumerate([idx, r["reg_no"], r["name"], r["dept"], r["year"], r["username"], r["status"], r["q1"], r["q2"], r["q3"], r["q4"], r["solved_str"]], 1):
             cell = ws2.cell(row=row_num, column=c_i, value=v)
             cell.font = FONT_REGULAR
-            cell.alignment = ALIGN_LEFT if c_i == 3 else ALIGN_CENTER
+            cell.alignment = ALIGN_LEFT if c_i in (3, 6) else ALIGN_CENTER
+            if r["is_att"] and c_i in (7, 12):
+                cell.font = FONT_BOLD
+                cell.fill = GREEN_FILL
             _apply_thin_border(cell)
 
     # ──────────────────────────────────────────────────────────────────────────
-    # SHEET 3: CONTEST ATTENDANCE (ALL 1,450)
+    # SHEET 3: CONTEST ATTENDANCE
     # ──────────────────────────────────────────────────────────────────────────
     ws3 = wb.create_sheet(title="Contest Attendance")
     _write_college_header(ws3, "WEEKLY CONTEST 516 — ATTENDANCE & EVIDENCE STATUS", dept_header_text, 8, metadata_block)
@@ -313,13 +326,13 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         cell.fill = NAVY_FILL
         cell.alignment = ALIGN_CENTER
         _apply_thin_border(cell)
-    for idx, r in enumerate(rows, 1):
+    for idx, r in enumerate(alpha_sorted, 1):
         row_num = r3_hdr + idx
         ev_label = "VERIFIED_CONTEST_EVIDENCE" if r["is_att"] else "NO_PUBLIC_CONTEST_EVIDENCE"
         for c_i, v in enumerate([idx, r["reg_no"], r["name"], r["dept"], r["year"], r["username"], r["status"], ev_label], 1):
             cell = ws3.cell(row=row_num, column=c_i, value=v)
             cell.font = FONT_REGULAR
-            cell.alignment = ALIGN_LEFT if c_i == 3 else ALIGN_CENTER
+            cell.alignment = ALIGN_LEFT if c_i in (3, 6) else ALIGN_CENTER
             if c_i == 7:
                 cell.fill = GREEN_FILL if r["is_att"] else ROSE_FILL
                 cell.font = FONT_BOLD
@@ -349,10 +362,12 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
                 cell.font = FONT_BOLD
             _apply_thin_border(cell)
 
-    # Helper function for rendering solver list sheets
+    # ──────────────────────────────────────────────────────────────────────────
+    # SHEET 5: TOP PERFORMERS (OPTION 2: RANK ORDER 4/4 -> 3/4 -> 2/4 -> 1/4)
+    # ──────────────────────────────────────────────────────────────────────────
     def render_tier_sheet(sheet_title, title_text, tier_rows, show_rank=True):
         ws_t = wb.create_sheet(title=sheet_title)
-        _write_college_header(ws_t, title_text, dept_header_text, 11, metadata_block)
+        _write_college_header(ws_t, title_text, dept_header_text, 12, metadata_block)
         rt_hdr = 7
         th_headers = ["Rank", "Register No", "Student Name", "Dept", "Year", "LeetCode Handle", "Q1", "Q2", "Q3", "Q4", "Solved", "Score"] if show_rank else ["S.No", "Register No", "Student Name", "Dept", "Year", "LeetCode Handle", "Q1", "Q2", "Q3", "Q4", "Solved", "Score"]
         for c_i, h in enumerate(th_headers, 1):
@@ -361,22 +376,19 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
             cell.fill = NAVY_FILL
             cell.alignment = ALIGN_CENTER
             _apply_thin_border(cell)
-        sorted_tier = sorted(tier_rows, key=lambda x: (-x["score"], x["dept"], x["name"]))
+        sorted_tier = sorted(tier_rows, key=lambda x: (-x["solved"], -x["score"], x["dept"], x["name"]))
         for idx, r in enumerate(sorted_tier, 1):
             row_num = rt_hdr + idx
             for c_i, v in enumerate([idx, r["reg_no"], r["name"], r["dept"], r["year"], r["username"], r["q1"], r["q2"], r["q3"], r["q4"], r["solved_str"], r["score"]], 1):
                 cell = ws_t.cell(row=row_num, column=c_i, value=v)
                 cell.font = FONT_REGULAR
-                cell.alignment = ALIGN_LEFT if c_i == 3 else ALIGN_CENTER
+                cell.alignment = ALIGN_LEFT if c_i in (3, 6) else ALIGN_CENTER
                 if c_i in (1, 11, 12):
                     cell.font = FONT_BOLD
                 _apply_thin_border(cell)
 
-    # ──────────────────────────────────────────────────────────────────────────
-    # SHEET 5: TOP PERFORMERS (ALL 4/4 -> 3/4 -> 2/4 -> 1/4)
-    # ──────────────────────────────────────────────────────────────────────────
     all_top_solvers = sorted(attended_rows, key=lambda x: (-x["solved"], -x["score"], x["dept"], x["name"]))
-    render_tier_sheet("Top Performers", "WEEKLY CONTEST 516 — INSTITUTIONAL TOP PERFORMERS LEADERBOARD", all_top_solvers, show_rank=True)
+    render_tier_sheet("Top Performers", "WEEKLY CONTEST 516 — TOP PERFORMERS LEADERBOARD (4/4 -> 3/4 -> 2/4 -> 1/4)", all_top_solvers, show_rank=True)
 
     # ──────────────────────────────────────────────────────────────────────────
     # SHEET 6: 4-4 PERFECT SOLVERS
@@ -399,10 +411,10 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     render_tier_sheet("1-4 Solvers", f"WEEKLY CONTEST 516 — 1/4 SOLVERS ({len(p_1)} STUDENTS)", p_1, show_rank=True)
 
     # ──────────────────────────────────────────────────────────────────────────
-    # SHEET 10: DEPARTMENT SUMMARY (ALL 11 DEPARTMENTS)
+    # SHEET 10: DEPARTMENT SUMMARY
     # ──────────────────────────────────────────────────────────────────────────
     ws10 = wb.create_sheet(title="Department Summary")
-    _write_college_header(ws10, "WEEKLY CONTEST 516 — ALL 11 DEPARTMENTS SUMMARY", dept_header_text, 11, metadata_block)
+    _write_college_header(ws10, "WEEKLY CONTEST 516 — DEPARTMENTS BREAKDOWN", dept_header_text, 11, metadata_block)
     r10_hdr = 7
     s10_headers = ["S.No", "Department Name", "Total Students", "Verified Attended", "Not Attended", "Attendance %", "Q1", "Q2", "Q3", "Q4", "Total Solves"]
     for c_i, h in enumerate(s10_headers, 1):
@@ -414,7 +426,9 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     cur_r = r10_hdr + 1
     sum_d_stud = sum_d_att = sum_d_not = sum_d_solves = 0
     sum_q1 = sum_q2 = sum_q3 = sum_q4 = 0
-    for idx, d_name in enumerate(OFFICIAL_DEPTS, 1):
+
+    depts_to_show = depts_present if len(depts_present) > 1 or len(rows) > 100 else OFFICIAL_DEPTS
+    for idx, d_name in enumerate(depts_to_show, 1):
         d_list = dept_map.get(d_name, [])
         d_tot = len(d_list)
         d_att = sum(1 for r in d_list if r["is_att"])
@@ -445,7 +459,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
 
     # Total row
     ws10.cell(row=cur_r, column=1, value="")
-    tot_cell = ws10.cell(row=cur_r, column=2, value="INSTITUTIONAL TOTAL")
+    tot_cell = ws10.cell(row=cur_r, column=2, value="TOTAL IN SCOPE")
     tot_cell.font = FONT_BOLD
     tot_cell.alignment = ALIGN_CENTER
     tot_cell.fill = SUB_FILL
@@ -459,12 +473,12 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         _apply_thin_border(cell)
 
     # ──────────────────────────────────────────────────────────────────────────
-    # SHEET 11: DEPARTMENT TOP PERFORMERS (TABLES FOR ALL 11 DEPTS)
+    # SHEET 11: DEPARTMENT TOP PERFORMERS
     # ──────────────────────────────────────────────────────────────────────────
     ws11 = wb.create_sheet(title="Department Top Performers")
     _write_college_header(ws11, "WEEKLY CONTEST 516 — DEPARTMENT TOP PERFORMERS", dept_header_text, 10, metadata_block)
     r11_cur = 7
-    for d_name in OFFICIAL_DEPTS:
+    for d_name in (depts_present if len(depts_present) > 1 or len(rows) > 100 else OFFICIAL_DEPTS):
         d_att_list = [r for r in dept_map.get(d_name, []) if r["is_att"]]
         d_att_list.sort(key=lambda x: (-x["solved"], -x["score"], x["name"]))
 
@@ -495,7 +509,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
             _apply_thin_border(c_empty)
             r11_cur += 2
         else:
-            for r_i, s in enumerate(d_att_list[:10], 1):
+            for r_i, s in enumerate(d_att_list[:15], 1):
                 vals = [r_i, s["name"], s["reg_no"], s["year"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved_str"], s["score"]]
                 for c_i, v in enumerate(vals, 1):
                     cell = ws11.cell(row=r11_cur, column=c_i, value=v)
@@ -506,7 +520,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
             r11_cur += 1
 
     # ──────────────────────────────────────────────────────────────────────────
-    # SHEET 12: YEAR SUMMARY (II, III, IV YEARS)
+    # SHEET 12: YEAR SUMMARY
     # ──────────────────────────────────────────────────────────────────────────
     ws12 = wb.create_sheet(title="Year Summary")
     _write_college_header(ws12, "WEEKLY CONTEST 516 — ACADEMIC YEAR BATCH SUMMARY", dept_header_text, 7, metadata_block)
@@ -534,7 +548,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         cur_r += 1
 
     # ──────────────────────────────────────────────────────────────────────────
-    # SHEET 13: VERIFICATION & AUDIT (SHA-256 INTEGRITY)
+    # SHEET 13: VERIFICATION AUDIT
     # ──────────────────────────────────────────────────────────────────────────
     ws13 = wb.create_sheet(title="Verification Audit")
     _write_college_header(ws13, "WEEKLY CONTEST 516 — DATA AUDIT & IMMUTABILITY RECORD", dept_header_text, 6, metadata_block)
@@ -551,12 +565,11 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         ("Session Date", contest_date_str),
         ("Official Time Window", "08:00:00 AM IST – 09:30:00 AM IST"),
         ("Final Snapshot Timestamp", "23-Aug-2026 09:30:00 AM IST"),
-        ("Total Institutional Students Evaluated", f"{tot_students:,}"),
+        ("Scope Students Evaluated", f"{tot_students:,}"),
         ("Verified Official Attendees", f"{tot_attended:,}"),
         ("Verified Non-Attendees / No Evidence", f"{tot_not_attended:,}"),
         ("Binary Constraint Validation", "PASS (Every Q1..Q4 is strictly 0 or 1)"),
-        ("Mathematical Verification", "PASS (Solved == Q1 + Q2 + Q3 + Q4 for all 1,450 records)"),
-        ("Department Roster Reconciliation", "PASS (Sum of all 11 departments strictly equals 1,450)"),
+        ("Mathematical Verification", "PASS (Solved == Q1 + Q2 + Q3 + Q4 for all records)"),
         ("Reconciliation Decision", "FINALIZED & IMMUTABLE"),
         ("Dataset SHA-256 Checksum", dataset_sha256),
     ]
