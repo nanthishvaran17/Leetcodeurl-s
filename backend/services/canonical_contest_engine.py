@@ -234,12 +234,9 @@ def build_canonical_contest_dataset(
             q3_val = 1 if (p_res.q3 and p_res.q3 >= 1) else 0
             q4_val = 1 if (p_res.q4 and p_res.q4 >= 1) else 0
             actual_sum = q1_val + q2_val + q3_val + q4_val
-            solved_val = p_res.total_contest_solved if p_res.total_contest_solved is not None else actual_sum
+            solved_val = actual_sum
 
-            # Mathematical validation: Contest Solved must strictly equal q1 + q2 + q3 + q4
-            if solved_val != actual_sum and actual_sum > 0:
-                solved_val = actual_sum
-
+            # Independent score calculation
             score_val = p_res.contest_score or (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
             rank_val = p_res.contest_rank
             rating_val = p_res.contest_rating

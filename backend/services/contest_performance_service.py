@@ -16,6 +16,7 @@ from backend.models import (
 from backend.services.report_models import ReportConfig
 from backend.services.weekly_session_resolver import resolve_weekly_sessions, extract_contest_number
 from backend.services.contest_classifier import ContestStatus
+from backend.services.contest_problem_accuracy_engine import ContestProblemAccuracyEngine
 from backend.logger import logger
 
 
@@ -231,25 +232,30 @@ def build_contest_performance_report(db: Session, config: ReportConfig) -> Dict[
             solved_val = q1_val + q2_val + q3_val + q4_val
         elif part_res is not None:
             p_type = str(part_res.participation_type or "").upper()
-            p_solved = part_res.problems_solved or 0
             if p_type in ("OFFICIAL", "PUBLIC"):
                 status = ContestStatus.PUBLIC_ATTENDED.value
-                solved_val = p_solved
-                q1_val = 1 if p_solved >= 1 else 0
-                q2_val = 1 if p_solved >= 2 else 0
-                q3_val = 1 if p_solved >= 3 else 0
-                q4_val = 1 if p_solved >= 4 else 0
                 rank_val = part_res.contest_rank
                 rating_val = part_res.contest_rating_after
+                q1_val = getattr(part_res, "q1", None)
+                q2_val = getattr(part_res, "q2", None)
+                q3_val = getattr(part_res, "q3", None)
+                q4_val = getattr(part_res, "q4", None)
+                if q1_val is not None and q2_val is not None:
+                    solved_val = int(q1_val) + int(q2_val) + int(q3_val or 0) + int(q4_val or 0)
+                else:
+                    solved_val = part_res.problems_solved or 0
             elif p_type in ("VIRTUAL",):
                 status = ContestStatus.VIRTUAL_ATTENDED.value
-                solved_val = p_solved
-                q1_val = 1 if p_solved >= 1 else 0
-                q2_val = 1 if p_solved >= 2 else 0
-                q3_val = 1 if p_solved >= 3 else 0
-                q4_val = 1 if p_solved >= 4 else 0
                 rank_val = part_res.contest_rank
                 rating_val = part_res.contest_rating_after
+                q1_val = getattr(part_res, "q1", None)
+                q2_val = getattr(part_res, "q2", None)
+                q3_val = getattr(part_res, "q3", None)
+                q4_val = getattr(part_res, "q4", None)
+                if q1_val is not None and q2_val is not None:
+                    solved_val = int(q1_val) + int(q2_val) + int(q3_val or 0) + int(q4_val or 0)
+                else:
+                    solved_val = part_res.problems_solved or 0
             else:
                 status = ContestStatus.NOT_ATTENDED.value
         else:
@@ -322,6 +328,10 @@ def build_contest_performance_report(db: Session, config: ReportConfig) -> Dict[
     participation_rate = round((total_participants / max(total_students, 1)) * 100, 1)
     public_attendance_rate = round((public_attended / max(total_students, 1)) * 100, 1)
     virtual_attendance_rate = round((virtual_attended / max(total_students, 1)) * 100, 1)
+
+    accuracy_audit = ContestProblemAccuracyEngine.calculate_distribution_and_reconcile(
+        participants_list, total_expected_population=total_participants
+    )
 
     # 7. Internal Reconciliation Verification
     roster_sum = (
@@ -404,6 +414,8 @@ def build_contest_performance_report(db: Session, config: ReportConfig) -> Dict[
             "zeroSolvedParticipated": zero_solved_participated,
             "notParticipated": not_participated
         },
+        "performanceTable": accuracy_audit["performance_table"],
+        "performance_table": accuracy_audit["performance_table"],
         "metrics": {
             "totalStudents": total_students,
             "publicAttended": public_attended,
@@ -435,11 +447,14 @@ def build_contest_performance_report(db: Session, config: ReportConfig) -> Dict[
             "Not Attended": not_attended
         },
         "reconciliation": {
-            "isReconciled": roster_sum == total_students and solve_sum == total_participants,
+            "isReconciled": roster_sum == total_students and solve_sum == total_participants and accuracy_audit["is_population_reconciled"],
             "totalRoster": total_students,
             "sumStatuses": roster_sum,
             "totalParticipants": total_participants,
-            "sumSolveDistribution": solve_sum
+            "sumSolveDistribution": solve_sum,
+            "formula": accuracy_audit["math_formula"],
+            "departmentReconciliation": accuracy_audit["department_reconciliation"],
+            "yearReconciliation": accuracy_audit["year_reconciliation"]
         },
         "allStudents": sorted_rows,
         "rows": sorted_rows,
