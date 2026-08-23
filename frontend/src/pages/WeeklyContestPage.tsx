@@ -826,43 +826,63 @@ export const WeeklyContestPage: React.FC = () => {
     };
   }, [sessionMetrics, matrixRows, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter]);
 
+  // Pre-Indexed Matrix Rows for Ultra-Fast Instant Search & Filtering
+  const indexedMatrixRows = useMemo(() => {
+    return matrixRows.map(r => {
+      const d = (r.dept || r.department || '').toString().toUpperCase();
+      const y = (r.year || r.year_level || '').toString().toUpperCase();
+      const st = (r.participation_status || r.status || r.attendance_status || '').toString().toUpperCase();
+      const searchKey = `${r.name || ''} ${r.reg_no || ''} ${r.username || ''} ${r.leetcode_url || ''}`.toLowerCase();
+      return {
+        ...r,
+        _deptKey: d,
+        _yearKey: y,
+        _statusKey: st,
+        _searchKey: searchKey
+      };
+    });
+  }, [matrixRows]);
+
   // Memoized Debounced Filtered Rows for Detailed View
   const filteredMatrixRows = useMemo(() => {
-    let rows = matrixRows;
+    let rows = indexedMatrixRows;
 
     if (selectedDeptFilter !== 'ALL') {
+      const targetDept = selectedDeptFilter.toUpperCase();
       rows = rows.filter(r => {
-        const d = (r.dept || r.department || '').toString().toUpperCase();
-        if (selectedDeptFilter === 'CSE(CS)') return d.includes('CS') || d.includes('CYBER');
-        if (selectedDeptFilter === 'CSE(IOT)') return d.includes('IOT') || d.includes('INTERNET');
-        if (selectedDeptFilter === 'CSE') return (d === 'CSE' || d.startsWith('CSE ') || d.includes('COMPUTER SCIENCE')) && !d.includes('CS') && !d.includes('CYBER') && !d.includes('IOT') && !d.includes('INTERNET');
-        return d === selectedDeptFilter.toUpperCase() || d.includes(selectedDeptFilter.toUpperCase());
+        const d = r._deptKey;
+        if (targetDept === 'CSE(CS)') return d.includes('CS') || d.includes('CYBER');
+        if (targetDept === 'CSE(IOT)') return d.includes('IOT') || d.includes('INTERNET');
+        if (targetDept === 'CSE') return (d === 'CSE' || d.startsWith('CSE ') || d.includes('COMPUTER SCIENCE')) && !d.includes('CS') && !d.includes('CYBER') && !d.includes('IOT') && !d.includes('INTERNET');
+        return d === targetDept || d.includes(targetDept);
       });
     }
 
     if (selectedYearFilter !== 'ALL') {
+      const targetYear = selectedYearFilter.toUpperCase();
       rows = rows.filter(r => {
-        const y = (r.year || r.year_level || '').toString().toUpperCase();
-        if (selectedYearFilter === 'II') return y === 'II' || y === '2' || y.includes('II YEAR');
-        if (selectedYearFilter === 'III') return y === 'III' || y === '3' || y.includes('III YEAR');
-        if (selectedYearFilter === 'IV') return y === 'IV' || y === '4' || y.includes('IV YEAR');
-        return y === selectedYearFilter.toUpperCase();
+        const y = r._yearKey;
+        if (targetYear === 'II') return y === 'II' || y === '2' || y.includes('II YEAR');
+        if (targetYear === 'III') return y === 'III' || y === '3' || y.includes('III YEAR');
+        if (targetYear === 'IV') return y === 'IV' || y === '4' || y.includes('IV YEAR');
+        return y === targetYear;
       });
     }
 
     if (selectedAttendanceFilter !== 'ALL') {
+      const targetAtt = selectedAttendanceFilter.toUpperCase();
       rows = rows.filter(r => {
-        const st = (r.participation_status || r.status || r.attendance_status || '').toString().toUpperCase();
-        if (selectedAttendanceFilter === 'PUBLIC' || selectedAttendanceFilter === 'PUBLIC_ATTENDED') {
+        const st = r._statusKey;
+        if (targetAtt === 'PUBLIC' || targetAtt === 'PUBLIC_ATTENDED') {
           return st.includes('PUBLIC') && !st.includes('NOT');
         }
-        if (selectedAttendanceFilter === 'VIRTUAL' || selectedAttendanceFilter === 'VIRTUAL_ATTENDED') {
+        if (targetAtt === 'VIRTUAL' || targetAtt === 'VIRTUAL_ATTENDED') {
           return st.includes('VIRTUAL');
         }
-        if (selectedAttendanceFilter === 'NOT_ATTENDED' || selectedAttendanceFilter === 'PUBLIC_NOT_ATTENDED') {
+        if (targetAtt === 'NOT_ATTENDED' || targetAtt === 'PUBLIC_NOT_ATTENDED') {
           return st.includes('NOT_ATTENDED') || st.includes('NOT ATTENDED') || st === 'ABSENT' || st === 'NOT PARTICIPATED';
         }
-        if (selectedAttendanceFilter === 'DATA_ERROR' || selectedAttendanceFilter === 'ERROR') {
+        if (targetAtt === 'DATA_ERROR' || targetAtt === 'ERROR') {
           return st.includes('ERROR') || r.fetch_status === 'ERROR' || Boolean(r.error_reason);
         }
         return true;
@@ -871,16 +891,11 @@ export const WeeklyContestPage: React.FC = () => {
 
     if (debouncedSearchTerm && debouncedSearchTerm.trim()) {
       const term = debouncedSearchTerm.trim().toLowerCase();
-      rows = rows.filter(r =>
-        (r.name && r.name.toLowerCase().includes(term)) ||
-        (r.reg_no && r.reg_no.toLowerCase().includes(term)) ||
-        (r.username && r.username.toLowerCase().includes(term)) ||
-        (r.leetcode_url && r.leetcode_url.toLowerCase().includes(term))
-      );
+      rows = rows.filter(r => r._searchKey.includes(term));
     }
 
     return rows;
-  }, [matrixRows, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, debouncedSearchTerm]);
+  }, [indexedMatrixRows, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, debouncedSearchTerm]);
 
   // Memoized Paginated Slices for 60fps High-Performance Rendering
   const paginatedMatrixRows = useMemo(() => {

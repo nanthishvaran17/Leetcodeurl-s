@@ -55,6 +55,25 @@ def normalize_participation_status(raw_status: Optional[str], fetch_status: Opti
     return "PENDING"
 
 
+# ─── IN-MEMORY ULTRA-FAST SNAPSHOT CACHE ──────────────────────────────────────
+_CANONICAL_DATASET_CACHE: Dict[Tuple[int, str, str, str], Dict[str, Any]] = {}
+_CANONICAL_CACHE_TIMESTAMPS: Dict[Tuple[int, str, str, str], float] = {}
+CACHE_TTL_SECONDS = 300  # 5 minutes TTL for finalized sessions
+
+
+def invalidate_canonical_cache(session_id: Optional[int] = None):
+    """Invalidates the in-memory cache for a specific session or globally."""
+    global _CANONICAL_DATASET_CACHE, _CANONICAL_CACHE_TIMESTAMPS
+    if session_id:
+        keys_to_del = [k for k in _CANONICAL_DATASET_CACHE if k[0] == session_id]
+        for k in keys_to_del:
+            _CANONICAL_DATASET_CACHE.pop(k, None)
+            _CANONICAL_CACHE_TIMESTAMPS.pop(k, None)
+    else:
+        _CANONICAL_DATASET_CACHE.clear()
+        _CANONICAL_CACHE_TIMESTAMPS.clear()
+
+
 def build_canonical_contest_dataset(
     session_id: int,
     db: Session,
@@ -70,6 +89,15 @@ def build_canonical_contest_dataset(
     session_obj = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
     if not session_obj:
         raise ValueError(f"Contest Session ID {session_id} not found in database.")
+
+    # High-Performance Fast-Path: Read from memory cache if session is finalized and clean
+    cache_key = (session_id, str(dept).upper(), str(year).upper(), str(attendance).upper())
+    import time
+    now_time = time.time()
+    if session_obj.status == "FINALIZED" and cache_key in _CANONICAL_DATASET_CACHE:
+        cache_ts = _CANONICAL_CACHE_TIMESTAMPS.get(cache_key, 0)
+        if (now_time - cache_ts) < CACHE_TTL_SECONDS:
+            return _CANONICAL_DATASET_CACHE[cache_key]
 
     # 1. Fetch Authoritative Master Students with eager loaded department
     from sqlalchemy.orm import joinedload
@@ -546,7 +574,7 @@ def build_canonical_contest_dataset(
     for y in year_stats_map.values():
         y["participation_pct"] = round(((y["public"] + y["virtual"]) / y["total"] * 100), 2) if y["total"] > 0 else 0.0
 
-    return {
+    result_payload = {
         "sessionId": session_id,
         "contestId": session_obj.contest_id,
         "contestName": session_obj.contest_name,
@@ -571,3 +599,9 @@ def build_canonical_contest_dataset(
             "statusSum": sum_status_totals
         }
     }
+
+    if session_obj.status == "FINALIZED":
+        _CANONICAL_DATASET_CACHE[cache_key] = result_payload
+        _CANONICAL_CACHE_TIMESTAMPS[cache_key] = time.time()
+
+    return result_payload
