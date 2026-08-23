@@ -65,10 +65,9 @@ def get_leaderboard_fast(
     eligible = []
     for s in sessions:
         s_date = _parse_session_date(s.session_date)
-        if s.status in ["FINALIZED", "COMPLETED"]:
-            eligible.append((s, s_date))
-        elif s.status in ["LIVE", "ACTIVE"] and s_date <= today:
-            eligible.append((s, s_date))
+        if s_date <= today:
+            if s.status in ["FINALIZED", "COMPLETED", "LIVE", "ACTIVE"]:
+                eligible.append((s, s_date))
 
     def _get_c_num(item):
         s = item[0]
@@ -356,10 +355,9 @@ def get_students(
         eligible = []
         for s in sessions:
             s_date = _parse_session_date(s.session_date)
-            if s.status in ["FINALIZED", "COMPLETED"]:
-                eligible.append((s, s_date))
-            elif s.status in ["LIVE", "ACTIVE"] and s_date <= today:
-                eligible.append((s, s_date))
+            if s_date <= today:
+                if s.status in ["FINALIZED", "COMPLETED", "LIVE", "ACTIVE"]:
+                    eligible.append((s, s_date))
 
         def _get_c_num(item):
             s = item[0]
