@@ -218,6 +218,19 @@ def deep_health_check(db: Session = Depends(get_db)):
     """
     return get_deep_health_telemetry(db)
 
+@app.api_route("/health/performance", methods=["GET"])
+@app.api_route("/api/health/performance", methods=["GET"])
+def performance_metrics_check():
+    """
+    Operational Performance Telemetry: p50, p95, p99 latencies, RAM RSS, CPU, and Cache efficiency.
+    """
+    from backend.middleware.performance_profiler import get_performance_metrics
+    return get_performance_metrics()
+
+
+# Performance Middleware
+from backend.middleware.performance_profiler import PerformanceMonitoringMiddleware
+app.add_middleware(PerformanceMonitoringMiddleware)
 
 # CORS Configuration
 origins = [
