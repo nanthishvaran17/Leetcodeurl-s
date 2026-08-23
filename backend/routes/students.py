@@ -663,6 +663,15 @@ def download_sample_student_excel():
         headers={"Content-Disposition": 'attachment; filename="Student_Import_Sample.xlsx"'}
     )
 
+@router.get("/by-email", response_model=Optional[StudentOut])
+def get_student_by_email(email: str = Query(..., description="Student email address"), db: Session = Depends(get_db)):
+    clean_email = email.strip().lower()
+    student = db.query(Student).filter(Student.email.ilike(clean_email)).first()
+    if not student:
+        return None
+    st_out = StudentOut.model_validate(student)
+    return st_out
+
 @router.get("/{student_id}", response_model=StudentOut)
 def get_student_detail(student_id: int, db: Session = Depends(get_db)):
     student = db.query(Student).filter(Student.id == student_id).first()

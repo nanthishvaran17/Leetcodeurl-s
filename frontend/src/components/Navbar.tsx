@@ -63,20 +63,20 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               <div
                 onClick={() => setActiveTab('landing')}
-                className="flex items-center space-x-3 cursor-pointer group"
+                className="flex items-center space-x-2.5 cursor-pointer group"
               >
-                <CollegeLogo size={40} className="transition-transform group-hover:scale-105" />
+                <CollegeLogo size={34} className="transition-transform group-hover:scale-105" />
                 <div className="flex flex-col">
                   <div className="flex items-center space-x-1.5">
-                    <span className="font-extrabold text-sm sm:text-base tracking-tight text-gray-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                      Nandha Engineering College
+                    <span className="font-black text-sm sm:text-base tracking-tight text-gray-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                      NANDHA LEETCODE INTELLIGENCE
                     </span>
-                    <span className="px-2 py-0.5 text-[10px] font-black rounded-md bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
-                      LEETCODE
+                    <span className="hidden sm:inline-flex px-1.5 py-0.2 text-[9px] font-black rounded bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+                      1500+ STUDENTS
                     </span>
                   </div>
-                  <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium -mt-0.5">
-                    LeetCode Tracker • Institutional Edition
+                  <span className="text-[11px] text-gray-500 dark:text-gray-400 font-semibold tracking-wide">
+                    Nandha Engineering College • Erode
                   </span>
                 </div>
               </div>
@@ -87,17 +87,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="flex items-center space-x-2.5 px-3.5 py-1.5 rounded-2xl bg-slate-100/90 dark:bg-navy-950/90 border border-slate-200 dark:border-navy-800 text-xs shadow-inner">
                 <div className={`w-2.5 h-2.5 rounded-full ${
                   currentSessionStatus === 'ACTIVE' || currentSessionStatus === 'LIVE'
-                    ? 'bg-emerald-500 pulse-live-indicator'
+                    ? 'bg-brand-500 pulse-live-indicator'
                     : currentSessionStatus === 'FINALIZED' || currentSessionStatus === 'COMPLETED' || currentSessionStatus === 'READY'
-                    ? 'bg-emerald-500'
-                    : 'bg-emerald-500'
+                    ? 'bg-brand-500'
+                    : 'bg-brand-500'
                 }`} />
                 <span className="font-extrabold text-slate-700 dark:text-slate-300 tracking-tight flex items-center space-x-1.5">
                   <span>Sync Engine:</span>
                   <span className={`uppercase font-black tracking-wider px-2 py-0.5 rounded-md border text-[10px] ${
                     currentSessionStatus === 'ACTIVE' || currentSessionStatus === 'LIVE'
-                      ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                      : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                      ? 'bg-brand-500/20 text-brand-600 dark:text-brand-400 border-brand-500/30'
+                      : 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20'
                   }`}>
                     {currentSessionStatus === 'SCHEDULED' ? 'ACTIVE / READY' : currentSessionStatus}
                   </span>
@@ -114,7 +114,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onClick={() => setShowSyncModal(true)}
                 className="hidden lg:flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-xs font-bold text-slate-700 dark:text-slate-200 transition-all duration-200 border border-slate-200 dark:border-navy-700 cursor-pointer active:scale-95"
               >
-                <Activity className={`w-3.5 h-3.5 ${currentSessionStatus === 'ACTIVE' ? 'text-emerald-500 animate-sync-spin' : 'text-brand-500'}`} />
+                <Activity className={`w-3.5 h-3.5 ${currentSessionStatus === 'ACTIVE' ? 'text-brand-500 animate-sync-spin' : 'text-brand-500'}`} />
                 <span>Sync Engine Status</span>
               </button>
 

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { auth } from '../firebase';
 
 // Smart API Base URL Resolution for Local Development vs Production Hosting
 const getApiBaseUrl = () => {
@@ -37,7 +38,15 @@ const api = axios.create({
 });
 
 
-import { auth } from '../firebase';
+// In-flight GET request deduplication map to prevent redundant concurrent network round-trips
+const inFlightRequests = new Map<string, Promise<any>>();
+
+export const getRequestKey = (config: any): string => {
+  const method = (config.method || 'get').toLowerCase();
+  const url = config.url || '';
+  const params = config.params ? JSON.stringify(config.params) : '';
+  return `${method}:${url}:${params}`;
+};
 
 api.interceptors.request.use(async (config) => {
   let token = localStorage.getItem('token');
@@ -63,7 +72,9 @@ api.interceptors.request.use(async (config) => {
 
 // Resilient Response Interceptor: Automatic Retry for Render Cold Starts & Network Glitches
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    return response;
+  },
   async (error) => {
     const config = error.config;
     if (!config || (config._retryCount && config._retryCount >= 2)) {

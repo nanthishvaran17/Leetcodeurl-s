@@ -14,7 +14,7 @@ function parseUtcTime(ts?: string): number {
   return isNaN(time) ? Date.now() : time;
 }
 
-function getSyncState(syncStatus?: string, lastVerifiedAt?: string): 'pending'|'syncing'|'fetching'|'verified'|'failed'|'mismatch'|'stale'|'invalid_profile'|'pending_username'|'url_invalid'|'profile_not_found'|'username_mismatch' {
+function getSyncState(syncStatus?: string, lastVerifiedAt?: string): 'pending' | 'syncing' | 'fetching' | 'verified' | 'failed' | 'mismatch' | 'stale' | 'invalid_profile' | 'pending_username' | 'url_invalid' | 'profile_not_found' | 'username_mismatch' {
   if (!syncStatus) return 'pending';
   const s = syncStatus.toLowerCase();
   if (s === 'fetching' || s === 'syncing') return 'fetching';
@@ -352,283 +352,287 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
       )}
 
 
-      <div className="w-full overflow-x-auto rounded-2xl glass-card border border-gray-200 dark:border-gray-800 shadow-lg">
-      <table className="w-full text-left border-collapse text-xs">
-        <thead>
-          <tr className="bg-gray-100/80 dark:bg-navy-900/80 text-gray-600 dark:text-gray-300 font-bold border-b border-gray-200 dark:border-gray-800 uppercase tracking-wider">
-            <th className="py-3 px-3 text-center w-10">
-              <input
-                type="checkbox"
-                checked={students.length > 0 && selectedIds.length === students.length}
-                onChange={toggleAll}
-                className="rounded border-gray-300 text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
-              />
-            </th>
-            <th className="py-3 px-3 text-left whitespace-nowrap">College Rank</th>
-            <th className="py-3 px-3 text-left whitespace-nowrap">Register No</th>
-            <th className="py-3 px-3 text-left whitespace-nowrap">Student Name</th>
-            <th className="py-3 px-3 text-left whitespace-nowrap">Dept / Year</th>
-            <th className="py-3 px-3 text-left whitespace-nowrap">LeetCode Handle</th>
-            <th className="py-3 px-3 text-center whitespace-nowrap">Total Solved</th>
-            <th className="py-3 px-3 text-center whitespace-nowrap">CONTEST</th>
-            <th className="py-3 px-3 text-center whitespace-nowrap">Contest Rating</th>
-            <th className="py-3 px-3 text-center whitespace-nowrap">Contest Rank</th>
-            <th className="py-3 px-3 text-center whitespace-nowrap">Profile Rank</th>
-            <th className="py-3 px-3 text-center whitespace-nowrap">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-          {loading ? (
-            <tr>
-              <td colSpan={12} className="py-12 text-center text-brand-600 dark:text-brand-400 font-bold">
-                <div className="flex flex-col items-center justify-center space-y-2">
-                  <RefreshCw className="w-6 h-6 animate-spin text-brand-500" />
-                  <span className="text-xs">Loading real institutional student records...</span>
-
-                </div>
-              </td>
+      <div className="responsive-table-container w-full min-w-0 max-w-full overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm bg-white dark:bg-navy-900">
+        <table className="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr className="bg-slate-50 dark:bg-navy-950 text-slate-500 dark:text-slate-400 font-black border-b border-slate-200 dark:border-navy-800 uppercase tracking-widest text-[10px]">
+              <th className="py-3 px-3 text-center w-10">
+                <input
+                  type="checkbox"
+                  checked={students.length > 0 && selectedIds.length === students.length}
+                  onChange={toggleAll}
+                  className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                />
+              </th>
+              <th className="py-3 px-3 text-left whitespace-nowrap">Rank</th>
+              <th className="py-3 px-3 text-left whitespace-nowrap">Register No</th>
+              <th className="py-3 px-3 text-left whitespace-nowrap">Student</th>
+              <th className="py-3 px-3 text-left whitespace-nowrap">Dept / Year</th>
+              <th className="py-3 px-3 text-left whitespace-nowrap">LeetCode Handle</th>
+              <th className="py-3 px-3 text-center whitespace-nowrap">Solved</th>
+              <th className="py-3 px-3 text-center whitespace-nowrap">Contest</th>
+              <th className="py-3 px-3 text-center whitespace-nowrap">Rating</th>
+              <th className="py-3 px-3 text-center whitespace-nowrap">Contest Rank</th>
+              <th className="py-3 px-3 text-center whitespace-nowrap">Profile Rank</th>
+              <th className="py-3 px-3 text-center whitespace-nowrap">Actions</th>
             </tr>
-          ) : students.length === 0 ? (
-            <tr>
-              <td colSpan={12} className="py-12 text-center text-gray-500 dark:text-gray-400">
-                <div className="flex flex-col items-center justify-center space-y-2">
-                  <AlertCircle className="w-6 h-6 text-amber-500" />
-                  <span className="text-sm font-bold text-gray-800 dark:text-gray-200">No students match the selected filters.</span>
-                  <span className="text-xs text-gray-400">Try changing or resetting the filters.</span>
-                </div>
-              </td>
-            </tr>
-          ) : (
-            students.map((student, idx) => {
+          </thead>
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            {loading ? (
+              <tr>
+                <td colSpan={12} className="py-12 text-center text-brand-600 dark:text-brand-400 font-bold">
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <RefreshCw className="w-6 h-6 animate-spin text-brand-500" />
+                    <span className="text-xs">Loading real institutional student records...</span>
 
-              const syncState = getSyncState(student.stats?.sync_status, student.stats?.last_verified_at);
-              const isVerified = syncState === 'verified' || syncState === 'stale';
+                  </div>
+                </td>
+              </tr>
+            ) : students.length === 0 ? (
+              <tr>
+                <td colSpan={12} className="py-12 text-center text-gray-500 dark:text-gray-400">
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <AlertCircle className="w-6 h-6 text-amber-500" />
+                    <span className="text-sm font-bold text-gray-800 dark:text-gray-200">No students match the selected filters.</span>
+                    <span className="text-xs text-gray-400">Try changing or resetting the filters.</span>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              students.map((student, idx) => {
 
-              // RULE: Never show 0 for unverified students
-              const totalSolved = isVerified ? (student.stats?.total_solved ?? 0) : null;
-              const isSolver = isVerified && (totalSolved ?? 0) > 0;
+                const syncState = getSyncState(student.stats?.sync_status, student.stats?.last_verified_at);
+                const isVerified = syncState === 'verified' || syncState === 'stale';
 
-              const publicScore = student.public_contest_result?.score_display || student.stats?.recent_contest_score || (isVerified ? 'Not Attended' : '—');
-              const recentContestName = student.contest_name || student.public_contest_result?.contest_name || student.stats?.recent_contest_name || 'Weekly Contest';
+                // RULE: Never show 0 for unverified students
+                const totalSolved = isVerified ? (student.stats?.total_solved ?? 0) : null;
+                const isSolver = isVerified && (totalSolved ?? 0) > 0;
 
-              const contestRating = (isVerified && student.public_contest_result?.contest_rating)
-                ? student.public_contest_result.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-                : (isVerified && student.stats?.contest_rating)
-                  ? student.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-                  : (isVerified ? 'Unrated' : '—');
+                const publicScore = student.public_contest_result?.score_display || student.stats?.recent_contest_score || (isVerified ? 'Not Attended' : '—');
+                const recentContestName = student.contest_name || student.public_contest_result?.contest_name || student.stats?.recent_contest_name || 'Weekly Contest';
 
-              const isPublicAttended = student.contest_status === 'PUBLIC_ATTENDED' || student.public_contest_result?.status === 'PUBLIC_ATTENDED' || student.public_contest_result?.status === 'ATTENDED' || (student.public_contest_result?.score_display && !student.public_contest_result.score_display.includes('Not Attended'));
-              const isVirtualAttended = student.contest_status === 'VIRTUAL_ATTENDED' || student.virtual_contest_result?.status === 'VIRTUAL_ATTENDED' || student.virtual_contest_result?.status === 'ATTENDED';
-              const isDataError = student.contest_status === 'DATA_ERROR' || student.public_contest_result?.status === 'DATA_ERROR' || student.virtual_contest_result?.status === 'DATA_ERROR';
+                const contestRating = (isVerified && student.public_contest_result?.contest_rating)
+                  ? student.public_contest_result.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+                  : (isVerified && student.stats?.contest_rating)
+                    ? student.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+                    : (isVerified ? 'Unrated' : '—');
 
-              // Status Badge Config per Specification
-              const contestStatusBadge = isPublicAttended
-                ? { cls: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-400/30', label: '🟢 Public Attended' }
-                : isVirtualAttended
-                  ? { cls: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-400/30', label: '🔵 Virtual Attended' }
-                  : isDataError
-                    ? { cls: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-400/30', label: '⚠️ Data Error' }
-                    : { cls: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-400/30', label: '🔴 Not Attended' };
+                const isPublicAttended = student.contest_status === 'PUBLIC_ATTENDED' || student.public_contest_result?.status === 'PUBLIC_ATTENDED' || student.public_contest_result?.status === 'ATTENDED' || (student.public_contest_result?.score_display && !student.public_contest_result.score_display.includes('Not Attended'));
+                const isVirtualAttended = student.contest_status === 'VIRTUAL_ATTENDED' || student.virtual_contest_result?.status === 'VIRTUAL_ATTENDED' || student.virtual_contest_result?.status === 'ATTENDED';
+                const isDataError = student.contest_status === 'DATA_ERROR' || student.public_contest_result?.status === 'DATA_ERROR' || student.virtual_contest_result?.status === 'DATA_ERROR';
 
-              const rawContestRank = student.public_contest_result?.contest_rank;
+                // Status Badge Config per Specification
+                const contestStatusBadge = isPublicAttended
+                  ? { cls: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-400/30', label: '🟢 Public Attended' }
+                  : isVirtualAttended
+                    ? { cls: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-400/30', label: '🔵 Virtual Attended' }
+                    : isDataError
+                      ? { cls: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-400/30', label: '⚠️ Data Error' }
+                      : { cls: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-400/30', label: '🔴 Not Attended' };
 
-              const contestRank = isPublicAttended && rawContestRank
-                ? `#${rawContestRank.toLocaleString('en-US')}`
-                : '—';
+                const rawContestRank = student.public_contest_result?.contest_rank;
 
-              const profileRank = isVerified && student.stats?.public_profile_ranking
-                ? `#${student.stats.public_profile_ranking.toLocaleString('en-US')}`
-                : '—';
+                const contestRank = isPublicAttended && rawContestRank
+                  ? `#${rawContestRank.toLocaleString('en-US')}`
+                  : '—';
 
-              const effectiveCollegeRank = student.college_rank || (isSolver ? idx + 1 : undefined);
-              const hasCanonicalUrl = isVerified && Boolean(student.leetcode_url && student.leetcode_url.includes('/u/'));
-              const verifiedUsername = student.username || (student.leetcode_url ? student.leetcode_url.split('/u/')[1]?.replace('/', '') : null);
+                const profileRank = isVerified && student.stats?.public_profile_ranking
+                  ? `#${student.stats.public_profile_ranking.toLocaleString('en-US')}`
+                  : '—';
 
-              // Determine Participation Mode Badge per specification
-              // Determine Participation Mode Badge per specification
-              const ovMode = student.overall_participation_mode || 'NONE';
-              let modeBadge = (
-                <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-300 dark:border-gray-700">
-                  <span>⚪ NOT ATTENDED</span>
-                </span>
-              );
+                const effectiveCollegeRank = student.college_rank || (isSolver ? idx + 1 : undefined);
+                const hasCanonicalUrl = isVerified && Boolean(student.leetcode_url && student.leetcode_url.includes('/u/'));
+                const verifiedUsername = student.username || (student.leetcode_url ? student.leetcode_url.split('/u/')[1]?.replace('/', '') : null);
 
-              if (ovMode === 'PUBLIC_ONLY' || ovMode === 'PUBLIC') {
-                modeBadge = (
-                  <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-400/30">
-                    <span>🟢 PUBLIC CONTEST</span>
+                // Determine Participation Mode Badge per specification
+                // Determine Participation Mode Badge per specification
+                const ovMode = student.overall_participation_mode || 'NONE';
+                let modeBadge = (
+                  <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-300 dark:border-gray-700">
+                    <span>⚪ NOT ATTENDED</span>
                   </span>
                 );
-              } else if (ovMode === 'VIRTUAL_ONLY' || ovMode === 'VIRTUAL') {
-                modeBadge = (
-                  <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-400/30">
-                    <span>🔵 VIRTUAL CONTEST</span>
-                  </span>
-                );
-              } else if (ovMode === 'BOTH') {
-                modeBadge = (
-                  <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-400/30">
-                    <span>🟢 PUBLIC CONTEST</span>
-                  </span>
-                );
-              } else if (ovMode === 'FETCH_ERROR') {
-                modeBadge = (
-                  <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-400/30">
-                    <span>⚠️ DATA ERROR</span>
-                  </span>
-                );
-              }
 
-              const isSyncing = syncState === 'syncing';
+                if (ovMode === 'PUBLIC_ONLY' || ovMode === 'PUBLIC') {
+                  modeBadge = (
+                    <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-400/30">
+                      <span>🟢 PUBLIC CONTEST</span>
+                    </span>
+                  );
+                } else if (ovMode === 'VIRTUAL_ONLY' || ovMode === 'VIRTUAL') {
+                  modeBadge = (
+                    <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-400/30">
+                      <span>🔵 VIRTUAL CONTEST</span>
+                    </span>
+                  );
+                } else if (ovMode === 'BOTH') {
+                  modeBadge = (
+                    <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-400/30">
+                      <span>🟢 PUBLIC CONTEST</span>
+                    </span>
+                  );
+                } else if (ovMode === 'FETCH_ERROR') {
+                  modeBadge = (
+                    <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-400/30">
+                      <span>⚠️ DATA ERROR</span>
+                    </span>
+                  );
+                }
 
-              return (
-                <tr
-                  key={student.id}
-                  className="hover:bg-brand-50/60 dark:hover:bg-navy-800/50 transition-all duration-200 group font-medium text-xs border-b border-gray-100 dark:border-navy-800/60 cursor-pointer"
-                >
+                const isSyncing = syncState === 'syncing';
 
-                  <td className="py-3 px-3 text-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.includes(student.id)}
-                      onChange={() => toggleStudent(student.id)}
-                      className="rounded border-gray-300 text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
-                    />
-                  </td>
+                return (
+                  <tr
+                    key={student.id}
+                    className="hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10 transition-colors duration-150 group font-medium text-xs border-b border-slate-100 dark:border-navy-800/60 cursor-pointer"
+                  >
 
-                  <td className="py-3 px-3 whitespace-nowrap font-bold">
-                    {isSolver
-                      ? getRankBadge(effectiveCollegeRank)
-                      : syncState === 'pending'
-                        ? <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500 border border-gray-300 dark:border-gray-700"><Clock className="w-3 h-3" /><span>Pending</span></span>
-                        : syncState === 'failed'
-                          ? <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-600 dark:bg-rose-950 dark:text-rose-400 border border-rose-300"><AlertCircle className="w-3 h-3" /><span>Failed</span></span>
-                          : <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 border border-gray-300 dark:border-gray-700">Unranked</span>
-                    }
-                  </td>
+                    <td className="py-3 px-3 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(student.id)}
+                        onChange={() => toggleStudent(student.id)}
+                        className="rounded border-gray-300 text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+                      />
+                    </td>
 
-                  <td className="py-3 px-3 whitespace-nowrap font-mono text-gray-500 font-bold">
-                    {student.reg_no}
-                  </td>
+                    <td className="py-3 px-3 whitespace-nowrap font-bold">
+                      {isSolver
+                        ? getRankBadge(effectiveCollegeRank)
+                        : syncState === 'pending'
+                          ? <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500 border border-gray-300 dark:border-gray-700"><Clock className="w-3 h-3" /><span>Pending</span></span>
+                          : syncState === 'failed'
+                            ? <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-600 dark:bg-rose-950 dark:text-rose-400 border border-rose-300"><AlertCircle className="w-3 h-3" /><span>Failed</span></span>
+                            : <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 border border-gray-300 dark:border-gray-700">Unranked</span>
+                      }
+                    </td>
 
-                  <td className="py-3 px-3 whitespace-nowrap">
-                    <p 
-                      onClick={() => handleOpenProfile(student)}
-                      className="font-bold text-gray-900 dark:text-white hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer flex items-center gap-1.5"
-                      title="Click to view student profile"
-                    >
-                      <span>{student.name}</span>
-                    </p>
-                  </td>
+                    <td className="py-3 px-3 whitespace-nowrap font-mono text-gray-500 font-bold">
+                      {student.reg_no}
+                    </td>
 
-                  <td className="py-3 px-3 whitespace-nowrap text-gray-600 dark:text-gray-300 font-medium">
-                    <span className="font-bold text-gray-900 dark:text-white">{student.department?.code}</span> • {student.year_level}
-                  </td>
-
-                  <td className="py-3 px-3 whitespace-nowrap font-mono font-bold text-brand-600 dark:text-brand-400">
-                    {hasCanonicalUrl && verifiedUsername ? (
-                      <a
-                        href={student.leetcode_url!}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:underline flex items-center gap-1 text-brand-600 dark:text-brand-400 font-bold"
-                        title={`Open ${verifiedUsername}'s verified LeetCode profile`}
-                      >
-                        {verifiedUsername}
-                        <ExternalLink className="w-3 h-3 opacity-70" />
-                      </a>
-                    ) : syncState === 'pending_username' ? (
-                      <span className="inline-flex items-center space-x-1 text-amber-600 dark:text-amber-400 font-sans font-medium text-[11px]">
-                        <span>⏳ Pending Username</span>
-                      </span>
-                    ) : syncState === 'invalid_profile' ? (
-                      <span className="inline-flex items-center space-x-1 text-rose-500 font-sans font-medium text-[11px]">
-                        <span>⚠ Invalid Profile</span>
-                      </span>
-                    ) : (
-                      <span className="text-gray-400 font-sans text-xs">—</span>
-                    )}
-                  </td>
-
-                  <td className="py-3 px-3 whitespace-nowrap text-center font-bold text-gray-900 dark:text-white text-sm">
-                    {!isVerified
-                      ? <span className="text-gray-400 dark:text-gray-600 text-xs">{syncState === 'pending' ? '⏳ Pending' : syncState === 'failed' ? '🔴 Failed' : '—'}</span>
-                      : totalSolved
-                    }
-                  </td>
-
-                  <td className="py-3 px-3 whitespace-nowrap text-center bg-brand-50/40 dark:bg-brand-950/20">
-                    <div className="flex flex-col items-center justify-center space-y-1">
-                      <span className="text-[11px] font-extrabold text-gray-700 dark:text-gray-200">
-                        {student.public_contest_result?.contest_name || recentContestName}
-                      </span>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black border ${contestStatusBadge.cls}`}>
-                        {contestStatusBadge.label}
-                      </span>
-                    </div>
-                  </td>
-
-                  <td className="py-3 px-3 whitespace-nowrap text-center font-mono font-bold text-amber-500">
-                    {contestRating}
-                  </td>
-
-                  <td className="py-3 px-3 whitespace-nowrap text-center font-mono font-bold text-indigo-500">
-                    {contestRank}
-                  </td>
-
-                  <td className="py-3 px-3 whitespace-nowrap text-center font-mono text-gray-500 font-bold">
-                    {profileRank}
-                  </td>
-
-                  <td className="py-3 px-3 text-center whitespace-nowrap">
-                    <div className="flex items-center justify-center space-x-1.5">
-                      <button
+                    <td className="py-3 px-3 whitespace-nowrap">
+                      <p
                         onClick={() => handleOpenProfile(student)}
-                        className="p-1.5 rounded-xl text-gray-600 dark:text-gray-300 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition-colors font-bold text-xs flex items-center gap-1 cursor-pointer"
-                        title="👁 View Full Profile"
+                        className="font-bold text-gray-900 dark:text-white hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer flex items-center gap-1.5"
+                        title="Click to view student profile"
                       >
-                        <Eye className="w-4 h-4 text-brand-500" />
-                        <span className="hidden md:inline">Profile</span>
-                      </button>
+                        <span>{student.name}</span>
+                      </p>
+                    </td>
 
-                      <button
-                        onClick={() => handleOpenEdit(student)}
-                        className="p-1.5 rounded-xl text-gray-600 dark:text-gray-300 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors font-bold text-xs flex items-center gap-1"
-                        title="✏️ Edit Student Profile"
-                      >
-                        <Edit3 className="w-4 h-4 text-amber-500" />
-                        <span className="hidden md:inline">Edit</span>
-                      </button>
+                    <td className="py-3 px-3 whitespace-nowrap text-gray-600 dark:text-gray-300 font-medium">
+                      <span className="font-bold text-gray-900 dark:text-white">{student.department?.code}</span> • {student.year_level}
+                    </td>
 
-                      {onRefreshStudent && (
-                        <button
-                          onClick={() => onRefreshStudent(student.id)}
-                          disabled={isSyncing}
-                          className={`p-1.5 rounded-xl transition-colors ${isSyncing ? 'text-blue-500 animate-spin' : 'text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'}`}
-                          title="Sync LeetCode Profile"
-                          aria-label="Sync LeetCode Profile"
+                    <td className="py-3 px-3 whitespace-nowrap font-mono font-bold text-brand-600 dark:text-brand-400">
+                      {hasCanonicalUrl && verifiedUsername ? (
+                        <a
+                          href={student.leetcode_url!}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:underline flex items-center gap-1 text-brand-600 dark:text-brand-400 font-bold"
+                          title={`Open ${verifiedUsername}'s verified LeetCode profile`}
                         >
-                          <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                        </button>
+                          {verifiedUsername}
+                          <ExternalLink className="w-3 h-3 opacity-70" />
+                        </a>
+                      ) : syncState === 'pending_username' ? (
+                        <span className="inline-flex items-center space-x-1 text-amber-600 dark:text-amber-400 font-sans font-medium text-[11px]">
+                          <span>⏳ Pending Username</span>
+                        </span>
+                      ) : syncState === 'invalid_profile' ? (
+                        <span className="inline-flex items-center space-x-1 text-rose-500 font-sans font-medium text-[11px]">
+                          <span>⚠ Invalid Profile</span>
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 font-sans text-xs">—</span>
                       )}
+                    </td>
 
-                      <button
-                        onClick={() => setDeletingStudent(student)}
-                        className="p-1.5 rounded-xl text-gray-600 dark:text-gray-300 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors font-bold text-xs flex items-center gap-1"
-                        title="🗑 Deactivate Student Roster Entry"
-                      >
-                        <Trash2 className="w-4 h-4 text-rose-500" />
-                        <span className="hidden md:inline">Delete</span>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                    <td className="py-3 px-3 whitespace-nowrap text-center font-bold text-gray-900 dark:text-white text-sm">
+                      {!isVerified
+                        ? <span className="text-gray-400 dark:text-gray-600 text-xs">{syncState === 'pending' ? '⏳ Pending' : syncState === 'failed' ? '🔴 Failed' : '—'}</span>
+                        : totalSolved
+                      }
+                    </td>
 
-              );
-            })
-          )}
-        </tbody>
-      </table>
+                    <td className="py-3 px-3 whitespace-nowrap text-center bg-brand-50/40 dark:bg-brand-950/20">
+                      <div className="flex flex-col items-center justify-center space-y-1">
+                        <span className="text-[11px] font-extrabold text-gray-700 dark:text-gray-200">
+                          {student.public_contest_result?.contest_name || recentContestName}
+                        </span>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black border ${contestStatusBadge.cls}`}>
+                          {contestStatusBadge.label}
+                        </span>
+                      </div>
+                    </td>
+
+                    <td className="py-3 px-3 whitespace-nowrap text-center font-mono font-bold text-amber-500">
+                      {contestRating}
+                    </td>
+
+                    <td className="py-3 px-3 whitespace-nowrap text-center font-mono font-bold text-indigo-500">
+                      {contestRank}
+                    </td>
+
+                    <td className="py-3 px-3 whitespace-nowrap text-center font-mono text-gray-500 font-bold">
+                      {profileRank}
+                    </td>
+
+                    <td className="py-3 px-3 text-center whitespace-nowrap">
+                      <div className="flex items-center justify-center space-x-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenProfile(student)}
+                          className="p-1.5 rounded-xl text-gray-600 dark:text-gray-300 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition-colors font-bold text-xs flex items-center gap-1 cursor-pointer"
+                          title="👁 View Full Profile"
+                        >
+                          <Eye className="w-4 h-4 text-brand-500" />
+                          <span className="hidden md:inline">Profile</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEdit(student)}
+                          className="p-1.5 rounded-xl text-gray-600 dark:text-gray-300 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors font-bold text-xs flex items-center gap-1"
+                          title="✏️ Edit Student Profile"
+                        >
+                          <Edit3 className="w-4 h-4 text-amber-500" />
+                          <span className="hidden md:inline">Edit</span>
+                        </button>
+
+                        {onRefreshStudent && (
+                          <button
+                            type="button"
+                            onClick={() => onRefreshStudent(student.id)}
+                            disabled={isSyncing}
+                            className={`p-1.5 rounded-xl transition-colors ${isSyncing ? 'text-blue-500 animate-spin' : 'text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'}`}
+                            title="Sync LeetCode Profile"
+                            aria-label="Sync LeetCode Profile"
+                          >
+                            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => setDeletingStudent(student)}
+                          className="p-1.5 rounded-xl text-gray-600 dark:text-gray-300 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors font-bold text-xs flex items-center gap-1"
+                          title="🗑 Deactivate Student Roster Entry"
+                        >
+                          <Trash2 className="w-4 h-4 text-rose-500" />
+                          <span className="hidden md:inline">Delete</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+
+                );
+              })
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Viewport-Centered Student Edit Modal */}

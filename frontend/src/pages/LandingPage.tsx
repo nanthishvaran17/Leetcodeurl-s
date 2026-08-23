@@ -456,21 +456,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             initial={{ opacity: 0, x: -15 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1, duration: 0.4 }}
-            className="inline-flex items-center space-x-2.5 px-4 py-2 rounded-2xl bg-white/10 border border-white/20 text-white text-xs font-bold backdrop-blur-md shadow-lg"
+            className="inline-flex items-center space-x-2.5 px-3.5 py-1.5 rounded-2xl bg-white/10 border border-white/20 text-white text-xs font-bold backdrop-blur-md shadow-lg"
           >
-            <CollegeLogo size={28} className="w-7 h-7 animate-float" />
-            <span>NANDHA ENGINEERING COLLEGE (AUTONOMOUS) • Official Weekly Tracker & Analytics</span>
+            <CollegeLogo size={24} className="w-6 h-6 animate-float" />
+            <span>NANDHA ENGINEERING COLLEGE (AUTONOMOUS) • ERODE</span>
           </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
-            className="text-4xl md:text-5xl font-black tracking-tight leading-tight"
+            className="text-3xl md:text-5xl font-black tracking-tight leading-tight"
           >
-            College LeetCode <br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-blue-300 to-indigo-300">
-              Weekly Tracker & Leaderboard
+            Nandha LeetCode <br />
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300">
+              Institutional Intelligence Platform
             </span>
           </motion.h1>
 
@@ -478,9 +478,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
-            className="text-sm md:text-base text-gray-100 font-medium max-w-2xl leading-relaxed drop-shadow"
+            className="text-xs md:text-sm text-slate-200 font-medium max-w-2xl leading-relaxed drop-shadow"
           >
-            Real-time automated performance monitoring across all institutional departments (CSE, Cyber Security, IoT, IT, AIDS, ECE, EEE, AGRI, MECH, CIVIL, BME). Sunday session tracking, multi-level rankings, official Excel matrix reporting, and automated email dispatch.
+            Track • Verify • Analyze • Report • Recognize. Institutional competitive programming intelligence across 1500+ students in Cyber Security, IoT, and Engineering Departments with verified Sunday contest forensics and automated reporting.
           </motion.p>
 
 

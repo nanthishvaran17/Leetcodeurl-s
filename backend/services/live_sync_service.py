@@ -993,17 +993,28 @@ def get_system_freshness(db: Session) -> Dict[str, Any]:
     stale_count = 0
     latest_sync: Optional[datetime.datetime] = None
 
-    now = datetime.datetime.utcnow()
+    # Always work in UTC-aware datetimes to avoid offset-naive/aware TypeError
+    now = datetime.datetime.now(datetime.timezone.utc)
     freshness_seconds = settings.SYNC_FRESHNESS_HOURS * 3600
+
+    def _to_utc(dt: Optional[datetime.datetime]) -> Optional[datetime.datetime]:
+        """Normalise any datetime to UTC-aware; return None if input is None."""
+        if dt is None:
+            return None
+        if dt.tzinfo is None:
+            # Treat naive datetimes stored in DB as UTC
+            return dt.replace(tzinfo=datetime.timezone.utc)
+        return dt.astimezone(datetime.timezone.utc)
 
     for s in students:
         st = s.stats
         if st and st.sync_status in ("success", "verified") and st.total_solved is not None:
             verified_count += 1
-            if st.last_successful_sync and (latest_sync is None or st.last_successful_sync > latest_sync):
-                latest_sync = st.last_successful_sync
+            sync_ts = _to_utc(st.last_successful_sync)
+            if sync_ts and (latest_sync is None or sync_ts > latest_sync):
+                latest_sync = sync_ts
             # Check if sync is older than configurable threshold
-            if st.last_successful_sync and (now - st.last_successful_sync).total_seconds() > freshness_seconds:
+            if sync_ts and (now - sync_ts).total_seconds() > freshness_seconds:
                 stale_count += 1
         elif st and st.total_solved is not None:
             partial_count += 1

@@ -85,15 +85,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
       {/* ── Header ── */}
       <div className="px-3 py-2 border-b border-slate-100 dark:border-navy-800/80 flex items-center justify-between shrink-0 mb-3 relative z-10">
         <div className="flex items-center space-x-2.5">
-          <div className="p-1.5 rounded-xl bg-gradient-to-tr from-brand-500/20 to-indigo-500/20 text-brand-600 dark:text-brand-400 border border-brand-500/30 shadow-sm">
-            <Compass className="w-4 h-4 animate-[spin_12s_linear_infinite]" />
+          <div className="p-1.5 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shadow-sm">
+            <Compass className="w-4 h-4 animate-[spin_16s_linear_infinite]" />
           </div>
           <div className="flex flex-col">
             <span className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-wider">
-              Main Navigation
+              Nandha Intelligence
             </span>
-            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">
-              Institutional Hub
+            <span className="text-[9.5px] font-bold text-slate-400 dark:text-slate-500">
+              Institutional Platform
             </span>
           </div>
         </div>
@@ -126,13 +126,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
                     onClick={() => setActiveTab(item.id)}
                     className={`relative w-full flex items-center justify-between px-3 py-2.5 rounded-2xl font-bold text-xs text-left cursor-pointer select-none transition-all duration-200 group transform active:scale-[0.98] ${
                       isActive
-                        ? 'bg-gradient-to-r from-brand-600 via-indigo-600 to-indigo-700 text-white font-extrabold shadow-lg shadow-brand-500/30 border border-brand-400/40 translate-x-1'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100/90 dark:hover:bg-navy-900/90 hover:text-brand-600 dark:hover:text-brand-300 hover:translate-x-1'
+                        ? 'bg-brand-600 text-white font-extrabold shadow-lg shadow-brand-500/30 border border-brand-400/40 translate-x-1'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100/90 dark:hover:bg-navy-900/90 hover:text-brand-600 dark:hover:text-brand-400 hover:translate-x-1'
                     }`}
                   >
                     {/* Active Left Indicator Notch */}
                     {isActive && (
-                      <span className="absolute -left-1 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-amber-400 rounded-r-full shadow-[0_0_10px_#fbbf24] z-20" />
+                      <span className="absolute -left-1 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-white rounded-r-full shadow-sm z-20" />
                     )}
 
                     {/* Left Icon + Label */}
@@ -190,18 +190,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
         ))}
       </div>
 
-      {/* ── Bottom Session Info Card ── */}
+      {/* ── Bottom Institution Footer Card ── */}
       <div className="pt-3 mt-2 border-t border-slate-100 dark:border-navy-800 shrink-0 relative z-10">
-        <div className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-900 via-navy-950 to-indigo-950 text-white border border-brand-500/30 shadow-xl text-xs space-y-2 relative overflow-hidden group cursor-default transform hover:scale-[1.01] transition-transform duration-200">
-          <div className="absolute top-0 right-0 -mt-6 -mr-6 w-20 h-20 bg-brand-500/20 rounded-full blur-xl pointer-events-none group-hover:bg-brand-500/30 transition-all" />
-          <div className="flex items-center space-x-2 text-amber-400 font-extrabold relative z-10">
-            <Calendar className="w-4 h-4 text-amber-400 shrink-0 animate-pulse" />
+        <div className="p-3.5 rounded-2xl bg-slate-900 dark:bg-navy-950 text-white border border-emerald-500/20 shadow-lg text-xs space-y-2 relative overflow-hidden group cursor-default">
+          <div className="absolute top-0 right-0 -mt-4 -mr-4 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
+          <div className="flex items-center space-x-2 relative z-10">
+            <Calendar className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
             <span className="text-white text-xs font-extrabold truncate">Sunday Session Window</span>
           </div>
-          <p className="text-[10.5px] text-slate-300 leading-relaxed font-medium relative z-10">
+          <p className="text-[10.5px] text-slate-400 leading-relaxed font-medium relative z-10">
             Official Window: <b className="text-emerald-400 font-black">08:00 AM – 09:30 AM IST</b>.<br />
             Continuous LeetCode tracking & live sync.
           </p>
+          <div className="pt-1 border-t border-slate-800 relative z-10">
+            <p className="text-[9.5px] text-slate-500 font-semibold">
+              Nandha Engineering College • Erode
+            </p>
+          </div>
         </div>
       </div>
 

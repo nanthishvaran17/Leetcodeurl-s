@@ -64,13 +64,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const [syncStarting, setSyncStarting] = useState(false);
   const [generatingReport, setGeneratingReport] = useState(false);
 
-  // Live WebSocket connection status
-  const { isConnected } = useLiveLeaderboard(() => {
-    fetchDashboardData();
+  // Live WebSocket connection status — only refetch on real sync/leaderboard updates
+  const { isConnected } = useLiveLeaderboard((data) => {
+    if (data?.type === 'leaderboard_update' || data?.type === 'sync_complete') {
+      fetchDashboardData(true);
+    }
   });
 
-  const fetchDashboardData = async () => {
-    setLoading(true);
+  const fetchDashboardData = async (isBackground = false) => {
+    if (!isBackground) setLoading(true);
 
     try {
       const [sumRes, deptRes, qualRes, studRes, healthRes, syncRes] = await Promise.allSettled([
@@ -100,15 +102,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       if (syncRes.status === 'fulfilled' && syncRes.value.data) {
         setSyncStatus(syncRes.value.data);
       }
-      setLoading(false);
     } catch (err) {
       console.warn("REST API request delayed or offline", err);
-      setLoading(false);
+    } finally {
+      if (!isBackground) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchDashboardData(false);
   }, []);
 
   // Calculate dynamic relative time every 10 seconds without page refresh
@@ -286,22 +288,23 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       </div>
 
       {/* 2. MAIN EXECUTIVE BANNER */}
-      <div className="stagger-2 relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-2xl border border-brand-500/30 card-ai-control">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="stagger-2 relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-navy-900 to-slate-900 text-white p-6 sm:p-8 shadow-2xl border border-emerald-500/20">
+        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-80 h-80 bg-emerald-500/8 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-48 h-48 bg-teal-500/8 rounded-full blur-2xl pointer-events-none"></div>
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
           <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
-              <Building2 className="w-3.5 h-3.5 text-amber-400" />
-              <span>NANDHA ENGINEERING COLLEGE • DATA OPERATIONS CENTER</span>
+            <div className="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/25 text-emerald-300 text-xs font-bold tracking-wider">
+              <Building2 className="w-3 h-3 text-emerald-400" />
+              <span>NANDHA ENGINEERING COLLEGE • ERODE</span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">
-              LeetCode <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Data Operations Center</span>
+              Institutional <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300">Performance Overview</span>
             </h1>
 
-            <p className="text-xs md:text-sm text-gray-300 font-bold tracking-wide">
-              24/7 background sync engine, database health monitoring & continuous student performance analytics
+            <p className="text-xs md:text-sm text-slate-300 font-medium leading-relaxed">
+              1500+ students across all departments — live sync, contest verification, leaderboard analytics, and automated reporting
             </p>
           </div>
 
@@ -565,6 +568,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
           <div className="flex items-center space-x-3">
             <button
+              type="button"
               onClick={handleTriggerStart}
               disabled={triggering}
               className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs flex items-center space-x-1.5 shadow-md shadow-indigo-600/30 disabled:opacity-50 transition-all cursor-pointer"
@@ -574,6 +578,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             </button>
 
             <button
+              type="button"
               onClick={handleTriggerEnd}
               disabled={triggering}
               className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs flex items-center space-x-1.5 shadow-md shadow-emerald-600/30 disabled:opacity-50 transition-all cursor-pointer"

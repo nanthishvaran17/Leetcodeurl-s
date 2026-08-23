@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  Swords, Trophy, Flame, Star, Award, Zap, ChevronRight, User, CheckCircle2,
+  Swords, Trophy, Flame, Star, Award, Zap, ChevronRight, ChevronDown, Check, User, CheckCircle2,
   Search, Filter, RefreshCw, Building2, Users, BarChart3, TrendingUp, Sparkles,
   ArrowRightLeft, GraduationCap, School, Layers
 } from 'lucide-react';
@@ -14,6 +14,14 @@ export const ComparePage: React.FC = () => {
 
   // Group Comparison Sub-Dimension: DEPT | DEPT_YEAR | YEAR | SECTION
   const [groupDimension, setGroupDimension] = useState<'DEPT' | 'DEPT_YEAR' | 'YEAR' | 'SECTION'>('DEPT_YEAR');
+
+  // Custom Dropdown Open States
+  const [deptOpen, setDeptOpen] = useState<boolean>(false);
+  const [yearOpen, setYearOpen] = useState<boolean>(false);
+  const [fighterAOpen, setFighterAOpen] = useState<boolean>(false);
+  const [fighterBOpen, setFighterBOpen] = useState<boolean>(false);
+  const [groupAOpen, setGroupAOpen] = useState<boolean>(false);
+  const [groupBOpen, setGroupBOpen] = useState<boolean>(false);
 
   // Filters for Student Comparison
   const [departments, setDepartments] = useState<any[]>([]);
@@ -348,8 +356,8 @@ export const ComparePage: React.FC = () => {
       {/* Mode 1: STUDENT VS STUDENT */}
       {compareMode === 'STUDENT' && (
         <div className="space-y-6">
-                {/* Filter Controls Bar */}
-          <div className="glass-card p-6 rounded-3xl border space-y-4 shadow-xl">
+          {/* Filter Controls Bar */}
+          <div className={`glass-card p-6 rounded-3xl border space-y-4 shadow-xl relative ${deptOpen || yearOpen ? 'z-50' : 'z-10'}`}>
             <div className="flex items-center justify-between flex-wrap gap-3 border-b border-gray-200 dark:border-gray-800 pb-3">
               <h3 className="font-extrabold text-sm text-gray-900 dark:text-white flex items-center space-x-2">
                 <Filter className="w-4 h-4 text-brand-500" />
@@ -359,40 +367,118 @@ export const ComparePage: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               
-              {/* Department Filter */}
+              {/* Department Filter — Premium Custom Dropdown */}
               <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Select Department</label>
-                <select
-                  value={selectedDept}
-                  onChange={(e) => setSelectedDept(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-900 text-gray-900 dark:text-white border-gray-200 dark:border-gray-800 focus:ring-2 focus:ring-brand-500 outline-none"
-                >
-                  <option value="ALL">All Departments</option>
-                  {departments.map((d) => (
-                    <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
-                  ))}
-                </select>
+                <div className={`relative ${deptOpen ? 'z-30' : 'z-10'}`}>
+                  <button
+                    type="button"
+                    onClick={() => { setDeptOpen(p => !p); setYearOpen(false); setFighterAOpen(false); setFighterBOpen(false); }}
+                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${
+                      deptOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-gray-200 dark:border-gray-800 hover:border-brand-300'
+                    }`}
+                  >
+                    <Building2 className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+                    {selectedDept === 'ALL' ? (
+                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300">ALL</span>
+                    ) : (
+                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-indigo-600 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300">
+                        {departments.find(d => String(d.id) === selectedDept)?.code || 'DEPT'}
+                      </span>
+                    )}
+                    <span className="text-xs font-bold text-gray-900 dark:text-white truncate flex-1">
+                      {selectedDept === 'ALL' ? 'All Departments' : departments.find(d => String(d.id) === selectedDept)?.name || selectedDept}
+                    </span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${deptOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {deptOpen && (
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl max-h-64 overflow-y-auto">
+                      <button
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => { setSelectedDept('ALL'); setDeptOpen(false); }}
+                        className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${
+                          selectedDept === 'ALL' ? 'bg-brand-50 dark:bg-brand-950/60' : 'hover:bg-gray-50 dark:hover:bg-navy-800'
+                        }`}
+                      >
+                        <Building2 className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                        <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300">ALL</span>
+                        <span className={`text-xs truncate flex-1 ${selectedDept === 'ALL' ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-gray-700 dark:text-gray-300'}`}>All Departments</span>
+                        {selectedDept === 'ALL' && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
+                      </button>
+                      {departments.map((d) => (
+                        <button
+                          key={d.id}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => { setSelectedDept(String(d.id)); setDeptOpen(false); }}
+                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${
+                            selectedDept === String(d.id) ? 'bg-brand-50 dark:bg-brand-950/60' : 'hover:bg-gray-50 dark:hover:bg-navy-800'
+                          }`}
+                        >
+                          <Building2 className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-indigo-600 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300">{d.code}</span>
+                          <span className={`text-xs truncate flex-1 ${selectedDept === String(d.id) ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-gray-700 dark:text-gray-300'}`}>{d.name}</span>
+                          {selectedDept === String(d.id) && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Year Filter */}
+              {/* Year Filter — Premium Custom Dropdown */}
               <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Select Academic Year Level</label>
-                <select
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-900 text-gray-900 dark:text-white border-gray-200 dark:border-gray-800 focus:ring-2 focus:ring-brand-500 outline-none"
-                >
-                  <option value="ALL">All Academic Years</option>
-                  <option value="II">II Year (Batch 2025 - 2029)</option>
-                  <option value="III">III Year (Batch 2024 - 2028)</option>
-                  <option value="IV">IV Year (Batch 2023 - 2027)</option>
-                </select>
+                <div className={`relative ${yearOpen ? 'z-30' : 'z-10'}`}>
+                  <button
+                    type="button"
+                    onClick={() => { setYearOpen(p => !p); setDeptOpen(false); setFighterAOpen(false); setFighterBOpen(false); }}
+                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${
+                      yearOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-gray-200 dark:border-gray-800 hover:border-brand-300'
+                    }`}
+                  >
+                    <GraduationCap className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300">
+                      {selectedYear}
+                    </span>
+                    <span className="text-xs font-bold text-gray-900 dark:text-white truncate flex-1">
+                      {selectedYear === 'ALL' ? 'All Academic Years' : selectedYear === 'II' ? 'II Year (Batch 2025 - 2029)' : selectedYear === 'III' ? 'III Year (Batch 2024 - 2028)' : 'IV Year (Batch 2023 - 2027)'}
+                    </span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${yearOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {yearOpen && (
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl max-h-64 overflow-y-auto">
+                      {[
+                        { value: 'ALL', code: 'ALL', label: 'All Academic Years' },
+                        { value: 'II',  code: 'II',  label: 'II Year (Batch 2025 - 2029)' },
+                        { value: 'III', code: 'III', label: 'III Year (Batch 2024 - 2028)' },
+                        { value: 'IV',  code: 'IV',  label: 'IV Year (Batch 2023 - 2027)' },
+                      ].map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => { setSelectedYear(opt.value); setYearOpen(false); }}
+                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${
+                            selectedYear === opt.value ? 'bg-brand-50 dark:bg-brand-950/60' : 'hover:bg-gray-50 dark:hover:bg-navy-800'
+                          }`}
+                        >
+                          <GraduationCap className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300">{opt.code}</span>
+                          <span className={`text-xs truncate flex-1 ${selectedYear === opt.value ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-gray-700 dark:text-gray-300'}`}>{opt.label}</span>
+                          {selectedYear === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
           {/* Student Selectors (With Search Box for Fighter A & Fighter B) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 relative ${fighterAOpen || fighterBOpen ? 'z-40' : 'z-10'}`}>
             
             {/* Select Student A */}
             <div className="glass-card p-5 rounded-3xl border border-brand-500/30 space-y-3 bg-brand-50/20 dark:bg-brand-950/20 shadow-md">
@@ -413,21 +499,75 @@ export const ComparePage: React.FC = () => {
                 />
               </div>
 
-              <select
-                value={studentAId || ''}
-                onChange={(e) => handleSelectA(Number(e.target.value))}
-                className="w-full px-4 py-3 rounded-2xl border text-xs font-extrabold bg-white dark:bg-navy-900 text-gray-900 dark:text-white border-brand-400/40 shadow-sm outline-none"
-              >
-                {filteredStudentsA.length === 0 ? (
-                  <option value="">No matching student found</option>
-                ) : (
-                  filteredStudentsA.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      #{s.college_rank || '—'} • {s.name} ({s.reg_no}) — {s.stats?.total_solved || 0} Solved [{s.department?.code}]
-                    </option>
-                  ))
+              {/* Custom Dropdown Fighter A */}
+              <div className={`relative ${fighterAOpen ? 'z-30' : 'z-10'}`}>
+                <button
+                  type="button"
+                  onClick={() => { setFighterAOpen(p => !p); setFighterBOpen(false); setDeptOpen(false); setYearOpen(false); }}
+                  className={`w-full flex items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-white dark:bg-navy-900 border text-left transition-all focus:outline-none shadow-sm ${
+                    fighterAOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-brand-400/40 hover:border-brand-400'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <User className="w-4 h-4 text-brand-500 shrink-0" />
+                    {studentA ? (
+                      <div className="flex items-center gap-2 truncate">
+                        <span className="px-2 py-0.5 rounded-md bg-brand-500/10 text-brand-600 dark:text-brand-300 font-mono font-black text-[10px]">
+                          #{studentA.college_rank || '—'}
+                        </span>
+                        <span className="text-xs font-black text-gray-900 dark:text-white truncate">{studentA.name}</span>
+                        <span className="text-[11px] text-gray-400 font-mono">({studentA.reg_no})</span>
+                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                          {studentA.stats?.total_solved || 0} Solved
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xs font-extrabold text-gray-400">Select Fighter A</span>
+                    )}
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform shrink-0 ${fighterAOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {fighterAOpen && (
+                  <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-brand-200 dark:border-navy-700 rounded-2xl shadow-2xl max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
+                    {filteredStudentsA.length === 0 ? (
+                      <div className="p-4 text-center text-xs font-bold text-gray-400">No matching student found</div>
+                    ) : (
+                      filteredStudentsA.map((s) => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => { handleSelectA(s.id); setFighterAOpen(false); }}
+                          className={`w-full flex items-center justify-between gap-2 px-4 py-3 text-left transition-colors ${
+                            studentAId === s.id ? 'bg-brand-50/70 dark:bg-brand-950/60' : 'hover:bg-gray-50 dark:hover:bg-navy-800'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            <span className="px-2 py-0.5 rounded-md bg-brand-500/10 text-brand-600 dark:text-brand-300 font-mono font-black text-[10px] shrink-0">
+                              #{s.college_rank || '—'}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className={`text-xs truncate ${studentAId === s.id ? 'font-black text-brand-700 dark:text-brand-300' : 'font-bold text-gray-900 dark:text-white'}`}>
+                                {s.name}
+                              </p>
+                              <p className="text-[10px] text-gray-400 font-mono truncate">
+                                {s.reg_no} • {s.department?.code || 'DEPT'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-[10px] font-black px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                              {s.stats?.total_solved || 0} Solved
+                            </span>
+                            {studentAId === s.id && <Check className="w-4 h-4 text-brand-500 shrink-0" />}
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
                 )}
-              </select>
+              </div>
 
               {/* Quick Select Preset Buttons */}
               <div className="flex items-center space-x-2 pt-1">
@@ -462,21 +602,75 @@ export const ComparePage: React.FC = () => {
                 />
               </div>
 
-              <select
-                value={studentBId || ''}
-                onChange={(e) => handleSelectB(Number(e.target.value))}
-                className="w-full px-4 py-3 rounded-2xl border text-xs font-extrabold bg-white dark:bg-navy-900 text-gray-900 dark:text-white border-indigo-400/40 shadow-sm outline-none"
-              >
-                {filteredStudentsB.length === 0 ? (
-                  <option value="">No matching student found</option>
-                ) : (
-                  filteredStudentsB.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      #{s.college_rank || '—'} • {s.name} ({s.reg_no}) — {s.stats?.total_solved || 0} Solved [{s.department?.code}]
-                    </option>
-                  ))
+              {/* Custom Dropdown Fighter B */}
+              <div className={`relative ${fighterBOpen ? 'z-30' : 'z-10'}`}>
+                <button
+                  type="button"
+                  onClick={() => { setFighterBOpen(p => !p); setFighterAOpen(false); setDeptOpen(false); setYearOpen(false); }}
+                  className={`w-full flex items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-white dark:bg-navy-900 border text-left transition-all focus:outline-none shadow-sm ${
+                    fighterBOpen ? 'border-indigo-400 ring-2 ring-indigo-400/20' : 'border-indigo-400/40 hover:border-indigo-400'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <User className="w-4 h-4 text-indigo-500 shrink-0" />
+                    {studentB ? (
+                      <div className="flex items-center gap-2 truncate">
+                        <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 font-mono font-black text-[10px]">
+                          #{studentB.college_rank || '—'}
+                        </span>
+                        <span className="text-xs font-black text-gray-900 dark:text-white truncate">{studentB.name}</span>
+                        <span className="text-[11px] text-gray-400 font-mono">({studentB.reg_no})</span>
+                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                          {studentB.stats?.total_solved || 0} Solved
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xs font-extrabold text-gray-400">Select Fighter B</span>
+                    )}
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform shrink-0 ${fighterBOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {fighterBOpen && (
+                  <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-indigo-200 dark:border-navy-700 rounded-2xl shadow-2xl max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
+                    {filteredStudentsB.length === 0 ? (
+                      <div className="p-4 text-center text-xs font-bold text-gray-400">No matching student found</div>
+                    ) : (
+                      filteredStudentsB.map((s) => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => { handleSelectB(s.id); setFighterBOpen(false); }}
+                          className={`w-full flex items-center justify-between gap-2 px-4 py-3 text-left transition-colors ${
+                            studentBId === s.id ? 'bg-indigo-50/70 dark:bg-indigo-950/60' : 'hover:bg-gray-50 dark:hover:bg-navy-800'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 font-mono font-black text-[10px] shrink-0">
+                              #{s.college_rank || '—'}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className={`text-xs truncate ${studentBId === s.id ? 'font-black text-indigo-700 dark:text-indigo-300' : 'font-bold text-gray-900 dark:text-white'}`}>
+                                {s.name}
+                              </p>
+                              <p className="text-[10px] text-gray-400 font-mono truncate">
+                                {s.reg_no} • {s.department?.code || 'DEPT'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-[10px] font-black px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                              {s.stats?.total_solved || 0} Solved
+                            </span>
+                            {studentBId === s.id && <Check className="w-4 h-4 text-indigo-500 shrink-0" />}
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
                 )}
-              </select>
+              </div>
 
               {/* Quick Select Preset Buttons */}
               <div className="flex items-center space-x-2 pt-1">
@@ -738,7 +932,7 @@ export const ComparePage: React.FC = () => {
         <div className="space-y-8">
 
           {/* Group Dimension & Selector Bar */}
-          <div className="glass-card p-6 rounded-3xl border space-y-6 shadow-xl">
+          <div className={`glass-card p-6 rounded-3xl border space-y-6 shadow-xl relative ${groupAOpen || groupBOpen ? 'z-50' : 'z-10'}`}>
             
             {/* Dimension Sub-Tabs (Department & Year Combo vs Department vs Year Level vs Section) */}
             <div className="flex items-center justify-between flex-wrap gap-3 border-b border-gray-200 dark:border-gray-800 pb-4">
@@ -806,20 +1000,49 @@ export const ComparePage: React.FC = () => {
             {/* Select Group A vs Group B Dropdowns */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               
-              {/* Group A Selector */}
+              {/* Group A Selector — Premium Custom Dropdown */}
               <div className="space-y-2">
                 <label className="block text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider">
                   Select {groupDimension === 'DEPT_YEAR' ? 'Dept & Year Batch' : groupDimension === 'DEPT' ? 'Department' : groupDimension === 'YEAR' ? 'Academic Year' : 'Section'} A
                 </label>
-                <select
-                  value={groupAKey}
-                  onChange={(e) => setGroupAKey(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border text-xs font-extrabold bg-white dark:bg-navy-900 text-gray-900 dark:text-white border-brand-400/40 shadow-sm focus:ring-2 focus:ring-brand-500 outline-none"
-                >
-                  {groupOptions.map((g) => (
-                    <option key={g.key} value={g.key}>{g.label}</option>
-                  ))}
-                </select>
+                <div className={`relative ${groupAOpen ? 'z-30' : 'z-10'}`}>
+                  <button
+                    type="button"
+                    onClick={() => { setGroupAOpen(p => !p); setGroupBOpen(false); setFighterAOpen(false); setFighterBOpen(false); }}
+                    className={`w-full flex items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-white dark:bg-navy-900 border text-left transition-all focus:outline-none shadow-sm ${
+                      groupAOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-brand-400/40 hover:border-brand-400'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <Building2 className="w-4 h-4 text-brand-500 shrink-0" />
+                      <span className="text-xs font-black text-gray-900 dark:text-white truncate">
+                        {groupOptions.find(g => g.key === groupAKey)?.label || groupAKey || 'Select Group A'}
+                      </span>
+                    </div>
+                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform shrink-0 ${groupAOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {groupAOpen && (
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-brand-200 dark:border-navy-700 rounded-2xl shadow-2xl max-h-64 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
+                      {groupOptions.map((g) => (
+                        <button
+                          key={g.key}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => { setGroupAKey(g.key); setGroupAOpen(false); }}
+                          className={`w-full flex items-center justify-between gap-2 px-4 py-3 text-left transition-colors ${
+                            groupAKey === g.key ? 'bg-brand-50/70 dark:bg-brand-950/60' : 'hover:bg-gray-50 dark:hover:bg-navy-800'
+                          }`}
+                        >
+                          <span className={`text-xs truncate ${groupAKey === g.key ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-gray-700 dark:text-gray-300'}`}>
+                            {g.label}
+                          </span>
+                          {groupAKey === g.key && <Check className="w-4 h-4 text-brand-500 shrink-0" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
                 {groupDimension === 'DEPT_YEAR' && (
                   <div className="flex items-center space-x-2 pt-1">
@@ -829,7 +1052,7 @@ export const ComparePage: React.FC = () => {
                         const opt = groupOptions.find(g => g.key.endsWith('II') && g.key.startsWith('1'));
                         if (opt) setGroupAKey(opt.key);
                       }}
-                      className="px-2 py-0.5 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-300 text-[10px] font-bold"
+                      className="px-2 py-0.5 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-300 text-[10px] font-bold hover:bg-brand-500 hover:text-white transition-all cursor-pointer"
                     >
                       2nd Year CSE(CS)
                     </button>
@@ -837,20 +1060,49 @@ export const ComparePage: React.FC = () => {
                 )}
               </div>
 
-              {/* Group B Selector */}
+              {/* Group B Selector — Premium Custom Dropdown */}
               <div className="space-y-2">
                 <label className="block text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
                   Select {groupDimension === 'DEPT_YEAR' ? 'Dept & Year Batch' : groupDimension === 'DEPT' ? 'Department' : groupDimension === 'YEAR' ? 'Academic Year' : 'Section'} B
                 </label>
-                <select
-                  value={groupBKey}
-                  onChange={(e) => setGroupBKey(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border text-xs font-extrabold bg-white dark:bg-navy-900 text-gray-900 dark:text-white border-indigo-400/40 shadow-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                >
-                  {groupOptions.map((g) => (
-                    <option key={g.key} value={g.key}>{g.label}</option>
-                  ))}
-                </select>
+                <div className={`relative ${groupBOpen ? 'z-30' : 'z-10'}`}>
+                  <button
+                    type="button"
+                    onClick={() => { setGroupBOpen(p => !p); setGroupAOpen(false); setFighterAOpen(false); setFighterBOpen(false); }}
+                    className={`w-full flex items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-white dark:bg-navy-900 border text-left transition-all focus:outline-none shadow-sm ${
+                      groupBOpen ? 'border-indigo-400 ring-2 ring-indigo-400/20' : 'border-indigo-400/40 hover:border-indigo-400'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <Building2 className="w-4 h-4 text-indigo-500 shrink-0" />
+                      <span className="text-xs font-black text-gray-900 dark:text-white truncate">
+                        {groupOptions.find(g => g.key === groupBKey)?.label || groupBKey || 'Select Group B'}
+                      </span>
+                    </div>
+                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform shrink-0 ${groupBOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {groupBOpen && (
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-indigo-200 dark:border-navy-700 rounded-2xl shadow-2xl max-h-64 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
+                      {groupOptions.map((g) => (
+                        <button
+                          key={g.key}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => { setGroupBKey(g.key); setGroupBOpen(false); }}
+                          className={`w-full flex items-center justify-between gap-2 px-4 py-3 text-left transition-colors ${
+                            groupBKey === g.key ? 'bg-indigo-50/70 dark:bg-indigo-950/60' : 'hover:bg-gray-50 dark:hover:bg-navy-800'
+                          }`}
+                        >
+                          <span className={`text-xs truncate ${groupBKey === g.key ? 'font-black text-indigo-700 dark:text-indigo-300' : 'font-semibold text-gray-700 dark:text-gray-300'}`}>
+                            {g.label}
+                          </span>
+                          {groupBKey === g.key && <Check className="w-4 h-4 text-indigo-500 shrink-0" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
                 {groupDimension === 'DEPT_YEAR' && (
                   <div className="flex items-center space-x-2 pt-1">
@@ -860,7 +1112,7 @@ export const ComparePage: React.FC = () => {
                         const opt = groupOptions.find(g => g.key.endsWith('II') && g.key.startsWith('2'));
                         if (opt) setGroupBKey(opt.key);
                       }}
-                      className="px-2 py-0.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 text-[10px] font-bold"
+                      className="px-2 py-0.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 text-[10px] font-bold hover:bg-indigo-500 hover:text-white transition-all cursor-pointer"
                     >
                       2nd Year CSE(IOT)
                     </button>

@@ -143,11 +143,28 @@ export const App: React.FC = () => {
       return;
     }
     setActiveTab(tab);
+    // Robust scroll-to-top: covers window, html, and any scrollable main container
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    // Also fire after React re-render / framer-motion animation starts
+    requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    });
   };
 
   const handleSelectStudent = (student: StudentData) => {
     setSelectedStudent(student);
     setActiveTab('profile');
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+    });
   };
 
   // Determine main dashboard component based on role
@@ -330,7 +347,7 @@ export const App: React.FC = () => {
       {/* Login Modal */}
       {showLoginModal && (
         <div
-          className="modal-overlay-responsive animate-modal-backdrop"
+          className="modal-overlay-responsive modal-overlay-top animate-modal-backdrop"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowLoginModal(false);

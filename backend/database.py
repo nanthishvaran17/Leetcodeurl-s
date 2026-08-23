@@ -36,9 +36,9 @@ from sqlalchemy.pool import NullPool, QueuePool
 engine_kwargs = {}
 if "postgresql" in db_url or "postgres" in db_url:
     engine_kwargs.update({
-        "pool_size": 50,
-        "max_overflow": 50,
-        "pool_timeout": 60,
+        "pool_size": 25,
+        "max_overflow": 15,
+        "pool_timeout": 30,
         "pool_pre_ping": True,
         "pool_recycle": 300,
         "connect_args": {
@@ -442,13 +442,14 @@ def run_migrations():
             except Exception as _e_fsa:
                 pass
 
-            # Performance Indexes Creation
+            # Performance Indexes Creation (Universal for both SQLite and PostgreSQL)
             indexes = [
                 ("idx_students_dept_year", "CREATE INDEX IF NOT EXISTS idx_students_dept_year ON students(department_id, year_level)"),
                 ("idx_students_is_active", "CREATE INDEX IF NOT EXISTS idx_students_is_active ON students(is_active)"),
                 ("idx_students_name", "CREATE INDEX IF NOT EXISTS idx_students_name ON students(name)"),
                 ("idx_students_reg_no", "CREATE INDEX IF NOT EXISTS idx_students_reg_no ON students(reg_no)"),
                 ("idx_students_username", "CREATE INDEX IF NOT EXISTS idx_students_username ON students(username)"),
+                ("idx_students_email", "CREATE INDEX IF NOT EXISTS idx_students_email ON students(email)"),
                 ("idx_faculty_assign_fac_stud", "CREATE INDEX IF NOT EXISTS idx_faculty_assign_fac_stud ON faculty_student_assignments(faculty_id, student_id)"),
                 ("idx_faculty_assign_stud", "CREATE INDEX IF NOT EXISTS idx_faculty_assign_stud ON faculty_student_assignments(student_id)"),
                 ("idx_profile_stats_student_id", "CREATE INDEX IF NOT EXISTS idx_profile_stats_student_id ON leetcode_profile_stats(student_id)"),
@@ -459,9 +460,15 @@ def run_migrations():
                 ("idx_weekly_public_sess_stud", "CREATE INDEX IF NOT EXISTS idx_weekly_public_sess_stud ON weekly_public_results(session_id, student_id)"),
                 ("idx_weekly_public_sess_status", "CREATE INDEX IF NOT EXISTS idx_weekly_public_sess_status ON weekly_public_results(session_id, participation_status)"),
                 ("idx_weekly_public_solved", "CREATE INDEX IF NOT EXISTS idx_weekly_public_solved ON weekly_public_results(total_contest_solved)"),
+                ("idx_weekly_virtual_sess_stud", "CREATE INDEX IF NOT EXISTS idx_weekly_virtual_sess_stud ON weekly_virtual_results(session_id, student_id)"),
                 ("idx_weekly_prog_stud_id", "CREATE INDEX IF NOT EXISTS idx_weekly_prog_stud_id ON weekly_student_progress(student_id)"),
                 ("idx_weekly_prog_college_rank", "CREATE INDEX IF NOT EXISTS idx_weekly_prog_college_rank ON weekly_student_progress(college_rank)"),
-                ("idx_weekly_prog_total_solved", "CREATE INDEX IF NOT EXISTS idx_weekly_prog_total_solved ON weekly_student_progress(total_solved)")
+                ("idx_weekly_prog_total_solved", "CREATE INDEX IF NOT EXISTS idx_weekly_prog_total_solved ON weekly_student_progress(total_solved)"),
+                ("idx_email_otp_email_hash", "CREATE INDEX IF NOT EXISTS idx_email_otp_email_hash ON email_otp_records(email_hash)"),
+                ("idx_email_otp_request_id", "CREATE INDEX IF NOT EXISTS idx_email_otp_request_id ON email_otp_records(request_id)"),
+                ("idx_email_otp_created_at", "CREATE INDEX IF NOT EXISTS idx_email_otp_created_at ON email_otp_records(created_at)"),
+                ("idx_admin_sessions_token_hash", "CREATE INDEX IF NOT EXISTS idx_admin_sessions_token_hash ON admin_sessions(token_hash)"),
+                ("idx_admin_sessions_expires_at", "CREATE INDEX IF NOT EXISTS idx_admin_sessions_expires_at ON admin_sessions(expires_at)")
             ]
             for idx_name, idx_sql in indexes:
                 try:
@@ -472,5 +479,40 @@ def run_migrations():
             print("[DB Migration] Performance indexes verified/created successfully.")
     except Exception as e:
         print(f"[DB Migration] Warning: {e}")
+
+    # Ensure PostgreSQL / Supabase also receives all performance indexes
+    if "sqlite" not in db_url:
+        try:
+            with engine.connect() as pg_conn:
+                pg_indexes = [
+                    "CREATE INDEX IF NOT EXISTS idx_students_dept_year ON students(department_id, year_level)",
+                    "CREATE INDEX IF NOT EXISTS idx_students_is_active ON students(is_active)",
+                    "CREATE INDEX IF NOT EXISTS idx_students_name ON students(name)",
+                    "CREATE INDEX IF NOT EXISTS idx_students_reg_no ON students(reg_no)",
+                    "CREATE INDEX IF NOT EXISTS idx_students_username ON students(username)",
+                    "CREATE INDEX IF NOT EXISTS idx_students_email ON students(email)",
+                    "CREATE INDEX IF NOT EXISTS idx_profile_stats_student_id ON leetcode_profile_stats(student_id)",
+                    "CREATE INDEX IF NOT EXISTS idx_profile_stats_total_solved ON leetcode_profile_stats(total_solved)",
+                    "CREATE INDEX IF NOT EXISTS idx_profile_stats_contest_rating ON leetcode_profile_stats(contest_rating)",
+                    "CREATE INDEX IF NOT EXISTS idx_profile_stats_sync_status ON leetcode_profile_stats(sync_status)",
+                    "CREATE INDEX IF NOT EXISTS idx_weekly_public_sess_stud ON weekly_public_results(session_id, student_id)",
+                    "CREATE INDEX IF NOT EXISTS idx_weekly_public_sess_status ON weekly_public_results(session_id, participation_status)",
+                    "CREATE INDEX IF NOT EXISTS idx_weekly_virtual_sess_stud ON weekly_virtual_results(session_id, student_id)",
+                    "CREATE INDEX IF NOT EXISTS idx_weekly_prog_stud_id ON weekly_student_progress(student_id)",
+                    "CREATE INDEX IF NOT EXISTS idx_email_otp_email_hash ON email_otp_records(email_hash)",
+                    "CREATE INDEX IF NOT EXISTS idx_email_otp_request_id ON email_otp_records(request_id)",
+                    "CREATE INDEX IF NOT EXISTS idx_email_otp_created_at ON email_otp_records(created_at)",
+                    "CREATE INDEX IF NOT EXISTS idx_admin_sessions_token_hash ON admin_sessions(token_hash)",
+                    "CREATE INDEX IF NOT EXISTS idx_admin_sessions_expires_at ON admin_sessions(expires_at)"
+                ]
+                for pgi in pg_indexes:
+                    try:
+                        pg_conn.execute(__import__('sqlalchemy').text(pgi))
+                    except Exception:
+                        pass
+                pg_conn.commit()
+                print("[DB Migration] PostgreSQL / Supabase performance indexes ensured.")
+        except Exception as _pge:
+            print(f"[DB Migration] PostgreSQL index note: {_pge}")
 
 run_migrations()

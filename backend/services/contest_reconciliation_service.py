@@ -988,6 +988,148 @@ class UniversalContestReconciliationEngine:
 
         return result_payload
 
+    @classmethod
+    def classify_student(
+        cls,
+        student: Any,
+        ranking_history: Optional[Dict[str, Any]],
+        recent_subs: Optional[List[Dict[str, Any]]],
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Classifies a single student for test harness and granular verification."""
+        username = getattr(student, "username", "") or ""
+        if not username or len(str(username).strip()) < 2:
+            return {
+                "attendance_status": "DATA_ERROR",
+                "is_live": False, "is_virtual": False,
+                "total_solved": 0, "q1": 0, "q2": 0, "q3": 0, "q4": 0,
+                "evidence_level": EvidenceLevel.PROFILE_ERROR
+            }
+
+        # 1. Check Live Participation
+        if ranking_history and ranking_history.get("attended"):
+            solved = int(ranking_history.get("problemsSolved") or 0)
+            return {
+                "attendance_status": "LIVE_ATTENDED",
+                "is_live": True, "is_virtual": False,
+                "total_solved": solved,
+                "q1": 1 if solved >= 1 else 0,
+                "q2": 1 if solved >= 2 else 0,
+                "q3": 1 if solved >= 3 else 0,
+                "q4": 1 if solved >= 4 else 0,
+                "evidence_level": EvidenceLevel.LEVEL_4_OFFICIAL_LIVE
+            }
+
+        # 2. Check Virtual Submissions
+        q_solved = {"Q1": 0, "Q2": 0, "Q3": 0, "Q4": 0}
+        p_dict = (metadata.get("problems") if metadata else None) or CONTEST_516_PROBLEMS
+        
+        if recent_subs:
+            for sub in recent_subs:
+                t_slug = sub.get("titleSlug") or sub.get("title") or ""
+                matched_q = match_contest_problem(t_slug, p_dict)
+                if matched_q:
+                    q_key = matched_q if isinstance(matched_q, str) else matched_q.get("id")
+                    if q_key in q_solved:
+                        q_solved[q_key] = 1
+
+        tot_v_solved = sum(q_solved.values())
+        if tot_v_solved > 0:
+            return {
+                "attendance_status": "VIRTUAL_ATTENDED",
+                "is_live": False, "is_virtual": True,
+                "total_solved": tot_v_solved,
+                "q1": q_solved["Q1"], "q2": q_solved["Q2"],
+                "q3": q_solved["Q3"], "q4": q_solved["Q4"],
+                "evidence_level": EvidenceLevel.LEVEL_5_AUTHORITATIVE_VIRTUAL
+            }
+
+        return {
+            "attendance_status": "NOT_ATTENDED",
+            "is_live": False, "is_virtual": False,
+            "total_solved": 0,
+            "q1": 0, "q2": 0, "q3": 0, "q4": 0,
+            "evidence_level": EvidenceLevel.NO_EVIDENCE
+        }
+
+    @classmethod
+    def classify_student_submissions(
+        cls,
+        student: Any,
+        ranking_history: Optional[Dict[str, Any]],
+        recent_subs: Optional[List[Dict[str, Any]]]
+    ) -> Dict[str, Any]:
+        return cls.classify_student(student, ranking_history, recent_subs, None)
+
+    @classmethod
+    def reconcile_session_21(cls, db: Session, sync_mode: str = "AUTO") -> Dict[str, Any]:
+        return cls.reconcile_contest(21, db, sync_mode=sync_mode)
+
+
+CONTEST_516_PROBLEMS = {
+    "Q1": {
+        "id": "Q1",
+        "title": "Check ASCII Palindromic",
+        "titleSlug": "check-ascii-palindromic",
+        "slugs": ["check-ascii-palindromic", "find-special-substring-of-length-k"],
+        "keywords": ["ascii", "palindromic", "special substring", "length k"]
+    },
+    "Q2": {
+        "id": "Q2",
+        "title": "Find All Numbers Disappeared in an Array II",
+        "titleSlug": "find-all-numbers-disappeared-in-an-array-ii",
+        "slugs": ["find-all-numbers-disappeared-in-an-array-ii", "maximum-manhattan-distance-after-k-changes"],
+        "keywords": ["disappeared in an array", "manhattan distance", "k changes"]
+    },
+    "Q3": {
+        "id": "Q3",
+        "title": "Longest Subarray With at Most K Distinct Prime Factors",
+        "titleSlug": "longest-subarray-with-at-most-k-distinct-prime-factors",
+        "slugs": ["longest-subarray-with-at-most-k-distinct-prime-factors", "count-substrings-divisible-by-last-digit"],
+        "keywords": ["prime factors", "divisible by last digit"]
+    },
+    "Q4": {
+        "id": "Q4",
+        "title": "Sum Game",
+        "titleSlug": "sum-game",
+        "slugs": ["sum-game", "maximum-difference-between-even-and-odd-frequency-ii"],
+        "keywords": ["sum game", "even and odd frequency"]
+    }
+}
+
+def match_contest_problem(slug_or_title: str, problems_dict: Any = None) -> Any:
+    """Matches a submission slug or title to the canonical contest problem set."""
+    if not slug_or_title:
+        return None
+    clean = str(slug_or_title).lower().strip().replace(" ", "-").replace("_", "-")
+    
+    # If explicit problems_dict is passed (from ContestMetadataResolver / meta)
+    if problems_dict is not None and hasattr(problems_dict, "items"):
+        for q_key, p_def in problems_dict.items():
+            p_slug = getattr(p_def, 'title_slug', '') or getattr(p_def, 'slug', '') or ''
+            p_title = getattr(p_def, 'title', '') or ''
+            if clean == p_slug.lower() or clean == p_title.lower().replace(" ", "-"):
+                return q_key
+            if isinstance(p_def, dict):
+                d_slug = str(p_def.get('title_slug', '') or p_def.get('slug', '')).lower()
+                d_title = str(p_def.get('title', '')).lower().replace(" ", "-")
+                if clean == d_slug or clean == d_title:
+                    return q_key
+                d_slugs = p_def.get('slugs', [])
+                if any(clean == s.lower() for s in d_slugs):
+                    return q_key
+        return None
+
+    # Default fallback to CONTEST_516_PROBLEMS dictionary returning dict with 'id'
+    for q_id, q_data in CONTEST_516_PROBLEMS.items():
+        if clean in q_data["slugs"] or clean == q_data["titleSlug"]:
+            return q_data
+        if clean == q_data["title"].lower().replace(" ", "-"):
+            return q_data
+        if any(kw in clean for kw in q_data["keywords"]):
+            return q_data
+    return None
+
 
 # Canonical aliases
 ContestMetadataResolver = ContestProblemAccuracyEngine

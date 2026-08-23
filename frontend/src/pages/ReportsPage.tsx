@@ -26,6 +26,7 @@ export const ReportsPage: React.FC = () => {
   const [rptDeptOpen,  setRptDeptOpen]  = useState<boolean>(false);
   const [rptYearOpen,  setRptYearOpen]  = useState<boolean>(false);
   const [rptScopeOpen, setRptScopeOpen] = useState<boolean>(false);
+  const [rptTypeOpen,  setRptTypeOpen]  = useState<boolean>(false);
 
   // Floating Center Delete Modal & Toast States
   const [deleteModalItem, setDeleteModalItem] = useState<DeleteItemInfo | null>(null);
@@ -409,7 +410,7 @@ export const ReportsPage: React.FC = () => {
         <>
 
       {/* Universal Institutional Reports Section */}
-      <div className="glass-card p-6 md:p-8 rounded-3xl border border-blue-500/30 dark:border-blue-500/20 shadow-xl space-y-6 bg-gradient-to-r from-blue-500/5 via-cyan-500/5 to-transparent">
+      <div className={`glass-card p-6 md:p-8 rounded-3xl border border-blue-500/30 dark:border-blue-500/20 shadow-xl space-y-6 bg-gradient-to-r from-blue-500/5 via-cyan-500/5 to-transparent relative ${rptTypeOpen || rptDeptOpen || rptYearOpen || rptScopeOpen ? 'z-50' : 'z-10'}`}>
         <div className="flex items-center justify-between flex-wrap gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
           <div className="flex items-center space-x-3">
             <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
@@ -430,34 +431,70 @@ export const ReportsPage: React.FC = () => {
         {/* Unified Report Builder Form Controls */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 p-5 bg-white/70 dark:bg-navy-900/70 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-inner">
           
-          {/* 1. Report Type */}
+          {/* 1. Report Type — Premium Dropdown */}
           <div className="space-y-1.5">
             <label className="text-xs font-black uppercase text-gray-600 dark:text-gray-400 tracking-wider">
               Report Type
             </label>
-            <select
-              value={selectedReportType}
-              onChange={(e) => setSelectedReportType(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border border-gray-300 dark:border-gray-700 text-xs font-bold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="STUDENT_PERFORMANCE">Student Performance Detail</option>
-              <option value="COLLEGE_EXECUTIVE">College Executive Overview</option>
-              <option value="DEPARTMENT_PERFORMANCE">Department Performance</option>
-              <option value="BATCH_PERFORMANCE">Batch Performance</option>
-              <option value="CONTEST_PERFORMANCE">Contest Performance</option>
-              <option value="STUDENT_MASTER">Student Master (All Roster)</option>
-              <option value="LEADERBOARD">Leaderboard</option>
-              <option value="CUSTOM">Custom Report</option>
-            </select>
+            <div className={`relative ${rptTypeOpen ? 'z-30' : 'z-10'}`}>
+              <button
+                type="button"
+                onClick={() => { setRptTypeOpen(p => !p); setRptDeptOpen(false); setRptYearOpen(false); setRptScopeOpen(false); }}
+                className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${
+                  rptTypeOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-gray-300 dark:border-gray-700 hover:border-brand-300'
+                }`}
+              >
+                <LayoutTemplate className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+                <span className="text-xs font-bold text-gray-900 dark:text-white truncate flex-1">
+                  {({
+                    'STUDENT_PERFORMANCE': 'Student Performance Detail',
+                    'COLLEGE_EXECUTIVE':   'College Executive Overview',
+                    'DEPARTMENT_PERFORMANCE': 'Department Performance',
+                    'BATCH_PERFORMANCE':   'Batch Performance',
+                    'CONTEST_PERFORMANCE': 'Contest Performance',
+                    'STUDENT_MASTER':      'Student Master (All Roster)',
+                    'LEADERBOARD':         'Leaderboard',
+                    'CUSTOM':              'Custom Report',
+                  } as Record<string,string>)[selectedReportType] || selectedReportType}
+                </span>
+                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${rptTypeOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {rptTypeOpen && (
+                <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl max-h-64 overflow-y-auto">
+                  {[
+                    { value: 'STUDENT_PERFORMANCE',   label: 'Student Performance Detail',   dot: 'bg-brand-500' },
+                    { value: 'COLLEGE_EXECUTIVE',      label: 'College Executive Overview',   dot: 'bg-indigo-500' },
+                    { value: 'DEPARTMENT_PERFORMANCE', label: 'Department Performance',       dot: 'bg-purple-500' },
+                    { value: 'BATCH_PERFORMANCE',      label: 'Batch Performance',            dot: 'bg-sky-500' },
+                    { value: 'CONTEST_PERFORMANCE',    label: 'Contest Performance',          dot: 'bg-amber-500' },
+                    { value: 'STUDENT_MASTER',         label: 'Student Master (All Roster)',  dot: 'bg-teal-500' },
+                    { value: 'LEADERBOARD',            label: 'Leaderboard',                  dot: 'bg-rose-500' },
+                    { value: 'CUSTOM',                 label: 'Custom Report',                dot: 'bg-gray-500' },
+                  ].map(opt => (
+                    <button key={opt.value} type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => { setSelectedReportType(opt.value); setRptTypeOpen(false); }}
+                      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${
+                        selectedReportType === opt.value ? 'bg-brand-50 dark:bg-brand-950/60' : 'hover:bg-gray-50 dark:hover:bg-navy-800'
+                      }`}
+                    >
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${opt.dot}`} />
+                      <span className={`text-xs truncate flex-1 ${selectedReportType === opt.value ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-gray-700 dark:text-gray-300'}`}>{opt.label}</span>
+                      {selectedReportType === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* 2. Department — Premium Dropdown */}
           <div className="space-y-1.5">
             <label className="text-xs font-black uppercase text-gray-600 dark:text-gray-400 tracking-wider">Department</label>
-            <div className="relative">
+            <div className={`relative ${rptDeptOpen ? 'z-30' : 'z-10'}`}>
               <button
                 type="button"
-                onClick={() => { setRptDeptOpen(p => !p); setRptYearOpen(false); setRptScopeOpen(false); }}
+                onClick={() => { setRptDeptOpen(p => !p); setRptTypeOpen(false); setRptYearOpen(false); setRptScopeOpen(false); }}
                 className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${
                   rptDeptOpen ? 'border-indigo-400 ring-2 ring-indigo-400/20' : 'border-gray-300 dark:border-gray-700 hover:border-indigo-300'
                 }`}
@@ -488,7 +525,7 @@ export const ReportsPage: React.FC = () => {
                 <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${rptDeptOpen ? 'rotate-180' : ''}`} />
               </button>
               {rptDeptOpen && (
-                <div className="absolute z-[100] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto">
+                <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl max-h-64 overflow-y-auto">
                   {[
                     { value:'ALL',      code:'ALL',      label:'All Departments',                color:'text-indigo-600 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300' },
                     { value:'CSE',      code:'CSE',      label:'Computer Science and Engineering',color:'text-blue-600 bg-blue-50 dark:bg-blue-950 dark:text-blue-300' },
@@ -524,10 +561,10 @@ export const ReportsPage: React.FC = () => {
           {/* 3. Year / Batch — Premium Dropdown */}
           <div className="space-y-1.5">
             <label className="text-xs font-black uppercase text-gray-600 dark:text-gray-400 tracking-wider">Year / Batch</label>
-            <div className="relative">
+            <div className={`relative ${rptYearOpen ? 'z-30' : 'z-10'}`}>
               <button
                 type="button"
-                onClick={() => { setRptYearOpen(p => !p); setRptDeptOpen(false); setRptScopeOpen(false); }}
+                onClick={() => { setRptYearOpen(p => !p); setRptTypeOpen(false); setRptDeptOpen(false); setRptScopeOpen(false); }}
                 className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${
                   rptYearOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-gray-300 dark:border-gray-700 hover:border-brand-300'
                 }`}
@@ -548,7 +585,7 @@ export const ReportsPage: React.FC = () => {
                 <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${rptYearOpen ? 'rotate-180' : ''}`} />
               </button>
               {rptYearOpen && (
-                <div className="absolute z-[100] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden">
+                <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl max-h-64 overflow-y-auto">
                   {[
                     { value:'ALL', code:'ALL', label:'All Academic Years', color:'text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300' },
                     { value:'II',  code:'II',  label:'Year (2025–2029)',    color:'text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300' },
@@ -576,10 +613,10 @@ export const ReportsPage: React.FC = () => {
           {/* 4. Output Scope — Premium Dropdown */}
           <div className="space-y-1.5">
             <label className="text-xs font-black uppercase text-gray-600 dark:text-gray-400 tracking-wider">Output Scope</label>
-            <div className="relative">
+            <div className={`relative ${rptScopeOpen ? 'z-30' : 'z-10'}`}>
               <button
                 type="button"
-                onClick={() => { setRptScopeOpen(p => !p); setRptDeptOpen(false); setRptYearOpen(false); }}
+                onClick={() => { setRptScopeOpen(p => !p); setRptTypeOpen(false); setRptDeptOpen(false); setRptYearOpen(false); }}
                 className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${
                   rptScopeOpen ? 'border-purple-400 ring-2 ring-purple-400/20' : 'border-gray-300 dark:border-gray-700 hover:border-purple-300'
                 }`}
@@ -591,7 +628,7 @@ export const ReportsPage: React.FC = () => {
                 <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${rptScopeOpen ? 'rotate-180' : ''}`} />
               </button>
               {rptScopeOpen && (
-                <div className="absolute z-[100] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden">
+                <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl max-h-64 overflow-y-auto">
                   {[
                     { value:'COLLEGE',   label:'College-wide',       dot:'bg-indigo-500' },
                     { value:'DEPARTMENT',label:'Department-wide',     dot:'bg-purple-500' },

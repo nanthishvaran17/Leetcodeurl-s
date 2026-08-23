@@ -79,12 +79,16 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
             <div>
               <div className="flex items-center space-x-2">
                 <h2 className="text-xl sm:text-2xl font-black tracking-tight">{profile.name}</h2>
-                <span className="px-2.5 py-0.5 rounded-lg text-xs font-black bg-brand-500/20 text-brand-400 border border-brand-500/30">
-                  {profile.current_level}
+                <span className="px-2 py-0.5 rounded text-[11px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                  <span>VERIFIED</span>
                 </span>
               </div>
-              <p className="text-xs font-bold text-gray-300 mt-1">
-                {profile.reg_no} • {profile.department} ({profile.department_code}) • {profile.year_level} Year
+              <p className="text-xs font-mono font-bold text-slate-300 mt-0.5">
+                {profile.reg_no}
+              </p>
+              <p className="text-xs font-semibold text-slate-400 mt-0.5">
+                {profile.department} • {profile.year_level} Year
               </p>
             </div>
           </div>

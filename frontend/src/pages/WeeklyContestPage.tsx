@@ -2374,7 +2374,7 @@ export const WeeklyContestPage: React.FC = () => {
                 <span className="text-gray-400 font-medium">Q cells: <b className="text-emerald-600">1</b> = solved | <b className="text-rose-500">0</b> = not solved | <b>—</b> = not attended</span>
               </div>
 
-              <div className="max-h-[75vh] overflow-y-auto overflow-x-auto">
+              <div className="responsive-table-container w-full min-w-0 max-w-full max-h-[75vh] overflow-y-auto overflow-x-auto">
                 <table className="w-full min-w-[900px] text-left text-xs">
                   <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10">
                     <tr>

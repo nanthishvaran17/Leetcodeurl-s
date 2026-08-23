@@ -12,7 +12,10 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = localStorage.getItem('theme') as Theme;
-    return saved || 'dark';
+    const userExplicitlyChose = localStorage.getItem('theme_user_set') === 'true';
+    // If user has never explicitly toggled the theme, default to light
+    if (!saved || !userExplicitlyChose) return 'light';
+    return saved || 'light';
   });
 
   useEffect(() => {
@@ -26,7 +29,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    setTheme(prev => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('theme_user_set', 'true');
+      return next;
+    });
   };
 
   return (

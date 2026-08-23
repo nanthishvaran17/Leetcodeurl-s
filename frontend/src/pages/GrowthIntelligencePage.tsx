@@ -10,6 +10,10 @@ import {
   Sparkles,
   Clock,
   ChevronRight,
+  ChevronDown,
+  Check,
+  Building2,
+  GraduationCap,
   Search,
   UserCheck,
   CheckCircle2,
@@ -77,6 +81,8 @@ export const GrowthIntelligencePage: React.FC = () => {
   const [period, setPeriod] = useState<'today' | '7d' | '30d' | 'all'>('7d');
   const [deptFilter, setDeptFilter] = useState<string>('ALL');
   const [yearFilter, setYearFilter] = useState<string>('ALL');
+  const [deptOpen, setDeptOpen] = useState<boolean>(false);
+  const [yearOpen, setYearOpen] = useState<boolean>(false);
   const [improvers, setImprovers] = useState<Improver[]>([]);
   const [collegeDelta, setCollegeDelta] = useState<CollegeDelta | null>(null);
   const [departments, setDepartments] = useState<Array<{ id: number; code: string; name: string }>>([]);
@@ -181,20 +187,26 @@ export const GrowthIntelligencePage: React.FC = () => {
     <div className="space-y-8 py-2 pb-16 animate-slideUp">
 
       {/* Executive Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-2xl border border-brand-500/30">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className={`relative rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-2xl border border-brand-500/30 ${deptOpen || yearOpen ? 'z-50' : 'z-10'}`}>
+        <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl"></div>
+        </div>
 
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-2xl">
+          <div className="space-y-3.5 max-w-2xl">
             <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               <span>REAL-TIME GROWTH & DELTA ENGINE</span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl xl:text-4xl font-black tracking-tight flex items-center gap-3">
-              <TrendingUp className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-400 stroke-[2.5]" />
-              Growth Intelligence & <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-300">Time Machine</span>
-            </h1>
+            <div className="flex items-center gap-3.5">
+              <div className="p-2.5 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0 shadow-lg shadow-emerald-500/10">
+                <TrendingUp className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.5]" />
+              </div>
+              <h1 className="text-2xl sm:text-3xl xl:text-4xl font-black tracking-tight text-white leading-tight">
+                Growth Intelligence & <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-300">Time Machine</span>
+              </h1>
+            </div>
 
             <p className="text-xs md:text-sm text-gray-300 font-medium leading-relaxed">
               Track student problem-solving deltas, biggest improvers leaderboard, difficulty velocity, and granular historical stat snapshots across custom timeframe windows.
@@ -203,38 +215,128 @@ export const GrowthIntelligencePage: React.FC = () => {
 
           {/* Filters, Timeframe Selector Pills & Live Refresh Button */}
           <div className="flex flex-wrap items-center gap-3">
-            <select
-              value={deptFilter}
-              onChange={(e) => setDeptFilter(e.target.value)}
-              className="px-3.5 py-2 rounded-2xl bg-navy-900/90 text-white text-xs font-bold border border-gray-700/80 backdrop-blur-md shadow-inner outline-none cursor-pointer hover:border-brand-500 max-w-full"
-            >
-              <option value="ALL">All Departments</option>
-              {departments.map((department) => (
-                <option key={department.id} value={department.code}>
-                  {department.code} {department.name ? `(${department.name})` : ''}
-                </option>
-              ))}
-            </select>
+            
+            {/* Department Custom Dropdown */}
+            <div className={`relative ${deptOpen ? 'z-30' : 'z-10'}`}>
+              <button
+                type="button"
+                onClick={() => { setDeptOpen(p => !p); setYearOpen(false); }}
+                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-navy-900/90 text-white text-xs font-bold border backdrop-blur-md shadow-inner transition-all focus:outline-none ${
+                  deptOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-gray-700/80 hover:border-brand-500'
+                }`}
+              >
+                <Building2 className="w-3.5 h-3.5 text-brand-400 shrink-0" />
+                <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30 shrink-0">
+                  {deptFilter}
+                </span>
+                <span className="truncate max-w-[120px]">
+                  {deptFilter === 'ALL' ? 'All Departments' : departments.find(d => d.code === deptFilter)?.name || deptFilter}
+                </span>
+                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${deptOpen ? 'rotate-180' : ''}`} />
+              </button>
 
-            <select
-              value={yearFilter}
-              onChange={(e) => setYearFilter(e.target.value)}
-              className="px-3.5 py-2 rounded-2xl bg-navy-900/90 text-white text-xs font-bold border border-gray-700/80 backdrop-blur-md shadow-inner outline-none cursor-pointer hover:border-brand-500 max-w-full"
-            >
-              <option value="ALL">All Academic Years</option>
-              {availableYears.map((year) => (
-                <option key={year} value={year}>{year} Year</option>
-              ))}
-            </select>
+              {deptOpen && (
+                <div className="absolute z-[200] top-full left-0 mt-1 min-w-[220px] bg-navy-900 border border-gray-700 rounded-2xl shadow-2xl max-h-64 overflow-y-auto divide-y divide-navy-800">
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => { setDeptFilter('ALL'); setDeptOpen(false); }}
+                    className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left text-xs transition-colors ${
+                      deptFilter === 'ALL' ? 'bg-brand-950/80 text-brand-300 font-black' : 'text-gray-300 hover:bg-navy-800 font-bold'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300">ALL</span>
+                      <span className="truncate">All Departments</span>
+                    </div>
+                    {deptFilter === 'ALL' && <Check className="w-3.5 h-3.5 text-brand-400 shrink-0" />}
+                  </button>
+                  {departments.map((d) => (
+                    <button
+                      key={d.id}
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => { setDeptFilter(d.code); setDeptOpen(false); }}
+                      className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left text-xs transition-colors ${
+                        deptFilter === d.code ? 'bg-brand-950/80 text-brand-300 font-black' : 'text-gray-300 hover:bg-navy-800 font-bold'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300">{d.code}</span>
+                        <span className="truncate">{d.name || d.code}</span>
+                      </div>
+                      {deptFilter === d.code && <Check className="w-3.5 h-3.5 text-brand-400 shrink-0" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
+            {/* Academic Year Custom Dropdown */}
+            <div className={`relative ${yearOpen ? 'z-30' : 'z-10'}`}>
+              <button
+                type="button"
+                onClick={() => { setYearOpen(p => !p); setDeptOpen(false); }}
+                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-navy-900/90 text-white text-xs font-bold border backdrop-blur-md shadow-inner transition-all focus:outline-none ${
+                  yearOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-gray-700/80 hover:border-brand-500'
+                }`}
+              >
+                <GraduationCap className="w-3.5 h-3.5 text-brand-400 shrink-0" />
+                <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30 shrink-0">
+                  {yearFilter}
+                </span>
+                <span className="truncate">
+                  {yearFilter === 'ALL' ? 'All Academic Years' : `${yearFilter} Year`}
+                </span>
+                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${yearOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {yearOpen && (
+                <div className="absolute z-[200] top-full left-0 mt-1 min-w-[200px] bg-navy-900 border border-gray-700 rounded-2xl shadow-2xl max-h-64 overflow-y-auto divide-y divide-navy-800">
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => { setYearFilter('ALL'); setYearOpen(false); }}
+                    className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left text-xs transition-colors ${
+                      yearFilter === 'ALL' ? 'bg-brand-950/80 text-brand-300 font-black' : 'text-gray-300 hover:bg-navy-800 font-bold'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300">ALL</span>
+                      <span className="truncate">All Academic Years</span>
+                    </div>
+                    {yearFilter === 'ALL' && <Check className="w-3.5 h-3.5 text-brand-400 shrink-0" />}
+                  </button>
+                  {availableYears.map((year) => (
+                    <button
+                      key={year}
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => { setYearFilter(year); setYearOpen(false); }}
+                      className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left text-xs transition-colors ${
+                        yearFilter === year ? 'bg-brand-950/80 text-brand-300 font-black' : 'text-gray-300 hover:bg-navy-800 font-bold'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300">{year}</span>
+                        <span className="truncate">{year} Year</span>
+                      </div>
+                      {yearFilter === year && <Check className="w-3.5 h-3.5 text-brand-400 shrink-0" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Timeframe Selector Pills */}
             <div className="flex items-center space-x-1 bg-navy-900/90 p-1.5 rounded-2xl border border-gray-700/80 shadow-inner backdrop-blur-md">
               {(['today', '7d', '30d', 'all'] as const).map((p) => (
                 <button
                   key={p}
                   onClick={() => setPeriod(p)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                  className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
                     period === p
-                      ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md'
+                      ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-600/30 scale-105'
                       : 'text-gray-300 hover:text-white hover:bg-white/10'
                   }`}
                 >
@@ -248,7 +350,7 @@ export const GrowthIntelligencePage: React.FC = () => {
               onClick={handleManualRefresh}
               disabled={loading || isRefreshing}
               title="Refresh Growth Metrics & Solve Deltas"
-              className="inline-flex items-center space-x-2 px-4 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-lg shadow-emerald-600/30 transition-all active:scale-95 disabled:opacity-50"
+              className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-black shadow-lg shadow-brand-600/30 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
             >
               <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
               <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>

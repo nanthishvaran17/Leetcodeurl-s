@@ -236,7 +236,10 @@ app.add_middleware(PerformanceMonitoringMiddleware)
 origins = [
     "http://localhost:3000",
     "http://localhost:5173",
+    "http://localhost:5174",
     "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
     "https://leetcodeurls.netlify.app",
     "https://leetcode-student-data.web.app",
     "https://leetcode-student-data.firebaseapp.com",
@@ -248,7 +251,7 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origin_regex=r"https://.*\.netlify\.app|https://.*\.web\.app|https://.*\.firebaseapp\.com",
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+|https://.*\.netlify\.app|https://.*\.web\.app|https://.*\.firebaseapp\.com|https://.*\.onrender\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

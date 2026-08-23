@@ -147,8 +147,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             let matchedStudent: any = null;
             if (fbUser.email) {
               try {
-                const res = await api.get('/students');
-                matchedStudent = res.data.find((s: any) => s.email && s.email.toLowerCase() === fbUser.email?.toLowerCase());
+                const res = await api.get('/students/by-email', { params: { email: fbUser.email } });
+                matchedStudent = res.data;
               } catch (_err) {}
             }
 

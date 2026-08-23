@@ -393,10 +393,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
 
         <div>
           <h2 className="text-base sm:text-lg font-black text-gray-900 dark:text-white tracking-tight uppercase">
-            NANDHA ENGINEERING COLLEGE
+            NANDHA LEETCODE INTELLIGENCE
           </h2>
-          <p className="text-[10px] font-extrabold uppercase tracking-widest text-brand-600 dark:text-brand-400">
-            (AUTONOMOUS) • ESTD 2001
+          <p className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+            Nandha Engineering College • Erode
           </p>
         </div>
 
