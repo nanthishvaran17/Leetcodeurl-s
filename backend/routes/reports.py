@@ -355,12 +355,13 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
             r_filename = get_contest_filename_base(contest_name, dept=dept, year=year, attendance=attendance)
 
             from backend.services.canonical_contest_engine import build_canonical_contest_dataset
+            # Official institutional report ALWAYS covers the complete 1,450-student authoritative roster
             canonical_data = build_canonical_contest_dataset(
                 session_id=session_id,
                 db=db,
-                dept=dept or "ALL",
-                year=year or "ALL",
-                attendance=attendance or "ALL"
+                dept="ALL",
+                year="ALL",
+                attendance="ALL"
             )
 
             raw_rows = canonical_data.get("rows", [])
