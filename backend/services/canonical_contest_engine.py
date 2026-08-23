@@ -105,10 +105,19 @@ def build_canonical_contest_dataset(
         "DATA_MISMATCH": 0
     }
 
-    # Department and Year aggregators
+    # Department and Year aggregators for all 11 Institutional Departments
     dept_stats_map: Dict[str, Dict[str, Any]] = {
-        "CSE(CS)": {"name": "Computer Science & Engineering (Cyber Security)", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
-        "CSE(IoT)": {"name": "Computer Science & Engineering (IoT)", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0}
+        "CSE": {"name": "Computer Science and Engineering", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
+        "IT": {"name": "Information Technology", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
+        "AIDS": {"name": "Artificial Intelligence and Data Science", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
+        "CSE(CS)": {"name": "Computer Science and Engineering (Cyber Security)", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
+        "CSE(IOT)": {"name": "Computer Science and Engineering (Internet of Things)", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
+        "ECE": {"name": "Electronics and Communication Engineering", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
+        "EEE": {"name": "Electrical and Electronics Engineering", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
+        "MECH": {"name": "Mechanical Engineering", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
+        "CIVIL": {"name": "Civil Engineering", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
+        "AGRI": {"name": "Agriculture Engineering", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
+        "BME": {"name": "Biomedical Engineering", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
     }
 
     year_stats_map: Dict[str, Dict[str, Any]] = {
@@ -126,12 +135,32 @@ def build_canonical_contest_dataset(
         p_res = public_res_map.get(s_id)
         v_res = virtual_res_map.get(s_id)
 
-        dept_code = (student.department.code if student.department else None) or (p_res.dept if p_res else None) or "CSE(CS)"
-        # Normalize dept code
-        if dept_code.upper() in ("CSE(IOT)", "CSE(IOT)", "IOT"):
-            dept_code = "CSE(IoT)"
-        elif dept_code.upper() in ("CSE(CS)", "CSE(CYBER SECURITY)", "CYBER SECURITY", "CS"):
+        dept_raw = (student.department.code if student.department else None) or (p_res.dept if p_res else None) or "CSE"
+        dept_code = str(dept_raw).strip().upper()
+        if dept_code in ("CSE(IOT)", "IOT", "CSE_IOT"):
+            dept_code = "CSE(IOT)"
+        elif dept_code in ("CSE(CS)", "CS", "CYBER", "CYBER SECURITY", "CSE_CS"):
             dept_code = "CSE(CS)"
+        elif dept_code in ("IT", "INFORMATION TECHNOLOGY"):
+            dept_code = "IT"
+        elif dept_code in ("AIDS", "AI&DS", "AI-DS", "AI DS"):
+            dept_code = "AIDS"
+        elif dept_code in ("ECE", "ELECTRONICS"):
+            dept_code = "ECE"
+        elif dept_code in ("EEE", "ELECTRICAL"):
+            dept_code = "EEE"
+        elif dept_code in ("MECH", "MECHANICAL"):
+            dept_code = "MECH"
+        elif dept_code in ("CIVIL",):
+            dept_code = "CIVIL"
+        elif dept_code in ("AGRI", "AGRICULTURE"):
+            dept_code = "AGRI"
+        elif dept_code in ("BME", "BIOMEDICAL"):
+            dept_code = "BME"
+        elif dept_code in ("CSE", "COMPUTER SCIENCE"):
+            dept_code = "CSE"
+        else:
+            dept_code = dept_raw
 
         year_level = student.year_level or (p_res.year if p_res else None) or "III"
         username = student.username or ""
@@ -237,13 +266,9 @@ def build_canonical_contest_dataset(
         status_counts[canon_status] = status_counts.get(canon_status, 0) + 1
 
         # Department aggregator
-        d_up = dept_code.upper()
-        if "IOT" in d_up:
-            dept_norm = "CSE(IoT)"
-        elif "CYBER" in d_up or "(CS)" in d_up or d_up.endswith("CS") or "CSE(CS)" in d_up:
-            dept_norm = "CSE(CS)"
-        else:
-            dept_norm = "CSE(CS)"
+        dept_norm = dept_code
+        if dept_norm not in dept_stats_map:
+            dept_stats_map[dept_norm] = {"name": dept_norm, "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0}
 
         if dept_norm in dept_stats_map:
             dept_stats_map[dept_norm]["total"] += 1
