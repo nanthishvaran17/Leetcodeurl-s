@@ -1,61 +1,117 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Radio, Activity } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Clock, Radio } from 'lucide-react';
 
 interface CountdownTimerProps {
-  targetSeconds: number;
+  targetSeconds?: number;
   isLive?: boolean;
 }
 
-function getIstLiveStatus(): { isLive: boolean; secondsRemaining: number } {
+export function getIstSessionTiming(): {
+  isLive: boolean;
+  secondsRemaining: number;
+  phase: 'COUNTDOWN_TODAY' | 'LIVE_NOW' | 'NEXT_WEEK';
+  headerTitle: string;
+  subTitle: string;
+} {
   try {
     const now = new Date();
-    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-    const ist = new Date(utc + (3600000 * 5.5));
+    // Format to Asia/Kolkata timezone components
+    const istFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+      hour12: false
+    });
+    const parts = istFormatter.formatToParts(now);
+    const getPart = (type: string) => parseInt(parts.find(p => p.type === type)?.value || '0', 10);
 
-    const day = ist.getDay(); // 0 = Sunday
-    const hours = ist.getHours();
-    const minutes = ist.getMinutes();
-    const seconds = ist.getSeconds();
-    const timeInSec = hours * 3600 + minutes * 60 + seconds;
+    const year = getPart('year');
+    const month = getPart('month') - 1; // 0-indexed month
+    const dayDate = getPart('day');
+    const hour = getPart('hour');
+    const minute = getPart('minute');
+    const second = getPart('second');
 
-    const startSec = 8 * 3600;         // 08:00 AM IST = 28800s
-    const endSec = 9 * 3600 + 30 * 60; // 09:30 AM IST = 34200s
+    const istDate = new Date(Date.UTC(year, month, dayDate, hour, minute, second));
+    const dayOfWeek = istDate.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const secondsToday = hour * 3600 + minute * 60 + second;
 
-    if (day === 0 && timeInSec >= startSec && timeInSec <= endSec) {
-      return { isLive: true, secondsRemaining: endSec - timeInSec };
+    const startSec = 8 * 3600;         // 08:00:00 AM IST = 28,800s
+    const endSec = 9 * 3600 + 30 * 60; // 09:30:00 AM IST = 34,200s
+
+    if (dayOfWeek === 0) {
+      // Sunday
+      if (secondsToday < startSec) {
+        // Before 8:00 AM today
+        return {
+          isLive: false,
+          secondsRemaining: Math.max(0, startSec - secondsToday),
+          phase: 'COUNTDOWN_TODAY',
+          headerTitle: "Today's Sunday LeetCode Session",
+          subTitle: 'Official Monitoring Window: 08:00 AM – 09:30 AM IST (Starts in)'
+        };
+      } else if (secondsToday <= endSec) {
+        // 8:00 AM - 9:30 AM Live Window
+        return {
+          isLive: true,
+          secondsRemaining: Math.max(0, endSec - secondsToday),
+          phase: 'LIVE_NOW',
+          headerTitle: '🟢 SUNDAY SESSION LIVE NOW',
+          subTitle: 'Official Monitoring Window: 08:00 AM – 09:30 AM IST (Remaining Time)'
+        };
+      } else {
+        // After 9:30 AM today -> Next Sunday
+        const secondsRemaining = (7 * 86400) - (secondsToday - startSec);
+        return {
+          isLive: false,
+          secondsRemaining: Math.max(0, secondsRemaining),
+          phase: 'NEXT_WEEK',
+          headerTitle: 'Next Sunday LeetCode Session',
+          subTitle: "Today's Session Completed • Next Window: Next Sunday 08:00 AM IST"
+        };
+      }
+    } else {
+      // Monday (1) through Saturday (6)
+      const daysUntilSunday = (7 - dayOfWeek) % 7;
+      const secondsRemaining = (daysUntilSunday * 86400) + (startSec - secondsToday);
+      return {
+        isLive: false,
+        secondsRemaining: Math.max(0, secondsRemaining),
+        phase: 'NEXT_WEEK',
+        headerTitle: 'Next Sunday LeetCode Session',
+        subTitle: 'Official Monitoring Window: 08:00 AM – 09:30 AM IST'
+      };
     }
-  } catch {
-    // fallback
+  } catch (_e) {
+    return {
+      isLive: false,
+      secondsRemaining: 86400,
+      phase: 'NEXT_WEEK',
+      headerTitle: 'Next Sunday LeetCode Session',
+      subTitle: 'Official Monitoring Window: 08:00 AM – 09:30 AM IST'
+    };
   }
-  return { isLive: false, secondsRemaining: 0 };
 }
 
-export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds, isLive: propIsLive }) => {
-  const istStatus = getIstLiveStatus();
-  const isSessionLive = propIsLive !== undefined ? propIsLive : istStatus.isLive;
-  
-  const initialSeconds = isSessionLive && istStatus.isLive ? istStatus.secondsRemaining : targetSeconds;
-  const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
+export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _propTarget, isLive: propIsLive }) => {
+  const [timing, setTiming] = useState(getIstSessionTiming);
 
   useEffect(() => {
-    const currentIst = getIstLiveStatus();
-    if (currentIst.isLive) {
-      setSecondsLeft(currentIst.secondsRemaining);
-    } else {
-      setSecondsLeft(targetSeconds);
-    }
-  }, [targetSeconds, propIsLive]);
-
-  useEffect(() => {
-    if (secondsLeft <= 0) return;
-
-    const interval = setInterval(() => {
-      setSecondsLeft((prev) => Math.max(prev - 1, 0));
-    }, 1000);
-
+    const updateTiming = () => {
+      setTiming(getIstSessionTiming());
+    };
+    updateTiming();
+    const interval = setInterval(updateTiming, 1000);
     return () => clearInterval(interval);
-  }, [secondsLeft]);
+  }, []);
+
+  const isSessionLive = propIsLive !== undefined ? propIsLive : timing.isLive;
+  const secondsLeft = timing.secondsRemaining;
 
   const formatTime = (totalSeconds: number) => {
     const days = Math.floor(totalSeconds / (3600 * 24));
@@ -94,19 +150,20 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds, i
           <div>
             <div className="flex items-center space-x-2">
               <h4 className="font-black text-base text-gray-900 dark:text-white">
-                {isSessionLive ? '🟢 SUNDAY SESSION LIVE NOW' : 'Next Sunday LeetCode Session'}
+                {isSessionLive ? '🟢 SUNDAY SESSION LIVE NOW' : timing.headerTitle}
               </h4>
-              {isSessionLive && (
+              {isSessionLive ? (
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 animate-pulse">
                   Live Window
                 </span>
-              )}
+              ) : timing.phase === 'COUNTDOWN_TODAY' ? (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/30">
+                  Starting Today
+                </span>
+              ) : null}
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              {isSessionLive 
-                ? 'Official Monitoring Window: 08:00 AM – 09:30 AM IST (Remaining Time)'
-                : 'Official Monitoring Window: 08:00 AM – 09:30 AM IST'
-              }
+              {timing.subTitle}
             </p>
           </div>
         </div>
@@ -162,3 +219,4 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds, i
     </motion.div>
   );
 };
+

@@ -86,16 +86,20 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="hidden md:flex items-center space-x-4">
               <div className="flex items-center space-x-2.5 px-3.5 py-1.5 rounded-2xl bg-slate-100/90 dark:bg-navy-950/90 border border-slate-200 dark:border-navy-800 text-xs shadow-inner">
                 <div className={`w-2.5 h-2.5 rounded-full ${
-                  currentSessionStatus === 'ACTIVE'
+                  currentSessionStatus === 'ACTIVE' || currentSessionStatus === 'LIVE'
                     ? 'bg-emerald-500 pulse-live-indicator'
-                    : currentSessionStatus === 'FINALIZED'
-                    ? 'bg-blue-500'
-                    : 'bg-amber-500'
+                    : currentSessionStatus === 'FINALIZED' || currentSessionStatus === 'COMPLETED' || currentSessionStatus === 'READY'
+                    ? 'bg-emerald-500'
+                    : 'bg-emerald-500'
                 }`} />
                 <span className="font-extrabold text-slate-700 dark:text-slate-300 tracking-tight flex items-center space-x-1.5">
                   <span>Sync Engine:</span>
-                  <span className="text-slate-900 dark:text-white uppercase font-black tracking-wider px-1.5 py-0.5 rounded-md bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-[10px]">
-                    {currentSessionStatus}
+                  <span className={`uppercase font-black tracking-wider px-2 py-0.5 rounded-md border text-[10px] ${
+                    currentSessionStatus === 'ACTIVE' || currentSessionStatus === 'LIVE'
+                      ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                      : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                  }`}>
+                    {currentSessionStatus === 'SCHEDULED' ? 'ACTIVE / READY' : currentSessionStatus}
                   </span>
                 </span>
               </div>

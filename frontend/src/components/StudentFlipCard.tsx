@@ -57,7 +57,7 @@ function formatVerifiedAgo(lastVerifiedAt?: string): string {
   return `${Math.floor(diffHr / 24)}d ago`;
 }
 
-export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSelectStudent, onDeleteStudent }) => {
+const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student, onSelectStudent, onDeleteStudent }) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
   // ── Sync State ──────────────────────────────────────────────────────────────
@@ -409,3 +409,5 @@ export const StudentFlipCard: React.FC<StudentFlipCardProps> = ({ student, onSel
     </motion.div>
   );
 };
+
+export const StudentFlipCard = React.memo(StudentFlipCardComponent);

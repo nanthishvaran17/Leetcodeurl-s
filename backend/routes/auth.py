@@ -276,7 +276,10 @@ def get_authoritative_admin_email() -> str:
 
 EXACT_TWO_ADMIN_EMAILS = {
     "nanthishvaran17@gmail.com",
-    "msanthoshkumar@nandhaengg.org"
+    "nanthishvaran117@gmail.com",
+    "nanthishvaran0106@gmail.com",
+    "msanthoshkumar@nandhaengg.org",
+    "santhoshkumar@nandhaengg.org"
 }
 
 def mask_email_str(email_str: str) -> str:

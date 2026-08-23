@@ -402,7 +402,7 @@ export const WeeklyContestPage: React.FC = () => {
       await new Promise(r => setTimeout(r, 400));
       setSyncStatusStage('Syncing Weekly Contest…');
 
-      const res = await api.post(`/contests/sessions/${selectedSessionId}/sync`);
+      const res = await api.post(`/contests/sessions/${selectedSessionId}/sync`, {}, { timeout: 180000 });
       setSyncSummary(res.data);
       
       setSyncStatusStage('Sync completed successfully.');
@@ -415,7 +415,7 @@ export const WeeklyContestPage: React.FC = () => {
         isOpen: true,
         type: 'success',
         title: 'Contest Synchronized',
-        message: `Successfully synchronized session ${selectedSessionId}. Validated ${res.data.target_authentic || 0} authentic results.`
+        message: `Successfully synchronized session ${selectedSessionId}. Validated ${res.data?.target_authentic || 0} authentic results.`
       });
     } catch (err: any) {
       setSyncStatusStage('');
@@ -426,11 +426,14 @@ export const WeeklyContestPage: React.FC = () => {
       if (status === 401 || status === 403 || code === 'AUTH_REQUIRED' || (typeof detail === 'string' && detail.toLowerCase().includes('authentication required'))) {
         setShowAuthRequiredModal(true);
       } else {
-        const detailMsg = typeof detail === 'string' ? detail : err.message || "Synchronization could not be completed.";
+        const isTimeout = err.code === 'ECONNABORTED' || (err.message && err.message.toLowerCase().includes('timeout'));
+        const detailMsg = isTimeout 
+          ? "The sync job is taking a bit longer to process across all students. It is continuing to run on the server — please refresh in a moment."
+          : (typeof detail === 'string' ? detail : err.message || "Synchronization could not be completed.");
         setNotification({
           isOpen: true,
-          type: 'error',
-          title: 'Sync Failed',
+          type: isTimeout ? 'info' : 'error',
+          title: isTimeout ? 'Sync In Progress' : 'Sync Failed',
           message: detailMsg
         });
       }
@@ -946,7 +949,7 @@ export const WeeklyContestPage: React.FC = () => {
 
               <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
                 <Layers className="w-3.5 h-3.5 text-amber-400" />
-                <span>CONTEST ANALYTICS • INSTITUTIONAL EDITION (ALL 12 DEPARTMENTS)</span>
+                <span>CONTEST ANALYTICS • INSTITUTIONAL EDITION (ALL 11 DEPARTMENTS)</span>
               </div>
 
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/10 text-gray-300 text-xs font-mono font-bold">
@@ -1714,19 +1717,18 @@ export const WeeklyContestPage: React.FC = () => {
                 onChange={(e) => setSelectedDeptFilter(e.target.value)}
                 className="w-full bg-transparent text-xs font-bold text-gray-800 dark:text-gray-200 outline-none cursor-pointer"
               >
-                <option value="ALL">All Departments (12 Cohorts)</option>
+                <option value="ALL">All Departments (11 Cohorts)</option>
                 <option value="CSE">Computer Science and Engineering (CSE)</option>
                 <option value="CSE(CS)">CSE (Cyber Security)</option>
                 <option value="CSE(IOT)">CSE (Internet of Things)</option>
                 <option value="IT">Information Technology (IT)</option>
                 <option value="AIDS">Artificial Intelligence & Data Science (AIDS)</option>
-                <option value="AIML">Artificial Intelligence & Machine Learning (AIML)</option>
                 <option value="ECE">Electronics and Communication Engineering (ECE)</option>
                 <option value="EEE">Electrical and Electronics Engineering (EEE)</option>
-                <option value="AGRI">Agricultural Engineering (AGRI)</option>
                 <option value="MECH">Mechanical Engineering (MECH)</option>
                 <option value="CIVIL">Civil Engineering (CIVIL)</option>
                 <option value="BME">Biomedical Engineering (BME)</option>
+                <option value="AGRI">Agricultural Engineering (AGRI)</option>
               </select>
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-gray-400 pointer-events-none" />

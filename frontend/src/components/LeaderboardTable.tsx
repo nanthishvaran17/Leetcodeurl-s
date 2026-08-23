@@ -123,7 +123,7 @@ interface LeaderboardTableProps {
 
 import { useNotification } from '../context/NotificationContext';
 
-export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
+const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   students,
   loading = false,
   onSelectStudent,
@@ -1041,3 +1041,5 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
     </div>
   );
 };
+
+export const LeaderboardTable = React.memo(LeaderboardTableComponent);

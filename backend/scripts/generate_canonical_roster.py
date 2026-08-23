@@ -123,13 +123,30 @@ export const CANONICAL_ROSTER: any[] = {json.dumps(roster_list, ensure_ascii=Fal
 
 export const CANONICAL_SUMMARY: any = {json.dumps(summary_obj, ensure_ascii=False, indent=2)};
 
+const CACHE_VERSION = '2026_08_23_live_v6_full_1450_verified';
+
+function checkCacheVersion(): void {{
+  if (typeof window === 'undefined') return;
+  try {{
+    const currentVersion = localStorage.getItem('nec_cache_version');
+    if (currentVersion !== CACHE_VERSION) {{
+      localStorage.removeItem('nec_cached_students');
+      localStorage.removeItem('nec_cached_students_timestamp');
+      localStorage.removeItem('nec_cached_summary');
+      localStorage.removeItem('nec_cached_summary_timestamp');
+      localStorage.setItem('nec_cache_version', CACHE_VERSION);
+    }}
+  }} catch (e) {{}}
+}}
+
 export function getCachedStudents(): any[] {{
   if (typeof window === 'undefined') return CANONICAL_ROSTER;
+  checkCacheVersion();
   try {{
     const cached = localStorage.getItem('nec_cached_students');
     if (cached) {{
       const parsed = JSON.parse(cached);
-      if (Array.isArray(parsed) && parsed.length >= 3500) {{
+      if (Array.isArray(parsed) && parsed.length >= 100) {{
         return parsed;
       }}
     }}
@@ -144,6 +161,7 @@ export function saveCachedStudents(students: any[]): void {{
   try {{
     localStorage.setItem('nec_cached_students', JSON.stringify(students));
     localStorage.setItem('nec_cached_students_timestamp', new Date().toISOString());
+    localStorage.setItem('nec_cache_version', CACHE_VERSION);
   }} catch (e) {{
     console.warn('Could not save cached students to localStorage:', e);
   }}
@@ -155,6 +173,8 @@ export function invalidateStudentCache(): void {{
     localStorage.removeItem('nec_cached_students');
     localStorage.removeItem('nec_cached_students_timestamp');
     localStorage.removeItem('nec_cached_summary');
+    localStorage.removeItem('nec_cached_summary_timestamp');
+    localStorage.setItem('nec_cache_version', CACHE_VERSION);
   }} catch (e) {{
     console.warn('Could not invalidate cached students in localStorage:', e);
   }}
@@ -162,11 +182,12 @@ export function invalidateStudentCache(): void {{
 
 export function getCachedSummary(): any {{
   if (typeof window === 'undefined') return CANONICAL_SUMMARY;
+  checkCacheVersion();
   try {{
     const cached = localStorage.getItem('nec_cached_summary');
     if (cached) {{
       const parsed = JSON.parse(cached);
-      if (parsed && typeof parsed === 'object' && parsed.total_students >= 3500) {{
+      if (parsed && typeof parsed === 'object' && parsed.total_students >= 100) {{
         return parsed;
       }}
     }}
@@ -181,6 +202,7 @@ export function saveCachedSummary(summary: any): void {{
   try {{
     localStorage.setItem('nec_cached_summary', JSON.stringify(summary));
     localStorage.setItem('nec_cached_summary_timestamp', new Date().toISOString());
+    localStorage.setItem('nec_cache_version', CACHE_VERSION);
   }} catch (e) {{
     console.warn('Could not save cached summary to localStorage:', e);
   }}
