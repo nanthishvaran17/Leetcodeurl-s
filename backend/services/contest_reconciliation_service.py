@@ -34,7 +34,8 @@ from sqlalchemy.orm import Session, joinedload
 
 from backend.models import (
     Student, WeeklySession, WeeklyPublicResult, WeeklyVirtualResult,
-    LeetCodeProfileStats, Department, AuditLog, OfficialWeeklySnapshot
+    LeetCodeProfileStats, Department, AuditLog, OfficialWeeklySnapshot,
+    ContestVirtualEvidence, ContestPostPracticeEvidence, VirtualScanAudit
 )
 from backend.logger import logger
 from backend.services.contest_problem_accuracy_engine import (
@@ -58,15 +59,16 @@ class EvidenceLevel:
     NO_EVIDENCE = "NO_EVIDENCE"                                      # No contest activity recorded
 
 
-# ─── CANONICAL ATTENDANCE STATES (5 MUTUALLY EXCLUSIVE STATES) ─────────────────
+# ─── CANONICAL ATTENDANCE STATES (MUTUALLY EXCLUSIVE STATES) ─────────────────
 class CanonicalAttendanceState:
     DATA_ERROR = "DATA_ERROR"
     LIVE_ATTENDED = "LIVE_ATTENDED"
     VIRTUAL_ATTENDED = "VIRTUAL_ATTENDED"
     POST_CONTEST_PRACTICE = "POST_CONTEST_PRACTICE"
     NOT_ATTENDED = "NOT_ATTENDED"
+    EVIDENCE_UNAVAILABLE = "EVIDENCE_UNAVAILABLE"
 
-    ALL_STATES = {DATA_ERROR, LIVE_ATTENDED, VIRTUAL_ATTENDED, POST_CONTEST_PRACTICE, NOT_ATTENDED}
+    ALL_STATES = {DATA_ERROR, LIVE_ATTENDED, VIRTUAL_ATTENDED, POST_CONTEST_PRACTICE, NOT_ATTENDED, EVIDENCE_UNAVAILABLE}
 
 
 # ─── EVIDENCE CLASSIFICATION STATES ────────────────────────────────────────────
@@ -551,6 +553,32 @@ class UniversalContestReconciliationEngine:
             session_obj.sync_status = "🟢 Verified"
             session_obj.last_synced = datetime.datetime.utcnow()
             session_obj.dataset_hash = dataset_checksum
+            
+            # Persist audit record in virtual_scan_audits table
+            try:
+                scan_audit = VirtualScanAudit(
+                    scan_id=f"SCAN-{contest_id}-{datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
+                    contest_id=contest_id,
+                    started_at=datetime.datetime.utcnow(),
+                    completed_at=datetime.datetime.utcnow(),
+                    students_scanned=total_roster,
+                    profiles_valid=total_roster - data_errors,
+                    profiles_invalid=data_errors,
+                    live_candidates=live_attended,
+                    virtual_candidates=virtual_attended,
+                    practice_candidates=post_contest_practice_count,
+                    api_success=True,
+                    api_failure=False,
+                    evidence_found=live_attended + virtual_attended + post_contest_practice_count,
+                    evidence_unavailable=0,
+                    snapshot_created=True,
+                    checksum=dataset_checksum,
+                    engine_version=cls.ENGINE_VERSION
+                )
+                db.add(scan_audit)
+            except Exception as e:
+                logger.warning(f"Could not persist VirtualScanAudit: {e}")
+
             db.commit()
 
             try:

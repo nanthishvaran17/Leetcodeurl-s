@@ -1727,6 +1727,86 @@ class EmailQueueItem(Base):
     campaign = relationship("EmailCampaign", back_populates="queue_items")
 
 
+class ContestVirtualEvidence(Base):
+    """
+    Dedicated immutable evidence records for verified Virtual Contest participation.
+    """
+    __tablename__ = "contest_virtual_evidence"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    contest_id = Column(String(100), nullable=False, index=True)
+    session_id = Column(Integer, ForeignKey("weekly_sessions.id"), nullable=False, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    registration_number = Column(String(50), nullable=False, index=True)
+    leetcode_username = Column(String(100), nullable=False, index=True)
+    
+    virtual_status = Column(String(50), default="VERIFIED_VIRTUAL")
+    virtual_session_id = Column(String(100), nullable=True)
+    participation_time_utc = Column(DateTime, nullable=True)
+    participation_time_ist = Column(String(50), nullable=True)
+    evidence_level = Column(String(50), default="LEVEL_5_AUTHORITATIVE_VIRTUAL")
+    evidence_source = Column(String(100), default="LeetCode Authoritative Virtual Contest API")
+    evidence_reference = Column(Text, nullable=True)
+    verified_at = Column(DateTime, default=datetime.datetime.utcnow)
+    verification_method = Column(String(50), default="AUTHORITATIVE_GRAPHQL")
+
+    session = relationship("WeeklySession")
+    student = relationship("Student")
 
 
+class ContestPostPracticeEvidence(Base):
+    """
+    Dedicated records for post-contest practice submissions on official contest problems.
+    """
+    __tablename__ = "contest_post_practice_evidence"
+    __table_args__ = {"extend_existing": True}
 
+    id = Column(Integer, primary_key=True, index=True)
+    contest_id = Column(String(100), nullable=False, index=True)
+    session_id = Column(Integer, ForeignKey("weekly_sessions.id"), nullable=False, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    registration_number = Column(String(50), nullable=False, index=True)
+    leetcode_username = Column(String(100), nullable=False, index=True)
+    
+    problem_id = Column(String(50), nullable=False)
+    question_number = Column(Integer, nullable=False)
+    slug = Column(String(150), nullable=False, index=True)
+    submission_id = Column(String(100), nullable=True)
+    status = Column(String(50), default="ACCEPTED")
+    accepted_timestamp_utc = Column(DateTime, nullable=True)
+    accepted_timestamp_ist = Column(String(50), nullable=True)
+    evidence_source = Column(String(100), default="LeetCode Recent Submissions API")
+    detected_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    session = relationship("WeeklySession")
+    student = relationship("Student")
+
+
+class VirtualScanAudit(Base):
+    """
+    Forensic scan execution log for complete audit traceability.
+    """
+    __tablename__ = "virtual_scan_audits"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    scan_id = Column(String(100), unique=True, nullable=False, index=True)
+    contest_id = Column(String(100), nullable=False, index=True)
+    started_at = Column(DateTime, default=datetime.datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
+    
+    students_scanned = Column(Integer, default=0)
+    profiles_valid = Column(Integer, default=0)
+    profiles_invalid = Column(Integer, default=0)
+    live_candidates = Column(Integer, default=0)
+    virtual_candidates = Column(Integer, default=0)
+    practice_candidates = Column(Integer, default=0)
+    
+    api_success = Column(Boolean, default=True)
+    api_failure = Column(Boolean, default=False)
+    evidence_found = Column(Integer, default=0)
+    evidence_unavailable = Column(Integer, default=0)
+    snapshot_created = Column(Boolean, default=False)
+    checksum = Column(String(128), nullable=True)
+    engine_version = Column(String(50), default="5.0.0-FORENSIC-FINAL")
