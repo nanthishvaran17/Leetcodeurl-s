@@ -295,26 +295,45 @@ import re
 
 def get_contest_filename_base(contest_name: str, session_date: str = None, dept: str = "ALL", year: str = "ALL", attendance: str = "ALL") -> str:
     """
-    Derives standard professional institutional report filename with dept & year:
-    e.g. Nandha_Engineering_College_Weekly_Contest_516_CSE_IOT_All_Years_2026-08-23
-         Nandha_Engineering_College_Weekly_Contest_516_CSE_CS_III_Year_2026-08-23
-         Nandha_Engineering_College_Weekly_Contest_516_All_Departments_2026-08-23
+    NEC-branded compact filename:
+    NEC_WC516_CSE-IOT_IV-Yr_23Aug2026
+    NEC_WC516_CSE-CS_III-Yr_23Aug2026
+    NEC_WC516_All-Depts_All-Yrs_23Aug2026
     """
     import re
-    now_ist = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
-    date_str = session_date.replace(".", "-") if session_date else now_ist.strftime("%Y-%m-%d")
 
-    # --- Contest number segment ---
+    # --- Contest number ---
     m = re.search(r'\d+', str(contest_name or ""))
-    contest_seg = f"Weekly_Contest_{m.group(0)}" if m else "Weekly_Report"
+    contest_seg = f"WC{m.group(0)}" if m else "WC"
 
-    # --- Department segment ---
+    # --- Date: compact 23Aug2026 ---
+    MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+    if session_date:
+        parts = re.split(r'[.\-/]', str(session_date))
+        try:
+            if len(parts) == 3:
+                # could be DD.MM.YYYY or YYYY-MM-DD
+                if len(parts[0]) == 4:           # YYYY-MM-DD
+                    dd, mm, yyyy = int(parts[2]), int(parts[1]), parts[0]
+                else:                            # DD.MM.YYYY
+                    dd, mm, yyyy = int(parts[0]), int(parts[1]), parts[2]
+                date_seg = f"{dd:02d}{MONTHS[mm-1]}{yyyy}"
+            else:
+                date_seg = str(session_date).replace(".", "")
+        except Exception:
+            date_seg = str(session_date).replace(".", "")
+    else:
+        import datetime
+        now = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
+        date_seg = f"{now.day:02d}{MONTHS[now.month-1]}{now.year}"
+
+    # --- Department short slug ---
     DEPT_SLUG = {
         "CSE":      "CSE",
         "IT":       "IT",
         "AIDS":     "AIDS",
-        "CSE(CS)":  "CSE_CS",
-        "CSE(IOT)": "CSE_IOT",
+        "CSE(CS)":  "CSE-CS",
+        "CSE(IOT)": "CSE-IOT",
         "ECE":      "ECE",
         "EEE":      "EEE",
         "MECH":     "MECH",
@@ -323,22 +342,19 @@ def get_contest_filename_base(contest_name: str, session_date: str = None, dept:
         "BME":      "BME",
     }
     d = str(dept or "ALL").upper().strip()
-    if d in ("ALL", "", "ALL DEPARTMENTS"):
-        dept_seg = "All_Departments"
-    else:
-        dept_seg = DEPT_SLUG.get(d, re.sub(r'[^A-Z0-9]', '_', d))
+    dept_seg = "All-Depts" if d in ("ALL", "", "ALL DEPARTMENTS") else DEPT_SLUG.get(d, d)
 
-    # --- Year segment ---
+    # --- Year short slug ---
     y = str(year or "ALL").upper().strip()
     YEAR_SLUG = {
-        "II": "II_Year", "2": "II_Year",
-        "III": "III_Year", "3": "III_Year",
-        "IV": "IV_Year", "4": "IV_Year",
-        "ALL": "All_Years", "": "All_Years",
+        "II": "II-Yr", "2": "II-Yr",
+        "III": "III-Yr", "3": "III-Yr",
+        "IV": "IV-Yr", "4": "IV-Yr",
+        "ALL": "All-Yrs", "": "All-Yrs",
     }
-    year_seg = YEAR_SLUG.get(y, f"{y}_Year")
+    year_seg = YEAR_SLUG.get(y, f"{y}-Yr")
 
-    return f"Nandha_Engineering_College_{contest_seg}_{dept_seg}_{year_seg}_{date_str}"
+    return f"NEC_{contest_seg}_{dept_seg}_{year_seg}_{date_seg}"
 
 def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: str = "ALL", attendance: str = "ALL"):
     # First check ReportHistory
