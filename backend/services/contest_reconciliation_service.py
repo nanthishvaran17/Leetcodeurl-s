@@ -58,14 +58,15 @@ class EvidenceLevel:
     NO_EVIDENCE = "NO_EVIDENCE"                                      # No contest activity recorded
 
 
-# ─── CANONICAL ATTENDANCE STATES (MUTUALLY EXCLUSIVE) ──────────────────────────
+# ─── CANONICAL ATTENDANCE STATES (5 MUTUALLY EXCLUSIVE STATES) ─────────────────
 class CanonicalAttendanceState:
+    DATA_ERROR = "DATA_ERROR"
     LIVE_ATTENDED = "LIVE_ATTENDED"
     VIRTUAL_ATTENDED = "VIRTUAL_ATTENDED"
+    POST_CONTEST_PRACTICE = "POST_CONTEST_PRACTICE"
     NOT_ATTENDED = "NOT_ATTENDED"
-    DATA_ERROR = "DATA_ERROR"
 
-    ALL_STATES = {LIVE_ATTENDED, VIRTUAL_ATTENDED, NOT_ATTENDED, DATA_ERROR}
+    ALL_STATES = {DATA_ERROR, LIVE_ATTENDED, VIRTUAL_ATTENDED, POST_CONTEST_PRACTICE, NOT_ATTENDED}
 
 
 # ─── EVIDENCE CLASSIFICATION STATES ────────────────────────────────────────────
@@ -407,15 +408,16 @@ class UniversalContestReconciliationEngine:
         # 6. Reconcile Counts
         live_attended = sum(1 for r in student_records if r["attendance_state"] == CanonicalAttendanceState.LIVE_ATTENDED)
         virtual_attended = sum(1 for r in student_records if r["attendance_state"] == CanonicalAttendanceState.VIRTUAL_ATTENDED)
+        post_contest_practice_count = sum(1 for r in student_records if r["attendance_state"] == CanonicalAttendanceState.POST_CONTEST_PRACTICE)
         not_attended = sum(1 for r in student_records if r["attendance_state"] == CanonicalAttendanceState.NOT_ATTENDED)
         data_errors = sum(1 for r in student_records if r["attendance_state"] == CanonicalAttendanceState.DATA_ERROR)
-        post_contest_practice_count = sum(1 for r in student_records if r.get("post_contest_practice") is True)
 
-        total_classified = live_attended + virtual_attended + not_attended + data_errors
+        total_classified = live_attended + virtual_attended + post_contest_practice_count + not_attended + data_errors
 
         # 7. Check Mathematical Invariants
         invariant_pass = (total_classified == total_roster) and (total_roster == 1450 or total_roster > 0)
-        math_formula = f"{live_attended} (Live) + {virtual_attended} (Virtual) + {not_attended} (Absent) + {data_errors} (Data Errors) = {total_classified} (Total: {total_roster})"
+        math_formula = f"{live_attended} (Live) + {virtual_attended} (Virtual) + {post_contest_practice_count} (Practice) + {not_attended} (Absent) + {data_errors} (Data Errors) = {total_classified} (Total: {total_roster})"
+        institutional_math = f"{live_attended} (Live) + {virtual_attended} (Virtual) + {not_attended + post_contest_practice_count} (Non-Attended/Practice) + {data_errors} (Data Errors) = {total_classified} (Total: {total_roster})"
 
         # 8. Calculate Solve Distribution on Live Attendees
         live_records = [r for r in student_records if r["attendance_state"] == CanonicalAttendanceState.LIVE_ATTENDED]
@@ -423,22 +425,73 @@ class UniversalContestReconciliationEngine:
             live_records, total_expected_population=live_attended
         )
 
-        # 9. Practice Candidate Table (to explain why Virtual is 0 or inspect practice activity)
-        practice_candidates = [
-            r for r in student_records
-            if r["attendance_state"] == CanonicalAttendanceState.NOT_ATTENDED and (r.get("post_contest_practice") is True or r.get("solved", 0) > 0)
+        # 9. Extract Dedicated Lists
+        verified_virtual_list = [
+            r for r in student_records if r["attendance_state"] == CanonicalAttendanceState.VIRTUAL_ATTENDED
+        ]
+        post_contest_practice_list = [
+            r for r in student_records if r["attendance_state"] == CanonicalAttendanceState.POST_CONTEST_PRACTICE
+        ]
+        data_error_list = [
+            {
+                "student_id": r["student_id"],
+                "reg_no": r["reg_no"],
+                "name": r["name"],
+                "dept": r["dept"],
+                "year": r["year"],
+                "username": r["username"] or "—",
+                "error_reason": r.get("audit_reason", "Unlinked handle")
+            }
+            for r in student_records if r["attendance_state"] == CanonicalAttendanceState.DATA_ERROR
         ]
 
-        # 10. Generate Immutable Dataset Signature
+        # 10. Generate REPORT A (Official Attendance) & REPORT B (Virtual/Practice Audit)
+        report_a = [
+            {
+                "reg_no": r["reg_no"],
+                "name": r["name"],
+                "dept": r["dept"],
+                "year": r["year"],
+                "username": r["username"],
+                "final_attendance": r["attendance_state"],
+                "evidence_level": r["evidence_level"]
+            }
+            for r in student_records
+        ]
+
+        report_b = [
+            {
+                "reg_no": r["reg_no"],
+                "name": r["name"],
+                "dept": r["dept"],
+                "year": r["year"],
+                "username": r["username"],
+                "q1": r["q1"],
+                "q2": r["q2"],
+                "q3": r["q3"],
+                "q4": r["q4"],
+                "solved": r["solved"],
+                "first_accepted_ist": r["first_accepted_ist"],
+                "last_accepted_ist": r["last_accepted_ist"],
+                "virtual_evidence": "VERIFIED" if r["virtual_verified"] else "NONE",
+                "evidence_level": r["evidence_level"],
+                "final_status": r["attendance_state"],
+                "evidence_source": r["evidence_source"]
+            }
+            for r in student_records
+            if r["attendance_state"] in (CanonicalAttendanceState.VIRTUAL_ATTENDED, CanonicalAttendanceState.POST_CONTEST_PRACTICE)
+        ]
+
+        # 11. Generate Immutable Dataset Signature
         dataset_signature = {
             "contest_id": contest_id,
             "engine_version": cls.ENGINE_VERSION,
             "total_roster": total_roster,
             "live_attended": live_attended,
             "virtual_attended": virtual_attended,
+            "post_contest_practice": post_contest_practice_count,
             "not_attended": not_attended,
             "data_errors": data_errors,
-            "post_contest_practice": post_contest_practice_count,
             "math_formula": math_formula
         }
         dataset_checksum = hashlib.sha256(json.dumps(dataset_signature, sort_keys=True).encode("utf-8")).hexdigest()
@@ -455,31 +508,45 @@ class UniversalContestReconciliationEngine:
             "live_attended": live_attended,
             "verified_virtual": virtual_attended,
             "virtual_attended": virtual_attended,
+            "post_contest_practice": post_contest_practice_count,
             "not_attended": not_attended,
             "data_errors": data_errors,
-            "post_contest_practice": post_contest_practice_count,
             "math_formula": math_formula,
+            "institutional_math": institutional_math,
             "invariant_status": "PASS" if invariant_pass else "FAIL",
             "problem_set_status": problem_set.problem_set_status,
             "problems_audited": [p.title_slug for p in problem_set.problems],
+            "official_problems": [
+                {
+                    "position": p.index,
+                    "title": p.title,
+                    "slug": p.title_slug,
+                    "points": p.points,
+                    "difficulty": p.difficulty
+                }
+                for p in problem_set.problems
+            ],
             "solve_distribution": solve_distribution_audit["tier_counts"],
             "percentages": solve_distribution_audit["percentages"],
             "performance_table": solve_distribution_audit["performance_table"],
             "question_totals": solve_distribution_audit["question_totals"],
             "department_reconciliation": solve_distribution_audit["department_reconciliation"],
             "year_reconciliation": solve_distribution_audit["year_reconciliation"],
-            "practice_candidates_count": len(practice_candidates),
-            "practice_candidates": practice_candidates,
+            "verified_virtual_list": verified_virtual_list,
+            "post_contest_practice_list": post_contest_practice_list,
+            "data_error_list": data_error_list,
+            "report_a_official_attendance_count": len(report_a),
+            "report_b_virtual_practice_count": len(report_b),
             "checksum": dataset_checksum,
             "generated_at": datetime.datetime.now(IST_TZ).isoformat()
         }
 
-        # 11. If NOT dry run and invariants pass, update DB and invalidate caches
+        # 12. If NOT dry run and invariants pass, update DB and invalidate caches
         if not dry_run and invariant_pass and session_obj:
             session_obj.total_students = total_roster
             session_obj.official_participants = live_attended
             session_obj.virtual_participants = virtual_attended
-            session_obj.not_participated = not_attended
+            session_obj.not_participated = not_attended + post_contest_practice_count
             session_obj.failed_verification = data_errors
             session_obj.sync_status = "🟢 Verified"
             session_obj.last_synced = datetime.datetime.utcnow()
