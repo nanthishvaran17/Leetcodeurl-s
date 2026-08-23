@@ -219,20 +219,28 @@ class UniversalWeeklyContestAutopilot:
             reconciliation = UniversalContestReconciliationEngine.reconcile_contest(
                 session.id, db, sync_mode="BACKGROUND_SYNC"
             )
-            audit = reconciliation["audit"]
+            audit = reconciliation.get("audit", reconciliation)
+            reconciliation_passed = audit.get("reconciliation_passed")
+            if reconciliation_passed is None:
+                reconciliation_passed = (
+                    audit.get("reconciliation_status") == "PASS"
+                    if "reconciliation_status" in audit
+                    else bool(audit.get("success"))
+                )
 
             self.last_sync_timestamp = datetime.datetime.now(datetime.timezone.utc)
-            self.last_action_summary = f"Live telemetry synced: {audit['live_attended']} Live Solvers"
-            self.telemetry["processed_count"] = audit["total_roster"]
+            live_attended = audit.get("live_attended", 0)
+            self.last_action_summary = f"Live telemetry synced: {live_attended} Live Solvers"
+            self.telemetry["processed_count"] = audit.get("total_roster", 0)
 
             return {
                 "phase": "LIVE_CYCLE",
                 "success": True,
                 "session_id": session.id,
-                "live_attended": audit["live_attended"],
-                "data_errors": audit["data_errors"],
+                "live_attended": live_attended,
+                "data_errors": audit.get("data_errors", 0),
                 "retried_count": 0,
-                "reconciliation_passed": audit["reconciliation_passed"]
+                "reconciliation_passed": reconciliation_passed
             }
         except Exception as e:
             logger.error(f"[AUTOPILOT_CYCLE_ERROR] {e}", exc_info=True)
@@ -265,16 +273,22 @@ class UniversalWeeklyContestAutopilot:
             reconciliation = UniversalContestReconciliationEngine.reconcile_contest(
                 session.id, db, sync_mode="POST_CONTEST_SYNC"
             )
-            audit = reconciliation["audit"]
+            audit = reconciliation.get("audit", reconciliation)
+            virtual_attended = audit.get("virtual_attended", audit.get("verified_virtual", 0))
+            live_attended = audit.get("live_attended", 0)
+            not_attended = audit.get("not_attended", 0)
 
             session.final_snapshot_id = f"SNAPSHOT-{meta_num(session.contest_name)}-FINAL-{session.id}"
-            session.dataset_hash = audit["dataset_hash"]
+            session.dataset_hash = audit.get("dataset_hash") or audit.get("checksum")
             session.finalized_at = datetime.datetime.now(datetime.timezone.utc)
             db.commit()
 
             self.current_phase = AutopilotState.VIRTUAL_MONITORING
             self.last_sync_timestamp = datetime.datetime.now(datetime.timezone.utc)
-            self.last_action_summary = f"Contest {session.contest_name} Finalized: {audit['live_attended']} Live | {audit['virtual_attended']} Virtual | {audit['not_attended']} Absent"
+            self.last_action_summary = (
+                f"Contest {session.contest_name} Finalized: "
+                f"{live_attended} Live | {virtual_attended} Virtual | {not_attended} Absent"
+            )
 
             return {
                 "phase": "FINALIZATION",
@@ -415,16 +429,24 @@ class UniversalWeeklyContestAutopilot:
             reconciliation = UniversalContestReconciliationEngine.reconcile_contest(
                 session.id, db, sync_mode="VIRTUAL_RECHECK"
             )
-            audit = reconciliation["audit"]
+            audit = reconciliation.get("audit", reconciliation)
+            virtual_attended = audit.get("virtual_attended", audit.get("verified_virtual", 0))
+            reconciliation_passed = audit.get("reconciliation_passed")
+            if reconciliation_passed is None:
+                reconciliation_passed = (
+                    audit.get("reconciliation_status") == "PASS"
+                    if "reconciliation_status" in audit
+                    else bool(audit.get("success"))
+                )
 
             self.last_sync_timestamp = datetime.datetime.now(datetime.timezone.utc)
-            self.last_action_summary = f"Virtual Recheck complete: {audit['virtual_attended']} Verified Virtual Solvers"
+            self.last_action_summary = f"Virtual Recheck complete: {virtual_attended} Verified Virtual Solvers"
 
             return {
                 "phase": "VIRTUAL_RECHECK",
                 "success": True,
-                "virtual_attended": audit["virtual_attended"],
-                "reconciliation_passed": audit["reconciliation_passed"]
+                "virtual_attended": virtual_attended,
+                "reconciliation_passed": reconciliation_passed
             }
         except Exception as e:
             logger.error(f"[AUTOPILOT_VIRTUAL_ERROR] {e}", exc_info=True)
@@ -687,5 +709,4 @@ def meta_num(contest_name: Optional[str]) -> int:
 # Global Canonical Exports (Supporting both new and backward-compatible consumers)
 weekly_contest_autopilot = UniversalWeeklyContestAutopilot()
 sunday_autopilot = weekly_contest_autopilot
-
 

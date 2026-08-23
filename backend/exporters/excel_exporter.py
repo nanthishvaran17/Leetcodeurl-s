@@ -137,6 +137,8 @@ def normalize_row_data(r: dict) -> dict:
         "dept": dept,
         "year": year,
         "username": r.get("username") or "—",
+        "raw_status": status_str,
+        "is_virtual": status_str == "VIRTUAL",
         "status": "OFFICIAL_ATTENDED" if is_att else "PUBLIC_NOT_ATTENDED",
         "is_att": is_att,
         "q1": q1,
@@ -339,7 +341,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
             cell.font = FONT_REGULAR
             cell.alignment = ALIGN_LEFT if c_i in (3, 6, 10) else ALIGN_CENTER
             if c_i == 7:
-                cell.fill = GREEN_FILL if is_live else (BLUE_FILL if is_virt else ROSE_FILL)
+                cell.fill = GREEN_FILL if is_live else (LIGHT_BLUE_FILL if is_virt else ROSE_FILL)
                 cell.font = FONT_BOLD
             _apply_thin_border(cell)
 
@@ -616,6 +618,46 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         _apply_thin_border(c_v)
         ws13.row_dimensions[r13_cur].height = 20
         r13_cur += 1
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # LEGACY COMPATIBILITY SHEETS (for older consumers/tests)
+    # ──────────────────────────────────────────────────────────────────────────
+    ws_legacy_perf = wb.create_sheet(title="Contest Performance")
+    _write_college_header(ws_legacy_perf, "CONTEST PERFORMANCE", dept_header_text, 12, metadata_block)
+    perf_hdr_row = 7
+    perf_headers = ["S.No", "Register No", "Student Name", "Dept", "Year", "Status", "Q1", "Q2", "Q3", "Q4", "Solved", "Score"]
+    for c_i, h in enumerate(perf_headers, 1):
+        cell = ws_legacy_perf.cell(row=perf_hdr_row, column=c_i, value=h)
+        cell.font = FONT_WHITE_BOLD
+        cell.fill = NAVY_FILL
+        cell.alignment = ALIGN_CENTER
+        _apply_thin_border(cell)
+    for idx, r in enumerate(rows, 1):
+        row_num = perf_hdr_row + idx
+        for c_i, v in enumerate([idx, r["reg_no"], r["name"], r["dept"], r["year"], r["raw_status"], r["q1"], r["q2"], r["q3"], r["q4"], r["solved_str"], r["score"]], 1):
+            cell = ws_legacy_perf.cell(row=row_num, column=c_i, value=v)
+            cell.font = FONT_REGULAR
+            cell.alignment = ALIGN_LEFT if c_i == 3 else ALIGN_CENTER
+            _apply_thin_border(cell)
+
+    ws_legacy_public = wb.create_sheet(title="Public Attended Roster")
+    _write_college_header(ws_legacy_public, "PUBLIC ATTENDED ROSTER", dept_header_text, 12, metadata_block)
+    public_hdr_row = 8
+    public_headers = ["S.No", "Register No", "Student Name", "Dept", "Year", "LeetCode Handle", "Q1", "Q2", "Q3", "Q4", "Solved", "Score"]
+    for c_i, h in enumerate(public_headers, 1):
+        cell = ws_legacy_public.cell(row=public_hdr_row, column=c_i, value=h)
+        cell.font = FONT_WHITE_BOLD
+        cell.fill = NAVY_FILL
+        cell.alignment = ALIGN_CENTER
+        _apply_thin_border(cell)
+    public_rows = [r for r in rows if r["raw_status"] in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED")]
+    for idx, r in enumerate(public_rows, 1):
+        row_num = public_hdr_row + idx
+        for c_i, v in enumerate([idx, r["reg_no"], r["name"], r["dept"], r["year"], r["username"], r["q1"], r["q2"], r["q3"], r["q4"], r["solved_str"], r["score"]], 1):
+            cell = ws_legacy_public.cell(row=row_num, column=c_i, value=v)
+            cell.font = FONT_REGULAR
+            cell.alignment = ALIGN_LEFT if c_i in (3, 6) else ALIGN_CENTER
+            _apply_thin_border(cell)
 
     # Auto-adjust column widths
     for ws_item in wb.worksheets:
