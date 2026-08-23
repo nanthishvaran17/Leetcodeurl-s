@@ -1771,20 +1771,23 @@ export const WeeklyContestPage: React.FC = () => {
               <GraduationCap className="w-4 h-4 text-brand-500 shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Academic Year</p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  {selectedYearFilter === 'ALL' ? (
-                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300">ALL</span>
-                  ) : selectedYearFilter === 'II' ? (
-                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300">II</span>
-                  ) : selectedYearFilter === 'III' ? (
-                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300">III</span>
-                  ) : (
-                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300">IV</span>
-                  )}
-                  <span className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">
-                    {selectedYearFilter === 'ALL' ? 'All Academic Years' : selectedYearFilter === 'II' ? 'II Year (2025–2029)' : selectedYearFilter === 'III' ? 'III Year (2024–2028)' : 'IV Year (2023–2027)'}
-                  </span>
-                </div>
+                {!yearOpen && (
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    {selectedYearFilter === 'ALL' ? (
+                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300">ALL</span>
+                    ) : selectedYearFilter === 'II' ? (
+                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300">II</span>
+                    ) : selectedYearFilter === 'III' ? (
+                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300">III</span>
+                    ) : (
+                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300">IV</span>
+                    )}
+                    <span className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">
+                      {selectedYearFilter === 'ALL' ? 'All Academic Years' : selectedYearFilter === 'II' ? 'II Year (2025–2029)' : selectedYearFilter === 'III' ? 'III Year (2024–2028)' : 'IV Year (2023–2027)'}
+                    </span>
+                  </div>
+                )}
+                {yearOpen && <p className="text-[10px] text-gray-400 mt-0.5 italic">Choose a year below...</p>}
               </div>
               <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${yearOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -1833,22 +1836,15 @@ export const WeeklyContestPage: React.FC = () => {
               <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Attendance Status</p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  {{
-                    'ALL':                { dot: 'bg-gray-400',    label: 'All Statuses' },
-                    'PUBLIC_ATTENDED':    { dot: 'bg-emerald-500', label: 'Public Attended' },
-                    'VIRTUAL_ATTENDED':   { dot: 'bg-purple-500',  label: 'Virtual Attended' },
-                    'PUBLIC_NOT_ATTENDED':{ dot: 'bg-rose-400',    label: 'Not Attended' },
-                    'DATA_ERROR':         { dot: 'bg-amber-500',   label: 'Data Errors' },
-                  }[selectedAttendanceFilter] && (
-                    <>
-                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${({ 'ALL':'bg-gray-400','PUBLIC_ATTENDED':'bg-emerald-500','VIRTUAL_ATTENDED':'bg-purple-500','PUBLIC_NOT_ATTENDED':'bg-rose-400','DATA_ERROR':'bg-amber-500' } as any)[selectedAttendanceFilter]}`} />
-                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">
-                        {({ 'ALL':'All Statuses','PUBLIC_ATTENDED':'Public Attended','VIRTUAL_ATTENDED':'Virtual Attended','PUBLIC_NOT_ATTENDED':'Not Attended','DATA_ERROR':'Data Errors' } as any)[selectedAttendanceFilter]}
-                      </span>
-                    </>
-                  )}
-                </div>
+                {!attOpen && (
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${({ 'ALL':'bg-gray-400','PUBLIC_ATTENDED':'bg-emerald-500','VIRTUAL_ATTENDED':'bg-purple-500','PUBLIC_NOT_ATTENDED':'bg-rose-400','DATA_ERROR':'bg-amber-500' } as any)[selectedAttendanceFilter] || 'bg-gray-400'}`} />
+                    <span className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">
+                      {({ 'ALL':'All Statuses','PUBLIC_ATTENDED':'Public Attended','VIRTUAL_ATTENDED':'Virtual Attended','PUBLIC_NOT_ATTENDED':'Not Attended','DATA_ERROR':'Data Errors' } as any)[selectedAttendanceFilter] || 'All Statuses'}
+                    </span>
+                  </div>
+                )}
+                {attOpen && <p className="text-[10px] text-gray-400 mt-0.5 italic">Choose a status below...</p>}
               </div>
               <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${attOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -1893,6 +1889,7 @@ export const WeeklyContestPage: React.FC = () => {
                   setSelectedYearFilter('ALL');
                   setSelectedAttendanceFilter('ALL');
                   setSearchTerm('');
+                  setDeptOpen(false); setYearOpen(false); setAttOpen(false);
                 }}
                 className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 text-xs font-black border border-rose-200 dark:border-rose-800/60 transition-all cursor-pointer active:scale-95 shadow-sm"
               >
