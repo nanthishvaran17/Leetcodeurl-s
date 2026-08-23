@@ -636,8 +636,11 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
       </div>
 
       {/* Viewport-Centered Student Edit Modal */}
-      {editingStudent && (
+      {editingStudent && typeof document !== 'undefined' && createPortal(
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Edit profile for ${editingStudent.name}`}
           className="modal-overlay-responsive animate-modal-backdrop"
           onClick={(e) => {
             if (e.target === e.currentTarget && !isSaving) setEditingStudent(null);
@@ -749,12 +752,16 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Viewport-Centered Student Delete Confirmation Modal */}
-      {deletingStudent && (
+      {deletingStudent && typeof document !== 'undefined' && createPortal(
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Deactivate student record for ${deletingStudent.name}`}
           className="modal-overlay-responsive animate-modal-backdrop"
           onClick={(e) => {
             if (e.target === e.currentTarget && !isDeleting) setDeletingStudent(null);
@@ -795,7 +802,8 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ================================================================
