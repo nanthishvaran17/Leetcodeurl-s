@@ -1,9 +1,13 @@
+import asyncio
 import datetime
+import logging
 import re
 from typing import Dict, Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Response, Query
 from sqlalchemy.orm import Session
-from backend.database import get_db
+from backend.database import get_db, SessionLocal
+
+logger = logging.getLogger(__name__)
 from backend.models import (
     WeeklySession, WeeklyPublicResult, WeeklyVirtualResult, 
     WeeklyContestErrorLog, OfficialWeeklySnapshot, Student
