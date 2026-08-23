@@ -1172,3 +1172,17 @@ def toggle_autopilot(
         "message": "Autopilot active" if enable else "Autopilot paused"
     }
 
+
+@router.post("/sessions/{session_id}/virtual-recheck")
+def virtual_recheck_contest(
+    session_id: int,
+    dry_run: bool = Query(False, description="If true, computes and returns reconciliation without modifying stored snapshots"),
+    db: Session = Depends(get_db)
+):
+    """
+    ENTERPRISE FORENSIC RECONCILIATION ENGINE:
+    Executes authoritative problem-level & virtual participation audit.
+    """
+    from backend.services.contest_reconciliation_service import UniversalContestReconciliationEngine
+    return UniversalContestReconciliationEngine.reconcile_contest(session_id, db, dry_run=dry_run, sync_mode="VIRTUAL_RECHECK")
+
