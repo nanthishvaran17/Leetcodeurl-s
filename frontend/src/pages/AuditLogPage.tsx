@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ShieldAlert, Clock, Search, Filter, RefreshCw, CheckCircle2, AlertTriangle, UserCheck, X, Eye, Laptop, Terminal } from 'lucide-react';
 import api from '../services/api';
 
@@ -30,6 +31,22 @@ export const AuditLogPage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Lock body scroll when inspection modal is open
+  useEffect(() => {
+    if (selectedLog) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setSelectedLog(null);
+      };
+      window.addEventListener('keydown', onKey);
+      return () => {
+        document.body.style.overflow = prevOverflow || 'unset';
+        window.removeEventListener('keydown', onKey);
+      };
+    }
+  }, [selectedLog]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -216,9 +233,12 @@ export const AuditLogPage: React.FC = () => {
         )}
       </div>
 
-      {/* Audit Entry Detail Inspection Modal */}
-      {selectedLog && (
+      {/* Audit Entry Detail Inspection Modal — Mounted via Portal to document.body */}
+      {selectedLog && typeof document !== 'undefined' && createPortal(
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Audit log detail for ${selectedLog.audit_id}`}
           className="modal-overlay-responsive animate-modal-backdrop"
           onClick={(e) => {
             if (e.target === e.currentTarget) setSelectedLog(null);
@@ -258,42 +278,21 @@ export const AuditLogPage: React.FC = () => {
                 </div>
                 <div>
                   <span className="font-extrabold text-gray-400 uppercase tracking-wider text-[10px]">Role / Access Level</span>
-                  <div className="font-black text-indigo-600 dark:text-indigo-400 text-sm mt-0.5">{selectedLog.admin_role}</div>
+                  <div className="font-black text-gray-900 dark:text-white text-sm mt-0.5">{selectedLog.admin_role || 'Admin'}</div>
+                  <div className="text-gray-500 text-[11px] font-mono">{selectedLog.ip_address || '127.0.0.1'}</div>
                 </div>
               </div>
 
-              {/* Action Description Box */}
-              <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-800 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-gray-400 uppercase tracking-wider text-[10px]">Action Executed</span>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-black font-mono ${
-                    selectedLog.status === 'SUCCESS' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-800'
-                  }`}>
-                    {selectedLog.status}
-                  </span>
-                </div>
-                <div className="font-mono font-black text-sm text-gray-900 dark:text-white">
-                  {selectedLog.action}
-                </div>
-                <p className="text-gray-700 dark:text-gray-300 font-bold text-xs pt-1 leading-relaxed">
-                  {selectedLog.description}
-                </p>
-              </div>
-
-              {/* Technical Telemetry */}
-              <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-800">
-                <div>
-                  <span className="font-extrabold text-gray-400 uppercase tracking-wider text-[10px]">IP Address</span>
-                  <div className="font-mono font-bold text-gray-900 dark:text-white text-xs mt-0.5">{selectedLog.ip_address || '127.0.0.1'}</div>
-                </div>
-                <div>
-                  <span className="font-extrabold text-gray-400 uppercase tracking-wider text-[10px]">Logged Timestamp</span>
-                  <div className="font-mono font-bold text-gray-900 dark:text-white text-xs mt-0.5">{selectedLog.created_at || 'Just now'}</div>
+              {/* Event Description */}
+              <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-800 space-y-1">
+                <span className="font-extrabold text-gray-400 uppercase tracking-wider text-[10px]">Event Summary & Detail</span>
+                <div className="font-bold text-gray-900 dark:text-white text-xs leading-relaxed">
+                  {selectedLog.details || selectedLog.action}
                 </div>
               </div>
 
-              {/* Target Resource & Action Type */}
-              {(selectedLog.target_type || selectedLog.action_type) && (
+              {/* Target Metadata */}
+              {(selectedLog.target_type || selectedLog.target_id) && (
                 <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-800">
                   <div>
                     <span className="font-extrabold text-gray-400 uppercase tracking-wider text-[10px]">Target Resource</span>
@@ -345,7 +344,8 @@ export const AuditLogPage: React.FC = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>
