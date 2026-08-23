@@ -325,10 +325,12 @@ app.include_router(placement_eligibility.router)
 app.include_router(gamification.router, prefix="/api")
 app.include_router(gamification.router)
 app.include_router(accreditation.router, prefix="/api")
-app.include_router(accreditation.router)
-app.include_router(whatsapp_webhook.router)
 app.include_router(deep_tech_intelligence.router, prefix="/api")
 app.include_router(deep_tech_intelligence.router)
+
+from backend.routes import stats_snapshot
+app.include_router(stats_snapshot.router, prefix="/api")
+app.include_router(stats_snapshot.router)
 
 # Mount Static File Directories
 is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")
