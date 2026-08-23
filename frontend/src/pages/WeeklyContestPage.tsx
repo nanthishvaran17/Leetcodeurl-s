@@ -1796,7 +1796,7 @@ export const WeeklyContestPage: React.FC = () => {
                       <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300">IV</span>
                     )}
                     <span className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">
-                      {selectedYearFilter === 'ALL' ? 'All Academic Years' : selectedYearFilter === 'II' ? 'II Year (2025–2029)' : selectedYearFilter === 'III' ? 'III Year (2024–2028)' : 'IV Year (2023–2027)'}
+                      {selectedYearFilter === 'ALL' ? 'All Academic Years' : selectedYearFilter === 'II' ? 'Year (2025–2029)' : selectedYearFilter === 'III' ? 'Year (2024–2028)' : 'Year (2023–2027)'}
                     </span>
                   </div>
                 )}
@@ -1807,10 +1807,10 @@ export const WeeklyContestPage: React.FC = () => {
             {yearOpen && (
               <div className="absolute z-[100] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl overflow-hidden">
                 {[
-                  { value: 'ALL', label: 'All Academic Years',  code: 'ALL', color: 'text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300' },
-                  { value: 'II',  label: 'II Year (2025–2029)', code: 'II',  color: 'text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300' },
-                  { value: 'III', label: 'III Year (2024–2028)',code: 'III', color: 'text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300' },
-                  { value: 'IV',  label: 'IV Year (2023–2027)', code: 'IV',  color: 'text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
+                  { value: 'ALL', label: 'All Academic Years', code: 'ALL', color: 'text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300' },
+                  { value: 'II',  label: 'Year (2025–2029)',    code: 'II',  color: 'text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300' },
+                  { value: 'III', label: 'Year (2024–2028)',   code: 'III', color: 'text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300' },
+                  { value: 'IV',  label: 'Year (2023–2027)',    code: 'IV',  color: 'text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
                 ].map(opt => (
                   <button
                     key={opt.value}

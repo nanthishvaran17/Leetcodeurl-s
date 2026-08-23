@@ -543,17 +543,17 @@ export const ReportsPage: React.FC = () => {
                   <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300">IV</span>
                 )}
                 <span className="text-xs font-bold text-gray-900 dark:text-white truncate flex-1">
-                  {selectedYear === 'ALL' ? 'All Years (II, III, IV)' : selectedYear === 'II' ? 'II Year (2025–2029)' : selectedYear === 'III' ? 'III Year (2024–2028)' : 'IV Year (2023–2027)'}
+                  {selectedYear === 'ALL' ? 'All Academic Years' : selectedYear === 'II' ? 'Year (2025–2029)' : selectedYear === 'III' ? 'Year (2024–2028)' : 'Year (2023–2027)'}
                 </span>
                 <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${rptYearOpen ? 'rotate-180' : ''}`} />
               </button>
               {rptYearOpen && (
                 <div className="absolute z-[100] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden">
                   {[
-                    { value:'ALL', code:'ALL', label:'All Years (II, III, IV)', color:'text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300' },
-                    { value:'II',  code:'II',  label:'II Year (2025–2029)',     color:'text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300' },
-                    { value:'III', code:'III', label:'III Year (2024–2028)',    color:'text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300' },
-                    { value:'IV',  code:'IV',  label:'IV Year (2023–2027)',     color:'text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
+                    { value:'ALL', code:'ALL', label:'All Academic Years', color:'text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300' },
+                    { value:'II',  code:'II',  label:'Year (2025–2029)',    color:'text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300' },
+                    { value:'III', code:'III', label:'Year (2024–2028)',   color:'text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300' },
+                    { value:'IV',  code:'IV',  label:'Year (2023–2027)',    color:'text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
                   ].map(opt => (
                     <button key={opt.value} type="button"
                       onMouseDown={(e) => e.preventDefault()}
