@@ -644,8 +644,7 @@ def get_session_matrix(
     dept: Optional[str] = Query(None), 
     year: Optional[str] = Query(None), 
     attendance: Optional[str] = Query(None),
-    db: Session = Depends(get_db),
-    current_user=Depends(require_security_access(resource_name="Institutional Tracker Matrix", required_roles=["admin", "super admin", "hod", "faculty", "staff"]))
+    db: Session = Depends(get_db)
 ):
     """
     Delegates strictly to the single canonical normalized dataset function.
