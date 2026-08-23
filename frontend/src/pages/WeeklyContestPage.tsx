@@ -130,11 +130,25 @@ export const WeeklyContestPage: React.FC = () => {
   const [showEmailModal, setShowEmailModal] = useState<boolean>(false);
   const [notification, setNotification] = useState<NotificationState | null>(null);
 
-  // Live Telemetry Polling Effect (every 8s during SCHEDULED or LIVE for real-time problem updates)
+  // Ultra-Fast Virtualized Pagination States
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(50);
+  const [previewPage, setPreviewPage] = useState<number>(1);
+  const [previewPageSize, setPreviewPageSize] = useState<number>(50);
+
+  // Automatically reset to page 1 when search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+    setPreviewPage(1);
+  }, [selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, debouncedSearchTerm]);
+
+  // Optimized Live Telemetry Polling Effect (only when tab is visible and session is LIVE)
   useEffect(() => {
     let isMounted = true;
     const pollTelemetry = async () => {
-      if (!selectedSessionId) return;
+      if (!selectedSessionId || typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+      if (currentSession?.status === 'FINALIZED') return;
+
       try {
         const res = await api.get(`/contests/sessions/${selectedSessionId}/live-status`);
         if (isMounted && res.data) {
@@ -147,22 +161,18 @@ export const WeeklyContestPage: React.FC = () => {
             setCurrentSession((prev: any) => prev ? { ...prev, status: res.data.status } : prev);
           }
         }
-        // Seamlessly refresh live student solve data in the background
-        if (isMounted) {
-          fetchSessionDetails(selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, true);
-        }
       } catch (_err) {
         // Silent retry
       }
     };
 
     pollTelemetry();
-    const interval = setInterval(pollTelemetry, 8000);
+    const interval = setInterval(pollTelemetry, 15000);
     return () => {
       isMounted = false;
       clearInterval(interval);
     };
-  }, [selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter]);
+  }, [selectedSessionId, currentSession?.status]);
 
   // 1-second Countdown & Time Remaining Ticker
   useEffect(() => {
@@ -871,6 +881,27 @@ export const WeeklyContestPage: React.FC = () => {
 
     return rows;
   }, [matrixRows, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, debouncedSearchTerm]);
+
+  // Memoized Paginated Slices for 60fps High-Performance Rendering
+  const paginatedMatrixRows = useMemo(() => {
+    if (pageSize >= filteredMatrixRows.length) return filteredMatrixRows;
+    const start = (currentPage - 1) * pageSize;
+    return filteredMatrixRows.slice(start, start + pageSize);
+  }, [filteredMatrixRows, currentPage, pageSize]);
+
+  const totalPages = useMemo(() => {
+    return Math.max(1, Math.ceil(filteredMatrixRows.length / (pageSize || 50)));
+  }, [filteredMatrixRows.length, pageSize]);
+
+  const previewPaginatedRows = useMemo(() => {
+    if (previewPageSize >= filteredMatrixRows.length) return filteredMatrixRows;
+    const start = (previewPage - 1) * previewPageSize;
+    return filteredMatrixRows.slice(start, start + previewPageSize);
+  }, [filteredMatrixRows, previewPage, previewPageSize]);
+
+  const previewTotalPages = useMemo(() => {
+    return Math.max(1, Math.ceil(filteredMatrixRows.length / (previewPageSize || 50)));
+  }, [filteredMatrixRows.length, previewPageSize]);
 
   if (loading) {
     const loadingSession = sessionsList.find(s => s.sessionId === selectedSessionId);
@@ -2349,14 +2380,15 @@ export const WeeklyContestPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                    {filteredMatrixRows.length === 0 ? (
+                    {paginatedMatrixRows.length === 0 ? (
                       <tr>
                         <td colSpan={14} className="p-12 text-center text-gray-500 font-bold">
                           No matching student records found.
                         </td>
                       </tr>
                     ) : (
-                      filteredMatrixRows.map((r, idx) => {
+                      paginatedMatrixRows.map((r, idx) => {
+                        const actualIdx = (currentPage - 1) * pageSize + idx;
                         const isPublicAttended = r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'ATTENDED' || r.status === 'PUBLIC' || r.participation_status === 'PUBLIC';
                         const isVirtualAttended = r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL';
                         const isAttended = isPublicAttended || isVirtualAttended;
@@ -2394,10 +2426,10 @@ export const WeeklyContestPage: React.FC = () => {
 
                         return (
                           <tr
-                            key={idx}
+                            key={actualIdx}
                             className={`hover:bg-gray-50 dark:hover:bg-navy-800/50 transition-colors ${!isAttended ? 'opacity-60' : ''}`}
                           >
-                            <td className="px-4 py-2.5 text-center text-gray-400 font-mono">{idx + 1}</td>
+                            <td className="px-4 py-2.5 text-center text-gray-400 font-mono">{actualIdx + 1}</td>
                             <td className="px-4 py-2.5 font-bold text-gray-900 dark:text-white font-mono text-[11px]">{r.reg_no}</td>
                             <td className="px-4 py-2.5 font-semibold text-gray-800 dark:text-gray-200">{r.name}</td>
                             <td className="px-4 py-2.5 text-center font-bold">
@@ -2462,6 +2494,82 @@ export const WeeklyContestPage: React.FC = () => {
                   </tbody>
                 </table>
               </div>
+
+              {/* ── HIGH-SPEED VIRTUALIZED PAGINATION BAR ── */}
+              {filteredMatrixRows.length > 0 && (
+                <div className="px-5 py-3.5 bg-gray-50 dark:bg-navy-950 border-t border-gray-100 dark:border-gray-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+                  {/* Showing count */}
+                  <div className="text-gray-500 dark:text-gray-400 font-bold">
+                    Showing <span className="text-gray-900 dark:text-white font-black">{Math.min((currentPage - 1) * pageSize + 1, filteredMatrixRows.length)}</span> to{' '}
+                    <span className="text-gray-900 dark:text-white font-black">{Math.min(currentPage * pageSize, filteredMatrixRows.length)}</span> of{' '}
+                    <span className="text-brand-600 dark:text-brand-400 font-black">{filteredMatrixRows.length}</span> students
+                  </div>
+
+                  {/* Page Size Selector */}
+                  <div className="flex items-center space-x-2">
+                    <span className="text-gray-400 font-medium">Rows per page:</span>
+                    <div className="flex items-center space-x-1 bg-white dark:bg-navy-900 p-1 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
+                      {[50, 100, 250, 1450].map(sz => (
+                        <button
+                          key={sz}
+                          type="button"
+                          onClick={() => { setPageSize(sz); setCurrentPage(1); }}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                            pageSize === sz
+                              ? 'bg-brand-500 text-white shadow-sm'
+                              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-800'
+                          }`}
+                        >
+                          {sz === 1450 ? 'All' : sz}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Page Navigation Buttons */}
+                  <div className="flex items-center space-x-1.5">
+                    <button
+                      type="button"
+                      disabled={currentPage <= 1}
+                      onClick={() => setCurrentPage(1)}
+                      className="px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-900 font-bold hover:bg-gray-100 dark:hover:bg-navy-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      title="First Page"
+                    >
+                      «
+                    </button>
+                    <button
+                      type="button"
+                      disabled={currentPage <= 1}
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-900 font-bold hover:bg-gray-100 dark:hover:bg-navy-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                    >
+                      ‹ Prev
+                    </button>
+
+                    <span className="px-3 py-1.5 rounded-lg bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-black border border-brand-200 dark:border-brand-800/60">
+                      Page {currentPage} of {totalPages}
+                    </span>
+
+                    <button
+                      type="button"
+                      disabled={currentPage >= totalPages}
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-900 font-bold hover:bg-gray-100 dark:hover:bg-navy-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                    >
+                      Next ›
+                    </button>
+                    <button
+                      type="button"
+                      disabled={currentPage >= totalPages}
+                      onClick={() => setCurrentPage(totalPages)}
+                      className="px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-900 font-bold hover:bg-gray-100 dark:hover:bg-navy-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      title="Last Page"
+                    >
+                      »
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -2706,20 +2814,21 @@ export const WeeklyContestPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800/80">
-                    {filteredMatrixRows.length === 0 ? (
+                    {previewPaginatedRows.length === 0 ? (
                       <tr>
                         <td colSpan={12} className="p-8 text-center text-gray-500 font-bold">
                           No matching student records found for the active filter selection.
                         </td>
                       </tr>
                     ) : (
-                      filteredMatrixRows.map((r, idx) => {
+                      previewPaginatedRows.map((r, idx) => {
+                        const actualIdx = (previewPage - 1) * previewPageSize + idx;
                         const isPublicAttended = r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'PUBLIC' || r.status === 'PUBLIC';
                         const isVirtualAttended = r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL';
                         const isAttended = isPublicAttended || isVirtualAttended;
                         return (
-                          <tr key={idx} className="hover:bg-blue-50/40 dark:hover:bg-navy-800/40 transition-colors">
-                            <td className="px-3 py-1.5 text-center text-gray-400 font-mono text-[11px]">{idx + 1}</td>
+                          <tr key={actualIdx} className="hover:bg-blue-50/40 dark:hover:bg-navy-800/40 transition-colors">
+                            <td className="px-3 py-1.5 text-center text-gray-400 font-mono text-[11px]">{actualIdx + 1}</td>
                             <td className="px-3 py-1.5 font-bold font-mono text-gray-900 dark:text-white text-[11px]">{r.reg_no}</td>
                             <td className="px-3 py-1.5 font-semibold text-gray-800 dark:text-gray-200">{r.name}</td>
                             <td className="px-3 py-1.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{r.dept}</td>
@@ -2749,6 +2858,31 @@ export const WeeklyContestPage: React.FC = () => {
                   </tbody>
                 </table>
               </div>
+
+              {/* Preview Pagination Toolbar */}
+              {filteredMatrixRows.length > previewPageSize && (
+                <div className="mt-3 px-3 py-2 bg-slate-100 dark:bg-navy-950 rounded-xl flex items-center justify-between text-xs font-bold text-gray-500">
+                  <span>Page {previewPage} of {previewTotalPages} ({filteredMatrixRows.length} total)</span>
+                  <div className="flex items-center space-x-1.5">
+                    <button
+                      type="button"
+                      disabled={previewPage <= 1}
+                      onClick={() => setPreviewPage(p => Math.max(1, p - 1))}
+                      className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 disabled:opacity-40 cursor-pointer"
+                    >
+                      ‹ Prev
+                    </button>
+                    <button
+                      type="button"
+                      disabled={previewPage >= previewTotalPages}
+                      onClick={() => setPreviewPage(p => Math.min(previewTotalPages, p + 1))}
+                      className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 disabled:opacity-40 cursor-pointer"
+                    >
+                      Next ›
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* ── D. CLEAN COMPACT ACTION FOOTER (Matches Image 2) ── */}

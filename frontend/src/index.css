@@ -5,6 +5,9 @@
 @layer base {
   html {
     scrollbar-gutter: stable;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   body {
     @apply antialiased font-sans selection:bg-brand-500 selection:text-white bg-slate-50 text-slate-900 dark:bg-navy-950 dark:text-slate-100 transition-colors duration-300;
@@ -12,7 +15,19 @@
                       radial-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px);
     background-size: 32px 32px;
     background-position: 0 0, 16px 16px;
+    transform: translateZ(0);
   }
+}
+
+/* GPU Hardware Acceleration & Smooth 60fps Rendering */
+.gpu-layer {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+.table-perf {
+  contain: paint layout;
 }
 
 .dark body {
