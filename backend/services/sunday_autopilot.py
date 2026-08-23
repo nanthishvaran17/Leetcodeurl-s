@@ -130,6 +130,8 @@ class UniversalWeeklyContestAutopilot:
             active_students = db.query(Student).filter(
                 (Student.is_active == True) | (Student.is_active.is_(None))
             ).all()
+            valid_unames = [s for s in active_students if s.username and s.username.strip()]
+            missing_unames = [s for s in active_students if not s.username or not s.username.strip()]
 
             session.total_students = len(active_students)
             if session.status not in ("LIVE", "FINALIZED", "COMPLETED", "LOCKED"):
@@ -147,6 +149,9 @@ class UniversalWeeklyContestAutopilot:
                 "contest_name": session.contest_name,
                 "session_date": session.session_date,
                 "total_roster": len(active_students),
+                "active_students": len(active_students),
+                "valid_usernames": len(valid_unames),
+                "missing_usernames": len(missing_unames),
                 "status": session.status
             }
         except Exception as e:
@@ -226,6 +231,7 @@ class UniversalWeeklyContestAutopilot:
                 "session_id": session.id,
                 "live_attended": audit["live_attended"],
                 "data_errors": audit["data_errors"],
+                "retried_count": 0,
                 "reconciliation_passed": audit["reconciliation_passed"]
             }
         except Exception as e:
@@ -340,7 +346,11 @@ class UniversalWeeklyContestAutopilot:
                 "excel_path": excel_path,
                 "pdf_path": pdf_path,
                 "word_path": word_path,
-                "zip_path": zip_path
+                "zip_path": zip_path,
+                "excel_bytes_len": len(excel_bytes),
+                "pdf_bytes_len": len(pdf_bytes),
+                "word_bytes_len": len(word_bytes),
+                "zip_bytes_len": len(zip_bytes)
             }
         except Exception as e:
             logger.error(f"[AUTOPILOT_REPORT_ERROR] {e}", exc_info=True)
@@ -541,10 +551,47 @@ class UniversalWeeklyContestAutopilot:
             if close_on_exit:
                 db.close()
 
-    def _resolve_target_session(self, db: Session, session_id: Optional[int]) -> Optional[WeeklySession]:
+    def _resolve_target_session(self, db: Session, session_id: Optional[int] = None) -> Optional[WeeklySession]:
         if session_id:
             return db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
         return db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+
+    async def resume_or_recover_on_startup(self, db: Optional[Session] = None):
+        """
+        Startup Recovery Guard:
+        Inspects current IST time and active session state. If the server restarted
+        during live contest or after contest without finalization, it recovers seamlessly.
+        """
+        close_on_exit = False
+        if db is None:
+            db = SessionLocal()
+            close_on_exit = True
+
+        try:
+            now_ist = get_current_ist_datetime()
+            is_sunday = (now_ist.weekday() == 6)
+
+            session = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+            if not session:
+                return
+
+            current_time = now_ist.time()
+            time_0800 = datetime.time(8, 0, 0)
+            time_0930 = datetime.time(9, 30, 0)
+
+            if is_sunday and time_0800 <= current_time < time_0930:
+                logger.info(f"[AUTOPILOT_RECOVERY] Detected Sunday live contest window ({now_ist.strftime('%H:%M:%S IST')}). Resuming LIVE engine...")
+                session.status = "LIVE"
+                db.commit()
+            elif is_sunday and current_time >= time_0930 and session.status in ("LIVE", "RUNNING", "SCHEDULED"):
+                logger.info(f"[AUTOPILOT_RECOVERY] Detected unfinalized contest past 09:30 AM IST. Running auto finalization...")
+                self.phase_4_finalization_and_reconciliation(session.id, db)
+                self.phase_5_report_generation(session.id, db)
+        except Exception as e:
+            logger.warning(f"[AUTOPILOT_RECOVERY_NOTE] {e}")
+        finally:
+            if close_on_exit:
+                db.close()
 
 
 def meta_num(contest_name: Optional[str]) -> int:
@@ -554,6 +601,91 @@ def meta_num(contest_name: Optional[str]) -> int:
     return int(m.group(1)) if m else 516
 
 
-# Global Singleton Instance
+# Global Canonical Singletons
 weekly_contest_autopilot = UniversalWeeklyContestAutopilot()
-SundayAutopilotCoordinator = UniversalWeeklyContestAutopilot  # Aliased for backward-compatibility
+sunday_autopilot = weekly_contest_autopilot
+
+
+class SundayAutopilotCoordinator:
+    """
+    Backward-compatibility coordinator delegating to the UniversalWeeklyContestAutopilot singleton.
+    Preserves exact historical function signatures and async conventions for legacy test suites and external hooks.
+    """
+    @classmethod
+    def phase_1_preflight_0755(cls, db: Optional[Session] = None) -> Dict[str, Any]:
+        return weekly_contest_autopilot.phase_1_discovery_and_preparation(db)
+
+    @classmethod
+    async def phase_2_baseline_0800(cls, db_or_session_id: Any = None, db: Optional[Session] = None) -> Dict[str, Any]:
+        if isinstance(db_or_session_id, Session):
+            db, session_id = db_or_session_id, None
+        else:
+            session_id = db_or_session_id
+        return weekly_contest_autopilot.phase_2_start_live_monitoring(session_id, db)
+
+    @classmethod
+    async def phase_3_live_monitoring_cycle(cls, db_or_session_id: Any = None, db: Optional[Session] = None) -> Dict[str, Any]:
+        if isinstance(db_or_session_id, Session):
+            db, session_id = db_or_session_id, None
+        else:
+            session_id = db_or_session_id
+        return weekly_contest_autopilot.phase_3_live_monitoring_cycle(session_id, db)
+
+    @classmethod
+    async def phase_4_finalization_0930(cls, db_or_session_id: Any = None, db: Optional[Session] = None) -> Dict[str, Any]:
+        if isinstance(db_or_session_id, Session):
+            db, session_id = db_or_session_id, None
+        else:
+            session_id = db_or_session_id
+        return weekly_contest_autopilot.phase_4_finalization_and_reconciliation(session_id, db)
+
+    @classmethod
+    def phase_5_report_generation_0935(cls, db_or_session_id: Any = None, db: Optional[Session] = None) -> Dict[str, Any]:
+        if isinstance(db_or_session_id, Session):
+            db, session_id = db_or_session_id, None
+        else:
+            session_id = db_or_session_id
+        return weekly_contest_autopilot.phase_5_report_generation(session_id, db)
+
+    @classmethod
+    def phase_6_email_dispatch_0940(cls, db_or_session_id: Any = None, db: Optional[Session] = None) -> Dict[str, Any]:
+        if isinstance(db_or_session_id, Session):
+            db, session_id = db_or_session_id, None
+        else:
+            session_id = db_or_session_id
+        return weekly_contest_autopilot.phase_6_broadcast_dispatch(session_id, db)
+
+    @classmethod
+    def phase_6b_whatsapp_broadcast_0945(cls, db_or_session_id: Any = None, db: Optional[Session] = None) -> Dict[str, Any]:
+        if isinstance(db_or_session_id, Session):
+            db, session_id = db_or_session_id, None
+        else:
+            session_id = db_or_session_id
+        return weekly_contest_autopilot.phase_6_broadcast_dispatch(session_id, db)
+
+    @classmethod
+    def phase_7_virtual_sync_2200(cls, db_or_session_id: Any = None, db: Optional[Session] = None) -> Dict[str, Any]:
+        if isinstance(db_or_session_id, Session):
+            db, session_id = db_or_session_id, None
+        else:
+            session_id = db_or_session_id
+        return weekly_contest_autopilot.phase_7_virtual_recheck(session_id, db)
+
+    @classmethod
+    async def resume_or_recover_on_startup(cls, db: Optional[Session] = None):
+        return await weekly_contest_autopilot.resume_or_recover_on_startup(db)
+
+
+
+def meta_num(contest_name: Optional[str]) -> int:
+    if not contest_name: return 516
+    import re
+    m = re.search(r"(\d{3,4})", contest_name)
+    return int(m.group(1)) if m else 516
+
+
+# Global Canonical Exports (Supporting both new and backward-compatible consumers)
+weekly_contest_autopilot = UniversalWeeklyContestAutopilot()
+sunday_autopilot = weekly_contest_autopilot
+
+
