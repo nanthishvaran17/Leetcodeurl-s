@@ -665,14 +665,12 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
           aria-modal="true"
           aria-label={`Edit profile for ${editingStudent.name}`}
           className="modal-overlay-responsive animate-modal-backdrop"
-          style={modalTopY !== null ? { alignItems: 'flex-start', paddingTop: `${modalTopY}px` } : {}}
           onClick={(e) => {
             if (e.target === e.currentTarget && !isSaving) setEditingStudent(null);
           }}
         >
           <div
             className="modal-container-responsive max-w-lg bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 animate-modal-content"
-            style={modalTopY !== null ? { marginTop: 0, marginBottom: 'auto' } : {}}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -788,14 +786,12 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
           aria-modal="true"
           aria-label={`Deactivate student record for ${deletingStudent.name}`}
           className="modal-overlay-responsive animate-modal-backdrop"
-          style={modalTopY !== null ? { alignItems: 'flex-start', paddingTop: `${modalTopY}px` } : {}}
           onClick={(e) => {
             if (e.target === e.currentTarget && !isDeleting) setDeletingStudent(null);
           }}
         >
           <div
             className="modal-container-responsive max-w-md bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-rose-200 dark:border-rose-900/50 p-6 space-y-4 animate-modal-content"
-            style={modalTopY !== null ? { marginTop: 0, marginBottom: 'auto' } : {}}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
@@ -842,13 +838,11 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
           aria-modal="true"
           aria-label={`Student profile for ${viewingStudent.name}`}
           className="modal-overlay-responsive animate-modal-backdrop"
-          style={modalTopY !== null ? { alignItems: 'flex-start', paddingTop: `${modalTopY}px` } : {}}
           onClick={(e) => { if (e.target === e.currentTarget) setViewingStudent(null); }}
         >
           {/* Modal panel — centered with safe margins from top & bottom */}
           <div
             className="modal-container-responsive bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 animate-modal-content"
-            style={modalTopY !== null ? { marginTop: 0, marginBottom: 'auto' } : {}}
             onClick={(e) => e.stopPropagation()}
           >
 

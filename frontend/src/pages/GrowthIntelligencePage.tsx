@@ -692,14 +692,12 @@ export const GrowthIntelligencePage: React.FC = () => {
           aria-modal="true"
           aria-label={`Historical Timeline for ${selectedStudentName}`}
           className="modal-overlay-responsive animate-modal-backdrop"
-          style={modalTopY !== null ? { alignItems: 'flex-start', paddingTop: `${modalTopY}px` } : {}}
           onClick={(e) => {
             if (e.target === e.currentTarget) setIsModalOpen(false);
           }}
         >
           <div
             className="modal-container-responsive max-w-6xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-2xl animate-modal-content"
-            style={modalTopY !== null ? { marginTop: 0, marginBottom: 'auto' } : {}}
             onClick={(e) => e.stopPropagation()}
           >
             
