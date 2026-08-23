@@ -1789,7 +1789,7 @@ export const WeeklyContestPage: React.FC = () => {
             ) : (
               <div className="w-full flex items-center justify-center space-x-1.5 px-4 py-3 rounded-2xl bg-gray-50 dark:bg-navy-950 text-gray-400 text-xs font-bold border border-gray-100 dark:border-gray-800">
                 <Filter className="w-3.5 h-3.5 text-gray-400" />
-                <span>All 302 Students Active</span>
+                <span>All {matrixRows.length || 1450} Students Active</span>
               </div>
             )}
           </div>
@@ -1803,16 +1803,14 @@ export const WeeklyContestPage: React.FC = () => {
           {/* Card 1: Total Students */}
           <button
             onClick={() => setSelectedAttendanceFilter('ALL')}
-            className={`h-24 p-4 rounded-2xl bg-white dark:bg-navy-900 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${
+            className={`h-24 p-4 rounded-2xl bg-white dark:bg-navy-900 border text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg cursor-pointer flex flex-col justify-between relative overflow-hidden ${
               selectedAttendanceFilter === 'ALL'
-                ? 'border-brand-500 ring-4 ring-brand-500/20 shadow-lg'
+                ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-lg'
                 : 'border-gray-200 dark:border-gray-800 hover:border-brand-300 shadow-sm'
             }`}
           >
-            <div className="flex items-center justify-between w-full">
-              <p className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Total Students</p>
-              <Users className="w-3.5 h-3.5 text-gray-400" />
-            </div>
+            <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-2xl bg-gradient-to-r from-brand-400 to-brand-600" />
+            <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest pt-1">Total Students</p>
             <p className="text-2xl sm:text-3xl font-black font-mono text-gray-900 dark:text-white">
               <AnimatedNumber value={stats.totalRows} />
             </p>
@@ -1821,16 +1819,14 @@ export const WeeklyContestPage: React.FC = () => {
           {/* Card 2: Public Attended */}
           <button
             onClick={() => toggleAttendanceFilter('PUBLIC_ATTENDED')}
-            className={`h-24 p-4 rounded-2xl bg-emerald-500/10 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${
+            className={`h-24 p-4 rounded-2xl bg-emerald-500/10 border text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg cursor-pointer flex flex-col justify-between relative overflow-hidden ${
               selectedAttendanceFilter === 'PUBLIC_ATTENDED'
-                ? 'border-emerald-500 ring-4 ring-emerald-500/30 shadow-lg bg-emerald-500/20'
+                ? 'border-emerald-500 ring-2 ring-emerald-500/30 shadow-lg bg-emerald-500/20'
                 : 'border-emerald-500/20 hover:border-emerald-400 shadow-sm'
             }`}
           >
-            <div className="flex items-center justify-between w-full">
-              <p className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">Public</p>
-              <Award className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            </div>
+            <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-2xl bg-gradient-to-r from-emerald-400 to-green-500" />
+            <p className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-widest pt-1">Public</p>
             <p className="text-2xl sm:text-3xl font-black font-mono text-emerald-700 dark:text-emerald-300">
               <AnimatedNumber value={stats.attendedRows} />
             </p>
@@ -1839,16 +1835,14 @@ export const WeeklyContestPage: React.FC = () => {
           {/* Card 3: Virtual Attended */}
           <button
             onClick={() => toggleAttendanceFilter('VIRTUAL_ATTENDED')}
-            className={`h-24 p-4 rounded-2xl bg-purple-500/10 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${
+            className={`h-24 p-4 rounded-2xl bg-purple-500/10 border text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg cursor-pointer flex flex-col justify-between relative overflow-hidden ${
               selectedAttendanceFilter === 'VIRTUAL_ATTENDED'
-                ? 'border-purple-500 ring-4 ring-purple-500/30 shadow-lg bg-purple-500/20'
+                ? 'border-purple-500 ring-2 ring-purple-500/30 shadow-lg bg-purple-500/20'
                 : 'border-purple-500/20 hover:border-purple-400 shadow-sm'
             }`}
           >
-            <div className="flex items-center justify-between w-full">
-              <p className="text-[10px] font-black uppercase text-purple-600 dark:text-purple-400 tracking-wider">Virtual</p>
-              <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-            </div>
+            <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-2xl bg-gradient-to-r from-purple-400 to-violet-500" />
+            <p className="text-[10px] font-black uppercase text-purple-600 dark:text-purple-400 tracking-widest pt-1">Virtual</p>
             <p className="text-2xl sm:text-3xl font-black font-mono text-purple-700 dark:text-purple-300">
               <AnimatedNumber value={stats.virtualRows} />
             </p>
@@ -1857,16 +1851,14 @@ export const WeeklyContestPage: React.FC = () => {
           {/* Card 4: Not Attended */}
           <button
             onClick={() => toggleAttendanceFilter('PUBLIC_NOT_ATTENDED')}
-            className={`h-24 p-4 rounded-2xl bg-rose-500/10 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${
+            className={`h-24 p-4 rounded-2xl bg-rose-500/10 border text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg cursor-pointer flex flex-col justify-between relative overflow-hidden ${
               selectedAttendanceFilter === 'PUBLIC_NOT_ATTENDED'
-                ? 'border-rose-500 ring-4 ring-rose-500/30 shadow-lg bg-rose-500/20'
+                ? 'border-rose-500 ring-2 ring-rose-500/30 shadow-lg bg-rose-500/20'
                 : 'border-rose-500/20 hover:border-rose-400 shadow-sm'
             }`}
           >
-            <div className="flex items-center justify-between w-full">
-              <p className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400 tracking-wider">Not Attended</p>
-              <UserX className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
-            </div>
+            <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-2xl bg-gradient-to-r from-rose-400 to-red-500" />
+            <p className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400 tracking-widest pt-1">Not Attended</p>
             <p className="text-2xl sm:text-3xl font-black font-mono text-rose-700 dark:text-rose-300">
               <AnimatedNumber value={stats.notAttendedRows} />
             </p>
@@ -1879,27 +1871,23 @@ export const WeeklyContestPage: React.FC = () => {
               setShowDetailedView(true);
               setActiveTab('error_board');
             }}
-            className={`h-24 p-4 rounded-2xl bg-amber-500/10 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${
+            className={`h-24 p-4 rounded-2xl bg-amber-500/10 border text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg cursor-pointer flex flex-col justify-between relative overflow-hidden ${
               selectedAttendanceFilter === 'DATA_ERROR'
-                ? 'border-amber-500 ring-4 ring-amber-500/30 shadow-lg bg-amber-500/20'
+                ? 'border-amber-500 ring-2 ring-amber-500/30 shadow-lg bg-amber-500/20'
                 : 'border-amber-500/20 hover:border-amber-400 shadow-sm'
             }`}
           >
-            <div className="flex items-center justify-between w-full">
-              <p className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider">Data Errors</p>
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-            </div>
+            <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-2xl bg-gradient-to-r from-amber-400 to-orange-500" />
+            <p className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-widest pt-1">Data Errors</p>
             <p className="text-2xl sm:text-3xl font-black font-mono text-amber-700 dark:text-amber-300">
               <AnimatedNumber value={stats.errorRows} />
             </p>
           </button>
 
           {/* Card 6: Participation % */}
-          <div className="h-24 p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-center shadow-sm flex flex-col justify-between">
-            <div className="flex items-center justify-between w-full">
-              <p className="text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-wider">Participation</p>
-              <TrendingUp className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-            </div>
+          <div className="h-24 p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-left shadow-sm flex flex-col justify-between relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-2xl bg-gradient-to-r from-indigo-400 to-blue-500" />
+            <p className="text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-widest pt-1">Participation</p>
             <p className="text-2xl sm:text-3xl font-black font-mono text-indigo-700 dark:text-indigo-300">
               {stats.totalParticipationPct}%
             </p>
@@ -2004,12 +1992,10 @@ export const WeeklyContestPage: React.FC = () => {
           <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-md space-y-3">
             <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800/80 pb-3">
               <h4 className="text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                  <Trophy className="w-3.5 h-3.5" />
-                </div>
-                <span>Top Performers Spotlight</span>
+                <span className="w-1.5 h-4 rounded-full bg-gradient-to-b from-amber-400 to-orange-500" />
+                <span>Top Performers</span>
               </h4>
-              <span className="text-[10px] font-bold text-gray-400">Live Global Rank</span>
+              <span className="text-[10px] font-bold text-gray-400">Contest Solved</span>
             </div>
 
             <div className="space-y-2">
