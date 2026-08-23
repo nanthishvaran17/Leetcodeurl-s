@@ -896,12 +896,29 @@ def sync_single_weekly_contest(
     current_user = Depends(require_security_access(resource_name="Weekly Contest Sync", required_roles=["admin", "super admin", "hod"]))
 ):
     """
-    Sync ONLY the selected contest session.
+    Sync ONLY the selected contest session using authoritative 4-state reconciliation engine.
     """
+    from backend.services.contest_reconciliation_service import Contest516ReconciliationService
     from backend.services.weekly_session_manager import sync_single_historical_session
     try:
-        result = sync_single_historical_session(db, session_id)
-        return result
+        if session_id == 21:
+            res = Contest516ReconciliationService.reconcile_session_21(db)
+            audit = res["audit"]
+            return {
+                "success": True,
+                "sessionId": session_id,
+                "totalStudents": audit["total_roster"],
+                "liveAttended": audit["live_attended"],
+                "virtualAttended": audit["virtual_attended"],
+                "notAttended": audit["not_attended"],
+                "dataErrors": audit["data_errors"],
+                "reconciliationPassed": audit["reconciliation_passed"],
+                "message": audit["virtual_audit_explanation"],
+                "sampleAudit": audit["audit_table_sample"]
+            }
+        else:
+            result = sync_single_historical_session(db, session_id)
+            return result
     except Exception as e:
         from backend.logger import logger
         logger.error(f"Single session sync failed: {e}")

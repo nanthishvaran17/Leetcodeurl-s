@@ -317,9 +317,9 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     # SHEET 3: CONTEST ATTENDANCE
     # ──────────────────────────────────────────────────────────────────────────
     ws3 = wb.create_sheet(title="Contest Attendance")
-    _write_college_header(ws3, "WEEKLY CONTEST 516 — ATTENDANCE & EVIDENCE STATUS", dept_header_text, 8, metadata_block)
+    _write_college_header(ws3, "WEEKLY CONTEST 516 — ATTENDANCE & VIRTUAL DETECTION AUDIT", dept_header_text, 10, metadata_block)
     r3_hdr = 7
-    s3_headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Username", "Attendance Status", "Evidence Status"]
+    s3_headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Username", "Attendance Status", "Live", "Virtual", "Evidence Summary"]
     for c_i, h in enumerate(s3_headers, 1):
         cell = ws3.cell(row=r3_hdr, column=c_i, value=h)
         cell.font = FONT_WHITE_BOLD
@@ -328,13 +328,18 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         _apply_thin_border(cell)
     for idx, r in enumerate(alpha_sorted, 1):
         row_num = r3_hdr + idx
-        ev_label = "VERIFIED_CONTEST_EVIDENCE" if r["is_att"] else "NO_PUBLIC_CONTEST_EVIDENCE"
-        for c_i, v in enumerate([idx, r["reg_no"], r["name"], r["dept"], r["year"], r["username"], r["status"], ev_label], 1):
+        is_virt = bool(r.get("is_virtual")) or r.get("status") == "VIRTUAL"
+        is_live = r["is_att"] and not is_virt
+        live_str = "YES" if is_live else "NO"
+        virt_str = "YES" if is_virt else "NO"
+        ev_label = "VERIFIED_LIVE_CONTEST_EVIDENCE" if is_live else ("VERIFIED_VIRTUAL_PRACTICE_EVIDENCE" if is_virt else "NO_CONTEST_516_EVIDENCE")
+        
+        for c_i, v in enumerate([idx, r["reg_no"], r["name"], r["dept"], r["year"], r["username"], r["status"], live_str, virt_str, ev_label], 1):
             cell = ws3.cell(row=row_num, column=c_i, value=v)
             cell.font = FONT_REGULAR
-            cell.alignment = ALIGN_LEFT if c_i in (3, 6) else ALIGN_CENTER
+            cell.alignment = ALIGN_LEFT if c_i in (3, 6, 10) else ALIGN_CENTER
             if c_i == 7:
-                cell.fill = GREEN_FILL if r["is_att"] else ROSE_FILL
+                cell.fill = GREEN_FILL if is_live else (BLUE_FILL if is_virt else ROSE_FILL)
                 cell.font = FONT_BOLD
             _apply_thin_border(cell)
 
@@ -559,6 +564,10 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     ], sort_keys=True)
     dataset_sha256 = hashlib.sha256(serialized_dataset.encode("utf-8")).hexdigest()
 
+    virt_attended = sum(1 for r in rows if r.get("is_virtual") or r.get("status") == "VIRTUAL")
+    live_attended = tot_attended - virt_attended
+    data_errors = sum(1 for r in rows if r.get("status") in ("DATA_ERROR", "USERNAME_NOT_FOUND", "FETCH_ERROR"))
+
     audit_entries = [
         ("Snapshot ID", snapshot_id),
         ("Contest Identifier", contest_name),
@@ -566,8 +575,13 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         ("Official Time Window", "08:00:00 AM IST – 09:30:00 AM IST"),
         ("Final Snapshot Timestamp", "23-Aug-2026 09:30:00 AM IST"),
         ("Scope Students Evaluated", f"{tot_students:,}"),
-        ("Verified Official Attendees", f"{tot_attended:,}"),
-        ("Verified Non-Attendees / No Evidence", f"{tot_not_attended:,}"),
+        ("Verified Live Attendees", f"{live_attended:,}"),
+        ("Verified Virtual Attendees", f"{virt_attended:,}"),
+        ("Verified Non-Attendees", f"{tot_not_attended:,}"),
+        ("Data Quality Errors / Unlinked", f"{data_errors:,}"),
+        ("Contest 516 Problem Set", "Q1: Check ASCII Palindromic | Q2: Disappeared in Array II | Q3: Prime Factors | Q4: Sum Game"),
+        ("Virtual Audit Engine", "Contest516ReconciliationService (Problem-Attributed Forensic Scanner)"),
+        ("Virtual Detection Audit", f"{virt_attended} verified virtual solvers found across {tot_students} scanned profiles"),
         ("Binary Constraint Validation", "PASS (Every Q1..Q4 is strictly 0 or 1)"),
         ("Mathematical Verification", "PASS (Solved == Q1 + Q2 + Q3 + Q4 for all records)"),
         ("Reconciliation Decision", "FINALIZED & IMMUTABLE"),
