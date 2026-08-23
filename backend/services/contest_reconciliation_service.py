@@ -60,14 +60,17 @@ UTC_TZ = zoneinfo.ZoneInfo("UTC")
 
 # ─── EVIDENCE HIERARCHY ────────────────────────────────────────────────────────
 class EvidenceLevel:
-    LEVEL_5_AUTHORITATIVE_VIRTUAL = "LEVEL_5_AUTHORITATIVE_VIRTUAL"  # Authoritative virtual contest metadata
-    LEVEL_4_OFFICIAL_LIVE = "LEVEL_4_OFFICIAL_LIVE"                  # Official live contest ranking / participation
+    LEVEL_5_AUTHENTICATED_VIRTUAL_UI = "LEVEL_5_AUTHENTICATED_VIRTUAL_UI"  # Authenticated My Contests -> Virtual UI
+    LEVEL_5_AUTHORITATIVE_VIRTUAL = "LEVEL_5_AUTHORITATIVE_VIRTUAL"        # Authoritative virtual contest metadata
+    LEVEL_4_OFFICIAL_LIVE = "LEVEL_4_OFFICIAL_LIVE"                        # Official live contest ranking / participation
     LEVEL_3_CONTEST_PROBLEM_ACCEPTED = "LEVEL_3_CONTEST_PROBLEM_ACCEPTED"  # Solved exact contest problem post-contest
-    LEVEL_2_PROFILE_METADATA = "LEVEL_2_PROFILE_METADATA"            # General profile stats
-    LEVEL_1_INFERRED_WEAK = "LEVEL_1_INFERRED_WEAK"                  # Weak / circumstantial (never sufficient)
-    PROFILE_ERROR = "PROFILE_ERROR"                                  # Missing / invalid profile
-    NO_EVIDENCE = "NO_EVIDENCE"                                      # No contest activity recorded
-    EVIDENCE_UNAVAILABLE = "EVIDENCE_UNAVAILABLE"                    # Query could not complete
+    LEVEL_2_PUBLIC_CONTEST_HISTORY = "LEVEL_2_PUBLIC_CONTEST_HISTORY"      # Public profile contest history
+    LEVEL_2_PROFILE_METADATA = "LEVEL_2_PROFILE_METADATA"                  # General profile stats
+    LEVEL_1_INFERRED_WEAK = "LEVEL_1_INFERRED_WEAK"                        # Weak / circumstantial (never sufficient)
+    PROFILE_ERROR = "PROFILE_ERROR"                                        # Missing / invalid profile
+    NO_EVIDENCE = "NO_EVIDENCE"                                            # No contest activity recorded
+    EVIDENCE_UNAVAILABLE = "EVIDENCE_UNAVAILABLE"                          # Query could not complete
+    UNVERIFIED_SCREENSHOT = "UNVERIFIED_SCREENSHOT"                        # Screenshot without identity match
 
 
 # ─── SOURCE AUTHORITY HEALTH STATES ────────────────────────────────────────────
@@ -79,6 +82,10 @@ class SourceAuthorityStatus:
     SOURCE_PARTIAL = "SOURCE_PARTIAL"                            # Only subset queried
     SOURCE_ERROR = "SOURCE_ERROR"                                # Upstream API error
     CONTEST_EVIDENCE_CONFLICT = "CONTEST_EVIDENCE_CONFLICT"      # Conflicting evidence across multiple sources
+    AUTHENTICATED_UI_AVAILABLE = "AUTHENTICATED_UI_AVAILABLE"    # Authenticated user interface evidence verified
+    AUTHENTICATED_UI_UNAVAILABLE = "AUTHENTICATED_UI_UNAVAILABLE"# Authenticated session not accessible
+    AUTH_REQUIRED = "AUTH_REQUIRED"                              # Authentication needed to query private virtual history
+    UNVERIFIED_SCREENSHOT = "UNVERIFIED_SCREENSHOT"              # Screenshot evidence unmapped to identity
 
 
 # ─── LAYER A: INSTITUTIONAL ATTENDANCE STATES ──────────────────────────────────
@@ -103,6 +110,55 @@ class EvidenceState:
     SOURCE_PARTIAL = "SOURCE_PARTIAL"
     CONTEST_EVIDENCE_CONFLICT = "CONTEST_EVIDENCE_CONFLICT"
     DATA_ERROR = "DATA_ERROR"
+    UNVERIFIED_SCREENSHOT = "UNVERIFIED_SCREENSHOT"
+
+
+class AuthenticatedVirtualContestEvidenceProvider:
+    """
+    Dedicated evidence provider for inspecting authenticated LeetCode user interface
+    'My Contests' -> 'Virtual' contest history where legitimately available.
+    """
+    @classmethod
+    def evaluate_virtual_ui_evidence(
+        cls,
+        leetcode_username: str,
+        contest_id: str,
+        authenticated_record: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        if not authenticated_record:
+            return {
+                "has_evidence": False,
+                "evidence_state": SourceAuthorityStatus.AUTHENTICATED_UI_UNAVAILABLE,
+                "source_authority": SourceAuthorityStatus.AUTH_REQUIRED,
+                "confidence": 0.0,
+                "solved_count": 0
+            }
+        
+        c_id = str(authenticated_record.get("contest_id", "")).lower()
+        c_type = str(authenticated_record.get("contest_type", "")).upper()
+        target_id = str(contest_id).lower()
+
+        # Strict canonical contest match (no partial/fuzzy match on other contests like 515)
+        if c_id == target_id or f"weekly-contest-{c_id}" == target_id or target_id in c_id:
+            if c_type in ("VIRTUAL", "MY_CONTESTS_VIRTUAL"):
+                return {
+                    "has_evidence": True,
+                    "evidence_state": EvidenceState.VIRTUAL_VERIFIED,
+                    "evidence_level": EvidenceLevel.LEVEL_5_AUTHENTICATED_VIRTUAL_UI,
+                    "confidence": 1.0,
+                    "solved_count": authenticated_record.get("solved_count", 0),
+                    "score": authenticated_record.get("score", 0),
+                    "rank": authenticated_record.get("rank"),
+                    "virtual_indicator": True,
+                    "evidence_source": "AUTHENTICATED_LEETCODE_MY_CONTESTS_UI"
+                }
+        return {
+            "has_evidence": False,
+            "evidence_state": "UNVERIFIED",
+            "source_authority": "AUTHENTICATED_UI_MISMATCH",
+            "confidence": 0.0,
+            "solved_count": 0
+        }
 
 
 class UniversalContestReconciliationEngine:

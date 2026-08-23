@@ -1809,4 +1809,29 @@ class VirtualScanAudit(Base):
     evidence_unavailable = Column(Integer, default=0)
     snapshot_created = Column(Boolean, default=False)
     checksum = Column(String(128), nullable=True)
-    engine_version = Column(String(50), default="5.0.0-FORENSIC-FINAL")
+    engine_version = Column(String(50), default="7.0.0-AUTHENTICATED-VIRTUAL")
+
+
+class ContestVirtualScreenshotEvidence(Base):
+    """
+    Optional screenshot-based forensic evidence record with SHA-256 integrity hash.
+    """
+    __tablename__ = "contest_virtual_screenshot_evidence"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    leetcode_username = Column(String(100), nullable=False, index=True)
+    contest_id = Column(String(100), nullable=False, index=True)
+    image_hash = Column(String(64), nullable=False, index=True)
+    captured_at = Column(DateTime, default=datetime.datetime.utcnow)
+    source = Column(String(100), default="USER_UPLOADED_SCREENSHOT")
+    ocr_result = Column(JSON, nullable=True)
+    detected_contest_name = Column(String(150), nullable=True)
+    detected_virtual_label = Column(Boolean, default=False)
+    detected_solved_count = Column(Integer, default=0)
+    confidence = Column(Float, default=0.0)
+    review_status = Column(String(50), default="PENDING_REVIEW")  # PENDING_REVIEW, VERIFIED, UNVERIFIED_SCREENSHOT, REJECTED
+
+    student = relationship("Student")
+
