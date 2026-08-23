@@ -295,20 +295,50 @@ import re
 
 def get_contest_filename_base(contest_name: str, session_date: str = None, dept: str = "ALL", year: str = "ALL", attendance: str = "ALL") -> str:
     """
-    Derives standard professional institutional report filename:
-    Contest specific: Nandha_Engineering_College_LeetCode_Contest_<CONTEST_NUMBER>_<DATE>
-    General: Nandha_Engineering_College_LeetCode_Weekly_Report_<DATE>
+    Derives standard professional institutional report filename with dept & year:
+    e.g. Nandha_Engineering_College_Weekly_Contest_516_CSE_IOT_All_Years_2026-08-23
+         Nandha_Engineering_College_Weekly_Contest_516_CSE_CS_III_Year_2026-08-23
+         Nandha_Engineering_College_Weekly_Contest_516_All_Departments_2026-08-23
     """
     import re
     now_ist = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
     date_str = session_date.replace(".", "-") if session_date else now_ist.strftime("%Y-%m-%d")
 
+    # --- Contest number segment ---
     m = re.search(r'\d+', str(contest_name or ""))
-    if m:
-        c_num = m.group(0)
-        return f"Nandha_Engineering_College_LeetCode_Contest_{c_num}_{date_str}"
+    contest_seg = f"Weekly_Contest_{m.group(0)}" if m else "Weekly_Report"
+
+    # --- Department segment ---
+    DEPT_SLUG = {
+        "CSE":      "CSE",
+        "IT":       "IT",
+        "AIDS":     "AIDS",
+        "CSE(CS)":  "CSE_CS",
+        "CSE(IOT)": "CSE_IOT",
+        "ECE":      "ECE",
+        "EEE":      "EEE",
+        "MECH":     "MECH",
+        "CIVIL":    "CIVIL",
+        "AGRI":     "AGRI",
+        "BME":      "BME",
+    }
+    d = str(dept or "ALL").upper().strip()
+    if d in ("ALL", "", "ALL DEPARTMENTS"):
+        dept_seg = "All_Departments"
     else:
-        return f"Nandha_Engineering_College_LeetCode_Weekly_Report_{date_str}"
+        dept_seg = DEPT_SLUG.get(d, re.sub(r'[^A-Z0-9]', '_', d))
+
+    # --- Year segment ---
+    y = str(year or "ALL").upper().strip()
+    YEAR_SLUG = {
+        "II": "II_Year", "2": "II_Year",
+        "III": "III_Year", "3": "III_Year",
+        "IV": "IV_Year", "4": "IV_Year",
+        "ALL": "All_Years", "": "All_Years",
+    }
+    year_seg = YEAR_SLUG.get(y, f"{y}_Year")
+
+    return f"Nandha_Engineering_College_{contest_seg}_{dept_seg}_{year_seg}_{date_str}"
 
 def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: str = "ALL", attendance: str = "ALL"):
     # First check ReportHistory
