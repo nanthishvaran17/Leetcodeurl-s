@@ -144,9 +144,39 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   const [editUsername, setEditUsername] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [modalTopY, setModalTopY] = useState<number | null>(null);
 
-  const handleOpenProfile = (student: StudentData) => {
+  const calculateTargetTopY = (e?: React.MouseEvent) => {
+    if (!e) return null;
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
+    const modalEstHeight = 500;
+    let targetTop = rect.top - 20;
+    if (targetTop + modalEstHeight > vh - 20) {
+      targetTop = Math.max(70, vh - modalEstHeight - 20);
+    }
+    if (targetTop < 70) targetTop = 70;
+    return targetTop;
+  };
+
+  const handleOpenProfile = (student: StudentData, e?: React.MouseEvent) => {
+    setModalTopY(calculateTargetTopY(e));
     setViewingStudent(student);
+  };
+
+  const handleOpenEdit = (st: StudentData, e?: React.MouseEvent) => {
+    setModalTopY(calculateTargetTopY(e));
+    setEditingStudent(st);
+    setEditName(st.name);
+    setEditDeptId(st.department_id || 1);
+    setEditYearLevel(st.year_level || 'III');
+    setEditLeetCodeUrl(st.leetcode_url || '');
+    setEditUsername(st.username || '');
+  };
+
+  const handleOpenDelete = (st: StudentData, e?: React.MouseEvent) => {
+    setModalTopY(calculateTargetTopY(e));
+    setDeletingStudent(st);
   };
 
   // Body scroll lock & layout shift prevention when any modal is open
@@ -242,14 +272,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   };
 
 
-  const handleOpenEdit = (st: StudentData) => {
-    setEditingStudent(st);
-    setEditName(st.name);
-    setEditDeptId(st.department_id || 1);
-    setEditYearLevel(st.year_level || 'III');
-    setEditLeetCodeUrl(st.leetcode_url || '');
-    setEditUsername(st.username || '');
-  };
+
 
   const handleSaveEdit = async () => {
     if (!editingStudent) return;
@@ -513,7 +536,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
 
                     <td className="py-3 px-3 whitespace-nowrap">
                       <p
-                        onClick={() => handleOpenProfile(student)}
+                        onClick={(e) => handleOpenProfile(student, e)}
                         className="font-bold text-gray-900 dark:text-white hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer flex items-center gap-1.5"
                         title="Click to view student profile"
                       >
@@ -584,7 +607,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                       <div className="flex items-center justify-center space-x-1.5">
                         <button
                           type="button"
-                          onClick={() => handleOpenProfile(student)}
+                          onClick={(e) => handleOpenProfile(student, e)}
                           className="p-1.5 rounded-xl text-gray-600 dark:text-gray-300 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition-colors font-bold text-xs flex items-center gap-1 cursor-pointer"
                           title="👁 View Full Profile"
                         >
@@ -594,7 +617,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
 
                         <button
                           type="button"
-                          onClick={() => handleOpenEdit(student)}
+                          onClick={(e) => handleOpenEdit(student, e)}
                           className="p-1.5 rounded-xl text-gray-600 dark:text-gray-300 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors font-bold text-xs flex items-center gap-1"
                           title="✏️ Edit Student Profile"
                         >
@@ -617,7 +640,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
 
                         <button
                           type="button"
-                          onClick={() => setDeletingStudent(student)}
+                          onClick={(e) => handleOpenDelete(student, e)}
                           className="p-1.5 rounded-xl text-gray-600 dark:text-gray-300 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors font-bold text-xs flex items-center gap-1"
                           title="🗑 Deactivate Student Roster Entry"
                         >
@@ -642,12 +665,14 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
           aria-modal="true"
           aria-label={`Edit profile for ${editingStudent.name}`}
           className="modal-overlay-responsive animate-modal-backdrop"
+          style={modalTopY !== null ? { alignItems: 'flex-start', paddingTop: `${modalTopY}px` } : {}}
           onClick={(e) => {
             if (e.target === e.currentTarget && !isSaving) setEditingStudent(null);
           }}
         >
           <div
             className="modal-container-responsive max-w-lg bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 animate-modal-content"
+            style={modalTopY !== null ? { marginTop: 0, marginBottom: 'auto' } : {}}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -763,12 +788,14 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
           aria-modal="true"
           aria-label={`Deactivate student record for ${deletingStudent.name}`}
           className="modal-overlay-responsive animate-modal-backdrop"
+          style={modalTopY !== null ? { alignItems: 'flex-start', paddingTop: `${modalTopY}px` } : {}}
           onClick={(e) => {
             if (e.target === e.currentTarget && !isDeleting) setDeletingStudent(null);
           }}
         >
           <div
             className="modal-container-responsive max-w-md bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-rose-200 dark:border-rose-900/50 p-6 space-y-4 animate-modal-content"
+            style={modalTopY !== null ? { marginTop: 0, marginBottom: 'auto' } : {}}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
@@ -815,11 +842,13 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
           aria-modal="true"
           aria-label={`Student profile for ${viewingStudent.name}`}
           className="modal-overlay-responsive animate-modal-backdrop"
+          style={modalTopY !== null ? { alignItems: 'flex-start', paddingTop: `${modalTopY}px` } : {}}
           onClick={(e) => { if (e.target === e.currentTarget) setViewingStudent(null); }}
         >
           {/* Modal panel — centered with safe margins from top & bottom */}
           <div
             className="modal-container-responsive bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 animate-modal-content"
+            style={modalTopY !== null ? { marginTop: 0, marginBottom: 'auto' } : {}}
             onClick={(e) => e.stopPropagation()}
           >
 
