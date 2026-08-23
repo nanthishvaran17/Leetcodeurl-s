@@ -64,15 +64,16 @@ def test_integrity():
     sheet_names = wb.sheetnames
     expected_sheets = [
         "Executive Summary", "Complete Student Roster", "Contest Attendance",
-        "Problem Performance", "Department Summary", "Year Summary",
-        "Top Performers", "Verification & Audit"
+        "Contest Performance Matrix", "Top Performers", "4-4 Perfect Solvers",
+        "3-4 Solvers", "2-4 Solvers", "1-4 Solvers", "Department Summary",
+        "Department Top Performers", "Year Summary", "Verification Audit"
     ]
     assert sheet_names == expected_sheets, f"Expected sheets {expected_sheets}, got {sheet_names}"
     
     # Check Sheet 2 has 1450 rows + header
     ws2 = wb["Complete Student Roster"]
     assert ws2.max_row >= 1450 + 7, f"Sheet 2 row count ({ws2.max_row}) is less than expected 1457"
-    print(f"PASS (8 Sheets verified, Sheet 2 contains all 1,450 students!)")
+    print(f"PASS (All 13 Sheets verified, Sheet 2 contains all 1,450 students!)")
 
     # Test 9: PDF, Word, and ZIP generation
     print(f"Test 9: Generating PDF, Word, and ZIP packages ... ", end="")
