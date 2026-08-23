@@ -118,7 +118,15 @@ def get_upcoming_session_info(db: Session = Depends(get_db)):
 def get_session_live_telemetry(session_id: int, db: Session = Depends(get_db)):
     """
     Returns real-time live telemetry, countdown, question progress, and verified events.
+    Auto-spawns continuous live sweep worker if contest is LIVE.
     """
+    session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+    if session and session.status == "LIVE" and not sunday_live_engine.is_running and not sunday_live_engine.is_paused:
+        try:
+            from backend.database import SessionLocal
+            asyncio.create_task(sunday_live_engine.run_live_sync_cycle(session_id, SessionLocal))
+        except Exception:
+            pass
     return sunday_live_engine.get_telemetry(session_id, db)
 
 @router.post("/sessions/{session_id}/admin-control")
