@@ -3,7 +3,7 @@ import {
   Trophy, Calendar, RefreshCw, AlertTriangle, Download, FileSpreadsheet,
   FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Zap, Filter, Trash2, Mail, Send, Sparkles, X, Edit3, UserCheck, UserX, Eye, Users, TrendingUp, Award, ChevronDown, ChevronUp,
   Building2, GraduationCap, RotateCcw, Search, Radio, Activity, Shield, Pause, Play, FastForward,
-  Gauge, Terminal, Cpu, Database, FlaskConical
+  Gauge, Terminal, Cpu, Database, FlaskConical, Check
 } from 'lucide-react';
 import api from '../services/api';
 import { StatusNotificationModal, NotificationState } from '../components/StatusNotificationModal';
@@ -265,7 +265,7 @@ export const WeeklyContestPage: React.FC = () => {
       setCurrentSession(currRes.data);
       const list = allSessionsRes.data || [];
       setSessionsList(list);
-      
+
       const targetId = (list.length > 0 ? list[0].sessionId : null) || currRes.data?.sessionId;
       if (targetId) {
         setSelectedSessionId(targetId);
@@ -292,7 +292,7 @@ export const WeeklyContestPage: React.FC = () => {
     if (sessionId === selectedSessionId) return;
     const sessObj = sessionsList.find(s => s.sessionId === sessionId);
     console.log("[CONTEST CLICK]", { contestNumber: sessObj?.contestNumber, sessionId });
-    
+
     // Clear all prior state & reset filters before loading new contest data to enforce ZERO STALE CARRYOVER
     setLoading(true);
     setMatrixRows([]);
@@ -332,7 +332,7 @@ export const WeeklyContestPage: React.FC = () => {
         api.get(`/contests/sessions/${requestedSessionId}/data-quality`, { signal: controller.signal }),
         api.get(`/contests/sessions/${requestedSessionId}/comparison?dept=${dept}&year=${year}&attendance=${attendance}`, { signal: controller.signal })
       ]);
-      
+
       const responseSessionId = matRes.data?.sessionId ?? matRes.data?.session_id;
       const responseContestNumber = matRes.data?.contestNumber ?? matRes.data?.contest_number;
 
@@ -402,13 +402,13 @@ export const WeeklyContestPage: React.FC = () => {
 
       const res = await api.post(`/contests/sessions/${selectedSessionId}/sync`, {}, { timeout: 180000 });
       setSyncSummary(res.data);
-      
+
       setSyncStatusStage('Sync completed successfully.');
       setTimeout(() => setSyncStatusStage(''), 3000);
 
       // Reload matrix for the selected session
       fetchSessionDetails(selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter);
-      
+
       setNotification({
         isOpen: true,
         type: 'success',
@@ -425,7 +425,7 @@ export const WeeklyContestPage: React.FC = () => {
         setShowAuthRequiredModal(true);
       } else {
         const isTimeout = err.code === 'ECONNABORTED' || (err.message && err.message.toLowerCase().includes('timeout'));
-        const detailMsg = isTimeout 
+        const detailMsg = isTimeout
           ? "The sync job is taking a bit longer to process across all students. It is continuing to run on the server — please refresh in a moment."
           : (typeof detail === 'string' ? detail : err.message || "Synchronization could not be completed.");
         setNotification({
@@ -911,11 +911,10 @@ export const WeeklyContestPage: React.FC = () => {
     <div className="space-y-6 animate-fade-in pb-12">
 
       {/* ── 1. SLEEK INSTITUTIONAL HERO HEADER ── */}
-      <div className={`relative overflow-hidden rounded-3xl text-white p-6 sm:p-8 shadow-2xl border transition-all duration-300 ${
-        isLive
+      <div className={`relative overflow-hidden rounded-3xl text-white p-6 sm:p-8 shadow-2xl border transition-all duration-300 ${isLive
           ? 'bg-gradient-to-r from-rose-950 via-slate-900 to-indigo-950 border-rose-500/40 shadow-rose-500/10'
           : 'bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 border-brand-500/30'
-      }`}>
+        }`}>
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute bottom-0 left-1/3 -mb-10 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -1176,11 +1175,10 @@ export const WeeklyContestPage: React.FC = () => {
               <span className="text-[11px] font-mono px-3 py-1 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 flex items-center gap-1.5 shadow-inner">
                 <Cpu className="w-3.5 h-3.5 text-brand-400" />
                 <span>Worker: <strong className="text-white">{liveTelemetry?.workerId || 'WORKER-LIVE-5'}</strong></span>
-                <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded ${
-                  liveTelemetry?.workerState === 'RUNNING' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' :
-                  liveTelemetry?.workerState === 'PAUSED' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' :
-                  'bg-slate-800 text-slate-300'
-                }`}>
+                <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded ${liveTelemetry?.workerState === 'RUNNING' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' :
+                    liveTelemetry?.workerState === 'PAUSED' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' :
+                      'bg-slate-800 text-slate-300'
+                  }`}>
                   {liveTelemetry?.workerState || 'READY'}
                 </span>
               </span>
@@ -1204,11 +1202,10 @@ export const WeeklyContestPage: React.FC = () => {
           <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-950/80 border border-slate-800 overflow-x-auto scrollbar-none">
             <button
               onClick={() => setAdminSubTab('sync_ops')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                adminSubTab === 'sync_ops'
+              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'sync_ops'
                   ? 'bg-brand-600 text-white shadow-lg'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
+                }`}
             >
               <Play className="w-3.5 h-3.5 fill-current" />
               <span>Live Sync & Controls</span>
@@ -1216,11 +1213,10 @@ export const WeeklyContestPage: React.FC = () => {
 
             <button
               onClick={() => setAdminSubTab('rate_limiter')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                adminSubTab === 'rate_limiter'
+              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'rate_limiter'
                   ? 'bg-brand-600 text-white shadow-lg'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
+                }`}
             >
               <Gauge className="w-3.5 h-3.5" />
               <span>Token-Bucket & Rate Limiter</span>
@@ -1228,11 +1224,10 @@ export const WeeklyContestPage: React.FC = () => {
 
             <button
               onClick={() => setAdminSubTab('error_resolver')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                adminSubTab === 'error_resolver'
+              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'error_resolver'
                   ? 'bg-brand-600 text-white shadow-lg'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
+                }`}
             >
               <AlertTriangle className="w-3.5 h-3.5" />
               <span>Data Errors & Re-sync ({liveTelemetry?.failedCount || stats.errorRows})</span>
@@ -1240,11 +1235,10 @@ export const WeeklyContestPage: React.FC = () => {
 
             <button
               onClick={() => setAdminSubTab('snapshot_audit')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                adminSubTab === 'snapshot_audit'
+              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'snapshot_audit'
                   ? 'bg-brand-600 text-white shadow-lg'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
+                }`}
             >
               <Lock className="w-3.5 h-3.5" />
               <span>Snapshot Lock & Windows</span>
@@ -1252,11 +1246,10 @@ export const WeeklyContestPage: React.FC = () => {
 
             <button
               onClick={() => setAdminSubTab('live_logs')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                adminSubTab === 'live_logs'
+              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'live_logs'
                   ? 'bg-brand-600 text-white shadow-lg'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
+                }`}
             >
               <Terminal className="w-3.5 h-3.5" />
               <span>Live Events Log Stream</span>
@@ -1264,11 +1257,10 @@ export const WeeklyContestPage: React.FC = () => {
 
             <button
               onClick={() => setAdminSubTab('simulation_sandbox')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                adminSubTab === 'simulation_sandbox'
+              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'simulation_sandbox'
                   ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
+                }`}
             >
               <FlaskConical className="w-3.5 h-3.5 text-amber-400" />
               <span>Sandbox & Live Test Sim</span>
@@ -1276,11 +1268,10 @@ export const WeeklyContestPage: React.FC = () => {
 
             <button
               onClick={() => setAdminSubTab('live_monitor')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                adminSubTab === 'live_monitor'
+              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'live_monitor'
                   ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/40'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
+                }`}
             >
               <Search className="w-3.5 h-3.5 text-emerald-400" />
               <span>Live Student Monitor</span>
@@ -1705,32 +1696,63 @@ export const WeeklyContestPage: React.FC = () => {
 
         {/* Row 2: Clean 3-Column Dropdowns + 1-Click Reset Control */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-gray-100 dark:border-gray-800">
-          {/* Department Select */}
-          <div className="relative flex items-center bg-gray-50 dark:bg-navy-950 px-3.5 py-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
-            <Building2 className="w-4 h-4 text-indigo-500 mr-2 shrink-0" />
-            <div className="flex-1">
-              <label className="block text-[9px] font-black uppercase text-gray-400 tracking-wider">Department</label>
-              <select
-                value={selectedDeptFilter}
-                onChange={(e) => setSelectedDeptFilter(e.target.value)}
-                className="w-full bg-transparent text-xs font-bold text-gray-800 dark:text-gray-200 outline-none cursor-pointer"
-              >
-                <option value="ALL">All Departments (11 Cohorts)</option>
-                <option value="CSE">Computer Science and Engineering (CSE)</option>
-                <option value="CSE(CS)">CSE (Cyber Security)</option>
-                <option value="CSE(IOT)">CSE (Internet of Things)</option>
-                <option value="IT">Information Technology (IT)</option>
-                <option value="AIDS">Artificial Intelligence & Data Science (AIDS)</option>
-                <option value="ECE">Electronics and Communication Engineering (ECE)</option>
-                <option value="EEE">Electrical and Electronics Engineering (EEE)</option>
-                <option value="MECH">Mechanical Engineering (MECH)</option>
-                <option value="CIVIL">Civil Engineering (CIVIL)</option>
-                <option value="BME">Biomedical Engineering (BME)</option>
-                <option value="AGRI">Agricultural Engineering (AGRI)</option>
-              </select>
-            </div>
-            <ChevronDown className="w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-          </div>
+          {/* Department Select — Premium Custom Dropdown */}
+          {(() => {
+            const DEPT_OPTIONS = [
+              { value: 'ALL', label: 'All Departments', code: 'ALL', color: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300' },
+              { value: 'CSE', label: 'Computer Science and Engineering', code: 'CSE', color: 'text-blue-600 bg-blue-50 dark:bg-blue-950 dark:text-blue-300' },
+              { value: 'CSE(CS)', label: 'CSE (Cyber Security)', code: 'CSE(CS)', color: 'text-purple-600 bg-purple-50 dark:bg-purple-950 dark:text-purple-300' },
+              { value: 'CSE(IOT)', label: 'CSE (Internet of Things)', code: 'CSE(IOT)', color: 'text-cyan-600 bg-cyan-50 dark:bg-cyan-950 dark:text-cyan-300' },
+              { value: 'IT', label: 'Information Technology', code: 'IT', color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300' },
+              { value: 'AIDS', label: 'AI & Data Science', code: 'AIDS', color: 'text-rose-600 bg-rose-50 dark:bg-rose-950 dark:text-rose-300' },
+              { value: 'ECE', label: 'Electronics & Communication Engg.', code: 'ECE', color: 'text-orange-600 bg-orange-50 dark:bg-orange-950 dark:text-orange-300' },
+              { value: 'EEE', label: 'Electrical & Electronics Engg.', code: 'EEE', color: 'text-yellow-600 bg-yellow-50 dark:bg-yellow-950 dark:text-yellow-300' },
+              { value: 'MECH', label: 'Mechanical Engineering', code: 'MECH', color: 'text-teal-600 bg-teal-50 dark:bg-teal-950 dark:text-teal-300' },
+              { value: 'CIVIL', label: 'Civil Engineering', code: 'CIVIL', color: 'text-lime-600 bg-lime-50 dark:bg-lime-950 dark:text-lime-300' },
+              { value: 'BME', label: 'Biomedical Engineering', code: 'BME', color: 'text-pink-600 bg-pink-50 dark:bg-pink-950 dark:text-pink-300' },
+              { value: 'AGRI', label: 'Agricultural Engineering', code: 'AGRI', color: 'text-green-600 bg-green-50 dark:bg-green-950 dark:text-green-300' },
+            ];
+            const [deptOpen, setDeptOpen] = React.useState(false);
+            const selectedDeptObj = DEPT_OPTIONS.find(o => o.value === selectedDeptFilter) || DEPT_OPTIONS[0];
+            return (
+              <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDeptOpen(false); }}>
+                {/* Trigger */}
+                <button
+                  type="button"
+                  onClick={() => setDeptOpen(p => !p)}
+                  className={`w-full flex items-center gap-2.5 bg-gray-50 dark:bg-navy-950 px-3.5 py-2.5 rounded-2xl border shadow-sm text-left transition-all hover:border-indigo-300 dark:hover:border-indigo-600 focus:outline-none ${deptOpen ? 'border-indigo-400 ring-2 ring-indigo-400/20 dark:border-indigo-500' : 'border-gray-200 dark:border-gray-800'}`}
+                >
+                  <Building2 className="w-4 h-4 text-indigo-500 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Department</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${selectedDeptObj.color}`}>{selectedDeptObj.code}</span>
+                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{selectedDeptObj.label}</span>
+                    </div>
+                  </div>
+                  <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${deptOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {/* Dropdown Panel */}
+                {deptOpen && (
+                  <div className="absolute z-50 top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden max-h-72 overflow-y-auto">
+                    {DEPT_OPTIONS.map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => { setSelectedDeptFilter(opt.value); setDeptOpen(false); }}
+                        className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-navy-800 ${selectedDeptFilter === opt.value ? 'bg-indigo-50 dark:bg-indigo-950/60' : ''}`}
+                      >
+                        <Building2 className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${opt.color}`}>{opt.code}</span>
+                        <span className={`text-xs font-semibold truncate flex-1 ${selectedDeptFilter === opt.value ? 'text-indigo-700 dark:text-indigo-300 font-black' : 'text-gray-700 dark:text-gray-300'}`}>{opt.label}</span>
+                        {selectedDeptFilter === opt.value && <Check className="w-3.5 h-3.5 text-indigo-500 shrink-0" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Academic Year Select */}
           <div className="relative flex items-center bg-gray-50 dark:bg-navy-950 px-3.5 py-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
@@ -1803,14 +1825,15 @@ export const WeeklyContestPage: React.FC = () => {
           {/* Card 1: Total Students */}
           <button
             onClick={() => setSelectedAttendanceFilter('ALL')}
-            className={`h-24 p-4 rounded-2xl bg-white dark:bg-navy-900 border text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg cursor-pointer flex flex-col justify-between relative overflow-hidden ${
-              selectedAttendanceFilter === 'ALL'
-                ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-lg'
+            className={`h-24 p-4 rounded-2xl bg-white dark:bg-navy-900 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${selectedAttendanceFilter === 'ALL'
+                ? 'border-brand-500 ring-4 ring-brand-500/20 shadow-lg'
                 : 'border-gray-200 dark:border-gray-800 hover:border-brand-300 shadow-sm'
-            }`}
+              }`}
           >
-            <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-2xl bg-gradient-to-r from-brand-400 to-brand-600" />
-            <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest pt-1">Total Students</p>
+            <div className="flex items-center justify-between w-full">
+              <p className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Total Students</p>
+              <Users className="w-3.5 h-3.5 text-gray-400" />
+            </div>
             <p className="text-2xl sm:text-3xl font-black font-mono text-gray-900 dark:text-white">
               <AnimatedNumber value={stats.totalRows} />
             </p>
@@ -1819,14 +1842,15 @@ export const WeeklyContestPage: React.FC = () => {
           {/* Card 2: Public Attended */}
           <button
             onClick={() => toggleAttendanceFilter('PUBLIC_ATTENDED')}
-            className={`h-24 p-4 rounded-2xl bg-emerald-500/10 border text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg cursor-pointer flex flex-col justify-between relative overflow-hidden ${
-              selectedAttendanceFilter === 'PUBLIC_ATTENDED'
-                ? 'border-emerald-500 ring-2 ring-emerald-500/30 shadow-lg bg-emerald-500/20'
+            className={`h-24 p-4 rounded-2xl bg-emerald-500/10 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${selectedAttendanceFilter === 'PUBLIC_ATTENDED'
+                ? 'border-emerald-500 ring-4 ring-emerald-500/30 shadow-lg bg-emerald-500/20'
                 : 'border-emerald-500/20 hover:border-emerald-400 shadow-sm'
-            }`}
+              }`}
           >
-            <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-2xl bg-gradient-to-r from-emerald-400 to-green-500" />
-            <p className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-widest pt-1">Public</p>
+            <div className="flex items-center justify-between w-full">
+              <p className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">Public</p>
+              <Award className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            </div>
             <p className="text-2xl sm:text-3xl font-black font-mono text-emerald-700 dark:text-emerald-300">
               <AnimatedNumber value={stats.attendedRows} />
             </p>
@@ -1835,14 +1859,15 @@ export const WeeklyContestPage: React.FC = () => {
           {/* Card 3: Virtual Attended */}
           <button
             onClick={() => toggleAttendanceFilter('VIRTUAL_ATTENDED')}
-            className={`h-24 p-4 rounded-2xl bg-purple-500/10 border text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg cursor-pointer flex flex-col justify-between relative overflow-hidden ${
-              selectedAttendanceFilter === 'VIRTUAL_ATTENDED'
-                ? 'border-purple-500 ring-2 ring-purple-500/30 shadow-lg bg-purple-500/20'
+            className={`h-24 p-4 rounded-2xl bg-purple-500/10 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${selectedAttendanceFilter === 'VIRTUAL_ATTENDED'
+                ? 'border-purple-500 ring-4 ring-purple-500/30 shadow-lg bg-purple-500/20'
                 : 'border-purple-500/20 hover:border-purple-400 shadow-sm'
-            }`}
+              }`}
           >
-            <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-2xl bg-gradient-to-r from-purple-400 to-violet-500" />
-            <p className="text-[10px] font-black uppercase text-purple-600 dark:text-purple-400 tracking-widest pt-1">Virtual</p>
+            <div className="flex items-center justify-between w-full">
+              <p className="text-[10px] font-black uppercase text-purple-600 dark:text-purple-400 tracking-wider">Virtual</p>
+              <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+            </div>
             <p className="text-2xl sm:text-3xl font-black font-mono text-purple-700 dark:text-purple-300">
               <AnimatedNumber value={stats.virtualRows} />
             </p>
@@ -1851,14 +1876,15 @@ export const WeeklyContestPage: React.FC = () => {
           {/* Card 4: Not Attended */}
           <button
             onClick={() => toggleAttendanceFilter('PUBLIC_NOT_ATTENDED')}
-            className={`h-24 p-4 rounded-2xl bg-rose-500/10 border text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg cursor-pointer flex flex-col justify-between relative overflow-hidden ${
-              selectedAttendanceFilter === 'PUBLIC_NOT_ATTENDED'
-                ? 'border-rose-500 ring-2 ring-rose-500/30 shadow-lg bg-rose-500/20'
+            className={`h-24 p-4 rounded-2xl bg-rose-500/10 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${selectedAttendanceFilter === 'PUBLIC_NOT_ATTENDED'
+                ? 'border-rose-500 ring-4 ring-rose-500/30 shadow-lg bg-rose-500/20'
                 : 'border-rose-500/20 hover:border-rose-400 shadow-sm'
-            }`}
+              }`}
           >
-            <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-2xl bg-gradient-to-r from-rose-400 to-red-500" />
-            <p className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400 tracking-widest pt-1">Not Attended</p>
+            <div className="flex items-center justify-between w-full">
+              <p className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400 tracking-wider">Not Attended</p>
+              <UserX className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+            </div>
             <p className="text-2xl sm:text-3xl font-black font-mono text-rose-700 dark:text-rose-300">
               <AnimatedNumber value={stats.notAttendedRows} />
             </p>
@@ -1871,23 +1897,26 @@ export const WeeklyContestPage: React.FC = () => {
               setShowDetailedView(true);
               setActiveTab('error_board');
             }}
-            className={`h-24 p-4 rounded-2xl bg-amber-500/10 border text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg cursor-pointer flex flex-col justify-between relative overflow-hidden ${
-              selectedAttendanceFilter === 'DATA_ERROR'
-                ? 'border-amber-500 ring-2 ring-amber-500/30 shadow-lg bg-amber-500/20'
+            className={`h-24 p-4 rounded-2xl bg-amber-500/10 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${selectedAttendanceFilter === 'DATA_ERROR'
+                ? 'border-amber-500 ring-4 ring-amber-500/30 shadow-lg bg-amber-500/20'
                 : 'border-amber-500/20 hover:border-amber-400 shadow-sm'
-            }`}
+              }`}
           >
-            <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-2xl bg-gradient-to-r from-amber-400 to-orange-500" />
-            <p className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-widest pt-1">Data Errors</p>
+            <div className="flex items-center justify-between w-full">
+              <p className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider">Data Errors</p>
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            </div>
             <p className="text-2xl sm:text-3xl font-black font-mono text-amber-700 dark:text-amber-300">
               <AnimatedNumber value={stats.errorRows} />
             </p>
           </button>
 
           {/* Card 6: Participation % */}
-          <div className="h-24 p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-left shadow-sm flex flex-col justify-between relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-2xl bg-gradient-to-r from-indigo-400 to-blue-500" />
-            <p className="text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-widest pt-1">Participation</p>
+          <div className="h-24 p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-center shadow-sm flex flex-col justify-between">
+            <div className="flex items-center justify-between w-full">
+              <p className="text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-wider">Participation</p>
+              <TrendingUp className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+            </div>
             <p className="text-2xl sm:text-3xl font-black font-mono text-indigo-700 dark:text-indigo-300">
               {stats.totalParticipationPct}%
             </p>
@@ -1992,10 +2021,12 @@ export const WeeklyContestPage: React.FC = () => {
           <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-md space-y-3">
             <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800/80 pb-3">
               <h4 className="text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-2">
-                <span className="w-1.5 h-4 rounded-full bg-gradient-to-b from-amber-400 to-orange-500" />
-                <span>Top Performers</span>
+                <div className="w-6 h-6 rounded-lg bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                  <Trophy className="w-3.5 h-3.5" />
+                </div>
+                <span>Top Performers Spotlight</span>
               </h4>
-              <span className="text-[10px] font-bold text-gray-400">Contest Solved</span>
+              <span className="text-[10px] font-bold text-gray-400">Live Global Rank</span>
             </div>
 
             <div className="space-y-2">
@@ -2003,10 +2034,9 @@ export const WeeklyContestPage: React.FC = () => {
                 stats.topPerformers.map((p, idx) => (
                   <div key={idx} className="flex items-center justify-between p-2.5 rounded-2xl bg-gray-50 dark:bg-navy-950/60 border border-gray-100 dark:border-gray-800 text-xs transition-all hover:bg-gray-100 dark:hover:bg-navy-800 hover:scale-[1.01]">
                     <div className="flex items-center space-x-2.5">
-                      <span className={`w-6 h-6 rounded-xl flex items-center justify-center font-black text-[11px] shadow-sm ${
-                        idx === 0 ? 'bg-gradient-to-br from-amber-400 to-orange-400 text-slate-950' :
-                        idx === 1 ? 'bg-gradient-to-br from-slate-200 to-slate-400 text-slate-900' : 'bg-gradient-to-br from-amber-700 to-amber-900 text-white'
-                      }`}>
+                      <span className={`w-6 h-6 rounded-xl flex items-center justify-center font-black text-[11px] shadow-sm ${idx === 0 ? 'bg-gradient-to-br from-amber-400 to-orange-400 text-slate-950' :
+                          idx === 1 ? 'bg-gradient-to-br from-slate-200 to-slate-400 text-slate-900' : 'bg-gradient-to-br from-amber-700 to-amber-900 text-white'
+                        }`}>
                         {idx + 1}
                       </span>
                       <div>
@@ -2138,33 +2168,30 @@ export const WeeklyContestPage: React.FC = () => {
             <div className="flex space-x-2 flex-wrap gap-y-1">
               <button
                 onClick={() => setActiveTab('matrix')}
-                className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                  activeTab === 'matrix'
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${activeTab === 'matrix'
                     ? 'bg-brand-500 text-white shadow-md'
                     : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
-                }`}
+                  }`}
               >
                 📋 Student Matrix Roster ({filteredMatrixRows.length})
               </button>
 
               <button
                 onClick={() => setActiveTab('dept_year')}
-                className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                  activeTab === 'dept_year'
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${activeTab === 'dept_year'
                     ? 'bg-purple-600 text-white shadow-md'
                     : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
-                }`}
+                  }`}
               >
                 📊 Dept & Year Breakdown
               </button>
 
               <button
                 onClick={() => setActiveTab('error_board')}
-                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 cursor-pointer ${
-                  activeTab === 'error_board'
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 cursor-pointer ${activeTab === 'error_board'
                     ? 'bg-amber-500 text-white shadow-md'
                     : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
-                }`}
+                  }`}
               >
                 <AlertTriangle className="w-3.5 h-3.5" />
                 <span>⚠️ Data Quality Error Board ({matrixRows.filter(r => !r.username || r.participation_status === 'DATA_ERROR' || r.status === 'USERNAME_NOT_FOUND').length} Issues)</span>
@@ -2483,12 +2510,12 @@ export const WeeklyContestPage: React.FC = () => {
 
       {/* Interactive Report Preview Modal — Auto-fitted Viewport Card (Matches Student Modal) */}
       {showPreviewModal && (
-        <div 
+        <div
           className="modal-overlay-responsive animate-modal-backdrop"
           onClick={(e) => { if (e.target === e.currentTarget) setShowPreviewModal(false); }}
         >
           <div className="modal-container-responsive max-w-5xl bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 animate-modal-content">
-            
+
             {/* ── A. SLEEK GRADIENT HEADER (Matches Image 2) ── */}
             <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-950 text-white flex items-center justify-between shrink-0">
               <div className="flex items-center space-x-3 min-w-0">
@@ -2588,15 +2615,14 @@ export const WeeklyContestPage: React.FC = () => {
                             <td className="px-3 py-1.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{r.dept}</td>
                             <td className="px-3 py-1.5 text-center text-gray-600 dark:text-gray-400 font-bold">{r.year}</td>
                             <td className="px-3 py-1.5 text-center">
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                                isPublicAttended 
-                                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' 
-                                  : isVirtualAttended 
-                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300' 
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${isPublicAttended
+                                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                                  : isVirtualAttended
+                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
                                     : r.status === 'USERNAME_NOT_FOUND'
                                       ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
                                       : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
-                              }`}>
+                                }`}>
                                 {isPublicAttended ? 'PUBLIC' : isVirtualAttended ? 'VIRTUAL' : r.status === 'USERNAME_NOT_FOUND' ? 'UNLINKED' : 'NOT ATTENDED'}
                               </span>
                             </td>
@@ -2621,34 +2647,34 @@ export const WeeklyContestPage: React.FC = () => {
                 Nandha Engineering College • LeetCode Tracker
               </span>
               <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                <button 
-                  onClick={() => downloadReportFile('excel')} 
+                <button
+                  onClick={() => downloadReportFile('excel')}
                   className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm flex items-center space-x-1"
                 >
                   <FileSpreadsheet className="w-3.5 h-3.5" />
                   <span>Excel (.xlsx)</span>
                 </button>
-                <button 
-                  onClick={() => downloadReportFile('pdf')} 
+                <button
+                  onClick={() => downloadReportFile('pdf')}
                   className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm flex items-center space-x-1"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>PDF (.pdf)</span>
                 </button>
-                <button 
-                  onClick={() => downloadReportFile('word')} 
+                <button
+                  onClick={() => downloadReportFile('word')}
                   className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm flex items-center space-x-1"
                 >
                   <span>Word (.docx)</span>
                 </button>
-                <button 
-                  onClick={() => downloadReportFile('zip')} 
+                <button
+                  onClick={() => downloadReportFile('zip')}
                   className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm"
                 >
                   <span>All (.zip)</span>
                 </button>
-                <button 
-                  onClick={() => setShowPreviewModal(false)} 
+                <button
+                  onClick={() => setShowPreviewModal(false)}
                   className="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-black transition-all cursor-pointer"
                 >
                   Done
@@ -3012,7 +3038,7 @@ export const WeeklyContestPage: React.FC = () => {
             <div className="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-inner">
               <Lock className="w-7 h-7" />
             </div>
-            
+
             <div className="space-y-1.5">
               <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center justify-center gap-2">
                 <span>Authentication Required</span>
