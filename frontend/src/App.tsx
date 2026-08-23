@@ -167,6 +167,38 @@ export const App: React.FC = () => {
     });
   };
 
+  // Global Keyboard Shortcuts & Pro SaaS UX System
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 1. Quick Search shortcut: '/' (when not typing in an input) or 'Ctrl+K' / 'Cmd+K'
+      const isInputFocused = ['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName);
+      const isSearchShortcut = (e.key === '/' && !isInputFocused) || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k');
+
+      if (isSearchShortcut) {
+        e.preventDefault();
+        const searchInput = document.querySelector<HTMLInputElement>(
+          'input[type="text"][placeholder*="search" i], input[type="text"][placeholder*="Search" i], input[type="text"][placeholder*="Register" i]'
+        );
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.select();
+        }
+        return;
+      }
+
+      // 2. Global Escape key handler to dismiss active modals & dialogs
+      if (e.key === 'Escape') {
+        if (selectedStudent) setSelectedStudent(null);
+        if (showLoginModal) setShowLoginModal(false);
+        if (showImportModal) setShowImportModal(false);
+        if (showAlertCenterModal) setShowAlertCenterModal(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedStudent, showLoginModal, showImportModal, showAlertCenterModal]);
+
   // Determine main dashboard component based on role
   const renderDashboardComponent = () => {
     if (user?.role === 'student') {
