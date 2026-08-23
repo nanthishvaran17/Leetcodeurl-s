@@ -127,7 +127,7 @@ export const WeeklyContestPage: React.FC = () => {
   const [showEmailModal, setShowEmailModal] = useState<boolean>(false);
   const [notification, setNotification] = useState<NotificationState | null>(null);
 
-  // Live Telemetry Polling Effect (every 10s during SCHEDULED or LIVE)
+  // Live Telemetry Polling Effect (every 8s during SCHEDULED or LIVE for real-time problem updates)
   useEffect(() => {
     let isMounted = true;
     const pollTelemetry = async () => {
@@ -144,18 +144,22 @@ export const WeeklyContestPage: React.FC = () => {
             setCurrentSession((prev: any) => prev ? { ...prev, status: res.data.status } : prev);
           }
         }
+        // Seamlessly refresh live student solve data in the background
+        if (isMounted) {
+          fetchSessionDetails(selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, true);
+        }
       } catch (_err) {
         // Silent retry
       }
     };
 
     pollTelemetry();
-    const interval = setInterval(pollTelemetry, 10000);
+    const interval = setInterval(pollTelemetry, 8000);
     return () => {
       isMounted = false;
       clearInterval(interval);
     };
-  }, [selectedSessionId]);
+  }, [selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter]);
 
   // 1-second Countdown & Time Remaining Ticker
   useEffect(() => {
@@ -305,7 +309,7 @@ export const WeeklyContestPage: React.FC = () => {
 
   const abortControllerRef = React.useRef<AbortController | null>(null);
 
-  const fetchSessionDetails = async (sessionId: number, dept: string = 'ALL', year: string = 'ALL', attendance: string = 'ALL') => {
+  const fetchSessionDetails = async (sessionId: number, dept: string = 'ALL', year: string = 'ALL', attendance: string = 'ALL', silent: boolean = false) => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -315,17 +319,11 @@ export const WeeklyContestPage: React.FC = () => {
     const requestedSessionId = sessionId;
     const reqId = ++latestReqIdRef.current;
 
-    console.log("[MATRIX REQUEST]", {
-      sessionId: requestedSessionId,
-      url: `/contests/sessions/${requestedSessionId}/matrix`,
-      dept,
-      year,
-      attendance
-    });
-
-    setLoading(true);
-    setMatrixRows([]);
-    setSessionMetrics(null);
+    if (!silent) {
+      setLoading(true);
+      setMatrixRows([]);
+      setSessionMetrics(null);
+    }
 
     try {
       let matrixUrl = `/contests/sessions/${requestedSessionId}/matrix?dept=${dept}&year=${year}&attendance=${attendance}`;
