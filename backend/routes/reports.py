@@ -355,16 +355,82 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
             r_filename = get_contest_filename_base(contest_name, dept=dept, year=year, attendance=attendance)
 
             from backend.services.canonical_contest_engine import build_canonical_contest_dataset
+            # Always pull the full authoritative 1,450-student dataset for metrics,
+            # then slice to the caller's active filter scope for the export rows.
             canonical_data = build_canonical_contest_dataset(
                 session_id=session_id,
                 db=db,
-                dept=dept or "ALL",
-                year=year or "ALL",
-                attendance=attendance or "ALL"
+                dept="ALL",
+                year="ALL",
+                attendance="ALL"
             )
 
-            raw_rows = canonical_data.get("rows", [])
+            all_raw_rows = canonical_data.get("rows", [])
             matrix_metrics = canonical_data.get("metrics", {})
+
+            # ── Apply caller's active filter (dept / year / attendance) ──────
+            # Canonical dept values used in DB: CSE, IT, AIDS, CSE(CS), CSE(IOT),
+            # ECE, EEE, MECH, CIVIL, AGRI, BME
+            DEPT_CANONICAL_MAP = {
+                # canonical_db_value : [accepted frontend filter strings]
+                "CSE(CS)":  ["CSE(CS)", "CYBER SECURITY", "CYBER", "CSE(CYBER", "CSE (CYBER", "(CS)"],
+                "CSE(IOT)": ["CSE(IOT)", "IOT", "CSE(IOT", "CSE (IOT", "(IOT)"],
+                "AIDS":     ["AIDS", "AI&DS", "AI DS", "ARTIFICIAL INTELLIGENCE"],
+                "CSE":      ["CSE"],           # exact only – never match CSE(CS) or CSE(IOT)
+                "IT":       ["IT", "INFORMATION TECHNOLOGY"],
+                "ECE":      ["ECE", "ELECTRONICS", "ELECTRICAL AND COMMUNICATION"],
+                "EEE":      ["EEE", "ELECTRICAL AND ELECTRONICS"],
+                "MECH":     ["MECH", "MECHANICAL"],
+                "CIVIL":    ["CIVIL"],
+                "AGRI":     ["AGRI", "AGRICULTURE"],
+                "BME":      ["BME", "BIOMEDICAL"],
+            }
+
+            def _resolve_canonical(s: str) -> str:
+                """Map any dept string to its canonical DB key."""
+                su = s.upper().strip()
+                for canonical, aliases in DEPT_CANONICAL_MAP.items():
+                    if su == canonical:
+                        return canonical
+                    for alias in aliases:
+                        if su == alias or su.startswith(alias):
+                            return canonical
+                return su
+
+            def _dept_match(row_dept: str, filter_dept: str) -> bool:
+                if not filter_dept or filter_dept.upper().strip() in ("ALL", ""):
+                    return True
+                return _resolve_canonical(row_dept) == _resolve_canonical(filter_dept)
+
+            def _year_match(row_year: str, filter_year: str) -> bool:
+                if not filter_year or filter_year.upper().strip() in ("ALL", ""):
+                    return True
+                ry = str(row_year).upper().strip()
+                fy = str(filter_year).upper().strip()
+                if fy in ("II", "2", "2ND", "II YEAR"):   return ry in ("II", "2")
+                if fy in ("III", "3", "3RD", "III YEAR"): return ry in ("III", "3")
+                if fy in ("IV", "4", "4TH", "IV YEAR"):   return ry in ("IV", "4")
+                return fy == ry
+
+            def _att_match(row_status: str, filter_att: str) -> bool:
+                if not filter_att or filter_att.upper().strip() in ("ALL", ""):
+                    return True
+                rs = str(row_status).upper().strip()
+                fa = str(filter_att).upper().strip()
+                att_statuses = {"PUBLIC", "VIRTUAL", "PUBLIC_ATTENDED", "ATTENDED"}
+                not_att_statuses = {"NOT_ATTENDED", "NO_EVIDENCE", "UNLINKED", "ERROR"}
+                if fa in ("PUBLIC", "ATTENDED", "PUBLIC_ATTENDED", "VERIFIED"):
+                    return rs in att_statuses
+                if fa in ("NOT_ATTENDED", "NOT ATTENDED", "ABSENT"):
+                    return rs in not_att_statuses
+                return True
+
+            raw_rows = [
+                r for r in all_raw_rows
+                if _dept_match(r.get("dept", ""), dept)
+                and _year_match(r.get("year", ""), year)
+                and _att_match(r.get("status", ""), attendance)
+            ]
 
             all_students = []
             top_students = []
@@ -447,7 +513,7 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
                     "warnings": []
                 },
                 "rows": raw_rows,
-                "all_rows": canonical_data.get("all_rows", raw_rows),
+                "all_rows": raw_rows,
                 "departmentStats": canonical_data.get("departmentStats", {}),
                 "yearStats": canonical_data.get("yearStats", {}),
                 "statusCounts": canonical_data.get("statusCounts", {}),
