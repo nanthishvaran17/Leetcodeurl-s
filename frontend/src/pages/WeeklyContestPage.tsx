@@ -105,6 +105,8 @@ export const WeeklyContestPage: React.FC = () => {
   const [isRetrying, setIsRetrying] = useState<boolean>(false);
   const [deletingSessionId, setDeletingSessionId] = useState<number | null>(null);
   const [deptOpen, setDeptOpen] = useState<boolean>(false);
+  const [yearOpen, setYearOpen] = useState<boolean>(false);
+  const [attOpen, setAttOpen]   = useState<boolean>(false);
 
   // Live Contest Engine Real-Time State
   const [liveTelemetry, setLiveTelemetry] = useState<any>(null);
@@ -1754,44 +1756,100 @@ export const WeeklyContestPage: React.FC = () => {
             );
           })()}
 
-          {/* Academic Year Select */}
-          <div className="relative flex items-center bg-gray-50 dark:bg-navy-950 px-3.5 py-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
-            <GraduationCap className="w-4 h-4 text-brand-500 mr-2 shrink-0" />
-            <div className="flex-1">
-              <label className="block text-[9px] font-black uppercase text-gray-400 tracking-wider">Academic Year</label>
-              <select
-                value={selectedYearFilter}
-                onChange={(e) => setSelectedYearFilter(e.target.value)}
-                className="w-full bg-transparent text-xs font-bold text-gray-800 dark:text-gray-200 outline-none cursor-pointer"
-              >
-                <option value="ALL">All Academic Years</option>
-                <option value="II">II Year (2025–2029)</option>
-                <option value="III">III Year (2024–2028)</option>
-                <option value="IV">IV Year (2023–2027)</option>
-              </select>
-            </div>
-            <ChevronDown className="w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-          </div>
+          {/* Academic Year — Premium Custom Dropdown */}
+          {(() => {
+            const YEAR_OPTIONS = [
+              { value: 'ALL', label: 'All Academic Years',  code: 'ALL',  color: 'text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300' },
+              { value: 'II',  label: 'II Year (2025–2029)', code: 'II',   color: 'text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300' },
+              { value: 'III', label: 'III Year (2024–2028)',code: 'III',  color: 'text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300' },
+              { value: 'IV',  label: 'IV Year (2023–2027)', code: 'IV',   color: 'text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
+            ];
+            const selYear = YEAR_OPTIONS.find(o => o.value === selectedYearFilter) || YEAR_OPTIONS[0];
+            return (
+              <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setYearOpen(false); }}>
+                <button
+                  type="button"
+                  onClick={() => setYearOpen(p => !p)}
+                  className={`w-full flex items-center gap-2.5 bg-gray-50 dark:bg-navy-950 px-3.5 py-2.5 rounded-2xl border shadow-sm text-left transition-all hover:border-brand-300 dark:hover:border-brand-600 focus:outline-none ${yearOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-gray-200 dark:border-gray-800'}`}
+                >
+                  <GraduationCap className="w-4 h-4 text-brand-500 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Academic Year</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${selYear.color}`}>{selYear.code}</span>
+                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{selYear.label}</span>
+                    </div>
+                  </div>
+                  <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${yearOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {yearOpen && (
+                  <div className="absolute z-50 top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden">
+                    {YEAR_OPTIONS.map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => { setSelectedYearFilter(opt.value); setYearOpen(false); }}
+                        className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-navy-800 ${selectedYearFilter === opt.value ? 'bg-brand-50 dark:bg-brand-950/60' : ''}`}
+                      >
+                        <GraduationCap className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${opt.color}`}>{opt.code}</span>
+                        <span className={`text-xs font-semibold truncate flex-1 ${selectedYearFilter === opt.value ? 'text-brand-700 dark:text-brand-300 font-black' : 'text-gray-700 dark:text-gray-300'}`}>{opt.label}</span>
+                        {selectedYearFilter === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
-          {/* Attendance Status Select */}
-          <div className="relative flex items-center bg-gray-50 dark:bg-navy-950 px-3.5 py-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500 mr-2 shrink-0" />
-            <div className="flex-1">
-              <label className="block text-[9px] font-black uppercase text-gray-400 tracking-wider">Attendance Status</label>
-              <select
-                value={selectedAttendanceFilter}
-                onChange={(e) => setSelectedAttendanceFilter(e.target.value)}
-                className="w-full bg-transparent text-xs font-bold text-gray-800 dark:text-gray-200 outline-none cursor-pointer"
-              >
-                <option value="ALL">All Statuses</option>
-                <option value="PUBLIC_ATTENDED">🟢 Public Attended</option>
-                <option value="VIRTUAL_ATTENDED">🟣 Virtual Attended</option>
-                <option value="PUBLIC_NOT_ATTENDED">⚪ Not Attended</option>
-                <option value="DATA_ERROR">⚠️ Data Errors</option>
-              </select>
-            </div>
-            <ChevronDown className="w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-          </div>
+          {/* Attendance Status — Premium Custom Dropdown */}
+          {(() => {
+            const ATT_OPTIONS = [
+              { value: 'ALL',                label: 'All Statuses',     code: 'ALL',  dot: 'bg-gray-400',    color: 'text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-300' },
+              { value: 'PUBLIC_ATTENDED',    label: 'Public Attended',  code: 'PUB',  dot: 'bg-emerald-500', color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300' },
+              { value: 'VIRTUAL_ATTENDED',   label: 'Virtual Attended', code: 'VIRT', dot: 'bg-purple-500',  color: 'text-purple-700 bg-purple-50 dark:bg-purple-950 dark:text-purple-300' },
+              { value: 'PUBLIC_NOT_ATTENDED',label: 'Not Attended',     code: 'ABS',  dot: 'bg-rose-400',   color: 'text-rose-700 bg-rose-50 dark:bg-rose-950 dark:text-rose-300' },
+              { value: 'DATA_ERROR',         label: 'Data Errors',      code: 'ERR',  dot: 'bg-amber-500',  color: 'text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
+            ];
+            const selAtt = ATT_OPTIONS.find(o => o.value === selectedAttendanceFilter) || ATT_OPTIONS[0];
+            return (
+              <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setAttOpen(false); }}>
+                <button
+                  type="button"
+                  onClick={() => setAttOpen(p => !p)}
+                  className={`w-full flex items-center gap-2.5 bg-gray-50 dark:bg-navy-950 px-3.5 py-2.5 rounded-2xl border shadow-sm text-left transition-all hover:border-emerald-300 dark:hover:border-emerald-600 focus:outline-none ${attOpen ? 'border-emerald-400 ring-2 ring-emerald-400/20' : 'border-gray-200 dark:border-gray-800'}`}
+                >
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Attendance Status</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${selAtt.dot}`} />
+                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{selAtt.label}</span>
+                    </div>
+                  </div>
+                  <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${attOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {attOpen && (
+                  <div className="absolute z-50 top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden">
+                    {ATT_OPTIONS.map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => { setSelectedAttendanceFilter(opt.value); setAttOpen(false); }}
+                        className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-navy-800 ${selectedAttendanceFilter === opt.value ? 'bg-emerald-50 dark:bg-emerald-950/60' : ''}`}
+                      >
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${opt.dot}`} />
+                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${opt.color}`}>{opt.code}</span>
+                        <span className={`text-xs font-semibold truncate flex-1 ${selectedAttendanceFilter === opt.value ? 'text-emerald-700 dark:text-emerald-300 font-black' : 'text-gray-700 dark:text-gray-300'}`}>{opt.label}</span>
+                        {selectedAttendanceFilter === opt.value && <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Reset Filters / Active Filter Summary Button */}
           <div className="flex items-center justify-between sm:justify-end gap-2">
@@ -1811,7 +1869,7 @@ export const WeeklyContestPage: React.FC = () => {
             ) : (
               <div className="w-full flex items-center justify-center space-x-1.5 px-4 py-3 rounded-2xl bg-gray-50 dark:bg-navy-950 text-gray-400 text-xs font-bold border border-gray-100 dark:border-gray-800">
                 <Filter className="w-3.5 h-3.5 text-gray-400" />
-                <span>All {matrixRows.length || 1450} Students Active</span>
+                <span>Reset All Filters</span>
               </div>
             )}
           </div>
