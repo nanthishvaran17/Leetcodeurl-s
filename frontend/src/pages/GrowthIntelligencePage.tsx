@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   TrendingUp,
   Award,
@@ -98,6 +99,7 @@ export const GrowthIntelligencePage: React.FC = () => {
   const [selectedStudentName, setSelectedStudentName] = useState<string>('');
   const [activeStudentInfo, setActiveStudentInfo] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [modalTopY, setModalTopY] = useState<number | null>(null);
 
   useEffect(() => {
     fetchGrowthData();
@@ -160,8 +162,22 @@ export const GrowthIntelligencePage: React.FC = () => {
     }
   };
 
-  const handleFetchStudentHistory = async (identifier: string, fallbackName?: string) => {
+  const calculateTargetTopY = (e?: React.MouseEvent) => {
+    if (!e) return null;
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
+    const modalEstHeight = 550;
+    let targetTop = rect.top - 20;
+    if (targetTop + modalEstHeight > vh - 20) {
+      targetTop = Math.max(70, vh - modalEstHeight - 20);
+    }
+    if (targetTop < 70) targetTop = 70;
+    return targetTop;
+  };
+
+  const handleFetchStudentHistory = async (identifier: string, fallbackName?: string, e?: React.MouseEvent) => {
     if (!identifier || (typeof identifier === 'string' && !identifier.trim())) return;
+    if (e) setModalTopY(calculateTargetTopY(e));
     setHistoryLoading(true);
     try {
       const res = await api.get(`/history/${encodeURIComponent(identifier.trim())}?limit=50`);
@@ -182,6 +198,22 @@ export const GrowthIntelligencePage: React.FC = () => {
       setHistoryLoading(false);
     }
   };
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isModalOpen) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      const onKey = (ev: KeyboardEvent) => {
+        if (ev.key === 'Escape') setIsModalOpen(false);
+      };
+      window.addEventListener('keydown', onKey);
+      return () => {
+        document.body.style.overflow = prevOverflow || 'unset';
+        window.removeEventListener('keydown', onKey);
+      };
+    }
+  }, [isModalOpen]);
 
   return (
     <div className="space-y-8 py-2 pb-16 animate-slideUp">
@@ -546,7 +578,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                     {/* Time Machine Timeline Button */}
                     <td className="py-4 px-4 text-right">
                       <button
-                        onClick={() => handleFetchStudentHistory(String(imp.student_id), imp.name)}
+                        onClick={(e) => handleFetchStudentHistory(String(imp.student_id), imp.name, e)}
                         className="px-3.5 py-2 text-xs font-black rounded-xl bg-brand-600 hover:bg-brand-700 text-white transition-all flex items-center space-x-1.5 shadow-md shadow-brand-600/30 ml-auto transform hover:scale-105"
                       >
                         <Clock className="w-3.5 h-3.5" />
@@ -653,10 +685,23 @@ export const GrowthIntelligencePage: React.FC = () => {
         )}
       </div>
 
-      {/* Interactive Student Time Machine Timeline Modal */}
-      {isModalOpen && (
-        <div className="modal-overlay-responsive animate-modal-backdrop">
-          <div className="modal-container-responsive max-w-6xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-2xl animate-modal-content">
+      {/* Interactive Student Time Machine Timeline Modal — Mounted via Portal to document.body */}
+      {isModalOpen && typeof document !== 'undefined' && createPortal(
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Historical Timeline for ${selectedStudentName}`}
+          className="modal-overlay-responsive animate-modal-backdrop"
+          style={modalTopY !== null ? { alignItems: 'flex-start', paddingTop: `${modalTopY}px` } : {}}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsModalOpen(false);
+          }}
+        >
+          <div
+            className="modal-container-responsive max-w-6xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-2xl animate-modal-content"
+            style={modalTopY !== null ? { marginTop: 0, marginBottom: 'auto' } : {}}
+            onClick={(e) => e.stopPropagation()}
+          >
             
             {/* Modal Header */}
             <div className="p-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-gray-800 shrink-0">
@@ -785,7 +830,8 @@ export const GrowthIntelligencePage: React.FC = () => {
             </div>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>
