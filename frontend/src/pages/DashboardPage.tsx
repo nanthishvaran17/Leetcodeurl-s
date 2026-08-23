@@ -210,16 +210,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     setGeneratingReport(true);
     notify.info('Generating PDF Report', 'Compiling institutional performance metrics and charts...', { category: 'REPORTS' });
     try {
-      const res = await api.get('/reports/export-pdf', { responseType: 'blob' });
+      const res = await api.get('/reports/21/pdf', { responseType: 'blob' });
       const blobUrl = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
       const link = document.createElement('a');
       link.href = blobUrl;
-      link.setAttribute('download', `Nandha_LeetCode_Weekly_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
+      link.setAttribute('download', `NEC_WC516_Weekly_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(blobUrl);
-      notify.success('Report Ready', 'Weekly PDF report downloaded successfully.', { category: 'REPORTS' });
+      notify.success('Report Ready', 'Weekly Contest 516 PDF report downloaded successfully.', { category: 'REPORTS' });
     } catch (err: any) {
       console.error("Report generation failed", err);
       const statusCode = err.response?.status;
@@ -236,18 +236,18 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   };
 
   const handleExportExcel = async () => {
-    notify.info('Preparing Excel Export', 'Gathering college-wide student statistics...', { category: 'REPORTS' });
+    notify.info('Preparing Excel Export', 'Gathering Weekly Contest 516 statistics...', { category: 'REPORTS' });
     try {
-      const res = await api.get('/reports/export-excel', { responseType: 'blob' });
+      const res = await api.get('/reports/21/excel', { responseType: 'blob' });
       const blobUrl = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement('a');
       link.href = blobUrl;
-      link.setAttribute('download', `Nandha_LeetCode_College_Summary_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      link.setAttribute('download', `NEC_WC516_Master_Report_${new Date().toISOString().slice(0, 10)}.xlsx`);
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(blobUrl);
-      notify.success('Excel Export Complete', 'College summary workbook downloaded.', { category: 'REPORTS' });
+      notify.success('Excel Export Complete', 'Weekly Contest 516 workbook downloaded.', { category: 'REPORTS' });
     } catch (err: any) {
       console.error("Excel export failed", err);
       const statusCode = err.response?.status;
