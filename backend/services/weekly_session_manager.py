@@ -850,11 +850,11 @@ def sync_single_historical_session(db: Session, session_id: int):
     """
 
     async def _fetch_all_evidence():
-        limits = httpx.Limits(max_connections=35, max_keepalive_connections=20)
-        timeout = httpx.Timeout(12.0, connect=5.0)
+        limits = httpx.Limits(max_connections=60, max_keepalive_connections=35)
+        timeout = httpx.Timeout(8.0, connect=3.5)
 
         async with httpx.AsyncClient(headers=HEADERS, limits=limits, timeout=timeout, follow_redirects=True) as client:
-            sem = asyncio.Semaphore(15)
+            sem = asyncio.Semaphore(30)
 
             async def _fetch_single(s):
                 raw_u = s.username
@@ -1387,37 +1387,44 @@ class SundayLiveContestEngine:
 
         async with self._lock:
             self.active_session_id = session_id
-            self.active_job_id = f"LIVE-JOB-{session_id}-{int(get_current_ist_datetime().timestamp())}"
             self.is_running = True
-            self.worker_state = "RUNNING"
-            self.last_sync_dt = get_current_ist_datetime()
 
-            db = db_factory()
-            try:
-                session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
-                if not session:
-                    return
+            while self.is_running:
+                db = db_factory()
+                try:
+                    session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+                    if not session or session.status not in ("LIVE", "SCHEDULED"):
+                        break
 
-                if session.status == "SCHEDULED":
-                    session.status = "LIVE"
-                    db.commit()
+                    if session.status == "SCHEDULED":
+                        session.status = "LIVE"
+                        db.commit()
 
-                # Perform live evidence synchronization for all students
-                sync_single_historical_session(db, session_id)
+                    self.active_job_id = f"LIVE-JOB-{session_id}-{int(get_current_ist_datetime().timestamp())}"
+                    self.worker_state = "RUNNING"
+                    self.last_sync_dt = get_current_ist_datetime()
 
-                self.processed_count = session.total_students or 1450
-                self.successful_count = (session.total_students or 1450) - (session.failed_verification or 0)
-                self.failed_count = session.failed_verification or 0
+                    # Perform quick live evidence synchronization for all students
+                    sync_single_historical_session(db, session_id)
 
-                self.last_sync_dt = get_current_ist_datetime()
-                self.worker_state = "READY"
-            except Exception as e:
-                logger.error(f"[SUNDAY_LIVE_ENGINE] Error in live cycle: {e}")
-                self.failed_count += 1
-                self.worker_state = "ERROR"
-            finally:
-                self.is_running = False
-                db.close()
+                    self.processed_count = session.total_students or 1450
+                    self.successful_count = (session.total_students or 1450) - (session.failed_verification or 0)
+                    self.failed_count = session.failed_verification or 0
+                    self.last_sync_dt = get_current_ist_datetime()
+                    self.worker_state = "READY"
+                    self.record_live_event("SYNC_SWEEP", "Contest Engine", "SYSTEM", "ALL", "ALL", f"Completed live solve sync cycle. {session.official_participants} active public solvers recorded.")
+                except Exception as e:
+                    logger.error(f"[SUNDAY_LIVE_ENGINE] Error in live cycle: {e}")
+                    self.failed_count += 1
+                    self.worker_state = "ERROR"
+                finally:
+                    db.close()
+
+                if self.is_paused:
+                    self.worker_state = "PAUSED"
+                    await asyncio.sleep(5)
+                else:
+                    await asyncio.sleep(8)
 
 
 sunday_live_engine = SundayLiveContestEngine()
