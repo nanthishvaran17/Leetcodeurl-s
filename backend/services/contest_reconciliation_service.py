@@ -938,7 +938,7 @@ class UniversalContestReconciliationEngine:
             # Persist audit record in virtual_scan_audits table
             try:
                 scan_audit = VirtualScanAudit(
-                    scan_id=f"SCAN-{contest_id}-{datetime.datetime.now(UTC_TZ).strftime('%Y%m%d%H%M%S')}",
+                    scan_id=f"SCAN-{contest_id}-{datetime.datetime.now(UTC_TZ).strftime('%Y%m%d%H%M%S%f')}",
                     contest_id=contest_id,
                     started_at=datetime.datetime.now(UTC_TZ),
                     completed_at=datetime.datetime.now(UTC_TZ),
