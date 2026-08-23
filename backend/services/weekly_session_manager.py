@@ -1185,37 +1185,29 @@ def sync_single_historical_session(db: Session, session_id: int):
         "rows": matrix_rows
     }
 
-    data_json_str = json.dumps(snapshot_data, sort_keys=True)
-    import hashlib
-    dataset_hash = hashlib.sha256(data_json_str.encode('utf-8')).hexdigest()
-    session.dataset_hash = dataset_hash
+    # Commit all public results and session metrics immediately
+    db.commit()
 
-    try:
-        existing_snap = db.query(OfficialWeeklySnapshot).filter(OfficialWeeklySnapshot.session_id == session.id).first()
-        if existing_snap:
-            if session.status == "FINALIZED":
-                existing_snap.dataset = snapshot_data
-                existing_snap.dataset_hash = dataset_hash
-                existing_snap.student_count = roster_count
-                existing_snap.error_count = data_errors_cnt
-        else:
-            new_snap = OfficialWeeklySnapshot(
-                session_id=session.id,
-                contest_id=canonical_contest_id,
-                contest_name=target_contest_title,
-                contest_date=session.session_date,
-                finalized_at=now_dt,
-                dataset=snapshot_data,
-                dataset_hash=dataset_hash,
-                student_count=roster_count,
-                error_count=data_errors_cnt
-            )
-            db.add(new_snap)
-        db.commit()
-    except Exception as snap_err:
-        logger.warning(f"[SNAPSHOT_LOCK_BYPASS] Snapshot update bypassed during live sync ({snap_err})")
-        db.rollback()
-        db.commit()
+    # Snapshot creation occurs only on finalization (at 09:30 AM IST)
+    if session.status in ("FINALIZED", "FINALIZING"):
+        try:
+            existing_snap = db.query(OfficialWeeklySnapshot).filter(OfficialWeeklySnapshot.session_id == session.id).first()
+            if not existing_snap:
+                new_snap = OfficialWeeklySnapshot(
+                    session_id=session.id,
+                    contest_id=canonical_contest_id,
+                    contest_name=target_contest_title,
+                    contest_date=session.session_date,
+                    finalized_at=now_dt,
+                    dataset=snapshot_data,
+                    dataset_hash=dataset_hash,
+                    student_count=roster_count,
+                    error_count=data_errors_cnt
+                )
+                db.add(new_snap)
+                db.commit()
+        except Exception as snap_err:
+            logger.warning(f"[SNAPSHOT_LOCK_BYPASS] Snapshot commit note: {snap_err}")
 
     # Invalidate all contest matrix cache keys
     from backend.cache import cache
