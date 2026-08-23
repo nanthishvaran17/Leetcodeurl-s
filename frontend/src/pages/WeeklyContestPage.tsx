@@ -106,7 +106,7 @@ export const WeeklyContestPage: React.FC = () => {
   const [deletingSessionId, setDeletingSessionId] = useState<number | null>(null);
   const [deptOpen, setDeptOpen] = useState<boolean>(false);
   const [yearOpen, setYearOpen] = useState<boolean>(false);
-  const [attOpen, setAttOpen]   = useState<boolean>(false);
+  const [attOpen,  setAttOpen]  = useState<boolean>(false);
 
   // Live Contest Engine Real-Time State
   const [liveTelemetry, setLiveTelemetry] = useState<any>(null);
@@ -915,8 +915,8 @@ export const WeeklyContestPage: React.FC = () => {
 
       {/* ── 1. SLEEK INSTITUTIONAL HERO HEADER ── */}
       <div className={`relative overflow-hidden rounded-3xl text-white p-6 sm:p-8 shadow-2xl border transition-all duration-300 ${isLive
-          ? 'bg-gradient-to-r from-rose-950 via-slate-900 to-indigo-950 border-rose-500/40 shadow-rose-500/10'
-          : 'bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 border-brand-500/30'
+        ? 'bg-gradient-to-r from-rose-950 via-slate-900 to-indigo-950 border-rose-500/40 shadow-rose-500/10'
+        : 'bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 border-brand-500/30'
         }`}>
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute bottom-0 left-1/3 -mb-10 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -1179,8 +1179,8 @@ export const WeeklyContestPage: React.FC = () => {
                 <Cpu className="w-3.5 h-3.5 text-brand-400" />
                 <span>Worker: <strong className="text-white">{liveTelemetry?.workerId || 'WORKER-LIVE-5'}</strong></span>
                 <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded ${liveTelemetry?.workerState === 'RUNNING' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' :
-                    liveTelemetry?.workerState === 'PAUSED' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' :
-                      'bg-slate-800 text-slate-300'
+                  liveTelemetry?.workerState === 'PAUSED' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' :
+                    'bg-slate-800 text-slate-300'
                   }`}>
                   {liveTelemetry?.workerState || 'READY'}
                 </span>
@@ -1206,8 +1206,8 @@ export const WeeklyContestPage: React.FC = () => {
             <button
               onClick={() => setAdminSubTab('sync_ops')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'sync_ops'
-                  ? 'bg-brand-600 text-white shadow-lg'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                ? 'bg-brand-600 text-white shadow-lg'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
             >
               <Play className="w-3.5 h-3.5 fill-current" />
@@ -1217,8 +1217,8 @@ export const WeeklyContestPage: React.FC = () => {
             <button
               onClick={() => setAdminSubTab('rate_limiter')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'rate_limiter'
-                  ? 'bg-brand-600 text-white shadow-lg'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                ? 'bg-brand-600 text-white shadow-lg'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
             >
               <Gauge className="w-3.5 h-3.5" />
@@ -1228,8 +1228,8 @@ export const WeeklyContestPage: React.FC = () => {
             <button
               onClick={() => setAdminSubTab('error_resolver')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'error_resolver'
-                  ? 'bg-brand-600 text-white shadow-lg'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                ? 'bg-brand-600 text-white shadow-lg'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
             >
               <AlertTriangle className="w-3.5 h-3.5" />
@@ -1239,8 +1239,8 @@ export const WeeklyContestPage: React.FC = () => {
             <button
               onClick={() => setAdminSubTab('snapshot_audit')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'snapshot_audit'
-                  ? 'bg-brand-600 text-white shadow-lg'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                ? 'bg-brand-600 text-white shadow-lg'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
             >
               <Lock className="w-3.5 h-3.5" />
@@ -1250,8 +1250,8 @@ export const WeeklyContestPage: React.FC = () => {
             <button
               onClick={() => setAdminSubTab('live_logs')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'live_logs'
-                  ? 'bg-brand-600 text-white shadow-lg'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                ? 'bg-brand-600 text-white shadow-lg'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
             >
               <Terminal className="w-3.5 h-3.5" />
@@ -1261,8 +1261,8 @@ export const WeeklyContestPage: React.FC = () => {
             <button
               onClick={() => setAdminSubTab('simulation_sandbox')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'simulation_sandbox'
-                  ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
             >
               <FlaskConical className="w-3.5 h-3.5 text-amber-400" />
@@ -1272,8 +1272,8 @@ export const WeeklyContestPage: React.FC = () => {
             <button
               onClick={() => setAdminSubTab('live_monitor')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'live_monitor'
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/40'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/40'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
             >
               <Search className="w-3.5 h-3.5 text-emerald-400" />
@@ -1741,6 +1741,7 @@ export const WeeklyContestPage: React.FC = () => {
                       <button
                         key={opt.value}
                         type="button"
+                        onMouseDown={(e) => e.preventDefault()}
                         onClick={() => { setSelectedDeptFilter(opt.value); setDeptOpen(false); }}
                         className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-navy-800 ${selectedDeptFilter === opt.value ? 'bg-indigo-50 dark:bg-indigo-950/60' : ''}`}
                       >
@@ -1757,99 +1758,131 @@ export const WeeklyContestPage: React.FC = () => {
           })()}
 
           {/* Academic Year — Premium Custom Dropdown */}
-          {(() => {
-            const YEAR_OPTIONS = [
-              { value: 'ALL', label: 'All Academic Years',  code: 'ALL',  color: 'text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300' },
-              { value: 'II',  label: 'II Year (2025–2029)', code: 'II',   color: 'text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300' },
-              { value: 'III', label: 'III Year (2024–2028)',code: 'III',  color: 'text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300' },
-              { value: 'IV',  label: 'IV Year (2023–2027)', code: 'IV',   color: 'text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
-            ];
-            const selYear = YEAR_OPTIONS.find(o => o.value === selectedYearFilter) || YEAR_OPTIONS[0];
-            return (
-              <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setYearOpen(false); }}>
-                <button
-                  type="button"
-                  onClick={() => setYearOpen(p => !p)}
-                  className={`w-full flex items-center gap-2.5 bg-gray-50 dark:bg-navy-950 px-3.5 py-2.5 rounded-2xl border shadow-sm text-left transition-all hover:border-brand-300 dark:hover:border-brand-600 focus:outline-none ${yearOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-gray-200 dark:border-gray-800'}`}
-                >
-                  <GraduationCap className="w-4 h-4 text-brand-500 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Academic Year</p>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${selYear.color}`}>{selYear.code}</span>
-                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{selYear.label}</span>
-                    </div>
-                  </div>
-                  <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${yearOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {yearOpen && (
-                  <div className="absolute z-50 top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden">
-                    {YEAR_OPTIONS.map(opt => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => { setSelectedYearFilter(opt.value); setYearOpen(false); }}
-                        className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-navy-800 ${selectedYearFilter === opt.value ? 'bg-brand-50 dark:bg-brand-950/60' : ''}`}
-                      >
-                        <GraduationCap className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${opt.color}`}>{opt.code}</span>
-                        <span className={`text-xs font-semibold truncate flex-1 ${selectedYearFilter === opt.value ? 'text-brand-700 dark:text-brand-300 font-black' : 'text-gray-700 dark:text-gray-300'}`}>{opt.label}</span>
-                        {selectedYearFilter === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
-                      </button>
-                    ))}
-                  </div>
-                )}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => { setYearOpen(p => !p); setDeptOpen(false); setAttOpen(false); }}
+              className={`w-full flex items-center gap-2.5 bg-gray-50 dark:bg-navy-950 px-3.5 py-2.5 rounded-2xl border shadow-sm text-left transition-all focus:outline-none ${
+                yearOpen
+                  ? 'border-brand-400 ring-2 ring-brand-400/20 dark:border-brand-500'
+                  : 'border-gray-200 dark:border-gray-800 hover:border-brand-300'
+              }`}
+            >
+              <GraduationCap className="w-4 h-4 text-brand-500 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Academic Year</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  {selectedYearFilter === 'ALL' ? (
+                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300">ALL</span>
+                  ) : selectedYearFilter === 'II' ? (
+                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300">II</span>
+                  ) : selectedYearFilter === 'III' ? (
+                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300">III</span>
+                  ) : (
+                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300">IV</span>
+                  )}
+                  <span className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">
+                    {selectedYearFilter === 'ALL' ? 'All Academic Years' : selectedYearFilter === 'II' ? 'II Year (2025–2029)' : selectedYearFilter === 'III' ? 'III Year (2024–2028)' : 'IV Year (2023–2027)'}
+                  </span>
+                </div>
               </div>
-            );
-          })()}
+              <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${yearOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {yearOpen && (
+              <div className="absolute z-[100] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl overflow-hidden">
+                {[
+                  { value: 'ALL', label: 'All Academic Years',  code: 'ALL', color: 'text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300' },
+                  { value: 'II',  label: 'II Year (2025–2029)', code: 'II',  color: 'text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300' },
+                  { value: 'III', label: 'III Year (2024–2028)',code: 'III', color: 'text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300' },
+                  { value: 'IV',  label: 'IV Year (2023–2027)', code: 'IV',  color: 'text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => { setSelectedYearFilter(opt.value); setYearOpen(false); }}
+                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${
+                      selectedYearFilter === opt.value
+                        ? 'bg-brand-50 dark:bg-brand-950/60'
+                        : 'hover:bg-gray-50 dark:hover:bg-navy-800'
+                    }`}
+                  >
+                    <GraduationCap className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${opt.color}`}>{opt.code}</span>
+                    <span className={`text-xs truncate flex-1 ${
+                      selectedYearFilter === opt.value ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-gray-700 dark:text-gray-300'
+                    }`}>{opt.label}</span>
+                    {selectedYearFilter === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Attendance Status — Premium Custom Dropdown */}
-          {(() => {
-            const ATT_OPTIONS = [
-              { value: 'ALL',                label: 'All Statuses',     code: 'ALL',  dot: 'bg-gray-400',    color: 'text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-300' },
-              { value: 'PUBLIC_ATTENDED',    label: 'Public Attended',  code: 'PUB',  dot: 'bg-emerald-500', color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300' },
-              { value: 'VIRTUAL_ATTENDED',   label: 'Virtual Attended', code: 'VIRT', dot: 'bg-purple-500',  color: 'text-purple-700 bg-purple-50 dark:bg-purple-950 dark:text-purple-300' },
-              { value: 'PUBLIC_NOT_ATTENDED',label: 'Not Attended',     code: 'ABS',  dot: 'bg-rose-400',   color: 'text-rose-700 bg-rose-50 dark:bg-rose-950 dark:text-rose-300' },
-              { value: 'DATA_ERROR',         label: 'Data Errors',      code: 'ERR',  dot: 'bg-amber-500',  color: 'text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
-            ];
-            const selAtt = ATT_OPTIONS.find(o => o.value === selectedAttendanceFilter) || ATT_OPTIONS[0];
-            return (
-              <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setAttOpen(false); }}>
-                <button
-                  type="button"
-                  onClick={() => setAttOpen(p => !p)}
-                  className={`w-full flex items-center gap-2.5 bg-gray-50 dark:bg-navy-950 px-3.5 py-2.5 rounded-2xl border shadow-sm text-left transition-all hover:border-emerald-300 dark:hover:border-emerald-600 focus:outline-none ${attOpen ? 'border-emerald-400 ring-2 ring-emerald-400/20' : 'border-gray-200 dark:border-gray-800'}`}
-                >
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Attendance Status</p>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${selAtt.dot}`} />
-                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{selAtt.label}</span>
-                    </div>
-                  </div>
-                  <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${attOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {attOpen && (
-                  <div className="absolute z-50 top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden">
-                    {ATT_OPTIONS.map(opt => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => { setSelectedAttendanceFilter(opt.value); setAttOpen(false); }}
-                        className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-navy-800 ${selectedAttendanceFilter === opt.value ? 'bg-emerald-50 dark:bg-emerald-950/60' : ''}`}
-                      >
-                        <span className={`w-2 h-2 rounded-full shrink-0 ${opt.dot}`} />
-                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${opt.color}`}>{opt.code}</span>
-                        <span className={`text-xs font-semibold truncate flex-1 ${selectedAttendanceFilter === opt.value ? 'text-emerald-700 dark:text-emerald-300 font-black' : 'text-gray-700 dark:text-gray-300'}`}>{opt.label}</span>
-                        {selectedAttendanceFilter === opt.value && <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
-                      </button>
-                    ))}
-                  </div>
-                )}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => { setAttOpen(p => !p); setDeptOpen(false); setYearOpen(false); }}
+              className={`w-full flex items-center gap-2.5 bg-gray-50 dark:bg-navy-950 px-3.5 py-2.5 rounded-2xl border shadow-sm text-left transition-all focus:outline-none ${
+                attOpen
+                  ? 'border-emerald-400 ring-2 ring-emerald-400/20 dark:border-emerald-500'
+                  : 'border-gray-200 dark:border-gray-800 hover:border-emerald-300'
+              }`}
+            >
+              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Attendance Status</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  {{
+                    'ALL':                { dot: 'bg-gray-400',    label: 'All Statuses' },
+                    'PUBLIC_ATTENDED':    { dot: 'bg-emerald-500', label: 'Public Attended' },
+                    'VIRTUAL_ATTENDED':   { dot: 'bg-purple-500',  label: 'Virtual Attended' },
+                    'PUBLIC_NOT_ATTENDED':{ dot: 'bg-rose-400',    label: 'Not Attended' },
+                    'DATA_ERROR':         { dot: 'bg-amber-500',   label: 'Data Errors' },
+                  }[selectedAttendanceFilter] && (
+                    <>
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${({ 'ALL':'bg-gray-400','PUBLIC_ATTENDED':'bg-emerald-500','VIRTUAL_ATTENDED':'bg-purple-500','PUBLIC_NOT_ATTENDED':'bg-rose-400','DATA_ERROR':'bg-amber-500' } as any)[selectedAttendanceFilter]}`} />
+                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">
+                        {({ 'ALL':'All Statuses','PUBLIC_ATTENDED':'Public Attended','VIRTUAL_ATTENDED':'Virtual Attended','PUBLIC_NOT_ATTENDED':'Not Attended','DATA_ERROR':'Data Errors' } as any)[selectedAttendanceFilter]}
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
-            );
-          })()}
+              <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${attOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {attOpen && (
+              <div className="absolute z-[100] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl overflow-hidden">
+                {[
+                  { value: 'ALL',                label: 'All Statuses',    code: 'ALL',  dot: 'bg-gray-400',    color: 'text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-300' },
+                  { value: 'PUBLIC_ATTENDED',    label: 'Public Attended', code: 'PUB',  dot: 'bg-emerald-500', color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300' },
+                  { value: 'VIRTUAL_ATTENDED',   label: 'Virtual Attended',code: 'VIRT', dot: 'bg-purple-500',  color: 'text-purple-700 bg-purple-50 dark:bg-purple-950 dark:text-purple-300' },
+                  { value: 'PUBLIC_NOT_ATTENDED',label: 'Not Attended',    code: 'ABS',  dot: 'bg-rose-400',   color: 'text-rose-700 bg-rose-50 dark:bg-rose-950 dark:text-rose-300' },
+                  { value: 'DATA_ERROR',         label: 'Data Errors',     code: 'ERR',  dot: 'bg-amber-500',  color: 'text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => { setSelectedAttendanceFilter(opt.value); setAttOpen(false); }}
+                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${
+                      selectedAttendanceFilter === opt.value
+                        ? 'bg-emerald-50 dark:bg-emerald-950/60'
+                        : 'hover:bg-gray-50 dark:hover:bg-navy-800'
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${opt.dot}`} />
+                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${opt.color}`}>{opt.code}</span>
+                    <span className={`text-xs truncate flex-1 ${
+                      selectedAttendanceFilter === opt.value ? 'font-black text-emerald-700 dark:text-emerald-300' : 'font-semibold text-gray-700 dark:text-gray-300'
+                    }`}>{opt.label}</span>
+                    {selectedAttendanceFilter === opt.value && <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Reset Filters / Active Filter Summary Button */}
           <div className="flex items-center justify-between sm:justify-end gap-2">
@@ -1884,8 +1917,8 @@ export const WeeklyContestPage: React.FC = () => {
           <button
             onClick={() => setSelectedAttendanceFilter('ALL')}
             className={`h-24 p-4 rounded-2xl bg-white dark:bg-navy-900 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${selectedAttendanceFilter === 'ALL'
-                ? 'border-brand-500 ring-4 ring-brand-500/20 shadow-lg'
-                : 'border-gray-200 dark:border-gray-800 hover:border-brand-300 shadow-sm'
+              ? 'border-brand-500 ring-4 ring-brand-500/20 shadow-lg'
+              : 'border-gray-200 dark:border-gray-800 hover:border-brand-300 shadow-sm'
               }`}
           >
             <div className="flex items-center justify-between w-full">
@@ -1901,8 +1934,8 @@ export const WeeklyContestPage: React.FC = () => {
           <button
             onClick={() => toggleAttendanceFilter('PUBLIC_ATTENDED')}
             className={`h-24 p-4 rounded-2xl bg-emerald-500/10 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${selectedAttendanceFilter === 'PUBLIC_ATTENDED'
-                ? 'border-emerald-500 ring-4 ring-emerald-500/30 shadow-lg bg-emerald-500/20'
-                : 'border-emerald-500/20 hover:border-emerald-400 shadow-sm'
+              ? 'border-emerald-500 ring-4 ring-emerald-500/30 shadow-lg bg-emerald-500/20'
+              : 'border-emerald-500/20 hover:border-emerald-400 shadow-sm'
               }`}
           >
             <div className="flex items-center justify-between w-full">
@@ -1918,8 +1951,8 @@ export const WeeklyContestPage: React.FC = () => {
           <button
             onClick={() => toggleAttendanceFilter('VIRTUAL_ATTENDED')}
             className={`h-24 p-4 rounded-2xl bg-purple-500/10 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${selectedAttendanceFilter === 'VIRTUAL_ATTENDED'
-                ? 'border-purple-500 ring-4 ring-purple-500/30 shadow-lg bg-purple-500/20'
-                : 'border-purple-500/20 hover:border-purple-400 shadow-sm'
+              ? 'border-purple-500 ring-4 ring-purple-500/30 shadow-lg bg-purple-500/20'
+              : 'border-purple-500/20 hover:border-purple-400 shadow-sm'
               }`}
           >
             <div className="flex items-center justify-between w-full">
@@ -1935,8 +1968,8 @@ export const WeeklyContestPage: React.FC = () => {
           <button
             onClick={() => toggleAttendanceFilter('PUBLIC_NOT_ATTENDED')}
             className={`h-24 p-4 rounded-2xl bg-rose-500/10 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${selectedAttendanceFilter === 'PUBLIC_NOT_ATTENDED'
-                ? 'border-rose-500 ring-4 ring-rose-500/30 shadow-lg bg-rose-500/20'
-                : 'border-rose-500/20 hover:border-rose-400 shadow-sm'
+              ? 'border-rose-500 ring-4 ring-rose-500/30 shadow-lg bg-rose-500/20'
+              : 'border-rose-500/20 hover:border-rose-400 shadow-sm'
               }`}
           >
             <div className="flex items-center justify-between w-full">
@@ -1956,8 +1989,8 @@ export const WeeklyContestPage: React.FC = () => {
               setActiveTab('error_board');
             }}
             className={`h-24 p-4 rounded-2xl bg-amber-500/10 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${selectedAttendanceFilter === 'DATA_ERROR'
-                ? 'border-amber-500 ring-4 ring-amber-500/30 shadow-lg bg-amber-500/20'
-                : 'border-amber-500/20 hover:border-amber-400 shadow-sm'
+              ? 'border-amber-500 ring-4 ring-amber-500/30 shadow-lg bg-amber-500/20'
+              : 'border-amber-500/20 hover:border-amber-400 shadow-sm'
               }`}
           >
             <div className="flex items-center justify-between w-full">
@@ -2093,7 +2126,7 @@ export const WeeklyContestPage: React.FC = () => {
                   <div key={idx} className="flex items-center justify-between p-2.5 rounded-2xl bg-gray-50 dark:bg-navy-950/60 border border-gray-100 dark:border-gray-800 text-xs transition-all hover:bg-gray-100 dark:hover:bg-navy-800 hover:scale-[1.01]">
                     <div className="flex items-center space-x-2.5">
                       <span className={`w-6 h-6 rounded-xl flex items-center justify-center font-black text-[11px] shadow-sm ${idx === 0 ? 'bg-gradient-to-br from-amber-400 to-orange-400 text-slate-950' :
-                          idx === 1 ? 'bg-gradient-to-br from-slate-200 to-slate-400 text-slate-900' : 'bg-gradient-to-br from-amber-700 to-amber-900 text-white'
+                        idx === 1 ? 'bg-gradient-to-br from-slate-200 to-slate-400 text-slate-900' : 'bg-gradient-to-br from-amber-700 to-amber-900 text-white'
                         }`}>
                         {idx + 1}
                       </span>
@@ -2227,8 +2260,8 @@ export const WeeklyContestPage: React.FC = () => {
               <button
                 onClick={() => setActiveTab('matrix')}
                 className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${activeTab === 'matrix'
-                    ? 'bg-brand-500 text-white shadow-md'
-                    : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+                  ? 'bg-brand-500 text-white shadow-md'
+                  : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
                   }`}
               >
                 📋 Student Matrix Roster ({filteredMatrixRows.length})
@@ -2237,8 +2270,8 @@ export const WeeklyContestPage: React.FC = () => {
               <button
                 onClick={() => setActiveTab('dept_year')}
                 className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${activeTab === 'dept_year'
-                    ? 'bg-purple-600 text-white shadow-md'
-                    : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+                  ? 'bg-purple-600 text-white shadow-md'
+                  : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
                   }`}
               >
                 📊 Dept & Year Breakdown
@@ -2247,8 +2280,8 @@ export const WeeklyContestPage: React.FC = () => {
               <button
                 onClick={() => setActiveTab('error_board')}
                 className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 cursor-pointer ${activeTab === 'error_board'
-                    ? 'bg-amber-500 text-white shadow-md'
-                    : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+                  ? 'bg-amber-500 text-white shadow-md'
+                  : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
                   }`}
               >
                 <AlertTriangle className="w-3.5 h-3.5" />
@@ -2674,12 +2707,12 @@ export const WeeklyContestPage: React.FC = () => {
                             <td className="px-3 py-1.5 text-center text-gray-600 dark:text-gray-400 font-bold">{r.year}</td>
                             <td className="px-3 py-1.5 text-center">
                               <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${isPublicAttended
-                                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                                  : isVirtualAttended
-                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
-                                    : r.status === 'USERNAME_NOT_FOUND'
-                                      ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-                                      : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                                : isVirtualAttended
+                                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
+                                  : r.status === 'USERNAME_NOT_FOUND'
+                                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                                    : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
                                 }`}>
                                 {isPublicAttended ? 'PUBLIC' : isVirtualAttended ? 'VIRTUAL' : r.status === 'USERNAME_NOT_FOUND' ? 'UNLINKED' : 'NOT ATTENDED'}
                               </span>
