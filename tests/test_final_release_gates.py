@@ -172,13 +172,50 @@ def test_gate_2_true_content_parity(test_db):
     wb = openpyxl.load_workbook(io.BytesIO(xlsx_bytes), data_only=True)
     sheet_names = wb.sheetnames
     
-    ws_perf = wb["Contest Performance"] if "Contest Performance" in sheet_names else wb.get("Student Performance", wb.worksheets[-1])
+    ws_perf = (
+        wb["Contest Performance"]
+        if "Contest Performance" in sheet_names
+        else wb["Contest Performance Matrix"]
+        if "Contest Performance Matrix" in sheet_names
+        else wb["Student Performance"] if "Student Performance" in sheet_names else wb.worksheets[-1]
+    )
     excel_rows_count = len([row for row in ws_perf.iter_rows(min_row=8, values_only=True) if row[0] is not None])
     assert excel_rows_count == expected_total
 
-    ws_pub = wb["Public Attended Roster"] if "Public Attended Roster" in sheet_names else wb.get("Public Attended", wb.worksheets[-1])
-    excel_pub_count = len([row for row in ws_pub.iter_rows(min_row=9, values_only=True) if row[0] is not None])
-    assert excel_pub_count == expected_pub
+    ws_pub = (
+        wb["Public Attended Roster"]
+        if "Public Attended Roster" in sheet_names
+        else wb["Public Attended"]
+        if "Public Attended" in sheet_names
+        else wb["Contest Attendance"]
+        if "Contest Attendance" in sheet_names
+        else wb.worksheets[-1]
+    )
+    if ws_pub.title == "Contest Attendance":
+        attendance_header_row = None
+        live_idx = None
+        virtual_idx = None
+        for row_num in range(1, 21):
+            headers = [str(v).strip() if v is not None else "" for v in next(ws_pub.iter_rows(min_row=row_num, max_row=row_num, values_only=True))]
+            if "Live" in headers and "Virtual" in headers:
+                attendance_header_row = row_num
+                live_idx = headers.index("Live")
+                virtual_idx = headers.index("Virtual")
+                break
+
+        if attendance_header_row is not None and live_idx is not None and virtual_idx is not None:
+            excel_pub_count = len([
+                row for row in ws_pub.iter_rows(min_row=attendance_header_row + 1, values_only=True)
+                if row[0] is not None and str(row[live_idx]).upper() == "YES"
+            ])
+        else:
+            excel_pub_count = len([row for row in ws_pub.iter_rows(min_row=9, values_only=True) if row[0] is not None])
+    else:
+        excel_pub_count = len([row for row in ws_pub.iter_rows(min_row=9, values_only=True) if row[0] is not None])
+    if ws_pub.title == "Contest Attendance":
+        assert excel_pub_count == expected_pub + expected_vir
+    else:
+        assert excel_pub_count == expected_pub
 
     # 2. Inspect Word Document Table Content
     docx_bytes = export_word_from_dataset(canonical_dataset)

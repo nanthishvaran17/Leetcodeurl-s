@@ -325,6 +325,8 @@ app.include_router(placement_eligibility.router)
 app.include_router(gamification.router, prefix="/api")
 app.include_router(gamification.router)
 app.include_router(accreditation.router, prefix="/api")
+app.include_router(whatsapp_webhook.router, prefix="/api")
+app.include_router(whatsapp_webhook.router)
 app.include_router(deep_tech_intelligence.router, prefix="/api")
 app.include_router(deep_tech_intelligence.router)
 
