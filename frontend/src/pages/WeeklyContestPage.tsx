@@ -825,23 +825,36 @@ export const WeeklyContestPage: React.FC = () => {
         const d = (r.dept || r.department || '').toString().toUpperCase();
         if (selectedDeptFilter === 'CSE(CS)') return d.includes('CS') || d.includes('CYBER');
         if (selectedDeptFilter === 'CSE(IOT)') return d.includes('IOT') || d.includes('INTERNET');
-        return d === selectedDeptFilter.toUpperCase();
+        if (selectedDeptFilter === 'CSE') return (d === 'CSE' || d.startsWith('CSE ') || d.includes('COMPUTER SCIENCE')) && !d.includes('CS') && !d.includes('CYBER') && !d.includes('IOT') && !d.includes('INTERNET');
+        return d === selectedDeptFilter.toUpperCase() || d.includes(selectedDeptFilter.toUpperCase());
       });
     }
 
     if (selectedYearFilter !== 'ALL') {
       rows = rows.filter(r => {
         const y = (r.year || r.year_level || '').toString().toUpperCase();
+        if (selectedYearFilter === 'II') return y === 'II' || y === '2' || y.includes('II YEAR');
+        if (selectedYearFilter === 'III') return y === 'III' || y === '3' || y.includes('III YEAR');
+        if (selectedYearFilter === 'IV') return y === 'IV' || y === '4' || y.includes('IV YEAR');
         return y === selectedYearFilter.toUpperCase();
       });
     }
 
     if (selectedAttendanceFilter !== 'ALL') {
       rows = rows.filter(r => {
-        const st = (r.participation_status || r.status || '').toString().toUpperCase();
-        if (selectedAttendanceFilter === 'PUBLIC') return st.includes('PUBLIC');
-        if (selectedAttendanceFilter === 'VIRTUAL') return st.includes('VIRTUAL');
-        if (selectedAttendanceFilter === 'NOT_ATTENDED') return st.includes('NOT_ATTENDED') || st.includes('NOT ATTENDED');
+        const st = (r.participation_status || r.status || r.attendance_status || '').toString().toUpperCase();
+        if (selectedAttendanceFilter === 'PUBLIC' || selectedAttendanceFilter === 'PUBLIC_ATTENDED') {
+          return st.includes('PUBLIC') && !st.includes('NOT');
+        }
+        if (selectedAttendanceFilter === 'VIRTUAL' || selectedAttendanceFilter === 'VIRTUAL_ATTENDED') {
+          return st.includes('VIRTUAL');
+        }
+        if (selectedAttendanceFilter === 'NOT_ATTENDED' || selectedAttendanceFilter === 'PUBLIC_NOT_ATTENDED') {
+          return st.includes('NOT_ATTENDED') || st.includes('NOT ATTENDED') || st === 'ABSENT' || st === 'NOT PARTICIPATED';
+        }
+        if (selectedAttendanceFilter === 'DATA_ERROR' || selectedAttendanceFilter === 'ERROR') {
+          return st.includes('ERROR') || r.fetch_status === 'ERROR' || Boolean(r.error_reason);
+        }
         return true;
       });
     }
@@ -1880,28 +1893,37 @@ export const WeeklyContestPage: React.FC = () => {
             )}
           </div>
 
-          {/* Reset Filters / Active Filter Summary Button */}
+          {/* Reset Filters Control — Always Clickable & Reactive */}
           <div className="flex items-center justify-between sm:justify-end gap-2">
-            {(selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL' || searchTerm !== '') ? (
-              <button
-                onClick={() => {
-                  setSelectedDeptFilter('ALL');
-                  setSelectedYearFilter('ALL');
-                  setSelectedAttendanceFilter('ALL');
-                  setSearchTerm('');
-                  setDeptOpen(false); setYearOpen(false); setAttOpen(false);
-                }}
-                className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 text-xs font-black border border-rose-200 dark:border-rose-800/60 transition-all cursor-pointer active:scale-95 shadow-sm"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset All Filters</span>
-              </button>
-            ) : (
-              <div className="w-full flex items-center justify-center space-x-1.5 px-4 py-3 rounded-2xl bg-gray-50 dark:bg-navy-950 text-gray-400 text-xs font-bold border border-gray-100 dark:border-gray-800">
-                <Filter className="w-3.5 h-3.5 text-gray-400" />
-                <span>Reset All Filters</span>
-              </div>
-            )}
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedDeptFilter('ALL');
+                setSelectedYearFilter('ALL');
+                setSelectedAttendanceFilter('ALL');
+                setSearchTerm('');
+                setDebouncedSearchTerm('');
+                setDeptOpen(false);
+                setYearOpen(false);
+                setAttOpen(false);
+              }}
+              className={`w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-2xl text-xs font-black border transition-all cursor-pointer active:scale-95 shadow-sm ${
+                (selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL' || searchTerm !== '')
+                  ? 'bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/60 ring-2 ring-rose-500/20'
+                  : 'bg-gray-50 dark:bg-navy-950 hover:bg-gray-100 dark:hover:bg-navy-900 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-800 hover:border-gray-300'
+              }`}
+            >
+              <RotateCcw className={`w-3.5 h-3.5 ${
+                (selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL' || searchTerm !== '')
+                  ? 'text-rose-600 dark:text-rose-400 animate-spin-once'
+                  : 'text-gray-400'
+              }`} />
+              <span>
+                {(selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL' || searchTerm !== '')
+                  ? 'Reset All Filters'
+                  : 'Reset All Filters'}
+              </span>
+            </button>
           </div>
         </div>
       </div>
