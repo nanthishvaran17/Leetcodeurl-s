@@ -104,6 +104,7 @@ export const WeeklyContestPage: React.FC = () => {
   const [customCalendarDate, setCustomCalendarDate] = useState<string>('');
   const [isRetrying, setIsRetrying] = useState<boolean>(false);
   const [deletingSessionId, setDeletingSessionId] = useState<number | null>(null);
+  const [deptOpen, setDeptOpen] = useState<boolean>(false);
 
   // Live Contest Engine Real-Time State
   const [liveTelemetry, setLiveTelemetry] = useState<any>(null);
@@ -1712,7 +1713,6 @@ export const WeeklyContestPage: React.FC = () => {
               { value: 'BME', label: 'Biomedical Engineering', code: 'BME', color: 'text-pink-600 bg-pink-50 dark:bg-pink-950 dark:text-pink-300' },
               { value: 'AGRI', label: 'Agricultural Engineering', code: 'AGRI', color: 'text-green-600 bg-green-50 dark:bg-green-950 dark:text-green-300' },
             ];
-            const [deptOpen, setDeptOpen] = React.useState(false);
             const selectedDeptObj = DEPT_OPTIONS.find(o => o.value === selectedDeptFilter) || DEPT_OPTIONS[0];
             return (
               <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDeptOpen(false); }}>
