@@ -1,8 +1,8 @@
 """
 contest_reconciliation_service.py
 ================================================================================
-WEEKLY CONTEST 516 — V9 DEFINITIVE VIRTUAL EVIDENCE ENGINE
-AUTHENTICATION-AWARE + UI EVIDENCE + IDENTITY MATCHING
+WEEKLY CONTEST 516 — V10 FINAL AUTHENTICATED VIRTUAL RECONCILIATION ENGINE
+REAL UI EVIDENCE INGESTION + IDENTITY MATCHING + EVIDENCE STATE SEPARATION
 ZERO FALSE POSITIVE + ZERO FALSE ZERO + ZERO UNJUSTIFIED ABSENCE
 ================================================================================
 A production-grade, evidence-first Universal Contest Reconciliation Engine that:
@@ -11,12 +11,12 @@ A production-grade, evidence-first Universal Contest Reconciliation Engine that:
      - LIVE_ATTENDED
      - VIRTUAL_ATTENDED
      - UNKNOWN_PENDING_EVIDENCE
-     - NOT_ATTENDED
+     - NOT_ATTENDED (only when all authoritative checks prove zero)
      - DATA_ERROR
    Layer B: Evidence Availability State:
-     - LIVE_VERIFIED
-     - VIRTUAL_VERIFIED
-     - POST_CONTEST_ACCEPTED
+     - VERIFIED_LIVE
+     - VERIFIED_VIRTUAL
+     - POST_CONTEST_PRACTICE
      - AUTH_REQUIRED
      - SOURCE_NOT_AUTHORITATIVE
      - UNVERIFIED_SCREENSHOT
@@ -27,12 +27,9 @@ A production-grade, evidence-first Universal Contest Reconciliation Engine that:
    - NEVER converts AUTH_REQUIRED into NOT_ATTENDED.
    - NEVER converts SOURCE_NOT_AUTHORITATIVE into NOT_ATTENDED.
    - NEVER converts NO_ACCESS_TO_AUTHENTICATED_UI into VIRTUAL = 0.
-   - "UNVERIFIED" is NOT "ABSENT".
-3. Telemetry Fix:
-   - When authenticated_sources_available = 0, authenticated_sources_checked = 0 (NOT 668).
-   - Reports evidence_pending = 668, not_attended = 0 (until checked).
-4. Reconciles:
-   LIVE (767) + VIRTUAL (0) + UNKNOWN_PENDING_EVIDENCE (668) + DATA_ERROR (15) = 1,450.
+   - Telemetry strictly reports: virtual_not_checked = 668, no_evidence = 0.
+3. Full Invariant:
+   LIVE (767) + VIRTUAL (0) + UNKNOWN_PENDING_EVIDENCE (668) + NOT_ATTENDED (0) + DATA_ERROR (15) = 1,450.
 """
 
 import re
@@ -90,6 +87,7 @@ class SourceAuthorityStatus:
     UNVERIFIED_SCREENSHOT = "UNVERIFIED_SCREENSHOT"              # Screenshot evidence unmapped to identity
     IDENTITY_MISMATCH = "IDENTITY_MISMATCH"                      # Evidence account handle does not match student
     PROBLEM_SET_UNKNOWN = "PROBLEM_SET_UNKNOWN"                  # Contest problem mapping invalid/unknown
+    UNKNOWN_CONTEST = "UNKNOWN_CONTEST"                          # Contest identifier unknown
 
 
 # ─── LAYER A: INSTITUTIONAL ATTENDANCE STATES ──────────────────────────────────
@@ -107,8 +105,11 @@ class CanonicalAttendanceState:
 
 # ─── LAYER B: EVIDENCE STATES ──────────────────────────────────────────────────
 class EvidenceState:
+    VERIFIED_LIVE = "VERIFIED_LIVE"
     LIVE_VERIFIED = "LIVE_VERIFIED"
+    VERIFIED_VIRTUAL = "VERIFIED_VIRTUAL"
     VIRTUAL_VERIFIED = "VIRTUAL_VERIFIED"
+    POST_CONTEST_PRACTICE = "POST_CONTEST_PRACTICE"
     POST_CONTEST_ACCEPTED = "POST_CONTEST_ACCEPTED"
     AUTH_REQUIRED = "AUTH_REQUIRED"
     SOURCE_NOT_AUTHORITATIVE = "SOURCE_NOT_AUTHORITATIVE"
@@ -121,7 +122,7 @@ class EvidenceState:
     IDENTITY_MISMATCH = "IDENTITY_MISMATCH"
 
 
-class AuthenticatedVirtualEvidenceProvider:
+class AuthenticatedVirtualContestProvider:
     """
     Dedicated evidence provider for inspecting authenticated LeetCode user interface
     'My Contests' -> 'Virtual' contest history with strict account identity verification.
@@ -152,7 +153,7 @@ class AuthenticatedVirtualEvidenceProvider:
             }
 
         # Gate 2: Account Identity Match
-        evidence_username = str(evidence_record.get("leetcode_username", "")).strip().lower()
+        evidence_username = str(evidence_record.get("leetcode_username", evidence_record.get("username", ""))).strip().lower()
         clean_reg_username = str(registered_username or "").strip().lower()
 
         if not clean_reg_username or not evidence_username:
@@ -201,7 +202,7 @@ class AuthenticatedVirtualEvidenceProvider:
             }
 
         # Gate 4: Explicit Virtual Mode
-        c_mode = str(evidence_record.get("contest_mode", evidence_record.get("contest_type", ""))).upper()
+        c_mode = str(evidence_record.get("contest_mode", evidence_record.get("mode", evidence_record.get("contest_type", "")))).upper()
         virtual_indicator = bool(evidence_record.get("virtual_indicator", False)) or ("VIRTUAL" in c_mode)
 
         if not virtual_indicator:
@@ -215,14 +216,14 @@ class AuthenticatedVirtualEvidenceProvider:
                 "reason": "Contest mode is not explicitly verified as Virtual"
             }
 
-        solved = int(evidence_record.get("solved_count", 0))
+        solved = int(evidence_record.get("solved_count", evidence_record.get("solved", 0)))
         score = int(evidence_record.get("score", 0))
         rank = evidence_record.get("rank")
         source = evidence_record.get("evidence_source", "AUTHENTICATED_LEETCODE_MY_CONTESTS_UI")
 
         return {
             "has_evidence": True,
-            "evidence_state": EvidenceState.VIRTUAL_VERIFIED,
+            "evidence_state": EvidenceState.VERIFIED_VIRTUAL,
             "evidence_level": EvidenceLevel.LEVEL_5_AUTHENTICATED_VIRTUAL_UI,
             "identity_verified": True,
             "confidence": 1.0,
@@ -250,7 +251,7 @@ class AuthenticatedVirtualEvidenceProvider:
                 "review_status": "NO_SCREENSHOT"
             }
 
-        username_in_image = str(screenshot_record.get("leetcode_username", "")).strip().lower()
+        username_in_image = str(screenshot_record.get("leetcode_username", screenshot_record.get("username", ""))).strip().lower()
         reg_username = str(registered_username or "").strip().lower()
 
         if not username_in_image:
@@ -281,26 +282,36 @@ class AuthenticatedVirtualEvidenceProvider:
                 "reason": "Screenshot is for an unrelated contest"
             }
 
+        c_mode = str(screenshot_record.get("contest_mode", screenshot_record.get("mode", ""))).upper()
+        if "VIRTUAL" not in c_mode and not screenshot_record.get("virtual_indicator"):
+            return {
+                "has_evidence": False,
+                "evidence_state": "MODE_MISMATCH",
+                "identity_verified": True,
+                "review_status": "INVALID_MODE",
+                "reason": "Screenshot does not indicate Virtual mode"
+            }
+
         return {
             "has_evidence": True,
-            "evidence_state": EvidenceState.VIRTUAL_VERIFIED,
+            "evidence_state": EvidenceState.VERIFIED_VIRTUAL,
             "evidence_level": EvidenceLevel.LEVEL_5_AUTHENTICATED_VIRTUAL_UI,
             "identity_verified": True,
             "review_status": "VERIFIED_VIRTUAL",
-            "solved_count": screenshot_record.get("solved_count", 0),
-            "image_sha256": screenshot_record.get("image_sha256")
+            "solved_count": screenshot_record.get("solved_count", screenshot_record.get("solved", 0)),
+            "image_sha256": screenshot_record.get("image_sha256", screenshot_record.get("sha256"))
         }
 
 
 # Aliases for backwards compatibility
-AuthenticatedVirtualContestEvidenceProvider = AuthenticatedVirtualEvidenceProvider
+AuthenticatedVirtualEvidenceProvider = AuthenticatedVirtualContestProvider
 
 
 class UniversalContestReconciliationEngine:
     """
-    Production-grade, reusable reconciliation engine for institutional LeetCode contests (v9.0).
+    Production-grade, reusable reconciliation engine for institutional LeetCode contests (v10.0).
     """
-    ENGINE_VERSION = "9.0.0-AUTHENTICATION-AWARE-FORENSIC"
+    ENGINE_VERSION = "10.0.0-AUTHENTICATED-VIRTUAL-FINAL"
 
     @classmethod
     def get_current_ist_datetime(cls) -> datetime.datetime:
@@ -467,7 +478,7 @@ class UniversalContestReconciliationEngine:
                     "year": year_level,
                     "username": username,
                     "attendance_state": CanonicalAttendanceState.LIVE_ATTENDED,
-                    "evidence_state": EvidenceState.LIVE_VERIFIED,
+                    "evidence_state": EvidenceState.VERIFIED_LIVE,
                     "evidence_level": EvidenceLevel.LEVEL_4_OFFICIAL_LIVE,
                     "evidence_source": "LeetCode Official Contest Ranking GraphQL",
                     "live_verified": True,
@@ -505,7 +516,7 @@ class UniversalContestReconciliationEngine:
                     "year": year_level,
                     "username": username,
                     "attendance_state": CanonicalAttendanceState.VIRTUAL_ATTENDED,
-                    "evidence_state": EvidenceState.VIRTUAL_VERIFIED,
+                    "evidence_state": EvidenceState.VERIFIED_VIRTUAL,
                     "evidence_level": EvidenceLevel.LEVEL_5_AUTHENTICATED_VIRTUAL_UI,
                     "evidence_source": "AUTHENTICATED_LEETCODE_MY_CONTESTS_UI",
                     "live_verified": False,
@@ -529,7 +540,7 @@ class UniversalContestReconciliationEngine:
                 })
             else:
                 # Valid non-live student whose Level-5 authenticated check is pending
-                # DO NOT classify as NOT_ATTENDED because authenticated virtual source is unverified
+                # Strict: DO NOT classify as NOT_ATTENDED because authenticated virtual source is unverified
                 records.append({
                     "student_id": s_id,
                     "reg_no": reg_no,
@@ -581,7 +592,7 @@ class UniversalContestReconciliationEngine:
         if verified_virtual_count > 0:
             detection_status = SourceAuthorityStatus.VERIFIED_NONZERO
         elif eligible_profiles > 0:
-            detection_status = SourceAuthorityStatus.SOURCE_NOT_AUTHORITATIVE
+            detection_status = SourceAuthorityStatus.AUTH_REQUIRED
         else:
             detection_status = SourceAuthorityStatus.VERIFIED_ZERO
 
@@ -603,17 +614,19 @@ class UniversalContestReconciliationEngine:
             "profiles_invalid": data_errors,
             "live_checked": total_roster,
             "virtual_candidates": eligible_profiles,
-            "authenticated_sources_available": 0,
-            "authenticated_sources_checked": 0,  # Strict fix: 0 checked when 0 available
+            "authenticated_source_available": 0,
+            "authenticated_source_checked": 0,
             "authenticated_source_unavailable": eligible_profiles,
             "virtual_verified": verified_virtual_count,
-            "virtual_unverified": eligible_profiles - verified_virtual_count,
-            "practice_candidates": practice_count,
-            "no_evidence": eligible_profiles - verified_virtual_count - practice_count,
+            "virtual_not_verified": 0,
+            "virtual_not_checked": eligible_profiles - verified_virtual_count,
             "auth_required": eligible_profiles if verified_virtual_count == 0 else 0,
             "source_not_authoritative": eligible_profiles if verified_virtual_count == 0 else 0,
+            "practice_candidates": practice_count,
+            "no_evidence": 0,  # 0 because virtual source was not checked
             "unverified_screenshots": 0,
-            "identity_mismatch": 0,
+            "verified_screenshots": 0,
+            "identity_mismatches": 0,
             "scan_failures": 0,
             "duplicates_removed": 0,
             "detection_status": detection_status,
@@ -621,7 +634,7 @@ class UniversalContestReconciliationEngine:
             "audit_warning": (
                 "⚠ Virtual detection source is not authoritative. "
                 "0 students have been verified as Virtual, but a complete Virtual participation count cannot be proven from the available source."
-                if detection_status == SourceAuthorityStatus.SOURCE_NOT_AUTHORITATIVE else None
+                if detection_status == SourceAuthorityStatus.AUTH_REQUIRED else None
             ),
             "last_scan": datetime.datetime.now(IST_TZ).isoformat(),
             "next_scan": (datetime.datetime.now(IST_TZ) + datetime.timedelta(minutes=30)).isoformat()
@@ -636,7 +649,7 @@ class UniversalContestReconciliationEngine:
         dry_run: bool = False,
         sync_mode: str = "AUTO"
     ) -> Dict[str, Any]:
-        """Universal, idempotent contest reconciliation engine execution with v9.0 Architecture."""
+        """Universal, idempotent contest reconciliation engine execution with v10.0 Architecture."""
         session_obj: Optional[WeeklySession] = None
         if isinstance(session_id_or_num, WeeklySession):
             session_obj = session_id_or_num
@@ -818,17 +831,19 @@ class UniversalContestReconciliationEngine:
             "profiles_invalid": data_errors,
             "live_checked": total_roster,
             "virtual_candidates": valid_non_live_count,
-            "authenticated_sources_available": 0,
-            "authenticated_sources_checked": 0,
+            "authenticated_source_available": 0,
+            "authenticated_source_checked": 0,
             "authenticated_source_unavailable": valid_non_live_count,
             "virtual_verified": len(verified_virtual_list),
-            "virtual_unverified": valid_non_live_count - len(verified_virtual_list),
-            "practice_candidates": len(post_contest_practice_list),
-            "no_evidence": valid_non_live_count - len(verified_virtual_list) - len(post_contest_practice_list),
+            "virtual_not_verified": 0,
+            "virtual_not_checked": valid_non_live_count - len(verified_virtual_list),
             "auth_required": valid_non_live_count if len(verified_virtual_list) == 0 else 0,
             "source_not_authoritative": valid_non_live_count if len(verified_virtual_list) == 0 else 0,
+            "practice_candidates": len(post_contest_practice_list),
+            "no_evidence": 0,
             "unverified_screenshots": 0,
-            "identity_mismatch": 0,
+            "verified_screenshots": 0,
+            "identity_mismatches": 0,
             "scan_failures": 0,
             "duplicates_removed": 0,
             "evidence_coverage": {
@@ -867,21 +882,18 @@ class UniversalContestReconciliationEngine:
             "contest_name": contest_name,
             "contest_date": contest_date,
             "total_roster": total_roster,
-            "live_count": live_attended,
             "live_attended": live_attended,
-            "verified_virtual_count": virtual_attended,
             "verified_virtual": virtual_attended,
-            "virtual_attended": virtual_attended,
-            "evidence_pending": evidence_pending,
-            "post_contest_practice_count": post_contest_practice_count,
             "post_contest_practice": post_contest_practice_count,
-            "not_attended_count": not_attended,
+            "evidence_pending": evidence_pending,
+            "verified_no_attendance": not_attended,
             "not_attended": not_attended,
-            "data_error_count": data_errors,
             "data_errors": data_errors,
+            "virtual_not_checked": valid_non_live_count if virtual_attended == 0 else 0,
             "auth_required": valid_non_live_count if virtual_attended == 0 else 0,
             "source_not_authoritative": valid_non_live_count if virtual_attended == 0 else 0,
             "unverified_screenshots": 0,
+            "verified_screenshots": 0,
             "identity_mismatches": 0,
             "virtual_detection_status": source_aware_validation["detection_status"],
             "source_authority": source_aware_validation["source_authority"],
@@ -919,6 +931,7 @@ class UniversalContestReconciliationEngine:
             "virtual_detection_health": source_aware_validation,
             "telemetry": scan_telemetry,
             "checksum": dataset_checksum,
+            "synced_at": datetime.datetime.now(IST_TZ).isoformat(),
             "synced_at_utc": datetime.datetime.now(UTC_TZ).isoformat(),
             "synced_at_ist": datetime.datetime.now(IST_TZ).isoformat(),
             "generated_at": datetime.datetime.now(IST_TZ).isoformat()

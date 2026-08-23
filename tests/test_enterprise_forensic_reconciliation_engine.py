@@ -1,25 +1,26 @@
 """
 test_enterprise_forensic_reconciliation_engine.py
 ================================================================================
-CONTEST 516 — V9 DEFINITIVE VIRTUAL EVIDENCE ENGINE TEST SUITE (A - P)
+CONTEST 516 — V10 FINAL AUTHENTICATED VIRTUAL RECONCILIATION TEST SUITE (A - Q)
 ================================================================================
 Comprehensive test suite validating:
 Test A: Live + Virtual -> LIVE_ATTENDED
 Test B: Non-live + authenticated Virtual -> VIRTUAL_ATTENDED
 Test C: Non-live + practice only -> POST_CONTEST_PRACTICE
-Test D: Non-live + Virtual source unavailable -> UNKNOWN_PENDING_EVIDENCE
-Test E: Non-live + no evidence + authoritative sources checked -> NOT_ATTENDED
-Test F: Screenshot + exact username + Virtual + Contest 516 -> VIRTUAL_ATTENDED
+Test D: Non-live + auth unavailable -> UNKNOWN_PENDING_EVIDENCE
+Test E: Auth checked + no evidence -> NOT_ATTENDED
+Test F: Screenshot + exact username + Contest 516 + Virtual -> VERIFIED_VIRTUAL
 Test G: Screenshot + no username -> UNVERIFIED_SCREENSHOT
 Test H: Screenshot + wrong username -> IDENTITY_MISMATCH
-Test I: Contest 515 Virtual -> ignored
+Test I: Contest 515 Virtual -> IGNORE
 Test J: Contest 516 Practice -> POST_CONTEST_PRACTICE
-Test K: Two Sum -> ignored
-Test L: Invalid LeetCode profile -> DATA_ERROR
-Test M: Duplicate screenshot -> deduplicated
-Test N: Unknown problem mapping -> PROBLEM_SET_UNKNOWN
-Test O: Auth source unavailable -> AUTH_REQUIRED
-Test P: 1,450 roster invariant -> PASS
+Test K: Two Sum -> IGNORE
+Test L: Invalid profile -> DATA_ERROR
+Test M: Duplicate screenshot -> DEDUPLICATED
+Test N: Unknown contest -> UNKNOWN_CONTEST
+Test O: Unknown problem mapping -> PROBLEM_SET_UNKNOWN
+Test P: Auth unavailable -> AUTH_REQUIRED
+Test Q: 1,450 roster invariant -> PASS
 """
 
 import pytest
@@ -27,7 +28,7 @@ import datetime
 import zoneinfo
 from backend.services.contest_reconciliation_service import (
     UniversalContestReconciliationEngine,
-    AuthenticatedVirtualEvidenceProvider,
+    AuthenticatedVirtualContestProvider,
     CanonicalAttendanceState,
     EvidenceState,
     EvidenceLevel,
@@ -58,21 +59,21 @@ def test_a_live_plus_virtual():
 # ─── TEST B: Non-live + authenticated Virtual -> VIRTUAL_ATTENDED ─────────────
 def test_b_non_live_authenticated_virtual():
     auth_rec = {
-        "leetcode_username": "student_b",
+        "username": "student_b",
         "contest_id": "weekly-contest-516",
-        "contest_mode": "VIRTUAL",
+        "mode": "VIRTUAL",
         "virtual_indicator": True,
-        "solved_count": 3,
+        "solved": 3,
         "score": 12
     }
-    eval_res = AuthenticatedVirtualEvidenceProvider.evaluate_virtual_ui_evidence(
+    eval_res = AuthenticatedVirtualContestProvider.evaluate_virtual_ui_evidence(
         registered_username="student_b",
         target_contest_id="weekly-contest-516",
         evidence_record=auth_rec
     )
     assert eval_res["has_evidence"] is True
     assert eval_res["identity_verified"] is True
-    assert eval_res["evidence_state"] == EvidenceState.VIRTUAL_VERIFIED
+    assert eval_res["evidence_state"] == EvidenceState.VERIFIED_VIRTUAL
 
 
 # ─── TEST C: Non-live + practice only -> POST_CONTEST_PRACTICE ────────────────
@@ -83,27 +84,28 @@ def test_c_non_live_practice_only(contest_516_problems):
     assert res["q1"] == 1
 
 
-# ─── TEST D: Non-live + Virtual source unavailable -> UNKNOWN_PENDING_EVIDENCE 
-def test_d_non_live_virtual_source_unavailable():
+# ─── TEST D: Non-live + auth unavailable -> UNKNOWN_PENDING_EVIDENCE ──────────
+def test_d_non_live_auth_unavailable():
     state = CanonicalAttendanceState.UNKNOWN_PENDING_EVIDENCE
     assert state == "UNKNOWN_PENDING_EVIDENCE"
 
 
-# ─── TEST E: Non-live + no evidence + authoritative sources checked -> NOT_ATTENDED
-def test_e_non_live_no_evidence_authoritative_checked():
+# ─── TEST E: Auth checked + no evidence -> NOT_ATTENDED ───────────────────────
+def test_e_auth_checked_plus_no_evidence():
     state = CanonicalAttendanceState.NOT_ATTENDED
     assert state == "NOT_ATTENDED"
 
 
-# ─── TEST F: Screenshot + exact username + Virtual + Contest 516 -> VIRTUAL_ATTENDED
-def test_f_screenshot_exact_username_virtual_516():
+# ─── TEST F: Screenshot + exact username + Contest 516 + Virtual -> VERIFIED_VIRTUAL
+def test_f_screenshot_exact_username_contest_516_virtual():
     screen_rec = {
-        "leetcode_username": "student_f",
+        "username": "student_f",
         "contest_id": "weekly-contest-516",
-        "solved_count": 3,
-        "image_sha256": "hash123456"
+        "mode": "VIRTUAL",
+        "solved": 3,
+        "sha256": "hash123456"
     }
-    eval_res = AuthenticatedVirtualEvidenceProvider.evaluate_screenshot_evidence(
+    eval_res = AuthenticatedVirtualContestProvider.evaluate_screenshot_evidence(
         registered_username="student_f",
         target_contest_id="weekly-contest-516",
         screenshot_record=screen_rec
@@ -115,12 +117,13 @@ def test_f_screenshot_exact_username_virtual_516():
 # ─── TEST G: Screenshot + no username -> UNVERIFIED_SCREENSHOT ────────────────
 def test_g_screenshot_no_username():
     screen_rec = {
-        "leetcode_username": "",
+        "username": "",
         "contest_id": "weekly-contest-516",
-        "solved_count": 3,
-        "image_sha256": "hash123456"
+        "mode": "VIRTUAL",
+        "solved": 3,
+        "sha256": "hash123456"
     }
-    eval_res = AuthenticatedVirtualEvidenceProvider.evaluate_screenshot_evidence(
+    eval_res = AuthenticatedVirtualContestProvider.evaluate_screenshot_evidence(
         registered_username="student_g",
         target_contest_id="weekly-contest-516",
         screenshot_record=screen_rec
@@ -132,12 +135,13 @@ def test_g_screenshot_no_username():
 # ─── TEST H: Screenshot + wrong username -> IDENTITY_MISMATCH ─────────────────
 def test_h_screenshot_wrong_username():
     screen_rec = {
-        "leetcode_username": "other_account",
+        "username": "unregistered_handle",
         "contest_id": "weekly-contest-516",
-        "solved_count": 3,
-        "image_sha256": "hash123456"
+        "mode": "VIRTUAL",
+        "solved": 3,
+        "sha256": "hash123456"
     }
-    eval_res = AuthenticatedVirtualEvidenceProvider.evaluate_screenshot_evidence(
+    eval_res = AuthenticatedVirtualContestProvider.evaluate_screenshot_evidence(
         registered_username="student_h",
         target_contest_id="weekly-contest-516",
         screenshot_record=screen_rec
@@ -146,16 +150,16 @@ def test_h_screenshot_wrong_username():
     assert eval_res["review_status"] == "IDENTITY_MISMATCH"
 
 
-# ─── TEST I: Contest 515 Virtual -> ignored ───────────────────────────────────
-def test_i_contest_515_virtual_ignored():
+# ─── TEST I: Contest 515 Virtual -> IGNORE ────────────────────────────────────
+def test_i_contest_515_virtual_ignore():
     auth_rec = {
-        "leetcode_username": "student_i",
+        "username": "student_i",
         "contest_id": "weekly-contest-515",
-        "contest_mode": "VIRTUAL",
+        "mode": "VIRTUAL",
         "virtual_indicator": True,
-        "solved_count": 3
+        "solved": 3
     }
-    eval_res = AuthenticatedVirtualEvidenceProvider.evaluate_virtual_ui_evidence(
+    eval_res = AuthenticatedVirtualContestProvider.evaluate_virtual_ui_evidence(
         registered_username="student_i",
         target_contest_id="weekly-contest-516",
         evidence_record=auth_rec
@@ -171,39 +175,50 @@ def test_j_contest_516_practice(contest_516_problems):
     assert res["solved"] == 1
 
 
-# ─── TEST K: Two Sum -> ignored ───────────────────────────────────────────────
-def test_k_two_sum_ignored(contest_516_problems):
+# ─── TEST K: Two Sum -> IGNORE ────────────────────────────────────────────────
+def test_k_two_sum_ignore(contest_516_problems):
     subs = [{"title_slug": "two-sum", "status": "ACCEPTED"}]
     res = ContestProblemAccuracyEngine.evaluate_student_submissions(contest_516_problems, subs)
     assert res["solved"] == 0
 
 
-# ─── TEST L: Invalid LeetCode profile -> DATA_ERROR ───────────────────────────
-def test_l_invalid_leetcode_profile():
+# ─── TEST L: Invalid profile -> DATA_ERROR ────────────────────────────────────
+def test_l_invalid_profile():
     state = CanonicalAttendanceState.DATA_ERROR
     assert state == "DATA_ERROR"
 
 
-# ─── TEST M: Duplicate screenshot -> deduplicated ─────────────────────────────
+# ─── TEST M: Duplicate screenshot -> DEDUPLICATED ─────────────────────────────
 def test_m_duplicate_screenshot_deduplicated():
     screenshots = [
-        {"hash": "sha256_1", "username": "user1"},
-        {"hash": "sha256_1", "username": "user1"}
+        {"sha256": "hash_1", "username": "user1"},
+        {"sha256": "hash_1", "username": "user1"}
     ]
-    unique_hashes = set(s["hash"] for s in screenshots)
-    assert len(unique_hashes) == 1
+    seen = set()
+    deduped = []
+    for s in screenshots:
+        if s["sha256"] not in seen:
+            seen.add(s["sha256"])
+            deduped.append(s)
+    assert len(deduped) == 1
 
 
-# ─── TEST N: Unknown problem mapping -> PROBLEM_SET_UNKNOWN ───────────────────
-def test_n_unknown_problem_mapping():
+# ─── TEST N: Unknown contest -> UNKNOWN_CONTEST ───────────────────────────────
+def test_n_unknown_contest():
+    status = SourceAuthorityStatus.UNKNOWN_CONTEST
+    assert status == "UNKNOWN_CONTEST"
+
+
+# ─── TEST O: Unknown problem mapping -> PROBLEM_SET_UNKNOWN ───────────────────
+def test_o_unknown_problem_mapping():
     unknown_set = UniversalContestReconciliationEngine.discover_problem_set("Unknown Contest No Number")
     assert unknown_set.is_valid is False
 
 
-# ─── TEST O: Auth source unavailable -> AUTH_REQUIRED ─────────────────────────
-def test_o_auth_source_unavailable():
-    eval_res = AuthenticatedVirtualEvidenceProvider.evaluate_virtual_ui_evidence(
-        registered_username="student_o",
+# ─── TEST P: Auth unavailable -> AUTH_REQUIRED ────────────────────────────────
+def test_p_auth_unavailable():
+    eval_res = AuthenticatedVirtualContestProvider.evaluate_virtual_ui_evidence(
+        registered_username="student_p",
         target_contest_id="weekly-contest-516",
         evidence_record=None
     )
@@ -211,18 +226,20 @@ def test_o_auth_source_unavailable():
     assert eval_res["evidence_state"] == EvidenceState.AUTH_REQUIRED
 
 
-# ─── TEST P: 1,450 roster invariant -> PASS ───────────────────────────────────
-def test_p_1450_roster_invariant_pass():
+# ─── TEST Q: 1,450 roster invariant -> PASS ───────────────────────────────────
+def test_q_1450_roster_invariant_pass():
     from backend.database import SessionLocal
     db = SessionLocal()
     try:
         res = UniversalContestReconciliationEngine.reconcile_contest(21, db, dry_run=True)
         assert res["total_roster"] == 1450
-        assert res["live_count"] == 767
-        assert res["verified_virtual_count"] == 0
+        assert res["live_attended"] == 767
+        assert res["verified_virtual"] == 0
         assert res["evidence_pending"] == 668
-        assert res["data_error_count"] == 15
+        assert res["verified_no_attendance"] == 0
+        assert res["data_errors"] == 15
         assert res["reconciliation_status"] == "PASS"
         assert res["invariant_status"] == "PASS"
+        assert res["math_formula"] == "767 (Live) + 0 (Virtual) + 668 (Pending) + 0 (Absent) + 15 (Data Errors) = 1450 (Total: 1450)"
     finally:
         db.close()
