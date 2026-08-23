@@ -850,11 +850,11 @@ def sync_single_historical_session(db: Session, session_id: int):
     """
 
     async def _fetch_all_evidence():
-        limits = httpx.Limits(max_connections=60, max_keepalive_connections=35)
+        limits = httpx.Limits(max_connections=120, max_keepalive_connections=60)
         timeout = httpx.Timeout(8.0, connect=3.5)
 
         async with httpx.AsyncClient(headers=HEADERS, limits=limits, timeout=timeout, follow_redirects=True) as client:
-            sem = asyncio.Semaphore(30)
+            sem = asyncio.Semaphore(60)
 
             async def _fetch_single(s):
                 raw_u = s.username
