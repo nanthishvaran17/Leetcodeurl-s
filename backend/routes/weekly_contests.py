@@ -1092,3 +1092,83 @@ def delete_weekly_session(
             "email_logs": deleted_emails
         }
     }
+
+
+# ─── AUTOPILOT CONTROL & TELEMETRY ENDPOINTS ──────────────────────────────────
+@router.get("/autopilot/status")
+def get_autopilot_status(db: Session = Depends(get_db)):
+    """
+    Returns live autonomous autopilot telemetry:
+    - Current contest metrics & phase
+    - Next upcoming contest discovery & countdown
+    - System health & last sync timestamp
+    """
+    from backend.services.sunday_autopilot import weekly_contest_autopilot
+    return weekly_contest_autopilot.get_status_overview(db)
+
+
+@router.post("/autopilot/trigger-phase")
+def trigger_autopilot_phase(
+    phase: str = Query(..., description="Phase to execute: PREPARATION, START_MONITORING, LIVE_CYCLE, FINALIZATION, REPORTS, BROADCAST, VIRTUAL_RECHECK, PREPARE_NEXT, FULL_CYCLE"),
+    session_id: Optional[int] = Query(None, description="Optional target session ID"),
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Trigger Autopilot Phase", required_roles=["admin", "super admin"]))
+):
+    """
+    Emergency manual trigger for any autopilot phase.
+    """
+    from backend.services.sunday_autopilot import weekly_contest_autopilot
+    
+    p = phase.upper()
+    if p in ("PREPARATION", "PHASE_1"):
+        return weekly_contest_autopilot.phase_1_discovery_and_preparation(db)
+    elif p in ("START_MONITORING", "PHASE_2"):
+        return weekly_contest_autopilot.phase_2_start_live_monitoring(session_id, db)
+    elif p in ("LIVE_CYCLE", "PHASE_3"):
+        return weekly_contest_autopilot.phase_3_live_monitoring_cycle(session_id, db)
+    elif p in ("FINALIZATION", "PHASE_4"):
+        return weekly_contest_autopilot.phase_4_finalization_and_reconciliation(session_id, db)
+    elif p in ("REPORTS", "PHASE_5"):
+        return weekly_contest_autopilot.phase_5_report_generation(session_id, db)
+    elif p in ("BROADCAST", "EMAIL", "PHASE_6"):
+        return weekly_contest_autopilot.phase_6_broadcast_dispatch(session_id, db)
+    elif p in ("VIRTUAL_RECHECK", "PHASE_7"):
+        return weekly_contest_autopilot.phase_7_virtual_recheck(session_id, db)
+    elif p in ("PREPARE_NEXT", "PHASE_8"):
+        return weekly_contest_autopilot.phase_8_prepare_next_contest(db)
+    elif p == "FULL_CYCLE":
+        r1 = weekly_contest_autopilot.phase_1_discovery_and_preparation(db)
+        r4 = weekly_contest_autopilot.phase_4_finalization_and_reconciliation(session_id, db)
+        r5 = weekly_contest_autopilot.phase_5_report_generation(session_id, db)
+        r7 = weekly_contest_autopilot.phase_7_virtual_recheck(session_id, db)
+        r8 = weekly_contest_autopilot.phase_8_prepare_next_contest(db)
+        return {
+            "phase": "FULL_CYCLE",
+            "success": True,
+            "prep": r1,
+            "finalization": r4,
+            "reports": r5,
+            "virtual_recheck": r7,
+            "next_contest": r8
+        }
+    else:
+        raise HTTPException(status_code=400, detail=f"Unknown autopilot phase: {phase}")
+
+
+@router.post("/autopilot/toggle")
+def toggle_autopilot(
+    enable: bool = Query(..., description="Enable or disable autonomous background execution"),
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Toggle Autopilot", required_roles=["admin", "super admin"]))
+):
+    """
+    Pauses or resumes autonomous background autopilot.
+    """
+    from backend.services.sunday_autopilot import weekly_contest_autopilot
+    weekly_contest_autopilot.is_enabled = enable
+    return {
+        "status": "success",
+        "is_enabled": weekly_contest_autopilot.is_enabled,
+        "message": "Autopilot active" if enable else "Autopilot paused"
+    }
+
