@@ -1,18 +1,38 @@
 """
 contest_reconciliation_service.py
 ================================================================================
-WEEKLY CONTEST 516 — V8 AUTHENTICATED VIRTUAL EVIDENCE ENGINE
-REAL UI EVIDENCE INGESTION + ACCOUNT MAPPING + FORENSIC RECONCILIATION
-ZERO FALSE POSITIVE • ZERO FALSE ZERO • ZERO HARD-CODED COUNTS
+WEEKLY CONTEST 516 — V9 DEFINITIVE VIRTUAL EVIDENCE ENGINE
+AUTHENTICATION-AWARE + UI EVIDENCE + IDENTITY MATCHING
+ZERO FALSE POSITIVE + ZERO FALSE ZERO + ZERO UNJUSTIFIED ABSENCE
 ================================================================================
 A production-grade, evidence-first Universal Contest Reconciliation Engine that:
-1. Ingests authenticated Level-5 "My Contests -> Virtual" UI evidence when available.
-2. Strictly verifies exact account identity (normalized username match).
-3. Validates canonical contest identity (Weekly Contest 516).
-4. Confirms explicit Virtual contest mode.
-5. Ingests and SHA-256 hashes screenshot evidence with identity validation.
-6. Decouples Layer A (Institutional Attendance) from Layer B (Forensic Evidence).
-7. Reconciles: LIVE + VIRTUAL + NOT_ATTENDED + DATA_ERROR = 1,450.
+1. Implements strict two-layer architecture:
+   Layer A: Institutional Attendance State:
+     - LIVE_ATTENDED
+     - VIRTUAL_ATTENDED
+     - UNKNOWN_PENDING_EVIDENCE
+     - NOT_ATTENDED
+     - DATA_ERROR
+   Layer B: Evidence Availability State:
+     - LIVE_VERIFIED
+     - VIRTUAL_VERIFIED
+     - POST_CONTEST_ACCEPTED
+     - AUTH_REQUIRED
+     - SOURCE_NOT_AUTHORITATIVE
+     - UNVERIFIED_SCREENSHOT
+     - IDENTITY_MISMATCH
+     - NO_EVIDENCE
+     - DATA_ERROR
+2. Absolute Data Honesty:
+   - NEVER converts AUTH_REQUIRED into NOT_ATTENDED.
+   - NEVER converts SOURCE_NOT_AUTHORITATIVE into NOT_ATTENDED.
+   - NEVER converts NO_ACCESS_TO_AUTHENTICATED_UI into VIRTUAL = 0.
+   - "UNVERIFIED" is NOT "ABSENT".
+3. Telemetry Fix:
+   - When authenticated_sources_available = 0, authenticated_sources_checked = 0 (NOT 668).
+   - Reports evidence_pending = 668, not_attended = 0 (until checked).
+4. Reconciles:
+   LIVE (767) + VIRTUAL (0) + UNKNOWN_PENDING_EVIDENCE (668) + DATA_ERROR (15) = 1,450.
 """
 
 import re
@@ -69,7 +89,7 @@ class SourceAuthorityStatus:
     AUTH_REQUIRED = "AUTH_REQUIRED"                              # Authentication needed to query private virtual history
     UNVERIFIED_SCREENSHOT = "UNVERIFIED_SCREENSHOT"              # Screenshot evidence unmapped to identity
     IDENTITY_MISMATCH = "IDENTITY_MISMATCH"                      # Evidence account handle does not match student
-    PROBLEM_SET_MISMATCH = "PROBLEM_SET_MISMATCH"                # Contest problem mapping invalid
+    PROBLEM_SET_UNKNOWN = "PROBLEM_SET_UNKNOWN"                  # Contest problem mapping invalid/unknown
 
 
 # ─── LAYER A: INSTITUTIONAL ATTENDANCE STATES ──────────────────────────────────
@@ -77,10 +97,12 @@ class CanonicalAttendanceState:
     DATA_ERROR = "DATA_ERROR"
     LIVE_ATTENDED = "LIVE_ATTENDED"
     VIRTUAL_ATTENDED = "VIRTUAL_ATTENDED"
+    UNKNOWN_PENDING_EVIDENCE = "UNKNOWN_PENDING_EVIDENCE"
+    ATTENDANCE_EVIDENCE_PENDING = "ATTENDANCE_EVIDENCE_PENDING"
     NOT_ATTENDED = "NOT_ATTENDED"
     EVIDENCE_UNAVAILABLE = "EVIDENCE_UNAVAILABLE"
 
-    ALL_STATES = {DATA_ERROR, LIVE_ATTENDED, VIRTUAL_ATTENDED, NOT_ATTENDED, EVIDENCE_UNAVAILABLE}
+    ALL_STATES = {DATA_ERROR, LIVE_ATTENDED, VIRTUAL_ATTENDED, UNKNOWN_PENDING_EVIDENCE, NOT_ATTENDED, EVIDENCE_UNAVAILABLE}
 
 
 # ─── LAYER B: EVIDENCE STATES ──────────────────────────────────────────────────
@@ -88,12 +110,12 @@ class EvidenceState:
     LIVE_VERIFIED = "LIVE_VERIFIED"
     VIRTUAL_VERIFIED = "VIRTUAL_VERIFIED"
     POST_CONTEST_ACCEPTED = "POST_CONTEST_ACCEPTED"
-    NO_EVIDENCE = "NO_EVIDENCE"
     AUTH_REQUIRED = "AUTH_REQUIRED"
     SOURCE_NOT_AUTHORITATIVE = "SOURCE_NOT_AUTHORITATIVE"
     SOURCE_UNAVAILABLE = "SOURCE_UNAVAILABLE"
     SOURCE_PARTIAL = "SOURCE_PARTIAL"
     CONTEST_EVIDENCE_CONFLICT = "CONTEST_EVIDENCE_CONFLICT"
+    NO_EVIDENCE = "NO_EVIDENCE"
     DATA_ERROR = "DATA_ERROR"
     UNVERIFIED_SCREENSHOT = "UNVERIFIED_SCREENSHOT"
     IDENTITY_MISMATCH = "IDENTITY_MISMATCH"
@@ -219,7 +241,7 @@ class AuthenticatedVirtualEvidenceProvider:
         target_contest_id: str,
         screenshot_record: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
-        """Evaluates optional screenshot-based forensic evidence."""
+        """Evaluates optional screenshot-based forensic evidence with identity verification."""
         if not screenshot_record:
             return {
                 "has_evidence": False,
@@ -231,13 +253,32 @@ class AuthenticatedVirtualEvidenceProvider:
         username_in_image = str(screenshot_record.get("leetcode_username", "")).strip().lower()
         reg_username = str(registered_username or "").strip().lower()
 
-        if not username_in_image or username_in_image != reg_username:
+        if not username_in_image:
             return {
                 "has_evidence": False,
                 "evidence_state": EvidenceState.UNVERIFIED_SCREENSHOT,
                 "identity_verified": False,
                 "review_status": "UNVERIFIED_SCREENSHOT",
-                "reason": "Screenshot does not contain verifiable account identity match"
+                "reason": "Screenshot does not contain a visible LeetCode username"
+            }
+
+        if username_in_image != reg_username:
+            return {
+                "has_evidence": False,
+                "evidence_state": EvidenceState.IDENTITY_MISMATCH,
+                "identity_verified": False,
+                "review_status": "IDENTITY_MISMATCH",
+                "reason": f"Screenshot username '{username_in_image}' does not match registered '{reg_username}'"
+            }
+
+        c_id = str(screenshot_record.get("contest_id", "")).lower()
+        if "516" not in c_id:
+            return {
+                "has_evidence": False,
+                "evidence_state": "CONTEST_MISMATCH",
+                "identity_verified": True,
+                "review_status": "INVALID_CONTEST",
+                "reason": "Screenshot is for an unrelated contest"
             }
 
         return {
@@ -245,7 +286,7 @@ class AuthenticatedVirtualEvidenceProvider:
             "evidence_state": EvidenceState.VIRTUAL_VERIFIED,
             "evidence_level": EvidenceLevel.LEVEL_5_AUTHENTICATED_VIRTUAL_UI,
             "identity_verified": True,
-            "review_status": "VERIFIED_SCREENSHOT",
+            "review_status": "VERIFIED_VIRTUAL",
             "solved_count": screenshot_record.get("solved_count", 0),
             "image_sha256": screenshot_record.get("image_sha256")
         }
@@ -257,9 +298,9 @@ AuthenticatedVirtualContestEvidenceProvider = AuthenticatedVirtualEvidenceProvid
 
 class UniversalContestReconciliationEngine:
     """
-    Production-grade, reusable reconciliation engine for institutional LeetCode contests (v8.0).
+    Production-grade, reusable reconciliation engine for institutional LeetCode contests (v9.0).
     """
-    ENGINE_VERSION = "8.0.0-AUTHENTICATED-VIRTUAL-FORENSIC"
+    ENGINE_VERSION = "9.0.0-AUTHENTICATION-AWARE-FORENSIC"
 
     @classmethod
     def get_current_ist_datetime(cls) -> datetime.datetime:
@@ -348,7 +389,8 @@ class UniversalContestReconciliationEngine:
         1. DATA_ERROR (invalid handle)
         2. LIVE_ATTENDED (Level 4 live ranking evidence)
         3. VIRTUAL_ATTENDED (Level 5 authenticated virtual UI / session evidence)
-        4. NOT_ATTENDED (valid profile with post-contest practice or no contest evidence)
+        4. UNKNOWN_PENDING_EVIDENCE (valid non-live student whose Level-5 source is pending)
+        5. NOT_ATTENDED (only when complete authoritative checks prove zero participation)
         """
         records: List[Dict[str, Any]] = []
 
@@ -486,7 +528,8 @@ class UniversalContestReconciliationEngine:
                     "audit_reason": f"Authoritative Virtual Contest Participation: Solved {solved_val}/4"
                 })
             else:
-                # Valid non-live student with 0 contest solves
+                # Valid non-live student whose Level-5 authenticated check is pending
+                # DO NOT classify as NOT_ATTENDED because authenticated virtual source is unverified
                 records.append({
                     "student_id": s_id,
                     "reg_no": reg_no,
@@ -494,10 +537,10 @@ class UniversalContestReconciliationEngine:
                     "dept": dept_code,
                     "year": year_level,
                     "username": username,
-                    "attendance_state": CanonicalAttendanceState.NOT_ATTENDED,
+                    "attendance_state": CanonicalAttendanceState.UNKNOWN_PENDING_EVIDENCE,
                     "evidence_state": EvidenceState.AUTH_REQUIRED,
                     "evidence_level": EvidenceLevel.NO_EVIDENCE,
-                    "evidence_source": "LeetCode Profile Submissions Scan",
+                    "evidence_source": "Level-5 Authenticated Check Pending",
                     "live_verified": False,
                     "virtual_verified": False,
                     "virtual_session_id": None,
@@ -514,8 +557,8 @@ class UniversalContestReconciliationEngine:
                     "last_accepted_ist": None,
                     "virtual_evidence": "NOT_VERIFIED",
                     "identity_verified": False,
-                    "verification_status": "NO_CONTEST_ACTIVITY",
-                    "audit_reason": "Valid profile with 0 verified live solves (Level-5 Authenticated Check Pending)"
+                    "verification_status": "AUTHENTICATED_CHECK_PENDING",
+                    "audit_reason": "Non-live valid profile (Level-5 Authenticated 'My Contests -> Virtual' check required)"
                 })
 
         return records
@@ -561,9 +604,12 @@ class UniversalContestReconciliationEngine:
             "live_checked": total_roster,
             "virtual_candidates": eligible_profiles,
             "authenticated_sources_available": 0,
-            "authenticated_sources_checked": eligible_profiles,
+            "authenticated_sources_checked": 0,  # Strict fix: 0 checked when 0 available
+            "authenticated_source_unavailable": eligible_profiles,
             "virtual_verified": verified_virtual_count,
+            "virtual_unverified": eligible_profiles - verified_virtual_count,
             "practice_candidates": practice_count,
+            "no_evidence": eligible_profiles - verified_virtual_count - practice_count,
             "auth_required": eligible_profiles if verified_virtual_count == 0 else 0,
             "source_not_authoritative": eligible_profiles if verified_virtual_count == 0 else 0,
             "unverified_screenshots": 0,
@@ -590,7 +636,7 @@ class UniversalContestReconciliationEngine:
         dry_run: bool = False,
         sync_mode: str = "AUTO"
     ) -> Dict[str, Any]:
-        """Universal, idempotent contest reconciliation engine execution with v8.0 Architecture."""
+        """Universal, idempotent contest reconciliation engine execution with v9.0 Architecture."""
         session_obj: Optional[WeeklySession] = None
         if isinstance(session_id_or_num, WeeklySession):
             session_obj = session_id_or_num
@@ -615,7 +661,8 @@ class UniversalContestReconciliationEngine:
             return {
                 "success": False,
                 "error": f"Problem set validation failed: {problem_set.validation_error}",
-                "problem_set_status": SourceAuthorityStatus.PROBLEM_SET_MISMATCH,
+                "problem_set_status": SourceAuthorityStatus.PROBLEM_SET_UNKNOWN,
+                "reconciliation_status": "FAIL",
                 "publication_allowed": False
             }
 
@@ -645,16 +692,17 @@ class UniversalContestReconciliationEngine:
         # 6. Reconcile Counts
         live_attended = sum(1 for r in student_records if r["attendance_state"] == CanonicalAttendanceState.LIVE_ATTENDED)
         virtual_attended = sum(1 for r in student_records if r["attendance_state"] == CanonicalAttendanceState.VIRTUAL_ATTENDED)
+        evidence_pending = sum(1 for r in student_records if r["attendance_state"] == CanonicalAttendanceState.UNKNOWN_PENDING_EVIDENCE)
         not_attended = sum(1 for r in student_records if r["attendance_state"] == CanonicalAttendanceState.NOT_ATTENDED)
         data_errors = sum(1 for r in student_records if r["attendance_state"] == CanonicalAttendanceState.DATA_ERROR)
         evidence_unavailable = sum(1 for r in student_records if r["attendance_state"] == CanonicalAttendanceState.EVIDENCE_UNAVAILABLE)
         post_contest_practice_count = sum(1 for r in student_records if r.get("post_contest_practice") is True)
 
-        total_classified = live_attended + virtual_attended + not_attended + data_errors + evidence_unavailable
+        total_classified = live_attended + virtual_attended + evidence_pending + not_attended + data_errors + evidence_unavailable
 
         # 7. Check Mathematical Invariants
         invariant_pass = (total_classified == total_roster) and (total_roster == 1450 or total_roster > 0)
-        math_formula = f"{live_attended} (Live) + {virtual_attended} (Virtual) + {not_attended} (Absent) + {data_errors} (Data Errors) = {total_classified} (Total: {total_roster})"
+        math_formula = f"{live_attended} (Live) + {virtual_attended} (Virtual) + {evidence_pending} (Pending) + {not_attended} (Absent) + {data_errors} (Data Errors) = {total_classified} (Total: {total_roster})"
 
         # 8. Calculate Solve Distribution on Live Attendees
         live_records = [r for r in student_records if r["attendance_state"] == CanonicalAttendanceState.LIVE_ATTENDED]
@@ -690,10 +738,10 @@ class UniversalContestReconciliationEngine:
                 "public_api_status": "CHECKED_NO_LIVE_RECORD",
                 "authenticated_source": "AUTH_REQUIRED",
                 "practice_evidence": "NONE",
-                "reason": "Authenticated LeetCode 'My Contests -> Virtual' check required to prove virtual participation",
+                "reason": "Level-5 Authenticated LeetCode 'My Contests -> Virtual' check required to prove virtual participation",
                 "next_check": "ON_AUTHENTICATION"
             }
-            for r in student_records if r["attendance_state"] == CanonicalAttendanceState.NOT_ATTENDED
+            for r in student_records if r["attendance_state"] == CanonicalAttendanceState.UNKNOWN_PENDING_EVIDENCE
         ]
 
         # 10. Perform Source-Aware Validation
@@ -771,9 +819,12 @@ class UniversalContestReconciliationEngine:
             "live_checked": total_roster,
             "virtual_candidates": valid_non_live_count,
             "authenticated_sources_available": 0,
-            "authenticated_sources_checked": valid_non_live_count,
+            "authenticated_sources_checked": 0,
+            "authenticated_source_unavailable": valid_non_live_count,
             "virtual_verified": len(verified_virtual_list),
+            "virtual_unverified": valid_non_live_count - len(verified_virtual_list),
             "practice_candidates": len(post_contest_practice_list),
+            "no_evidence": valid_non_live_count - len(verified_virtual_list) - len(post_contest_practice_list),
             "auth_required": valid_non_live_count if len(verified_virtual_list) == 0 else 0,
             "source_not_authoritative": valid_non_live_count if len(verified_virtual_list) == 0 else 0,
             "unverified_screenshots": 0,
@@ -783,7 +834,7 @@ class UniversalContestReconciliationEngine:
             "evidence_coverage": {
                 "profile_coverage": f"{profile_coverage_pct}%",
                 "live_evidence_coverage": "100.0%",
-                "virtual_evidence_coverage": "100.0%",
+                "virtual_evidence_coverage": "0.0% (Level-5 UI Auth Pending)",
                 "practice_evidence_coverage": "100.0%"
             },
             "source_aware_validation": source_aware_validation
@@ -796,6 +847,7 @@ class UniversalContestReconciliationEngine:
             "total_roster": total_roster,
             "live_attended": live_attended,
             "verified_virtual": virtual_attended,
+            "evidence_pending": evidence_pending,
             "post_contest_practice": post_contest_practice_count,
             "not_attended": not_attended,
             "data_errors": data_errors,
@@ -807,6 +859,7 @@ class UniversalContestReconciliationEngine:
         result_payload = {
             "success": invariant_pass,
             "dry_run": dry_run,
+            "reconciliation_status": "PASS" if invariant_pass else "FAIL",
             "publication_allowed": invariant_pass,
             "engine_version": cls.ENGINE_VERSION,
             "session_id": session_id,
@@ -819,6 +872,7 @@ class UniversalContestReconciliationEngine:
             "verified_virtual_count": virtual_attended,
             "verified_virtual": virtual_attended,
             "virtual_attended": virtual_attended,
+            "evidence_pending": evidence_pending,
             "post_contest_practice_count": post_contest_practice_count,
             "post_contest_practice": post_contest_practice_count,
             "not_attended_count": not_attended,
@@ -828,6 +882,7 @@ class UniversalContestReconciliationEngine:
             "auth_required": valid_non_live_count if virtual_attended == 0 else 0,
             "source_not_authoritative": valid_non_live_count if virtual_attended == 0 else 0,
             "unverified_screenshots": 0,
+            "identity_mismatches": 0,
             "virtual_detection_status": source_aware_validation["detection_status"],
             "source_authority": source_aware_validation["source_authority"],
             "source_capability": source_aware_validation["source_capability"],
@@ -864,7 +919,7 @@ class UniversalContestReconciliationEngine:
             "virtual_detection_health": source_aware_validation,
             "telemetry": scan_telemetry,
             "checksum": dataset_checksum,
-            "synced_at_utc": datetime.datetime.utcnow().isoformat(),
+            "synced_at_utc": datetime.datetime.now(UTC_TZ).isoformat(),
             "synced_at_ist": datetime.datetime.now(IST_TZ).isoformat(),
             "generated_at": datetime.datetime.now(IST_TZ).isoformat()
         }
@@ -877,16 +932,16 @@ class UniversalContestReconciliationEngine:
             session_obj.not_participated = not_attended
             session_obj.failed_verification = data_errors
             session_obj.sync_status = "🟢 Verified"
-            session_obj.last_synced = datetime.datetime.utcnow()
+            session_obj.last_synced = datetime.datetime.now(UTC_TZ)
             session_obj.dataset_hash = dataset_checksum
             
             # Persist audit record in virtual_scan_audits table
             try:
                 scan_audit = VirtualScanAudit(
-                    scan_id=f"SCAN-{contest_id}-{datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
+                    scan_id=f"SCAN-{contest_id}-{datetime.datetime.now(UTC_TZ).strftime('%Y%m%d%H%M%S')}",
                     contest_id=contest_id,
-                    started_at=datetime.datetime.utcnow(),
-                    completed_at=datetime.datetime.utcnow(),
+                    started_at=datetime.datetime.now(UTC_TZ),
+                    completed_at=datetime.datetime.now(UTC_TZ),
                     students_scanned=total_roster,
                     profiles_valid=total_roster - data_errors,
                     profiles_invalid=data_errors,
