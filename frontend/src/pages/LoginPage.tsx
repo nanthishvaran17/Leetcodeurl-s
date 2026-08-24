@@ -395,58 +395,68 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
   return (
     <div className={`fixed inset-0 z-[100] flex flex-col font-sans relative overflow-hidden transition-colors duration-700 ${theme === 'dark' ? 'bg-[#0B0F1A]' : 'bg-[#f4f7fb]'}`}>
       
-      {/* Background College Image with Overlay */}
+      {/* Background College Image */}
       <div 
         className={`absolute inset-0 z-0 bg-cover bg-center transition-all duration-700 ${
           theme === 'dark' 
             ? 'opacity-[0.25] mix-blend-luminosity filter blur-[1.5px]' 
-            : 'opacity-[0.95] saturate-[1.3] contrast-[1.05] brightness-[1.05]'
+            : 'opacity-[0.85] saturate-[1.2] contrast-[1.05]'
         }`}
         style={{ backgroundImage: "url('/nandha_gate_bg.jpg')" }}
       />
+
+      {/* Modern Gradient Overlay */}
       <div className={`absolute inset-0 z-0 transition-colors duration-700 ${
         theme === 'dark' 
-          ? 'bg-gradient-to-b from-[#0B0F1A]/95 via-[#0B0F1A]/85 to-[#0B0F1A]' 
-          : 'bg-gradient-to-b from-white/30 via-white/10 to-[#f4f7fb] backdrop-blur-[1.5px]'
+          ? 'bg-[#0B0F1A]/90' 
+          : 'bg-gradient-to-br from-white/60 via-white/20 to-blue-50/40 backdrop-blur-[2px]'
       }`}></div>
 
+      {/* Decorative Floating Orbs for Attractiveness */}
+      <div className={`absolute top-[-10%] left-[-10%] w-[45%] h-[45%] rounded-full blur-[100px] pointer-events-none transition-all duration-1000 animate-pulse-slow ${theme === 'dark' ? 'bg-blue-600/10' : 'bg-blue-400/25'}`}></div>
+      <div className={`absolute bottom-[-10%] right-[-5%] w-[55%] h-[55%] rounded-full blur-[120px] pointer-events-none transition-all duration-1000 animate-pulse-slow ${theme === 'dark' ? 'bg-cyan-600/10' : 'bg-cyan-400/20'}`} style={{ animationDelay: '2s' }}></div>
+      <div className={`absolute top-[20%] right-[10%] w-[35%] h-[35%] rounded-full blur-[90px] pointer-events-none transition-all duration-1000 animate-pulse-slow ${theme === 'dark' ? 'bg-indigo-600/10' : 'bg-indigo-400/15'}`} style={{ animationDelay: '4s' }}></div>
+
+      {/* Vignette Shadow */}
+      <div className="absolute inset-0 z-0 shadow-[inset_0_0_150px_rgba(0,0,0,0.08)] pointer-events-none"></div>
+
       {/* Animated Bottom Waves */}
-      <div className="absolute inset-x-0 bottom-0 h-[280px] opacity-40 overflow-hidden pointer-events-none z-0">
+      <div className="absolute inset-x-0 bottom-0 h-[280px] opacity-60 overflow-hidden pointer-events-none z-0">
         <svg className="absolute bottom-0 w-[200%] h-full transition-colors duration-700" viewBox="0 0 1200 120" preserveAspectRatio="none">
-          <path className="animate-wave-slow" d="M0,40 C300,100 600,0 900,40 C1200,80 1500,0 1800,40 L1800,120 L0,120 Z" fill={theme === 'dark' ? 'rgba(59, 130, 246, 0.05)' : 'rgba(14, 165, 233, 0.15)'} />
-          <path className="animate-wave-medium" d="M0,60 C400,0 800,120 1200,60 C1600,0 2000,120 2400,60 L2400,120 L0,120 Z" fill={theme === 'dark' ? 'rgba(96, 165, 250, 0.1)' : 'rgba(56, 189, 248, 0.25)'} />
-          <path className="animate-wave-fast" d="M0,80 C200,120 500,20 800,80 C1100,140 1400,20 1700,80 L1700,120 L0,120 Z" fill={theme === 'dark' ? 'rgba(147, 197, 253, 0.15)' : 'rgba(186, 230, 253, 0.35)'} />
+          <path className="animate-wave-slow" d="M0,40 C300,100 600,0 900,40 C1200,80 1500,0 1800,40 L1800,120 L0,120 Z" fill={theme === 'dark' ? 'rgba(59, 130, 246, 0.05)' : 'rgba(14, 165, 233, 0.2)'} />
+          <path className="animate-wave-medium" d="M0,60 C400,0 800,120 1200,60 C1600,0 2000,120 2400,60 L2400,120 L0,120 Z" fill={theme === 'dark' ? 'rgba(96, 165, 250, 0.1)' : 'rgba(56, 189, 248, 0.35)'} />
+          <path className="animate-wave-fast" d="M0,80 C200,120 500,20 800,80 C1100,140 1400,20 1700,80 L1700,120 L0,120 Z" fill={theme === 'dark' ? 'rgba(147, 197, 253, 0.15)' : 'rgba(186, 230, 253, 0.5)'} />
         </svg>
       </div>
 
       {/* Top Header */}
-      <div className="relative z-10 w-full px-6 py-6 sm:px-12 flex justify-between items-start">
-        <div className="flex items-center space-x-3.5">
-          <div className="w-14 h-14 flex items-center justify-center p-0.5">
-            <img src="/nandha_emblem.png" alt="Nandha Engineering College Logo" className="w-full h-full object-contain drop-shadow-md" onError={(e) => { (e.target as HTMLImageElement).src = '/logo.png'; }} />
+      <div className="relative z-20 w-full px-5 py-5 sm:px-10 lg:px-14 flex justify-between items-center">
+        <div className="flex items-center space-x-3.5 sm:space-x-4">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-2xl flex items-center justify-center p-1.5 shadow-lg border border-slate-100/60">
+            <img src="/nandha_emblem.png" alt="Nandha Engineering College Logo" className="w-full h-full object-contain drop-shadow-sm" onError={(e) => { (e.target as HTMLImageElement).src = '/logo.png'; }} />
           </div>
-          <div className="hidden sm:block">
-            <h2 className={`text-[16px] font-bold tracking-wide uppercase transition-colors duration-500 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Nandha Engineering College</h2>
-            <p className={`text-[11px] tracking-widest font-bold uppercase mt-0.5 transition-colors duration-500 ${theme === 'dark' ? 'text-blue-400' : 'text-slate-600'}`}>Autonomous • Erode</p>
+          <div className="hidden sm:block text-left">
+            <h2 className={`text-[15px] sm:text-[17px] font-extrabold tracking-wide uppercase transition-colors duration-500 drop-shadow-sm ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Nandha Engineering College</h2>
+            <p className={`text-[10.5px] sm:text-[11.5px] tracking-[0.15em] font-bold uppercase mt-0.5 transition-colors duration-500 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-700'}`}>Autonomous • Erode</p>
           </div>
         </div>
 
         {!onClose ? (
-          <div className={`flex items-center rounded-full p-1 shadow-sm border transition-colors duration-500 ${
+          <div className={`flex items-center rounded-full p-1 shadow-md border transition-colors duration-500 ${
             theme === 'dark' 
               ? 'bg-white/[0.05] border-white/[0.1]' 
-              : 'bg-white/80 border-slate-200/60 backdrop-blur-md'
+              : 'bg-white/90 border-white/50 backdrop-blur-md'
           }`}>
             <button onClick={() => setTheme('light')} className={`p-1.5 rounded-full transition-all ${
-              theme === 'light' ? 'bg-blue-50 text-blue-600 shadow-sm' : 'text-slate-400 hover:text-white'
-            }`}><Sun className="w-4 h-4" /></button>
+              theme === 'light' ? 'bg-blue-50 text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+            }`}><Sun className="w-4.5 h-4.5" /></button>
             <button onClick={() => setTheme('dark')} className={`p-1.5 rounded-full transition-all ${
               theme === 'dark' ? 'bg-blue-500/20 text-blue-400 shadow-sm' : 'text-slate-400 hover:text-slate-600'
-            }`}><Moon className="w-4 h-4" /></button>
+            }`}><Moon className="w-4.5 h-4.5" /></button>
           </div>
         ) : (
-          <button type="button" onClick={onClose} aria-label="Close" className={`p-2.5 rounded-full shadow-sm border transition-all ${
-            theme === 'dark' ? 'bg-white/[0.05] border-white/[0.1] text-slate-400 hover:text-white' : 'bg-white/80 border-slate-200/60 text-slate-400 hover:text-slate-600'
+          <button type="button" onClick={onClose} aria-label="Close" className={`p-2.5 rounded-full shadow-md border transition-all ${
+            theme === 'dark' ? 'bg-white/[0.05] border-white/[0.1] text-slate-400 hover:text-white' : 'bg-white/90 border-white/50 text-slate-400 hover:text-slate-600 backdrop-blur-md'
           }`}>
             <X className="w-5 h-5" />
           </button>
@@ -456,10 +466,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       {/* Main Content (Centered Card) */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full px-4 overflow-y-auto pb-10">
         
-        <div className={`w-full max-w-[460px] rounded-[24px] border p-8 sm:p-10 transition-all duration-700 ${isShaking ? 'animate-shake' : ''} ${
+        <div className={`w-full max-w-[460px] rounded-[28px] border p-8 sm:p-10 transition-all duration-700 ${isShaking ? 'animate-shake' : ''} ${
           theme === 'dark' 
-            ? 'bg-[#111827]/85 border-white/[0.08] backdrop-blur-xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)]' 
-            : 'bg-white/95 border-slate-100 backdrop-blur-md shadow-[0_20px_60px_-15px_rgba(0,0,0,0.08)]'
+            ? 'bg-[#0B0F1A]/85 border-white/[0.08] backdrop-blur-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7)]' 
+            : 'bg-white/85 border-white/60 backdrop-blur-xl shadow-[0_20px_60px_-15px_rgba(0,30,80,0.12)]'
         }`}
           style={{ opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.98)' }}>
           
