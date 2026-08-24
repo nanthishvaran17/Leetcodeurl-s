@@ -267,5 +267,492 @@ def get_faculty_workload_summary(
         "total_faculty": len(faculty_list),
         "target_department_id": target_dept_id,
         "recommended_ratio_per_faculty": 20,
+        "max_capacity_per_faculty": 30,
         "faculty_workload": workload
     }
+
+
+# =========================================================================
+# STAFF MENTORING & MONITORING ENDPOINTS
+# =========================================================================
+
+class NoteCreateRequest(BaseModel):
+    student_id: int
+    note: str
+    escalation_level: Optional[str] = "NORMAL"
+
+
+class FollowUpCreateRequest(BaseModel):
+    student_id: int
+    title: str
+    due_date: str  # YYYY-MM-DD
+    notes: Optional[str] = None
+
+
+class FollowUpUpdateRequest(BaseModel):
+    status: str  # PENDING, COMPLETED, CANCELLED
+    notes: Optional[str] = None
+
+
+class WeeklyTargetRequest(BaseModel):
+    student_id: int
+    target_problems: int = 10
+    target_contests: int = 1
+
+
+def calculate_student_performance_status(s: Student) -> Dict[str, Any]:
+    """Helper to automatically classify student status & trend."""
+    total = s.stats.total_solved if (s.stats and s.stats.total_solved is not None) else 0
+    streak = s.stats.max_streak if (s.stats and s.stats.max_streak is not None) else 0
+    rating = s.stats.contest_rating if (s.stats and s.stats.contest_rating is not None) else 0.0
+    last_verified = s.stats.last_verified_at if s.stats else None
+
+    days_inactive = 0
+    if last_verified:
+        now = datetime.datetime.now(datetime.timezone.utc)
+        if last_verified.tzinfo is None:
+            last_verified = last_verified.replace(tzinfo=datetime.timezone.utc)
+        days_inactive = (now - last_verified).days
+
+    if days_inactive >= 8 or (total == 0 and days_inactive >= 5):
+        status_label = "At Risk"
+        status_code = "AT_RISK"
+        badge_color = "red"
+    elif total < 30 or days_inactive >= 4:
+        status_label = "Needs Improvement"
+        status_code = "NEEDS_IMPROVEMENT"
+        badge_color = "yellow"
+    elif total >= 100 or streak >= 7 or rating >= 1400:
+        status_label = "Excellent"
+        status_code = "EXCELLENT"
+        badge_color = "emerald"
+    else:
+        status_label = "Improving"
+        status_code = "IMPROVING"
+        badge_color = "blue"
+
+    # Performance trend calculation based on recent records
+    trend = "STABLE"
+    trend_label = "➡️ Stable"
+
+    if total > 50 and days_inactive <= 2:
+        trend = "IMPROVING"
+        trend_label = "📈 Improving"
+    elif days_inactive >= 7:
+        trend = "DECLINING"
+        trend_label = "📉 Declining"
+
+    return {
+        "status_code": status_code,
+        "status_label": status_label,
+        "badge_color": badge_color,
+        "days_inactive": days_inactive,
+        "trend": trend,
+        "trend_label": trend_label
+    }
+
+
+@router.get("/my-mentoring-summary")
+def get_my_mentoring_summary(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("Faculty", "faculty", "Staff", "staff", "HOD", "hod", "Admin", "Super Admin"))
+):
+    """Returns summary KPIs for the authenticated mentor's assigned student portfolio."""
+    from backend.models import StaffFollowUp, StaffAlert, StudentWeeklyTarget
+
+    assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, current_user.id)
+    if not assigned_ids:
+        return {
+            "total_assigned": 0,
+            "active_students": 0,
+            "completed_students": 0,
+            "pending_students": 0,
+            "needing_attention": 0,
+            "at_risk": 0,
+            "workload_capacity": 30,
+            "workload_status": "EMPTY",
+            "weekly_progress_avg": 0,
+            "overall_performance": "N/A"
+        }
+
+    students = db.query(Student).outerjoin(Student.stats).options(
+        joinedload(Student.stats)
+    ).filter(Student.id.in_(assigned_ids)).all()
+
+    total_assigned = len(students)
+    active_count = 0
+    at_risk_count = 0
+    needing_attention_count = 0
+    completed_count = 0
+    pending_count = 0
+    total_solved_sum = 0
+
+    for s in students:
+        perf = calculate_student_performance_status(s)
+        if perf["status_code"] == "AT_RISK":
+            at_risk_count += 1
+            needing_attention_count += 1
+        elif perf["status_code"] == "NEEDS_IMPROVEMENT":
+            needing_attention_count += 1
+        elif perf["status_code"] == "EXCELLENT":
+            completed_count += 1
+        else:
+            pending_count += 1
+
+        solved = s.stats.total_solved if (s.stats and s.stats.total_solved) else 0
+        if solved > 0:
+            active_count += 1
+        total_solved_sum += solved
+
+    avg_solved = round(total_solved_sum / total_assigned, 1) if total_assigned > 0 else 0.0
+    pending_followups = db.query(StaffFollowUp).filter(
+        StaffFollowUp.staff_id == current_user.id,
+        StaffFollowUp.status == "PENDING"
+    ).count()
+
+    unread_alerts = db.query(StaffAlert).filter(
+        StaffAlert.staff_id == current_user.id,
+        StaffAlert.is_read == False
+    ).count()
+
+    # Calculate post-9:30 solvers count for assigned students
+    from backend.routes.weekly_contests import get_post_930_solvers
+    post_930_data = get_post_930_solvers(
+        request=Depends(get_db), session_date=None, dept=None,
+        year_level=None, section=None, min_post_window_solves=1,
+        sort_by="latest", search=None, student_id=None, db=db
+    ) if hasattr(db, 'query') else {"summary": {"students_detected": 0, "total_post_930_solves": 0}}
+
+    post_930_summary = post_930_data.get("summary", {}) if isinstance(post_930_data, dict) else {}
+
+    return {
+        "faculty_id": current_user.id,
+        "faculty_name": current_user.username,
+        "total_assigned": total_assigned,
+        "active_students": active_count,
+        "completed_students": completed_count,
+        "pending_students": pending_count,
+        "needing_attention": needing_attention_count,
+        "at_risk": at_risk_count,
+        "pending_followups": pending_followups,
+        "unread_alerts": unread_alerts,
+        "post_930_solvers_count": post_930_summary.get("students_detected", 0),
+        "post_930_total_solves": post_930_summary.get("total_post_930_solves", 0),
+        "workload_capacity": 30,
+        "workload_status": "NORMAL" if total_assigned <= 20 else ("FULL" if total_assigned == 30 else "ABOVE_TARGET"),
+        "weekly_progress_avg": avg_solved,
+        "overall_performance": "High" if at_risk_count == 0 else ("Moderate" if at_risk_count <= 3 else "Needs Action")
+    }
+
+
+@router.get("/priority-students")
+def get_priority_students(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("Faculty", "faculty", "Staff", "staff", "HOD", "hod", "Admin", "Super Admin"))
+):
+    """Returns assigned students requiring immediate attention."""
+    assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, current_user.id)
+    if not assigned_ids:
+        return []
+
+    students = db.query(Student).outerjoin(Student.stats).options(
+        joinedload(Student.department),
+        joinedload(Student.section),
+        joinedload(Student.stats)
+    ).filter(Student.id.in_(assigned_ids)).all()
+
+    priority_list = []
+    for s in students:
+        perf = calculate_student_performance_status(s)
+        if perf["status_code"] in ["AT_RISK", "NEEDS_IMPROVEMENT"] or perf["days_inactive"] >= 5:
+            reasons = []
+            if perf["days_inactive"] >= 5:
+                reasons.append(f"Inactive for {perf['days_inactive']} days")
+            if (s.stats.total_solved or 0) < 10:
+                reasons.append("Low problem count")
+            if perf["status_code"] == "AT_RISK":
+                reasons.append("At Risk performance status")
+
+            priority_list.append({
+                "id": s.id,
+                "name": s.name,
+                "reg_no": s.reg_no,
+                "department": s.department.code if s.department else "CSE",
+                "year_level": s.year_level,
+                "section": s.section.name if s.section else "A",
+                "username": s.username,
+                "total_solved": s.stats.total_solved if s.stats else 0,
+                "days_inactive": perf["days_inactive"],
+                "status_label": perf["status_label"],
+                "status_code": perf["status_code"],
+                "badge_color": perf["badge_color"],
+                "trend": perf["trend_label"],
+                "priority_reasons": reasons
+            })
+
+    priority_list.sort(key=lambda x: (x["status_code"] != "AT_RISK", -x["days_inactive"]))
+    return priority_list
+
+
+@router.get("/notes/{student_id}")
+def get_student_notes(
+    student_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("Faculty", "faculty", "Staff", "staff", "HOD", "hod", "Admin", "Super Admin"))
+):
+    """Retrieves private mentoring notes for an assigned student."""
+    from backend.models import MentorNote
+
+    user_role = (current_user.role or "").strip().lower()
+    if user_role in ["staff", "faculty"]:
+        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, current_user.id)
+        if student_id not in assigned_ids:
+            raise HTTPException(status_code=403, detail="Access Denied: Student is not assigned to your portfolio.")
+
+    notes = db.query(MentorNote).filter(MentorNote.student_id == student_id).order_by(MentorNote.created_at.desc()).all()
+    return [
+        {
+            "id": n.id,
+            "student_id": n.student_id,
+            "faculty_id": n.faculty_id,
+            "faculty_name": n.faculty.username if n.faculty else "Staff",
+            "note": n.note,
+            "escalation_level": n.escalation_level,
+            "created_at": n.created_at.isoformat() if n.created_at else None
+        }
+        for n in notes
+    ]
+
+
+@router.post("/notes")
+def create_student_note(
+    payload: NoteCreateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("Faculty", "faculty", "Staff", "staff", "HOD", "hod", "Admin", "Super Admin"))
+):
+    """Adds a private mentoring note for an assigned student."""
+    from backend.models import MentorNote
+
+    user_role = (current_user.role or "").strip().lower()
+    if user_role in ["staff", "faculty"]:
+        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, current_user.id)
+        if payload.student_id not in assigned_ids:
+            raise HTTPException(status_code=403, detail="Access Denied: Student is not assigned to your portfolio.")
+
+    new_note = MentorNote(
+        student_id=payload.student_id,
+        faculty_id=current_user.id,
+        note=payload.note,
+        escalation_level=payload.escalation_level or "NORMAL"
+    )
+    db.add(new_note)
+    db.commit()
+    db.refresh(new_note)
+
+    return {
+        "success": True,
+        "note": {
+            "id": new_note.id,
+            "student_id": new_note.student_id,
+            "faculty_id": new_note.faculty_id,
+            "faculty_name": current_user.username,
+            "note": new_note.note,
+            "escalation_level": new_note.escalation_level,
+            "created_at": new_note.created_at.isoformat() if new_note.created_at else None
+        }
+    }
+
+
+@router.get("/follow-ups")
+def get_staff_follow_ups(
+    status_filter: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("Faculty", "faculty", "Staff", "staff", "HOD", "hod", "Admin", "Super Admin"))
+):
+    """Retrieves follow-up tasks for the staff member."""
+    from backend.models import StaffFollowUp, Student
+
+    query = db.query(StaffFollowUp).options(joinedload(StaffFollowUp.student)).filter(
+        StaffFollowUp.staff_id == current_user.id
+    )
+    if status_filter:
+        query = query.filter(StaffFollowUp.status == status_filter.upper())
+
+    follow_ups = query.order_by(StaffFollowUp.due_date.asc()).all()
+
+    return [
+        {
+            "id": f.id,
+            "student_id": f.student_id,
+            "student_name": f.student.name if f.student else "Student",
+            "reg_no": f.student.reg_no if f.student else "N/A",
+            "title": f.title,
+            "due_date": f.due_date,
+            "status": f.status,
+            "notes": f.notes,
+            "created_at": f.created_at.isoformat() if f.created_at else None,
+            "completed_at": f.completed_at.isoformat() if f.completed_at else None
+        }
+        for f in follow_ups
+    ]
+
+
+@router.post("/follow-ups")
+def create_staff_follow_up(
+    payload: FollowUpCreateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("Faculty", "faculty", "Staff", "staff", "HOD", "hod", "Admin", "Super Admin"))
+):
+    """Schedules a new follow-up item for an assigned student."""
+    from backend.models import StaffFollowUp
+
+    user_role = (current_user.role or "").strip().lower()
+    if user_role in ["staff", "faculty"]:
+        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, current_user.id)
+        if payload.student_id not in assigned_ids:
+            raise HTTPException(status_code=403, detail="Access Denied: Student is not assigned to your portfolio.")
+
+    follow_up = StaffFollowUp(
+        student_id=payload.student_id,
+        staff_id=current_user.id,
+        title=payload.title,
+        due_date=payload.due_date,
+        status="PENDING",
+        notes=payload.notes
+    )
+    db.add(follow_up)
+    db.commit()
+    db.refresh(follow_up)
+
+    return {
+        "success": True,
+        "follow_up": {
+            "id": follow_up.id,
+            "student_id": follow_up.student_id,
+            "title": follow_up.title,
+            "due_date": follow_up.due_date,
+            "status": follow_up.status
+        }
+    }
+
+
+@router.put("/follow-ups/{follow_up_id}")
+def update_staff_follow_up(
+    follow_up_id: int,
+    payload: FollowUpUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("Faculty", "faculty", "Staff", "staff", "HOD", "hod", "Admin", "Super Admin"))
+):
+    """Updates status or notes of a follow-up item."""
+    from backend.models import StaffFollowUp
+
+    follow_up = db.query(StaffFollowUp).filter(
+        StaffFollowUp.id == follow_up_id,
+        StaffFollowUp.staff_id == current_user.id
+    ).first()
+
+    if not follow_up:
+        raise HTTPException(status_code=404, detail="Follow-up task not found.")
+
+    follow_up.status = payload.status.upper()
+    if payload.notes:
+        follow_up.notes = payload.notes
+    if payload.status.upper() == "COMPLETED":
+        follow_up.completed_at = datetime.datetime.utcnow()
+
+    db.commit()
+    return {"success": True, "message": f"Follow-up status updated to {follow_up.status}."}
+
+
+@router.get("/alerts")
+def get_staff_alerts(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("Faculty", "faculty", "Staff", "staff", "HOD", "hod", "Admin", "Super Admin"))
+):
+    """Returns alerts for assigned students."""
+    from backend.models import StaffAlert
+
+    alerts = db.query(StaffAlert).options(joinedload(StaffAlert.student)).filter(
+        StaffAlert.staff_id == current_user.id
+    ).order_by(StaffAlert.created_at.desc()).all()
+
+    return [
+        {
+            "id": a.id,
+            "student_id": a.student_id,
+            "student_name": a.student.name if a.student else "Student",
+            "reg_no": a.student.reg_no if a.student else "N/A",
+            "alert_type": a.alert_type,
+            "severity": a.severity,
+            "title": a.title,
+            "message": a.message,
+            "is_read": a.is_read,
+            "created_at": a.created_at.isoformat() if a.created_at else None
+        }
+        for a in alerts
+    ]
+
+
+@router.post("/alerts/mark-read")
+def mark_alerts_as_read(
+    alert_ids: List[int] = Body(..., embed=True),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("Faculty", "faculty", "Staff", "staff", "HOD", "hod", "Admin", "Super Admin"))
+):
+    """Marks specified alerts as read."""
+    from backend.models import StaffAlert
+
+    db.query(StaffAlert).filter(
+        StaffAlert.id.in_(alert_ids),
+        StaffAlert.staff_id == current_user.id
+    ).update({"is_read": True}, synchronize_session=False)
+
+    db.commit()
+    return {"success": True, "marked_count": len(alert_ids)}
+
+
+@router.get("/weekly-report")
+def get_weekly_staff_report(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("Faculty", "faculty", "Staff", "staff", "HOD", "hod", "Admin", "Super Admin"))
+):
+    """Generates automated weekly summary report for staff."""
+    from backend.models import StaffFollowUp
+
+    assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, current_user.id)
+    students = db.query(Student).outerjoin(Student.stats).options(
+        joinedload(Student.stats)
+    ).filter(Student.id.in_(assigned_ids)).all() if assigned_ids else []
+
+    active_cnt = 0
+    completed_cnt = 0
+    needs_imp_cnt = 0
+    at_risk_cnt = 0
+
+    for s in students:
+        perf = calculate_student_performance_status(s)
+        if perf["status_code"] == "AT_RISK":
+            at_risk_cnt += 1
+        elif perf["status_code"] == "NEEDS_IMPROVEMENT":
+            needs_imp_cnt += 1
+        elif perf["status_code"] == "EXCELLENT":
+            completed_cnt += 1
+        else:
+            active_cnt += 1
+
+    pending_followups = db.query(StaffFollowUp).filter(
+        StaffFollowUp.staff_id == current_user.id,
+        StaffFollowUp.status == "PENDING"
+    ).count()
+
+    return {
+        "staff_name": current_user.username,
+        "assigned_students": len(students),
+        "active": active_cnt,
+        "completed": completed_cnt,
+        "needs_improvement": needs_imp_cnt,
+        "at_risk": at_risk_cnt,
+        "follow_ups": pending_followups,
+        "report_date": datetime.datetime.utcnow().strftime("%Y-%m-%d")
+    }
+

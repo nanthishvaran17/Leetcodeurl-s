@@ -79,7 +79,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         api.get('/sessions/dashboard-summary'),
         api.get('/analytics/department-comparison'),
         api.get('/analytics/data-quality'),
-        api.get('/students?limit=10&sort_by=solved_desc'),
+        api.get('/students?sort_by=solved_desc'),
         api.get('/system/health'),
         api.get('/sync/status')
       ]);

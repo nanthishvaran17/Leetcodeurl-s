@@ -12,20 +12,23 @@ interface NavbarProps {
   onOpenLogin: () => void;
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  isSidebarOpen: boolean;
+  setIsSidebarOpen: (isOpen: boolean) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   currentSessionStatus = 'ACTIVE',
   onOpenLogin,
   activeTab,
-  setActiveTab
+  setActiveTab,
+  isSidebarOpen,
+  setIsSidebarOpen
 }) => {
   const { theme, toggleTheme } = useTheme();
   const { user, logout, isAuthenticated } = useAuth();
 
   const [freshness, setFreshness] = useState<any>(null);
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
-  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState<boolean>(false);
 
   useEffect(() => {
     loadFreshness();
@@ -53,11 +56,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               {isAuthenticated && (
                 <button
                   type="button"
-                  onClick={() => setIsMobileDrawerOpen(!isMobileDrawerOpen)}
-                  className="p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-800 lg:hidden transition-colors cursor-pointer"
-                  title="Toggle Mobile Navigation Menu"
+                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                  className="p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors cursor-pointer"
+                  title="Toggle Navigation Menu"
                 >
-                  {isMobileDrawerOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                  {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </button>
               )}
 
@@ -184,130 +187,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       </header>
 
       {/* Mobile / Tablet Responsive Drawer Navigation Overlay */}
-      <AnimatePresence>
-        {isMobileDrawerOpen && isAuthenticated && (
-          <div className="fixed inset-0 z-[100000] lg:hidden flex">
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={() => setIsMobileDrawerOpen(false)}
-            />
-            {/* Drawer */}
-            <motion.div
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-              className="relative w-4/5 max-w-xs bg-white dark:bg-navy-950 h-full shadow-2xl p-5 flex flex-col justify-between overflow-y-auto z-10 border-r border-gray-200 dark:border-navy-800"
-            >
-              <div className="space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-navy-800">
-                  <div className="flex items-center space-x-2">
-                    <CollegeLogo size={32} />
-                    <span className="font-black text-xs text-gray-900 dark:text-white">Main Navigation</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsMobileDrawerOpen(false)}
-                    className="p-1.5 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-navy-800 cursor-pointer"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
 
-                <nav className="space-y-3">
-                  {[
-                    {
-                      category: 'EXECUTIVE INTELLIGENCE',
-                      items: [
-                        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-                        { id: 'hod-command-center', label: 'HOD Command Center', icon: Cpu, badge: 'HOD' },
-                        { id: 'faculty-action-center', label: 'Faculty Action Center', icon: Zap, badge: 'STAFF' },
-                        { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
-                      ]
-                    },
-                    {
-                      category: 'ACADEMIC & CONTESTS',
-                      items: [
-                        { id: 'departments', label: 'Departments & Sections', icon: Layers },
-                        { id: 'weekly-contest', label: 'Weekly Contest Tracker', icon: Calendar, badge: 'LIVE' },
-                        { id: 'students', label: 'Student Leaderboard', icon: Users },
-                        { id: 'compare', label: 'Student Comparison', icon: BarChart3 },
-                        { id: 'quality', label: 'Data Quality Board', icon: CheckCircle2 },
-                        { id: 'data-issues', label: 'Student Data Issues', icon: AlertOctagon, badge: 'RECOVERY' },
-                      ]
-                    },
-                    {
-                      category: 'INSTITUTIONAL OPERATIONS',
-                      items: [
-                        { id: 'system-health', label: 'Institutional Operations', icon: Activity, badge: 'PROD' },
-                        { id: 'reports', label: 'Reports & Export', icon: FileSpreadsheet },
-                        { id: 'public', label: 'Public Shareable View', icon: Globe },
-                        { id: 'settings', label: 'Admin Settings', icon: Settings },
-                        { id: 'audit', label: 'Audit Log', icon: ShieldAlert },
-                      ]
-                    }
-                  ].map((group, gIdx) => (
-                    <div key={gIdx} className="space-y-1">
-                      <span className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-wider px-2 block">
-                        {group.category}
-                      </span>
-                      {group.items.map((item) => {
-                        const Icon = item.icon;
-                        const isActive = activeTab === item.id;
-                        return (
-                          <button
-                            key={item.id}
-                            type="button"
-                            onClick={() => {
-                              setActiveTab(item.id);
-                              setIsMobileDrawerOpen(false);
-                            }}
-                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl font-bold text-xs text-left transition-all cursor-pointer ${
-                              isActive
-                                ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md'
-                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-900'
-                            }`}
-                          >
-                            <div className="flex items-center space-x-2.5">
-                              <Icon className="w-4 h-4 shrink-0" />
-                              <span>{item.label}</span>
-                            </div>
-                            {item.badge && (
-                              <span className={`text-[9px] font-black px-1.5 py-0.2 rounded uppercase ${
-                                isActive ? 'bg-amber-400 text-slate-950' : 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20'
-                              }`}>
-                                {item.badge}
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ))}
-                </nav>
-              </div>
-
-              <div className="pt-4 border-t border-gray-200 dark:border-navy-800">
-                <button
-                  type="button"
-                  onClick={() => {
-                    logout();
-                    setIsMobileDrawerOpen(false);
-                  }}
-                  className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold text-xs hover:bg-rose-500/20 transition-all cursor-pointer"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>Sign Out Portal</span>
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* Sync Engine Status Top-Level Portal Modal */}
       <SyncStatusModal

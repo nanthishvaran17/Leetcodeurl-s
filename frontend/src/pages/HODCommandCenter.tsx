@@ -14,6 +14,8 @@ import {
 import {
   simulateWhatIfScenario, askAIDepartmentQuery
 } from '../services/intelligenceService';
+import { AdminStaffAllocationPanel } from '../components/AdminStaffAllocationPanel';
+import { StudentEditOverlay } from '../components/StudentEditOverlay';
 
 // ─── Shared Components ────────────────────────────────────────────────────────
 
@@ -99,98 +101,83 @@ const StudentModal: React.FC<{
           name:              form.name.trim(),
           department_id:     Number(form.department_id),
           year_level:        form.year_level,
-          leetcode_username: form.leetcode_username.trim().toLowerCase(),
-          email:             form.email || undefined,
+          leetcode_username: form.leetcode_username.trim(),
+          email:             form.email.trim() || undefined,
         });
         setSuccess(res.message);
-        setTimeout(() => { onSaved(); onClose(); }, 1000);
+        setTimeout(onSaved, 800);
       } else {
-        // Edit mode — only send changed fields
-        const payload: StudentUpdatePayload = {};
-        if (form.name !== student?.name) payload.name = form.name;
-        if (form.department_id && Number(form.department_id) !== student?.department_id) payload.department_id = Number(form.department_id);
-        if (form.year_level !== student?.year_level) payload.year_level = form.year_level;
-        if (form.leetcode_username !== student?.leetcode_username) payload.leetcode_username = form.leetcode_username;
-        if (form.email !== student?.email) payload.email = form.email;
-
-        const res = await updateStudent(student!.reg_no, payload);
-        setSuccess(res.message + (res.resync_pending ? ' (LeetCode re-sync queued)' : ''));
-        setTimeout(() => { onSaved(); onClose(); }, 1000);
+        const res = await updateStudent(student!.reg_no, {
+          name:              form.name.trim() || undefined,
+          department_id:     form.department_id ? Number(form.department_id) : undefined,
+          year_level:        form.year_level || undefined,
+          leetcode_username: form.leetcode_username.trim() || undefined,
+          email:             form.email.trim() || undefined,
+        });
+        setSuccess(res.message);
+        setTimeout(onSaved, 800);
       }
     } catch (err: any) {
-      setError(err?.response?.data?.detail || 'Operation failed. Please try again.');
+      setError(err?.message || 'Operation failed.');
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-         onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-navy-850 border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden">
-
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-900/50">
-          <div>
-            <h3 className="font-black text-slate-800 dark:text-slate-100">
-              {mode === 'add' ? '➕ Add New Student' : `✏️ Edit — ${student?.name}`}
-            </h3>
-            <p className="text-[10px] text-slate-400 mt-0.5">
-              {mode === 'add' ? 'LeetCode username will be validated via LeetCode API.' : 'Only changed fields are updated.'}
-            </p>
-          </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"><X size={18} /></button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm overflow-y-auto animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden my-auto p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-black text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <Plus size={18} className="text-brand-500" />
+            <span>{mode === 'add' ? 'Add New Student Record' : `Edit Student — ${student?.name}`}</span>
+          </h3>
+          <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-800 transition"><X size={16} /></button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
+        {error && <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/25 text-red-500 text-xs font-semibold">{error}</div>}
+        {success && <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-500 text-xs font-semibold">{success}</div>}
+
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div>
+            <label className={labelCls}>Register Number *</label>
+            <input value={form.reg_no} disabled={mode === 'edit'} onChange={e => setForm({ ...form, reg_no: e.target.value })} placeholder="e.g. 732222104001" className={inputCls} />
+          </div>
+          <div>
+            <label className={labelCls}>Student Full Name *</label>
+            <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. ARUN KUMAR M" className={inputCls} />
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={labelCls}>Reg No *</label>
-              <input value={form.reg_no} onChange={e => setForm(f => ({ ...f, reg_no: e.target.value }))}
-                className={inputCls} placeholder="e.g. 22CSA001" disabled={mode === 'edit'} required />
+              <label className={labelCls}>Department *</label>
+              <select value={form.department_id} onChange={e => setForm({ ...form, department_id: e.target.value })} className={inputCls}>
+                <option value="">Select Dept...</option>
+                {departments.map(d => (
+                  <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
+                ))}
+              </select>
             </div>
             <div>
-              <label className={labelCls}>Year *</label>
-              <select value={form.year_level} onChange={e => setForm(f => ({ ...f, year_level: e.target.value }))} className={inputCls}>
+              <label className={labelCls}>Academic Year *</label>
+              <select value={form.year_level} onChange={e => setForm({ ...form, year_level: e.target.value })} className={inputCls}>
                 {['II', 'III', 'IV'].map(y => <option key={y} value={y}>{y} Year</option>)}
               </select>
             </div>
           </div>
-
-          <div>
-            <label className={labelCls}>Full Name *</label>
-            <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-              className={inputCls} placeholder="e.g. Aakash Kumar S" required />
-          </div>
-
-          <div>
-            <label className={labelCls}>Department *</label>
-            <select value={form.department_id} onChange={e => setForm(f => ({ ...f, department_id: e.target.value }))} className={inputCls} required>
-              <option value="">Select Department</option>
-              {departments.map(d => <option key={d.id} value={d.id}>{d.name} ({d.code})</option>)}
-            </select>
-          </div>
-
           <div>
             <label className={labelCls}>LeetCode Username *</label>
-            <input value={form.leetcode_username} onChange={e => setForm(f => ({ ...f, leetcode_username: e.target.value.toLowerCase() }))}
-              className={inputCls} placeholder="e.g. aakash_kumar" required />
+            <input value={form.leetcode_username} onChange={e => setForm({ ...form, leetcode_username: e.target.value })} placeholder="e.g. arunkumar_leetcode" className={inputCls} />
           </div>
-
           <div>
-            <label className={labelCls}>Email (optional)</label>
-            <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-              className={inputCls} type="email" placeholder="student@nandhaengg.org" />
+            <label className={labelCls}>Email Address (Optional)</label>
+            <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="e.g. arunkumar@nandhaengg.org" className={inputCls} />
           </div>
 
-          {error   && <div className="text-red-400 text-xs font-semibold bg-red-500/10 border border-red-500/25 rounded-xl px-3 py-2">{error}</div>}
-          {success && <div className="text-emerald-400 text-xs font-semibold bg-emerald-500/10 border border-emerald-500/25 rounded-xl px-3 py-2">✅ {success}</div>}
-
-          <div className="flex justify-end gap-3 pt-2 border-t border-slate-200 dark:border-navy-700">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 text-sm font-semibold hover:bg-slate-200 dark:hover:bg-navy-700 transition">
-              Cancel
-            </button>
-            <button type="submit" disabled={saving} className="px-5 py-2 rounded-xl bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 transition flex items-center gap-2 shadow-md disabled:opacity-60">
-              {saving ? <><RefreshCw size={13} className="animate-spin" /> Processing...</> : mode === 'add' ? '➕ Add Student' : '💾 Save Changes'}
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl text-slate-500 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-navy-800 transition">Cancel</button>
+            <button type="submit" disabled={saving} className="px-5 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold transition flex items-center gap-2 disabled:opacity-60">
+              {saving && <RefreshCw size={12} className="animate-spin" />}
+              <span>{mode === 'add' ? 'Create Student' : 'Save Changes'}</span>
             </button>
           </div>
         </form>
@@ -199,26 +186,29 @@ const StudentModal: React.FC<{
   );
 };
 
-// ─── Delete Confirm Modal ─────────────────────────────────────────────────────
+// ─── Deactivate Confirmation Modal ───────────────────────────────────────────
 
-const DeleteConfirmModal: React.FC<{ student: StudentRecord; onClose: () => void; onConfirm: () => void; deleting: boolean }> = ({ student, onClose, onConfirm, deleting }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && onClose()}>
-    <div className="w-full max-w-md rounded-2xl bg-white dark:bg-navy-850 border border-slate-200 dark:border-navy-700 shadow-2xl p-6 text-center">
-      <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
-        <Trash2 size={24} className="text-red-400" />
+const DeleteConfirmModal: React.FC<{
+  student: StudentRecord;
+  deleting: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}> = ({ student, deleting, onClose, onConfirm }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="w-full max-w-md rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xl p-6 space-y-4">
+      <div className="flex items-center gap-3 text-red-500">
+        <div className="p-3 rounded-2xl bg-red-500/10"><Trash2 size={20} /></div>
+        <div>
+          <h3 className="text-base font-black text-slate-800 dark:text-slate-100">Deactivate Student Record?</h3>
+          <p className="text-xs text-slate-500 dark:text-navy-400">Reg No: {student.reg_no}</p>
+        </div>
       </div>
-      <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 mb-1">Deactivate Student?</h3>
-      <p className="text-sm text-slate-500 dark:text-navy-400 mb-2">
-        <strong className="text-slate-700 dark:text-slate-200">{student.name}</strong> ({student.reg_no})
+      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+        Are you sure you want to deactivate <strong className="text-slate-900 dark:text-white">{student.name}</strong>? The record will be soft-deleted (is_active = false) preserving all historical logs and contest performance.
       </p>
-      <p className="text-xs text-slate-400 dark:text-navy-400 mb-6">
-        This is a soft-delete. Historical contest evidence is preserved. The student can be reactivated later.
-      </p>
-      <div className="flex gap-3 justify-center">
-        <button onClick={onClose} className="px-5 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 text-sm font-semibold hover:bg-slate-200 transition">
-          Cancel
-        </button>
-        <button onClick={onConfirm} disabled={deleting} className="px-5 py-2 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition flex items-center gap-2 disabled:opacity-60">
+      <div className="flex justify-end gap-2 pt-2">
+        <button onClick={onClose} className="px-4 py-2 rounded-xl text-slate-500 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-navy-800 transition">Cancel</button>
+        <button onClick={onConfirm} disabled={deleting} className="px-5 py-2 rounded-xl bg-red-500 text-white text-xs font-semibold hover:bg-red-600 transition flex items-center gap-2 disabled:opacity-60">
           {deleting ? <RefreshCw size={13} className="animate-spin" /> : <Trash2 size={13} />} Deactivate
         </button>
       </div>
@@ -228,7 +218,7 @@ const DeleteConfirmModal: React.FC<{ student: StudentRecord; onClose: () => void
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-const TABS = ['Overview', 'Student CRUD', 'Benchmarks', 'What-If', 'AI Query'] as const;
+const TABS = ['Overview', 'Student CRUD', 'Staff Allocations', 'Benchmarks', 'What-If', 'AI Query'] as const;
 type Tab = typeof TABS[number];
 
 export const HODCommandCenter: React.FC = () => {
@@ -652,7 +642,14 @@ export const HODCommandCenter: React.FC = () => {
       )}
 
       {/* ══════════════════════════════════════════════════════════════════════
-          TAB 3: BENCHMARKS — Real DB-driven Dept + Year Matrix
+          TAB 3: STAFF ALLOCATIONS — Workload & Unassigned Student Queue
+          ════════════════════════════════════════════════════════════════════ */}
+      {tab === 'Staff Allocations' && (
+        <AdminStaffAllocationPanel />
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          TAB 4: BENCHMARKS — Real DB-driven Dept + Year Matrix
           ════════════════════════════════════════════════════════════════════ */}
       {tab === 'Benchmarks' && (
         <div className="space-y-5">
@@ -811,7 +808,19 @@ export const HODCommandCenter: React.FC = () => {
         <StudentModal mode="add" departments={departments} onClose={() => setShowModal(null)} onSaved={loadStudents} />
       )}
       {showModal === 'edit' && editStudent && (
-        <StudentModal mode="edit" student={editStudent} departments={departments} onClose={() => { setShowModal(null); setEditStudent(null); }} onSaved={loadStudents} />
+        <StudentEditOverlay
+          isOpen={showModal === 'edit'}
+          student={editStudent}
+          onClose={() => {
+            setShowModal(null);
+            setEditStudent(null);
+          }}
+          onSaveSuccess={() => {
+            loadStudents();
+            setShowModal(null);
+            setEditStudent(null);
+          }}
+        />
       )}
       {deleteTarget && (
         <DeleteConfirmModal student={deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDeleteConfirm} deleting={deleting} />

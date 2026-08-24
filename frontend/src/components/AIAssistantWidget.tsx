@@ -77,6 +77,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showLaunchers, setShowLaunchers] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [activeMode, setActiveMode] = useState<'operations' | 'institutional'>('operations');
   
   const [telemetry, setTelemetry] = useState<any>({
@@ -402,21 +403,30 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
         {/* Floating Toggle Button */}
         {!isOpen && (
           <motion.button
+            drag
+            dragMomentum={false}
+            onDragStart={() => setIsDragging(true)}
+            onDragEnd={() => {
+              setTimeout(() => setIsDragging(false), 150);
+            }}
             initial={{ opacity: 0, scale: 0.8, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 15 }}
-            whileHover={{ scale: 1.08, y: -2 }}
+            whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.94 }}
-            onClick={() => setIsOpen(true)}
-            className="flex items-center space-x-2 px-5 py-3 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-2xl shadow-blue-600/50 cursor-pointer border border-white/30 backdrop-blur-md transition-all"
+            onClick={() => {
+              if (!isDragging) {
+                setIsOpen(true);
+              }
+            }}
+            className="w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white shadow-2xl shadow-blue-600/50 cursor-grab active:cursor-grabbing border-2 border-white/30 backdrop-blur-md transition-shadow"
+            title="Drag to move, Click to open AI"
           >
             <div className="relative flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping"></span>
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full border border-white"></span>
+              <Sparkles className="w-6 h-6 text-amber-300 animate-pulse" />
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full animate-ping"></span>
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border border-white"></span>
             </div>
-            <span className="text-sm">💬</span>
-            <span className="tracking-wide text-xs font-black drop-shadow-sm">NEC Unified AI</span>
           </motion.button>
         )}
       </AnimatePresence>

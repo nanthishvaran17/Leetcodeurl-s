@@ -1,4 +1,6 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
   Users,
@@ -19,12 +21,17 @@ import {
   Compass,
   AlertOctagon,
   Flame,
-  Radio
+  Radio,
+  X
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { CollegeLogo } from './CollegeLogo';
 
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 interface NavItem {
@@ -41,67 +48,110 @@ interface NavSection {
   items: NavItem[];
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
-  const sections: NavSection[] = [
-    {
-      title: 'EXECUTIVE INTELLIGENCE',
-      items: [
-        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { id: 'hod-command-center', label: 'HOD Command Center', icon: Cpu, badge: 'HOD', badgeColor: 'purple' },
-        { id: 'faculty-action-center', label: 'Faculty Action Center', icon: Zap, badge: 'STAFF', badgeColor: 'indigo' },
-        { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
-      ]
-    },
-    {
-      title: 'ACADEMIC & CONTEST TRACKING',
-      items: [
-        { id: 'departments', label: 'Departments & Sections', icon: Layers },
-        { id: 'weekly-contest', label: 'Weekly Contest Tracker', icon: Calendar, pulse: true, badge: 'LIVE', badgeColor: 'emerald' },
-        { id: 'students', label: 'Student Leaderboard', icon: Users },
-        { id: 'compare', label: 'Student Comparison', icon: BarChart3 },
-        { id: 'quality', label: 'Data Quality Board', icon: CheckCircle2 },
-        { id: 'data-issues', label: 'Student Data Issues', icon: AlertOctagon, badge: 'RECOVERY', badgeColor: 'rose' },
-      ]
-    },
-    {
-      title: 'INSTITUTIONAL OPERATIONS',
-      items: [
-        { id: 'system-health', label: 'Institutional Operations', icon: Activity, badge: 'PROD', badgeColor: 'emerald' },
-        { id: 'reports', label: 'Reports & Export', icon: FileSpreadsheet },
-        { id: 'public', label: 'Public Shareable View', icon: Globe },
-        { id: 'settings', label: 'Admin Settings', icon: Settings },
-        { id: 'audit', label: 'Audit Log', icon: ShieldAlert },
-      ]
-    }
-  ];
+export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, onClose }) => {
+  const { user } = useAuth();
+  const roleClean = (user?.role || '').trim().toLowerCase();
+  const isStaff = roleClean === 'staff' || roleClean === 'faculty';
 
-  return (
-    <aside className="sticky top-20 w-full max-w-[305px] xl:max-w-[325px] shrink-0 h-[calc(100vh-6rem)] border border-slate-200/90 dark:border-navy-800/90 rounded-3xl p-3.5 sm:p-4 flex flex-col justify-between shadow-2xl backdrop-blur-2xl bg-white/95 dark:bg-navy-950/95 hidden lg:flex relative overflow-hidden transition-all duration-300">
-      
-      {/* ── Ambient Radial Mesh Glows ── */}
-      <div className="absolute top-0 right-0 w-48 h-48 bg-brand-500/10 dark:bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-16 left-0 w-36 h-36 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+  const sections: NavSection[] = isStaff
+    ? [
+        {
+          title: 'MENTORING WORKSPACE',
+          items: [
+            { id: 'dashboard', label: 'My Mentoring Dashboard', icon: LayoutDashboard, badge: 'MY MENTOR', badgeColor: 'indigo' },
+            { id: 'faculty-action-center', label: 'Faculty Action Center', icon: Zap, badge: 'STAFF', badgeColor: 'indigo' },
+            { id: 'weekly-contest', label: 'Weekly Contest Tracker', icon: Calendar, pulse: true, badge: 'LIVE', badgeColor: 'emerald' },
+          ]
+        },
+        {
+          title: 'REPORTS & VIEW',
+          items: [
+            { id: 'reports', label: 'Reports & Export', icon: FileSpreadsheet },
+            { id: 'public', label: 'Public Shareable View', icon: Globe },
+          ]
+        }
+      ]
+    : [
+        {
+          title: 'EXECUTIVE INTELLIGENCE',
+          items: [
+            { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+            { id: 'hod-command-center', label: 'HOD Command Center', icon: Cpu, badge: 'HOD', badgeColor: 'purple' },
+            { id: 'faculty-action-center', label: 'Faculty Action Center', icon: Zap, badge: 'STAFF', badgeColor: 'indigo' },
+            { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
+          ]
+        },
+        {
+          title: 'ACADEMIC & CONTEST TRACKING',
+          items: [
+            { id: 'departments', label: 'Departments & Sections', icon: Layers },
+            { id: 'weekly-contest', label: 'Weekly Contest Tracker', icon: Calendar, pulse: true, badge: 'LIVE', badgeColor: 'emerald' },
+            { id: 'students', label: 'Student Leaderboard', icon: Users },
+            { id: 'compare', label: 'Student Comparison', icon: BarChart3 },
+            { id: 'quality', label: 'Data Quality Board', icon: CheckCircle2 },
+            { id: 'data-issues', label: 'Student Data Issues', icon: AlertOctagon, badge: 'RECOVERY', badgeColor: 'rose' },
+          ]
+        },
+        {
+          title: 'INSTITUTIONAL OPERATIONS',
+          items: [
+            { id: 'system-health', label: 'Institutional Operations', icon: Activity, badge: 'PROD', badgeColor: 'emerald' },
+            { id: 'reports', label: 'Reports & Export', icon: FileSpreadsheet },
+            { id: 'public', label: 'Public Shareable View', icon: Globe },
+            { id: 'settings', label: 'Admin Settings', icon: Settings },
+            { id: 'audit', label: 'Audit Log', icon: ShieldAlert },
+          ]
+        }
+      ];
 
-      {/* ── Header ── */}
-      <div className="px-3 py-2 border-b border-slate-100 dark:border-navy-800/80 flex items-center justify-between shrink-0 mb-3 relative z-10">
-        <div className="flex items-center space-x-2.5">
-          <div className="p-1.5 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shadow-sm">
-            <Compass className="w-4 h-4 animate-[spin_16s_linear_infinite]" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-wider">
-              Nandha Intelligence
-            </span>
-            <span className="text-[9.5px] font-bold text-slate-400 dark:text-slate-500">
-              Institutional Platform
-            </span>
-          </div>
-        </div>
-        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-500 text-[10px] font-black">
-          <Radio className="w-3 h-3 animate-pulse" />
-          <span>LIVE</span>
-        </div>
-      </div>
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[100000] flex">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={onClose}
+          />
+          
+          {/* Drawer */}
+          <motion.div
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '-100%' }}
+            transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+            className="relative w-4/5 max-w-xs xl:max-w-[325px] h-full shadow-2xl backdrop-blur-2xl bg-white dark:bg-navy-950 p-4 sm:p-5 flex flex-col justify-between overflow-hidden z-10 border-r border-slate-200/90 dark:border-navy-800/90"
+          >
+            {/* ── Ambient Radial Mesh Glows ── */}
+            <div className="absolute top-0 right-0 w-48 h-48 bg-brand-500/10 dark:bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-16 left-0 w-36 h-36 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+
+            {/* ── Header ── */}
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-navy-800/80 shrink-0 mb-4 relative z-10">
+              <div className="flex items-center space-x-2.5">
+                <CollegeLogo size={32} />
+                <div className="flex flex-col">
+                  <span className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                    Nandha Intelligence
+                  </span>
+                  <span className="text-[9.5px] font-bold text-slate-400 dark:text-slate-500">
+                    Institutional Platform
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-1.5 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-navy-800 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
       {/* ── Navigation Groups ── */}
       <div className="space-y-4 overflow-y-auto pr-1 flex-1 min-h-0 custom-scrollbar relative z-10">
@@ -209,7 +259,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
           </div>
         </div>
       </div>
-
-    </aside>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>,
+    document.body
   );
 };

@@ -8,6 +8,8 @@ import {
 import api from '../services/api';
 import { StatusNotificationModal, NotificationState } from '../components/StatusNotificationModal';
 import { LiveStudentMonitor } from '../components/LiveStudentMonitor';
+import { Post930SolversView } from './Post930SolversView';
+import { StudentEditOverlay } from '../components/StudentEditOverlay';
 
 // Animated Count-Up component for headline stat numbers
 const AnimatedNumber: React.FC<{ value: number; suffix?: string; duration?: number }> = ({ value, suffix = '', duration = 600 }) => {
@@ -2331,7 +2333,6 @@ export const WeeklyContestPage: React.FC = () => {
               >
                 📋 Student Matrix Roster ({filteredMatrixRows.length})
               </button>
-
               <button
                 onClick={() => setActiveTab('dept_year')}
                 className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${activeTab === 'dept_year'
@@ -2351,6 +2352,17 @@ export const WeeklyContestPage: React.FC = () => {
               >
                 <AlertTriangle className="w-3.5 h-3.5" />
                 <span>⚠️ Data Quality Error Board ({matrixRows.filter(r => !r.username || r.participation_status === 'DATA_ERROR' || r.status === 'USERNAME_NOT_FOUND').length} Issues)</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('post_930_activity' as any)}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 cursor-pointer ${activeTab === ('post_930_activity' as any)
+                  ? 'bg-amber-600 text-white shadow-md'
+                  : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+                  }`}
+              >
+                <Clock className="w-3.5 h-3.5 text-amber-400" />
+                <span>🟠 Post-9:30 AM Activity</span>
               </button>
             </div>
 
@@ -3104,137 +3116,16 @@ export const WeeklyContestPage: React.FC = () => {
         </div>
       )}
 
-      {/* Viewport-Centered Student Edit Modal */}
-      {editingStudent && (
-        <div
-          className="modal-overlay-responsive animate-fade-in"
-          onClick={(e) => {
-            if (e.target === e.currentTarget && !isSavingStudent) setEditingStudent(null);
-          }}
-        >
-          <div
-            className="modal-container-responsive max-w-lg bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col my-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between shrink-0">
-              <div className="flex items-center space-x-2.5">
-                <Edit3 className="w-5 h-5 text-indigo-400" />
-                <div>
-                  <h3 className="text-base font-black">Edit Student Profile</h3>
-                  <p className="text-xs text-gray-300 font-mono font-bold mt-0.5">{editingStudent.reg_no}</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setEditingStudent(null)}
-                title="Close"
-                aria-label="Close"
-                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500 text-white hover:text-white transition-all font-black text-xs flex items-center space-x-1 cursor-pointer"
-              >
-                <span className="text-sm">✕</span>
-                <span>Close</span>
-              </button>
-            </div>
-
-            {/* Form Content */}
-            <div className="p-6 space-y-4 flex-1 min-h-0 overflow-y-auto">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-700 dark:text-gray-300">Student Full Name</label>
-                <input
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="w-full px-3.5 py-2 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500 font-semibold"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-700 dark:text-gray-300">Department</label>
-                  <select
-                    value={editDeptCode}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setEditDeptCode(val);
-                      setEditDeptId(val.includes('IOT') ? 2 : 1);
-                    }}
-                    className="w-full px-3.5 py-2 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500 font-bold cursor-pointer"
-                  >
-                    <option value="CSE(CS)">CSE(CS)</option>
-                    <option value="CSE(IOT)">CSE(IOT)</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-700 dark:text-gray-300">Academic Year</label>
-                  <select
-                    value={editYearLevel}
-                    onChange={(e) => setEditYearLevel(e.target.value)}
-                    className="w-full px-3.5 py-2 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500 font-bold cursor-pointer"
-                  >
-                    <option value="II">II Year</option>
-                    <option value="III">III Year</option>
-                    <option value="IV">IV Year</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-700 dark:text-gray-300">LeetCode Username Handle</label>
-                <input
-                  type="text"
-                  value={editUsername}
-                  onChange={(e) => setEditUsername(e.target.value)}
-                  placeholder="e.g. AADHISH_S_B"
-                  className="w-full px-3.5 py-2 text-xs font-mono bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-700 dark:text-gray-300">LeetCode Profile URL</label>
-                <input
-                  type="text"
-                  value={editLeetCodeUrl}
-                  onChange={(e) => setEditLeetCodeUrl(e.target.value)}
-                  placeholder="https://leetcode.com/u/..."
-                  className="w-full px-3.5 py-2 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-700 dark:text-gray-300">Institutional Email (Optional)</label>
-                <input
-                  type="email"
-                  value={editEmail}
-                  onChange={(e) => setEditEmail(e.target.value)}
-                  placeholder="student@nandha.edu.in"
-                  className="w-full px-3.5 py-2 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500"
-                />
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="p-4 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between shrink-0">
-              <button
-                type="button"
-                onClick={() => setEditingStudent(null)}
-                className="px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-gray-800 cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveStudentEdit}
-                disabled={isSavingStudent}
-                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer disabled:opacity-50"
-              >
-                {isSavingStudent ? 'Saving...' : 'Save Changes'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Viewport-Centered Sticky Floating Student Edit Overlay */}
+      <StudentEditOverlay
+        isOpen={Boolean(editingStudent)}
+        student={editingStudent}
+        onClose={() => setEditingStudent(null)}
+        onSaveSuccess={() => {
+          fetchInitialContestData();
+          setEditingStudent(null);
+        }}
+      />
 
       {/* Viewport-Centered Student Delete Confirmation Modal */}
       {deletingStudent && (

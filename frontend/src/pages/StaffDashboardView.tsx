@@ -1,63 +1,60 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Users, Building2, Trophy, AlertTriangle, Download, RefreshCw, BarChart3,
-  CheckCircle2, Search, Filter, ShieldCheck, Award
+  Users, AlertTriangle, RefreshCw, BarChart3, CheckCircle2, Search,
+  ShieldCheck, Award, TrendingUp, TrendingDown, Minus, Eye, Bell,
+  FileText, Clock, AlertCircle, ArrowRight, Download
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { StudentData } from '../components/LeaderboardTable';
-import { getCachedStudents, saveCachedStudents } from '../data/canonicalRoster';
 import api from '../services/api';
-import { FacultyActionCenter } from './FacultyActionCenter';
+import { StaffMentoringDetailModal } from '../components/StaffMentoringDetailModal';
 
 export const StaffDashboardView: React.FC = () => {
   const { user } = useAuth();
-  const [students, setStudents] = useState<StudentData[]>(() => getCachedStudents());
-  const [deptAnalytics, setDeptAnalytics] = useState<any[]>([]);
-  const [dataQuality, setDataQuality] = useState<any>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [summary, setSummary] = useState<any>(null);
+  const [myStudents, setMyStudents] = useState<any[]>([]);
+  const [priorityStudents, setPriorityStudents] = useState<any[]>([]);
+  const [alerts, setAlerts] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [search, setSearch] = useState<string>('');
+  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
 
   useEffect(() => {
-    fetchData();
+    fetchMentoringData();
   }, []);
 
-  const fetchData = async () => {
+  const fetchMentoringData = async () => {
+    setLoading(true);
     try {
-      const [studRes, deptRes, qualRes] = await Promise.all([
-        api.get('/students'),
-        api.get('/analytics/department-comparison'),
-        api.get('/analytics/data-quality')
+      const [sumRes, studRes, prioRes, alertRes] = await Promise.all([
+        api.get('/faculty-assignments/my-mentoring-summary'),
+        api.get('/faculty-assignments/my-students'),
+        api.get('/faculty-assignments/priority-students'),
+        api.get('/faculty-assignments/alerts')
       ]);
 
-      if (studRes.data && Array.isArray(studRes.data)) {
-        const sorted = studRes.data.sort((a: StudentData, b: StudentData) => (b.stats?.total_solved || 0) - (a.stats?.total_solved || 0));
-        setStudents(sorted);
-        saveCachedStudents(sorted);
-      }
-      setDeptAnalytics(deptRes.data);
-      setDataQuality(qualRes.data);
+      setSummary(sumRes.data);
+      const studentList = studRes.data?.students || [];
+      setMyStudents(studentList);
+      setPriorityStudents(prioRes.data || []);
+      setAlerts(alertRes.data || []);
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching mentoring dashboard data:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const totalStudents = students.length;
-  const activeStudents = students.filter(s => (s.weekly_progress || 0) > 0 || (s.stats?.total_solved || 0) > 0).length;
-  const totalSolvedAll = students.reduce((acc, s) => acc + (s.stats?.total_solved || 0), 0);
-  const avgSolvedAll = totalStudents > 0 ? Math.round(totalSolvedAll / totalStudents) : 0;
-
-  const filteredStudents = students.filter(s =>
-    s.name.toLowerCase().includes(search.toLowerCase()) ||
-    s.reg_no.toLowerCase().includes(search.toLowerCase()) ||
-    s.department?.code.toLowerCase().includes(search.toLowerCase())
+  // Filter ONLY inside assigned students set
+  const filteredStudents = myStudents.filter((s: any) =>
+    (s.name || '').toLowerCase().includes(search.toLowerCase()) ||
+    (s.reg_no || '').toLowerCase().includes(search.toLowerCase()) ||
+    (s.username || '').toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div className="space-y-8 py-2">
 
-      {/* Staff Welcome Banner */}
+      {/* Staff Mentoring Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-2xl border border-indigo-500/30">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -65,157 +62,274 @@ export const StaffDashboardView: React.FC = () => {
           <div className="space-y-2">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-black border border-indigo-400/30">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>FACULTY & STAFF MONITORING DASHBOARD</span>
+              <span>MY MENTORING DASHBOARD</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-black">Welcome, {user?.name}</h1>
+            <h1 className="text-2xl md:text-3xl font-black">Welcome, {user?.name || user?.username}</h1>
             <p className="text-xs text-gray-300">
-              Department Performance Monitoring & Student Progress Oversight
+              Restricted Portfolio • Monitoring Assigned Students & Mentoring Progress
             </p>
           </div>
 
           <button
-            onClick={fetchData}
+            onClick={fetchMentoringData}
             className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 flex items-center space-x-2 transition-all"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            <span>Refresh Stats</span>
+            <span>Refresh Portfolio</span>
           </button>
         </div>
       </div>
 
-      {/* FACULTY ACTION CENTER & MENTORING HUB */}
-      <FacultyActionCenter />
+      {/* Summary KPI Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
 
-      {/* Staff Metrics Summary Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-
-        <div className="glass-card p-6 rounded-3xl border space-y-2 shadow-lg">
+        <div className="glass-card p-5 rounded-3xl border space-y-2 shadow-lg">
           <div className="flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">
-            <span>Total Students</span>
-            <Users className="w-5 h-5 text-brand-500" />
+            <span>Assigned</span>
+            <Users className="w-4 h-4 text-brand-500" />
           </div>
-          <h3 className="text-3xl font-black text-gray-900 dark:text-white">{totalStudents}</h3>
-          <p className="text-xs text-gray-500">Enrolled across departments</p>
-        </div>
-
-        <div className="glass-card p-6 rounded-3xl border border-emerald-500/30 space-y-2 shadow-lg">
-          <div className="flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">
-            <span>Active Participants</span>
-            <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-          </div>
-          <h3 className="text-3xl font-black text-emerald-500">{activeStudents}</h3>
-          <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">
-            {totalStudents > 0 ? Math.round((activeStudents / totalStudents) * 100) : 0}% Active Rate
-          </p>
-        </div>
-
-        <div className="glass-card p-6 rounded-3xl border border-amber-500/30 space-y-2 shadow-lg">
-          <div className="flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">
-            <span>Avg Solved / Student</span>
-            <BarChart3 className="w-5 h-5 text-amber-500" />
-          </div>
-          <h3 className="text-3xl font-black text-amber-500">{avgSolvedAll}</h3>
-          <p className="text-xs text-gray-500">Overall college average</p>
-        </div>
-
-        <div className="glass-card p-6 rounded-3xl border border-rose-500/30 space-y-2 shadow-lg">
-          <div className="flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">
-            <span>Stale / Unlinked Profiles</span>
-            <AlertTriangle className="w-5 h-5 text-rose-500" />
-          </div>
-          <h3 className="text-3xl font-black text-rose-500">
-            {dataQuality?.missing_links || 0}
+          <h3 className="text-2xl font-black text-gray-900 dark:text-white">
+            {summary?.total_assigned || myStudents.length} / 30
           </h3>
-          <p className="text-xs text-rose-600 dark:text-rose-400 font-bold">Requires Action</p>
+          <p className="text-[10px] text-gray-500">Max Capacity: 30</p>
+        </div>
+
+        <div className="glass-card p-5 rounded-3xl border border-emerald-500/30 space-y-2 shadow-lg">
+          <div className="flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">
+            <span>Active</span>
+            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+          </div>
+          <h3 className="text-2xl font-black text-emerald-500">
+            {summary?.active_students || 0}
+          </h3>
+          <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Active Solvers</p>
+        </div>
+
+        <div className="glass-card p-5 rounded-3xl border border-indigo-500/30 space-y-2 shadow-lg">
+          <div className="flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">
+            <span>Completed</span>
+            <Award className="w-4 h-4 text-indigo-500" />
+          </div>
+          <h3 className="text-2xl font-black text-indigo-500">
+            {summary?.completed_students || 0}
+          </h3>
+          <p className="text-[10px] text-indigo-400">Target Achieved</p>
+        </div>
+
+        <div className="glass-card p-5 rounded-3xl border border-amber-500/30 space-y-2 shadow-lg">
+          <div className="flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">
+            <span>Attention</span>
+            <Clock className="w-4 h-4 text-amber-500" />
+          </div>
+          <h3 className="text-2xl font-black text-amber-500">
+            {summary?.needing_attention || 0}
+          </h3>
+          <p className="text-[10px] text-amber-600 font-bold">Needs Action</p>
+        </div>
+
+        <div className="glass-card p-5 rounded-3xl border border-rose-500/30 space-y-2 shadow-lg">
+          <div className="flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">
+            <span>At Risk</span>
+            <AlertTriangle className="w-4 h-4 text-rose-500" />
+          </div>
+          <h3 className="text-2xl font-black text-rose-500">
+            {summary?.at_risk || 0}
+          </h3>
+          <p className="text-[10px] text-rose-600 font-bold">Immediate Follow-Up</p>
+        </div>
+
+        <div className="glass-card p-5 rounded-3xl border space-y-2 shadow-lg">
+          <div className="flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">
+            <span>Avg Progress</span>
+            <BarChart3 className="w-4 h-4 text-brand-500" />
+          </div>
+          <h3 className="text-2xl font-black text-gray-900 dark:text-white">
+            {summary?.weekly_progress_avg || 0}
+          </h3>
+          <p className="text-[10px] text-gray-500">Solved / Student</p>
         </div>
 
       </div>
 
-      {/* Department Breakdown */}
-      <div className="glass-card p-6 rounded-3xl border space-y-4 shadow-xl">
-        <h3 className="text-base font-black text-gray-900 dark:text-white flex items-center space-x-2">
-          <Building2 className="w-5 h-5 text-indigo-500" />
-          <span>Department Performance Summary</span>
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {deptAnalytics.map((dept) => (
-            <div key={dept.department_id} className="p-5 rounded-2xl bg-gray-50 dark:bg-navy-900 border space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="font-extrabold text-sm text-gray-900 dark:text-white">
-                  {dept.department_name} ({dept.department_code})
-                </span>
-                <span className="px-3 py-1 rounded-full text-xs font-black bg-brand-500/20 text-brand-600 dark:text-brand-300">
-                  {dept.total_students} Students
-                </span>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                <div className="p-2 rounded-xl bg-white dark:bg-navy-950 border">
-                  <p className="text-[10px] text-gray-400 font-bold">Avg Solved</p>
-                  <p className="text-base font-black text-emerald-600 dark:text-emerald-400">{dept.avg_solved}</p>
-                </div>
-                <div className="p-2 rounded-xl bg-white dark:bg-navy-950 border">
-                  <p className="text-[10px] text-gray-400 font-bold">Participation</p>
-                  <p className="text-base font-black text-indigo-600 dark:text-indigo-400">{dept.participation_rate}%</p>
-                </div>
-                <div className="p-2 rounded-xl bg-white dark:bg-navy-950 border">
-                  <p className="text-[10px] text-gray-400 font-bold">Top Ranker</p>
-                  <p className="text-xs font-black text-amber-500 truncate">{dept.top_student_name}</p>
-                </div>
-              </div>
+      {/* POST-9:30 AM ACTIVITY NOTIFICATION BANNER FOR STAFF */}
+      {summary?.post_930_solvers_count > 0 && (
+        <div className="glass-card p-5 rounded-3xl border border-amber-500/40 bg-gradient-to-r from-amber-500/10 via-slate-900/40 to-indigo-950/40 flex items-center justify-between flex-wrap gap-4 shadow-xl">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+              <Clock className="w-6 h-6 animate-pulse" />
             </div>
-          ))}
+            <div>
+              <h4 className="text-sm font-black text-white flex items-center space-x-2">
+                <span>🟠 Post-Session Activity Detected</span>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950">
+                  {summary.post_930_solvers_count} Students
+                </span>
+              </h4>
+              <p className="text-xs text-gray-300">
+                {summary.post_930_solvers_count} of your assigned students solved +{summary.post_930_total_solves} problems after 09:30 AM IST lock time.
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Staff Leaderboard Search & Table */}
-      <div className="glass-card p-6 rounded-3xl border space-y-4 shadow-xl">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <h3 className="text-base font-black text-gray-900 dark:text-white flex items-center space-x-2">
-            <Trophy className="w-5 h-5 text-amber-500" />
-            <span>Student Performance Master Table</span>
-          </h3>
+      {/* TODAY'S PRIORITY SECTION */}
+      {priorityStudents.length > 0 && (
+        <div className="glass-card p-6 rounded-3xl border border-amber-500/30 bg-amber-50/20 dark:bg-amber-950/10 space-y-4 shadow-xl">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="w-5 h-5 text-amber-500 animate-pulse" />
+              <h3 className="text-base font-black text-gray-900 dark:text-white">
+                Today's Priority — ({priorityStudents.length} Students Need Attention)
+              </h3>
+            </div>
+            <span className="text-xs text-amber-600 font-bold">Restricted to your assigned portfolio</span>
+          </div>
 
-          <div className="relative w-full sm:w-64">
-            <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {priorityStudents.slice(0, 3).map((st: any) => (
+              <div key={st.id} className="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-amber-200 dark:border-amber-900/50 space-y-3 shadow-md">
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-sm text-gray-900 dark:text-white">{st.name}</span>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-black bg-rose-500/20 text-rose-500 border border-rose-500/30">
+                    {st.status_label || 'Needs Attention'}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 font-mono">Reg: {st.reg_no} • {st.department} ({st.year_level} Year)</p>
+                <div className="space-y-1">
+                  {st.priority_reasons?.map((r: string, idx: number) => (
+                    <p key={idx} className="text-[11px] text-amber-700 dark:text-amber-300 font-medium flex items-center space-x-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                      <span>{r}</span>
+                    </p>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setSelectedStudent(st)}
+                  className="w-full py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all flex items-center justify-center space-x-1"
+                >
+                  <span>Inspect Student</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* MY STUDENTS MAIN SECTION */}
+      <div className="glass-card p-6 rounded-3xl border space-y-6 shadow-xl">
+
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center space-x-2">
+              <Users className="w-5 h-5 text-brand-500" />
+              <span>My Assigned Students ({myStudents.length})</span>
+            </h3>
+            <p className="text-xs text-gray-500">
+              Only students strictly assigned to your mentorship allocation are fetched.
+            </p>
+          </div>
+
+          {/* Search inside assigned set strictly */}
+          <div className="relative w-full sm:w-72">
+            <Search className="w-4 h-4 absolute left-3.5 top-3 text-gray-400" />
             <input
               type="text"
-              placeholder="Search student..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-xl border text-xs font-bold bg-white dark:bg-navy-900 focus:ring-2 focus:ring-brand-500 outline-none"
+              placeholder="Search assigned students..."
+              className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs focus:ring-2 focus:ring-brand-500"
             />
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-400 uppercase tracking-wider font-extrabold">
-                <th className="py-3 px-4">Rank</th>
-                <th className="py-3 px-4">Student Name</th>
-                <th className="py-3 px-4">Reg No</th>
-                <th className="py-3 px-4">Dept / Year</th>
-                <th className="py-3 px-4 text-center">Total Solved</th>
-                <th className="py-3 px-4 text-center">Rating</th>
+        {/* Assigned Students Table */}
+        <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-navy-800">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-gray-50 dark:bg-navy-950 text-gray-400 font-black uppercase text-[10px] tracking-wider border-b">
+              <tr>
+                <th className="px-4 py-3">Student Name</th>
+                <th className="px-4 py-3">Reg No</th>
+                <th className="px-4 py-3">Dept / Class</th>
+                <th className="px-4 py-3">LeetCode Handle</th>
+                <th className="px-4 py-3">Total Solved</th>
+                <th className="px-4 py-3">Contest Rating</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-bold">
-              {filteredStudents.slice(0, 15).map((s) => (
-                <tr key={s.id} className="hover:bg-gray-50 dark:hover:bg-navy-900">
-                  <td className="py-3 px-4 font-black text-brand-600 dark:text-brand-400">#{s.college_rank || '—'}</td>
-                  <td className="py-3 px-4 text-gray-900 dark:text-white">{s.name}</td>
-                  <td className="py-3 px-4 font-mono text-gray-500">{s.reg_no}</td>
-                  <td className="py-3 px-4 text-gray-500">{s.department?.code} • {s.year_level} Yr</td>
-                  <td className="py-3 px-4 text-center font-black text-emerald-600 dark:text-emerald-400">{s.stats?.total_solved || 0}</td>
-                  <td className="py-3 px-4 text-center font-black text-amber-500">{s.stats?.contest_rating ? Math.round(s.stats.contest_rating) : '—'}</td>
+            <tbody className="divide-y divide-gray-100 dark:divide-navy-800">
+              {loading ? (
+                <tr>
+                  <td colSpan={8} className="p-8 text-center text-gray-400 font-bold animate-pulse">
+                    Loading your assigned students...
+                  </td>
                 </tr>
-              ))}
+              ) : filteredStudents.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="p-8 text-center text-gray-400 italic">
+                    {search ? "No student found in your assigned portfolio matching search." : "No students assigned to your portfolio yet."}
+                  </td>
+                </tr>
+              ) : (
+                filteredStudents.map((st: any) => {
+                  const solved = st.total_solved || 0;
+                  const statusLabel = solved >= 100 ? 'Excellent' : (solved >= 30 ? 'Improving' : 'Needs Improvement');
+                  const statusColor = statusLabel === 'Excellent' ? 'emerald' : 'amber';
+
+                  return (
+                    <tr key={st.id} className="hover:bg-gray-50/50 dark:hover:bg-navy-850 transition-colors">
+                      <td className="px-4 py-3.5 font-extrabold text-gray-900 dark:text-white">
+                        {st.name}
+                      </td>
+                      <td className="px-4 py-3.5 font-mono text-gray-500">
+                        {st.reg_no}
+                      </td>
+                      <td className="px-4 py-3.5 text-gray-600 dark:text-gray-300">
+                        {st.department} ({st.year_level} - {st.section})
+                      </td>
+                      <td className="px-4 py-3.5 font-bold text-brand-600 dark:text-brand-400">
+                        {st.username ? `@${st.username}` : 'Not Linked'}
+                      </td>
+                      <td className="px-4 py-3.5 font-black text-gray-900 dark:text-white">
+                        {solved}
+                      </td>
+                      <td className="px-4 py-3.5 font-bold text-amber-500">
+                        {st.contest_rating ? Math.round(st.contest_rating) : 'N/A'}
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black bg-${statusColor}-500/15 text-${statusColor}-500 border border-${statusColor}-500/30`}>
+                          {statusLabel}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <button
+                          onClick={() => setSelectedStudent(st)}
+                          className="px-3 py-1.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold flex items-center space-x-1.5 transition-all text-[11px] shadow-sm"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Inspect</span>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
+
       </div>
+
+      {/* Staff Mentoring Detail Modal */}
+      {selectedStudent && (
+        <StaffMentoringDetailModal
+          student={selectedStudent}
+          onClose={() => setSelectedStudent(null)}
+          onRefresh={fetchMentoringData}
+        />
+      )}
 
     </div>
   );

@@ -384,6 +384,70 @@ class MentorNote(Base):
     student = relationship("Student", back_populates="mentor_notes")
     faculty = relationship("User")
 
+class StudentAssignmentHistory(Base):
+    __tablename__ = "student_assignment_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    previous_faculty_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    new_faculty_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    assigned_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    reason = Column(String(255), nullable=True, default="Initial Allocation")
+    assigned_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    student = relationship("Student")
+    previous_faculty = relationship("User", foreign_keys=[previous_faculty_id])
+    new_faculty = relationship("User", foreign_keys=[new_faculty_id])
+    assigned_by = relationship("User", foreign_keys=[assigned_by_id])
+
+class StaffFollowUp(Base):
+    __tablename__ = "staff_follow_ups"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    staff_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    title = Column(String(255), nullable=False)
+    due_date = Column(String(20), nullable=False) # YYYY-MM-DD
+    status = Column(String(30), default="PENDING", index=True) # PENDING, COMPLETED, CANCELLED
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
+
+    student = relationship("Student")
+    staff = relationship("User")
+
+class StaffAlert(Base):
+    __tablename__ = "staff_alerts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    staff_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    alert_type = Column(String(50), nullable=False, index=True) # INACTIVITY, TARGET_MISSED, CONTEST_MISSED, PERFORMANCE_DECLINE, AT_RISK
+    severity = Column(String(20), default="MEDIUM") # LOW, MEDIUM, HIGH, CRITICAL
+    title = Column(String(255), nullable=False)
+    message = Column(Text, nullable=False)
+    is_read = Column(Boolean, default=False, index=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    student = relationship("Student")
+    staff = relationship("User")
+
+class StudentWeeklyTarget(Base):
+    __tablename__ = "student_weekly_targets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    week_number = Column(Integer, nullable=True, default=1)
+    academic_year = Column(String(20), default="2026-27")
+    target_problems = Column(Integer, default=10)
+    target_contests = Column(Integer, default=1)
+    completed_problems = Column(Integer, default=0)
+    completed_contests = Column(Integer, default=0)
+    status = Column(String(30), default="IN_PROGRESS") # IN_PROGRESS, ACHIEVED, MISSED
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    student = relationship("Student")
+
 class AuditLog(Base):
     __tablename__ = "audit_logs"
     

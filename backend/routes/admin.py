@@ -543,3 +543,254 @@ def send_admin_test_report_email(
         "subject": subject,
         "message": f"Pre-flight test report email dispatched strictly to {admin_email}"
     }
+
+
+# =========================================================================
+# ADMIN STAFF MANAGEMENT & UNASSIGNED STUDENT QUEUE
+# =========================================================================
+
+class CreateStaffRequest(BaseModel):
+    username: str
+    email: str
+    password: str = "Staff@123"
+    department_id: Optional[int] = None
+    section_id: Optional[int] = None
+
+
+class BulkAssignRequest(BaseModel):
+    staff_id: int
+    student_ids: List[int]
+
+
+@router.get("/unassigned-students")
+def get_unassigned_students(
+    dept_id: Optional[int] = Query(None),
+    year_level: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user_or_default)
+):
+    """Admin: Retrieves list of active students currently without an assigned mentor."""
+    from backend.models import Student, FacultyStudentAssignment
+    from sqlalchemy.orm import joinedload
+
+    assigned_subquery = db.query(FacultyStudentAssignment.student_id).filter(
+        FacultyStudentAssignment.is_active == True
+    ).subquery()
+
+    query = db.query(Student).outerjoin(Student.stats).options(
+        joinedload(Student.department),
+        joinedload(Student.section),
+        joinedload(Student.stats)
+    ).filter(
+        (Student.is_active == True) | (Student.is_active.is_(None)),
+        ~Student.id.in_(assigned_subquery)
+    )
+
+    if dept_id:
+        query = query.filter(Student.department_id == dept_id)
+    if year_level and year_level.strip().upper() not in ['ALL', 'ALL YEARS', '']:
+        query = query.filter(Student.year_level == year_level.strip().upper())
+
+    unassigned = query.order_by(Student.year_level, Student.reg_no).all()
+
+    return {
+        "total_unassigned": len(unassigned),
+        "students": [
+            {
+                "id": s.id,
+                "reg_no": s.reg_no,
+                "name": s.name,
+                "department_id": s.department_id,
+                "department": s.department.code if s.department else "CSE",
+                "year_level": s.year_level,
+                "section": s.section.name if s.section else "A",
+                "username": s.username,
+                "total_solved": s.stats.total_solved if s.stats else 0
+            }
+            for s in unassigned
+        ]
+    }
+
+
+@router.post("/staff")
+def create_staff_user(
+    payload: CreateStaffRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user_or_default)
+):
+    """Admin: Creates a new Staff/Mentor account."""
+    from backend.routes.auth import get_password_hash
+
+    existing = db.query(User).filter(
+        (User.username.ilike(payload.username.strip())) | (User.email.ilike(payload.email.strip()))
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="A user with this username or email already exists.")
+
+    staff_user = User(
+        username=payload.username.strip(),
+        email=payload.email.strip().lower(),
+        hashed_password=get_password_hash(payload.password),
+        role="Staff",
+        department_id=payload.department_id,
+        section_id=payload.section_id,
+        is_active=True
+    )
+    db.add(staff_user)
+    db.commit()
+    db.refresh(staff_user)
+
+    log_admin_action(
+        db, action="CREATE_STAFF_ACCOUNT", action_type="USER_MANAGEMENT",
+        description=f"Created staff account {staff_user.username} ({staff_user.email})",
+        current_user=current_user, target_type="User", target_id=str(staff_user.id)
+    )
+
+    return {
+        "success": True,
+        "message": f"Staff account for '{staff_user.username}' created successfully.",
+        "staff": {
+            "id": staff_user.id,
+            "username": staff_user.username,
+            "email": staff_user.email,
+            "role": staff_user.role,
+            "department_id": staff_user.department_id,
+            "is_active": staff_user.is_active
+        }
+    }
+
+
+@router.get("/staff-list")
+def get_all_staff_users(
+    dept_id: Optional[int] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user_or_default)
+):
+    """Admin: Lists all staff/faculty accounts with workload counts."""
+    from backend.models import FacultyStudentAssignment
+    from sqlalchemy.orm import joinedload
+    from sqlalchemy import func
+
+    query = db.query(User).options(joinedload(User.department)).filter(
+        User.role.in_(["Staff", "staff", "Faculty", "faculty", "HOD", "hod"])
+    )
+    if dept_id:
+        query = query.filter(User.department_id == dept_id)
+
+    staff_list = query.order_by(User.username.asc()).all()
+    fac_ids = [s.id for s in staff_list]
+
+    count_rows = db.query(
+        FacultyStudentAssignment.faculty_id,
+        func.count(FacultyStudentAssignment.id)
+    ).filter(
+        FacultyStudentAssignment.faculty_id.in_(fac_ids),
+        FacultyStudentAssignment.is_active == True
+    ).group_by(FacultyStudentAssignment.faculty_id).all() if fac_ids else []
+
+    counts_map = {r[0]: r[1] for r in count_rows}
+
+    return [
+        {
+            "id": s.id,
+            "username": s.username,
+            "email": s.email,
+            "role": s.role,
+            "department_id": s.department_id,
+            "department": s.department.code if s.department else "CSE",
+            "is_active": s.is_active,
+            "assigned_count": counts_map.get(s.id, 0),
+            "max_capacity": 30,
+            "capacity_remaining": max(0, 30 - counts_map.get(s.id, 0)),
+            "last_login": s.last_login.isoformat() if s.last_login else None
+        }
+        for s in staff_list
+    ]
+
+
+@router.post("/bulk-assign")
+def bulk_assign_students_admin(
+    payload: BulkAssignRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user_or_default)
+):
+    """Admin: Bulk assigns multiple unassigned students to a staff member (Max 30 hard limit)."""
+    from backend.services.faculty_assignment_service import faculty_assignment_service
+
+    result = faculty_assignment_service.assign_students_to_faculty(
+        db=db,
+        faculty_id=payload.staff_id,
+        student_ids=payload.student_ids,
+        assigned_by_id=current_user.id
+    )
+
+    log_admin_action(
+        db, action="BULK_ASSIGN_STUDENTS", action_type="ALLOCATION",
+        description=f"Assigned {len(payload.student_ids)} students to staff ID {payload.staff_id}",
+        current_user=current_user, target_type="User", target_id=str(payload.staff_id)
+    )
+
+    return result
+
+
+@router.post("/auto-rebalance")
+def auto_rebalance_workload(
+    dept_id: Optional[int] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user_or_default)
+):
+    """Admin: Triggers automatic workload rebalancing for staff allocations."""
+    from backend.services.faculty_assignment_service import faculty_assignment_service
+
+    result = faculty_assignment_service.rebalance_staff_allocations(
+        db=db,
+        department_id=dept_id,
+        assigned_by_id=current_user.id
+    )
+
+    log_admin_action(
+        db, action="AUTO_REBALANCE_WORKLOAD", action_type="ALLOCATION",
+        description=f"Auto-rebalanced workload for dept {dept_id or 'ALL'}",
+        current_user=current_user, target_type="Department", target_id=str(dept_id or 0)
+    )
+
+    return result
+
+
+@router.post("/staff/{staff_id}/toggle-status")
+def toggle_staff_status(
+    staff_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user_or_default)
+):
+    """
+    Admin: Toggles staff active/disabled status.
+    If disabled, unassigns students and moves them to unassigned queue.
+    """
+    from backend.services.faculty_assignment_service import faculty_assignment_service
+
+    staff = db.query(User).filter(User.id == staff_id).first()
+    if not staff:
+        raise HTTPException(status_code=404, detail="Staff account not found.")
+
+    if staff.is_active:
+        # Disable staff and unassign students
+        res = faculty_assignment_service.disable_staff_account(
+            db=db,
+            staff_id=staff_id,
+            disabled_by_id=current_user.id
+        )
+        msg = f"Staff account disabled. {res.get('unassigned_count', 0)} students moved to unassigned queue."
+    else:
+        staff.is_active = True
+        db.commit()
+        msg = "Staff account reactivated successfully."
+
+    log_admin_action(
+        db, action="TOGGLE_STAFF_STATUS", action_type="USER_MANAGEMENT",
+        description=f"Toggled staff {staff.username} active status to {staff.is_active}",
+        current_user=current_user, target_type="User", target_id=str(staff.id)
+    )
+
+    return {"success": True, "message": msg, "is_active": staff.is_active}
+

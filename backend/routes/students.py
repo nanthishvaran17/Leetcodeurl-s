@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks, Query
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks, Query, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import asyncio
@@ -243,6 +243,7 @@ def get_leaderboard_fast(
 
 @router.get("", response_model=List[StudentOut])
 def get_students(
+    request: Request,
     dept_id: Optional[int] = None,
     year_level: Optional[str] = None,
     section_id: Optional[int] = None,
@@ -256,10 +257,18 @@ def get_students(
     limit: Optional[int] = Query(None, ge=1, le=500),
     db: Session = Depends(get_db)
 ):
-    cache_key = f"students_list:{dept_id}:{year_level}:{section_id}:{search}:{session_id}:{sort_by}:{min_solved}:{max_solved}:{verified_only}:{page}:{limit}"
-    cached_data = cache.get(cache_key)
-    if cached_data is not None:
-        return cached_data
+    from backend.security import get_current_user_optional
+    from backend.services.faculty_assignment_service import faculty_assignment_service
+
+    current_user = get_current_user_optional(request, db)
+    user_id = current_user.id if current_user else 0
+    role_clean = (current_user.role or "").strip().lower() if current_user else ""
+
+    cache_key = f"students_list:{user_id}:{role_clean}:{dept_id}:{year_level}:{section_id}:{search}:{session_id}:{sort_by}:{min_solved}:{max_solved}:{verified_only}:{page}:{limit}"
+    if not current_user or role_clean in ("admin", "super admin", "super_admin", "hod"):
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return cached_data
 
     query = db.query(Student).outerjoin(Student.stats).options(
         joinedload(Student.department),
@@ -270,6 +279,15 @@ def get_students(
         joinedload(Student.lc_contest_standing),
         joinedload(Student.lc_activity)
     ).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+
+    # Fail closed Staff / Mentor ownership check
+    if current_user and role_clean in ["staff", "faculty"]:
+        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, current_user.id)
+        if not assigned_ids:
+            return []
+        query = query.filter(Student.id.in_(assigned_ids))
+    elif current_user and role_clean == "student":
+        query = query.filter(Student.email.ilike(current_user.email))
 
     if dept_id:
         query = query.filter(Student.department_id == dept_id)
@@ -673,7 +691,28 @@ def get_student_by_email(email: str = Query(..., description="Student email addr
     return st_out
 
 @router.get("/{student_id}", response_model=StudentOut)
-def get_student_detail(student_id: int, db: Session = Depends(get_db)):
+def get_student_detail(student_id: int, request: Request, db: Session = Depends(get_db)):
+    from backend.security import get_current_user_optional
+    from backend.services.faculty_assignment_service import faculty_assignment_service
+
+    current_user = get_current_user_optional(request, db)
+    if current_user:
+        role_clean = (current_user.role or "").strip().lower()
+        if role_clean in ["staff", "faculty"]:
+            assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, current_user.id)
+            if student_id not in assigned_ids:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Access Denied: You are not authorized to view details for this student."
+                )
+        elif role_clean == "student":
+            st_user = db.query(Student).filter(Student.id == student_id).first()
+            if not st_user or (st_user.email and st_user.email.lower() != (current_user.email or "").lower()):
+                raise HTTPException(
+                    status_code=403,
+                    detail="Access Denied: You can only view your own student profile."
+                )
+
     student = db.query(Student).filter(Student.id == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")

@@ -26,7 +26,6 @@
                       radial-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px);
     background-size: 32px 32px;
     background-position: 0 0, 16px 16px;
-    transform: translateZ(0);
   }
   #root {
     width: 100%;

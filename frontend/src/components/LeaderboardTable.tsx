@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { ExternalLink, Trophy, RefreshCw, Wifi, Trash2, AlertCircle, Eye, Edit3, ShieldAlert, X, Clock, Flame, Award, CheckCircle2, TrendingUp, Sparkles, BookOpen, Star } from 'lucide-react';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import api from '../services/api';
+import { StudentEditOverlay } from './StudentEditOverlay';
 
 function parseUtcTime(ts?: string): number {
   if (!ts) return Date.now();
@@ -208,18 +209,11 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   };
 
   // Body scroll lock & layout shift prevention when any modal is open
+  // Body scroll lock & layout shift prevention when any modal is open
   useEffect(() => {
     const isAnyModalOpen = Boolean(viewingStudent || editingStudent || deletingStudent);
     if (isAnyModalOpen) {
-      const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
       const prevOverflow = document.body.style.overflow;
-      const prevPosition = document.body.style.position;
-      const prevTop = document.body.style.top;
-      const prevWidth = document.body.style.width;
-
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
       document.body.style.overflow = 'hidden';
 
       const onKey = (e: KeyboardEvent) => {
@@ -232,11 +226,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
       window.addEventListener('keydown', onKey);
 
       return () => {
-        document.body.style.position = prevPosition || '';
-        document.body.style.top = prevTop || '';
-        document.body.style.width = prevWidth || '';
         document.body.style.overflow = prevOverflow || '';
-        window.scrollTo(0, scrollY);
         window.removeEventListener('keydown', onKey);
       };
     }
@@ -767,126 +757,18 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
         </div>
       )}
 
-      {/* Viewport-Centered Student Edit Modal */}
-      {editingStudent && typeof document !== 'undefined' && createPortal(
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={`Edit profile for ${editingStudent.name}`}
-          className="modal-overlay-responsive animate-modal-backdrop"
-          onClick={(e) => {
-            if (e.target === e.currentTarget && !isSaving) setEditingStudent(null);
-          }}
-        >
-          <div
-            className="modal-container-responsive max-w-lg bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 animate-modal-content"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between shrink-0">
-              <div className="flex items-center space-x-2.5">
-                <Edit3 className="w-5 h-5 text-indigo-400" />
-                <div>
-                  <h3 className="text-base font-black">Edit Student Profile</h3>
-                  <p className="text-xs text-gray-300 font-mono font-bold mt-0.5">{editingStudent.reg_no}</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setEditingStudent(null)}
-                title="Close"
-                aria-label="Close"
-                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500 text-white hover:text-white transition-all font-black text-xs flex items-center space-x-1 cursor-pointer"
-              >
-                <span className="text-sm">✕</span>
-                <span>Close</span>
-              </button>
-            </div>
-
-            {/* Form Content */}
-            <div className="p-6 space-y-4 flex-1 min-h-0 overflow-y-auto">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-700 dark:text-gray-300">Student Full Name</label>
-                <input
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="w-full px-3.5 py-2 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500 font-semibold"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-700 dark:text-gray-300">Department</label>
-                  <select
-                    value={editDeptId}
-                    onChange={(e) => setEditDeptId(Number(e.target.value))}
-                    className="w-full px-3.5 py-2 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500 font-bold cursor-pointer"
-                  >
-                    <option value={1}>CSE(CS)</option>
-                    <option value={2}>CSE(IOT)</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-700 dark:text-gray-300">Academic Year</label>
-                  <select
-                    value={editYearLevel}
-                    onChange={(e) => setEditYearLevel(e.target.value)}
-                    className="w-full px-3.5 py-2 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500 font-bold cursor-pointer"
-                  >
-                    <option value="II">II Year</option>
-                    <option value="III">III Year</option>
-                    <option value="IV">IV Year</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-700 dark:text-gray-300">LeetCode Username Handle</label>
-                <input
-                  type="text"
-                  value={editUsername}
-                  onChange={(e) => setEditUsername(e.target.value)}
-                  placeholder="e.g. AADHISH_S_B"
-                  className="w-full px-3.5 py-2 text-xs font-mono bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-700 dark:text-gray-300">LeetCode Profile URL</label>
-                <input
-                  type="text"
-                  value={editLeetCodeUrl}
-                  onChange={(e) => setEditLeetCodeUrl(e.target.value)}
-                  placeholder="https://leetcode.com/u/..."
-                  className="w-full px-3.5 py-2 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500"
-                />
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="p-4 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between shrink-0">
-              <button
-                type="button"
-                onClick={() => setEditingStudent(null)}
-                className="px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-gray-800 cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveEdit}
-                disabled={isSaving}
-                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer disabled:opacity-50"
-              >
-                {isSaving ? 'Saving...' : 'Save Changes'}
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+      {/* Viewport-Centered Sticky Floating Student Edit Overlay */}
+      <StudentEditOverlay
+        isOpen={Boolean(editingStudent)}
+        student={editingStudent}
+        onClose={() => setEditingStudent(null)}
+        onSaveSuccess={(updated) => {
+          if (editingStudent && onRefreshStudent) {
+            onRefreshStudent(editingStudent.id);
+          }
+          setEditingStudent(null);
+        }}
+      />
 
       {/* Viewport-Centered Student Delete Confirmation Modal */}
       {deletingStudent && typeof document !== 'undefined' && createPortal(

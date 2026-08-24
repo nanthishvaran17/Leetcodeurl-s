@@ -70,6 +70,7 @@ export const App: React.FC = () => {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showAlertCenterModal, setShowAlertCenterModal] = useState(false);
   const [summaryData, setSummaryData] = useState<any>(() => getCachedSummary());
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     fetchSummary();
@@ -172,15 +173,7 @@ export const App: React.FC = () => {
   // Lock body scroll securely preserving exact viewport scroll position when selectedStudent modal is open
   useEffect(() => {
     if (selectedStudent) {
-      const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
       const prevOverflow = document.body.style.overflow;
-      const prevPosition = document.body.style.position;
-      const prevTop = document.body.style.top;
-      const prevWidth = document.body.style.width;
-
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
       document.body.style.overflow = 'hidden';
 
       const onKey = (ev: KeyboardEvent) => {
@@ -189,11 +182,7 @@ export const App: React.FC = () => {
       window.addEventListener('keydown', onKey);
 
       return () => {
-        document.body.style.position = prevPosition || '';
-        document.body.style.top = prevTop || '';
-        document.body.style.width = prevWidth || '';
         document.body.style.overflow = prevOverflow || '';
-        window.scrollTo(0, scrollY);
         window.removeEventListener('keydown', onKey);
       };
     }
@@ -233,10 +222,11 @@ export const App: React.FC = () => {
 
   // Determine main dashboard component based on role
   const renderDashboardComponent = () => {
-    if (user?.role === 'student') {
+    const roleClean = (user?.role || '').trim().toLowerCase();
+    if (roleClean === 'student') {
       return <StudentDashboardView />;
     }
-    if (user?.role === 'staff') {
+    if (roleClean === 'staff' || roleClean === 'faculty') {
       return <StaffDashboardView />;
     }
     return (
@@ -272,17 +262,23 @@ export const App: React.FC = () => {
         onOpenLogin={() => setShowLoginModal(true)}
         activeTab={activeTab}
         setActiveTab={handleTabChange}
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
       />
 
-      <div className={`flex-1 w-full py-4 sm:py-6 ${
-        isAuthenticated && activeTab !== 'landing'
-          ? 'lg:grid lg:grid-cols-[310px_minmax(0,1fr)] xl:grid-cols-[330px_minmax(0,1fr)] lg:gap-7 items-start px-3 sm:px-5 lg:px-7 2xl:px-8 w-full max-w-full mx-auto'
-          : 'px-3 sm:px-5 lg:px-7 2xl:px-8 w-full max-w-full mx-auto'
-      }`}>
+      <div className="flex-1 w-full py-4 sm:py-6 px-3 sm:px-5 lg:px-7 2xl:px-8 max-w-full mx-auto relative">
         
-        {/* Left Sidebar (Only visible for authenticated users when not on landing page) */}
+        {/* Slide-out Sidebar Drawer */}
         {isAuthenticated && activeTab !== 'landing' && (
-          <Sidebar activeTab={activeTab} setActiveTab={handleTabChange} />
+          <Sidebar 
+            activeTab={activeTab} 
+            setActiveTab={(tab) => {
+              handleTabChange(tab);
+              setIsSidebarOpen(false);
+            }} 
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+          />
         )}
 
         {/* Main Content View Container with Framer Motion Transition */}

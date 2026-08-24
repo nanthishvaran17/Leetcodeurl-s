@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, ExternalLink, Trophy, Flame, Award, Lightbulb, RefreshCw, FileText } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Trophy, Flame, Award, Lightbulb, RefreshCw, FileText, Edit3 } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import api from '../services/api';
 import { SkillRadarChart } from '../components/SkillRadarChart';
 import { BadgeShelf } from '../components/BadgeShelf';
 import { IDCardGenerator } from '../components/IDCardGenerator';
+import { StudentEditOverlay } from '../components/StudentEditOverlay';
 
 interface StudentProfilePageProps {
   student: any;
@@ -19,6 +20,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   const [insights, setInsights] = useState<any>(null);
   const [isLiveFetching, setIsLiveFetching] = useState(false);
   const [liveFetchError, setLiveFetchError] = useState<string | null>(null);
+  const [showEditOverlay, setShowEditOverlay] = useState(false);
 
   useEffect(() => {
     if (student?.id) {
@@ -241,6 +243,14 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             )}
 
             <button
+              onClick={() => setShowEditOverlay(true)}
+              className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs flex items-center space-x-1.5 shadow-md transition-all hover:scale-105 cursor-pointer"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>Edit Student</span>
+            </button>
+
+            <button
               onClick={handleLiveFetch}
               disabled={isLiveFetching}
               className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md shadow-indigo-600/30 transition-all hover:scale-105 disabled:opacity-50"
@@ -433,6 +443,16 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           )}
         </div>
       </div>
+
+      <StudentEditOverlay
+        isOpen={showEditOverlay}
+        student={detail}
+        onClose={() => setShowEditOverlay(false)}
+        onSaveSuccess={(updated) => {
+          setDetail(updated);
+          fetchStudentDetail();
+        }}
+      />
     </div>
   </div>
 );
