@@ -402,7 +402,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
             ? 'opacity-[0.25] mix-blend-luminosity filter blur-[1.5px]' 
             : 'opacity-[0.95] saturate-[1.3] contrast-[1.05] brightness-[1.05]'
         }`}
-        style={{ backgroundImage: "url('/nandha_bg.jpg')" }}
+        style={{ backgroundImage: "url('/nandha_gate_bg.jpg')" }}
       />
       <div className={`absolute inset-0 z-0 transition-colors duration-700 ${
         theme === 'dark' 
