@@ -259,33 +259,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     try {
       await triggerFullSync(requesterTag);
       startSyncPolling();
-    } catch (err) {
-      console.warn('Backend sync offline, initiating local canonical reconciliation', err);
-      setTimeout(() => {
-        setSyncProgress({
-          total: initialTotal,
-          processed: Math.floor(initialTotal * 0.5),
-          successful: 700,
-          failed: 15,
-          pending_usernames: 8,
-          is_running: true,
-          triggered_by: requesterTag
-        });
-      }, 400);
-      setTimeout(async () => {
-        await fetchFilteredStudents();
-        setRefreshing(false);
-        setSyncProgress({
-          total: initialTotal,
-          processed: initialTotal,
-          successful: 1386,
-          failed: 33,
-          pending_usernames: 16,
-          is_running: false,
-          last_sync_time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) + ' IST',
-          triggered_by: requesterTag
-        });
-      }, 1000);
+    } catch (err: any) {
+      console.error('[LIVE_SYNC_TRIGGER_ERROR]', err);
+      setRefreshing(false);
+      setSyncProgress({
+        total: initialTotal,
+        processed: 0,
+        successful: 0,
+        failed: 0,
+        is_running: false
+      });
     }
   };
 

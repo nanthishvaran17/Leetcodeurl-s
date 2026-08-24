@@ -822,8 +822,8 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
     # 2. Brevo HTTPS API (Port 443 Fallback & Cloud Deployment)
     # ================================================================
     
-    # Try Gmail SMTP First if available locally
-    if (not is_render) and smtp_user and smtp_pass:
+    # Priority 1: High-performance IPv4 Gmail SMTP (Port 587 TLS / Port 465 SSL)
+    if smtp_user and smtp_pass:
         t_smtp_start = time.time()
         logger.info(f"[{now_iso}] [OTP] stage=direct_gmail_smtp host={smtp_host}:{smtp_port}")
         try:
@@ -837,7 +837,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
             msg.attach(MIMEText(html_body, 'html', 'utf-8'))
 
             ctx = ssl.create_default_context()
-            server = smtplib.SMTP(smtp_host, smtp_port, timeout=8.0)
+            server = IPv4SMTP(smtp_host, smtp_port, timeout=10.0)
             try:
                 server.ehlo()
                 server.starttls(context=ctx)
@@ -863,7 +863,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
             )
             return True, STATUS_SMTP_ACCEPTED, generated_msg_id
         except Exception as direct_smtp_err:
-            logger.warning(f"[{now_iso}] [OTP] Direct Gmail SMTP failed ({direct_smtp_err}), falling back to Brevo HTTPS API...")
+            logger.warning(f"[{now_iso}] [OTP] Direct Gmail IPv4 SMTP failed ({direct_smtp_err}), falling back to Brevo HTTPS API...")
 
     # Secondary / Production Primary: Brevo HTTPS API (Port 443)
     if brevo_key:
