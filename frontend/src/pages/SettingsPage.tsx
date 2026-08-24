@@ -475,8 +475,7 @@ export const SettingsPage: React.FC = () => {
     <div className="space-y-6 pb-16 text-xs text-gray-800 dark:text-gray-200">
       
       {/* 1. RICH INSTITUTIONAL PAGE HEADER BANNER */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-2xl border border-brand-500/30">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-lg border border-brand-500/30">
 
         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
@@ -1245,7 +1244,7 @@ export const SettingsPage: React.FC = () => {
 
         {/* 11. SECTION VIII — ADMIN IDENTITY & AUDIT LOG STREAM */}
         {(activeSectionFilter === 'ALL' || activeSectionFilter === 'audit') && (
-          <div className="p-6 rounded-3xl bg-gradient-to-br from-navy-950 via-slate-900 to-indigo-950 text-white border border-brand-500/30 shadow-2xl space-y-4">
+          <div className="p-6 rounded-3xl bg-gradient-to-br from-navy-950 via-slate-900 to-indigo-950 text-white border border-brand-500/30 shadow-lg space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
               <div className="space-y-0.5">
                 <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full bg-brand-500/20 border border-brand-400/30 text-amber-300 text-[10px] font-black uppercase">
@@ -1445,7 +1444,7 @@ export const SettingsPage: React.FC = () => {
       {/* Confirmation Modal */}
       {confirmModal.open && (
         <div className="modal-overlay-responsive animate-modal-backdrop">
-          <div className="modal-container-responsive max-w-md bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl p-6 space-y-4 shadow-2xl animate-modal-content">
+          <div className="modal-container-responsive max-w-md bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl p-6 space-y-4 shadow-lg animate-modal-content">
             <h3 className="text-base font-extrabold text-gray-900 dark:text-white flex items-center space-x-2">
               <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
               <span>{confirmModal.title}</span>

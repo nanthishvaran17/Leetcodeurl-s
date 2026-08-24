@@ -330,7 +330,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       }}
     >
       <div
-        className="modal-container-responsive max-w-xl bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-navy-700 animate-modal-content text-gray-900 dark:text-gray-100"
+        className="modal-container-responsive max-w-xl bg-white dark:bg-navy-900 rounded-3xl shadow-lg border border-gray-200 dark:border-navy-700 animate-modal-content text-gray-900 dark:text-gray-100"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Sticky Top Header */}
@@ -543,7 +543,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         {/* Unsaved Changes Warning Sub-Modal */}
         {showUnsavedPrompt && (
           <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-            <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-navy-900 p-6 border border-gray-200 dark:border-navy-700 shadow-2xl space-y-4 text-center">
+            <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-navy-900 p-6 border border-gray-200 dark:border-navy-700 shadow-lg space-y-4 text-center">
               <div className="w-12 h-12 rounded-full bg-amber-500/20 text-amber-500 mx-auto flex items-center justify-center">
                 <AlertTriangle className="w-6 h-6" />
               </div>

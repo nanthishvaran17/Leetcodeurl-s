@@ -504,8 +504,6 @@ export const StudentDataIssuesPage: React.FC = () => {
 
       {/* ── 1. TOP HERO BANNER (MATCHING INSTITUTIONAL GRADIENT) ── */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-xl border border-brand-500/30">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2.5 max-w-2xl">
@@ -1076,12 +1074,12 @@ export const StudentDataIssuesPage: React.FC = () => {
       {/* ── 8. REPAIR USERNAME MODAL ── */}
       <AnimatePresence>
         {repairStudent && (
-          <div className="fixed inset-0 w-screen h-screen z-[1000000] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <div className="fixed inset-0 w-screen h-screen z-[1000000] flex items-center justify-center p-4 bg-black/90">
             <motion.div
               initial={{ opacity: 0, scale: 0.92, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.92, y: 15 }}
-              className="max-w-lg w-full p-6 rounded-3xl bg-slate-900 border border-slate-700 shadow-2xl space-y-4 text-slate-100 my-auto"
+              className="max-w-lg w-full p-6 rounded-3xl bg-slate-900 border border-slate-700 shadow-lg space-y-4 text-slate-100 my-auto"
             >
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <div className="flex items-center space-x-2.5">
@@ -1194,12 +1192,12 @@ export const StudentDataIssuesPage: React.FC = () => {
       {/* ── 9. SAVE CUSTOM VIEW MODAL ── */}
       <AnimatePresence>
         {showSaveViewModal && (
-          <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-modal-backdrop">
+          <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 bg-black/85 animate-modal-backdrop">
             <motion.div
               initial={{ opacity: 0, scale: 0.92, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.92, y: 15 }}
-              className="max-w-md w-full p-6 rounded-3xl bg-slate-900 border border-slate-700 shadow-2xl space-y-4 text-slate-100"
+              className="max-w-md w-full p-6 rounded-3xl bg-slate-900 border border-slate-700 shadow-lg space-y-4 text-slate-100"
             >
               <div className="flex items-center space-x-2.5 border-b border-slate-800 pb-3">
                 <div className="p-2 rounded-xl bg-brand-500/20 text-brand-400 border border-brand-500/30">

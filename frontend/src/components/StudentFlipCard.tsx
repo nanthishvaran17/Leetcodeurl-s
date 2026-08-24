@@ -199,7 +199,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student, onS
         }`}
       >
         {/* FRONT SIDE */}
-        <div className="absolute inset-0 w-full h-full min-h-[360px] glass-card p-5 sm:p-6 rounded-3xl border border-gray-200/90 dark:border-gray-800 shadow-xl hover:shadow-2xl dark:hover:border-brand-500/40 backface-hidden flex flex-col justify-between transition-all duration-300 bg-white/95 dark:bg-navy-900/90">
+        <div className="absolute inset-0 w-full h-full min-h-[360px] glass-card p-5 sm:p-6 rounded-3xl border border-gray-200/90 dark:border-gray-800 shadow-xl hover:shadow-lg dark:hover:border-brand-500/40 backface-hidden flex flex-col justify-between transition-all duration-300 bg-white/95 dark:bg-navy-900/90">
           
           {/* Card Top: Rank & Department Pill */}
           <div className="flex items-center justify-between gap-2">
@@ -259,7 +259,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student, onS
         </div>
 
         {/* BACK SIDE */}
-        <div className="absolute inset-0 w-full h-full min-h-[360px] p-5 sm:p-6 rounded-3xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-950 text-gray-900 dark:text-white shadow-2xl backface-hidden rotate-y-180 flex flex-col justify-between overflow-y-auto">
+        <div className="absolute inset-0 w-full h-full min-h-[360px] p-5 sm:p-6 rounded-3xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-950 text-gray-900 dark:text-white shadow-lg backface-hidden rotate-y-180 flex flex-col justify-between overflow-y-auto">
 
           
           {/* Top Header */}

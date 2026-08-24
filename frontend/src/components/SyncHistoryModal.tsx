@@ -52,7 +52,7 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
 
   return (
     <div className="modal-overlay-responsive animate-modal-backdrop">
-      <div className="modal-container-responsive max-w-4xl bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 animate-modal-content">
+      <div className="modal-container-responsive max-w-4xl bg-white dark:bg-navy-900 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-800 animate-modal-content">
         
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-navy-950/50">

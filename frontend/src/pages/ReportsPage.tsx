@@ -346,8 +346,7 @@ export const ReportsPage: React.FC = () => {
     <div className="space-y-8 pb-10 animate-fade-in">
       
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-2xl border border-brand-500/30">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-lg border border-brand-500/30">
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
           <div className="space-y-3 max-w-2xl">
@@ -460,7 +459,7 @@ export const ReportsPage: React.FC = () => {
                 <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${rptTypeOpen ? 'rotate-180' : ''}`} />
               </button>
               {rptTypeOpen && (
-                <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl max-h-64 overflow-y-auto">
+                <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-64 overflow-y-auto">
                   {[
                     { value: 'STUDENT_PERFORMANCE',   label: 'Student Performance Detail',   dot: 'bg-brand-500' },
                     { value: 'COLLEGE_EXECUTIVE',      label: 'College Executive Overview',   dot: 'bg-indigo-500' },
@@ -525,7 +524,7 @@ export const ReportsPage: React.FC = () => {
                 <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${rptDeptOpen ? 'rotate-180' : ''}`} />
               </button>
               {rptDeptOpen && (
-                <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl max-h-64 overflow-y-auto">
+                <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-64 overflow-y-auto">
                   {[
                     { value:'ALL',      code:'ALL',      label:'All Departments',                color:'text-indigo-600 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300' },
                     { value:'CSE',      code:'CSE',      label:'Computer Science and Engineering',color:'text-blue-600 bg-blue-50 dark:bg-blue-950 dark:text-blue-300' },
@@ -585,7 +584,7 @@ export const ReportsPage: React.FC = () => {
                 <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${rptYearOpen ? 'rotate-180' : ''}`} />
               </button>
               {rptYearOpen && (
-                <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl max-h-64 overflow-y-auto">
+                <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-64 overflow-y-auto">
                   {[
                     { value:'ALL', code:'ALL', label:'All Academic Years', color:'text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300' },
                     { value:'II',  code:'II',  label:'Year (2025–2029)',    color:'text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300' },
@@ -628,7 +627,7 @@ export const ReportsPage: React.FC = () => {
                 <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${rptScopeOpen ? 'rotate-180' : ''}`} />
               </button>
               {rptScopeOpen && (
-                <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl max-h-64 overflow-y-auto">
+                <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-64 overflow-y-auto">
                   {[
                     { value:'COLLEGE',   label:'College-wide',       dot:'bg-indigo-500' },
                     { value:'DEPARTMENT',label:'Department-wide',     dot:'bg-purple-500' },
@@ -803,7 +802,7 @@ export const ReportsPage: React.FC = () => {
           return (
             <div
               key={card.id}
-              className="group glass-card p-6 rounded-3xl border border-gray-200 dark:border-gray-800/80 shadow-md hover:shadow-2xl hover:border-brand-500/40 transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between space-y-6 relative overflow-hidden"
+              className="group glass-card p-6 rounded-3xl border border-gray-200 dark:border-gray-800/80 shadow-md hover:shadow-lg hover:border-brand-500/40 transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between space-y-6 relative overflow-hidden"
             >
               
               {/* Top Card Info */}
@@ -903,7 +902,7 @@ export const ReportsPage: React.FC = () => {
       {/* Preview Modal */}
       {selectedSnapshotPreview && (
         <div className="modal-overlay-responsive animate-modal-backdrop">
-          <div className="modal-container-responsive max-w-4xl bg-white dark:bg-navy-950 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 animate-modal-content">
+          <div className="modal-container-responsive max-w-4xl bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-800 animate-modal-content">
             {/* Modal Header */}
             <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-navy-900/50 shrink-0">
               <div className="space-y-1">
@@ -1122,7 +1121,7 @@ export const ReportsPage: React.FC = () => {
       {/* Floating Success / Status Toast */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-[10000] animate-slideUp">
-          <div className="px-5 py-3 rounded-2xl bg-slate-900 border border-slate-700 text-white text-xs font-bold shadow-2xl flex items-center space-x-3">
+          <div className="px-5 py-3 rounded-2xl bg-slate-900 border border-slate-700 text-white text-xs font-bold shadow-lg flex items-center space-x-3">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             <span>{toastMessage}</span>
             <button

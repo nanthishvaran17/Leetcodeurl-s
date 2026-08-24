@@ -667,8 +667,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
     <div className="space-y-8 pb-12 animate-fade-in">
       
       {/* 1. DASHBOARD HEADER & PROVIDER STATUS BAR */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-2xl border border-brand-500/30">
-        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-lg border border-brand-500/30">
 
         <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
@@ -1504,7 +1503,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
       {/* 9. DELIVERY DETAIL DRAWER / MODAL */}
       {selectedLogDetail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 relative">
+          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl max-w-lg w-full p-6 shadow-lg space-y-5 relative">
             <button
               onClick={() => setSelectedLogDetail(null)}
               className="absolute top-5 right-5 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white rounded-full transition-colors cursor-pointer"
@@ -1582,7 +1581,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
       {/* 10. CONFIRMATION & DUPLICATE MODALS */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-lg space-y-4">
             <div className="flex items-center space-x-3 text-brand-600 dark:text-brand-400">
               <Zap className="w-6 h-6 text-amber-400" />
               <h3 className="text-lg font-black text-gray-900 dark:text-white">Confirm Manual Dispatch</h3>
@@ -1616,7 +1615,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
       {showDuplicateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-lg space-y-4">
             <div className="flex items-center space-x-3 text-amber-600 dark:text-amber-400">
               <AlertTriangle className="w-6 h-6" />
               <h3 className="text-lg font-black text-gray-900 dark:text-white">Duplicate Delivery Detected</h3>
@@ -1659,7 +1658,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
       {/* 11. SCHEDULE SETTINGS MODAL */}
       {showScheduleModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5">
+          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-lg space-y-5">
             <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
               <h3 className="text-base font-black text-gray-900 dark:text-white flex items-center gap-2">
                 <Settings className="w-5 h-5 text-brand-500" />
@@ -1759,7 +1758,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
       {/* 12. ADD RECIPIENT MODAL */}
       {showAddRecipientModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-lg space-y-4">
             <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
               <h3 className="text-base font-black text-gray-900 dark:text-white flex items-center gap-2">
                 <Plus className="w-5 h-5 text-teal-500" />

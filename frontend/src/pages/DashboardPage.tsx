@@ -288,9 +288,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       </div>
 
       {/* 2. MAIN EXECUTIVE BANNER */}
-      <div className="stagger-2 relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-navy-900 to-slate-900 text-white p-6 sm:p-8 shadow-2xl border border-emerald-500/20">
-        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-80 h-80 bg-emerald-500/8 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-48 h-48 bg-teal-500/8 rounded-full blur-2xl pointer-events-none"></div>
+      <div className="stagger-2 relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-navy-900 to-slate-900 text-white p-6 sm:p-8 shadow-lg border border-emerald-500/20">
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
           <div className="space-y-2 max-w-2xl">

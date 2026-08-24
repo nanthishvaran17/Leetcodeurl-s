@@ -44,8 +44,6 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
   return (
     <div className="glass-card rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-navy-800/80 card-ai-control shadow-xl relative overflow-hidden">
       {/* Background ambient lighting */}
-      <div className="absolute top-0 right-0 -mt-8 -mr-8 w-44 h-44 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-44 h-44 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200/80 dark:border-navy-800/80 relative z-10">

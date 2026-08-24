@@ -30,10 +30,8 @@ export const AccessRestrictedView: React.FC<AccessRestrictedViewProps> = ({
   return (
     <div className="min-h-[75vh] flex items-center justify-center p-4 relative overflow-hidden animate-fade-in">
       {/* Ambient Lighting Background Blurs */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[28rem] h-[28rem] bg-rose-500/10 dark:bg-rose-500/15 rounded-full blur-3xl pointer-events-none animate-pulse-slow" />
-      <div className="absolute bottom-10 right-1/4 w-80 h-80 bg-indigo-500/10 dark:bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-lg w-full bg-white/85 dark:bg-navy-900/85 backdrop-blur-2xl border border-gray-200/80 dark:border-navy-700/80 rounded-3xl p-8 sm:p-10 text-center shadow-2xl space-y-6 relative z-10 transition-all duration-300 transform hover:scale-[1.005]">
+      <div className="max-w-lg w-full bg-white/85 dark:bg-navy-900/85 backdrop-blur-2xl border border-gray-200/80 dark:border-navy-700/80 rounded-3xl p-8 sm:p-10 text-center shadow-lg space-y-6 relative z-10 transition-all duration-300 transform hover:scale-[1.005]">
         
         {/* Institutional Security Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/20 dark:border-rose-500/30 text-[11px] font-black tracking-wider uppercase text-rose-600 dark:text-rose-400">

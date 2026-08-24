@@ -975,12 +975,10 @@ export const WeeklyContestPage: React.FC = () => {
     <div className="space-y-6 animate-fade-in pb-12">
 
       {/* ── 1. SLEEK INSTITUTIONAL HERO HEADER ── */}
-      <div className={`relative overflow-hidden rounded-3xl text-white p-6 sm:p-8 shadow-2xl border transition-all duration-300 ${isLive
+      <div className={`relative overflow-hidden rounded-3xl text-white p-6 sm:p-8 shadow-lg border transition-all duration-300 ${isLive
         ? 'bg-gradient-to-r from-rose-950 via-slate-900 to-indigo-950 border-rose-500/40 shadow-rose-500/10'
         : 'bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 border-brand-500/30'
         }`}>
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-0 left-1/3 -mb-10 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-6">
           {/* Left Context Info */}
@@ -1085,7 +1083,7 @@ export const WeeklyContestPage: React.FC = () => {
 
       {/* ── 1B. SCHEDULED MODE COUNTDOWN BANNER (BEFORE SUNDAY 08:00 AM IST) ── */}
       {isScheduled && (
-        <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-amber-950/90 via-slate-900 to-navy-950 border border-amber-500/30 text-white shadow-2xl space-y-4 animate-fade-in">
+        <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-amber-950/90 via-slate-900 to-navy-950 border border-amber-500/30 text-white shadow-lg space-y-4 animate-fade-in">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs font-black">
               <Clock className="w-3.5 h-3.5 text-amber-400" />
@@ -1217,7 +1215,7 @@ export const WeeklyContestPage: React.FC = () => {
 
       {/* ── 1D. ADMIN LIVE CONTEST OPERATIONS & WORKER TELEMETRY SUITE ── */}
       {showAdminMonitor && (
-        <div className="p-5 sm:p-7 rounded-3xl bg-slate-900 text-white border border-slate-700/80 shadow-2xl space-y-6 animate-fade-in">
+        <div className="p-5 sm:p-7 rounded-3xl bg-slate-900 text-white border border-slate-700/80 shadow-lg space-y-6 animate-fade-in">
           {/* Header with Title, Worker Badge, and Action Status */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
             <div className="flex items-center space-x-3">
@@ -1661,7 +1659,7 @@ export const WeeklyContestPage: React.FC = () => {
 
       {/* ── LIVE STUDENT MONITOR PANEL ── */}
       {showAdminMonitor && adminSubTab === 'live_monitor' && (
-        <div className="p-5 sm:p-6 rounded-3xl bg-slate-900 border border-slate-700 shadow-2xl animate-fade-in">
+        <div className="p-5 sm:p-6 rounded-3xl bg-slate-900 border border-slate-700 shadow-lg animate-fade-in">
           <LiveStudentMonitor />
         </div>
       )}
@@ -1853,7 +1851,7 @@ export const WeeklyContestPage: React.FC = () => {
               <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${yearOpen ? 'rotate-180' : ''}`} />
             </button>
             {yearOpen && (
-              <div className="absolute z-[100] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl overflow-hidden">
+              <div className="absolute z-[100] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg overflow-hidden">
                 {[
                   { value: 'ALL', label: 'All Academic Years', code: 'ALL', color: 'text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300' },
                   { value: 'II',  label: 'Year (2025–2029)',    code: 'II',  color: 'text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300' },
@@ -1910,7 +1908,7 @@ export const WeeklyContestPage: React.FC = () => {
               <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${attOpen ? 'rotate-180' : ''}`} />
             </button>
             {attOpen && (
-              <div className="absolute z-[100] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl overflow-hidden">
+              <div className="absolute z-[100] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg overflow-hidden">
                 {[
                   { value: 'ALL',                label: 'All Statuses',    code: 'ALL',  dot: 'bg-gray-400',    color: 'text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-300' },
                   { value: 'PUBLIC_ATTENDED',    label: 'Public Attended', code: 'PUB',  dot: 'bg-emerald-500', color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300' },
@@ -2759,7 +2757,7 @@ export const WeeklyContestPage: React.FC = () => {
           className="modal-overlay-responsive animate-modal-backdrop"
           onClick={(e) => { if (e.target === e.currentTarget) setShowPreviewModal(false); }}
         >
-          <div className="modal-container-responsive max-w-5xl bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 animate-modal-content">
+          <div className="modal-container-responsive max-w-5xl bg-white dark:bg-navy-900 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-800 animate-modal-content">
 
             {/* ── A. SLEEK GRADIENT HEADER (Matches Image 2) ── */}
             <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-950 text-white flex items-center justify-between shrink-0">
@@ -2959,7 +2957,7 @@ export const WeeklyContestPage: React.FC = () => {
       {/* Interactive Report Email Dispatch Modal */}
       {showEmailModal && (
         <div className="modal-overlay-responsive animate-modal-backdrop">
-          <div className="modal-container-responsive max-w-2xl bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col my-auto">
+          <div className="modal-container-responsive max-w-2xl bg-white dark:bg-navy-900 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col my-auto">
             {/* Modal Header */}
             <div className="p-5 sm:p-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between shrink-0">
               <div>
@@ -3136,7 +3134,7 @@ export const WeeklyContestPage: React.FC = () => {
           }}
         >
           <div
-            className="modal-container-responsive max-w-md bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-rose-200 dark:border-rose-900/50 overflow-hidden flex flex-col p-6 space-y-4 my-auto"
+            className="modal-container-responsive max-w-md bg-white dark:bg-navy-900 rounded-3xl shadow-lg border border-rose-200 dark:border-rose-900/50 overflow-hidden flex flex-col p-6 space-y-4 my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
@@ -3184,7 +3182,7 @@ export const WeeklyContestPage: React.FC = () => {
       {/* Centered Institutional Authentication Required Modal */}
       {showAuthRequiredModal && (
         <div className="modal-overlay-responsive animate-fade-in">
-          <div className="modal-container-responsive max-w-md bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-amber-300 dark:border-amber-700/60 p-6 space-y-4 my-auto text-center overflow-y-auto">
+          <div className="modal-container-responsive max-w-md bg-white dark:bg-navy-900 rounded-3xl shadow-lg border border-amber-300 dark:border-amber-700/60 p-6 space-y-4 my-auto text-center overflow-y-auto">
             <div className="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-inner">
               <Lock className="w-7 h-7" />
             </div>

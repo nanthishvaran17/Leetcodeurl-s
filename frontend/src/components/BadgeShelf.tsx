@@ -110,7 +110,7 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
               <p className="text-[10px] text-gray-600 dark:text-gray-300 font-extrabold uppercase tracking-wider mt-0.5">{b.category}</p>
 
               {/* Tooltip on hover */}
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 hidden group-hover:block w-48 p-2.5 rounded-2xl bg-slate-950 border border-slate-700 text-white text-xs shadow-2xl z-30 pointer-events-none">
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 hidden group-hover:block w-48 p-2.5 rounded-2xl bg-slate-950 border border-slate-700 text-white text-xs shadow-lg z-30 pointer-events-none">
                 <p className="font-black text-amber-400">{b.name}</p>
                 <p className="text-gray-200 text-[10px] font-medium mt-1 leading-snug">{b.description}</p>
               </div>

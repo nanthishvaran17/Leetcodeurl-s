@@ -80,7 +80,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
 
   return (
     <div className="modal-overlay-responsive animate-modal-backdrop">
-      <div className="modal-container-responsive max-w-3xl glass-card rounded-3xl border border-gray-200 dark:border-gray-800 shadow-2xl animate-modal-content">
+      <div className="modal-container-responsive max-w-3xl glass-card rounded-3xl border border-gray-200 dark:border-gray-800 shadow-lg animate-modal-content">
         
         {/* Header */}
         <div className="flex items-center justify-between border-b p-6 border-gray-200 dark:border-gray-800 shrink-0 bg-gray-50/50 dark:bg-navy-900/50">

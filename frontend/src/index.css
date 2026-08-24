@@ -90,9 +90,7 @@
   align-items: center !important;
   justify-content: center !important;
   padding: 1.75rem 1rem !important;
-  background-color: rgba(5, 7, 14, 0.8) !important;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
+  background-color: rgba(5, 7, 14, 0.75) !important;
   overflow: hidden !important;
   box-sizing: border-box !important;
   will-change: opacity;
@@ -162,19 +160,15 @@
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(226, 232, 240, 0.85);
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 1);
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05);
 }
 
 .dark .glass-card {
-  background: rgba(11, 15, 25, 0.82);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.35);
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
 }
 
 .card-ai-control {

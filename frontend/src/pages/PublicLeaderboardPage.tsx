@@ -87,7 +87,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
     <div className="space-y-8 pb-12 animate-slide-right">
 
       {/* ─── HERO BANNER ─── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy-950 via-slate-900 to-indigo-950 text-white p-8 md:p-10 shadow-2xl border border-brand-500/30">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy-950 via-slate-900 to-indigo-950 text-white p-8 md:p-10 shadow-lg border border-brand-500/30">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 right-0 -mt-16 -mr-16 w-80 h-80 bg-brand-500/15 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-60 h-60 bg-indigo-500/10 rounded-full blur-3xl" />

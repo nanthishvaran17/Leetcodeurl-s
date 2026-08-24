@@ -414,8 +414,8 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
       {/* Create Staff Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-          <div className="w-full max-w-md p-6 rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 animate-fade-in">
+          <div className="w-full max-w-md p-6 rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-lg space-y-4">
             <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center space-x-2">
               <UserPlus className="w-5 h-5 text-indigo-500" />
               <span>Create New Staff Account</span>

@@ -54,7 +54,7 @@ const PriorityBadge: React.FC<{ priority: string; score: number; reason: string 
         <span className="opacity-60 text-[10px]">({score})</span>
       </span>
       {show && (
-        <div className="absolute top-[110%] left-0 z-50 w-64 p-3 rounded-xl text-xs bg-slate-900 dark:bg-navy-900 border border-slate-700 dark:border-navy-700 shadow-2xl leading-relaxed pointer-events-none">
+        <div className="absolute top-[110%] left-0 z-50 w-64 p-3 rounded-xl text-xs bg-slate-900 dark:bg-navy-900 border border-slate-700 dark:border-navy-700 shadow-lg leading-relaxed pointer-events-none">
           <div className={`font-bold mb-1 ${cfg.tw.split(' ')[1]}`}>Score: {score}/100</div>
           <div className="text-slate-400">{reason}</div>
         </div>
@@ -109,10 +109,10 @@ const StudentViewModal: React.FC<{
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md overflow-y-auto animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 overflow-y-auto animate-fade-in"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl bg-slate-900 border border-slate-700 shadow-2xl overflow-hidden my-auto text-white">
+      <div className="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl bg-slate-900 border border-slate-700 shadow-lg overflow-hidden my-auto text-white">
         
         {/* Header */}
         <div className="p-5 border-b border-slate-800 flex items-center justify-between flex-wrap gap-3 bg-slate-950/60 shrink-0">
@@ -319,7 +319,7 @@ const UpdateModal: React.FC<{
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-white dark:bg-navy-850 border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden">
+      <div className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-white dark:bg-navy-850 border border-slate-200 dark:border-navy-700 shadow-lg overflow-hidden">
 
         {/* Header */}
         <div className={`p-5 border-b border-slate-200 dark:border-navy-700 flex items-start justify-between ${cfg.tw.split(' ').slice(0,1).join(' ')}/5`}>
@@ -529,8 +529,7 @@ export const FacultyActionCenter: React.FC = () => {
   return (
     <div className="space-y-5 pb-12 animate-fade-in font-sans">
       {/* ── Executive Header Banner ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-2xl border border-brand-500/30">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-lg border border-brand-500/30">
 
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
           <div className="space-y-3 max-w-2xl">

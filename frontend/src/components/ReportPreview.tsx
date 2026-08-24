@@ -122,7 +122,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
   if (loading) {
     return (
       <div className="modal-overlay-responsive animate-modal-backdrop">
-        <div className="bg-white dark:bg-navy-900 p-8 rounded-3xl flex flex-col items-center space-y-4 shadow-2xl border border-gray-200 dark:border-gray-800">
+        <div className="bg-white dark:bg-navy-900 p-8 rounded-3xl flex flex-col items-center space-y-4 shadow-lg border border-gray-200 dark:border-gray-800">
           <RefreshCw className="w-8 h-8 animate-spin text-brand-500" />
           <p className="font-bold text-gray-700 dark:text-gray-300">Fetching verified report dataset...</p>
         </div>
@@ -162,7 +162,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
       className="modal-overlay-responsive animate-modal-backdrop"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="modal-container-responsive max-w-6xl bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 animate-modal-content">
+      <div className="modal-container-responsive max-w-6xl bg-white dark:bg-navy-900 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-800 animate-modal-content">
         
         {/* ── 1. HEADER BANNER ── */}
         <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-950 text-white flex items-center justify-between shrink-0">

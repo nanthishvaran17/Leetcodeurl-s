@@ -62,7 +62,7 @@ export const AlertCenterModal: React.FC<AlertCenterModalProps> = ({ isOpen, onCl
 
   return (
     <div className="modal-overlay-responsive animate-fade-in">
-      <div className="modal-container-responsive max-w-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+      <div className="modal-container-responsive max-w-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-lg flex flex-col overflow-hidden">
         
         {/* Header */}
         <div className="p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-navy-950/50 flex items-center justify-between shrink-0">

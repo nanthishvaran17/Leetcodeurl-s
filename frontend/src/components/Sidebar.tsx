@@ -125,11 +125,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-            className="relative w-4/5 max-w-xs xl:max-w-[325px] h-full shadow-2xl backdrop-blur-2xl bg-white dark:bg-navy-950 p-4 sm:p-5 flex flex-col justify-between overflow-hidden z-10 border-r border-slate-200/90 dark:border-navy-800/90"
+            className="relative w-4/5 max-w-xs xl:max-w-[325px] h-full shadow-lg backdrop-blur-2xl bg-white dark:bg-navy-950 p-4 sm:p-5 flex flex-col justify-between overflow-hidden z-10 border-r border-slate-200/90 dark:border-navy-800/90"
           >
             {/* ── Ambient Radial Mesh Glows ── */}
-            <div className="absolute top-0 right-0 w-48 h-48 bg-brand-500/10 dark:bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-16 left-0 w-36 h-36 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
 
             {/* ── Header ── */}
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-navy-800/80 shrink-0 mb-4 relative z-10">

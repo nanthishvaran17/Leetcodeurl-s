@@ -237,7 +237,7 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
   };
 
   return (
-    <div className="glass-card p-6 md:p-8 rounded-3xl border border-emerald-500/40 dark:border-emerald-500/30 shadow-2xl space-y-6 bg-gradient-to-br from-navy-950/90 via-slate-900/90 to-emerald-950/70 text-white">
+    <div className="glass-card p-6 md:p-8 rounded-3xl border border-emerald-500/40 dark:border-emerald-500/30 shadow-lg space-y-6 bg-gradient-to-br from-navy-950/90 via-slate-900/90 to-emerald-950/70 text-white">
       
       {/* Top Bar */}
       <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-800 pb-4">
@@ -267,7 +267,7 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
       <div className="flex justify-center p-2 rounded-2xl bg-black/60 border border-slate-700/80 shadow-inner overflow-x-auto">
         <canvas
           ref={canvasRef}
-          className="rounded-2xl shadow-2xl max-w-full h-auto border border-emerald-500/50"
+          className="rounded-2xl shadow-lg max-w-full h-auto border border-emerald-500/50"
           style={{ width: '100%', maxWidth: '750px' }}
         />
       </div>

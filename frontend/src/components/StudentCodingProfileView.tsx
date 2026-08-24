@@ -68,7 +68,7 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
     <div className="space-y-6">
 
       {/* ── 1. DIGITAL CODING PROFILE HEADER CARD ── */}
-      <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white border border-navy-800 shadow-2xl space-y-6">
+      <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white border border-navy-800 shadow-lg space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
           
           {/* Identity & Level */}

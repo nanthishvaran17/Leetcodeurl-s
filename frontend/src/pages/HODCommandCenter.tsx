@@ -125,8 +125,8 @@ const StudentModal: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm overflow-y-auto animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden my-auto p-6 space-y-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 overflow-y-auto animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-lg overflow-hidden my-auto p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-black text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <Plus size={18} className="text-brand-500" />
@@ -194,8 +194,8 @@ const DeleteConfirmModal: React.FC<{
   onClose: () => void;
   onConfirm: () => void;
 }> = ({ student, deleting, onClose, onConfirm }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
-    <div className="w-full max-w-md rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xl p-6 space-y-4">
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="w-full max-w-md rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-lg p-6 space-y-4">
       <div className="flex items-center gap-3 text-red-500">
         <div className="p-3 rounded-2xl bg-red-500/10"><Trash2 size={20} /></div>
         <div>
@@ -352,9 +352,7 @@ export const HODCommandCenter: React.FC = () => {
     <div className="space-y-5 pb-12 animate-fade-in font-sans">
 
       {/* ── Executive Header Banner ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-2xl border border-brand-500/30">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 -mb-10 w-64 h-64 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-lg border border-brand-500/30">
 
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
           <div className="space-y-3 max-w-3xl">
@@ -439,7 +437,7 @@ export const HODCommandCenter: React.FC = () => {
         health ? (
           <>
             {/* Health Score Hero */}
-            <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white border border-navy-800 shadow-2xl">
+            <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white border border-navy-800 shadow-lg">
               <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, rgba(99,102,241,0.3) 0%, transparent 60%)' }} />
               <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="space-y-2">

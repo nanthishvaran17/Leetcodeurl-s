@@ -504,7 +504,7 @@ export const CertificateManagementModal: React.FC<{
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 15 }}
         transition={{ duration: 0.25, ease: "easeOut" }}
-        className="modal-container-responsive max-w-[1600px] w-[96vw] h-[92vh] bg-slate-950 border border-slate-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-slate-100"
+        className="modal-container-responsive max-w-[1600px] w-[96vw] h-[92vh] bg-slate-950 border border-slate-800 rounded-3xl shadow-lg flex flex-col overflow-hidden text-slate-100"
         onClick={(e) => e.stopPropagation()}
       >
 
@@ -1126,7 +1126,7 @@ export const CertificateManagementModal: React.FC<{
                   </div>
 
                   {/* ── THE A4 CERTIFICATE CANVAS (PRINT TARGET) ── */}
-                  <div className="print-certificate-target relative w-full aspect-[297/210] bg-[#FCFCFA] text-slate-900 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-2xl border-[6px] border-[#0B192C] overflow-hidden select-none font-serif">
+                  <div className="print-certificate-target relative w-full aspect-[297/210] bg-[#FCFCFA] text-slate-900 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-lg border-[6px] border-[#0B192C] overflow-hidden select-none font-serif">
 
                     {/* Outer & Inner Gold Filigree Borders */}
                     <div className="absolute inset-2 border-[1.5px] border-[#C5A059] pointer-events-none"></div>
@@ -1613,12 +1613,12 @@ export const CertificateManagementModal: React.FC<{
       {/* ── REVIEW & CONFIRM ISSUANCE MODAL ─────────────────────────────────── */}
       <AnimatePresence>
         {showConfirmIssueModal && selectedStudent && (
-          <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-modal-backdrop">
+          <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 bg-black/85 animate-modal-backdrop">
             <motion.div
               initial={{ opacity: 0, scale: 0.92, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.92, y: 15 }}
-              className="max-w-md w-full p-6 rounded-3xl bg-slate-900 border border-slate-700 shadow-2xl space-y-4 text-slate-100"
+              className="max-w-md w-full p-6 rounded-3xl bg-slate-900 border border-slate-700 shadow-lg space-y-4 text-slate-100"
             >
               <div className="flex items-center space-x-3 border-b border-slate-800 pb-3">
                 <div className="p-2.5 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30">

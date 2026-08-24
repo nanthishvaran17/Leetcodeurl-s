@@ -177,7 +177,7 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
         }
       }}
     >
-      <div className="modal-container-responsive max-w-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-2xl animate-modal-content">
+      <div className="modal-container-responsive max-w-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-lg animate-modal-content">
         
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-navy-800 bg-gray-50/50 dark:bg-navy-950/50 shrink-0">

@@ -79,8 +79,7 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
     <div className="space-y-8 animate-fade-in pb-12 font-sans">
       
       {/* Hero Banner with Rich Styling */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-2xl border border-brand-500/30">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-lg border border-brand-500/30">
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-6">
           <div className="space-y-3 max-w-3xl">

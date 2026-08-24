@@ -373,8 +373,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     <div className="space-y-6">
 
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-2xl border border-brand-500/30">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-lg border border-brand-500/30">
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
           <div className="space-y-3 max-w-2xl">
@@ -483,7 +482,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       {/* Add Student Modal */}
       {showAddModal && (
         <div className="modal-overlay-responsive animate-modal-backdrop">
-          <div className="modal-container-responsive max-w-md glass-card rounded-3xl border border-gray-200 dark:border-gray-800 shadow-2xl animate-modal-content">
+          <div className="modal-container-responsive max-w-md glass-card rounded-3xl border border-gray-200 dark:border-gray-800 shadow-lg animate-modal-content">
             <div className="p-5 border-b border-gray-100 dark:border-gray-800 shrink-0 bg-gray-50/50 dark:bg-navy-900/50 flex items-center justify-between">
               <h3 className="text-base font-extrabold text-gray-900 dark:text-white">Add New Student Record</h3>
               <button onClick={handleCloseAddModal} className="p-1 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors cursor-pointer">

@@ -50,7 +50,6 @@ export const PlacementIntelligenceCard: React.FC<PlacementIntelligenceCardProps>
   return (
     <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur-xl relative overflow-hidden shadow-xl">
       {/* Background Accent Glow */}
-      <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Header */}
       <div className="flex items-center justify-between mb-4">

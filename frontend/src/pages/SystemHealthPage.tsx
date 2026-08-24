@@ -484,9 +484,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
   return (
     <div className="space-y-6 pb-20 animate-fade-in text-gray-900 dark:text-gray-100 font-sans">
       {/* ── 1. TOP HERO BANNER (RICH GLOWING INSTITUTIONAL GRADIENT) ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-2xl border border-brand-500/30">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-lg border border-brand-500/30">
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           {/* Left Column: Institutional Header & Status */}
@@ -928,7 +926,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
               {/* Autocomplete Dropdown */}
               {showStudentDropdown && studentSuggestions.length > 0 && (
-                <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-2xl shadow-2xl z-50 max-h-56 overflow-y-auto p-1.5 space-y-1 animate-fade-in">
+                <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-2xl shadow-lg z-50 max-h-56 overflow-y-auto p-1.5 space-y-1 animate-fade-in">
                   {studentSuggestions.map((st) => (
                     <button
                       key={st.id}
@@ -1650,7 +1648,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
       {/* ── 13. TRUST SCORE "WHY THIS SCORE?" FACTOR BREAKDOWN MODAL ── */}
       {showTrustModal && (
         <div className="modal-overlay-responsive animate-modal-backdrop">
-          <div className="modal-container-responsive max-w-xl bg-white dark:bg-navy-900 border border-indigo-300 dark:border-indigo-700/60 rounded-3xl shadow-2xl p-6 space-y-4 animate-modal-content">
+          <div className="modal-container-responsive max-w-xl bg-white dark:bg-navy-900 border border-indigo-300 dark:border-indigo-700/60 rounded-3xl shadow-lg p-6 space-y-4 animate-modal-content">
             <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-indigo-600" />
@@ -1703,7 +1701,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
       {/* ── 13. OFFICIAL FORENSIC AUDIT CERTIFICATE PREVIEW MODAL ── */}
       {showCertPreviewModal && forensicResult && (
         <div className="modal-overlay-responsive animate-modal-backdrop">
-          <div className="modal-container-responsive max-w-3xl bg-white text-gray-900 rounded-3xl shadow-2xl border-4 border-amber-500/40 animate-modal-content">
+          <div className="modal-container-responsive max-w-3xl bg-white text-gray-900 rounded-3xl shadow-lg border-4 border-amber-500/40 animate-modal-content">
             
             {/* Modal Controls Bar */}
             <div className="px-6 py-3 bg-navy-950 text-white flex items-center justify-between border-b border-gray-800">
@@ -1887,7 +1885,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
       {/* ── 14. SMART COMMAND PALETTE (CTRL+K / CMD+K) ── */}
       {showCommandPalette && (
         <div className="modal-overlay-responsive animate-modal-backdrop">
-          <div className="modal-container-responsive max-w-lg bg-white dark:bg-navy-900 border border-indigo-300 dark:border-indigo-700/60 rounded-3xl shadow-2xl animate-modal-content">
+          <div className="modal-container-responsive max-w-lg bg-white dark:bg-navy-900 border border-indigo-300 dark:border-indigo-700/60 rounded-3xl shadow-lg animate-modal-content">
             <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2 shrink-0">
               <Search className="w-4 h-4 text-gray-400" />
               <input

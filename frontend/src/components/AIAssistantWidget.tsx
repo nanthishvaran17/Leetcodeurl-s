@@ -419,13 +419,12 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                 setIsOpen(true);
               }
             }}
-            className="w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white shadow-2xl shadow-blue-600/50 cursor-grab active:cursor-grabbing border-2 border-white/30 backdrop-blur-md transition-shadow"
+            className="w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white shadow-md cursor-grab active:cursor-grabbing border-2 border-white/20 transition-all"
             title="Drag to move, Click to open AI"
           >
             <div className="relative flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-amber-300 animate-pulse" />
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full animate-ping"></span>
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border border-white"></span>
+              <Sparkles className="w-6 h-6 text-amber-300" />
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border border-white shadow-sm"></span>
             </div>
           </motion.button>
         )}
@@ -439,7 +438,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 20 }}
             transition={{ type: "spring", stiffness: 350, damping: 25 }}
-            className={`bg-white dark:bg-navy-900 rounded-3xl border border-gray-200 dark:border-navy-800 shadow-2xl flex flex-col overflow-hidden text-gray-900 dark:text-gray-100 transition-all ${
+            className={`bg-white dark:bg-navy-900 rounded-3xl border border-gray-200 dark:border-navy-800 shadow-lg flex flex-col overflow-hidden text-gray-900 dark:text-gray-100 transition-all ${
               isExpanded
                 ? 'w-[800px] max-w-[calc(100vw-2rem)] h-[780px] max-h-[calc(100vh-4rem)]'
                 : 'w-[420px] max-w-[calc(100vw-2rem)] h-[640px]'

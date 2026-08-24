@@ -109,7 +109,7 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
 
   return (
     <div
-      className={`pointer-events-auto relative overflow-hidden rounded-2xl p-4 shadow-2xl border backdrop-blur-xl transition-all duration-300 transform hover:-translate-y-0.5 ${style.bg}`}
+      className={`pointer-events-auto relative overflow-hidden rounded-2xl p-4 shadow-lg border backdrop-blur-xl transition-all duration-300 transform hover:-translate-y-0.5 ${style.bg}`}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       role="alert"
@@ -222,7 +222,7 @@ export const NotificationCenter: React.FC = () => {
           aria-labelledby="confirm-dialog-title"
         >
           <div
-            className="modal-container-responsive max-w-[520px] bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl shadow-2xl overflow-hidden p-6 sm:p-8 space-y-5 animate-modal-content"
+            className="modal-container-responsive max-w-[520px] bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl shadow-lg overflow-hidden p-6 sm:p-8 space-y-5 animate-modal-content"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header Icon */}

@@ -304,8 +304,7 @@ export const ComparePage: React.FC = () => {
     <div className="space-y-8 py-2">
       
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-2xl border border-brand-500/30">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-lg border border-brand-500/30">
 
         <div className="relative z-10 space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
@@ -392,7 +391,7 @@ export const ComparePage: React.FC = () => {
                     <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${deptOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {deptOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl max-h-64 overflow-y-auto">
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-64 overflow-y-auto">
                       <button
                         type="button"
                         onMouseDown={(e) => e.preventDefault()}
@@ -448,7 +447,7 @@ export const ComparePage: React.FC = () => {
                     <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${yearOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {yearOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl max-h-64 overflow-y-auto">
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-64 overflow-y-auto">
                       {[
                         { value: 'ALL', code: 'ALL', label: 'All Academic Years' },
                         { value: 'II',  code: 'II',  label: 'II Year (Batch 2025 - 2029)' },
@@ -529,7 +528,7 @@ export const ComparePage: React.FC = () => {
                 </button>
 
                 {fighterAOpen && (
-                  <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-brand-200 dark:border-navy-700 rounded-2xl shadow-2xl max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
+                  <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-brand-200 dark:border-navy-700 rounded-2xl shadow-lg max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
                     {filteredStudentsA.length === 0 ? (
                       <div className="p-4 text-center text-xs font-bold text-gray-400">No matching student found</div>
                     ) : (
@@ -632,7 +631,7 @@ export const ComparePage: React.FC = () => {
                 </button>
 
                 {fighterBOpen && (
-                  <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-indigo-200 dark:border-navy-700 rounded-2xl shadow-2xl max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
+                  <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-indigo-200 dark:border-navy-700 rounded-2xl shadow-lg max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
                     {filteredStudentsB.length === 0 ? (
                       <div className="p-4 text-center text-xs font-bold text-gray-400">No matching student found</div>
                     ) : (
@@ -1023,7 +1022,7 @@ export const ComparePage: React.FC = () => {
                   </button>
 
                   {groupAOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-brand-200 dark:border-navy-700 rounded-2xl shadow-2xl max-h-64 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-brand-200 dark:border-navy-700 rounded-2xl shadow-lg max-h-64 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
                       {groupOptions.map((g) => (
                         <button
                           key={g.key}
@@ -1083,7 +1082,7 @@ export const ComparePage: React.FC = () => {
                   </button>
 
                   {groupBOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-indigo-200 dark:border-navy-700 rounded-2xl shadow-2xl max-h-64 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-indigo-200 dark:border-navy-700 rounded-2xl shadow-lg max-h-64 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
                       {groupOptions.map((g) => (
                         <button
                           key={g.key}

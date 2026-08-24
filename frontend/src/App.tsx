@@ -453,7 +453,7 @@ export const App: React.FC = () => {
           onClick={(e) => { if (e.target === e.currentTarget) setSelectedStudent(null); }}
         >
           <div
-            className="modal-container-responsive bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 animate-modal-content max-w-4xl"
+            className="modal-container-responsive bg-white dark:bg-navy-900 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-800 animate-modal-content max-w-4xl"
             onClick={(e) => e.stopPropagation()}
           >
             <StudentProfilePage

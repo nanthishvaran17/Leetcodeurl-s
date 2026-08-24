@@ -119,7 +119,7 @@ export const StatusNotificationModal: React.FC<StatusNotificationModalProps> = (
     >
       {/* Modal Container Card */}
       <div
-        className={`modal-container-responsive max-w-[500px] bg-slate-900/95 dark:bg-navy-900/95 backdrop-blur-2xl rounded-3xl border ${config.borderGlow} p-6 sm:p-8 text-center space-y-5 text-white animate-modal-content transition-all shadow-2xl overflow-y-auto`}
+        className={`modal-container-responsive max-w-[500px] bg-slate-900/95 dark:bg-navy-900/95 backdrop-blur-2xl rounded-3xl border ${config.borderGlow} p-6 sm:p-8 text-center space-y-5 text-white animate-modal-content transition-all shadow-lg overflow-y-auto`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Subtle Top Close Icon */}

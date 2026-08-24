@@ -782,7 +782,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
           }}
         >
           <div
-            className="modal-container-responsive max-w-md bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-rose-200 dark:border-rose-900/50 p-6 space-y-4 animate-modal-content"
+            className="modal-container-responsive max-w-md bg-white dark:bg-navy-900 rounded-3xl shadow-lg border border-rose-200 dark:border-rose-900/50 p-6 space-y-4 animate-modal-content"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
@@ -833,13 +833,12 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
         >
           {/* Modal panel — centered with safe margins from top & bottom */}
           <div
-            className="modal-container-responsive bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 animate-modal-content"
+            className="modal-container-responsive bg-white dark:bg-navy-900 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-800 animate-modal-content"
             onClick={(e) => e.stopPropagation()}
           >
 
             {/* ── A. STICKY HEADER ─────────────────────────────────────── */}
             <div className="shrink-0 p-5 sm:p-6 bg-gradient-to-r from-brand-900 via-indigo-900 to-navy-950 text-white flex items-start justify-between relative overflow-hidden">
-              <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-brand-500/10 rounded-full blur-2xl pointer-events-none" />
 
               {/* Identity */}
               <div className="flex items-center space-x-3 sm:space-x-4 z-10 min-w-0 flex-1 pr-3">

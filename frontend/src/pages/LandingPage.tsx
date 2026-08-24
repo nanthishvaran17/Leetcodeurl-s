@@ -429,10 +429,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-900 via-navy-900 to-indigo-950 text-white p-8 md:p-12 shadow-2xl border border-brand-500/30"
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-900 via-navy-900 to-indigo-950 text-white p-8 md:p-12 shadow-lg border border-brand-500/30"
       >
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
-        <div className="absolute bottom-0 left-1/3 -mb-10 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="relative z-10 max-w-3xl space-y-6">
           <motion.div
@@ -572,7 +570,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 transition={{ type: "spring", stiffness: 350, damping: 25 }}
                 className="glass-card p-6 sm:p-7 rounded-3xl space-y-3 border border-gray-200/80 dark:border-gray-800/80 shadow-lg relative overflow-hidden group cursor-default"
               >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all pointer-events-none"></div>
                 <div className="p-3 w-fit rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
                   <Users className="w-7 h-7" />
                 </div>
@@ -587,7 +584,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 transition={{ type: "spring", stiffness: 350, damping: 25 }}
                 className="glass-card p-6 sm:p-7 rounded-3xl space-y-2 border border-gray-200/80 dark:border-gray-800/80 shadow-lg relative overflow-hidden group cursor-default"
               >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all pointer-events-none"></div>
                 <div className="p-3 w-fit rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
@@ -607,7 +603,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 transition={{ type: "spring", stiffness: 350, damping: 25 }}
                 className="glass-card p-6 sm:p-7 rounded-3xl space-y-2 border border-gray-200/80 dark:border-gray-800/80 shadow-lg relative overflow-hidden group cursor-default"
               >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all pointer-events-none"></div>
                 <div className="p-3 w-fit rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
                   <Trophy className="w-6 h-6" />
                 </div>
@@ -623,7 +618,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 transition={{ type: "spring", stiffness: 350, damping: 25 }}
                 className="glass-card p-6 sm:p-7 rounded-3xl space-y-2 border border-amber-200/80 dark:border-amber-900/40 shadow-lg relative overflow-hidden group cursor-default gold-aura"
               >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/15 rounded-full blur-2xl group-hover:bg-amber-500/25 transition-all pointer-events-none"></div>
                 <div className="p-3 w-fit rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
                   <Trophy className="w-6 h-6 fill-amber-500" />
                 </div>
@@ -826,8 +820,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
         {/* Premium Live Sync Progress Bar */}
         {syncProgress && (
-          <div className="p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-2xl space-y-4 overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-lg space-y-4 overflow-hidden relative">
 
             <div className="flex justify-between items-end flex-wrap gap-2 relative z-10">
               <div className="space-y-1">

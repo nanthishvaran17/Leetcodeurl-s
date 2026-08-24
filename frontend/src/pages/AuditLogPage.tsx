@@ -57,8 +57,7 @@ export const AuditLogPage: React.FC = () => {
     <div className="space-y-6">
       
       {/* ── HEADER (RICH GLOWING INSTITUTIONAL GRADIENT) ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-2xl border border-brand-500/30">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-lg border border-brand-500/30">
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
           <div className="space-y-2.5 max-w-2xl">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
@@ -244,7 +243,7 @@ export const AuditLogPage: React.FC = () => {
             if (e.target === e.currentTarget) setSelectedLog(null);
           }}
         >
-          <div className="modal-container-responsive max-w-xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-800 rounded-3xl shadow-2xl p-6 space-y-4 animate-modal-content">
+          <div className="modal-container-responsive max-w-xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-800 rounded-3xl shadow-lg p-6 space-y-4 animate-modal-content">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-navy-800">
               <div className="flex items-center space-x-2.5">
                 <div className="p-2 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">

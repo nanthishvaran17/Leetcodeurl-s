@@ -276,7 +276,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
           
           {/* Loading State */}
           {loading && (
-            <div className="p-12 text-center rounded-3xl bg-slate-900/80 border border-slate-800 shadow-2xl backdrop-blur-xl space-y-4">
+            <div className="p-12 text-center rounded-3xl bg-slate-900/80 border border-slate-800 shadow-lg backdrop-blur-xl space-y-4">
               <div className={`w-12 h-12 border-4 ${isForensicDoc ? 'border-blue-500/30 border-t-blue-500' : 'border-emerald-500/30 border-t-emerald-500'} rounded-full animate-spin mx-auto`}></div>
               <h3 className="text-base font-black text-white">Cryptographically Verifying Institutional Credential...</h3>
               <p className="text-xs text-slate-400 font-mono">Querying authoritative registry for {verificationId}</p>
@@ -285,7 +285,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
 
           {/* 1A. VERIFIED FORENSIC CONTEST REPORT STATE */}
           {!loading && data && data.status === 'VERIFIED' && isForensicDoc && (
-            <div className="rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-blue-500/40 shadow-2xl shadow-blue-500/10 p-6 sm:p-10 space-y-8 backdrop-blur-xl relative overflow-hidden">
+            <div className="rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-blue-500/40 shadow-lg shadow-blue-500/10 p-6 sm:p-10 space-y-8 backdrop-blur-xl relative overflow-hidden">
               
               {/* Blue / Indigo Top Ribbon */}
               <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-500"></div>
@@ -426,7 +426,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
 
           {/* 1B. VERIFIED CERTIFICATE OF EXCELLENCE STATE */}
           {!loading && data && data.status === 'VERIFIED' && !isForensicDoc && (
-            <div className="rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-emerald-500/40 shadow-2xl shadow-emerald-500/10 p-6 sm:p-10 space-y-8 backdrop-blur-xl relative overflow-hidden">
+            <div className="rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-emerald-500/40 shadow-lg shadow-emerald-500/10 p-6 sm:p-10 space-y-8 backdrop-blur-xl relative overflow-hidden">
               
               {/* Ornate Gold Top Ribbon */}
               <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-600 via-amber-400 to-emerald-500"></div>
@@ -556,7 +556,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
 
           {/* 2. REVOKED CERTIFICATE STATE */}
           {!loading && data && data.status === 'REVOKED' && (
-            <div className="rounded-3xl bg-slate-900 border border-rose-500/40 shadow-2xl p-8 space-y-6 text-center">
+            <div className="rounded-3xl bg-slate-900 border border-rose-500/40 shadow-lg p-8 space-y-6 text-center">
               <div className="w-16 h-16 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-500 flex items-center justify-center mx-auto">
                 <ShieldAlert className="w-8 h-8" />
               </div>
@@ -580,7 +580,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
 
           {/* 3. SERVER ERROR / SERVICE UNAVAILABLE STATE */}
           {!loading && error === 'SERVER_ERROR' && (
-            <div className="rounded-3xl bg-slate-900 border border-red-500/40 shadow-2xl p-8 space-y-6 text-center">
+            <div className="rounded-3xl bg-slate-900 border border-red-500/40 shadow-lg p-8 space-y-6 text-center">
               <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/30 text-red-500 flex items-center justify-center mx-auto">
                 <AlertTriangle className="w-8 h-8" />
               </div>
@@ -608,7 +608,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
 
           {/* 4. NOT VERIFIED / NOT FOUND STATE */}
           {!loading && error !== 'SERVER_ERROR' && (!data || data.status === 'NOT_VERIFIED' || error) && (
-            <div className="rounded-3xl bg-slate-900 border border-amber-500/40 shadow-2xl p-8 space-y-6 text-center">
+            <div className="rounded-3xl bg-slate-900 border border-amber-500/40 shadow-lg p-8 space-y-6 text-center">
               <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-center justify-center mx-auto">
                 <XCircle className="w-8 h-8" />
               </div>

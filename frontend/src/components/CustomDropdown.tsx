@@ -126,7 +126,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.98 }}
             transition={{ duration: 0.16, ease: 'easeOut' }}
-            className={`absolute ${alignClass} z-[9999] mt-1.5 w-full min-w-[280px] sm:min-w-[340px] max-h-80 overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 shadow-2xl p-1.5 space-y-1 focus:outline-none ring-1 ring-black/10 dark:ring-white/10`}
+            className={`absolute ${alignClass} z-[9999] mt-1.5 w-full min-w-[280px] sm:min-w-[340px] max-h-80 overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 shadow-lg p-1.5 space-y-1 focus:outline-none ring-1 ring-black/10 dark:ring-white/10`}
             style={{
               backgroundColor: 'var(--dropdown-bg, #ffffff)',
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.08)'

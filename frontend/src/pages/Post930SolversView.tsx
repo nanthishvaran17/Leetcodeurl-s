@@ -78,8 +78,7 @@ export const Post930SolversView: React.FC = () => {
     <div className="space-y-8 py-2 animate-fade-in">
 
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-950 via-slate-900 to-indigo-950 text-white p-8 shadow-2xl border border-amber-500/30">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-950 via-slate-900 to-indigo-950 text-white p-8 shadow-lg border border-amber-500/30">
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
           <div className="space-y-2">
@@ -329,8 +328,8 @@ export const Post930SolversView: React.FC = () => {
 
       {/* Problem Evidence Modal */}
       {selectedStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 shadow-2xl overflow-hidden text-gray-900 dark:text-gray-100 space-y-4 p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 animate-fade-in">
+          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 shadow-lg overflow-hidden text-gray-900 dark:text-gray-100 space-y-4 p-6">
             <div className="flex items-center justify-between border-b border-gray-200 dark:border-navy-800 pb-3">
               <div>
                 <h3 className="text-base font-black flex items-center space-x-2">

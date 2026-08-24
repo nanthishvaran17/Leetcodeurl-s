@@ -222,7 +222,7 @@ export const GrowthIntelligencePage: React.FC = () => {
     <div className="space-y-8 py-2 pb-16 animate-slideUp">
 
       {/* Executive Header Banner */}
-      <div className={`relative rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-2xl border border-brand-500/30 ${deptOpen || yearOpen ? 'z-50' : 'z-10'}`}>
+      <div className={`relative rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-lg border border-brand-500/30 ${deptOpen || yearOpen ? 'z-50' : 'z-10'}`}>
         <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
           <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl"></div>
         </div>
@@ -271,7 +271,7 @@ export const GrowthIntelligencePage: React.FC = () => {
               </button>
 
               {deptOpen && (
-                <div className="absolute z-[200] top-full left-0 mt-1 min-w-[220px] bg-navy-900 border border-gray-700 rounded-2xl shadow-2xl max-h-64 overflow-y-auto divide-y divide-navy-800">
+                <div className="absolute z-[200] top-full left-0 mt-1 min-w-[220px] bg-navy-900 border border-gray-700 rounded-2xl shadow-lg max-h-64 overflow-y-auto divide-y divide-navy-800">
                   <button
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
@@ -327,7 +327,7 @@ export const GrowthIntelligencePage: React.FC = () => {
               </button>
 
               {yearOpen && (
-                <div className="absolute z-[200] top-full left-0 mt-1 min-w-[200px] bg-navy-900 border border-gray-700 rounded-2xl shadow-2xl max-h-64 overflow-y-auto divide-y divide-navy-800">
+                <div className="absolute z-[200] top-full left-0 mt-1 min-w-[200px] bg-navy-900 border border-gray-700 rounded-2xl shadow-lg max-h-64 overflow-y-auto divide-y divide-navy-800">
                   <button
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
@@ -452,7 +452,7 @@ export const GrowthIntelligencePage: React.FC = () => {
       </div>
 
       {/* Main Section: Top Improvers Leaderboard */}
-      <div className="glass-card p-6 rounded-3xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-900 shadow-2xl space-y-5">
+      <div className="glass-card p-6 rounded-3xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-900 shadow-lg space-y-5">
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-4">
           <div className="flex items-center space-x-3">

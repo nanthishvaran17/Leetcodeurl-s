@@ -37,8 +37,7 @@ export const LiveStudentMonitor: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in font-sans">
       {/* ── HEADER CARD ── */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white shadow-2xl border border-brand-500/30 relative overflow-hidden">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-72 h-72 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white shadow-lg border border-brand-500/30 relative overflow-hidden">
 
         <div className="relative z-10 space-y-4 max-w-3xl">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">

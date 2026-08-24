@@ -248,7 +248,7 @@ export const HallOfFameKioskPage: React.FC = () => {
               </div>
 
               {/* Gold (Rank 1) */}
-              <div className="bg-gradient-to-b from-amber-500/20 to-slate-900/90 rounded-3xl p-8 border-2 border-amber-400 text-center shadow-2xl shadow-amber-500/20 scale-105">
+              <div className="bg-gradient-to-b from-amber-500/20 to-slate-900/90 rounded-3xl p-8 border-2 border-amber-400 text-center shadow-lg shadow-amber-500/20 scale-105">
                 <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-yellow-300 to-amber-500 text-slate-950 font-black text-3xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-amber-500/40 animate-bounce">
                   👑 1
                 </div>

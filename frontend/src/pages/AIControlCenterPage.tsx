@@ -127,8 +127,7 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
     <div className="space-y-6 pb-12 animate-fade-in font-sans">
 
       {/* ── 1. HEADER TELEMETRY BAR (SOC / NOC OPERATIONS DESIGN) ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-2xl border border-brand-500/30">
-        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-80 h-80 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-lg border border-brand-500/30">
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2.5 max-w-3xl">
@@ -466,7 +465,7 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
       {/* ── 6. SERVICE DETAIL DIAGNOSTICS DRAWER ── */}
       {selectedService && (
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/60 backdrop-blur-sm animate-fade-in p-4">
-          <div className="bg-white dark:bg-navy-900 border-l border-gray-200 dark:border-navy-700 w-full max-w-lg h-full rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 overflow-y-auto relative">
+          <div className="bg-white dark:bg-navy-900 border-l border-gray-200 dark:border-navy-700 w-full max-w-lg h-full rounded-3xl p-6 sm:p-8 shadow-lg space-y-6 overflow-y-auto relative">
             <button
               onClick={() => setSelectedService(null)}
               className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white rounded-full transition-colors cursor-pointer"

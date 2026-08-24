@@ -139,8 +139,8 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
   const statusColor = student?.badge_color || (statusLabel === 'Excellent' ? 'emerald' : statusLabel === 'At Risk' ? 'rose' : 'amber');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-fade-in">
-      <div className="w-full max-w-3xl max-h-[92vh] flex flex-col rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 shadow-2xl overflow-hidden my-auto text-gray-900 dark:text-gray-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 overflow-y-auto animate-fade-in">
+      <div className="w-full max-w-3xl max-h-[92vh] flex flex-col rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 shadow-lg overflow-hidden my-auto text-gray-900 dark:text-gray-100">
 
         {/* Modal Header */}
         <div className="p-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-indigo-500/20">
