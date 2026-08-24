@@ -324,57 +324,85 @@ export const AdminStaffAllocationPanel: React.FC = () => {
         {/* Unassigned Students Table */}
         <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-800">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-navy-950 text-slate-400 font-black uppercase text-[10px] tracking-wider border-b">
+            <thead className="bg-slate-100/80 dark:bg-navy-900 text-slate-500 dark:text-slate-400 font-black uppercase text-[10px] tracking-widest border-b border-slate-200 dark:border-navy-800">
               <tr>
-                <th className="px-4 py-3">
+                <th className="px-4 py-4 text-center w-12">
                   <input
                     type="checkbox"
                     checked={unassigned.length > 0 && selectedStudents.length === unassigned.length}
                     onChange={toggleSelectAll}
-                    className="rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                    className="rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer w-4 h-4"
                   />
                 </th>
-                <th className="px-4 py-3">Register No</th>
-                <th className="px-4 py-3">Student Name</th>
-                <th className="px-4 py-3">Department</th>
-                <th className="px-4 py-3">Year / Class</th>
-                <th className="px-4 py-3">LeetCode Handle</th>
-                <th className="px-4 py-3">Total Solved</th>
+                <th className="px-4 py-4 text-center whitespace-nowrap">Register No</th>
+                <th className="px-4 py-4 text-left whitespace-nowrap">Student Name</th>
+                <th className="px-4 py-4 text-center whitespace-nowrap">Department</th>
+                <th className="px-4 py-4 text-center whitespace-nowrap">Year / Class</th>
+                <th className="px-4 py-4 text-center whitespace-nowrap">LeetCode Handle</th>
+                <th className="px-4 py-4 text-center whitespace-nowrap">Total Solved</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
+            <tbody className="divide-y divide-slate-100 dark:divide-navy-800 bg-white dark:bg-navy-950">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-slate-400 font-bold animate-pulse">
-                    Loading unassigned students...
+                  <td colSpan={7} className="p-12 text-center text-slate-400 font-bold animate-pulse">
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <RefreshCw className="w-6 h-6 animate-spin text-brand-500" />
+                      <span>Loading unassigned students...</span>
+                    </div>
                   </td>
                 </tr>
               ) : unassigned.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-slate-400 italic">
-                    🎉 All active students are currently assigned to a primary mentor!
+                  <td colSpan={7} className="p-12 text-center">
+                    <div className="flex flex-col items-center justify-center space-y-3">
+                      <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
+                        <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                      </div>
+                      <p className="text-slate-600 dark:text-slate-400 font-bold text-sm">
+                        🎉 All active students are currently assigned to a primary mentor!
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 unassigned.map((st: any) => (
-                  <tr key={st.id} className="hover:bg-slate-50/50 dark:hover:bg-navy-850 transition-colors">
-                    <td className="px-4 py-3.5">
+                  <tr key={st.id} className="hover:bg-brand-50/40 dark:hover:bg-brand-900/10 transition-colors duration-150 group">
+                    <td className="px-4 py-4 text-center">
                       <input
                         type="checkbox"
                         checked={selectedStudents.includes(st.id)}
                         onChange={() => toggleSelectStudent(st.id)}
-                        className="rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                        className="rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer w-4 h-4"
                       />
                     </td>
-                    <td className="px-4 py-3.5 font-mono text-slate-500">{st.reg_no}</td>
-                    <td className="px-4 py-3.5 font-extrabold text-slate-900 dark:text-white">{st.name}</td>
-                    <td className="px-4 py-3.5 text-slate-600 dark:text-slate-300">{st.department}</td>
-                    <td className="px-4 py-3.5 text-slate-600 dark:text-slate-300">{st.year_level} Year ({st.section})</td>
-                    <td className="px-4 py-3.5 font-bold text-brand-600 dark:text-brand-400">
-                      {st.username ? `@${st.username}` : 'Not Linked'}
+                    <td className="px-4 py-4 font-mono text-slate-500 dark:text-slate-400 text-center tracking-wider">{st.reg_no}</td>
+                    <td className="px-4 py-4 font-extrabold text-slate-900 dark:text-white text-left">{st.name}</td>
+                    <td className="px-4 py-4 text-center">
+                      <span className="px-2.5 py-1 bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 rounded-lg text-[10px] font-bold border border-slate-200 dark:border-navy-700">
+                        {st.department}
+                      </span>
                     </td>
-                    <td className="px-4 py-3.5 font-black text-slate-900 dark:text-white">
-                      {st.total_solved || 0}
+                    <td className="px-4 py-4 text-center">
+                      <span className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 rounded-lg text-[10px] font-bold border border-indigo-100 dark:border-indigo-500/20">
+                        {st.year_level} Year ({st.section})
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 font-bold text-center">
+                      {st.username ? (
+                        <span className="text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-500/10 border border-brand-200 dark:border-brand-500/20 px-2.5 py-1 rounded-lg text-[11px] inline-flex items-center space-x-1">
+                          <span>@</span><span>{st.username}</span>
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 italic text-xs">Not Linked</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 dark:bg-navy-800 border border-slate-200 dark:border-navy-700">
+                        <span className="font-black text-slate-900 dark:text-white text-xs">
+                          {st.total_solved || 0}
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 ))

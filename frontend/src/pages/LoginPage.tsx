@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Shield, Lock, User, Mail, AlertCircle, CheckCircle2, Loader2, ArrowLeft,
-  RefreshCw, X, Eye, EyeOff, ShieldCheck, KeyRound, Sparkles, ShieldAlert,
-  Fingerprint, Check, Radio
+  Lock, User, Mail, AlertCircle, CheckCircle2, Loader2,
+  Eye, EyeOff, KeyRound, Fingerprint, Check, X,
+  TrendingUp, ShieldCheck, PieChart, FileText, Star,
+  Sun, Moon, HelpCircle, ArrowRight, Shield
 } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
@@ -14,6 +15,20 @@ interface LoginPageProps {
   onClose?: () => void;
 }
 
+// ─── SVG Wave Animation ────────────────────────────────────────────────────────
+const AnimatedWaves: React.FC = () => {
+  return (
+    <div className="absolute bottom-0 left-0 right-0 h-48 overflow-hidden pointer-events-none opacity-60">
+      <svg className="absolute bottom-0 w-[200%] h-full" viewBox="0 0 1200 120" preserveAspectRatio="none">
+        <path className="animate-wave-slow" d="M0,40 C300,100 600,0 900,40 C1200,80 1500,0 1800,40 L1800,120 L0,120 Z" fill="rgba(12, 142, 233, 0.15)" />
+        <path className="animate-wave-medium" d="M0,60 C400,0 800,120 1200,60 C1600,0 2000,120 2400,60 L2400,120 L0,120 Z" fill="rgba(56, 189, 248, 0.2)" />
+        <path className="animate-wave-fast" d="M0,80 C200,120 500,20 800,80 C1100,140 1400,20 1700,80 L1700,120 L0,120 Z" fill="rgba(148, 210, 252, 0.25)" />
+      </svg>
+    </div>
+  );
+};
+
+// ─── Main LoginPage ──────────────────────────────────────────────────────────
 export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
   const [authMode, setAuthMode] = useState<'otp' | 'admin'>('otp');
   const [step, setStep] = useState<'email' | 'otp_verify' | 'success'>('email');
@@ -36,8 +51,26 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
   const [resendCooldown, setResendCooldown] = useState(0);
   const [isShaking, setIsShaking] = useState(false);
   const [isWakingServer, setIsWakingServer] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  // Mouse parallax state (desktop only)
+  const [mouseX, setMouseX] = useState(0);
+  const [mouseY, setMouseY] = useState(0);
 
-  // Detect slow network response
+  // Mount animation trigger
+  useEffect(() => { const t = setTimeout(() => setMounted(true), 60); return () => clearTimeout(t); }, []);
+
+  // Mouse parallax tracker — disabled on touch devices
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const onMove = (e: MouseEvent) => {
+      const cx = (e.clientX / window.innerWidth - 0.5) * 2;  // -1..1
+      const cy = (e.clientY / window.innerHeight - 0.5) * 2; // -1..1
+      setMouseX(cx);
+      setMouseY(cy);
+    };
+    window.addEventListener('mousemove', onMove, { passive: true });
+    return () => window.removeEventListener('mousemove', onMove);
+  }, []);
   useEffect(() => {
     let t: any = null;
     if (loading) {
@@ -337,439 +370,325 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
     }
   };
 
-  const formatTimer = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
+  const formatTimer = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
-  // State-aware Shield Status computation
-  const getShieldStatus = () => {
-    if (step === 'success') return { label: 'IDENTITY CONFIRMED', color: 'emerald' };
-    if (error) return { label: 'SECURITY CHECK FAILED', color: 'rose' };
-    if (loading && step === 'email') return { label: 'VERIFYING CHANNEL', color: 'cyan' };
-    if (loading && step === 'otp_verify') return { label: 'AUTHENTICATING CODE', color: 'cyan' };
-    if (step === 'otp_verify') return { label: 'VERIFICATION REQUIRED', color: 'indigo' };
-    return { label: 'ADMIN ACCESS READY', color: 'brand' };
-  };
+  const AnimatedWaves = () => (
+    <div className="absolute inset-x-0 bottom-0 h-48 opacity-20 overflow-hidden pointer-events-none">
+      <svg className="w-full h-full" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path fill="#ffffff" fillOpacity="1" d="M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,213.3C672,192,768,128,864,122.7C960,117,1056,171,1152,192C1248,213,1344,203,1392,197.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+      </svg>
+    </div>
+  );
 
-  const shieldStatus = getShieldStatus();
+  // Shared input style for light theme right panel
+  const inputCls = "w-full py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-[13px] font-medium text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-200 shadow-sm";
 
   return (
-    <div className={`relative max-w-md mx-auto my-3 p-6 sm:p-8 rounded-3xl border border-gray-200 dark:border-navy-700/90 shadow-2xl space-y-4 bg-white dark:bg-navy-950 transition-all ${isShaking ? 'animate-shake' : ''}`}>
+    <div className="fixed inset-0 z-[100] flex bg-white overflow-hidden font-sans">
+      
+      {/* ══ LEFT PANEL ══════════════════════════════════════════════════════ */}
+      <div className="relative hidden lg:flex lg:w-[48%] xl:w-[45%] flex-col overflow-hidden bg-gradient-to-b from-[#0a1128] to-[#0d1b3e] text-white">
+        
+        {/* Dotted Grid Pattern */}
+        <div className="absolute top-0 right-0 w-80 h-80 opacity-20 pointer-events-none" 
+          style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.3) 1px, transparent 1px)', backgroundSize: '16px 16px', maskImage: 'radial-gradient(circle at top right, black, transparent)' }} />
+        
+        {/* Animated Background Waves */}
+        <AnimatedWaves />
 
-      {onClose && (
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close admin login"
-          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-navy-800 rounded-xl transition-all z-10 cursor-pointer"
-        >
-          <X className="w-5 h-5" />
-        </button>
-      )}
+        {/* Building Silhouette Illustration */}
+        <div className="absolute bottom-8 right-8 opacity-[0.15] pointer-events-none w-[320px] text-brand-300">
+          <svg viewBox="0 0 200 100" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-full">
+            <path d="M20,90 L20,60 L60,60 L60,50 L100,30 L140,50 L140,60 L180,60 L180,90 Z" />
+            <path d="M100,30 L100,90 M60,60 L60,90 M140,60 L140,90" />
+            <path d="M40,60 L40,90 M80,50 L80,90 M120,50 L120,90 M160,60 L160,90" />
+            <text x="100" y="44" textAnchor="middle" fontSize="6" fill="currentColor" stroke="none" className="font-bold tracking-widest">NANDHA</text>
+          </svg>
+        </div>
 
-      {/* 1. CYBER SECURITY COMMAND HEADER & SHIELD */}
-      <div className="text-center space-y-2.5">
-        <div className="relative w-14 h-14 mx-auto flex items-center justify-center">
-          <div className={`absolute inset-0 rounded-2xl ${shieldStatus.color === 'emerald' ? 'bg-emerald-500/20' :
-            shieldStatus.color === 'rose' ? 'bg-rose-500/20' :
-              loading ? 'bg-cyan-500/25 animate-pulse' : 'bg-brand-500/15'
-            } blur-md transition-all`}></div>
-
-          <div className={`w-13 h-13 rounded-2xl flex items-center justify-center text-white shadow-lg transition-all relative z-10 border border-white/20 ${shieldStatus.color === 'emerald' ? 'bg-emerald-600 shadow-emerald-600/30' :
-            shieldStatus.color === 'rose' ? 'bg-rose-600 shadow-rose-600/30' :
-              'bg-gradient-to-tr from-brand-600 via-indigo-600 to-cyan-600 shadow-brand-600/30'
-            }`}>
-            {step === 'success' ? (
-              <CheckCircle2 className="w-7 h-7" />
-            ) : error ? (
-              <ShieldAlert className="w-7 h-7" />
-            ) : (
-              <ShieldCheck className="w-7 h-7" />
-            )}
+        <div className="relative z-10 flex flex-col h-full p-12 xl:p-14 justify-between">
+          
+          {/* Top: Header */}
+          <div style={{ opacity: mounted ? 1 : 0, transform: mounted ? `translateY(0)` : 'translateY(20px)', transition: 'opacity 0.8s ease, transform 0.8s ease' }}>
+            <div className="flex items-center space-x-4 mb-5">
+              <img src="/nandha_emblem.png" alt="Nandha Engineering College" className="w-14 h-14 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.15)]"
+                onError={(e) => { (e.target as HTMLImageElement).src = '/logo.png'; }} />
+              <div>
+                <h2 className="text-[16px] font-bold tracking-wider uppercase text-white/95">Nandha Engineering College</h2>
+                <p className="text-[10px] tracking-[0.2em] text-brand-300 font-bold uppercase mt-0.5">Autonomous • Erode</p>
+              </div>
+            </div>
+            <div className="w-full h-px bg-gradient-to-r from-white/20 to-transparent"></div>
           </div>
-        </div>
 
-        <div>
-          <h2 className="text-base sm:text-lg font-black text-gray-900 dark:text-white tracking-tight uppercase">
-            NANDHA LEETCODE INTELLIGENCE
-          </h2>
-          <p className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
-            Nandha Engineering College • Erode
-          </p>
-        </div>
+          {/* Middle Content */}
+          <div className="space-y-4 -mt-10" style={{ opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(16px)', transition: 'opacity 0.75s 0.2s ease, transform 0.75s 0.2s ease' }}>
+            <h1 className="text-[3.5rem] leading-[1.05] font-bold tracking-tight">
+              <span className="text-white">Nandha LeetCode</span><br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f2fe] to-[#4facfe] drop-shadow-[0_0_12px_rgba(79,172,254,0.4)]">Intelligence</span>
+            </h1>
+            <p className="text-[17px] text-slate-300 font-medium max-w-md pt-2">
+              Institutional Student Performance & Mentoring Platform
+            </p>
+            
+            <div className="flex items-center space-x-6 pt-5">
+              <div className="flex items-center space-x-2 text-brand-200"><TrendingUp className="w-4 h-4"/><span className="text-[13px] font-medium">Track</span></div>
+              <div className="flex items-center space-x-2 text-brand-200"><ShieldCheck className="w-4 h-4"/><span className="text-[13px] font-medium">Verify</span></div>
+              <div className="flex items-center space-x-2 text-brand-200"><PieChart className="w-4 h-4"/><span className="text-[13px] font-medium">Analyze</span></div>
+              <div className="flex items-center space-x-2 text-brand-200"><FileText className="w-4 h-4"/><span className="text-[13px] font-medium">Report</span></div>
+              <div className="flex items-center space-x-2 text-brand-200"><Star className="w-4 h-4"/><span className="text-[13px] font-medium">Recognize</span></div>
+            </div>
 
-        {/* Live Status Indicators Bar */}
-        <div className="flex flex-wrap items-center justify-center gap-1.5 text-[9px] font-mono font-bold">
-          <span className="px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 text-slate-700 dark:text-slate-300 flex items-center space-x-1.5 shadow-sm">
-            <span className={`w-1.5 h-1.5 rounded-full ${shieldStatus.color === 'emerald' ? 'bg-emerald-500 animate-pulse' : shieldStatus.color === 'rose' ? 'bg-rose-500' : 'bg-cyan-500 animate-pulse'}`}></span>
-            <span>{shieldStatus.label}</span>
-          </span>
-          <span className="px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 text-slate-500 dark:text-slate-400">
-            HMAC-SHA256 • TLS
-          </span>
+            <div className="mt-8 inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-[#0c1838] border border-[#1a2c5a] shadow-inner">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+              <span className="text-[11px] font-bold text-slate-200 uppercase tracking-widest">Institutional Portal</span>
+            </div>
+          </div>
+
+          {/* Bottom Footer */}
+          <div className="relative z-10 flex flex-col text-[11px] text-slate-400 space-y-1" style={{ opacity: mounted ? 1 : 0, transition: 'opacity 0.7s 0.6s ease' }}>
+            <div className="flex items-center space-x-1.5 text-brand-300 mb-1">
+              <Shield className="w-3.5 h-3.5" />
+              <span className="font-bold uppercase tracking-widest">Secure. Encrypted. Trusted.</span>
+            </div>
+            <p className="font-medium tracking-wide">© 2025 Nandha Engineering College. All rights reserved.</p>
+          </div>
         </div>
       </div>
 
-      {/* 2. THREE-STAGE VERIFICATION HUD PROGRESS (Only in OTP Mode) */}
-      {authMode === 'otp' && (
-        <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-100/80 dark:bg-navy-900/90 border border-slate-200 dark:border-navy-800 text-[10px] font-mono font-bold text-center">
-          <div className={`py-1 rounded-lg transition-all flex items-center justify-center space-x-1 ${step === 'email'
-            ? 'bg-white dark:bg-navy-800 text-brand-600 dark:text-brand-400 shadow-sm border border-brand-200/50 dark:border-brand-800/50'
-            : 'text-emerald-600 dark:text-emerald-400'
-            }`}>
-            <span>{step !== 'email' ? '✓' : '01'}</span>
-            <span>EMAIL</span>
-          </div>
-
-          <div className={`py-1 rounded-lg transition-all flex items-center justify-center space-x-1 ${step === 'otp_verify'
-            ? 'bg-white dark:bg-navy-800 text-brand-600 dark:text-brand-400 shadow-sm border border-brand-200/50 dark:border-brand-800/50'
-            : step === 'success'
-              ? 'text-emerald-600 dark:text-emerald-400'
-              : 'text-gray-400'
-            }`}>
-            <span>{step === 'success' ? '✓' : '02'}</span>
-            <span>OTP</span>
-          </div>
-
-          <div className={`py-1 rounded-lg transition-all flex items-center justify-center space-x-1 ${step === 'success'
-            ? 'bg-white dark:bg-navy-800 text-emerald-600 dark:text-emerald-400 shadow-sm border border-emerald-200 dark:border-emerald-800'
-            : 'text-gray-400'
-            }`}>
-            <span>{step === 'success' ? '✓' : '03'}</span>
-            <span>ACCESS</span>
-          </div>
-        </div>
-      )}
-
-      {/* 3. MODE SELECTOR TABS */}
-      {step !== 'success' && (
-        <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-gray-100 dark:bg-navy-900 border border-gray-200 dark:border-navy-800">
-          <button
-            type="button"
-            onClick={() => { setAuthMode('otp'); setStep('email'); setError(''); }}
-            className={`py-2 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${authMode === 'otp'
-              ? 'bg-white dark:bg-navy-800 text-brand-600 dark:text-brand-400 shadow-sm border border-gray-200/60 dark:border-navy-700'
-              : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
-              }`}
-          >
-            <Mail className="w-3.5 h-3.5" />
-            <span>Secure Email OTP</span>
+      {/* ══ RIGHT PANEL ═════════════════════════════════════════════════════ */}
+      <div className="relative flex-1 flex flex-col items-center justify-center overflow-y-auto bg-[#f5f7fb]">
+        
+        {/* Mobile close */}
+        {onClose && (
+          <button type="button" onClick={onClose} aria-label="Close"
+            className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-600 rounded-xl transition-all z-50">
+            <X className="w-5 h-5" />
           </button>
-          <button
-            type="button"
-            onClick={() => { setAuthMode('admin'); setError(''); }}
-            className={`py-2 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${authMode === 'admin'
-              ? 'bg-white dark:bg-navy-800 text-brand-600 dark:text-brand-400 shadow-sm border border-gray-200/60 dark:border-navy-700'
-              : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
-              }`}
-          >
-            <KeyRound className="w-3.5 h-3.5" />
-            <span>Admin Password</span>
-          </button>
-        </div>
-      )}
-
-      {/* 4. ERROR & SUCCESS NOTIFICATIONS */}
-      {error && (
-        <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center justify-between space-x-2 animate-fadeIn shadow-sm">
-          <div className="flex items-center space-x-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
-            <span className="font-semibold">{error}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setError('')}
-            className="p-1 text-rose-500 hover:text-rose-700 dark:hover:text-rose-200 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-all shrink-0 cursor-pointer"
-            title="Dismiss notification"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
-
-      {successMsg && step !== 'success' && (
-        <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs flex items-center space-x-2 animate-fadeIn shadow-sm">
-          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
-          <span className="font-semibold">{successMsg}</span>
-        </div>
-      )}
-
-      {/* Secure Channel Progress Banner */}
-      {loading && isWakingServer && (
-        <div className="p-3 rounded-2xl bg-indigo-50 dark:bg-navy-900 border border-indigo-200 dark:border-indigo-800 text-indigo-800 dark:text-indigo-300 text-xs flex items-center space-x-2.5 animate-pulse shadow-sm">
-          <Sparkles className="w-4 h-4 shrink-0 text-brand-500 animate-spin" />
-          <span className="font-semibold text-[11px] leading-tight">
-            ⚡ <strong>Securing Encrypted 24/7 Channel...</strong> Finalizing verification with cloud services.
-          </span>
-        </div>
-      )}
-
-      {/* 5. STEP 3: CINEMATIC IDENTITY CONFIRMED UNLOCK EXPERIENCE */}
-      {step === 'success' && (
-        <div className="py-7 text-center space-y-3.5 animate-fadeIn">
-          <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
-            <div className="absolute inset-0 rounded-2xl bg-emerald-500/25 animate-ping"></div>
-            <div className="w-15 h-15 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-600/35 border-2 border-emerald-300 relative z-10">
-              <Check className="w-8 h-8 stroke-[3]" />
+        )}
+        
+        {/* Theme Toggle (Right Panel Top) */}
+        {!onClose && (
+          <div className="absolute top-6 right-6 z-50">
+            <div className="flex items-center bg-white rounded-full p-1 shadow-sm border border-slate-200/60">
+              <button className="p-1.5 rounded-full bg-blue-50 text-blue-600 shadow-sm transition-all"><Sun className="w-4 h-4" /></button>
+              <button className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 transition-all"><Moon className="w-4 h-4" /></button>
             </div>
           </div>
-          <div>
-            <h3 className="text-base sm:text-lg font-black text-gray-900 dark:text-white tracking-wide uppercase">
-              IDENTITY CONFIRMED
-            </h3>
-            <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1 font-mono tracking-wider">
-              ADMINISTRATOR ACCESS GRANTED
-            </p>
-            <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-2 font-mono">
-              ENTERING INSTITUTIONAL CONTROL CENTER...
-            </p>
-          </div>
+        )}
+
+        {/* Mobile logo */}
+        <div className="lg:hidden flex flex-col items-center mb-8 px-6"
+          style={{ opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(-10px)', transition: 'opacity 0.5s ease, transform 0.5s ease' }}>
+          <img src="/nandha_emblem.png" alt="Nandha Engineering College" className="w-14 h-14 object-contain mb-3 drop-shadow-md"
+            onError={(e) => { (e.target as HTMLImageElement).src = '/logo.png'; }} />
+          <p className="text-[12px] font-bold text-slate-800 tracking-widest uppercase text-center">Nandha Engineering College</p>
+          <p className="text-[11px] text-blue-600 font-bold mt-0.5">LeetCode Intelligence</p>
         </div>
-      )}
 
-      {/* 6. EMAIL ENTRY HUD */}
-      {authMode === 'otp' && step === 'email' && (
-        <div className="space-y-4">
-          <div className="border-b border-gray-100 dark:border-navy-800 pb-1">
-            <h3 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider">
-              AUTHORIZED ADMINISTRATOR
-            </h3>
-            <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
-              Enter the registered institutional administrator email to begin secure verification.
-            </p>
-          </div>
-
-          <form onSubmit={handleSendOtp} className="space-y-3.5">
-            <div>
-              <label className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-                REGISTERED ADMINISTRATOR EMAIL
-              </label>
+        {/* Login Card */}
+        <div className={`relative w-full max-w-[420px] px-5 sm:px-0 mx-auto ${isShaking ? 'animate-shake' : ''}`}
+          style={{ opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.98)', transition: 'opacity 0.7s 0.2s ease, transform 0.7s 0.2s ease' }}>
+          
+          <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 p-8 sm:p-10 relative overflow-hidden">
+            
+            {/* Circular Lock Badge */}
+            <div className="flex justify-center mb-6">
               <div className="relative">
-                <Mail className="w-4.5 h-4.5 text-gray-400 absolute left-3.5 top-3.5" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder=" Enter Administrator Email "
-                  required
-                  className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-navy-900 text-sm font-semibold text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:outline-none transition-all shadow-sm"
-                />
+                <div className="absolute inset-0 bg-blue-100 rounded-full animate-ping opacity-60"></div>
+                <div className="relative w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center border border-blue-100 shadow-sm">
+                  <Lock className="w-5 h-5 text-blue-600" />
+                </div>
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-cyan-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-md shadow-brand-600/25 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>SECURING CONNECTION & DISPATCHING...</span>
-                </>
-              ) : (
-                <>
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>SEND SECURE OTP</span>
-                </>
-              )}
-            </button>
-          </form>
+            {/* Header */}
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome Back</h2>
+              <p className="mt-1.5 text-[13px] text-slate-500 font-medium">Sign in to continue to your workspace</p>
+            </div>
 
-          <div className="space-y-3 pt-1">
-            <div className="relative flex items-center justify-center py-1">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-gray-300 dark:via-navy-700 to-transparent"></div>
+            {/* Alerts */}
+            {error && (
+              <div className="mb-6 p-3 rounded-xl bg-rose-50 text-rose-600 text-[13px] border border-rose-100 flex items-start space-x-2.5">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span className="flex-1 font-medium">{error}</span>
+                <button type="button" onClick={() => setError('')} className="shrink-0 text-rose-400 hover:text-rose-600"><X className="w-3.5 h-3.5" /></button>
               </div>
-              <div className="relative px-3 py-0.5 rounded-full bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 shadow-sm flex items-center space-x-1.5 text-[9px] font-black text-brand-600 dark:text-brand-400 uppercase tracking-widest">
-                <span>OR INSTITUTIONAL SSO</span>
+            )}
+            {successMsg && step !== 'success' && (
+              <div className="mb-6 p-3 rounded-xl bg-emerald-50 text-emerald-700 text-[13px] border border-emerald-100 flex items-center space-x-2.5">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
+                <span className="font-medium">{successMsg}</span>
               </div>
-            </div>
-            <GoogleSignInButton onSuccess={onSuccess} />
-          </div>
-        </div>
-      )}
+            )}
+            {isWakingServer && loading && (
+              <div className="mb-6 p-3 rounded-xl bg-amber-50 border border-amber-100 text-amber-700 text-[13px] flex items-center space-x-2.5">
+                <Loader2 className="w-4 h-4 animate-spin shrink-0 text-amber-500" />
+                <span className="font-medium">Server is starting up, please wait...</span>
+              </div>
+            )}
+            {step === 'success' && (
+              <div className="mb-6 py-6 flex flex-col items-center text-center space-y-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center shadow-md shadow-emerald-500/20 text-white">
+                  <Check className="w-6 h-6 stroke-[2.5]" />
+                </div>
+                <div>
+                  <p className="text-[14px] font-bold text-emerald-800">Authentication Successful</p>
+                  <p className="text-xs text-emerald-600 mt-1 flex items-center justify-center space-x-1.5 font-medium">
+                    <Loader2 className="w-3 h-3 animate-spin" /><span>Redirecting...</span>
+                  </p>
+                </div>
+              </div>
+            )}
 
-      {/* 7. OTP VERIFICATION HUD */}
-      {authMode === 'otp' && step === 'otp_verify' && (
-        <form onSubmit={handleVerifyOtp} className="space-y-3.5 animate-fadeIn">
-          {/* Destination Badge with Change Link */}
-          <div className="p-3 rounded-2xl bg-brand-50/80 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800 text-xs text-brand-900 dark:text-brand-200 flex items-center justify-between shadow-sm">
-            <div>
-              <span className="text-gray-500 dark:text-gray-400 block text-[9px] uppercase font-bold tracking-wider">VERIFICATION CODE SENT TO:</span>
-              <span className="font-mono font-black text-brand-700 dark:text-brand-300 text-xs sm:text-sm">{maskedEmail || maskEmail(email)}</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => { setStep('email'); setError(''); setSuccessMsg(''); }}
-              className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center space-x-1 cursor-pointer"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Change</span>
-            </button>
-          </div>
-
-          <div>
-            <div className="flex justify-between items-center mb-2">
-              <label className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                ENTER 6-DIGIT SECURITY CODE
-              </label>
-
-              {/* Progress-styled Countdown Timer */}
-              {timerSeconds > 0 ? (
-                <span className={`text-xs font-black font-mono px-2 py-0.5 rounded-md border flex items-center space-x-1 ${timerSeconds < 60
-                  ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-800 animate-pulse'
-                  : 'bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 border-brand-200 dark:border-brand-800'
-                  }`}>
-                  <span>Expires in</span>
-                  <span>{formatTimer(timerSeconds)}</span>
-                </span>
-              ) : (
-                <span className="text-xs font-black font-mono text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-800 animate-pulse">
-                  OTP Expired
-                </span>
-              )}
-            </div>
-
-            {/* 6-Digit Segmented Box Inputs */}
-            <div className="grid grid-cols-6 gap-1.5 sm:gap-2">
-              {otpDigits.map((digit, idx) => (
-                <input
-                  key={idx}
-                  ref={digitRefs[idx]}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleDigitChange(idx, e.target.value)}
-                  onKeyDown={(e) => handleDigitKeyDown(idx, e)}
-                  onPaste={handleOtpPaste}
-                  className="w-full h-12 text-center text-lg sm:text-xl font-mono font-black border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-navy-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:outline-none shadow-sm transition-all"
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2.5 pt-1">
-            <button
-              type="button"
-              onClick={handleResendOtp}
-              disabled={resendCooldown > 0 || loading}
-              className="py-2.5 rounded-xl border border-gray-300 dark:border-navy-700 bg-gray-50 dark:bg-navy-900 text-gray-700 dark:text-gray-200 font-extrabold text-xs hover:bg-gray-100 dark:hover:bg-navy-800 disabled:opacity-50 flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-              <span>{resendCooldown > 0 ? `RESEND IN ${resendCooldown}s` : 'RESEND OTP'}</span>
-            </button>
-
-            <button
-              type="submit"
-              disabled={loading || otpDigits.join('').length !== 6 || timerSeconds <= 0}
-              className="py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-md shadow-brand-600/25 flex items-center justify-center space-x-1.5 disabled:opacity-50 transition-all cursor-pointer"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Verifying...</span>
-                </>
-              ) : (
-                <>
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>VERIFY & CONTINUE</span>
-                </>
-              )}
-            </button>
-          </div>
-
-          {/* Compact Security Tip */}
-          <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-navy-900/90 border border-slate-200 dark:border-navy-800 text-[10px] text-slate-600 dark:text-slate-400 text-center leading-relaxed">
-            💡 <span className="font-bold text-slate-800 dark:text-slate-200">SECURITY TIP:</span> Check your <strong className="text-brand-600 dark:text-brand-400 font-bold">Inbox, Spam, or Promotions</strong> folders if your verification code is not visible.
-          </div>
-        </form>
-      )}
-
-      {/* 8. ADMIN PASSWORD MODE */}
-      {authMode === 'admin' && step !== 'success' && (
-        <form onSubmit={handleAdminSubmit} className="space-y-3.5 animate-fadeIn">
-          <div className="border-b border-gray-100 dark:border-navy-800 pb-1">
-            <h3 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider">
-              ADMINISTRATOR CONTROL ACCESS
-            </h3>
-            <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
-              Sign in with institutional administrator credentials.
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-              ADMINISTRATOR USERNAME
-            </label>
-            <div className="relative">
-              <User className="w-4.5 h-4.5 text-gray-400 absolute left-3.5 top-3.5" />
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter admin username"
-                required
-                className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-navy-900 text-sm font-semibold focus:ring-2 focus:ring-brand-500 focus:outline-none shadow-sm"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-              SECURE PASSWORD
-            </label>
-            <div className="relative">
-              <Lock className="w-4.5 h-4.5 text-gray-400 absolute left-3.5 top-3.5" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                className="w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-navy-900 text-sm font-semibold focus:ring-2 focus:ring-brand-500 focus:outline-none shadow-sm"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 sm:top-3.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-0.5 rounded-lg focus:outline-none cursor-pointer"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-md shadow-brand-600/25 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
-          >
-            {loading ? (
+            {step !== 'success' && (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>AUTHENTICATING ADMINISTRATOR...</span>
-              </>
-            ) : (
-              <>
-                <KeyRound className="w-4 h-4" />
-                <span>SIGN IN TO ADMIN CONTROL CENTER</span>
+                {/* Segmented Control */}
+                <div className="flex p-1 mb-7 bg-slate-100 rounded-xl shadow-inner">
+                  {([['admin', 'Password', KeyRound], ['otp', 'Secure OTP', Fingerprint]] as const).map(([mode, label, Icon]) => (
+                    <button key={mode} type="button"
+                      onClick={() => { setAuthMode(mode as 'admin'|'otp'); setError(''); setSuccessMsg(''); if (mode === 'otp') setStep('email'); }}
+                      className={`flex-1 py-2 text-[13px] font-bold rounded-lg transition-all flex items-center justify-center space-x-1.5 ${
+                        authMode === mode ? 'bg-white text-blue-600 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-700'
+                      }`}>
+                      <Icon className="w-4 h-4" /><span>{label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* ADMIN PASSWORD FORM */}
+                {authMode === 'admin' && (
+                  <form onSubmit={handleAdminSubmit} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="block text-[12px] font-bold text-slate-700">Official Email / ID</label>
+                      <div className="relative group">
+                        <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors pointer-events-none" />
+                        <input type="text" value={username} onChange={e => setUsername(e.target.value)}
+                          placeholder="Enter your registered email or ID" required autoComplete="username"
+                          className={`${inputCls} pl-10 pr-4`} />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-center">
+                        <label className="block text-[12px] font-bold text-slate-700">Password</label>
+                        <a href="#" className="text-[12px] font-bold text-blue-600 hover:text-blue-700 transition-colors">Forgot Password?</a>
+                      </div>
+                      <div className="relative group">
+                        <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors pointer-events-none" />
+                        <input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
+                          placeholder="••••••••" required autoComplete="current-password"
+                          className={`${inputCls} pl-10 pr-10`} />
+                        <button type="button" onClick={() => setShowPassword(v => !v)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center pt-1 pb-2">
+                      <label className="flex items-center space-x-2 cursor-pointer group">
+                        <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 transition-colors" />
+                        <span className="text-[12px] font-bold text-slate-600 group-hover:text-slate-800 transition-colors">Remember me</span>
+                      </label>
+                      <a href="#" className="text-[12px] font-bold text-blue-600 hover:text-blue-700 flex items-center space-x-1">
+                        <HelpCircle className="w-3.5 h-3.5" /><span>Need Help?</span>
+                      </a>
+                    </div>
+                    <div>
+                      <button type="submit" disabled={loading}
+                        className="w-full flex items-center justify-center space-x-2 py-3 px-4 bg-gradient-to-r from-blue-600 to-cyan-400 hover:from-blue-700 hover:to-cyan-500 text-white rounded-xl font-bold text-[14px] shadow-[0_4px_14px_0_rgb(0,118,255,0.39)] hover:shadow-[0_6px_20px_rgba(0,118,255,0.23)] hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:hover:translate-y-0">
+                        {loading ? <><Loader2 className="w-4 h-4 animate-spin" /><span>Signing in...</span></> : <><span>Sign In</span><ArrowRight className="w-4 h-4" /></>}
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* OTP - EMAIL STEP */}
+                {authMode === 'otp' && step === 'email' && (
+                  <form onSubmit={handleSendOtp} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="block text-[12px] font-bold text-slate-700">Registered Email</label>
+                      <div className="relative group">
+                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors pointer-events-none" />
+                        <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                          placeholder="Enter your registered email" required autoComplete="email"
+                          className={`${inputCls} pl-10 pr-4`} />
+                      </div>
+                    </div>
+                    <div className="pt-2 space-y-4">
+                      <button type="submit" disabled={loading}
+                        className="w-full flex items-center justify-center space-x-2 py-3 px-4 bg-gradient-to-r from-blue-600 to-cyan-400 hover:from-blue-700 hover:to-cyan-500 text-white rounded-xl font-bold text-[14px] shadow-[0_4px_14px_0_rgb(0,118,255,0.39)] hover:shadow-[0_6px_20px_rgba(0,118,255,0.23)] hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:hover:translate-y-0">
+                        {loading ? <><Loader2 className="w-4 h-4 animate-spin" /><span>Sending Code...</span></> : <><span>Continue with Email</span><ArrowRight className="w-4 h-4" /></>}
+                      </button>
+                      <div className="relative flex items-center justify-center py-1">
+                        <div className="absolute inset-0 flex items-center"><div className="w-full h-px bg-slate-200" /></div>
+                        <span className="relative px-3 bg-white text-[10px] font-bold text-slate-400 uppercase tracking-widest">or</span>
+                      </div>
+                      <GoogleSignInButton onSuccess={onSuccess} />
+                    </div>
+                  </form>
+                )}
+
+                {/* OTP - VERIFY STEP */}
+                {authMode === 'otp' && step === 'otp_verify' && (
+                  <form onSubmit={handleVerifyOtp} className="space-y-5">
+                    <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-0.5">Code sent to</span>
+                        <span className="font-bold text-slate-900 text-[13px]">{maskedEmail || maskEmail(email)}</span>
+                      </div>
+                      <button type="button" onClick={() => { setStep('email'); setError(''); setSuccessMsg(''); }}
+                        className="text-[12px] font-bold text-blue-600 hover:text-blue-700 transition-colors">Change</button>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">6-Digit Security Code</label>
+                        <span className={`text-[12px] font-bold tabular-nums ${timerSeconds < 60 ? 'text-rose-500 animate-pulse' : 'text-slate-500'}`}>
+                          {timerSeconds > 0 ? formatTimer(timerSeconds) : 'Expired'}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-6 gap-2">
+                        {otpDigits.map((digit, idx) => (
+                          <input key={idx} ref={digitRefs[idx]} type="text" inputMode="numeric" maxLength={1} value={digit}
+                            onChange={e => handleDigitChange(idx, e.target.value)}
+                            onKeyDown={e => handleDigitKeyDown(idx, e)} onPaste={handleOtpPaste}
+                            className="w-full h-12 text-center text-lg font-bold border border-slate-200 rounded-xl bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all shadow-sm" />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-4 pt-1">
+                      <button type="submit" disabled={loading || otpDigits.join('').length !== 6 || timerSeconds <= 0}
+                        className="w-full flex items-center justify-center space-x-2 py-3 px-4 bg-gradient-to-r from-blue-600 to-cyan-400 hover:from-blue-700 hover:to-cyan-500 text-white rounded-xl font-bold text-[14px] shadow-[0_4px_14px_0_rgb(0,118,255,0.39)] hover:shadow-[0_6px_20px_rgba(0,118,255,0.23)] hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:hover:translate-y-0">
+                        {loading ? <><Loader2 className="w-4 h-4 animate-spin" /><span>Verifying...</span></> : <><span>Verify & Sign In</span><ArrowRight className="w-4 h-4" /></>}
+                      </button>
+                      <button type="button" onClick={handleResendOtp} disabled={resendCooldown > 0 || loading}
+                        className="w-full py-2 text-[13px] font-bold text-slate-500 hover:text-slate-700 disabled:opacity-40 transition-colors">
+                        {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : 'Resend Code'}
+                      </button>
+                    </div>
+                  </form>
+                )}
               </>
             )}
-          </button>
-        </form>
-      )}
 
-      {/* 9. SECURITY FOOTER */}
-      <div className="pt-2 border-t border-gray-100 dark:border-navy-800 text-center">
-        <p className="text-[9px] font-mono font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider">
-          SECURE SESSION • INSTITUTIONAL AUTHENTICATION • PROTECTED ADMIN ACCESS
-        </p>
+            {/* Shield Footer inside card */}
+            <div className="mt-8 pt-5 border-t border-slate-100 flex flex-col items-center justify-center space-y-1">
+              <div className="flex items-center space-x-1.5 text-slate-700">
+                <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                <span className="text-[13px] font-bold tracking-tight">Secure Institutional Access</span>
+              </div>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Authorized users only</span>
+            </div>
+            
+          </div>
+          
+          <div className="mt-6 text-center text-[12px] font-semibold text-slate-500">
+            Powered by <span className="text-blue-600 font-bold">Nandha LeetCode Intelligence</span>
+          </div>
+        </div>
       </div>
-
     </div>
   );
 };
+
+export default LoginPage;

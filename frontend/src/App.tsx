@@ -72,6 +72,7 @@ export const App: React.FC = () => {
   const [summaryData, setSummaryData] = useState<any>(() => getCachedSummary());
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+
   useEffect(() => {
     fetchSummary();
     const timer = setTimeout(() => {
@@ -253,6 +254,17 @@ export const App: React.FC = () => {
     />
   );
 
+  // Full-screen login for unauthenticated users
+  if (!isAuthenticated) {
+    return (
+      <LoginPage
+        onSuccess={() => {
+          setActiveTab('dashboard');
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-navy-950 text-gray-900 dark:text-gray-100 flex flex-col font-sans transition-colors duration-200">
       
@@ -405,23 +417,12 @@ export const App: React.FC = () => {
 
       </div>
 
-      {/* Login Modal */}
+      {/* Login Modal (used for re-authentication when already inside the app) */}
       {showLoginModal && (
-        <div
-          className="modal-overlay-responsive modal-overlay-top animate-modal-backdrop"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowLoginModal(false);
-            }
-          }}
-        >
-          <div className="modal-container-responsive max-w-md animate-modal-content">
-            <LoginPage
-              onClose={() => setShowLoginModal(false)}
-              onSuccess={() => { setShowLoginModal(false); setActiveTab('dashboard'); }}
-            />
-          </div>
-        </div>
+        <LoginPage
+          onClose={() => setShowLoginModal(false)}
+          onSuccess={() => { setShowLoginModal(false); setActiveTab('dashboard'); }}
+        />
       )}
 
 

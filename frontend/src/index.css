@@ -57,7 +57,7 @@
   align-items: center;
   justify-content: center;
   padding: 0.15rem 0.4rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
   font-size: 0.65rem;
   font-weight: 800;
   line-height: 1;
@@ -738,6 +738,24 @@
   .animate-shake {
     animation: none !important;
   }
+}
+
+/* ─── Wave Animations ─────────────────────────────────────────── */
+@keyframes waveAnimation {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-wave-slow {
+  animation: waveAnimation 16s linear infinite;
+  will-change: transform;
+}
+.animate-wave-medium {
+  animation: waveAnimation 12s linear infinite;
+  will-change: transform;
+}
+.animate-wave-fast {
+  animation: waveAnimation 8s linear infinite;
+  will-change: transform;
 }
 
 /* ─── Official Certificate Print Media Rules ─────────────────────────── */

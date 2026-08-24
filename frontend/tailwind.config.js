@@ -28,7 +28,9 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['Inter', 'Outfit', 'system-ui', 'sans-serif'],
+        sans: ['Didot', '"Playfair Display"', 'Bodoni MT', 'Times New Roman', 'serif'],
+        serif: ['Didot', '"Playfair Display"', 'Bodoni MT', 'Times New Roman', 'serif'],
+        mono: ['Didot', '"Playfair Display"', 'Bodoni MT', 'Times New Roman', 'serif'],
       },
     },
   },
