@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { ExternalLink, Trophy, RefreshCw, Wifi, Trash2, AlertCircle, Eye, Edit3, ShieldAlert, X, Clock, Flame, Award, CheckCircle2, TrendingUp, Sparkles, BookOpen, Star } from 'lucide-react';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
@@ -145,6 +145,26 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [modalTopY, setModalTopY] = useState<number | null>(null);
+
+  // Ultra-Fast Paginated Table Viewport Rendering (Default: 50 items per page)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState<'25' | '50' | '100' | 'All'>('50');
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [students.length, pageSize]);
+
+  const totalPages = useMemo(() => {
+    if (pageSize === 'All') return 1;
+    return Math.ceil(students.length / Number(pageSize)) || 1;
+  }, [students.length, pageSize]);
+
+  const paginatedStudents = useMemo(() => {
+    if (pageSize === 'All') return students;
+    const size = Number(pageSize);
+    const start = (currentPage - 1) * size;
+    return students.slice(start, start + size);
+  }, [students, currentPage, pageSize]);
 
   const calculateTargetTopY = (e?: React.MouseEvent) => {
     if (!e) return null;
@@ -429,7 +449,8 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                 </td>
               </tr>
             ) : (
-              students.map((student, idx) => {
+              paginatedStudents.map((student, idx) => {
+                const actualRank = pageSize === 'All' ? idx + 1 : (currentPage - 1) * Number(pageSize) + idx + 1;
 
                 const syncState = getSyncState(student.stats?.sync_status, student.stats?.last_verified_at);
                 const isVerified = syncState === 'verified' || syncState === 'stale';
@@ -657,13 +678,85 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                       </div>
                     </td>
                   </tr>
-
                 );
               })
             )}
           </tbody>
         </table>
       </div>
+
+      {/* Sleek Ultra-Fast Pagination Bar */}
+      {students.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 mt-3 bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 rounded-2xl text-xs font-semibold text-gray-600 dark:text-gray-300 shadow-sm">
+          <div className="flex items-center space-x-2">
+            <span>Showing <strong className="text-gray-900 dark:text-white font-extrabold">{pageSize === 'All' ? 1 : (currentPage - 1) * Number(pageSize) + 1}</strong> to <strong className="text-gray-900 dark:text-white font-extrabold">{pageSize === 'All' ? students.length : Math.min(currentPage * Number(pageSize), students.length)}</strong> of <strong className="text-brand-600 dark:text-brand-400 font-extrabold">{students.length}</strong> solvers</span>
+          </div>
+
+          <div className="flex items-center space-x-4">
+            {/* Rows Per Page Selector */}
+            <div className="flex items-center space-x-1.5">
+              <span className="text-[11px] font-bold text-gray-400">Per Page:</span>
+              {(['25', '50', '100', 'All'] as const).map((size) => (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() => setPageSize(size)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                    pageSize === size
+                      ? 'bg-brand-600 text-white shadow-sm'
+                      : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-navy-700'
+                  }`}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {pageSize !== 'All' && totalPages > 1 && (
+              <div className="flex items-center space-x-1">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  className="px-2 py-1 rounded-lg bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-navy-700 disabled:opacity-40 font-bold"
+                  title="First Page"
+                >
+                  «
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-navy-700 disabled:opacity-40 font-bold"
+                >
+                  ‹ Prev
+                </button>
+                <span className="px-2 font-mono font-bold text-gray-900 dark:text-white">
+                  {currentPage} / {totalPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-navy-700 disabled:opacity-40 font-bold"
+                >
+                  Next ›
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className="px-2 py-1 rounded-lg bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-navy-700 disabled:opacity-40 font-bold"
+                  title="Last Page"
+                >
+                  »
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Viewport-Centered Student Edit Modal */}
       {editingStudent && typeof document !== 'undefined' && createPortal(

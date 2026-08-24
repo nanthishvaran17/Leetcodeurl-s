@@ -139,6 +139,8 @@ interface StudentMasterPageProps {
 
 import { useNotification } from '../context/NotificationContext';
 
+import { useDebounce } from '../hooks/useDebounce';
+
 export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   onSelectStudent,
   onOpenImport
@@ -146,6 +148,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   const { notify, confirmAction } = useNotification();
   const [students, setStudents] = useState<StudentData[]>(CANONICAL_ROSTER);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -171,13 +174,13 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   const [departments, setDepartments] = useState<any[]>([]);
 
   useEffect(() => {
-    fetchStudents();
+    fetchStudents(debouncedSearch);
     fetchDepartments();
-  }, [search]);
+  }, [debouncedSearch]);
 
-  const fetchStudents = async () => {
+  const fetchStudents = async (query = '') => {
     try {
-      const res = await api.get(`/students?search=${search}`);
+      const res = await api.get(`/students?search=${encodeURIComponent(query)}`);
       if (res.data && Array.isArray(res.data)) {
         setStudents(res.data);
       }

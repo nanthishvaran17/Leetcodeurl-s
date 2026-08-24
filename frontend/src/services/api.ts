@@ -40,6 +40,24 @@ const api = axios.create({
 
 // In-flight GET request deduplication map to prevent redundant concurrent network round-trips
 const inFlightRequests = new Map<string, Promise<any>>();
+const responseCache = new Map<string, { timestamp: number; data: any }>();
+const CACHE_TTL_MS = 30000; // 30 seconds TTL
+
+export const getCachedData = (key: string) => {
+  const cached = responseCache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.data;
+  }
+  return null;
+};
+
+export const setCachedData = (key: string, data: any) => {
+  responseCache.set(key, { timestamp: Date.now(), data });
+};
+
+export const clearApiCache = () => {
+  responseCache.clear();
+};
 
 export const getRequestKey = (config: any): string => {
   const method = (config.method || 'get').toLowerCase();
