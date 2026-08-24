@@ -166,7 +166,7 @@ export const App: React.FC = () => {
 
   const handleSelectStudent = (student: StudentData) => {
     setSelectedStudent(student);
-    setActiveTab('profile');
+    // Preserve current tab and exact scroll position; student profile modal opens as a viewport-centered portal overlay
   };
 
   // Global Keyboard Shortcuts & Pro SaaS UX System

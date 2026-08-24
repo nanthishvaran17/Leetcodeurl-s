@@ -203,17 +203,17 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   useEffect(() => {
     const isAnyModalOpen = Boolean(viewingStudent || editingStudent || deletingStudent);
     if (isAnyModalOpen) {
-      const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
       const prevOverflow = document.body.style.overflow;
-      const prevPaddingRight = document.body.style.paddingRight;
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      const prevPosition = document.body.style.position;
+      const prevTop = document.body.style.top;
+      const prevWidth = document.body.style.width;
+
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
       document.body.style.overflow = 'hidden';
-      if (scrollbarWidth > 0) {
-        document.body.style.paddingRight = `${scrollbarWidth}px`;
-      }
-      if (window.scrollY === 0 && currentScrollY > 0) {
-        window.scrollTo(0, currentScrollY);
-      }
+
       const onKey = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           setViewingStudent(null);
@@ -222,12 +222,13 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
         }
       };
       window.addEventListener('keydown', onKey);
+
       return () => {
+        document.body.style.position = prevPosition || '';
+        document.body.style.top = prevTop || '';
+        document.body.style.width = prevWidth || '';
         document.body.style.overflow = prevOverflow || '';
-        document.body.style.paddingRight = prevPaddingRight || '';
-        if (currentScrollY > 0) {
-          window.scrollTo(0, currentScrollY);
-        }
+        window.scrollTo(0, scrollY);
         window.removeEventListener('keydown', onKey);
       };
     }
