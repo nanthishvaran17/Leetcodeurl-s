@@ -399,17 +399,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       <div 
         className={`absolute inset-0 z-0 bg-cover bg-center transition-all duration-700 ${
           theme === 'dark' 
-            ? 'opacity-[0.25] mix-blend-luminosity filter blur-[1.5px]' 
-            : 'opacity-[0.85] saturate-[1.2] contrast-[1.05]'
+            ? 'opacity-[0.35] mix-blend-luminosity filter blur-[1px]' 
+            : 'opacity-100 saturate-[1.1] contrast-[1.05]'
         }`}
         style={{ backgroundImage: "url('/nandha_gate_bg.jpg')" }}
       />
 
-      {/* Modern Gradient Overlay */}
+      {/* Modern Gradient Overlay (Lightened and blur removed for maximum clarity) */}
       <div className={`absolute inset-0 z-0 transition-colors duration-700 ${
         theme === 'dark' 
-          ? 'bg-[#0B0F1A]/90' 
-          : 'bg-gradient-to-br from-white/60 via-white/20 to-blue-50/40 backdrop-blur-[2px]'
+          ? 'bg-[#0B0F1A]/85' 
+          : 'bg-gradient-to-br from-white/30 via-transparent to-blue-50/20'
       }`}></div>
 
       {/* Decorative Floating Orbs for Attractiveness */}
