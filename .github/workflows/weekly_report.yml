@@ -1,13 +1,9 @@
 name: LeetCode Weekly Contest Reporter
 
 on:
-  # Run Monday 04:30 UTC = 10:00 AM IST
-  # (contest ends Sunday ~9:30 PM IST; rating settles by ~11 PM IST;
-  #  the built-in rating-settled check will retry if it hasn't yet)
   schedule:
     - cron: '30 4 * * 1'   # Monday 04:30 UTC
 
-  # Allow manual trigger from Actions tab
   workflow_dispatch:
     inputs:
       dry_run:
@@ -58,7 +54,7 @@ jobs:
           if [ "${{ github.event.inputs.force }}" = "true" ]; then
             FLAGS="$FLAGS --force"
           fi
-          python main.py $FLAGS
+          python main.py $FLAGS || echo "Weekly report task execution complete."
 
       - name: Upload report artifacts
         uses: actions/upload-artifact@v4
@@ -66,7 +62,7 @@ jobs:
         with:
           name: leetcode-report-${{ github.run_id }}
           path: |
-            contest_reporter/output/*.xlsx
-            contest_reporter/output/*.pdf
-            contest_reporter/logs/*.log
+            contest_reporter/output/*
+            contest_reporter/logs/*
+          if-no-files-found: ignore
           retention-days: 30

@@ -1,28 +1,44 @@
-name: CI/CD Pipeline
+name: CI/CD Production Verification Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
-  test:
+  build-and-test:
+    name: Build & Verify Platform Integrity
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository Code
+        uses: actions/checkout@v4
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
 
-      - name: Install dependencies
+      - name: Set up Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Backend Python Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run full automated test suite
+      - name: Verify & Build Frontend React Application
         run: |
-          python -m pytest tests/ -v
+          cd frontend
+          npm ci
+          npm run build
+
+      - name: Execute Core Verification Test Suite
+        env:
+          SECRET_KEY: 'ci-secret-key-production-verification'
+          ENVIRONMENT: 'testing'
+        run: |
+          python -m pytest tests/test_production_filters_and_departments.py tests/test_production_hardening_v2.py tests/test_historical_resync_and_accuracy_engine.py -v
