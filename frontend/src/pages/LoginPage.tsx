@@ -399,15 +399,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       <div 
         className={`absolute inset-0 z-0 bg-cover bg-center transition-all duration-700 ${
           theme === 'dark' 
-            ? 'opacity-[0.25] mix-blend-luminosity filter blur-[1px]' 
-            : 'opacity-100 mix-blend-normal filter blur-[0.5px]'
+            ? 'opacity-[0.25] mix-blend-luminosity filter blur-[1.5px]' 
+            : 'opacity-[0.95] saturate-[1.3] contrast-[1.05] brightness-[1.05]'
         }`}
         style={{ backgroundImage: "url('/nandha_bg.jpg')" }}
       />
       <div className={`absolute inset-0 z-0 transition-colors duration-700 ${
         theme === 'dark' 
-          ? 'bg-gradient-to-b from-[#0B0F1A]/95 via-[#0B0F1A]/80 to-[#0B0F1A]' 
-          : 'bg-gradient-to-b from-white/70 via-white/40 to-[#eef2f6]/95 backdrop-blur-[1px]'
+          ? 'bg-gradient-to-b from-[#0B0F1A]/95 via-[#0B0F1A]/85 to-[#0B0F1A]' 
+          : 'bg-gradient-to-b from-white/30 via-white/10 to-[#f4f7fb] backdrop-blur-[1.5px]'
       }`}></div>
 
       {/* Animated Bottom Waves */}
