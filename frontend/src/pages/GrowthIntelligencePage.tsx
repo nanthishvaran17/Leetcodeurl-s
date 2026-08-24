@@ -176,11 +176,15 @@ export const GrowthIntelligencePage: React.FC = () => {
   };
 
   const handleFetchStudentHistory = async (identifier: string, fallbackName?: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (!identifier || (typeof identifier === 'string' && !identifier.trim())) return;
     setSelectedStudentName(fallbackName || `Student: ${identifier}`);
     setHistorySnapshots([]);
     setHistoryLoading(true);
-    setIsModalOpen(true); // Open modal immediately on click
+    setIsModalOpen(true); // Open modal immediately on click in current viewport
     try {
       const res = await api.get(`/history/${encodeURIComponent(identifier.trim())}?limit=50`);
       if (res.data && Array.isArray(res.data)) {
@@ -200,24 +204,31 @@ export const GrowthIntelligencePage: React.FC = () => {
     }
   };
 
-  // Lock body scroll when modal is open
+  // Lock body scroll securely preserving exact viewport scroll position
   useEffect(() => {
     if (isModalOpen) {
-      const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
       const prevOverflow = document.body.style.overflow;
+      const prevPosition = document.body.style.position;
+      const prevTop = document.body.style.top;
+      const prevWidth = document.body.style.width;
+
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
       document.body.style.overflow = 'hidden';
-      if (window.scrollY === 0 && currentScrollY > 0) {
-        window.scrollTo(0, currentScrollY);
-      }
+
       const onKey = (ev: KeyboardEvent) => {
         if (ev.key === 'Escape') setIsModalOpen(false);
       };
       window.addEventListener('keydown', onKey);
+
       return () => {
+        document.body.style.position = prevPosition || '';
+        document.body.style.top = prevTop || '';
+        document.body.style.width = prevWidth || '';
         document.body.style.overflow = prevOverflow || '';
-        if (currentScrollY > 0) {
-          window.scrollTo(0, currentScrollY);
-        }
+        window.scrollTo(0, scrollY);
         window.removeEventListener('keydown', onKey);
       };
     }
