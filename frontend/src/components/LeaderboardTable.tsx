@@ -180,8 +180,16 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   };
 
   const handleOpenProfile = (student: StudentData, e?: React.MouseEvent) => {
-    setModalTopY(calculateTargetTopY(e));
-    setViewingStudent(student);
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (onSelectStudent) {
+      onSelectStudent(student);
+    } else {
+      setModalTopY(calculateTargetTopY(e));
+      setViewingStudent(student);
+    }
   };
 
   const handleOpenEdit = (st: StudentData, e?: React.MouseEvent) => {

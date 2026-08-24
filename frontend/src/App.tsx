@@ -165,9 +165,39 @@ export const App: React.FC = () => {
   };
 
   const handleSelectStudent = (student: StudentData) => {
+    if (!student) return;
     setSelectedStudent(student);
-    // Preserve current tab and exact scroll position; student profile modal opens as a viewport-centered portal overlay
   };
+
+  // Lock body scroll securely preserving exact viewport scroll position when selectedStudent modal is open
+  useEffect(() => {
+    if (selectedStudent) {
+      const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      const prevOverflow = document.body.style.overflow;
+      const prevPosition = document.body.style.position;
+      const prevTop = document.body.style.top;
+      const prevWidth = document.body.style.width;
+
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
+
+      const onKey = (ev: KeyboardEvent) => {
+        if (ev.key === 'Escape') setSelectedStudent(null);
+      };
+      window.addEventListener('keydown', onKey);
+
+      return () => {
+        document.body.style.position = prevPosition || '';
+        document.body.style.top = prevTop || '';
+        document.body.style.width = prevWidth || '';
+        document.body.style.overflow = prevOverflow || '';
+        window.scrollTo(0, scrollY);
+        window.removeEventListener('keydown', onKey);
+      };
+    }
+  }, [selectedStudent]);
 
   // Global Keyboard Shortcuts & Pro SaaS UX System
   useEffect(() => {
