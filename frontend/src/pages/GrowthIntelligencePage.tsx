@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip
+} from 'recharts';
+import {
   TrendingUp,
   Award,
   Zap,
@@ -35,26 +43,31 @@ interface Improver {
   easy_solved: number;
   medium_solved: number;
   hard_solved: number;
+  contest_rating: number;
   delta_solved: number;
   delta_easy: number;
   delta_medium: number;
   delta_hard: number;
   delta_rating: number;
-  current_contest_rating?: number;
 }
 
 interface CollegeDelta {
   period: string;
-  delta_total: number;
-  delta_easy: number;
-  delta_medium: number;
-  delta_hard: number;
-  total_students: number;
-  active_students: number;
-  total_solved: number;
-  easy_solved: number;
-  medium_solved: number;
-  hard_solved: number;
+  total_students?: number;
+  active_students?: number;
+  active_solvers?: number;
+  total_solved?: number;
+  delta_total?: number;
+  delta_easy?: number;
+  delta_medium?: number;
+  delta_hard?: number;
+  easy_solved?: number;
+  medium_solved?: number;
+  hard_solved?: number;
+  total_delta_solved?: number;
+  total_delta_easy?: number;
+  total_delta_medium?: number;
+  total_delta_hard?: number;
 }
 
 interface StatSnapshot {
@@ -64,14 +77,9 @@ interface StatSnapshot {
   easy_solved: number;
   medium_solved: number;
   hard_solved: number;
-  contest_rating?: number;
-  delta_total: number;
-  delta_easy: number;
-  delta_medium: number;
-  delta_hard: number;
-  delta_rating: number;
+  contest_rating: number;
   captured_at: string;
-  sync_run_id?: string;
+  delta_total: number;
   source?: string;
 }
 
@@ -92,14 +100,13 @@ export const GrowthIntelligencePage: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Time Machine state
+  // Time Machine Inline Expansion state (One expanded student at a time)
+  const [expandedStudentId, setExpandedStudentId] = useState<number | string | null>(null);
   const [searchStudentId, setSearchStudentId] = useState<string>('');
   const [historySnapshots, setHistorySnapshots] = useState<StatSnapshot[]>([]);
   const [historyLoading, setHistoryLoading] = useState<boolean>(false);
   const [selectedStudentName, setSelectedStudentName] = useState<string>('');
   const [activeStudentInfo, setActiveStudentInfo] = useState<any>(null);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [modalTopY, setModalTopY] = useState<number | null>(null);
 
   useEffect(() => {
     fetchGrowthData();
@@ -181,10 +188,17 @@ export const GrowthIntelligencePage: React.FC = () => {
       e.stopPropagation();
     }
     if (!identifier || (typeof identifier === 'string' && !identifier.trim())) return;
+
+    // Toggle collapse if clicking the currently expanded student
+    if (String(expandedStudentId) === String(identifier)) {
+      setExpandedStudentId(null);
+      return;
+    }
+
+    setExpandedStudentId(identifier);
     setSelectedStudentName(fallbackName || `Student: ${identifier}`);
     setHistorySnapshots([]);
     setHistoryLoading(true);
-    setIsModalOpen(true); // Open modal immediately on click in current viewport
     try {
       const res = await api.get(`/history/${encodeURIComponent(identifier.trim())}?limit=50`);
       if (res.data && Array.isArray(res.data)) {
@@ -203,36 +217,6 @@ export const GrowthIntelligencePage: React.FC = () => {
       setHistoryLoading(false);
     }
   };
-
-  // Lock body scroll securely preserving exact viewport scroll position
-  useEffect(() => {
-    if (isModalOpen) {
-      const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
-      const prevOverflow = document.body.style.overflow;
-      const prevPosition = document.body.style.position;
-      const prevTop = document.body.style.top;
-      const prevWidth = document.body.style.width;
-
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
-
-      const onKey = (ev: KeyboardEvent) => {
-        if (ev.key === 'Escape') setIsModalOpen(false);
-      };
-      window.addEventListener('keydown', onKey);
-
-      return () => {
-        document.body.style.position = prevPosition || '';
-        document.body.style.top = prevTop || '';
-        document.body.style.width = prevWidth || '';
-        document.body.style.overflow = prevOverflow || '';
-        window.scrollTo(0, scrollY);
-        window.removeEventListener('keydown', onKey);
-      };
-    }
-  }, [isModalOpen]);
 
   return (
     <div className="space-y-8 py-2 pb-16 animate-slideUp">
@@ -515,373 +499,284 @@ export const GrowthIntelligencePage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:border-gray-800 dark:divide-gray-800/80 bg-white dark:bg-navy-900 font-medium">
-                {improvers.map((imp, idx) => (
-                  <tr key={imp.student_id} className="hover:bg-gray-50 dark:hover:bg-navy-800/60 transition-colors">
-                    
-                    {/* Rank Badge */}
-                    <td className="py-4 px-4 font-black text-gray-900 dark:text-white">
-                      {idx === 0 ? (
-                        <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black shadow-md shadow-amber-500/30 text-xs">
-                          🥇 #1
-                        </span>
-                      ) : idx === 1 ? (
-                        <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-gradient-to-r from-slate-200 to-gray-300 text-slate-900 font-black shadow-sm text-xs">
-                          🥈 #2
-                        </span>
-                      ) : idx === 2 ? (
-                        <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-gradient-to-r from-amber-700 to-amber-800 text-amber-100 font-black shadow-sm text-xs">
-                          🥉 #3
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 font-extrabold text-xs">
-                          #{idx + 1}
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Student Info */}
-                    <td className="py-4 px-4">
-                      <div
+                {improvers.map((imp, idx) => {
+                  const isExpanded = String(expandedStudentId) === String(imp.student_id);
+                  return (
+                    <React.Fragment key={imp.student_id}>
+                      <tr
                         onClick={(e) => handleFetchStudentHistory(String(imp.student_id), imp.name, e)}
-                        className="font-extrabold text-sm text-gray-900 dark:text-white tracking-tight hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer transition-colors"
-                        title={`Click to view historical timeline for ${imp.name}`}
+                        className={`transition-colors cursor-pointer ${
+                          isExpanded
+                            ? 'bg-brand-50/80 dark:bg-navy-800/90 border-l-4 border-l-brand-500'
+                            : 'hover:bg-gray-50 dark:hover:bg-navy-800/60'
+                        }`}
                       >
-                        {imp.name}
-                      </div>
-                      <div
-                        onClick={(e) => handleFetchStudentHistory(String(imp.student_id), imp.name, e)}
-                        className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400 mt-0.5 hover:underline cursor-pointer"
-                        title={`Click to view historical timeline for ${imp.reg_no}`}
-                      >
-                        {imp.reg_no}
-                      </div>
-                    </td>
-
-                    {/* Department / Year Pill */}
-                    <td className="py-4 px-4">
-                      <span className="inline-block px-3 py-1 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 font-extrabold text-xs">
-                        {imp.department_code} • {imp.year_level} Yr
-                      </span>
-                    </td>
-
-                    {/* Total Solved */}
-                    <td className="py-4 px-4 font-black text-sm text-gray-900 dark:text-white">
-                      {imp.total_solved}
-                    </td>
-
-                    {/* Growth Delta */}
-                    <td className="py-4 px-4">
-                      <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-black text-sm shadow-sm">
-                        <span>+{imp.delta_solved}</span>
-                      </span>
-                    </td>
-
-                    {/* Difficulty Breakdown */}
-                    <td className="py-4 px-4">
-                      <div className="flex items-center space-x-2 text-xs font-black">
-                        <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                          {imp.easy_solved} E (+{imp.delta_easy})
-                        </span>
-                        <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                          {imp.medium_solved} M (+{imp.delta_medium})
-                        </span>
-                        <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
-                          {imp.hard_solved} H (+{imp.delta_hard})
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* Rating Delta */}
-                    <td className="py-4 px-4">
-                      {imp.delta_rating !== 0 ? (
-                        <span className={`font-black text-xs px-2.5 py-1 rounded-lg ${
-                          imp.delta_rating > 0
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                            : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
-                        }`}>
-                          {imp.delta_rating > 0 ? `+${imp.delta_rating}` : imp.delta_rating}
-                        </span>
-                      ) : (
-                        <span className="text-gray-400 font-bold">—</span>
-                      )}
-                    </td>
-
-                    {/* Time Machine Timeline Button */}
-                    <td className="py-4 px-4 text-right">
-                      <button
-                        onClick={(e) => handleFetchStudentHistory(String(imp.student_id), imp.name, e)}
-                        className="px-3.5 py-2 text-xs font-black rounded-xl bg-brand-600 hover:bg-brand-700 text-white transition-all flex items-center space-x-1.5 shadow-md shadow-brand-600/30 ml-auto transform hover:scale-105"
-                      >
-                        <Clock className="w-3.5 h-3.5" />
-                        <span>Timeline</span>
-                      </button>
-                    </td>
-
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Time Machine Historical Inspection Section */}
-      <div className="glass-card p-6 rounded-3xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-900 shadow-2xl space-y-5">
-        
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-4">
-          <div>
-            <h3 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
-              <Clock className="w-6 h-6 text-brand-600 dark:text-brand-400" />
-              Student Historical Time Machine
-            </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-              Inspect historical stat snapshots, difficulty shifts, and granular solve velocity for any student.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
-            <div className="relative flex-1 sm:w-80">
-              <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Register No, Name, or Handle (e.g. 732224CC031)..."
-                value={searchStudentId}
-                onChange={(e) => setSearchStudentId(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && searchStudentId.trim()) {
-                    handleFetchStudentHistory(searchStudentId);
-                  }
-                }}
-                className="bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-bold rounded-2xl pl-10 pr-4 py-2.5 w-full focus:outline-none focus:border-brand-500 shadow-inner"
-              />
-            </div>
-            <button
-              onClick={() => handleFetchStudentHistory(searchStudentId)}
-              disabled={!searchStudentId.trim() || historyLoading}
-              className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-brand-600 hover:from-indigo-700 hover:to-brand-700 text-white text-xs font-black rounded-2xl shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-50 shrink-0"
-            >
-              {historyLoading ? 'Loading...' : 'Inspect Timeline'}
-            </button>
-          </div>
-        </div>
-
-        {selectedStudentName && (
-          <div className="text-xs font-bold text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 p-3 rounded-2xl border border-brand-200 dark:border-brand-800/60 flex items-center justify-between">
-            <span>Viewing historical timeline for: <span className="text-gray-900 dark:text-white font-black text-sm">{selectedStudentName}</span></span>
-            <span className="text-[11px] font-mono text-gray-500">Total Snapshots: {historySnapshots.length}</span>
-          </div>
-        )}
-
-        {historySnapshots.length > 0 ? (
-          <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-gray-800">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-gray-100 dark:bg-navy-950 text-gray-700 dark:text-gray-300 uppercase font-black text-[11px] border-b border-gray-200 dark:border-gray-800 tracking-wider">
-                <tr>
-                  <th className="py-3.5 px-4">Captured At</th>
-                  <th className="py-3.5 px-4">Total Solved</th>
-                  <th className="py-3.5 px-4 text-emerald-600 dark:text-emerald-400">Easy</th>
-                  <th className="py-3.5 px-4 text-amber-600 dark:text-amber-400">Medium</th>
-                  <th className="py-3.5 px-4 text-rose-600 dark:text-rose-400">Hard</th>
-                  <th className="py-3.5 px-4">Contest Rating</th>
-                  <th className="py-3.5 px-4 text-emerald-600 dark:text-emerald-400">Delta Solved</th>
-                  <th className="py-3.5 px-4">Source</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-800/80 bg-white dark:bg-navy-900 font-mono font-medium">
-                {historySnapshots.map((snap) => (
-                  <tr key={snap.id} className="hover:bg-gray-50 dark:hover:bg-navy-800/60 transition-colors">
-                    <td className="py-3.5 px-4 text-gray-700 dark:text-gray-300 font-sans font-bold">
-                      {new Date(snap.captured_at).toLocaleString()}
-                    </td>
-                    <td className="py-3.5 px-4 font-black text-sm text-gray-900 dark:text-white">{snap.total_solved}</td>
-                    <td className="py-3.5 px-4 font-extrabold text-emerald-600 dark:text-emerald-400">{snap.easy_solved}</td>
-                    <td className="py-3.5 px-4 font-extrabold text-amber-600 dark:text-amber-400">{snap.medium_solved}</td>
-                    <td className="py-3.5 px-4 font-extrabold text-rose-600 dark:text-rose-400">{snap.hard_solved}</td>
-                    <td className="py-3.5 px-4 font-bold text-gray-800 dark:text-gray-200">{snap.contest_rating ?? 'Unrated'}</td>
-                    <td className="py-3.5 px-4">
-                      <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-black">
-                        +{snap.delta_total}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-[11px] font-sans font-bold text-gray-500 dark:text-gray-400">{snap.source || 'leetcode_public_profile'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="text-center py-10 text-gray-500 dark:text-gray-400 text-xs font-semibold bg-gray-50 dark:bg-navy-950/40 rounded-2xl border border-dashed border-gray-300 dark:border-gray-800">
-            Select a student from the leaderboard or enter a Student ID above to view snapshot history timeline.
-          </div>
-        )}
-      </div>
-
-      {/* Interactive Student Time Machine Timeline Modal — Mounted via Portal to document.body */}
-      {isModalOpen && typeof document !== 'undefined' && createPortal(
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={`Historical Timeline for ${selectedStudentName}`}
-          className="modal-overlay-responsive animate-modal-backdrop"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            width: '100vw',
-            height: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 999999
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setIsModalOpen(false);
-          }}
-        >
-          <div
-            className="modal-container-responsive max-w-6xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-2xl animate-modal-content"
-            style={{
-              margin: 'auto',
-              maxHeight: 'calc(100dvh - 4rem)',
-              display: 'flex',
-              flexDirection: 'column',
-              position: 'relative'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            
-            {/* Modal Header */}
-            <div className="p-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-gray-800 shrink-0">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 rounded-2xl bg-brand-500/20 border border-brand-400/30 text-brand-400">
-                  <Clock className="w-6 h-6 stroke-[2.5]" />
-                </div>
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <h3 className="text-xl font-black tracking-tight">{selectedStudentName}</h3>
-                    {activeStudentInfo && (
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-brand-500/20 border border-brand-400/30 text-brand-300">
-                        {activeStudentInfo.reg_no}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-300 font-medium">
-                    Granular Historical Solve Snapshots & Timeline Analytics
-                    {activeStudentInfo && ` • ${activeStudentInfo.department} Year ${activeStudentInfo.year}`}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-2 rounded-2xl bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white transition-all"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6 flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-6 custom-scrollbar">
-              
-              {/* Snapshot KPI Summary Strip */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60">
-                  <span className="text-[10px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400">Latest Solved</span>
-                  <div className="text-2xl font-black text-emerald-900 dark:text-emerald-100 mt-1">
-                    {historySnapshots[0]?.total_solved ?? 0}
-                  </div>
-                </div>
-                <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60">
-                  <span className="text-[10px] font-extrabold uppercase text-amber-600 dark:text-amber-400">Rating Trajectory</span>
-                  <div className="text-2xl font-black text-amber-900 dark:text-amber-100 mt-1">
-                    {historySnapshots[0]?.contest_rating ?? 'Unrated'}
-                  </div>
-                </div>
-                <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60">
-                  <span className="text-[10px] font-extrabold uppercase text-indigo-600 dark:text-indigo-400">Period Delta</span>
-                  <div className="text-2xl font-black text-indigo-900 dark:text-indigo-100 mt-1">
-                    +{historySnapshots.reduce((acc, s) => acc + (s.delta_total || 0), 0)}
-                  </div>
-                </div>
-                <div className="p-4 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60">
-                  <span className="text-[10px] font-extrabold uppercase text-purple-600 dark:text-purple-400">Total Snapshots</span>
-                  <div className="text-2xl font-black text-purple-900 dark:text-purple-100 mt-1">
-                    {historySnapshots.length}
-                  </div>
-                </div>
-              </div>
-
-              {/* Timeline Snapshot Records Table */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 flex items-center justify-between">
-                  <span>Snapshot History Logs</span>
-                  <span>Descending Order (Newest First)</span>
-                </h4>
-
-                <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-gray-800">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-gray-100 dark:bg-navy-950 text-gray-700 dark:text-gray-300 uppercase font-black text-[10px] border-b border-gray-200 dark:border-gray-800">
-                      <tr>
-                        <th className="py-3 px-4">Captured Timestamp</th>
-                        <th className="py-3 px-4">Total</th>
-                        <th className="py-3 px-4 text-emerald-600">Easy</th>
-                        <th className="py-3 px-4 text-amber-600">Medium</th>
-                        <th className="py-3 px-4 text-rose-600">Hard</th>
-                        <th className="py-3 px-4">Rating</th>
-                        <th className="py-3 px-4 text-emerald-600">Delta</th>
-                        <th className="py-3 px-4">Source</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-gray-800 font-mono text-xs">
-                      {historySnapshots.map((snap) => (
-                        <tr key={snap.id} className="hover:bg-gray-50 dark:hover:bg-navy-800/60 transition-colors">
-                          <td className="py-3 px-4 font-sans font-bold text-gray-800 dark:text-gray-200">
-                            {new Date(snap.captured_at).toLocaleString([], {
-                              year: 'numeric',
-                              month: 'short',
-                              day: '2-digit',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </td>
-                          <td className="py-3 px-4 font-black text-gray-900 dark:text-white">{snap.total_solved}</td>
-                          <td className="py-3 px-4 font-bold text-emerald-600 dark:text-emerald-400">{snap.easy_solved}</td>
-                          <td className="py-3 px-4 font-bold text-amber-600 dark:text-amber-400">{snap.medium_solved}</td>
-                          <td className="py-3 px-4 font-bold text-rose-600 dark:text-rose-400">{snap.hard_solved}</td>
-                          <td className="py-3 px-4 font-bold text-gray-700 dark:text-gray-300">{snap.contest_rating ?? '—'}</td>
-                          <td className="py-3 px-4">
-                            <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-black text-[11px]">
-                              +{snap.delta_total}
+                        
+                        {/* Rank Badge */}
+                        <td className="py-4 px-4 font-black text-gray-900 dark:text-white">
+                          {idx === 0 ? (
+                            <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black shadow-md shadow-amber-500/30 text-xs">
+                              🥇 #1
                             </span>
+                          ) : idx === 1 ? (
+                            <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-gradient-to-r from-slate-200 to-gray-300 text-slate-900 font-black shadow-sm text-xs">
+                              🥈 #2
+                            </span>
+                          ) : idx === 2 ? (
+                            <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-gradient-to-r from-amber-700 to-amber-800 text-amber-100 font-black shadow-sm text-xs">
+                              🥉 #3
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 font-extrabold text-xs">
+                              #{idx + 1}
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Student Info */}
+                        <td className="py-4 px-4">
+                          <div className="font-extrabold text-sm text-gray-900 dark:text-white tracking-tight hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+                            {imp.name}
+                          </div>
+                          <div className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400 mt-0.5">
+                            {imp.reg_no}
+                          </div>
+                        </td>
+
+                        {/* Department / Year Pill */}
+                        <td className="py-4 px-4">
+                          <span className="inline-block px-3 py-1 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 font-extrabold text-xs">
+                            {imp.department_code} • {imp.year_level} Yr
+                          </span>
+                        </td>
+
+                        {/* Total Solved */}
+                        <td className="py-4 px-4 font-black text-sm text-gray-900 dark:text-white">
+                          {imp.total_solved}
+                        </td>
+
+                        {/* Growth Delta */}
+                        <td className="py-4 px-4">
+                          <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-black text-sm shadow-sm">
+                            <span>+{imp.delta_solved}</span>
+                          </span>
+                        </td>
+
+                        {/* Difficulty Breakdown */}
+                        <td className="py-4 px-4">
+                          <div className="flex items-center space-x-2 text-xs font-black">
+                            <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                              {imp.easy_solved} E (+{imp.delta_easy})
+                            </span>
+                            <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                              {imp.medium_solved} M (+{imp.delta_medium})
+                            </span>
+                            <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                              {imp.hard_solved} H (+{imp.delta_hard})
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Rating Delta */}
+                        <td className="py-4 px-4">
+                          {imp.delta_rating !== 0 ? (
+                            <span className={`font-black text-xs px-2.5 py-1 rounded-lg ${
+                              imp.delta_rating > 0
+                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                                : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                            }`}>
+                              {imp.delta_rating > 0 ? `+${imp.delta_rating}` : imp.delta_rating}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 font-bold">—</span>
+                          )}
+                        </td>
+
+                        {/* Time Machine Timeline Toggle Button */}
+                        <td className="py-4 px-4 text-right">
+                          <button
+                            type="button"
+                            onClick={(e) => handleFetchStudentHistory(String(imp.student_id), imp.name, e)}
+                            className={`px-3.5 py-2 text-xs font-black rounded-xl transition-all flex items-center space-x-1.5 shadow-md ml-auto ${
+                              isExpanded
+                                ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/30'
+                                : 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-600/30'
+                            }`}
+                          >
+                            <Clock className="w-3.5 h-3.5" />
+                            <span>{isExpanded ? 'Close' : 'Timeline'}</span>
+                            {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                          </button>
+                        </td>
+                      </tr>
+
+                      {/* INLINE EXPANDED DETAILS PANEL */}
+                      {isExpanded && (
+                        <tr key={`expanded-${imp.student_id}`} className="bg-slate-50/90 dark:bg-navy-950/90">
+                          <td colSpan={8} className="p-4 sm:p-6 border-b-2 border-brand-500/30">
+                            <div className="space-y-6">
+                              
+                              {/* Header & Details Strip */}
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-sm">
+                                <div className="space-y-1">
+                                  <div className="flex items-center space-x-2">
+                                    <h4 className="text-base font-black text-gray-900 dark:text-white">{imp.name}</h4>
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300">
+                                      {imp.reg_no}
+                                    </span>
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300">
+                                      {imp.department_code} • {imp.year_level} Yr
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-gray-500 font-semibold">
+                                    Active Filter Time Window: <strong className="text-brand-600 dark:text-brand-400 uppercase tracking-wide">{period === 'today' ? 'Today' : period === '7d' ? 'Last 7 Days' : period === '30d' ? 'Last 30 Days' : 'All Time'}</strong>
+                                  </p>
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); setExpandedStudentId(null); }}
+                                  className="px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-navy-800 hover:bg-rose-500 hover:text-white transition-colors text-xs font-bold flex items-center space-x-1"
+                                >
+                                  <span>✕ Close Details</span>
+                                </button>
+                              </div>
+
+                              {/* Growth Breakdown Grid */}
+                              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
+                                <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-sm">
+                                  <span className="text-[10px] font-extrabold uppercase text-gray-400">Total Solved</span>
+                                  <div className="text-lg font-black text-gray-900 dark:text-white mt-0.5">{imp.total_solved}</div>
+                                </div>
+                                <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/40 shadow-sm">
+                                  <span className="text-[10px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400">Easy Solved</span>
+                                  <div className="text-lg font-black text-emerald-900 dark:text-emerald-100 mt-0.5">
+                                    {imp.easy_solved} <span className="text-xs font-bold text-emerald-600">(+{imp.delta_easy})</span>
+                                  </div>
+                                </div>
+                                <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/40 shadow-sm">
+                                  <span className="text-[10px] font-extrabold uppercase text-amber-600 dark:text-amber-400">Medium Solved</span>
+                                  <div className="text-lg font-black text-amber-900 dark:text-amber-100 mt-0.5">
+                                    {imp.medium_solved} <span className="text-xs font-bold text-amber-600">(+{imp.delta_medium})</span>
+                                  </div>
+                                </div>
+                                <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 shadow-sm">
+                                  <span className="text-[10px] font-extrabold uppercase text-rose-600 dark:text-rose-400">Hard Solved</span>
+                                  <div className="text-lg font-black text-rose-900 dark:text-rose-100 mt-0.5">
+                                    {imp.hard_solved} <span className="text-xs font-bold text-rose-600">(+{imp.delta_hard})</span>
+                                  </div>
+                                </div>
+                                <div className="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/40 shadow-sm col-span-2 sm:col-span-1">
+                                  <span className="text-[10px] font-extrabold uppercase text-indigo-600 dark:text-indigo-400">Period Delta</span>
+                                  <div className="text-lg font-black text-indigo-900 dark:text-indigo-100 mt-0.5">+{imp.delta_solved}</div>
+                                </div>
+                              </div>
+
+                              {/* Compact Area Chart */}
+                              {historySnapshots.length > 1 && (
+                                <div className="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 space-y-2.5">
+                                  <div className="flex items-center justify-between">
+                                    <h5 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider flex items-center space-x-1.5">
+                                      <BarChart2 className="w-4 h-4 text-brand-500" />
+                                      <span>Solve Growth Trajectory</span>
+                                    </h5>
+                                    <span className="text-[11px] font-mono text-gray-400">{historySnapshots.length} Data Points</span>
+                                  </div>
+                                  <div className="h-44 w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                      <AreaChart data={[...historySnapshots].reverse()}>
+                                        <defs>
+                                          <linearGradient id={`colorSolved-${imp.student_id}`} x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.4}/>
+                                            <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
+                                          </linearGradient>
+                                        </defs>
+                                        <XAxis
+                                          dataKey="captured_at"
+                                          tickFormatter={(val) => new Date(val).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                                          tick={{ fontSize: 10, fill: '#64748b' }}
+                                        />
+                                        <YAxis domain={['dataMin - 2', 'dataMax + 2']} tick={{ fontSize: 10, fill: '#64748b' }} />
+                                        <Tooltip
+                                          contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', fontSize: '11px', color: '#fff' }}
+                                          labelFormatter={(val) => new Date(val).toLocaleString()}
+                                        />
+                                        <Area type="monotone" dataKey="total_solved" stroke="#4f46e5" strokeWidth={2.5} fillOpacity={1} fill={`url(#colorSolved-${imp.student_id})`} />
+                                      </AreaChart>
+                                    </ResponsiveContainer>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Snapshot History Table */}
+                              <div className="space-y-2.5">
+                                <div className="flex items-center justify-between">
+                                  <h5 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider flex items-center space-x-1.5">
+                                    <Clock className="w-4 h-4 text-brand-500" />
+                                    <span>Time Machine Historical Log</span>
+                                  </h5>
+                                </div>
+
+                                {historyLoading ? (
+                                  <div className="p-6 text-center text-xs font-bold text-gray-500 animate-pulse">
+                                    Loading historical snapshots...
+                                  </div>
+                                ) : historySnapshots.length > 0 ? (
+                                  <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-900">
+                                    <table className="w-full text-left text-xs">
+                                      <thead className="bg-gray-100 dark:bg-navy-950 text-gray-700 dark:text-gray-300 uppercase font-black text-[10px] border-b border-slate-200 dark:border-navy-800">
+                                        <tr>
+                                          <th className="py-2.5 px-3.5">Captured At</th>
+                                          <th className="py-2.5 px-3.5">Total</th>
+                                          <th className="py-2.5 px-3.5 text-emerald-600">Easy</th>
+                                          <th className="py-2.5 px-3.5 text-amber-600">Medium</th>
+                                          <th className="py-2.5 px-3.5 text-rose-600">Hard</th>
+                                          <th className="py-2.5 px-3.5">Rating</th>
+                                          <th className="py-2.5 px-3.5 text-emerald-600">Delta</th>
+                                          <th className="py-2.5 px-3.5">Source</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody className="divide-y divide-slate-200 dark:divide-navy-800 font-mono text-xs">
+                                        {historySnapshots.map((snap) => (
+                                          <tr key={snap.id} className="hover:bg-slate-50 dark:hover:bg-navy-800/60 transition-colors">
+                                            <td className="py-2.5 px-3.5 font-sans font-bold text-gray-800 dark:text-gray-200">
+                                              {new Date(snap.captured_at).toLocaleString([], { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                            </td>
+                                            <td className="py-2.5 px-3.5 font-black text-gray-900 dark:text-white">{snap.total_solved}</td>
+                                            <td className="py-2.5 px-3.5 font-bold text-emerald-600 dark:text-emerald-400">{snap.easy_solved}</td>
+                                            <td className="py-2.5 px-3.5 font-bold text-amber-600 dark:text-amber-400">{snap.medium_solved}</td>
+                                            <td className="py-2.5 px-3.5 font-bold text-rose-600 dark:text-rose-400">{snap.hard_solved}</td>
+                                            <td className="py-2.5 px-3.5 font-bold text-gray-700 dark:text-gray-300">{snap.contest_rating ?? '—'}</td>
+                                            <td className="py-2.5 px-3.5">
+                                              <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-black text-[11px]">
+                                                +{snap.delta_total}
+                                              </span>
+                                            </td>
+                                            <td className="py-2.5 px-3.5 text-[10px] font-sans font-bold text-gray-400">{snap.source || 'leetcode_sync'}</td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                ) : (
+                                  <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-300 text-xs font-bold text-center">
+                                    ⚠️ Historical snapshot data unavailable for this student yet.
+                                  </div>
+                                )}
+                              </div>
+
+                            </div>
                           </td>
-                          <td className="py-3 px-4 text-[10px] font-sans font-bold text-gray-400">{snap.source || 'leetcode_sync'}</td>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-4 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between shrink-0">
-              <span className="text-[11px] text-gray-500 font-medium">
-                Single Source of Truth Grounded Timeline Records
-              </span>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="px-5 py-2 rounded-xl bg-gray-200 dark:bg-navy-800 text-gray-800 dark:text-gray-200 text-xs font-black hover:bg-gray-300 dark:hover:bg-navy-700 transition-all"
-              >
-                Close Timeline
-              </button>
-            </div>
-
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-        </div>,
-        document.body
-      )}
+        )}
+      </div>
 
     </div>
   );
