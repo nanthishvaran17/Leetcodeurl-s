@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
@@ -158,13 +159,6 @@ export const App: React.FC = () => {
   const handleSelectStudent = (student: StudentData) => {
     setSelectedStudent(student);
     setActiveTab('profile');
-    window.scrollTo(0, 0);
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-    requestAnimationFrame(() => {
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-    });
   };
 
   // Global Keyboard Shortcuts & Pro SaaS UX System
@@ -412,6 +406,28 @@ export const App: React.FC = () => {
 
       {/* Floating Global NEC Unified AI Widget */}
       <AIAssistantWidget onNavigateTab={handleTabChange} />
+
+      {/* Viewport-Centered Student Profile Modal */}
+      {selectedStudent && typeof document !== 'undefined' && createPortal(
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Student profile for ${selectedStudent.name}`}
+          className="modal-overlay-responsive animate-modal-backdrop"
+          onClick={(e) => { if (e.target === e.currentTarget) setSelectedStudent(null); }}
+        >
+          <div
+            className="modal-container-responsive bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 animate-modal-content max-w-4xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <StudentProfilePage
+              student={selectedStudent}
+              onBack={() => setSelectedStudent(null)}
+            />
+          </div>
+        </div>,
+        document.body
+      )}
 
     </div>
   );

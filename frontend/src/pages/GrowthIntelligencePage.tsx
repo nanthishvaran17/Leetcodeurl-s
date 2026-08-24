@@ -177,8 +177,10 @@ export const GrowthIntelligencePage: React.FC = () => {
 
   const handleFetchStudentHistory = async (identifier: string, fallbackName?: string, e?: React.MouseEvent) => {
     if (!identifier || (typeof identifier === 'string' && !identifier.trim())) return;
-    if (e) setModalTopY(calculateTargetTopY(e));
+    setSelectedStudentName(fallbackName || `Student: ${identifier}`);
+    setHistorySnapshots([]);
     setHistoryLoading(true);
+    setIsModalOpen(true); // Open modal immediately on click
     try {
       const res = await api.get(`/history/${encodeURIComponent(identifier.trim())}?limit=50`);
       if (res.data && Array.isArray(res.data)) {
@@ -190,7 +192,6 @@ export const GrowthIntelligencePage: React.FC = () => {
         setSelectedStudentName(res.data.student?.name || fallbackName || `Student: ${identifier}`);
         setActiveStudentInfo(res.data.student);
       }
-      setIsModalOpen(true);
     } catch (err: any) {
       console.error("Fetch history error:", err);
       notify.warning('Timeline Records Not Found', `Could not find history snapshots for '${identifier}'. Please check Register Number or LeetCode handle.`, { category: 'TIME MACHINE' });
@@ -202,14 +203,21 @@ export const GrowthIntelligencePage: React.FC = () => {
   // Lock body scroll when modal is open
   useEffect(() => {
     if (isModalOpen) {
+      const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
       const prevOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
+      if (window.scrollY === 0 && currentScrollY > 0) {
+        window.scrollTo(0, currentScrollY);
+      }
       const onKey = (ev: KeyboardEvent) => {
         if (ev.key === 'Escape') setIsModalOpen(false);
       };
       window.addEventListener('keydown', onKey);
       return () => {
-        document.body.style.overflow = prevOverflow || 'unset';
+        document.body.style.overflow = prevOverflow || '';
+        if (currentScrollY > 0) {
+          window.scrollTo(0, currentScrollY);
+        }
         window.removeEventListener('keydown', onKey);
       };
     }
@@ -522,8 +530,20 @@ export const GrowthIntelligencePage: React.FC = () => {
 
                     {/* Student Info */}
                     <td className="py-4 px-4">
-                      <div className="font-extrabold text-sm text-gray-900 dark:text-white tracking-tight">{imp.name}</div>
-                      <div className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400 mt-0.5">{imp.reg_no}</div>
+                      <div
+                        onClick={(e) => handleFetchStudentHistory(String(imp.student_id), imp.name, e)}
+                        className="font-extrabold text-sm text-gray-900 dark:text-white tracking-tight hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer transition-colors"
+                        title={`Click to view historical timeline for ${imp.name}`}
+                      >
+                        {imp.name}
+                      </div>
+                      <div
+                        onClick={(e) => handleFetchStudentHistory(String(imp.student_id), imp.name, e)}
+                        className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400 mt-0.5 hover:underline cursor-pointer"
+                        title={`Click to view historical timeline for ${imp.reg_no}`}
+                      >
+                        {imp.reg_no}
+                      </div>
                     </td>
 
                     {/* Department / Year Pill */}
@@ -692,12 +712,32 @@ export const GrowthIntelligencePage: React.FC = () => {
           aria-modal="true"
           aria-label={`Historical Timeline for ${selectedStudentName}`}
           className="modal-overlay-responsive animate-modal-backdrop"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 999999
+          }}
           onClick={(e) => {
             if (e.target === e.currentTarget) setIsModalOpen(false);
           }}
         >
           <div
             className="modal-container-responsive max-w-6xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-2xl animate-modal-content"
+            style={{
+              margin: 'auto',
+              maxHeight: 'calc(100dvh - 4rem)',
+              display: 'flex',
+              flexDirection: 'column',
+              position: 'relative'
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             
@@ -732,7 +772,7 @@ export const GrowthIntelligencePage: React.FC = () => {
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 overflow-y-auto space-y-6 custom-scrollbar flex-1">
+            <div className="p-6 flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-6 custom-scrollbar">
               
               {/* Snapshot KPI Summary Strip */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

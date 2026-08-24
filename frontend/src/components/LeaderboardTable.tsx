@@ -183,12 +183,16 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   useEffect(() => {
     const isAnyModalOpen = Boolean(viewingStudent || editingStudent || deletingStudent);
     if (isAnyModalOpen) {
+      const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
       const prevOverflow = document.body.style.overflow;
       const prevPaddingRight = document.body.style.paddingRight;
       const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
       if (scrollbarWidth > 0) {
         document.body.style.paddingRight = `${scrollbarWidth}px`;
+      }
+      if (window.scrollY === 0 && currentScrollY > 0) {
+        window.scrollTo(0, currentScrollY);
       }
       const onKey = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
@@ -199,8 +203,11 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
       };
       window.addEventListener('keydown', onKey);
       return () => {
-        document.body.style.overflow = prevOverflow || 'unset';
+        document.body.style.overflow = prevOverflow || '';
         document.body.style.paddingRight = prevPaddingRight || '';
+        if (currentScrollY > 0) {
+          window.scrollTo(0, currentScrollY);
+        }
         window.removeEventListener('keydown', onKey);
       };
     }

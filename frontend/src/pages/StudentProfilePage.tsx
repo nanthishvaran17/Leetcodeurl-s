@@ -177,16 +177,39 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in pb-10">
+    <div className="h-full flex flex-col overflow-hidden animate-fade-in bg-white dark:bg-navy-900 rounded-3xl">
       
-      {/* Back Button */}
-      <button
-        onClick={onBack}
-        className="flex items-center space-x-2 text-xs font-bold text-gray-500 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        <span>Back to Student Master / Dashboard</span>
-      </button>
+      {/* Sticky Header Bar with Close Button */}
+      <div className="p-4 sm:p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-gray-800 shrink-0">
+        <div className="flex items-center space-x-3">
+          <button
+            type="button"
+            onClick={onBack}
+            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer flex items-center space-x-1 text-xs font-bold"
+            title="Back / Close"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back</span>
+          </button>
+          <div>
+            <h2 className="text-base sm:text-lg font-black text-white">{detail?.name || student?.name}</h2>
+            <span className="text-xs text-brand-300 font-mono font-bold">{detail?.reg_no || student?.reg_no} • {detail?.department?.code || student?.department?.code}</span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={onBack}
+          className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500 text-white transition-all font-black text-xs flex items-center space-x-1 cursor-pointer"
+          title="Close Modal"
+        >
+          <span className="text-base leading-none">✕</span>
+          <span>Close</span>
+        </button>
+      </div>
+
+      {/* Scrollable Body Content */}
+      <div className="p-5 sm:p-6 overflow-y-auto overscroll-contain flex-1 min-h-0 space-y-6 custom-scrollbar">
 
       {/* Student Profile Header Banner */}
       <div className="glass-card p-6 rounded-3xl border space-y-4 bg-gradient-to-r from-brand-900/10 via-navy-900/10 to-indigo-900/10 shadow-xl">
@@ -409,9 +432,8 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             <p className="text-xs text-gray-500">Loading topic insights...</p>
           )}
         </div>
-
       </div>
-
     </div>
-  );
+  </div>
+);
 };
