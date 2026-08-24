@@ -388,7 +388,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
             </h1>
 
             <p className="text-xs md:text-sm text-gray-300 font-bold tracking-wide">
-              Manage student profiles across Cyber Security &amp; IoT, LeetCode profile links, and live sync status
+              Manage student profiles across all departments (CSE, IT, ECE, EEE, MECH, CIVIL, AIML, AIDS, Cyber Security &amp; IoT), LeetCode profile links, and live sync status
             </p>
           </div>
 

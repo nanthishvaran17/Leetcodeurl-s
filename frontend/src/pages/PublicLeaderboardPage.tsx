@@ -103,7 +103,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
               LeetCode Performance <span className="text-brand-400">Leaderboard</span>
             </h1>
             <p className="text-sm text-gray-300 font-semibold">
-              Real-time institutional performance rankings — CSE (Cyber Security) & CSE (IoT) Departments
+              Real-time institutional performance rankings — All Engineering Departments (CSE, IT, ECE, EEE, MECH, CIVIL, AIML, AIDS, Cyber Security &amp; IoT)
             </p>
             <div className="flex items-center space-x-2 text-[11px] text-gray-400 font-mono">
               <Shield className="w-3.5 h-3.5 text-emerald-400" />
