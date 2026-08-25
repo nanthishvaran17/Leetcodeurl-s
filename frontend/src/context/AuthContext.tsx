@@ -23,6 +23,7 @@ export interface AuthUser {
   role: 'student' | 'staff' | 'admin' | 'Super Admin';
   registerNo?: string | null;
   department?: string | null;
+  department_id?: number | null;
   year?: string | null;
   section?: string | null;
   leetcodeUsername?: string | null;

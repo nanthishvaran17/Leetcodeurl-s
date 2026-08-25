@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { StudentEditOverlay } from './StudentEditOverlay';
+import { useNotification } from '../context/NotificationContext';
 
 interface StudentMentoringDetailProps {
   student: any;
@@ -18,6 +19,7 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
   onClose,
   onRefresh
 }) => {
+  const { notify } = useNotification();
   const [activeTab, setActiveTab] = useState<'overview' | 'notes' | 'followups'>('overview');
   const [notes, setNotes] = useState<any[]>([]);
   const [followUps, setFollowUps] = useState<any[]>([]);
@@ -85,9 +87,10 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
       });
       setNewNote('');
       fetchNotes();
+      notify.success('Note Logged', 'Mentoring note added successfully.');
       if (onRefresh) onRefresh();
     } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to add note');
+      notify.error('Action Failed', err.response?.data?.detail || 'Failed to add note');
     } finally {
       setSubmittingNote(false);
     }
@@ -108,9 +111,10 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
       setFollowUpTitle('');
       setFollowUpNotes('');
       fetchFollowUps();
+      notify.success('Follow-Up Scheduled', 'Mentoring follow-up scheduled.');
       if (onRefresh) onRefresh();
     } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to schedule follow-up');
+      notify.error('Action Failed', err.response?.data?.detail || 'Failed to schedule follow-up');
     } finally {
       setSubmittingFollowUp(false);
     }

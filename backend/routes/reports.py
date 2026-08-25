@@ -10,6 +10,8 @@ from pydantic import BaseModel
 from backend.config import settings
 from backend.database import get_db
 from backend.models import Student, CertificateRecord, EmailLog, ContestParticipation
+from backend.schemas import StudentOut
+from backend.services.authorization_service import apply_role_based_student_filter
 from backend.excel_handler import (
     generate_8_sheet_excel_report,
     generate_student_performance_detail_excel,
@@ -50,8 +52,10 @@ def download_student_performance_detail_excel(
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export Student Performance Detail Excel", dept_scoped=True))
 ):
+    """Generates the student performance detail Excel, scoped to the caller's authorization level."""
     try:
-        excel_bytes = generate_student_performance_detail_excel(db)
+        # Pass current_user so the generator can apply role-based scoping
+        excel_bytes = generate_student_performance_detail_excel(db, current_user=current_user)
         return Response(
             content=excel_bytes,
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -67,8 +71,10 @@ def download_official_college_summary_excel(
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export Excel Summary Report", dept_scoped=True))
 ):
+    """Generates the 8-sheet official college Excel, scoped to the caller's authorization level."""
     try:
-        excel_bytes = generate_8_sheet_excel_report(db)
+        # Pass current_user for role-scoped generation (Staff → assigned students only)
+        excel_bytes = generate_8_sheet_excel_report(db, current_user=current_user)
         return Response(
             content=excel_bytes,
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -172,6 +178,8 @@ def download_csv_report(
     current_user = Depends(require_security_access(resource_name="Export CSV Report", dept_scoped=True))
 ):
     query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+    query = apply_role_based_student_filter(query, current_user, db)
+    
     if dept_id:
         query = query.filter(Student.department_id == dept_id)
     if year_level and year_level.upper() != 'ALL':

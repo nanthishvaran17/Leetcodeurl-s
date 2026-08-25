@@ -16,6 +16,7 @@ from backend.models import User, Student, FacultyStudentAssignment, Department, 
 from backend.security import require_security_access, require_role
 from backend.services.faculty_assignment_service import faculty_assignment_service, MAX_STUDENTS_PER_FACULTY
 from backend.schemas import StudentOut
+from backend.services.authorization_service import apply_role_based_student_filter
 from backend.logger import logger
 
 router = APIRouter(prefix="/faculty-assignments", tags=["Faculty Assignments"])
@@ -41,11 +42,13 @@ def get_my_assigned_students(
     current_user: User = Depends(require_role("Faculty", "faculty", "Staff", "staff", "HOD", "hod", "Admin", "Super Admin"))
 ):
     """
-    Returns the full list of students strictly assigned to the authenticated faculty member.
-    No limit on count (20 is recommended mentoring ratio).
+    Returns the full list of students strictly assigned to the authenticated faculty/staff member.
+    Authorization is enforced via the faculty_student_assignments table — NOT via role-based
+    department scope. This guarantees Staff A never sees Staff B's students even if both are
+    in the same department or if the caller has HOD/Admin role.
     """
     assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, current_user.id)
-    
+
     if not assigned_ids:
         return {
             "faculty_id": current_user.id,
@@ -56,11 +59,18 @@ def get_my_assigned_students(
             "students": []
         }
 
+    # SECURITY: Filter strictly by assigned_ids — no role-based expansion.
+    # apply_role_based_student_filter is intentionally NOT used here because it
+    # would expand scope for HOD/Admin and would issue a second redundant query
+    # to get_faculty_assigned_student_ids for Staff/Faculty roles (N+1 pattern).
     students = db.query(Student).outerjoin(Student.stats).options(
         joinedload(Student.department),
         joinedload(Student.section),
         joinedload(Student.stats)
-    ).filter(Student.id.in_(assigned_ids)).all()
+    ).filter(
+        Student.id.in_(assigned_ids),
+        (Student.is_active == True) | (Student.is_active.is_(None))
+    ).all()
 
     student_list = []
     for s in students:
@@ -185,6 +195,44 @@ def unassign_students(
         faculty_id=payload.faculty_id,
         student_ids=payload.student_ids
     )
+
+
+@router.delete("/staff/{faculty_id}")
+def delete_staff_member(
+    faculty_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("Admin", "Super Admin", "super admin", "HOD", "hod", dept_scoped=True))
+):
+    """
+    Deletes a staff member and automatically unassigns all their assigned students,
+    returning them to the unassigned student allocation queue.
+    """
+    faculty = db.query(User).filter(User.id == faculty_id).first()
+    if not faculty:
+        raise HTTPException(status_code=404, detail="Faculty member not found.")
+
+    user_role = (current_user.role or "").strip().lower()
+    if user_role in ["hod"] and current_user.department_id != faculty.department_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Access restricted: HOD can only delete staff members in their own department."
+        )
+
+    # 1. Unassign all students assigned to this faculty member
+    unassigned_count = db.query(FacultyStudentAssignment).filter(
+        FacultyStudentAssignment.faculty_id == faculty_id
+    ).delete(synchronize_session=False)
+
+    # 2. Delete the faculty user record
+    faculty_name = faculty.username
+    db.delete(faculty)
+    db.commit()
+
+    return {
+        "success": True,
+        "message": f"Staff member '{faculty_name}' deleted successfully. {unassigned_count} students returned to allocation queue.",
+        "unassigned_count": unassigned_count
+    }
 
 
 @router.post("/auto-distribute")

@@ -6,9 +6,23 @@
   *, *::before, *::after {
     box-sizing: border-box;
   }
+  html, body, #root {
+    font-family: "Times New Roman", Times, serif !important;
+    font-size: 16.5px;
+    letter-spacing: 0.03em !important;
+    word-spacing: 0.04em !important;
+    line-height: 1.55;
+  }
+  button, input, textarea, select, option, label, table, th, td, p, h1, h2, h3, h4, h5, h6, span, a {
+    font-family: inherit !important;
+    letter-spacing: 0.03em !important;
+    word-spacing: 0.04em !important;
+  }
   html {
+    font-size: 16.5px;
+    scroll-behavior: smooth;
     scrollbar-gutter: stable;
-    text-rendering: optimizeLegibility;
+    text-rendering: optimizeSpeed;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     width: 100%;
@@ -16,7 +30,7 @@
     overflow-x: hidden;
   }
   body {
-    @apply antialiased font-sans selection:bg-brand-500 selection:text-white bg-slate-50 text-slate-900 dark:bg-navy-950 dark:text-slate-100 transition-colors duration-300;
+    @apply antialiased font-sans selection:bg-brand-500 selection:text-white bg-slate-50 text-slate-900 dark:bg-navy-950 dark:text-slate-100 transition-colors duration-200;
     width: 100%;
     max-width: 100%;
     min-height: 100vh;
@@ -26,6 +40,11 @@
                       radial-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px);
     background-size: 32px 32px;
     background-position: 0 0, 16px 16px;
+  }
+  /* GPU Hardware Acceleration for Zero-Lag Smooth Interactions */
+  button, input, select, table, tr, div[role="dialog"] {
+    backface-visibility: hidden;
+    transform: translateZ(0);
   }
   #root {
     width: 100%;

@@ -10,26 +10,31 @@ from backend.schemas import StudentOut
 from backend.insights import get_student_insights
 from backend.gamification import calculate_section_battles
 from backend.cache import cache
+from backend.services.authorization_service import apply_role_based_student_filter
+from backend.security import get_current_user_optional
+from fastapi import Request
 
 router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
 
 @router.get("/department-comparison")
-def compare_departments(db: Session = Depends(get_db)):
-    cache_key = "analytics:dept_comparison"
-    cached = cache.get(cache_key)
-    if cached is not None:
-        return cached
-
+def compare_departments(request: Request, db: Session = Depends(get_db)):
+    current_user = get_current_user_optional(request, db)
+    
+    # We must skip caching if user has a restricted scope, otherwise they see global cache or poison the cache.
+    # We could make the cache key user-specific if needed.
+    
     departments = db.query(Department).all()
     if not departments:
         return []
 
     # Single batch fetch for all active students with department & stats
-    all_students = db.query(Student).options(
+    query = db.query(Student).options(
         joinedload(Student.stats)
     ).filter(
         (Student.is_active == True) | (Student.is_active.is_(None))
-    ).all()
+    )
+    query = apply_role_based_student_filter(query, current_user, db)
+    all_students = query.all()
 
     # Single batch fetch for all progress records
     all_progs = db.query(WeeklyStudentProgress).all()
@@ -84,17 +89,20 @@ def compare_departments(db: Session = Depends(get_db)):
     return results
 
 @router.get("/compare-students")
-def compare_students(ids: str = Query(..., description="Comma separated student IDs e.g. 1,2"), db: Session = Depends(get_db)):
+def compare_students(request: Request, ids: str = Query(..., description="Comma separated student IDs e.g. 1,2"), db: Session = Depends(get_db)):
+    current_user = get_current_user_optional(request, db)
     try:
         id_list = [int(x.strip()) for x in ids.split(",") if x.strip()]
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid student IDs format.")
 
-    students = db.query(Student).options(
+    query = db.query(Student).options(
         joinedload(Student.department),
         joinedload(Student.section),
         joinedload(Student.stats)
-    ).filter(Student.id.in_(id_list)).all()
+    ).filter(Student.id.in_(id_list))
+    query = apply_role_based_student_filter(query, current_user, db)
+    students = query.all()
 
     # Batch progress fetch
     progs = db.query(WeeklyStudentProgress).filter(
@@ -128,7 +136,8 @@ def compare_students(ids: str = Query(..., description="Comma separated student 
     return comparison_data
 
 @router.get("/data-quality")
-def get_data_quality_dashboard(force_refresh: bool = Query(False), db: Session = Depends(get_db)):
+def get_data_quality_dashboard(request: Request, force_refresh: bool = Query(False), db: Session = Depends(get_db)):
+    current_user = get_current_user_optional(request, db)
     cache_key = "analytics:data_quality"
     if force_refresh:
         cache.delete(cache_key)
@@ -137,10 +146,12 @@ def get_data_quality_dashboard(force_refresh: bool = Query(False), db: Session =
         if cached is not None:
             return cached
 
-    students = db.query(Student).options(
+    query = db.query(Student).options(
         joinedload(Student.department),
         joinedload(Student.stats)
-    ).all()
+    )
+    query = apply_role_based_student_filter(query, current_user, db)
+    students = query.all()
     total = len(students)
 
     ok_count = 0
@@ -342,6 +353,7 @@ def get_batch_matrix_analytics(db: Session = Depends(get_db)):
 
 @router.get("/growth-trends")
 def get_growth_trends(
+    request: Request,
     department: Optional[str] = Query("ALL"),
     year_level: Optional[str] = Query("ALL"),
     db: Session = Depends(get_db)
@@ -350,7 +362,9 @@ def get_growth_trends(
     Returns Growth Intelligence historical trends filtered by Department and Year Level.
     Uses real database historical snapshots and current verified metrics.
     """
+    current_user = get_current_user_optional(request, db)
     query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+    query = apply_role_based_student_filter(query, current_user, db)
 
     if department and department.upper() != "ALL":
         query = query.join(Department).filter(
@@ -396,6 +410,7 @@ def get_growth_trends(
 
 @router.get("/deep-matrix")
 def get_deep_matrix_analytics(
+    request: Request,
     department: Optional[str] = Query("ALL"),
     year_level: Optional[str] = Query("ALL"),
     search: Optional[str] = Query(None),
@@ -412,12 +427,16 @@ def get_deep_matrix_analytics(
     """
     from sqlalchemy.orm import joinedload
     
+    current_user = get_current_user_optional(request, db)
+    
     # Query all active students with eager loading
     students_query = db.query(Student).options(
         joinedload(Student.department),
         joinedload(Student.section),
         joinedload(Student.stats)
     ).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+    
+    students_query = apply_role_based_student_filter(students_query, current_user, db)
 
     all_students = students_query.all()
     total_enrolled = len(all_students)

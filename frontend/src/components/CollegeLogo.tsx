@@ -43,20 +43,20 @@ export const CollegeLogo: React.FC<CollegeLogoProps> = ({ className = "w-10 h-10
 
         {/* YEARS OF EXCELLENCE Banner text */}
         <rect x="46" y="47" width="28" height="4" fill="#0A192F" />
-        <text x="60" y="50" fill="#38BDF8" fontSize="3.2" fontStyle="bold" fontFamily="Arial, sans-serif" textAnchor="middle">
+        <text x="60" y="50" fill="#38BDF8" fontSize="3.2" fontStyle="bold" fontFamily="Times New Roman, serif" textAnchor="middle">
           YEARS OF EXCELLENCE
         </text>
 
         {/* NEC Text */}
-        <text x="35" y="66" fill="#FFFFFF" fontSize="11" fontWeight="900" fontFamily="Arial, sans-serif" textAnchor="middle" letterSpacing="0.5">
+        <text x="35" y="66" fill="#FFFFFF" fontSize="11" fontWeight="900" fontFamily="Times New Roman, serif" textAnchor="middle" letterSpacing="0.5">
           NEC
         </text>
 
         {/* RISING HIGHER EVERYDAY Text */}
-        <text x="50" y="77" fill="#E0F2FE" fontSize="4.5" fontWeight="800" fontFamily="Arial, sans-serif" textAnchor="middle" letterSpacing="0.8">
+        <text x="50" y="77" fill="#E0F2FE" fontSize="4.5" fontWeight="800" fontFamily="Times New Roman, serif" textAnchor="middle" letterSpacing="0.8">
           RISING HIGHER
         </text>
-        <text x="50" y="84" fill="#FFFFFF" fontSize="5" fontWeight="900" fontFamily="Arial, sans-serif" textAnchor="middle" letterSpacing="1">
+        <text x="50" y="84" fill="#FFFFFF" fontSize="5" fontWeight="900" fontFamily="Times New Roman, serif" textAnchor="middle" letterSpacing="1">
           EVERYDAY
         </text>
       </svg>

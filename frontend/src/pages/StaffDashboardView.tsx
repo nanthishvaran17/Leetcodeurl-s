@@ -32,8 +32,10 @@ export const StaffDashboardView: React.FC = () => {
         api.get('/faculty-assignments/alerts')
       ]);
 
-      setSummary(sumRes.data);
-      const studentList = studRes.data?.students || [];
+      const studentList = Array.isArray(studRes.data?.students)
+        ? studRes.data.students
+        : (Array.isArray(studRes.data) ? studRes.data : []);
+
       setMyStudents(studentList);
       setPriorityStudents(prioRes.data || []);
       setAlerts(alertRes.data || []);
@@ -298,7 +300,11 @@ export const StaffDashboardView: React.FC = () => {
                         {st.contest_rating ? Math.round(st.contest_rating) : 'N/A'}
                       </td>
                       <td className="px-4 py-3.5">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black bg-${statusColor}-500/15 text-${statusColor}-500 border border-${statusColor}-500/30`}>
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black border ${
+                          statusLabel === 'Excellent'
+                            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                            : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                        }`}>
                           {statusLabel}
                         </span>
                       </td>

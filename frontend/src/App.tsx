@@ -230,6 +230,9 @@ export const App: React.FC = () => {
     if (roleClean === 'staff' || roleClean === 'faculty') {
       return <StaffDashboardView />;
     }
+    if (roleClean === 'hod') {
+      return <HODCommandCenter />;
+    }
     return (
       <DashboardPage
         onSelectStudent={handleSelectStudent}

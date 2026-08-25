@@ -9,6 +9,7 @@ import { StatCard } from '../components/StatCard';
 import { CountdownTimer } from '../components/CountdownTimer';
 import { AutomationStatusPanel } from '../components/AutomationStatusPanel';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
+import { AdminStaffAllocationPanel } from '../components/AdminStaffAllocationPanel';
 import { SyncHistoryModal } from '../components/SyncHistoryModal';
 import { FailedSyncModal } from '../components/FailedSyncModal';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
@@ -723,6 +724,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           ))}
         </div>
       </div>
+
+      {/* 7.5 Staff Workload & Student Capacity Allocation Panel */}
+      <AdminStaffAllocationPanel />
 
       {/* 8. Top Institutional Leaderboard */}
       <div className="space-y-4">

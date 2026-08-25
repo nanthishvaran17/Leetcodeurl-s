@@ -50,7 +50,9 @@ class FacultyAssignmentService:
         """
         Assigns one or more students to a faculty member.
         Hard capacity limit of 30 students enforced server-side.
-        Guaranteed concurrency-safe against race conditions via thread-level and database atomic locking.
+        Guaranteed concurrency-safe against race conditions via:
+          1. threading.RLock (single-process / SQLite safety)
+          2. SELECT FOR UPDATE (PostgreSQL multi-worker / gunicorn safety)
         """
         with _allocation_lock:
             faculty = db.query(User).filter(User.id == faculty_id, User.is_active == True).first()
@@ -60,7 +62,29 @@ class FacultyAssignmentService:
                     detail=f"Faculty with ID {faculty_id} not found or is inactive."
                 )
 
-            current_count = FacultyAssignmentService.get_faculty_assigned_count(db, faculty_id)
+            # DB-LEVEL ATOMIC CAPACITY CHECK
+            # For PostgreSQL: SELECT FOR UPDATE locks the row(s) preventing concurrent reads
+            # that haven't committed yet from passing the capacity check simultaneously.
+            # For SQLite: falls back to count-based check (threading.RLock is sufficient in single-process).
+            from sqlalchemy import text, func as sa_func
+            from backend.database import engine as _engine
+            is_postgres = "postgresql" in str(_engine.url)
+
+            if is_postgres:
+                # Lock faculty_student_assignments rows for this faculty atomically
+                db.execute(
+                    text(
+                        "SELECT id FROM faculty_student_assignments "
+                        "WHERE faculty_id = :fid AND is_active = true FOR UPDATE"
+                    ),
+                    {"fid": faculty_id}
+                )
+
+            # Re-read count INSIDE the locked transaction
+            current_count = db.query(sa_func.count(FacultyStudentAssignment.id)).filter(
+                FacultyStudentAssignment.faculty_id == faculty_id,
+                FacultyStudentAssignment.is_active == True
+            ).scalar() or 0
             
             # Deduplicate student_ids
             unique_student_ids = list(dict.fromkeys(student_ids))

@@ -28,9 +28,9 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['Didot', '"Playfair Display"', 'Bodoni MT', 'Times New Roman', 'serif'],
-        serif: ['Didot', '"Playfair Display"', 'Bodoni MT', 'Times New Roman', 'serif'],
-        mono: ['Didot', '"Playfair Display"', 'Bodoni MT', 'Times New Roman', 'serif'],
+        sans: ['"Times New Roman"', 'Times', 'serif'],
+        serif: ['"Times New Roman"', 'Times', 'serif'],
+        mono: ['"Times New Roman"', 'Times', 'serif'],
       },
     },
   },

@@ -45,6 +45,7 @@ class Student(Base):
     email = Column(String(150), nullable=True)
     phone_number = Column(String(30), unique=True, index=True, nullable=True)
     whatsapp_verified = Column(Boolean, default=False)
+    date_of_birth = Column(String(20), nullable=True)
     
     leetcode_url = Column(String(255), nullable=True)
     username = Column(String(100), index=True, nullable=True)
@@ -336,6 +337,7 @@ class User(Base):
     role = Column(String(30), default="Faculty") # Super Admin, HOD, Faculty, CR, Viewer
     phone_number = Column(String(30), unique=True, index=True, nullable=True)
     whatsapp_verified = Column(Boolean, default=False)
+    date_of_birth = Column(String(20), nullable=True)
     
     department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
     section_id = Column(Integer, ForeignKey("sections.id"), nullable=True)
@@ -825,6 +827,17 @@ class EmailOTPRecord(Base):
     request_ip_hash = Column(String(128), nullable=True, index=True)
     delivery_status = Column(String(50), default="PENDING")
     provider_message_id = Column(String(255), nullable=True)
+
+
+class PasswordResetAuthorization(Base):
+    __tablename__ = "password_reset_authorizations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), index=True, nullable=False)
+    reset_token_hash = Column(String(128), index=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    expires_at = Column(DateTime, nullable=False)
+    used = Column(Boolean, default=False)
 
 
 class AdminSession(Base):
@@ -1898,4 +1911,76 @@ class ContestVirtualScreenshotEvidence(Base):
     review_status = Column(String(50), default="PENDING_REVIEW")  # PENDING_REVIEW, VERIFIED, UNVERIFIED_SCREENSHOT, REJECTED
 
     student = relationship("Student")
+
+
+class OfficialPublicParticipant(Base):
+    """
+    Authoritative record for Official Public/Live Contest Participants.
+    Contains ONLY verified matches from complete official LeetCode contest leaderboards.
+    Supports versioned dataset management with historical superseding.
+    """
+    __tablename__ = "official_public_participants"
+    __table_args__ = (
+        UniqueConstraint("session_id", "student_id", "dataset_version", name="uq_official_public_session_student_version"),
+        {"extend_existing": True}
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("weekly_sessions.id"), nullable=False, index=True)
+    contest_id = Column(String(100), nullable=True, index=True)
+    contest_slug = Column(String(100), nullable=False, index=True)
+    contest_title = Column(String(150), nullable=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    leetcode_username = Column(String(100), nullable=False, index=True)
+    official_rank = Column(Integer, nullable=True)
+    official_problems_solved = Column(Integer, default=0)
+    official_score = Column(Integer, default=0)
+    official_finish_time = Column(String(50), nullable=True)
+    source = Column(String(100), default="official_leetcode_leaderboard")
+    verification_status = Column(String(50), default="VERIFIED")
+    dataset_version = Column(Integer, default=1, index=True)
+    is_active_version = Column(Boolean, default=True, index=True)
+    sync_timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+
+    session = relationship("WeeklySession")
+    student = relationship("Student")
+
+
+class PublicContestSyncAudit(Base):
+    """
+    Comprehensive operational audit trail & distributed lease lock tracking for official public contest synchronizations.
+    """
+    __tablename__ = "public_contest_sync_audits"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    sync_id = Column(String(100), unique=True, nullable=False, index=True)
+    session_id = Column(Integer, ForeignKey("weekly_sessions.id"), nullable=True, index=True)
+    contest_id = Column(String(100), nullable=True, index=True)
+    contest_slug = Column(String(100), nullable=False, index=True)
+    contest_title = Column(String(150), nullable=True)
+    started_at = Column(DateTime, default=datetime.datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
+    source = Column(String(100), default="official_leetcode_leaderboard")
+    pages_requested = Column(Integer, default=0)
+    pages_successfully_fetched = Column(Integer, default=0)
+    total_reported = Column(Integer, nullable=True)
+    total_fetched = Column(Integer, default=0)
+    unique_usernames = Column(Integer, default=0)
+    duplicate_count = Column(Integer, default=0)
+    matched_students = Column(Integer, default=0)
+    missing_username_count = Column(Integer, default=0)
+    retry_count = Column(Integer, default=0)
+    dataset_version = Column(Integer, default=1)
+    sync_owner = Column(String(100), nullable=True)
+    heartbeat_at = Column(DateTime, nullable=True)
+    lock_expiry = Column(DateTime, nullable=True)
+    circuit_breaker_state = Column(String(50), default="CLOSED")  # CLOSED, OPEN, HALF_OPEN
+    cache_state = Column(String(50), default="FRESH")  # FRESH, STABLE, STALE, EXPIRED, INVALID
+    validation_status = Column(String(50), default="VERIFIED")  # VERIFIED, CONTEST_MISMATCH, LEADERBOARD_INCOMPLETE, VERIFICATION_REQUIRED, API_FETCH_FAILED, SCHEMA_VALIDATION_FAILED, SYNC_IN_PROGRESS
+    publish_status = Column(String(50), default="PUBLISHED")  # PUBLISHED, DO_NOT_PUBLISH, KPT_LAST_VERIFIED, SUPERSEDED
+    failure_reason = Column(Text, nullable=True)
+
+    session = relationship("WeeklySession")
+
 

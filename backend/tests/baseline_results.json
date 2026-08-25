@@ -1,0 +1,20 @@
+{
+  "phase": "BASELINE",
+  "staff_count": 7,
+  "my_students": {
+    "p50_ms": 7.11,
+    "p95_ms": 8.86,
+    "p99_ms": 19.06,
+    "mean_queries": 4,
+    "max_queries": 4,
+    "mean_payload_bytes": 711.0
+  },
+  "mentoring_summary": {
+    "p50_ms": 5.39,
+    "p95_ms": 6.91,
+    "p99_ms": 8.13,
+    "mean_queries": 2,
+    "max_queries": 2
+  },
+  "error_rate_pct": 0.0
+}

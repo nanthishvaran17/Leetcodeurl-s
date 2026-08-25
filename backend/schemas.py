@@ -198,6 +198,19 @@ class UserOut(BaseModel):
     last_login: Optional[datetime.datetime] = None
     model_config = ConfigDict(from_attributes=True)
 
+class VerifyDobRequest(BaseModel):
+    email: str
+    date_of_birth: str
+
+class ResetPasswordOtpRequest(BaseModel):
+    email: str
+    otp: str
+
+class ResetPasswordSubmitRequest(BaseModel):
+    email: str
+    reset_token: str
+    new_password: str
+
 # Weekly Session Schemas
 class WeeklySessionOut(BaseModel):
     id: int

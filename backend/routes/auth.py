@@ -14,8 +14,8 @@ from sqlalchemy import or_
 
 from backend.database import get_db
 from backend.config import settings
-from backend.models import User, Student, AdminSession, AuditLog
-from backend.schemas import UserLogin, Token, UserOut, UserCreate, SendOtpRequest, VerifyOtpRequest
+from backend.models import User, Student, AdminSession, AuditLog, PasswordResetAuthorization
+from backend.schemas import UserLogin, Token, UserOut, UserCreate, SendOtpRequest, VerifyOtpRequest, VerifyDobRequest, ResetPasswordOtpRequest, ResetPasswordSubmitRequest
 from backend.services.otp_service import create_otp_transaction, verify_otp_transaction
 from backend.logger import logger
 
@@ -843,4 +843,128 @@ def test_admin_email_delivery(
         raise HTTPException(status_code=502, detail=f"Diagnostic test email delivery failed: {err}")
     return {"success": True, "message": f"Diagnostic OTP email successfully delivered to {target}"}
 
+# =========================================================================
+# FORGOT PASSWORD FLOW
+# =========================================================================
+
+@router.post("/forgot-password/verify-dob")
+def forgot_password_verify_dob(req: VerifyDobRequest, db: Session = Depends(get_db)):
+    email_clean = req.email.strip().lower()
+    
+    # Try finding user or student
+    user = db.query(User).filter(User.email.ilike(email_clean)).first()
+    student = None
+    if not user:
+        student = db.query(Student).filter(Student.email.ilike(email_clean)).first()
+    
+    if not user and not student:
+        raise HTTPException(status_code=400, detail="Account not found.")
+        
+    entity = user if user else student
+    
+    if not entity.is_active:
+        raise HTTPException(status_code=400, detail="Account is inactive.")
+        
+    # Verify DOB if we added the column and it is populated
+    if hasattr(entity, "date_of_birth") and entity.date_of_birth:
+        if entity.date_of_birth != req.date_of_birth:
+            raise HTTPException(status_code=400, detail="Date of Birth does not match our records.")
+    else:
+        # Legacy accounts without DOB must be completed by an administrator.
+        raise HTTPException(status_code=400, detail="This account requires identity information to be completed by an administrator.")
+
+    return {"success": True, "message": "DOB Verified"}
+
+
+@router.post("/forgot-password/send-otp")
+async def forgot_password_send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(get_db)):
+    # Very similar to send-otp, but only if they verified DOB
+    email_clean = (req.email or "").strip().lower()
+    user = db.query(User).filter(User.email.ilike(email_clean)).first()
+    student = None
+    if not user:
+        student = db.query(Student).filter(Student.email.ilike(email_clean)).first()
+        
+    if not user and not student:
+        raise HTTPException(status_code=400, detail="Account not found.")
+        
+    client_ip = request.client.host if request and request.client else "127.0.0.1"
+    try:
+        plain_otp, otp_rec = create_otp_transaction(db, email_clean, client_ip)
+    except ValueError as ve:
+        raise HTTPException(status_code=429, detail=str(ve))
+        
+    from backend.services.email_service import send_fast_otp_email
+    email_sent, status_code_or_err, msg_id = await asyncio.to_thread(
+        send_fast_otp_email, email_clean, plain_otp, str(otp_rec.request_id)
+    )
+    
+    from backend.services.otp_service import update_otp_delivery_status
+    if not email_sent:
+        update_otp_delivery_status(db, str(otp_rec.request_id), "DELIVERY_FAILED", None)
+        raise HTTPException(status_code=502, detail="Verification code could not be sent. Please try again.")
+        
+    update_otp_delivery_status(db, str(otp_rec.request_id), "PROVIDER_ACCEPTED", str(msg_id) if msg_id else None)
+    return {"success": True, "message": "Verification code sent to registered email.", "request_id": otp_rec.request_id}
+
+
+@router.post("/forgot-password/verify-otp")
+def forgot_password_verify_otp(req: VerifyOtpRequest, db: Session = Depends(get_db)):
+    email_clean = (req.email or "").strip().lower()
+    raw_otp = (req.otp or "").strip()
+    
+    is_valid, msg, otp_rec = verify_otp_transaction(db, email_clean, raw_otp, req.request_id)
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=msg)
+        
+    # Generate a temporary reset token and store its hash in the database
+    reset_token = secrets.token_urlsafe(32)
+    token_hash = pwd_context.hash(reset_token)
+    
+    auth_record = PasswordResetAuthorization(
+        email=email_clean,
+        reset_token_hash=token_hash,
+        expires_at=datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
+    )
+    db.add(auth_record)
+    db.commit()
+    
+    return {"success": True, "message": "OTP Verified.", "reset_token": reset_token}
+
+
+@router.post("/forgot-password/reset")
+def reset_password(req: ResetPasswordSubmitRequest, db: Session = Depends(get_db)):
+    email_clean = (req.email or "").strip().lower()
+    token = (req.reset_token or "").strip()
+    
+    if len(req.new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters long.")
+    
+    if not token:
+        raise HTTPException(status_code=401, detail="Missing reset authorization token.")
+        
+    # Verify the reset token from the DB
+    valid_record = None
+    records = db.query(PasswordResetAuthorization).filter(
+        PasswordResetAuthorization.email == email_clean,
+        PasswordResetAuthorization.used == False,
+        PasswordResetAuthorization.expires_at > datetime.datetime.utcnow()
+    ).all()
+    
+    for r in records:
+        if pwd_context.verify(token, r.reset_token_hash):
+            valid_record = r
+            break
+            
+    if not valid_record:
+        raise HTTPException(status_code=401, detail="Invalid or expired reset authorization.")
+    
+    user = db.query(User).filter(User.email.ilike(email_clean)).first()
+    if user:
+        user.hashed_password = get_password_hash(req.new_password)
+        valid_record.used = True
+        db.commit()
+        return {"success": True, "message": "Password reset successfully."}
+        
+    raise HTTPException(status_code=400, detail="User account not found for password reset.")
 

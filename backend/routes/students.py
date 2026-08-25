@@ -5,7 +5,8 @@ import asyncio
 import datetime
 
 from backend.database import get_db, SessionLocal
-from backend.models import Student, LeetCodeProfileStats, Department, Section, AuditLog, WeeklyStudentProgress
+from backend.models import Student, LeetCodeProfileStats, Department, Section, AuditLog, WeeklyStudentProgress, User
+from backend.services.authorization_service import apply_role_based_student_filter
 from backend.schemas import StudentOut, StudentCreate, StudentUpdate, ContestResultOut
 from backend.routes.auth import get_current_user
 from backend.security import require_security_access
@@ -97,6 +98,8 @@ def get_leaderboard_fast(
         )
         .filter((Student.is_active == True) | (Student.is_active.is_(None)))
     )
+    
+    query = apply_role_based_student_filter(query, current_user, db)
     if dept_id:
         query = query.filter(Student.department_id == dept_id)
     if year_level and year_level.strip().upper() not in ('ALL', 'ALL YEARS', ''):
@@ -280,14 +283,8 @@ def get_students(
         joinedload(Student.lc_activity)
     ).filter((Student.is_active == True) | (Student.is_active.is_(None)))
 
-    # Fail closed Staff / Mentor ownership check
-    if current_user and role_clean in ["staff", "faculty"]:
-        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, current_user.id)
-        if not assigned_ids:
-            return []
-        query = query.filter(Student.id.in_(assigned_ids))
-    elif current_user and role_clean == "student":
-        query = query.filter(Student.email.ilike(current_user.email))
+    # Centralized Authorization Scope
+    query = apply_role_based_student_filter(query, current_user, db)
 
     if dept_id:
         query = query.filter(Student.department_id == dept_id)
@@ -692,26 +689,8 @@ def get_student_by_email(email: str = Query(..., description="Student email addr
 
 @router.get("/{student_id}", response_model=StudentOut)
 def get_student_detail(student_id: int, request: Request, db: Session = Depends(get_db)):
-    from backend.security import get_current_user_optional
-    from backend.services.faculty_assignment_service import faculty_assignment_service
-
     current_user = get_current_user_optional(request, db)
-    if current_user:
-        role_clean = (current_user.role or "").strip().lower()
-        if role_clean in ["staff", "faculty"]:
-            assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, current_user.id)
-            if student_id not in assigned_ids:
-                raise HTTPException(
-                    status_code=403,
-                    detail="Access Denied: You are not authorized to view details for this student."
-                )
-        elif role_clean == "student":
-            st_user = db.query(Student).filter(Student.id == student_id).first()
-            if not st_user or (st_user.email and st_user.email.lower() != (current_user.email or "").lower()):
-                raise HTTPException(
-                    status_code=403,
-                    detail="Access Denied: You can only view your own student profile."
-                )
+    require_staff_student_access(db, current_user, student_id)
 
     student = db.query(Student).filter(Student.id == student_id).first()
     if not student:
@@ -864,6 +843,7 @@ def update_student(
     db: Session = Depends(get_db),
     current_user=Depends(require_security_access(resource_name="Update Student", required_roles=["admin", "super admin", "hod"]))
 ):
+
     student = db.query(Student).filter(Student.id == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student record not found.")
@@ -987,6 +967,7 @@ def delete_student(
     db: Session = Depends(get_db),
     current_user=Depends(require_security_access(resource_name="Delete Student", required_roles=["admin", "super admin"]))
 ):
+
     student = db.query(Student).filter(Student.id == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student record not found.")

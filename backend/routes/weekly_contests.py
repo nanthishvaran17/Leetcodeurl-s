@@ -1562,3 +1562,129 @@ def export_post_930_solvers_excel(
     )
 
 
+# ─── OFFICIAL PUBLIC PARTICIPANTS v10.0 ENDPOINTS ────────────────────────────
+from backend.models import User
+from backend.routes.auth import get_current_user
+from backend.services.public_contest_engine import PublicContestEngine
+
+@router.get("/sessions/{session_id}/public-participants")
+def get_public_participants(
+    session_id: int,
+    department_id: Optional[int] = Query(None),
+    year_level: Optional[str] = Query(None),
+    section_id: Optional[int] = Query(None),
+    search: Optional[str] = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get role-authorized list of Official Public Participants and unfound students.
+    Strictly scoped at server-side layer:
+    - Staff: Assigned students ONLY.
+    - HOD: Authorized department ONLY.
+    - Student: Self record ONLY.
+    - Admin / Principal: Full institution access.
+    """
+    return PublicContestEngine.get_public_participants_role_scoped(
+        db=db,
+        session_id=session_id,
+        current_user=current_user,
+        department_id=department_id,
+        year_level=year_level,
+        section_id=section_id,
+        search=search,
+        page=page,
+        page_size=page_size
+    )
+
+@router.post("/sessions/{session_id}/sync-public-participants")
+async def sync_public_participants(
+    session_id: int,
+    force: bool = Query(False),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Execute single-flight, fail-closed, complete leaderboard sync for Official Public Participants.
+    Requires Admin, HOD, or Staff authorization.
+    """
+    if current_user.role not in ("Admin", "SuperAdmin", "Principal", "HOD", "Staff", "Faculty"):
+        raise HTTPException(status_code=403, detail="Unauthorized to trigger contest synchronization.")
+
+    success, result = await PublicContestEngine.sync_public_participants(db=db, session_id=session_id, force_resync=force)
+    if not success:
+        raise HTTPException(status_code=500, detail=result.get("error", "Synchronization failed."))
+
+    return result
+
+@router.get("/sessions/{session_id}/public-participants/summary")
+def get_public_participants_summary(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get Department & Year matrix summary breakdown for Official Public Participants.
+    """
+    res = PublicContestEngine.get_public_participants_role_scoped(
+        db=db,
+        session_id=session_id,
+        current_user=current_user,
+        page=1,
+        page_size=3500
+    )
+    return {
+        "session_id": session_id,
+        "summary": res.get("summary", {}),
+        "total_records": res.get("total", 0)
+    }
+
+@router.get("/sessions/{session_id}/public-participants/audits")
+def get_public_participants_audits(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get operational audit log trajectory for Public Contest Leaderboard synchronizations.
+    Requires Admin, Principal, or HOD role.
+    """
+    if current_user.role not in ("Admin", "SuperAdmin", "Principal", "HOD"):
+        raise HTTPException(status_code=403, detail="Unauthorized to view contest audit history.")
+
+    from backend.models import PublicContestSyncAudit
+    audits = db.query(PublicContestSyncAudit).filter(
+        PublicContestSyncAudit.session_id == session_id
+    ).order_by(PublicContestSyncAudit.id.desc()).all()
+
+    return [
+        {
+            "sync_id": a.sync_id,
+            "session_id": a.session_id,
+            "contest_slug": a.contest_slug,
+            "started_at": a.started_at.isoformat() if a.started_at else None,
+            "completed_at": a.completed_at.isoformat() if a.completed_at else None,
+            "dataset_version": a.dataset_version,
+            "pages_requested": a.pages_requested,
+            "pages_successfully_fetched": a.pages_successfully_fetched,
+            "total_reported": a.total_reported,
+            "total_fetched": a.total_fetched,
+            "unique_usernames": a.unique_usernames,
+            "duplicate_count": a.duplicate_count,
+            "matched_students": a.matched_students,
+            "missing_username_count": a.missing_username_count,
+            "retry_count": a.retry_count,
+            "circuit_breaker_state": a.circuit_breaker_state,
+            "cache_state": a.cache_state,
+            "validation_status": a.validation_status,
+            "publish_status": a.publish_status,
+            "failure_reason": a.failure_reason
+        }
+        for a in audits
+    ]
+
+
+
+

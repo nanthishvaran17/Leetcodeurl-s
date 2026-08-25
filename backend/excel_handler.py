@@ -16,8 +16,9 @@ from sqlalchemy.orm import Session
 from backend.models import (
     Student, Department, Section, LeetCodeProfileStats,
     WeeklyStudentProgress, WeeklySessionSnapshot, WeeklySession,
-    WeeklyPublicResult, ContestParticipation, HODSnapshot, AuditLog, EmailLog
+    WeeklyPublicResult, ContestParticipation, HODSnapshot, AuditLog, EmailLog, User
 )
+from backend.services.authorization_service import apply_role_based_student_filter
 from backend.leetcode_client import extract_leetcode_username
 from backend.config import settings
 from backend.logger import logger
@@ -683,12 +684,9 @@ def _create_analytics_summary_sheet(wb, db: Session):
         ws.column_dimensions[col].width = w
 
 
-def generate_8_sheet_excel_report(db: Session) -> bytes:
+def generate_8_sheet_excel_report(db: Session, current_user: Optional[User] = None) -> bytes:
     """
-    Generates the full Nandha Engineering College LeetCode Excel report with:
-      Sheet 0 : COVER       — College logo + title
-      Sheet 1+ : CSE(CS)-IIYr, CSE(CS)-IIIYr, CSE(CS)-IVYr, CSE(IoT)-IIYr … — per dept+year student table
-      Last    : ANALYTICS SUMMARY — category breakdown + stats
+    Generates the official 8-sheet Nandha College LeetCode Performance Tracker.
     """
     wb = openpyxl.Workbook()
     wb.remove(wb.active)
@@ -701,11 +699,13 @@ def generate_8_sheet_excel_report(db: Session) -> bytes:
 
     for dept in departments:
         for year_lvl in year_order:
-            students_dy = db.query(Student).filter(
+            query = db.query(Student).filter(
                 Student.department_id == dept.id,
                 Student.year_level == year_lvl,
                 Student.is_active == True
-            ).all()
+            )
+            query = apply_role_based_student_filter(query, current_user, db)
+            students_dy = query.all()
             if students_dy:
                 _create_dept_year_sheet(wb, dept, year_lvl, students_dy, db)
 
@@ -723,14 +723,15 @@ def generate_8_sheet_excel_report(db: Session) -> bytes:
     return output.getvalue()
 
 
-def generate_student_performance_detail_excel(db: Session) -> bytes:
+def generate_student_performance_detail_excel(db: Session, current_user: Optional["User"] = None) -> bytes:
     """
-    Generates multi-sheet Student Performance Detail Excel:
-      - Cover Sheet
+    Generates the Cyber Security and IoT detailed performance Excel report.
+    Scoped to the current_user's authorization level:
+      - Staff/Faculty: assigned students only
+      - HOD: department students
+      - Admin/Super Admin/Principal: full institutional scope
+    Produces sheets per department+year combination, e.g.:
       - CSE(CS)-IIYr
-      - CSE(CS)-IIIYr
-      - CSE(CS)-IVYr
-      - CSE(IoT)-IIYr
       - CSE(IoT)-IIIYr
       - CSE(IoT)-IVYr
     """
@@ -796,6 +797,10 @@ def generate_student_performance_detail_excel(db: Session) -> bytes:
             if dept_obj:
                 students_query = students_query.filter(Student.department_id == dept_obj.id)
             students_query = students_query.filter(Student.year_level == yr)
+            # Apply role-based authorization scope (Staff → assigned only, HOD → dept, Admin → all)
+            if current_user is not None:
+                from backend.services.authorization_service import apply_role_based_student_filter
+                students_query = apply_role_based_student_filter(students_query, current_user, db)
             students = students_query.all()
 
             students.sort(key=lambda s: (s.stats.total_solved or 0) if s.stats else 0, reverse=True)
@@ -849,7 +854,7 @@ def generate_student_performance_detail_excel(db: Session) -> bytes:
     return output.getvalue()
 
 
-def generate_8_sheet_master_tracker(db: Session) -> bytes:
+def generate_8_sheet_master_tracker(db: Session, current_user: Optional[User] = None) -> bytes:
     """
     Generates the complete 8-sheet Master Tracker workbook with real DB data:
       1. Student Master
@@ -877,7 +882,9 @@ def generate_8_sheet_master_tracker(db: Session) -> bytes:
         bottom=Side(style='thin', color='C0C0C0')
     )
 
-    all_students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+    query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+    query = apply_role_based_student_filter(query, current_user, db)
+    all_students = query.all()
 
     # Sheet 1: Student Master
     ws1 = wb.create_sheet(title="Student Master")
