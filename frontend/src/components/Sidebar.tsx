@@ -115,7 +115,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-navy-950/70"
             onClick={onClose}
           />
           
@@ -125,7 +125,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-            className="relative w-4/5 max-w-xs xl:max-w-[325px] h-full shadow-lg backdrop-blur-2xl bg-white dark:bg-navy-950 p-4 sm:p-5 flex flex-col justify-between overflow-hidden z-10 border-r border-slate-200/90 dark:border-navy-800/90"
+            className="relative w-4/5 max-w-xs xl:max-w-[325px] h-full shadow-lg bg-white dark:bg-navy-900 p-4 sm:p-5 flex flex-col justify-between overflow-hidden z-10 border-r border-gray-200 dark:border-navy-800"
           >
             {/* ── Ambient Radial Mesh Glows ── */}
 

@@ -489,13 +489,14 @@ async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 5, per_
 
     db = SessionLocal()
     try:
-        query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
-        students = query.order_by(Student.id.asc()).all()
+        query = db.query(Student.id).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+        student_rows = query.order_by(Student.id.asc()).all()
+        student_ids = [row[0] for row in student_rows]
 
         if limit and limit > 0:
-            students = students[:limit]
+            student_ids = student_ids[:limit]
 
-        total_count = len(students)
+        total_count = len(student_ids)
         # Use pre_run_id if provided (so Firestore document matches what frontend subscribed to)
         run_id = pre_run_id or f"sync_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
         sync_tracker.reset(total_count, run_id=run_id)
@@ -504,8 +505,8 @@ async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 5, per_
         sync_tracker.recent_logs.append(f"[INFO] Starting sync for {total_count} students, RunID: {run_id}...")
 
         queue = asyncio.Queue()
-        for st in students:
-            queue.put_nowait(st.id)
+        for s_id in student_ids:
+            queue.put_nowait(s_id)
 
         async def worker(worker_id: int):
             while not queue.empty():

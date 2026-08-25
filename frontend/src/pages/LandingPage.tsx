@@ -111,6 +111,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           return st;
         }));
       }
+    } else if (data.type === 'STUDENT_UPDATED') {
+      setStudents(prev => prev.map(st => {
+        if (st.id === data.student_id) {
+          return {
+            ...st,
+            username: data.username || st.username,
+            name: data.name || st.name,
+            stats: {
+              ...(st.stats || {}),
+              sync_status: data.sync_status || st.stats?.sync_status,
+              total_solved: data.total_solved !== undefined ? data.total_solved : st.stats?.total_solved
+            }
+          };
+        }
+        return st;
+      }));
     } else if (data.type === 'SYNC_COMPLETED') {
       const tot = data.summary?.total_students || 300;
       const formattedTime = data.summary?.completed_at_ist || (data.summary?.completed_at ? new Date(data.summary.completed_at.endsWith('Z') ? data.summary.completed_at : data.summary.completed_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) + ' IST' : new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) + ' IST');

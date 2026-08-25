@@ -53,6 +53,7 @@ class Student(Base):
     hackerrank_username = Column(String(100), nullable=True)
     
     is_active = Column(Boolean, default=True)
+    version = Column(Integer, default=1, nullable=False)
     joining_date = Column(DateTime, default=datetime.datetime.utcnow)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
@@ -331,10 +332,11 @@ class User(Base):
     __tablename__ = "users"
     
     id = Column(Integer, primary_key=True, index=True)
+    institutional_id = Column(String(50), unique=True, index=True, nullable=True) # e.g. NEC-CSE-STF-001
     username = Column(String(100), unique=True, index=True, nullable=False)
     email = Column(String(150), unique=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
-    role = Column(String(30), default="Faculty") # Super Admin, HOD, Faculty, CR, Viewer
+    role = Column(String(30), default="Faculty") # Super Admin, Admin, Faculty, Staff, CR, Viewer
     phone_number = Column(String(30), unique=True, index=True, nullable=True)
     whatsapp_verified = Column(Boolean, default=False)
     date_of_birth = Column(String(20), nullable=True)
@@ -344,6 +346,7 @@ class User(Base):
     
     is_active = Column(Boolean, default=True)
     last_login = Column(DateTime, nullable=True)
+    last_activity = Column(DateTime, nullable=True)
     totp_secret = Column(String(100), nullable=True)
     is_2fa_enabled = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)

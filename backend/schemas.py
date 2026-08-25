@@ -143,6 +143,7 @@ class StudentOut(StudentBase):
     avatar_url: Optional[str] = None
     sync_state: Optional[str] = "PENDING_USERNAME"
     joining_date: datetime.datetime
+    version: Optional[int] = None
     department: Optional[DepartmentOut] = None
     section: Optional[SectionOut] = None
     stats: Optional[LeetCodeStatsOut] = None
@@ -158,6 +159,13 @@ class StudentOut(StudentBase):
     section_rank: Optional[int] = None
     weekly_progress: Optional[int] = 0
     streak_count: Optional[int] = 0
+
+class StudentPaginatedOut(BaseModel):
+    total: int
+    items: List[StudentOut]
+    page: int
+    limit: int
+    total_pages: int
     longest_streak: Optional[int] = 0
     total_active_days: Optional[int] = 0
     consistency_score: Optional[float] = 0.0

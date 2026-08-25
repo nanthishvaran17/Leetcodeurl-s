@@ -39,6 +39,7 @@ export interface StudentData {
   id: number;
   reg_no: string;
   name: string;
+  version?: number;
   email?: string;
   total_solved?: number | null;
   easy_solved?: number | null;
@@ -65,7 +66,7 @@ export interface StudentData {
     public_profile_ranking?: number | null;
     recent_contest_name?: string;
     recent_contest_score?: string;
-    status: string;
+    status?: string;
     sync_status?: string;
     source?: string | null;
     last_verified_at?: string | null;
@@ -120,6 +121,10 @@ interface LeaderboardTableProps {
   onDeleteStudent?: (student: StudentData) => void;
   onBulkDeleteStudents?: (studentIds: number[]) => void;
   onUpdateStudent?: (updated: StudentData) => void;
+  serverTotalCount?: number;
+  serverPage?: number;
+  serverPageSize?: number;
+  onServerPageChange?: (page: number, size: number) => void;
 }
 
 import { useNotification } from '../context/NotificationContext';
@@ -131,7 +136,11 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   onRefreshStudent,
   onDeleteStudent,
   onBulkDeleteStudents,
-  onUpdateStudent
+  onUpdateStudent,
+  serverTotalCount,
+  serverPage,
+  serverPageSize,
+  onServerPageChange
 }) => {
   const { notify, confirmAction } = useNotification();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -147,25 +156,55 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [modalTopY, setModalTopY] = useState<number | null>(null);
 
+  const isServerPaginated = serverTotalCount !== undefined;
+  
   // Ultra-Fast Paginated Table Viewport Rendering (Default: 50 items per page)
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState<'25' | '50' | '100' | 'All'>('50');
+  const [currentPage, setCurrentPage] = useState(serverPage || 1);
+  const [pageSize, setPageSize] = useState<'25' | '50' | '100' | 'All'>(serverPageSize ? String(serverPageSize) as any : '50');
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [students.length, pageSize]);
+    if (isServerPaginated) {
+      if (serverPage) setCurrentPage(serverPage);
+      if (serverPageSize) setPageSize(String(serverPageSize) as any);
+    } else {
+      setCurrentPage(1);
+    }
+  }, [students.length, pageSize, isServerPaginated, serverPage, serverPageSize]);
 
   const totalPages = useMemo(() => {
+    if (isServerPaginated) {
+      if (pageSize === 'All') return 1;
+      return Math.ceil((serverTotalCount || 0) / Number(pageSize)) || 1;
+    }
     if (pageSize === 'All') return 1;
     return Math.ceil(students.length / Number(pageSize)) || 1;
-  }, [students.length, pageSize]);
+  }, [students.length, pageSize, isServerPaginated, serverTotalCount]);
 
   const paginatedStudents = useMemo(() => {
+    if (isServerPaginated) return students; // The server already paginated them!
+    
     if (pageSize === 'All') return students;
     const size = Number(pageSize);
     const start = (currentPage - 1) * size;
     return students.slice(start, start + size);
-  }, [students, currentPage, pageSize]);
+  }, [students, currentPage, pageSize, isServerPaginated]);
+
+  const handlePageChange = (newPage: number) => {
+    if (isServerPaginated && onServerPageChange) {
+      onServerPageChange(newPage, Number(pageSize));
+    } else {
+      setCurrentPage(newPage);
+    }
+  };
+
+  const handlePageSizeChange = (newSize: '25' | '50' | '100' | 'All') => {
+    setPageSize(newSize);
+    if (isServerPaginated && onServerPageChange) {
+      onServerPageChange(1, newSize === 'All' ? 4500 : Number(newSize));
+    } else {
+      setCurrentPage(1);
+    }
+  };
 
   const calculateTargetTopY = (e?: React.MouseEvent) => {
     if (!e) return null;
@@ -309,7 +348,8 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
         department_id: editDeptId,
         year_level: editYearLevel,
         leetcode_url: editLeetCodeUrl.trim() || undefined,
-        username: editUsername.trim() || undefined
+        username: editUsername.trim() || undefined,
+        version: editingStudent.version
       });
       notify.success('Profile Updated', `Student record for ${editName} updated successfully.`, { category: 'STUDENT EDIT' });
       if (onUpdateStudent) onUpdateStudent(res.data);
@@ -716,7 +756,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
               <div className="flex items-center space-x-1">
                 <button
                   type="button"
-                  onClick={() => setCurrentPage(1)}
+                  onClick={() => handlePageChange(1)}
                   disabled={currentPage === 1}
                   className="px-2 py-1 rounded-lg bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-navy-700 disabled:opacity-40 font-bold"
                   title="First Page"
@@ -725,7 +765,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
                   className="px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-navy-700 disabled:opacity-40 font-bold"
                 >
@@ -736,7 +776,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                 </span>
                 <button
                   type="button"
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
                   className="px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-navy-700 disabled:opacity-40 font-bold"
                 >
@@ -744,7 +784,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setCurrentPage(totalPages)}
+                  onClick={() => handlePageChange(totalPages)}
                   disabled={currentPage === totalPages}
                   className="px-2 py-1 rounded-lg bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-navy-700 disabled:opacity-40 font-bold"
                   title="Last Page"

@@ -9,6 +9,8 @@ import {
 import api from '../services/api';
 import { SecurityActivitySection } from '../components/SecurityActivitySection';
 import { useNotification } from '../context/NotificationContext';
+import { StaffManagement } from '../components/admin/StaffManagement';
+import { StudentAllocationCenter } from '../components/admin/StudentAllocationCenter';
 
 export const SettingsPage: React.FC = () => {
   const { notify, confirmAction } = useNotification();
@@ -500,7 +502,7 @@ export const SettingsPage: React.FC = () => {
               <span>PRODUCTION</span>
             </span>
 
-            <span className="px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-gray-200 font-bold text-xs border border-white/15 flex items-center space-x-1">
+            <span className="px-3 py-1.5 rounded-full bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-200 font-bold text-xs border border-gray-200 dark:border-navy-700 flex items-center space-x-1">
               <Clock className="w-3.5 h-3.5" />
               <span>Asia/Kolkata (IST)</span>
             </span>
@@ -536,7 +538,7 @@ export const SettingsPage: React.FC = () => {
       </div>
 
       {/* 2. COMPACT SYSTEM STATUS STRIP */}
-      <div className="glass-card p-3.5 rounded-2xl border border-gray-200 dark:border-navy-700 bg-white/50 dark:bg-navy-900/50">
+      <div className="glass-card p-3.5 rounded-2xl border border-gray-200 dark:border-navy-700">
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2 font-mono text-[11px]">
           {HEALTH_ITEMS.map((item) => {
             const rawVal = systemHealth?.components?.[item.key];
@@ -566,6 +568,8 @@ export const SettingsPage: React.FC = () => {
         <div className="flex flex-wrap items-center gap-1.5">
           {[
             { id: 'ALL', label: 'All Sections' },
+            { id: 'staff', label: 'Staff Management' },
+            { id: 'allocation', label: 'Student Allocation' },
             { id: 'automation', label: 'Weekly Automation' },
             { id: 'contest', label: 'Contest Engine' },
             { id: 'integrity', label: 'Data Integrity Guard' },
@@ -610,6 +614,20 @@ export const SettingsPage: React.FC = () => {
       )}
 
       <form onSubmit={handleSave} className="space-y-6">
+
+        {/* SECTION: STAFF MANAGEMENT */}
+        {(activeSectionFilter === 'ALL' || activeSectionFilter === 'staff') && (
+          <div className="glass-card p-5 rounded-2xl border border-gray-200 dark:border-navy-700">
+            <StaffManagement />
+          </div>
+        )}
+
+        {/* SECTION: STUDENT ALLOCATION */}
+        {(activeSectionFilter === 'ALL' || activeSectionFilter === 'allocation') && (
+          <div className="glass-card p-5 rounded-2xl border border-gray-200 dark:border-navy-700">
+            <StudentAllocationCenter />
+          </div>
+        )}
 
         {/* 4. SECTION I — WEEKLY AUTOMATION */}
         {(activeSectionFilter === 'ALL' || activeSectionFilter === 'automation') && (

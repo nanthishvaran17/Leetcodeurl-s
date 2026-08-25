@@ -739,6 +739,7 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
         logger.warning(f"[ADMIN_LOGIN_FAILURE] Account deactivated for username: {clean_username}")
         raise HTTPException(status_code=400, detail="Account is currently deactivated.")
 
+    old_last_login = user.last_login
     try:
         setattr(user, "last_login", _utcnow())
         db.commit()
@@ -750,12 +751,13 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
 
     logger.info(f"[ADMIN_LOGIN_SUCCESS] Administrator {user.username} logged in successfully.")
 
-    from backend.services.audit_service import log_admin_action
-    log_admin_action(
-        db, action="ADMIN_LOGIN", action_type="SECURITY",
-        description=f"Admin {user.username} ({user.email}) logged in successfully with role {user.role}",
-        current_user=user, target_type="User", target_id=str(user.id)
-    )
+    if not old_last_login or (_utcnow() - old_last_login).total_seconds() > 5:
+        from backend.services.audit_service import log_admin_action
+        log_admin_action(
+            db, action="ADMIN_LOGIN", action_type="SECURITY",
+            description=f"Admin {user.username} ({user.email}) logged in successfully with role {user.role}",
+            current_user=user, target_type="User", target_id=str(user.id)
+        )
 
     access_token = create_access_token(data={"sub": user.username, "role": user.role, "email": user.email, "user_id": user.id})
 

@@ -172,16 +172,24 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [departments, setDepartments] = useState<any[]>([]);
+  
+  // Server-side pagination state
+  const [serverPage, setServerPage] = useState(1);
+  const [serverPageSize, setServerPageSize] = useState(50);
+  const [serverTotalCount, setServerTotalCount] = useState(0);
 
   useEffect(() => {
-    fetchStudents(debouncedSearch);
+    fetchStudents(debouncedSearch, serverPage, serverPageSize);
     fetchDepartments();
-  }, [debouncedSearch]);
+  }, [debouncedSearch, serverPage, serverPageSize]);
 
-  const fetchStudents = async (query = '') => {
+  const fetchStudents = async (query = '', page = 1, limit = 50) => {
     try {
-      const res = await api.get(`/students?search=${encodeURIComponent(query)}`);
-      if (res.data && Array.isArray(res.data)) {
+      const res = await api.get(`/students?search=${encodeURIComponent(query)}&paginated=true&page=${page}&limit=${limit}`);
+      if (res.data && res.data.items) {
+        setStudents(res.data.items);
+        setServerTotalCount(res.data.total);
+      } else if (res.data && Array.isArray(res.data)) {
         setStudents(res.data);
       }
     } catch (err) {
@@ -373,7 +381,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     <div className="space-y-6">
 
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-lg border border-brand-500/30">
+      <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-navy-900 p-8 shadow-sm border border-gray-200 dark:border-navy-700">
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
           <div className="space-y-3 max-w-2xl">
@@ -382,24 +390,24 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
               <span>STUDENT REPOSITORY • {students.length} ENROLLED STUDENTS</span>
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight">
-              Student Master <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Management Registry</span>
+            <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-gray-900 dark:text-white">
+              Student Master Management Registry
             </h1>
 
-            <p className="text-xs md:text-sm text-gray-300 font-bold tracking-wide">
+            <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 font-medium tracking-wide">
               Manage student profiles across all departments (CSE, IT, ECE, EEE, MECH, CIVIL, AIML, AIDS, Cyber Security &amp; IoT), LeetCode profile links, and live sync status
             </p>
           </div>
 
           <div className="flex items-center space-x-2.5 flex-wrap">
             {/* View Mode Toggle */}
-            <div className="flex items-center space-x-1 p-1.5 bg-white/10 rounded-2xl border border-white/20 backdrop-blur-md">
+            <div className="flex items-center space-x-1 p-1 bg-gray-100 dark:bg-navy-800 rounded-xl border border-gray-200 dark:border-navy-700">
               <button
                 onClick={() => setViewMode('table')}
-                className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all ${
+                className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
                   viewMode === 'table'
-                    ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/40'
-                    : 'text-gray-300 hover:text-white'
+                    ? 'bg-white dark:bg-navy-700 text-brand-600 dark:text-brand-400 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
                 }`}
               >
                 <List className="w-3.5 h-3.5" />
@@ -407,10 +415,10 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
               </button>
               <button
                 onClick={() => setViewMode('cards')}
-                className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all ${
+                className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
                   viewMode === 'cards'
-                    ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/40'
-                    : 'text-gray-300 hover:text-white'
+                    ? 'bg-white dark:bg-navy-700 text-brand-600 dark:text-brand-400 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
                 }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
@@ -420,15 +428,15 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
             <button
               onClick={onOpenImport}
-              className="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-black text-xs flex items-center space-x-2 backdrop-blur-md transition-all transform hover:scale-105"
+              className="px-4 py-2.5 rounded-xl bg-white dark:bg-navy-800 hover:bg-gray-50 dark:hover:bg-navy-700 border border-gray-200 dark:border-navy-700 text-gray-700 dark:text-gray-200 font-bold text-xs flex items-center space-x-2 shadow-sm transition-colors cursor-pointer"
             >
-              <UploadCloud className="w-4 h-4 text-emerald-400" />
+              <UploadCloud className="w-4 h-4 text-emerald-600" />
               <span>Bulk Excel Import</span>
             </button>
 
             <button
               onClick={handleOpenAddModal}
-              className="px-4 py-3 rounded-2xl bg-gradient-to-r from-brand-500 to-indigo-600 hover:from-brand-600 hover:to-indigo-700 text-white font-black text-xs shadow-xl shadow-brand-500/30 flex items-center space-x-2 transition-all transform hover:scale-105"
+              className="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-sm flex items-center space-x-2 transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Add Single Student</span>
@@ -445,7 +453,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by student name, register number or LeetCode username..."
-          className="w-full pl-10 pr-24 py-3 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-900 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none glass-card"
+          className="w-full pl-10 pr-24 py-3 rounded-xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-900 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none shadow-sm"
         />
         {search && (
           <button
@@ -465,6 +473,13 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
           onRefreshStudent={handleSyncSingleStudent}
           onDeleteStudent={handleDeleteStudent}
           onBulkDeleteStudents={handleBulkDeleteStudents}
+          serverTotalCount={serverTotalCount}
+          serverPage={serverPage}
+          serverPageSize={serverPageSize}
+          onServerPageChange={(page, size) => {
+            setServerPage(page);
+            if (size !== serverPageSize) setServerPageSize(size);
+          }}
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
@@ -482,7 +497,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       {/* Add Student Modal */}
       {showAddModal && (
         <div className="modal-overlay-responsive animate-modal-backdrop">
-          <div className="modal-container-responsive max-w-md glass-card rounded-3xl border border-gray-200 dark:border-gray-800 shadow-lg animate-modal-content">
+          <div className="modal-container-responsive max-w-md bg-white dark:bg-navy-900 rounded-2xl border border-gray-200 dark:border-navy-700 shadow-sm animate-modal-content">
             <div className="p-5 border-b border-gray-100 dark:border-gray-800 shrink-0 bg-gray-50/50 dark:bg-navy-900/50 flex items-center justify-between">
               <h3 className="text-base font-extrabold text-gray-900 dark:text-white">Add New Student Record</h3>
               <button onClick={handleCloseAddModal} className="p-1 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors cursor-pointer">

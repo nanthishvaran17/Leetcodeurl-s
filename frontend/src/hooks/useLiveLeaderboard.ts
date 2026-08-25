@@ -16,19 +16,17 @@ export function useLiveLeaderboard(onUpdate?: (data: any) => void) {
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const envUrl = import.meta.env.VITE_API_URL;
+    const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
     let wsUrl: string;
 
-    if (!isLocal || (envUrl && !envUrl.includes('localhost'))) {
-      const targetHost = (envUrl && !envUrl.includes('localhost'))
-        ? envUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '')
-        : 'leetcodeurl-s-1.onrender.com';
-      wsUrl = `wss://${targetHost}/ws/leaderboard`;
+    if (isLocal && import.meta.env.DEV) {
+      wsUrl = 'ws://127.0.0.1:8000/ws/leaderboard';
+    } else if (envUrl) {
+      const targetHost = envUrl.replace(/^https?:\/\//, '').replace(/\/api\/?$/, '').replace(/\/+$/, '');
+      const protocol = envUrl.startsWith('https') ? 'wss:' : 'ws:';
+      wsUrl = `${protocol}//${targetHost}/ws/leaderboard`;
     } else {
-
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsHost = envUrl ? envUrl.replace(/^https?:\/\//, '') : window.location.host;
-      wsUrl = `${protocol}//${wsHost}/ws/leaderboard`;
+      wsUrl = 'wss://leetcodeurl-s-1.onrender.com/ws/leaderboard';
     }
 
     const connect = () => {

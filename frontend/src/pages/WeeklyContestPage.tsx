@@ -692,7 +692,8 @@ export const WeeklyContestPage: React.FC = () => {
         year_level: editYearLevel,
         username: editUsername.trim() || undefined,
         leetcode_url: editLeetCodeUrl.trim() || undefined,
-        email: editEmail.trim() || undefined
+        email: editEmail.trim() || undefined,
+        version: editingStudent.version
       });
 
       // Update local row in matrixRows

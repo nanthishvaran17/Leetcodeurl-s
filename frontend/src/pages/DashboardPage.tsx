@@ -69,6 +69,20 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const { isConnected } = useLiveLeaderboard((data) => {
     if (data?.type === 'leaderboard_update' || data?.type === 'sync_complete') {
       fetchDashboardData(true);
+    } else if (data?.type === 'STUDENT_UPDATED') {
+      setStudents(prev => prev.map(s => {
+        if (s.id === data.student_id) {
+          return {
+            ...s,
+            stats: {
+              ...(s.stats || {}),
+              sync_status: data.sync_status,
+              total_solved: data.total_solved !== undefined ? data.total_solved : s.stats?.total_solved
+            }
+          };
+        }
+        return s;
+      }));
     }
   });
 
@@ -80,7 +94,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         api.get('/sessions/dashboard-summary'),
         api.get('/analytics/department-comparison'),
         api.get('/analytics/data-quality'),
-        api.get('/students?sort_by=solved_desc'),
+        api.get('/students/leaderboard-fast'),
         api.get('/system/health'),
         api.get('/sync/status')
       ]);
@@ -289,7 +303,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       </div>
 
       {/* 2. MAIN EXECUTIVE BANNER */}
-      <div className="stagger-2 relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-navy-900 to-slate-900 text-white p-6 sm:p-8 shadow-lg border border-emerald-500/20">
+      <div className="stagger-2 relative overflow-hidden rounded-2xl bg-white dark:bg-navy-900 p-6 sm:p-8 shadow-sm border border-gray-200 dark:border-navy-700">
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
           <div className="space-y-2 max-w-2xl">
@@ -298,11 +312,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <span>NANDHA ENGINEERING COLLEGE • ERODE</span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">
-              Institutional <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300">Performance Overview</span>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold tracking-tight text-gray-900 dark:text-white">
+              Institutional Performance Overview
             </h1>
 
-            <p className="text-xs md:text-sm text-slate-300 font-medium leading-relaxed">
+            <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 font-medium leading-relaxed">
               1500+ students across all departments — live sync, contest verification, leaderboard analytics, and automated reporting
             </p>
           </div>
@@ -311,7 +325,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <button
               onClick={handleStartSync}
               disabled={syncStarting || isWorkerRunning}
-              className="px-4 py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-black text-xs shadow-lg shadow-brand-600/30 flex items-center space-x-2 transition-all transform hover:scale-105 cursor-pointer disabled:opacity-50"
+              className="px-4 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-sm flex items-center space-x-2 transition-colors cursor-pointer disabled:opacity-50"
               title="Perform full live synchronization for active student roster"
             >
               <RefreshCw className={`w-4 h-4 ${syncStarting || isWorkerRunning ? 'animate-spin' : ''}`} />
@@ -319,24 +333,24 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             </button>
             <button
               onClick={onOpenImport}
-              className="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-black text-xs backdrop-blur-md border border-white/20 flex items-center space-x-2 transition-all transform hover:scale-105"
+              className="px-4 py-3 rounded-xl bg-white dark:bg-navy-800 hover:bg-gray-50 dark:hover:bg-navy-700 text-gray-700 dark:text-white font-bold text-xs shadow-sm border border-gray-200 dark:border-navy-700 flex items-center space-x-2 transition-colors cursor-pointer"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               <span>Import Roster</span>
             </button>
             <button
               onClick={handleExportExcel}
-              className="px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black text-xs shadow-lg shadow-emerald-500/30 flex items-center space-x-2 transition-all transform hover:scale-105"
+              className="px-4 py-3 rounded-xl bg-white dark:bg-navy-800 hover:bg-gray-50 dark:hover:bg-navy-700 text-gray-700 dark:text-white font-bold text-xs shadow-sm border border-gray-200 dark:border-navy-700 flex items-center space-x-2 transition-colors cursor-pointer"
             >
-              <FileSpreadsheet className="w-4 h-4" />
+              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
               <span>Export Excel</span>
             </button>
             <button
               onClick={handleGenerateReport}
               disabled={generatingReport}
-              className="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-black text-xs flex items-center space-x-2 backdrop-blur-md transition-all transform hover:scale-105 disabled:opacity-50"
+              className="px-4 py-3 rounded-xl bg-white dark:bg-navy-800 hover:bg-gray-50 dark:hover:bg-navy-700 text-gray-700 dark:text-white font-bold text-xs shadow-sm border border-gray-200 dark:border-navy-700 flex items-center space-x-2 transition-colors cursor-pointer disabled:opacity-50"
             >
-              <FileText className="w-4 h-4 text-amber-400" />
+              <FileText className="w-4 h-4 text-amber-500" />
               <span>{generatingReport ? "Generating..." : "Generate Weekly Report"}</span>
             </button>
           </div>
@@ -347,8 +361,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         
         {/* Left 2 Cols: Main Data Synchronization Operations Panel */}
-        <div className="lg:col-span-2 p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-xl space-y-5">
-          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-4">
+        <div className="lg:col-span-2 p-6 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 shadow-sm space-y-5">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-navy-800 pb-4">
             <div>
               <div className="flex items-center space-x-2">
                 <h2 className="text-base font-black text-gray-900 dark:text-white uppercase tracking-wider">DATA OPERATIONS</h2>
@@ -462,8 +476,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
 
         {/* Right 1 Col: 24/7 SYSTEM STATUS PANEL */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-xl space-y-4">
-          <h3 className="font-extrabold text-base text-gray-900 dark:text-white flex items-center space-x-2 border-b border-gray-100 dark:border-gray-800 pb-3">
+        <div className="p-6 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 shadow-sm space-y-4">
+          <h3 className="font-extrabold text-base text-gray-900 dark:text-white flex items-center space-x-2 border-b border-gray-100 dark:border-navy-800 pb-3">
             <Server className="w-5 h-5 text-indigo-500" />
             <span>24/7 SYSTEM STATUS</span>
           </h3>

@@ -291,7 +291,8 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         section: section.trim(),
         username: username.trim() || undefined,
         leetcode_url: leetcodeUrl.trim() || undefined,
-        email: email.trim() || undefined
+        email: email.trim() || undefined,
+        version: student.version
       };
 
       const res = await api.patch(`/students/${student.id}`, payload);

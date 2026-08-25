@@ -3,10 +3,11 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 import asyncio
 import datetime
+import os
 
 from backend.database import get_db, SessionLocal
 from backend.models import Student, LeetCodeProfileStats, Department, Section, AuditLog, WeeklyStudentProgress, User
-from backend.services.authorization_service import apply_role_based_student_filter
+from backend.services.authorization_service import apply_role_based_student_filter, require_staff_student_access
 from backend.schemas import StudentOut, StudentCreate, StudentUpdate, ContestResultOut
 from backend.routes.auth import get_current_user
 from backend.security import require_security_access
@@ -244,7 +245,10 @@ def get_leaderboard_fast(
     return Response(content=json_bytes, media_type="application/json")
 
 
-@router.get("", response_model=List[StudentOut])
+from typing import Union
+from backend.schemas import StudentPaginatedOut
+
+@router.get("", response_model=Union[List[StudentOut], StudentPaginatedOut])
 def get_students(
     request: Request,
     dept_id: Optional[int] = None,
@@ -258,6 +262,7 @@ def get_students(
     verified_only: Optional[bool] = False,
     page: Optional[int] = Query(None, ge=1),
     limit: Optional[int] = Query(None, ge=1, le=500),
+    paginated: Optional[bool] = False,
     db: Session = Depends(get_db)
 ):
     from backend.security import get_current_user_optional
@@ -267,11 +272,15 @@ def get_students(
     user_id = current_user.id if current_user else 0
     role_clean = (current_user.role or "").strip().lower() if current_user else ""
 
-    cache_key = f"students_list:{user_id}:{role_clean}:{dept_id}:{year_level}:{section_id}:{search}:{session_id}:{sort_by}:{min_solved}:{max_solved}:{verified_only}:{page}:{limit}"
+    cache_key = f"students_list:{user_id}:{role_clean}:{dept_id}:{year_level}:{section_id}:{search}:{session_id}:{sort_by}:{min_solved}:{max_solved}:{verified_only}:{page}:{limit}:{paginated}"
     if not current_user or role_clean in ("admin", "super admin", "super_admin", "hod"):
         cached_data = cache.get(cache_key)
         if cached_data is not None:
-            return cached_data
+            if paginated and isinstance(cached_data, list):
+                # cache migration: if cached is list but paginated requested, just return list this time. Next cache miss will fix it.
+                pass
+            else:
+                return cached_data
 
     query = db.query(Student).outerjoin(Student.stats).options(
         joinedload(Student.department),
@@ -324,6 +333,10 @@ def get_students(
     else:
         query = query.order_by(Student.name.asc())
 
+    total_count = None
+    if paginated:
+        total_count = query.count()
+
     # Pagination if page and limit provided
     if isinstance(page, int) and isinstance(limit, int) and page >= 1 and limit >= 1:
         offset = (page - 1) * limit
@@ -334,6 +347,8 @@ def get_students(
         students = query.all()
     
     if not students:
+        if paginated:
+            return StudentPaginatedOut(total=total_count or 0, items=[], page=page or 1, limit=limit or 50, total_pages=0)
         return []
 
     # Batch fetch all student progress in 1 single query
@@ -607,6 +622,14 @@ def get_students(
         results.append(st_out)
 
     cache.set(cache_key, results, ttl_seconds=30, tags=["students"])
+    if paginated:
+        return StudentPaginatedOut(
+            total=total_count or 0,
+            items=results,
+            page=page or 1,
+            limit=limit or 50,
+            total_pages=((total_count or 0) + (limit or 50) - 1) // (limit or 50)
+        )
     return results
 
 @router.get("/sample-excel")
@@ -832,6 +855,7 @@ class StudentUpdateSchema(BaseModel):
     leetcode_url: Optional[str] = None
     username: Optional[str] = None
     is_active: Optional[bool] = True
+    version: Optional[int] = None
 
 
 @router.patch("/{student_id}")
@@ -841,12 +865,22 @@ def update_student(
     payload: StudentUpdateSchema,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    current_user=Depends(require_security_access(resource_name="Update Student", required_roles=["admin", "super admin", "hod"]))
+    current_user=Depends(require_security_access(resource_name="Update Student", required_roles=["admin", "super admin", "hod", "faculty", "staff"]))
 ):
+    require_staff_student_access(db, current_user, student_id)
 
     student = db.query(Student).filter(Student.id == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student record not found.")
+
+    if hasattr(payload, 'version') and payload.version is not None:
+        current_version = getattr(student, 'version', 1)
+        if current_version != payload.version:
+            raise HTTPException(
+                status_code=409,
+                detail="Conflict: This student record was recently modified by another user. Please refresh and try again."
+            )
+        student.version = current_version + 1
 
     old_username = student.username
 
@@ -965,8 +999,9 @@ def delete_student(
     student_id: int,
     soft_delete: bool = Query(True),
     db: Session = Depends(get_db),
-    current_user=Depends(require_security_access(resource_name="Delete Student", required_roles=["admin", "super admin"]))
+    current_user=Depends(require_security_access(resource_name="Delete Student", required_roles=["admin", "super admin", "hod", "faculty", "staff"]))
 ):
+    require_staff_student_access(db, current_user, student_id)
 
     student = db.query(Student).filter(Student.id == student_id).first()
     if not student:
@@ -1063,17 +1098,34 @@ async def refresh_single_student(student_id: int):
     except Exception as err:
         raise HTTPException(status_code=500, detail=f"Sync error: {err}")
 
+from fastapi import Header, HTTPException
+
 @router.post("/refresh-all")
 @router.post("/sync-all")
 @router.post("/admin/sync/start")
-async def refresh_all_students(
-    background_tasks: BackgroundTasks,
-    limit: Optional[int] = None
+@router.post("/admin/sync/batch")
+async def trigger_batch_sync(
+    request: Request,
+    limit: Optional[int] = Query(None, description="Limit the number of students to sync (for testing)"),
+    mode: Optional[str] = Query("async", description="'async' for frontend triggering, 'sync' for Cloud Scheduler triggering"),
+    x_scheduler_token: Optional[str] = Header(None, alias="X-CloudScheduler-Token"),
+    current_user: Optional[User] = Depends(get_current_user),
+    background_tasks: BackgroundTasks = None
 ):
     """
-    Starts async background sync worker for all 273 students without blocking browser.
-    Returns immediately with runId. Frontend subscribes to Firestore syncRuns/{runId} for progress.
+    Triggers a global batch sync of all active LeetCode profiles.
+    Returns immediately with a run_id for frontend tracking if mode=async.
+    If mode=sync, runs synchronously so Cloud Run maintains CPU allocation.
     """
+    # Security: Require either a valid logged-in user OR the exact secret Cloud Scheduler token
+    expected_token = os.getenv("CLOUD_SCHEDULER_SECRET", "super-secret-sync-token")
+    is_scheduler = (x_scheduler_token == expected_token)
+    
+    if not current_user and not is_scheduler:
+        raise HTTPException(status_code=401, detail="Unauthorized access to sync engine")
+
+    if current_user and current_user.role not in ["Admin", "Super Admin", "HOD", "Staff", "admin", "super admin"]:
+        raise HTTPException(status_code=403, detail="Insufficient privileges to trigger sync")
     if sync_tracker.is_running:
         existing_run_id = sync_tracker.run_id or "current"
         return {
@@ -1085,6 +1137,11 @@ async def refresh_all_students(
 
     # Pre-generate a deterministic runId so the frontend can subscribe to Firestore immediately
     run_id = f"sync_{datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+    
+    if mode == "sync":
+        await run_batch_sync(limit=limit, pre_run_id=run_id)
+        return {"runId": run_id, "status": "completed", "message": "Batch sync finished."}
+    
     background_tasks.add_task(run_batch_sync, limit=limit, pre_run_id=run_id)
     db = SessionLocal()
     try:

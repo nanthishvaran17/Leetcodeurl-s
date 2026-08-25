@@ -550,12 +550,22 @@ def send_admin_test_report_email(
 # =========================================================================
 
 class CreateStaffRequest(BaseModel):
+    institutional_id: Optional[str] = None
     username: str
     email: str
     password: str = "Staff@123"
+    role: str = "Staff"
     department_id: Optional[int] = None
     section_id: Optional[int] = None
 
+class UpdateStaffRequest(BaseModel):
+    institutional_id: Optional[str] = None
+    username: Optional[str] = None
+    email: Optional[str] = None
+    role: Optional[str] = None
+    department_id: Optional[int] = None
+    section_id: Optional[int] = None
+    is_active: Optional[bool] = None
 
 class BulkAssignRequest(BaseModel):
     staff_id: int
@@ -621,6 +631,15 @@ def create_staff_user(
     """Admin: Creates a new Staff/Mentor account."""
     from backend.routes.auth import get_password_hash
 
+    # Strictly enforce RBAC: Only Super Admin and Admin can create staff
+    if current_user.role not in ["Super Admin", "Admin"]:
+        raise HTTPException(status_code=403, detail="Only Admins can create staff accounts.")
+
+    # Validate duplicate institutional_id if provided
+    if payload.institutional_id:
+        if db.query(User).filter(User.institutional_id == payload.institutional_id.strip()).first():
+            raise HTTPException(status_code=400, detail="A user with this Institutional ID already exists.")
+
     existing = db.query(User).filter(
         (User.username.ilike(payload.username.strip())) | (User.email.ilike(payload.email.strip()))
     ).first()
@@ -628,10 +647,11 @@ def create_staff_user(
         raise HTTPException(status_code=400, detail="A user with this username or email already exists.")
 
     staff_user = User(
+        institutional_id=payload.institutional_id.strip() if payload.institutional_id else None,
         username=payload.username.strip(),
         email=payload.email.strip().lower(),
         hashed_password=get_password_hash(payload.password),
-        role="Staff",
+        role=payload.role if payload.role in ["Super Admin", "Admin", "Faculty", "Staff", "Viewer"] else "Staff",
         department_id=payload.department_id,
         section_id=payload.section_id,
         is_active=True
@@ -651,6 +671,7 @@ def create_staff_user(
         "message": f"Staff account for '{staff_user.username}' created successfully.",
         "staff": {
             "id": staff_user.id,
+            "institutional_id": staff_user.institutional_id,
             "username": staff_user.username,
             "email": staff_user.email,
             "role": staff_user.role,
@@ -659,6 +680,81 @@ def create_staff_user(
         }
     }
 
+
+@router.patch("/staff/{staff_id}")
+def update_staff_user(
+    staff_id: int,
+    payload: UpdateStaffRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user_or_default)
+):
+    """Admin: Update staff account details and roles."""
+    if current_user.role not in ["Super Admin", "Admin"]:
+        raise HTTPException(status_code=403, detail="Only Admins can modify staff accounts.")
+
+    staff_user = db.query(User).filter(User.id == staff_id).first()
+    if not staff_user:
+        raise HTTPException(status_code=404, detail="Staff member not found.")
+
+    # Privilege escalation protection
+    if payload.role and payload.role in ["Super Admin", "Admin"] and current_user.role != "Super Admin":
+        raise HTTPException(status_code=403, detail="Only Super Admins can promote users to Admin roles.")
+
+    if payload.institutional_id is not None:
+        if payload.institutional_id.strip() != "":
+            existing_id = db.query(User).filter(User.institutional_id == payload.institutional_id.strip(), User.id != staff_id).first()
+            if existing_id:
+                raise HTTPException(status_code=400, detail="Institutional ID already in use.")
+            staff_user.institutional_id = payload.institutional_id.strip()
+        else:
+            staff_user.institutional_id = None
+
+    if payload.username is not None:
+        existing_username = db.query(User).filter(User.username.ilike(payload.username.strip()), User.id != staff_id).first()
+        if existing_username:
+            raise HTTPException(status_code=400, detail="Username already in use.")
+        staff_user.username = payload.username.strip()
+
+    if payload.email is not None:
+        existing_email = db.query(User).filter(User.email.ilike(payload.email.strip()), User.id != staff_id).first()
+        if existing_email:
+            raise HTTPException(status_code=400, detail="Email already in use.")
+        staff_user.email = payload.email.strip().lower()
+
+    if payload.role is not None and payload.role in ["Super Admin", "Admin", "Faculty", "Staff", "Viewer"]:
+        staff_user.role = payload.role
+
+    if payload.department_id is not None:
+        staff_user.department_id = payload.department_id
+
+    if payload.section_id is not None:
+        staff_user.section_id = payload.section_id
+
+    if payload.is_active is not None:
+        staff_user.is_active = payload.is_active
+
+    db.commit()
+    db.refresh(staff_user)
+
+    log_admin_action(
+        db, action="UPDATE_STAFF_ACCOUNT", action_type="USER_MANAGEMENT",
+        description=f"Updated staff account {staff_user.username}",
+        current_user=current_user, target_type="User", target_id=str(staff_user.id)
+    )
+
+    return {
+        "success": True,
+        "message": "Staff account updated successfully.",
+        "staff": {
+            "id": staff_user.id,
+            "institutional_id": staff_user.institutional_id,
+            "username": staff_user.username,
+            "email": staff_user.email,
+            "role": staff_user.role,
+            "department_id": staff_user.department_id,
+            "is_active": staff_user.is_active
+        }
+    }
 
 @router.get("/staff-list")
 def get_all_staff_users(

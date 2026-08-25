@@ -276,7 +276,9 @@ async def fetch_leetcode_profile(
                 logger.warning(f"Error fetching profile for '{username}' (Attempt {attempt}/{retries}): {last_error_detail}")
 
             if attempt < retries and matched_user is None and "matchedUser is null" not in last_error_detail:
-                await asyncio.sleep(0.3 * attempt)
+                import random
+                jitter = random.uniform(0.1, 0.5)
+                await asyncio.sleep((1.5 ** attempt) + jitter)
 
         # Handle profile not found (404 / matchedUser is null) or network failures
         if not matched_user:

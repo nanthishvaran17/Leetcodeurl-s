@@ -47,7 +47,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <header className="sticky top-0 z-[100000] bg-white/95 dark:bg-navy-900/95 backdrop-blur-md border-b border-gray-200 dark:border-navy-800 transition-colors shadow-sm">
+      <header className="sticky top-0 z-[100000] bg-white dark:bg-navy-900 border-b border-slate-200 dark:border-navy-800 transition-colors shadow-sm">
         <div className="w-full max-w-[1800px] mx-auto px-3 sm:px-5 lg:px-8">
           <div className="flex items-center justify-between h-16">
             

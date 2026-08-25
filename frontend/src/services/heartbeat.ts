@@ -18,12 +18,12 @@ const getHealthUrl = (): string => {
   const isLocal = typeof window !== 'undefined' && 
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
   
-  if (isLocal) {
+  if (isLocal && import.meta.env.DEV) {
     return 'http://127.0.0.1:8000/health';
   }
 
-  const envUrl = import.meta.env.VITE_API_URL;
-  if (envUrl && !envUrl.includes('localhost')) {
+  const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+  if (envUrl) {
     const origin = envUrl.replace(/\/api\/?$/, '').replace(/\/+$/, '');
     return `${origin}/health`;
   }
