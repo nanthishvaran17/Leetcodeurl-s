@@ -10,6 +10,7 @@ import { StatusNotificationModal, NotificationState } from '../components/Status
 import { LiveStudentMonitor } from '../components/LiveStudentMonitor';
 import { Post930SolversView } from './Post930SolversView';
 import { StudentEditOverlay } from '../components/StudentEditOverlay';
+import { PreviousWeekContestPanel } from '../components/PreviousWeekContestPanel';
 
 // Animated Count-Up component for headline stat numbers
 const AnimatedNumber: React.FC<{ value: number; suffix?: string; duration?: number }> = ({ value, suffix = '', duration = 600 }) => {
@@ -98,7 +99,8 @@ export const WeeklyContestPage: React.FC = () => {
   const [sessionMetrics, setSessionMetrics] = useState<any>(null);
   const [errorLogs, setErrorLogs] = useState<any[]>([]);
   const [comparison, setComparison] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'matrix' | 'dept_year' | 'error_board'>('matrix');
+  const [activeTab, setActiveTab] = useState<'previous_week' | 'matrix'>('previous_week');
+  const [subTab, setSubTab] = useState<'matrix' | 'dept_year' | 'error_board'>('matrix');
   const [showDetailedView, setShowDetailedView] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>('');
@@ -1664,8 +1666,43 @@ export const WeeklyContestPage: React.FC = () => {
         </div>
       )}
 
-      {/* ── 2. UNIFIED COHESIVE FILTER & ACTION COMMAND BAR ── */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-xl space-y-4">
+      {/* ── PRIMARY VIEW TAB SWITCHER ── */}
+      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-gray-100 dark:bg-navy-950 border border-gray-200 dark:border-gray-800">
+        <button
+          onClick={() => setActiveTab('previous_week')}
+          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-xs font-black transition-all cursor-pointer ${
+            activeTab === 'previous_week'
+              ? 'bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 text-white shadow-lg shadow-indigo-500/20'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+          }`}
+        >
+          <ShieldCheck className="w-4 h-4" />
+          <span>Previous Week Contest Analyzer (Live + Virtual)</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('matrix')}
+          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-xs font-black transition-all cursor-pointer ${
+            activeTab === 'matrix'
+              ? 'bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 text-white shadow-lg shadow-indigo-500/20'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+          }`}
+        >
+          <Trophy className="w-4 h-4" />
+          <span>Session Analytics & Student Roster Matrix</span>
+        </button>
+      </div>
+
+      {/* ── PREVIOUS WEEK CONTEST ANALYZER TAB ── */}
+      {activeTab === 'previous_week' && (
+        <PreviousWeekContestPanel />
+      )}
+
+      {/* ── SESSION ANALYTICS & ROSTER MATRIX TAB ── */}
+      {activeTab === 'matrix' && (
+        <>
+          {/* ── 2. UNIFIED COHESIVE FILTER & ACTION COMMAND BAR ── */}
+          <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-xl space-y-4">
         {/* Row 1: Search Input + Full Consolidated Action Toolbar */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           {/* Real-time Search Input */}
@@ -2051,7 +2088,7 @@ export const WeeklyContestPage: React.FC = () => {
             onClick={() => {
               toggleAttendanceFilter('DATA_ERROR');
               setShowDetailedView(true);
-              setActiveTab('error_board');
+              setSubTab('error_board');
             }}
             className={`h-24 p-4 rounded-2xl bg-amber-500/10 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${selectedAttendanceFilter === 'DATA_ERROR'
               ? 'border-amber-500 ring-4 ring-amber-500/30 shadow-lg bg-amber-500/20'
@@ -2323,8 +2360,8 @@ export const WeeklyContestPage: React.FC = () => {
           <div className="flex items-center justify-between flex-wrap gap-3 border-b border-gray-200 dark:border-gray-800 pb-3">
             <div className="flex space-x-2 flex-wrap gap-y-1">
               <button
-                onClick={() => setActiveTab('matrix')}
-                className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${activeTab === 'matrix'
+                onClick={() => setSubTab('matrix')}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${subTab === 'matrix'
                   ? 'bg-brand-500 text-white shadow-md'
                   : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
                   }`}
@@ -2332,8 +2369,8 @@ export const WeeklyContestPage: React.FC = () => {
                 📋 Student Matrix Roster ({filteredMatrixRows.length})
               </button>
               <button
-                onClick={() => setActiveTab('dept_year')}
-                className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${activeTab === 'dept_year'
+                onClick={() => setSubTab('dept_year')}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${subTab === 'dept_year'
                   ? 'bg-purple-600 text-white shadow-md'
                   : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
                   }`}
@@ -2342,8 +2379,8 @@ export const WeeklyContestPage: React.FC = () => {
               </button>
 
               <button
-                onClick={() => setActiveTab('error_board')}
-                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 cursor-pointer ${activeTab === 'error_board'
+                onClick={() => setSubTab('error_board')}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 cursor-pointer ${subTab === 'error_board'
                   ? 'bg-amber-500 text-white shadow-md'
                   : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
                   }`}
@@ -2370,7 +2407,7 @@ export const WeeklyContestPage: React.FC = () => {
           </div>
 
           {/* Tab 1: Live Question-Wise Student Matrix Table */}
-          {activeTab === 'matrix' && (
+          {subTab === 'matrix' && (
             <div className="border border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden shadow-xl bg-white dark:bg-navy-900">
               {/* Table Legend */}
               <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800 flex flex-wrap items-center justify-between gap-2 bg-gray-50 dark:bg-navy-950 text-[10px] font-bold">
@@ -2599,7 +2636,7 @@ export const WeeklyContestPage: React.FC = () => {
           )}
 
           {/* Tab 2: Department & Academic Year Matrix Breakdown */}
-          {activeTab === 'dept_year' && (
+          {subTab === 'dept_year' && (
             <div className="p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
                 <div className="flex items-center gap-2">
@@ -2687,7 +2724,7 @@ export const WeeklyContestPage: React.FC = () => {
           )}
 
           {/* Tab 3: Itemized Data Quality Error Board (21 Actionable Errors) */}
-          {activeTab === 'error_board' && (
+          {subTab === 'error_board' && (
             <div className="border border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden shadow-xl bg-white dark:bg-navy-900 p-6 space-y-4">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
@@ -3227,6 +3264,9 @@ export const WeeklyContestPage: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+        </>
       )}
 
     </div>

@@ -114,6 +114,88 @@ def get_upcoming_session_info(db: Session = Depends(get_db)):
         "totalStudents": session.total_students or 302
     }
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PREVIOUS WEEK CONTEST ANALYZER ENDPOINTS
+# ─────────────────────────────────────────────────────────────────────────────
+
+@router.get("/previous-week")
+def get_previous_week_info(db: Session = Depends(get_db)):
+    """
+    Returns metadata for the immediately previous Sunday LeetCode Weekly Contest.
+    """
+    from backend.services.previous_week_analyzer import PreviousWeekAnalyzer
+    return PreviousWeekAnalyzer.get_previous_week_metadata(db)
+
+
+@router.post("/previous-week/sync")
+async def sync_previous_week_contest(
+    payload: Optional[Dict[str, Any]] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Triggers complete single-flight Previous Week Contest synchronization.
+    Fetches official live leaderboard, verifies virtual participation for non-public students,
+    and publishes atomic dataset version.
+    """
+    from backend.services.previous_week_analyzer import PreviousWeekAnalyzer
+    force_resync = payload.get("force_resync", False) if payload else False
+    success, res = await PreviousWeekAnalyzer.sync_previous_week_contest(db, force_resync=force_resync)
+    if not success:
+        raise HTTPException(status_code=502 if "API_FETCH" in str(res) else 400, detail=res)
+    return res
+
+
+@router.get("/previous-week/participation")
+def get_previous_week_participation(
+    request: Request,
+    participation_type: Optional[str] = Query(None),
+    department_id: Optional[int] = Query(None),
+    year_level: Optional[str] = Query(None),
+    section_id: Optional[int] = Query(None),
+    search: Optional[str] = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=500),
+    db: Session = Depends(get_db)
+):
+    """
+    Role-scoped server-side query for Previous Week Contest participation records.
+    - Staff: Assigned students ONLY.
+    - HOD: Authorized department ONLY.
+    - Student: Self ONLY.
+    - Admin / Principal: Full institutional access.
+    """
+    from backend.routes.auth import get_current_user_from_request
+    from backend.services.previous_week_analyzer import PreviousWeekAnalyzer
+
+    current_user = get_current_user_from_request(request, db)
+    return PreviousWeekAnalyzer.get_previous_week_participation_role_scoped(
+        db, current_user,
+        participation_type=participation_type,
+        department_id=department_id,
+        year_level=year_level,
+        section_id=section_id,
+        search=search,
+        page=page,
+        page_size=page_size
+    )
+
+
+@router.get("/previous-week/summary")
+def get_previous_week_summary(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    Role-scoped summary statistics for Previous Week Contest.
+    Guarantees mathematical reconciliation across Public, Virtual, Not Participated, Not Verified, and Missing Username.
+    """
+    from backend.routes.auth import get_current_user_from_request
+    from backend.services.previous_week_analyzer import PreviousWeekAnalyzer
+
+    current_user = get_current_user_from_request(request, db)
+    return PreviousWeekAnalyzer.get_previous_week_summary_role_scoped(db, current_user)
+
 @router.get("/sessions/{session_id}/live-status")
 def get_session_live_telemetry(session_id: int, db: Session = Depends(get_db)):
     """

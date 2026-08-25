@@ -53,6 +53,20 @@ def run_db_migrations():
         except Exception as _snap_err:
             print(f"[DB Migration] Snapshot migration note: {_snap_err}")
 
+        # Ensure public_contest_sync_audits columns exist
+        try:
+            cursor.execute("PRAGMA table_info(public_contest_sync_audits)")
+            cols = [info[1] for info in cursor.fetchall()]
+            if "dataset_version" not in cols:
+                cursor.execute("ALTER TABLE public_contest_sync_audits ADD COLUMN dataset_version INTEGER DEFAULT 1")
+            if "publish_status" not in cols:
+                cursor.execute("ALTER TABLE public_contest_sync_audits ADD COLUMN publish_status VARCHAR(50) DEFAULT 'PUBLISHED'")
+            if "failure_reason" not in cols:
+                cursor.execute("ALTER TABLE public_contest_sync_audits ADD COLUMN failure_reason TEXT")
+            conn.commit()
+        except Exception as _audit_col_err:
+            print(f"[DB Migration] public_contest_sync_audits column migration note: {_audit_col_err}")
+
         # Register Database-level Snapshot Immutability Trigger
         try:
             cursor.execute("""

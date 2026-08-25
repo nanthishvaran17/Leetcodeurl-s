@@ -1981,6 +1981,41 @@ class PublicContestSyncAudit(Base):
     publish_status = Column(String(50), default="PUBLISHED")  # PUBLISHED, DO_NOT_PUBLISH, KPT_LAST_VERIFIED, SUPERSEDED
     failure_reason = Column(Text, nullable=True)
 
+
+class PreviousWeekParticipationRecord(Base):
+    """
+    Unified Authoritative Previous Week LeetCode Contest Participation Record.
+    Classifies every student into PUBLIC, VIRTUAL, NOT_PARTICIPATED, NOT_VERIFIED, or MISSING_LEETCODE_USERNAME.
+    Supports atomic dataset versioning and role-based access control.
+    """
+    __tablename__ = "previous_week_participation_records"
+    __table_args__ = (
+        UniqueConstraint("session_id", "student_id", "dataset_version", name="uq_prev_week_session_student_version"),
+        {"extend_existing": True}
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("weekly_sessions.id"), nullable=False, index=True)
+    contest_id = Column(String(100), nullable=False, index=True)
+    contest_slug = Column(String(100), nullable=False, index=True)
+    contest_title = Column(String(150), nullable=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    leetcode_username = Column(String(100), nullable=True, index=True)
+    
+    participation_type = Column(String(50), nullable=False, index=True)  # PUBLIC, VIRTUAL, NOT_PARTICIPATED, NOT_VERIFIED, MISSING_LEETCODE_USERNAME
+    official_rank = Column(Integer, nullable=True)
+    official_score = Column(Integer, nullable=True)
+    problems_solved = Column(Integer, default=0)
+    finish_time = Column(String(50), nullable=True)
+    
+    source = Column(String(100), default="official_leetcode_leaderboard")
+    verification_status = Column(String(50), default="VERIFIED")  # VERIFIED, UNVERIFIED, VERIFICATION_REQUIRED
+    verified_at = Column(DateTime, default=datetime.datetime.utcnow)
+    sync_id = Column(String(100), nullable=True, index=True)
+    dataset_version = Column(Integer, default=1, index=True)
+    is_active_version = Column(Boolean, default=True, index=True)
+
     session = relationship("WeeklySession")
+    student = relationship("Student")
 
 

@@ -21,6 +21,27 @@ def get_most_recent_sunday_date(target_dt: datetime.datetime = None) -> datetime
     sunday_dt = target_dt - datetime.timedelta(days=days_since_sunday)
     return sunday_dt.date()
 
+def get_immediately_previous_sunday_date(now_ist: datetime.datetime = None) -> datetime.date:
+    """
+    Calculates the date of the immediately previous Sunday in IST.
+    If today is Tuesday 25-Aug-2026, returns 23-Aug-2026.
+    If today is Sunday 23-Aug-2026 before 09:30 AM IST, returns 16-Aug-2026.
+    If today is Sunday 23-Aug-2026 after 09:30 AM IST, returns 23-Aug-2026.
+    """
+    if now_ist is None:
+        now_ist = get_current_ist_datetime()
+    
+    weekday = now_ist.weekday() # Monday=0, ..., Sunday=6
+    if weekday == 6: # Sunday
+        cutoff = now_ist.replace(hour=9, minute=30, second=0, microsecond=0)
+        if now_ist < cutoff:
+            return (now_ist - datetime.timedelta(days=7)).date()
+        else:
+            return now_ist.date()
+    else:
+        days_since_sunday = (weekday + 1)
+        return (now_ist - datetime.timedelta(days=days_since_sunday)).date()
+
 def get_upcoming_sunday_date(target_dt: datetime.datetime = None) -> datetime.date:
     """
     Returns the date of the next upcoming Sunday in IST.
