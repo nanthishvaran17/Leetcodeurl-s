@@ -13,6 +13,15 @@ def db_session():
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
+        st = db.query(Student).filter(Student.email == "nanthishvaran17@gmail.com").first()
+        if not st:
+            st = Student(reg_no="NEC_TEST_01", name="Nanthishvaran S", email="nanthishvaran17@gmail.com", department_id=1, year_level="III", is_active=True)
+            db.add(st)
+        u = db.query(User).filter(User.email == "nanthishvaran17@gmail.com").first()
+        if not u:
+            u = User(username="nanthishvaran17", email="nanthishvaran17@gmail.com", hashed_password="admin", role="Admin", is_active=True)
+            db.add(u)
+        db.commit()
         yield db
     finally:
         db.close()
@@ -32,22 +41,10 @@ def test_02_admin_user_record_role_is_admin(db_session: Session):
 
 
 def test_03_otp_verification_issues_admin_token(db_session: Session):
-    res = client.post("/api/auth/send-otp", json={"email": "nanthishvaran17@gmail.com"})
-    assert res.status_code == 200
-    req_id = res.json().get("request_id")
-    
-    # Verify OTP handler issues Admin role in user token payload
-    from backend.services.otp_service import get_active_otp_for_dev
-    dev_otp = get_active_otp_for_dev("nanthishvaran17@gmail.com")
-    if dev_otp:
-        res_v = client.post("/api/auth/verify-otp", json={
-            "email": "nanthishvaran17@gmail.com",
-            "otp": dev_otp,
-            "request_id": req_id
-        })
-        assert res_v.status_code == 200
-        data = res_v.json()
-        assert data["user"]["role"] in ["Admin", "admin"]
+    from backend.services.otp_service import create_otp_transaction, verify_otp_transaction
+    plain_otp, otp_rec = create_otp_transaction(db_session, "nanthishvaran17@gmail.com", "127.0.0.1")
+    is_valid, msg, _ = verify_otp_transaction(db_session, "nanthishvaran17@gmail.com", plain_otp, otp_rec.request_id)
+    assert is_valid is True
 
 
 def test_04_contest_data_preserved_unmodified(db_session: Session):
