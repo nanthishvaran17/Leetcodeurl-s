@@ -67,12 +67,16 @@ def calculate_department_health_score(
     if total_students == 0:
         return _empty_health()
 
-    student_ids = [s.id for s in base_q.with_entities(Student.id).all()]
-
-    # Pull stats for these students
-    stats_rows = db.query(LeetCodeProfileStats).filter(
-        LeetCodeProfileStats.student_id.in_(student_ids)
-    ).all()
+    # Pull stats using a JOIN to avoid massive IN clauses
+    stats_rows = db.query(LeetCodeProfileStats).join(Student).filter(
+        Student.is_active == True,
+    )
+    if dept_id:
+        stats_rows = stats_rows.filter(Student.department_id == dept_id)
+    elif test_dept_ids:
+        stats_rows = stats_rows.filter(Student.department_id.notin_(test_dept_ids))
+        
+    stats_rows = stats_rows.all()
 
     total_solved_list = [s.total_solved or 0 for s in stats_rows]
     rating_list       = [s.contest_rating or 0.0 for s in stats_rows if (s.contest_rating or 0) > 100]
@@ -109,11 +113,16 @@ def calculate_department_health_score(
         1
     )
 
-    # At-risk count from risk profiles
-    at_risk = db.query(StudentRiskProfile).filter(
-        StudentRiskProfile.student_id.in_(student_ids),
+    # At-risk count from risk profiles via JOIN
+    at_risk_q = db.query(StudentRiskProfile).join(Student).filter(
+        Student.is_active == True,
         StudentRiskProfile.risk_level.in_(["HIGH", "CRITICAL"])
-    ).count()
+    )
+    if dept_id:
+        at_risk_q = at_risk_q.filter(Student.department_id == dept_id)
+    elif test_dept_ids:
+        at_risk_q = at_risk_q.filter(Student.department_id.notin_(test_dept_ids))
+    at_risk = at_risk_q.count()
 
     # Improving = students with contest_rating above average
     improving = sum(1 for r in rating_list if r > avg_rating) if rating_list else 0
@@ -146,30 +155,52 @@ def _empty_health() -> Dict[str, Any]:
 def get_institutional_benchmarks(db: Session) -> Dict[str, Any]:
     """
     Real-time Department × Year benchmarking matrix from database.
-    - Department matrix: GROUP BY department_id with live LeetCodeProfileStats JOINs
+    - Department matrix: In-memory grouping of a single JOIN query for O(1) performance.
     - Year matrix: GROUP BY year_level with live stats
     Excludes test-stub departments.
     """
     # ── Department Matrix ────────────────────────────────────────────────────
     departments = db.query(Department).all()
+    dept_map = {d.id: d for d in departments if _is_real_dept(d.code)}
+    
+    # 1. Fetch ALL active students and stats in ONE query
+    student_stats = db.query(Student, LeetCodeProfileStats).outerjoin(
+        LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id
+    ).filter(
+        Student.is_active == True,
+        Student.department_id.in_(dept_map.keys())
+    ).all()
+    
+    # 2. Fetch ALL at-risk profiles in ONE query
+    at_risk_profiles = db.query(StudentRiskProfile).join(Student).filter(
+        Student.is_active == True,
+        Student.department_id.in_(dept_map.keys()),
+        StudentRiskProfile.risk_level.in_(["HIGH", "CRITICAL"])
+    ).all()
+    
+    # Group at-risk by dept
+    at_risk_by_dept = {}
+    for p in at_risk_profiles:
+        did = p.student.department_id
+        at_risk_by_dept[did] = at_risk_by_dept.get(did, 0) + 1
+        
+    # Group stats by dept
+    stats_by_dept = {}
+    for student, stats in student_stats:
+        did = student.department_id
+        if did not in stats_by_dept:
+            stats_by_dept[did] = []
+        if stats:
+            stats_by_dept[did].append(stats)
+            
     dept_matrix = []
 
-    for d in departments:
-        if not _is_real_dept(d.code):
-            continue
-
-        students = db.query(Student).filter(
-            Student.department_id == d.id,
-            Student.is_active == True
-        ).all()
-        cnt = len(students)
+    for d_id, d in dept_map.items():
+        stats_rows = stats_by_dept.get(d_id, [])
+        cnt = sum(1 for s, _ in student_stats if s.department_id == d_id)
+        
         if cnt == 0:
             continue
-
-        student_ids = [s.id for s in students]
-        stats_rows = db.query(LeetCodeProfileStats).filter(
-            LeetCodeProfileStats.student_id.in_(student_ids)
-        ).all()
 
         ratings  = [s.contest_rating or 0 for s in stats_rows if (s.contest_rating or 0) > 100]
         solveds  = [s.total_solved or 0 for s in stats_rows]
@@ -179,8 +210,25 @@ def get_institutional_benchmarks(db: Session) -> Dict[str, Any]:
         avg_solved = round(sum(solveds) / max(1, len(solveds)), 1)
         part_pct   = round((active / cnt) * 100, 1)
 
-        # Health score for this dept
-        health = calculate_department_health_score(db, dept_id=d.id)
+        # Inline Health score calculation for this dept to avoid N+1 DB queries
+        part_score = round(min(100.0, part_pct), 1)
+        cons_score = round(min(100.0, max(30.0, (avg_solved / 200.0) * 100.0)), 1)
+        grow_score = round(min(100.0, max(40.0, 55.0 + (avg_solved / 15.0))), 1)
+        perf_score = round(min(100.0, max(30.0, ((avg_rating - 1200.0) / 600.0) * 100.0)), 1)
+        
+        med_sum  = sum(s.medium_solved or 0 for s in stats_rows)
+        hard_sum = sum(s.hard_solved or 0 for s in stats_rows)
+        tot_sum  = sum(solveds)
+        if tot_sum > 0:
+            diff_ratio = (med_sum + hard_sum * 2) / float(tot_sum)
+            diff_score = round(min(100.0, max(20.0, diff_ratio * 200.0 + 30.0)), 1)
+        else:
+            diff_score = 30.0
+            
+        health_score = round(
+            part_score * 0.25 + cons_score * 0.20 + grow_score * 0.20 +
+            perf_score * 0.20 + diff_score * 0.15, 1
+        )
 
         dept_matrix.append({
             "department_id":       d.id,
@@ -191,7 +239,7 @@ def get_institutional_benchmarks(db: Session) -> Dict[str, Any]:
             "avg_rating":          avg_rating,
             "avg_solved":          avg_solved,
             "participation_rate_pct": part_pct,
-            "health_score":        health["health_score"],
+            "health_score":        health_score,
             "growth_rate_pct":     f"+{round(min(30.0, avg_solved / 10.0), 1)}%",
         })
 
@@ -210,35 +258,40 @@ def calculate_year_matrix(db: Session) -> List[Dict[str, Any]]:
     """
     Real GROUP BY year_level benchmarking from database.
     Returns actual counts and averages — no hardcoded values.
+    Optimized: In-memory grouping of a single JOIN query.
     """
     # Exclude test depts
-    test_dept_ids = [
-        d.id for d in db.query(Department).all()
-        if not _is_real_dept(d.code)
-    ]
+    departments = db.query(Department).all()
+    dept_map = {d.id: d for d in departments if _is_real_dept(d.code)}
 
     YEAR_ORDER = {"II": 1, "III": 2, "IV": 3}
-    year_rows = db.query(Student.year_level, func.count(Student.id)).filter(
+    
+    # Fetch ALL active students and stats in ONE query
+    student_stats = db.query(Student, LeetCodeProfileStats).outerjoin(
+        LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id
+    ).filter(
         Student.is_active == True,
-        Student.department_id.notin_(test_dept_ids) if test_dept_ids else True
-    ).group_by(Student.year_level).all()
-
+        Student.department_id.in_(dept_map.keys())
+    ).all()
+    
+    # Group by year level
+    stats_by_year = {}
+    for student, stats in student_stats:
+        yl = student.year_level
+        if yl not in stats_by_year:
+            stats_by_year[yl] = []
+        if stats:
+            stats_by_year[yl].append(stats)
+            
     year_matrix = []
-    for (year_level, count) in year_rows:
-        if not year_level or count == 0:
+    
+    for year_level, stats_rows in stats_by_year.items():
+        if not year_level:
             continue
-
-        student_ids = [
-            s.id for s in db.query(Student.id).filter(
-                Student.year_level == year_level,
-                Student.is_active == True,
-                Student.department_id.notin_(test_dept_ids) if test_dept_ids else True
-            ).all()
-        ]
-
-        stats_rows = db.query(LeetCodeProfileStats).filter(
-            LeetCodeProfileStats.student_id.in_(student_ids)
-        ).all()
+            
+        count = sum(1 for s, _ in student_stats if s.year_level == year_level)
+        if count == 0:
+            continue
 
         ratings = [s.contest_rating or 0 for s in stats_rows if (s.contest_rating or 0) > 100]
         solveds = [s.total_solved or 0 for s in stats_rows]
