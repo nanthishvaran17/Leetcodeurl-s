@@ -394,7 +394,7 @@ class PreviousWeekAnalyzer:
         if not session_id:
             return {"total": 0, "page": page, "page_size": page_size, "records": []}
 
-        authorized_ids = get_authorized_student_ids(db, current_user)
+        authorized_ids = get_authorized_student_ids(db, current_user) if current_user else None
 
         query = db.query(PreviousWeekParticipationRecord).join(
             Student, PreviousWeekParticipationRecord.student_id == Student.id
@@ -448,6 +448,10 @@ class PreviousWeekAnalyzer:
                 "participation_type": rec.participation_type,
                 "official_rank": rec.official_rank,
                 "official_score": rec.official_score,
+                "q1": rec.q1 or 0,
+                "q2": rec.q2 or 0,
+                "q3": rec.q3 or 0,
+                "q4": rec.q4 or 0,
                 "problems_solved": rec.problems_solved,
                 "finish_time": rec.finish_time,
                 "source": rec.source,
@@ -479,7 +483,7 @@ class PreviousWeekAnalyzer:
         if not session_id:
             return {"error": "Previous week session not found."}
 
-        authorized_ids = get_authorized_student_ids(db, current_user)
+        authorized_ids = get_authorized_student_ids(db, current_user) if current_user else None
 
         base_query = db.query(PreviousWeekParticipationRecord).join(
             Student, PreviousWeekParticipationRecord.student_id == Student.id

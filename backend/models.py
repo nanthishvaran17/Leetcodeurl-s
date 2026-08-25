@@ -2008,6 +2008,10 @@ class PreviousWeekParticipationRecord(Base):
     participation_type = Column(String(50), nullable=False, index=True)  # PUBLIC, VIRTUAL, NOT_PARTICIPATED, NOT_VERIFIED, MISSING_LEETCODE_USERNAME
     official_rank = Column(Integer, nullable=True)
     official_score = Column(Integer, nullable=True)
+    q1 = Column(Integer, default=0)
+    q2 = Column(Integer, default=0)
+    q3 = Column(Integer, default=0)
+    q4 = Column(Integer, default=0)
     problems_solved = Column(Integer, default=0)
     finish_time = Column(String(50), nullable=True)
     

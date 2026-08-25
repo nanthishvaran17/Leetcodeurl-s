@@ -159,6 +159,17 @@ class StudentOut(StudentBase):
     section_rank: Optional[int] = None
     weekly_progress: Optional[int] = 0
     streak_count: Optional[int] = 0
+    longest_streak: Optional[int] = 0
+    total_active_days: Optional[int] = 0
+    consistency_score: Optional[float] = 0.0
+    badge_list: List[str] = []
+    contest_status: Optional[str] = None
+    contest_solved: Optional[int] = 0
+    contest_score_display: Optional[str] = None
+    contest_name: Optional[str] = None
+    contest_number: Optional[int] = None
+    has_virtual: Optional[bool] = False
+    model_config = ConfigDict(from_attributes=True, extra="allow")
 
 class StudentPaginatedOut(BaseModel):
     total: int

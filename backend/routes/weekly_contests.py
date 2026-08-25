@@ -1768,5 +1768,111 @@ def get_public_participants_audits(
     ]
 
 
+# ─── SUNDAY LIVE CONTEST INGESTION ENDPOINTS ──────────────────────────────────
+
+from pydantic import BaseModel, Field
+
+class LiveSolveIngestRequest(BaseModel):
+    session_id: int
+    student_id: int
+    q1: int = Field(default=0, ge=0, le=1)
+    q2: int = Field(default=0, ge=0, le=1)
+    q3: int = Field(default=0, ge=0, le=1)
+    q4: int = Field(default=0, ge=0, le=1)
+    official_rank: Optional[int] = None
+    official_score: Optional[int] = None
+    finish_time: Optional[str] = None
+    evidence_source: str = "official_live_leetcode_api"
+
+class LiveSimulateStepRequest(BaseModel):
+    session_id: Optional[int] = None
+    student_id: int
+    target_solved: int = Field(default=1, ge=0, le=4)
+
+@router.post("/live/ingest-solve")
+async def ingest_live_contest_solve(
+    req: LiveSolveIngestRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Ingests authoritative live question solve event:
+    1. Validates identity & evidence.
+    2. Writes question-level state (Q1..Q4) in transactional DB write.
+    3. Recalculates solved_count = SUM(Q1..Q4).
+    4. Updates aggregates.
+    5. Broadcasts targeted CONTEST_RESULT_UPDATED & CONTEST_SUMMARY_UPDATED over WebSocket.
+    """
+    from backend.services.sunday_live_ingestion_engine import SundayLiveIngestionEngine
+    success, data, error = await SundayLiveIngestionEngine.ingest_student_solve_event(
+        db=db,
+        session_id=req.session_id,
+        student_id=req.student_id,
+        q1=req.q1,
+        q2=req.q2,
+        q3=req.q3,
+        q4=req.q4,
+        official_rank=req.official_rank,
+        official_score=req.official_score,
+        finish_time=req.finish_time,
+        evidence_source=req.evidence_source
+    )
+    if not success:
+        raise HTTPException(status_code=400, detail=error or "Live solve ingestion failed.")
+    return {"success": True, "result": data}
+
+@router.post("/live/simulate-step")
+async def simulate_live_solve_step(
+    req: LiveSimulateStepRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Test harness endpoint to verify live 0/4 -> 1/4 -> 2/4 -> 3/4 -> 4/4 state transitions.
+    Triggers true DB commit + WebSocket broadcast without full page reload.
+    """
+    from backend.services.sunday_live_ingestion_engine import SundayLiveIngestionEngine
+    session_id = req.session_id
+    if not session_id:
+        session = SundayLiveIngestionEngine.get_or_create_live_session(db)
+        session_id = session.id
+
+    res = await SundayLiveIngestionEngine.simulate_question_solve_progression(
+        db=db,
+        session_id=session_id,
+        student_id=req.student_id,
+        target_solved=req.target_solved
+    )
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error") or "Simulation failed.")
+    return res
+
+@router.get("/live/summary")
+def get_live_contest_summary(
+    session_id: Optional[int] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Returns live summary metrics and session metadata calculated strictly from database.
+    """
+    from backend.services.sunday_live_ingestion_engine import SundayLiveIngestionEngine
+    if session_id:
+        session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+    else:
+        session = SundayLiveIngestionEngine.get_or_create_live_session(db)
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Live contest session not found.")
+
+    metrics = SundayLiveIngestionEngine.recalculate_live_summary_metrics(db, session.id)
+    return {
+        "session_id": session.id,
+        "contest_id": session.contest_id,
+        "contest_name": session.contest_name,
+        "status": session.status,
+        "session_date": session.session_date,
+        "metrics": metrics
+    }
+
+
+
 
 

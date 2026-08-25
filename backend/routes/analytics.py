@@ -19,9 +19,7 @@ router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
 @router.get("/department-comparison")
 def compare_departments(request: Request, db: Session = Depends(get_db)):
     current_user = get_current_user_optional(request, db)
-    
-    # We must skip caching if user has a restricted scope, otherwise they see global cache or poison the cache.
-    # We could make the cache key user-specific if needed.
+    cache_key = f"dept_comparison:{current_user.id if current_user else 'anon'}"
     
     departments = db.query(Department).all()
     if not departments:

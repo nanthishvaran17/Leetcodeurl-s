@@ -10,7 +10,7 @@ from backend.models import Student, LeetCodeProfileStats, Department, Section, A
 from backend.services.authorization_service import apply_role_based_student_filter, require_staff_student_access
 from backend.schemas import StudentOut, StudentCreate, StudentUpdate, ContestResultOut
 from backend.routes.auth import get_current_user
-from backend.security import require_security_access
+from backend.security import require_security_access, get_current_user_optional
 from backend.leetcode_client import fetch_leetcode_profile, extract_leetcode_username
 from backend.excel_handler import validate_excel_import, commit_excel_import
 from backend.ranking import update_all_rankings_and_badges
@@ -27,6 +27,7 @@ from sqlalchemy import desc, asc, nullslast
 
 @router.get("/leaderboard-fast")
 def get_leaderboard_fast(
+    request: Request,
     dept_id: Optional[int] = None,
     year_level: Optional[str] = None,
     limit: Optional[int] = None,
@@ -36,7 +37,9 @@ def get_leaderboard_fast(
     Ultra-fast leaderboard endpoint for the LandingPage & Department Dashboard.
     Returns slim pre-serialized JSON for all matching students.
     """
-    cache_key = f"leaderboard_fast:{dept_id}:{year_level}:{limit}"
+    current_user = get_current_user_optional(request, db) if request else None
+    user_scope = f"{current_user.id}:{current_user.role}" if current_user else "public"
+    cache_key = f"leaderboard_fast:{user_scope}:{dept_id}:{year_level}:{limit}"
     cached_bytes = cache.get(cache_key)
     if cached_bytes is not None:
         from starlette.responses import Response
@@ -100,7 +103,8 @@ def get_leaderboard_fast(
         .filter((Student.is_active == True) | (Student.is_active.is_(None)))
     )
     
-    query = apply_role_based_student_filter(query, current_user, db)
+    if current_user:
+        query = apply_role_based_student_filter(query, current_user, db)
     if dept_id:
         query = query.filter(Student.department_id == dept_id)
     if year_level and year_level.strip().upper() not in ('ALL', 'ALL YEARS', ''):
@@ -293,7 +297,8 @@ def get_students(
     ).filter((Student.is_active == True) | (Student.is_active.is_(None)))
 
     # Centralized Authorization Scope
-    query = apply_role_based_student_filter(query, current_user, db)
+    if current_user:
+        query = apply_role_based_student_filter(query, current_user, db)
 
     if dept_id:
         query = query.filter(Student.department_id == dept_id)

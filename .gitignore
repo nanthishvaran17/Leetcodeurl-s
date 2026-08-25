@@ -91,3 +91,6 @@ Nandha_LeetCode_Engine_Complete_Manual.pdf
 production_verification_report.*
 verification_10_10_final_report.*
 
+
+.vercel
+.env*
