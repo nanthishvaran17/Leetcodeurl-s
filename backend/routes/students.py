@@ -294,7 +294,7 @@ def get_students(
         joinedload(Student.lc_problem_stats),
         joinedload(Student.lc_contest_standing),
         joinedload(Student.lc_activity)
-    ).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+    ).filter(Student.is_active == True)
 
     # Centralized Authorization Scope
     if current_user:

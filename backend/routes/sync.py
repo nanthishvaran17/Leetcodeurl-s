@@ -75,11 +75,13 @@ def get_current_sync_status(db: Session = Depends(get_db)):
     from backend.config import Settings
     cfg = Settings()
 
-    tot = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count()
-    verified_cnt = db.query(LeetCodeProfileStats).filter(
+    tot = db.query(Student).filter(Student.is_active == True).count()
+    verified_cnt = db.query(LeetCodeProfileStats).join(Student, LeetCodeProfileStats.student_id == Student.id).filter(
+        Student.is_active == True,
         (LeetCodeProfileStats.total_solved != None) | (LeetCodeProfileStats.sync_status.in_(["success", "OK", "verified", "stale"]))
     ).count()
-    pending_cnt = db.query(LeetCodeProfileStats).filter(
+    pending_cnt = db.query(LeetCodeProfileStats).join(Student, LeetCodeProfileStats.student_id == Student.id).filter(
+        Student.is_active == True,
         LeetCodeProfileStats.sync_status.in_(["pending", "pending_username", "not_started"])
     ).count()
     failed_cnt = max(0, tot - verified_cnt - pending_cnt)

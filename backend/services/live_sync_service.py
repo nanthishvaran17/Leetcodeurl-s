@@ -224,7 +224,7 @@ async def broadcast_sync_event(event_data: Dict[str, Any]):
 def get_active_students(db: Session) -> List[Student]:
     """Returns active student roster from database dynamically."""
     logger.info("[SYNC] Loading active institutional student roster from database...")
-    students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+    students = db.query(Student).filter(Student.is_active == True).all()
     logger.info(f"[SYNC] Loaded {len(students)} active students")
     return students
 
