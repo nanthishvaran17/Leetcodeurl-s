@@ -1,6 +1,6 @@
 import datetime
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
-from typing import List, Optional, Any, Dict
+from typing import List, Optional, Any, Dict, Union
 
 # Department Schemas
 class DepartmentBase(BaseModel):
@@ -142,7 +142,7 @@ class StudentOut(StudentBase):
     real_name: Optional[str] = None
     avatar_url: Optional[str] = None
     sync_state: Optional[str] = "PENDING_USERNAME"
-    joining_date: datetime.datetime
+    joining_date: Optional[Union[datetime.datetime, datetime.date, str]] = None
     version: Optional[int] = None
     department: Optional[DepartmentOut] = None
     section: Optional[SectionOut] = None

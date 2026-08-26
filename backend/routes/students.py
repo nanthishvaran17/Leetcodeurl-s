@@ -966,21 +966,6 @@ def update_student(
         background_tasks.add_task(_bg_sync_updated_student)
         logger.info(f"[UPDATE_STUDENT] Background sync queued for updated student {student.reg_no} (username={student.username})")
 
-    # ── Cloud Firestore sync (best-effort) ────────────────────────────────────
-    try:
-        from backend.services.firestore_service import update_firestore_doc
-        update_firestore_doc("students", student.reg_no, {
-            "reg_no": student.reg_no,
-            "name": student.name,
-            "username": student.username,
-            "leetcode_url": student.leetcode_url,
-            "year_level": student.year_level,
-            "is_active": student.is_active,
-            "updated_at": datetime.datetime.utcnow().isoformat() + "Z"
-        })
-    except Exception as fs_err:
-        logger.warning(f"[FIRESTORE UPDATE NOTE] {fs_err}")
-
     audit = AuditLog(
         user_id=current_user.id,
         user_name=current_user.username,
@@ -993,7 +978,37 @@ def update_student(
     db.add(audit)
     db.commit()
 
-    update_all_rankings_and_badges(db)
+    # ── Background Post-Processing (Async Rankings & Cloud Sync) ─────────────────
+    reg_no_val = student.reg_no
+    student_payload = {
+        "reg_no": student.reg_no,
+        "name": student.name,
+        "username": student.username,
+        "leetcode_url": student.leetcode_url,
+        "year_level": student.year_level,
+        "is_active": student.is_active,
+        "updated_at": datetime.datetime.utcnow().isoformat() + "Z"
+    }
+
+    def _bg_post_update_processing():
+        from backend.database import SessionLocal as _SL
+        # 1. Best-effort Firestore Sync
+        try:
+            from backend.services.firestore_service import update_firestore_doc
+            update_firestore_doc("students", reg_no_val, student_payload)
+        except Exception as fs_err:
+            logger.warning(f"[FIRESTORE UPDATE NOTE] {fs_err}")
+            
+        # 2. Recalculate rankings in isolated background DB session
+        _bg_db = _SL()
+        try:
+            update_all_rankings_and_badges(_bg_db)
+        except Exception as _r_err:
+            logger.warning(f"[UPDATE_RANKINGS_NOTE] {_r_err}")
+        finally:
+            _bg_db.close()
+
+    background_tasks.add_task(_bg_post_update_processing)
     cache.clear()
 
     return StudentOut.model_validate(student)
