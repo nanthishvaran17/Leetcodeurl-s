@@ -25,8 +25,8 @@ import api from '../services/api';
 
 // ─── Shared Card Component ───────────────────────────────────────────────────
 
-const Card: React.FC<{ children: React.ReactNode; className?: string; id?: string }> = ({ children, className = '', id }) => (
-  <div id={id} className={`bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm ${className}`}>
+const Card: React.FC<{ children: React.ReactNode; className?: string; id?: string; onClick?: () => void }> = ({ children, className = '', id, onClick }) => (
+  <div id={id} onClick={onClick} className={`bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm ${className}`}>
     {children}
   </div>
 );
