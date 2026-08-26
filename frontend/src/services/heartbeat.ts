@@ -27,8 +27,7 @@ const getHealthUrl = (): string => {
     const origin = envUrl.replace(/\/api\/?$/, '').replace(/\/+$/, '');
     return `${origin}/health`;
   }
-
-  return 'https://leetcodeurl-s-1.onrender.com/health';
+  return '/health';
 };
 
 const sendPing = async () => {

@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./data/leetcode_tracker.db"
     
     # Auth & Security Configuration
+    ENVIRONMENT: str = os.environ.get("ENVIRONMENT", "production")
+    PRODUCTION_DOMAIN: str = os.environ.get("PRODUCTION_DOMAIN", "api.nandhaengg.org")
     SECRET_KEY: str = os.environ.get("SECRET_KEY", "super-secret-key-change-this-in-production-2026")
     OTP_HMAC_SECRET: str = os.environ.get("OTP_HMAC_SECRET", "nec-leetcode-tracker-otp-secret-key-2026")
     ALGORITHM: str = "HS256"
@@ -14,6 +16,7 @@ class Settings(BaseSettings):
     SESSION_EXPIRE_MINUTES: int = int(os.environ.get("SESSION_EXPIRE_MINUTES", "10080")) # 7 Days
     SESSION_COOKIE_NAME: str = os.environ.get("SESSION_COOKIE_NAME", "admin_session_token")
     FRONTEND_ORIGIN: str = os.environ.get("FRONTEND_ORIGIN", "http://localhost:5173")
+    CORS_ALLOWED_ORIGINS: str = os.environ.get("CORS_ALLOWED_ORIGINS", "")
     
     # Official Administrator Credentials Configuration
     ADMIN_EMAIL: str = os.environ.get("ADMIN_EMAIL", "nanthishvaran17@gmail.com")
@@ -22,7 +25,7 @@ class Settings(BaseSettings):
 
     # Server & Timezone
     HOST: str = "0.0.0.0"
-    PORT: int = int(os.environ.get("PORT", 10000))
+    PORT: int = int(os.environ.get("PORT", 8000))
     TIMEZONE: str = "Asia/Kolkata"
     
     # LeetCode Service Config

@@ -39,7 +39,7 @@ class MetaWhatsAppClient:
             or "nandha_sec_2026_w7k9p4m2x8q1v5b3"
         )
         self.app_secret = os.environ.get("WHATSAPP_APP_SECRET", "nandha_app_sec_2026_d3f8a1c9e7204b56")
-        self.production_domain = os.environ.get("PRODUCTION_DOMAIN", "leetcodeurl-s.onrender.com")
+        self.production_domain = os.environ.get("PRODUCTION_DOMAIN", "api.nandhaengg.org")
         self.production_webhook_url = f"https://{self.production_domain}/api/whatsapp/webhook"
         self.request_timeout = float(os.environ.get("WHATSAPP_TIMEOUT_SECONDS", "8.0"))
 

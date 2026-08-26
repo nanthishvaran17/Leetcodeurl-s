@@ -122,32 +122,11 @@ async def _deferred_startup_tasks():
         except Exception as e:
             logger.warning(f"[STARTUP] Scheduler initialization note: {e}")
 
-async def _keep_alive_ping_loop():
-    """
-    24/7 Keep-Alive Self-Pinging Background Heartbeat.
-    Pings the public Render backend URL every 8 minutes so Render free-tier NEVER spins down
-    and remains 100% warm with 0ms cold-start latency!
-    """
-    import httpx
-    render_url = os.environ.get("RENDER_EXTERNAL_URL") or "https://leetcodeurl-s-1.onrender.com"
-    health_endpoint = f"{render_url.rstrip('/')}/api/health"
-    await asyncio.sleep(45)  # Wait 45s after startup before starting ping loop
-    while True:
-        try:
-            async with httpx.AsyncClient(timeout=15.0) as client:
-                res = await client.get(health_endpoint)
-                logger.info(f"[KEEP_ALIVE_HEARTBEAT] 24/7 Server Ping status={res.status_code}")
-        except Exception as e:
-            logger.debug(f"[KEEP_ALIVE_HEARTBEAT] Ping notice: {e}")
-        await asyncio.sleep(8 * 60)  # Ping every 8 minutes to prevent 15-minute idle sleep
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """FastAPI modern lifespan handler replacing deprecated on_event handlers."""
     logger.info("[STARTUP] FastAPI process alive. Port binding established immediately.")
     asyncio.create_task(_deferred_startup_tasks())
-    asyncio.create_task(_keep_alive_ping_loop())
     yield
     logger.info("[SHUTDOWN] FastAPI process receiving termination signal. Releasing resources gracefully...")
     try:
@@ -240,18 +219,24 @@ origins = [
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:5174",
+    "https://leetcode-frontend-deploy.vercel.app",
     "https://leetcodeurls.netlify.app",
     "https://leetcode-student-data.web.app",
     "https://leetcode-student-data.firebaseapp.com",
-    "https://leetcodeurl-s-1.onrender.com",
-    "https://leetcodeurl-s.onrender.com",
 ]
+if getattr(settings, "FRONTEND_ORIGIN", None) and settings.FRONTEND_ORIGIN not in origins:
+    origins.append(settings.FRONTEND_ORIGIN.strip())
+if getattr(settings, "CORS_ALLOWED_ORIGINS", None):
+    for o in settings.CORS_ALLOWED_ORIGINS.split(","):
+        o_clean = o.strip()
+        if o_clean and o_clean not in origins:
+            origins.append(o_clean)
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+|https://.*\.netlify\.app|https://.*\.web\.app|https://.*\.firebaseapp\.com|https://.*\.onrender\.com|https://.*\.vercel\.app",
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+|https://.*\.netlify\.app|https://.*\.web\.app|https://.*\.firebaseapp\.com|https://.*\.vercel\.app|https://.*\.pages\.dev",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

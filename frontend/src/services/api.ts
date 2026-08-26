@@ -18,9 +18,8 @@ const getApiBaseUrl = () => {
   }
 
   // Fallback ONLY if env is somehow completely missing
-  return 'https://leetcodeurl-s-1.onrender.com/api';
+  return '/api';
 };
-
 
 const API_BASE = getApiBaseUrl();
 

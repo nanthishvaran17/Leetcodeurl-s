@@ -306,7 +306,7 @@ def get_system_health(db: Session = Depends(get_db)):
         "request_id": request_id,
         "checked_at": now_str,
         "timestamp": now_utc.isoformat(),
-        "environment": os.environ.get("RENDER_SERVICE_ID", "production-local"),
+        "environment": os.environ.get("SERVICE_ID") or os.environ.get("ENVIRONMENT") or "production-cloud",
         "total_latency_ms": round((datetime.datetime.now() - start_time).total_seconds() * 1000, 1),
         "components": components,
         "recent_events": [
@@ -808,7 +808,7 @@ def get_comprehensive_admin_system_health(db: Session = Depends(get_db)):
         "overall_status": overall_status,
         "status_message": overall_msg,
         "timestamp_ist": now_ist_str,
-        "environment": os.environ.get("RENDER_SERVICE_ID", "production-local"),
+        "environment": os.environ.get("SERVICE_ID") or os.environ.get("ENVIRONMENT") or "production-cloud",
         "database": {
             "status": "HEALTHY" if db_ok else "OFFLINE",
             "connection": "Connected" if db_ok else "Disconnected",

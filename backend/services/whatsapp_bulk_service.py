@@ -4,7 +4,7 @@ Sends personalized contest performance summaries and institutional digests via M
 """
 
 import os
-import requests
+import httpx
 import logging
 from typing import Dict, Any, Optional
 
@@ -64,7 +64,7 @@ class MetaWhatsAppBulkEngine:
                 logger.info(f"[WHATSAPP_SIMULATED] Sent summary to {clean_phone} for {student_name} (Rank #{rank}, {solved} Solved)")
                 return True
 
-            res = requests.post(self.api_url, headers=headers, json=payload, timeout=10)
+            res = httpx.post(self.api_url, headers=headers, json=payload, timeout=10)
             if res.status_code in (200, 201):
                 logger.info(f"[WHATSAPP_SENT] Successfully delivered to {clean_phone}")
                 return True

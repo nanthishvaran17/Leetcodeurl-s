@@ -16,7 +16,7 @@ import {
   getFacultyWorkload, assignStudentsBatch, unassignStudentsBatch, autoDistributeDepartment,
   getReportData, CommandCenterSummary, StudentRecord, DeptBenchmark, YearBenchmark,
   DepartmentRecord, StaffRecord, FacultyWorkloadItem
-from '../services/commandCenterService';
+} from '../services/commandCenterService';
 import { simulateWhatIfScenario, askAIDepartmentQuery } from '../services/intelligenceService';
 import { CustomDropdown } from '../components/CustomDropdown';
 import { useAuth } from '../context/AuthContext';

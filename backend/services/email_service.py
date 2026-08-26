@@ -438,10 +438,8 @@ def send_email(
 
     last_error = None
 
-    is_render = bool(os.environ.get("RENDER") or os.environ.get("RENDER_EXTERNAL_URL") or os.environ.get("IS_RENDER"))
-
-    # Priority 1 (Local): Direct Gmail SMTP (Port 587) for instant delivery
-    if (not is_render) and smtp_user and smtp_pass:
+    # Priority 1: Direct Gmail SMTP (Port 587) for instant delivery
+    if smtp_user and smtp_pass:
         try:
             msg = MIMEMultipart('alternative')
             msg['From'] = f"Nandha Engineering College — LeetCode Tracker <{from_email}>"
@@ -804,14 +802,6 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
     from_email = (os.environ.get("REPORT_FROM_EMAIL") or smtp_user or "nanthishvaran17@gmail.com").strip()
     
     generated_msg_id = f"<{uuid.uuid4().hex}.otp@{smtp_host}>"
-
-    # --- Detect environment: Render production blocks SMTP ports 587/465 ---
-    is_render = bool(os.environ.get("RENDER") or os.environ.get("RENDER_EXTERNAL_URL") or os.environ.get("IS_RENDER"))
-    is_local = not is_render and (
-        "localhost" in os.environ.get("BASE_URL", "") or
-        "127.0.0.1" in os.environ.get("BASE_URL", "") or
-        not os.environ.get("RENDER_EXTERNAL_URL")
-    )
 
     # Resolve Brevo API key once for both paths
     brevo_key = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()

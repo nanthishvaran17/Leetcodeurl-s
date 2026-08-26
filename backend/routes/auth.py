@@ -307,7 +307,7 @@ def get_admin_email_diagnostics():
     from backend.services.email_service import verify_smtp_transporter
     ok, msg, diag = verify_smtp_transporter()
     
-    current_env = "production" if (os.environ.get("RENDER") or os.environ.get("VERCEL") or os.environ.get("NODE_ENV") == "production") else "local"
+    current_env = "production" if (os.environ.get("ENVIRONMENT") == "production" or os.environ.get("VERCEL") or os.environ.get("NODE_ENV") == "production" or getattr(settings, "ENVIRONMENT", "") == "production") else "local"
     
     return {
         "status": "success" if ok else "error",

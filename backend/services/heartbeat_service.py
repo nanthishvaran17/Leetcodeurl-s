@@ -140,6 +140,6 @@ def get_deep_health_telemetry(db: Session) -> Dict[str, Any]:
         "platform": {
             "service": "Nandha LeetCode Intelligence API",
             "version": "2.4.0",
-            "environment": os.environ.get("RENDER_INSTANCE_ID", "local-production")
+            "environment": os.environ.get("INSTANCE_ID") or os.environ.get("HOSTNAME") or "cloud-production"
         }
     }

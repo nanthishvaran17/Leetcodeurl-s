@@ -26,7 +26,8 @@ export function useLiveLeaderboard(onUpdate?: (data: any) => void) {
       const protocol = envUrl.startsWith('https') ? 'wss:' : 'ws:';
       wsUrl = `${protocol}//${targetHost}/ws/leaderboard`;
     } else {
-      wsUrl = 'wss://leetcodeurl-s-1.onrender.com/ws/leaderboard';
+      const loc = window.location;
+      wsUrl = `${loc.protocol === 'https:' ? 'wss:' : 'ws:'}//${loc.host}/ws/leaderboard`;
     }
 
     const connect = () => {

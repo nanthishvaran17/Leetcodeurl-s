@@ -134,16 +134,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         return;
       }
     } catch (err: any) {
-      // Offline / Dev fallback for default admin
-      if (cleanUser.toLowerCase() === 'admin' && cleanPass === 'admin123') {
-        setAuthStatusText('Welcome back, Admin • Loading authorized workspace...');
-        const fallbackUser = { id: 1, username: 'admin', email: 'admin@nandha.edu.in', role: 'Admin', is_active: true };
-        login('admin_instant_auth_token_nec_2026', fallbackUser);
-        setTimeout(() => {
-          onSuccess();
-        }, 400);
-        return;
-      }
       triggerShake();
       setError(err.response?.data?.detail || 'Invalid email/username or password. Please check your credentials.');
     } finally {
