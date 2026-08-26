@@ -422,15 +422,29 @@ export const SettingsPage: React.FC = () => {
     if (configFileInputRef.current) configFileInputRef.current.value = '';
   };
 
-  // Live Data Integrity Audit Check
-  const handleRunIntegrityAudit = () => {
+  // Live Data Integrity Audit Check (Live SQL Execution)
+  const handleRunIntegrityAudit = async () => {
     setIntegrityAuditing(true);
     setIntegrityAuditResult(null);
-    setTimeout(() => {
+    try {
+      const res = await api.post('/settings/integrity-audit');
+      if (res.data?.status === 'SUCCESS') {
+        setIntegrityAuditResult(res.data.summary || `100% Data Integrity Verified at ${res.data.audited_at}`);
+        notify.success('Integrity Audit Passed', res.data.summary, { category: 'DATA INTEGRITY' });
+        fetchAuditLogs();
+      } else {
+        setIntegrityAuditResult('⚠️ Integrity Audit Warning: Potential data inconsistency detected.');
+        notify.error('Integrity Audit Warning', 'Integrity rule violations detected.', { category: 'DATA INTEGRITY' });
+      }
+    } catch (err: any) {
+      console.error('Integrity audit request failed:', err);
+      setIntegrityAuditResult('❌ Live integrity audit call failed. Check server logs.');
+      notify.error('Audit Failed', 'Server error while running integrity audit.', { category: 'DATA INTEGRITY' });
+    } finally {
       setIntegrityAuditing(false);
-      setIntegrityAuditResult('100% Data Integrity Verified: Zero mock data, Question equality confirmed across all 300 students, Database to API parity verified.');
-    }, 800);
+    }
   };
+
 
   // Health Component Config Map
   const HEALTH_ITEMS = [
