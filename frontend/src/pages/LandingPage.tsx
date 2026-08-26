@@ -474,13 +474,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </span>
           </motion.h1>
 
-          <motion.p
+          <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
-            className="text-sm md:text-base text-gray-300 max-w-2xl mx-auto leading-relaxed">
-            <span className="font-semibold text-amber-400">Track • Verify • Analyze • Report • Recognize.</span> Institutional competitive programming intelligence across Cyber Security & IoT departments with verified Sunday contest forensics and automated reporting.
-          </motion.p>
+            className="space-y-3"
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              {['Track', 'Verify', 'Analyze', 'Report', 'Recognize'].map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black tracking-wide bg-white/10 border border-white/15 text-emerald-300 backdrop-blur-sm shadow-sm"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5" />
+                  {tag}
+                </span>
+              ))}
+            </div>
+
+            <p className="text-sm md:text-base text-gray-300 max-w-2xl leading-relaxed">
+              Institutional competitive programming intelligence across <span className="font-bold text-white">Cyber Security</span> &amp; <span className="font-bold text-white">IoT</span> departments with verified Sunday contest forensics and automated reporting.
+            </p>
+          </motion.div>
 
 
           <motion.div
