@@ -111,9 +111,12 @@ def get_deep_health_telemetry(db: Session) -> Dict[str, Any]:
         student_count = res or 0
         db_latency_ms = round((time.perf_counter() - t0) * 1000, 2)
         
-        # Check SQLite journal mode
-        wal_res = db.execute(text("PRAGMA journal_mode")).scalar()
-        wal_status = str(wal_res).upper() if wal_res else "WAL"
+        # Check journal mode for SQLite or report MVCC for PostgreSQL
+        if db.bind and getattr(db.bind, "dialect", None) and db.bind.dialect.name == "sqlite":
+            wal_res = db.execute(text("PRAGMA journal_mode")).scalar()
+            wal_status = str(wal_res).upper() if wal_res else "WAL"
+        else:
+            wal_status = "POSTGRESQL_MVCC"
     except Exception as e:
         db_status = f"UNHEALTHY: {str(e)}"
 

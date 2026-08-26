@@ -35,20 +35,30 @@ from sqlalchemy.pool import NullPool, QueuePool
 
 engine_kwargs = {}
 if "postgresql" in db_url or "postgres" in db_url:
-    engine_kwargs.update({
-        "pool_size": 25,
-        "max_overflow": 15,
-        "pool_timeout": 30,
-        "pool_pre_ping": True,
-        "pool_recycle": 300,
-        "connect_args": {
-            "connect_timeout": 10,
-            "keepalives": 1,
-            "keepalives_idle": 30,
-            "keepalives_interval": 10,
-            "keepalives_count": 5
-        }
-    })
+    if is_vercel:
+        engine_kwargs.update({
+            "poolclass": NullPool,
+            "pool_pre_ping": True,
+            "connect_args": {
+                "connect_timeout": 10,
+                "sslmode": "require"
+            }
+        })
+    else:
+        engine_kwargs.update({
+            "pool_size": 20,
+            "max_overflow": 10,
+            "pool_timeout": 30,
+            "pool_pre_ping": True,
+            "pool_recycle": 300,
+            "connect_args": {
+                "connect_timeout": 10,
+                "keepalives": 1,
+                "keepalives_idle": 30,
+                "keepalives_interval": 10,
+                "keepalives_count": 5
+            }
+        })
 else:
     engine_kwargs.update({
         "poolclass": NullPool,
