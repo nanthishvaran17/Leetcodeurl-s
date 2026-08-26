@@ -117,6 +117,11 @@ export const triggerFullSync = async (triggeredBy = 'admin') => {
   return res.data;
 };
 
+export const triggerTargetedSync = async (studentIds: number[], triggeredBy = 'admin') => {
+  const res = await api.post('/sync/targeted', { student_ids: studentIds, triggered_by: triggeredBy });
+  return res.data;
+};
+
 export const getSyncStatus = async () => {
   const res = await api.get('/sync/status');
   return res.data;

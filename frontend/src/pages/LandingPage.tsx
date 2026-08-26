@@ -6,7 +6,7 @@ import { CountdownTimer } from '../components/CountdownTimer';
 import { StudentFlipCard } from '../components/StudentFlipCard';
 import { AnimatedNumber } from '../components/AnimatedNumber';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
-import api, { triggerFullSync, getSyncStatus } from '../services/api';
+import api, { triggerFullSync, triggerTargetedSync, getSyncStatus } from '../services/api';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import { filterAndSortStudents } from '../utils/filterUtils';
 import { getCachedStudents, saveCachedStudents, CANONICAL_ROSTER } from '../data/canonicalRoster';
@@ -258,12 +258,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   const startSyncPolling = startPollingProgress;
 
+  const isFiltered = (selectedDept !== 'all' || yearLevel !== 'all' || solvedFilter !== 'all' || Boolean(nameSearch && nameSearch.trim()));
+
   const handleRefreshAll = async () => {
     if (refreshing || syncProgress?.is_running) return;
     setRefreshing(true);
-    const initialTotal = students.length > 0 ? students.length : 1450;
+
+    const targetList = isFiltered ? sortedList : students;
+    const initialTotal = targetList.length > 0 ? targetList.length : (isFiltered ? sortedList.length : 1450);
     const devicePlatform = typeof window !== 'undefined' ? (window.navigator.platform || 'Browser') : 'Device';
-    const requesterTag = `Admin (${devicePlatform})`;
+    const requesterTag = isFiltered ? `Filtered (${targetList.length} Students)` : `Admin (${devicePlatform})`;
+
     setSyncProgress({
       total: initialTotal,
       processed: 0,
@@ -272,8 +277,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       is_running: true,
       triggered_by: requesterTag
     });
+
     try {
-      await triggerFullSync(requesterTag);
+      if (isFiltered && targetList.length > 0) {
+        const studentIds = targetList.map(s => s.id).filter((id): id is number => typeof id === 'number');
+        await triggerTargetedSync(studentIds, requesterTag);
+      } else {
+        await triggerFullSync(requesterTag);
+      }
       startSyncPolling();
     } catch (err: any) {
       console.error('[LIVE_SYNC_TRIGGER_ERROR]', err);
@@ -829,7 +840,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <span>
               {syncProgress?.is_running
                 ? `Syncing... ${syncProgress.processed} / ${syncProgress.total}`
-                : refreshing ? 'Refreshing...' : ' Refresh All LeetCode Stats'
+                : refreshing 
+                  ? 'Refreshing...' 
+                  : isFiltered 
+                    ? `Refresh Filtered (${sortedList.length} Students)` 
+                    : 'Refresh All LeetCode Stats'
               }
             </span>
           </button>
@@ -844,13 +859,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <span className="text-xs font-black uppercase tracking-wider text-brand-600 dark:text-brand-400 flex items-center space-x-2">
                   <RefreshCw className={`w-3.5 h-3.5 ${syncProgress.is_running ? 'animate-spin' : ''}`} />
                   <span>
-                    {syncProgress.is_running ? 'Sync Engine Running' : 'Sync Process Complete'}
+                    {syncProgress.is_running 
+                      ? (isFiltered ? `Syncing Filtered Students (${syncProgress.processed}/${syncProgress.total})` : 'Sync Engine Running') 
+                      : 'Sync Process Complete'
+                    }
                   </span>
                 </span>
                 <p className="text-xs font-bold text-gray-500 dark:text-gray-400">
                   {syncProgress.is_running
                     ? `Processing Profile: ${syncProgress.current_student || 'Initializing...'}`
-                    : `All student statistics are up to date${syncProgress.last_sync_time ? ` • Last synced: ${syncProgress.last_sync_time}` : ''}${syncProgress.triggered_by ? ` • Initiated by: ${syncProgress.triggered_by}` : ''}`
+                    : `Student statistics are up to date${syncProgress.last_sync_time ? ` • Last synced: ${syncProgress.last_sync_time}` : ''}${syncProgress.triggered_by ? ` • Initiated by: ${syncProgress.triggered_by}` : ''}`
                   }
                 </p>
               </div>
