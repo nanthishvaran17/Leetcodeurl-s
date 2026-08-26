@@ -37,6 +37,7 @@ const FacultyActionCenter = lazy(() => import('./pages/FacultyActionCenter').the
 const StudentDataIssuesPage = lazy(() => import('./pages/StudentDataIssuesPage').then(m => ({ default: m.StudentDataIssuesPage })));
 const HallOfFameKioskPage = lazy(() => import('./pages/HallOfFameKioskPage').then(m => ({ default: m.HallOfFameKioskPage })));
 const AccreditationStudioPage = lazy(() => import('./pages/AccreditationStudioPage').then(m => ({ default: m.AccreditationStudioPage })));
+const AccessDeniedPage = lazy(() => import('./pages/AccessDeniedPage').then(m => ({ default: m.AccessDeniedPage })));
 
 const PageSkeleton = () => (
   <div className="p-8 text-center py-20 text-brand-600 dark:text-brand-400 font-bold space-y-3 animate-pulse">
@@ -242,18 +243,48 @@ export const App: React.FC = () => {
     );
   };
 
-  const isTabAuthorized = (allowedRoles: string[]) => {
+  // ─── CENTRALIZED ROLE PERMISSION MATRIX ────────────────────────────────────
+  // Single source of truth for all role-based tab access.
+  // NEVER duplicate this logic across components.
+  const ROLE_PERMISSIONS: Record<string, string[]> = {
+    // Super admin / admin: full access
+    admin:        ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard'],
+    super_admin:  ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard'],
+    'super admin':['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard'],
+    // HOD: command center + faculty tools; NO admin-only pages
+    hod:          ['dashboard','landing','public','profile','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports'],
+    // FACULTY / STAFF: isolated to faculty portal only — NO HOD/Admin pages
+    faculty:      ['dashboard','landing','public','faculty-action-center','weekly-contest','reports'],
+    staff:        ['dashboard','landing','public','faculty-action-center','weekly-contest','reports'],
+    professor:    ['dashboard','landing','public','faculty-action-center','weekly-contest','reports'],
+    // Student: minimal access
+    student:      ['dashboard','landing','public','profile'],
+  };
+
+  const isTabAllowed = (tab: string): boolean => {
+    if (!isAuthenticated) return ['landing', 'public', 'profile'].includes(tab);
+    const roleClean = (user?.role || '').trim().toLowerCase();
+    const allowed = ROLE_PERMISSIONS[roleClean] || ROLE_PERMISSIONS['admin'];
+    return allowed.includes(tab);
+  };
+
+  // Legacy compatibility — used by a few other components
+  const isTabAuthorized = (allowedRoles: string[]): boolean => {
     if (!isAuthenticated) return false;
     const roleClean = (user?.role || '').trim().toLowerCase();
     if (roleClean === 'admin' || roleClean === 'super admin' || roleClean === 'super_admin') return true;
     return allowedRoles.some(r => r.toLowerCase() === roleClean);
   };
 
-  const renderAccessRestricted = (resourceTitle: string) => (
-    <AccessRestrictedView
-      resourceName={resourceTitle}
-      onGoBack={() => handleTabChange(isAuthenticated ? 'dashboard' : 'landing')}
-      onOpenLogin={() => setShowLoginModal(true)}
+  const isFacultyRole = (): boolean => {
+    const r = (user?.role || '').trim().toLowerCase();
+    return r === 'faculty' || r === 'staff' || r === 'professor';
+  };
+
+  const renderAccessDenied = (resourceTitle: string) => (
+    <AccessDeniedPage
+      restrictedResource={resourceTitle}
+      onGoBack={() => handleTabChange(isFacultyRole() ? 'faculty-action-center' : (isAuthenticated ? 'dashboard' : 'landing'))}
     />
   );
 
@@ -262,7 +293,17 @@ export const App: React.FC = () => {
     return (
       <LoginPage
         onSuccess={() => {
-          setActiveTab('dashboard');
+          // Role-aware redirect after login
+          const roleClean = (user?.role || '').trim().toLowerCase();
+          if (roleClean === 'faculty' || roleClean === 'staff' || roleClean === 'professor') {
+            setActiveTab('faculty-action-center');
+          } else if (roleClean === 'hod') {
+            setActiveTab('hod-command-center');
+          } else if (roleClean === 'student') {
+            setActiveTab('dashboard');
+          } else {
+            setActiveTab('dashboard');
+          }
         }}
       />
     );
@@ -321,39 +362,43 @@ export const App: React.FC = () => {
               {activeTab === 'dashboard' && renderDashboardComponent()}
 
               {activeTab === 'hod-command-center' && (
-                isTabAuthorized(['admin', 'super admin', 'hod', 'faculty', 'staff', 'professor'])
+                isTabAllowed('hod-command-center')
                   ? <HODCommandCenter />
-                  : renderAccessRestricted('HOD Command Center')
+                  : renderAccessDenied('HOD Command Center')
               )}
 
               {activeTab === 'faculty-action-center' && (
-                isTabAuthorized(['admin', 'super admin', 'hod', 'faculty', 'staff', 'professor'])
+                isTabAllowed('faculty-action-center')
                   ? <FacultyActionCenter />
-                  : renderAccessRestricted('Faculty Action Center')
+                  : renderAccessDenied('Faculty Action Center')
               )}
 
-              {activeTab === 'growth' && <GrowthIntelligencePage />}
+              {activeTab === 'growth' && (
+                isTabAllowed('growth')
+                  ? <GrowthIntelligencePage />
+                  : renderAccessDenied('Growth Intelligence')
+              )}
 
               {activeTab === 'student-dashboard' && <StudentDashboardView />}
 
               {activeTab === 'staff-dashboard' && <StaffDashboardView />}
 
               {activeTab === 'departments' && (
-                isTabAuthorized(['admin', 'super admin', 'hod', 'faculty', 'staff', 'professor'])
+                isTabAllowed('departments')
                   ? <DepartmentDashboard onSelectStudent={handleSelectStudent} />
-                  : renderAccessRestricted('Department Analytics')
+                  : renderAccessDenied('Department Analytics')
               )}
 
               {activeTab === 'weekly-contest' && (
-                isTabAuthorized(['admin', 'super admin', 'hod', 'faculty', 'staff', 'professor'])
+                isTabAllowed('weekly-contest')
                   ? <WeeklyContestPage />
-                  : renderAccessRestricted('Weekly Contest Tracker')
+                  : renderAccessDenied('Weekly Contest Tracker')
               )}
 
               {activeTab === 'students' && (
-                isTabAuthorized(['admin', 'super admin', 'hod', 'faculty', 'staff', 'professor'])
+                isTabAllowed('students')
                   ? <StudentMasterPage onSelectStudent={handleSelectStudent} onOpenImport={() => setShowImportModal(true)} />
-                  : renderAccessRestricted('Student Leaderboard')
+                  : renderAccessDenied('Student Master Management')
               )}
 
               {activeTab === 'profile' && selectedStudent && (
@@ -364,33 +409,33 @@ export const App: React.FC = () => {
               )}
 
               {activeTab === 'compare' && (
-                isTabAuthorized(['admin', 'super admin', 'hod', 'faculty', 'staff', 'professor'])
+                isTabAllowed('compare')
                   ? <ComparePage />
-                  : renderAccessRestricted('Student Comparison')
+                  : renderAccessDenied('Student Comparison')
               )}
 
               {activeTab === 'quality' && (
-                isTabAuthorized(['admin', 'super admin', 'hod', 'faculty', 'staff', 'professor'])
+                isTabAllowed('quality')
                   ? <DataQualityPage onNavigateTab={handleTabChange} />
-                  : renderAccessRestricted('Data Quality Board')
+                  : renderAccessDenied('Data Quality Board')
               )}
 
               {(activeTab === 'data-issues' || activeTab === 'issues' || activeTab === 'not-started-issues') && (
-                isTabAuthorized(['admin', 'super admin', 'hod', 'faculty', 'staff', 'professor'])
+                isTabAllowed('data-issues')
                   ? <StudentDataIssuesPage />
-                  : renderAccessRestricted('Student Data Issues & Recovery')
+                  : renderAccessDenied('Student Data Issues & Recovery')
               )}
 
               {activeTab === 'system-health' && (
-                isTabAuthorized(['admin', 'super admin'])
+                isTabAllowed('system-health')
                   ? <SystemHealthPage onNavigateTab={setActiveTab} />
-                  : renderAccessRestricted('System Operations')
+                  : renderAccessDenied('System Operations — Admin Only')
               )}
 
               {activeTab === 'reports' && (
-                isTabAuthorized(['admin', 'super admin', 'hod', 'faculty', 'staff', 'professor'])
+                isTabAllowed('reports')
                   ? <ReportsPage />
-                  : renderAccessRestricted('Reports & Exports')
+                  : renderAccessDenied('Reports & Exports')
               )}
 
               {activeTab === 'public' && (
@@ -398,25 +443,26 @@ export const App: React.FC = () => {
               )}
 
               {activeTab === 'settings' && (
-                isTabAuthorized(['admin', 'super admin'])
+                isTabAllowed('settings')
                   ? <SettingsPage />
-                  : renderAccessRestricted('Admin Settings')
+                  : renderAccessDenied('Admin Settings — Admin Only')
               )}
 
               {activeTab === 'audit' && (
-                isTabAuthorized(['admin', 'super admin'])
+                isTabAllowed('audit')
                   ? <AuditLogPage />
-                  : renderAccessRestricted('Audit Log')
+                  : renderAccessDenied('Audit Log — Admin Only')
               )}
 
               {activeTab === 'ai-control' && (
-                isTabAuthorized(['admin', 'super admin'])
+                isTabAllowed('ai-control')
                   ? <AIControlCenterPage />
-                  : renderAccessRestricted('AI Control Center')
+                  : renderAccessDenied('AI Control Center — Admin Only')
               )}
             </Suspense>
           </motion.main>
         </AnimatePresence>
+
 
       </div>
 

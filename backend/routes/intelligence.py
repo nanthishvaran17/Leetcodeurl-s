@@ -13,6 +13,7 @@ import datetime
 
 from backend.database import get_db
 from backend.models import Student, User, FacultyActionQueueItem, SystemAlert
+from backend.security import require_role
 from backend.services.student_risk_engine import calculate_student_risk_engine, update_or_create_risk_profile
 from backend.services.skill_mapping_engine import calculate_student_skill_map, update_or_create_skill_profile
 from backend.services.learning_path_generator import generate_personalized_learning_path, update_or_create_learning_path
@@ -141,12 +142,20 @@ class FacultyEscalateRequest(BaseModel):
 
 
 @router.get("/faculty/actions/kpis")
-def get_faculty_kpis_endpoint(dept_id: Optional[int] = None, db: Session = Depends(get_db)):
+def get_faculty_kpis_endpoint(
+    dept_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("faculty", "staff", "hod", "admin", "super_admin", "super admin"))
+):
     """
-    Returns real database KPI metrics: Critical, High, Monitoring, In Progress, Completed, Resolved.
+    Returns real database KPI metrics scoped to the requesting user's role.
+    Faculty/Staff: Only their assigned students.
+    HOD/Admin: Full department or institution.
     """
     from backend.services.faculty_action_engine import get_faculty_kpis
-    return get_faculty_kpis(db, department_id=dept_id)
+    role_clean = (current_user.role or "").strip().lower()
+    faculty_id = current_user.id if role_clean in ["faculty", "staff"] else None
+    return get_faculty_kpis(db, department_id=dept_id, faculty_id=faculty_id)
 
 
 @router.get("/faculty/actions")
@@ -163,12 +172,17 @@ def get_faculty_actions_endpoint(
     page_size: int = Query(20, ge=1, le=200),
     limit: Optional[int] = Query(None),
     offset: Optional[int] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("faculty", "staff", "hod", "admin", "super_admin", "super admin"))
 ):
     """
-    Returns filtered and sorted Faculty Action Queue with real student context.
+    Returns filtered and sorted Faculty Action Queue.
+    Faculty/Staff see only their assigned students.
+    HOD/Admin see all.
     """
     from backend.services.faculty_action_engine import get_faculty_actions_list, detect_and_sync_faculty_signals
+    role_clean = (current_user.role or "").strip().lower()
+    faculty_id = current_user.id if role_clean in ["faculty", "staff"] else None
     eff_dept_id = department_id or dept_id
     eff_limit = limit if limit is not None else page_size
     eff_offset = offset if offset is not None else (page - 1) * page_size
@@ -180,7 +194,8 @@ def get_faculty_actions_endpoint(
         year_level=year_level,
         search=search,
         limit=eff_limit,
-        offset=eff_offset
+        offset=eff_offset,
+        faculty_id=faculty_id
     )
     if data["total"] == 0 and not search and not priority and not status:
         detect_and_sync_faculty_signals(db)
@@ -192,7 +207,8 @@ def get_faculty_actions_endpoint(
             year_level=year_level,
             search=search,
             limit=eff_limit,
-            offset=eff_offset
+            offset=eff_offset,
+            faculty_id=faculty_id
         )
     data["page"] = page
     data["page_size"] = eff_limit
@@ -200,7 +216,11 @@ def get_faculty_actions_endpoint(
 
 
 @router.post("/faculty/actions/detect-signals")
-def post_detect_faculty_signals_endpoint(force: bool = Query(False), db: Session = Depends(get_db)):
+def post_detect_faculty_signals_endpoint(
+    force: bool = Query(False),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("faculty", "staff", "hod", "admin", "super_admin", "super admin"))
+):
     """
     Triggers on-demand automated signal sweep across all active students in the database.
     """
@@ -216,7 +236,12 @@ def post_detect_faculty_signals_endpoint(force: bool = Query(False), db: Session
 
 
 @router.put("/faculty/actions/{action_id}")
-def put_faculty_action_endpoint(action_id: int, req: FacultyActionUpdateRequest, db: Session = Depends(get_db)):
+def put_faculty_action_endpoint(
+    action_id: int,
+    req: FacultyActionUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("faculty", "staff", "hod", "admin", "super_admin", "super admin"))
+):
     """
     Updates action details (PUT), status, notes, follow-up date with audit trail.
     """
@@ -239,7 +264,11 @@ def put_faculty_action_endpoint(action_id: int, req: FacultyActionUpdateRequest,
 
 
 @router.get("/faculty/actions/{action_id}")
-def get_single_faculty_action_endpoint(action_id: int, db: Session = Depends(get_db)):
+def get_single_faculty_action_endpoint(
+    action_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("faculty", "staff", "hod", "admin", "super_admin", "super admin"))
+):
     """
     Returns single action details with timeline and student metrics.
     """
@@ -249,6 +278,18 @@ def get_single_faculty_action_endpoint(action_id: int, db: Session = Depends(get
     item = db.query(FacultyActionQueueItem).filter(FacultyActionQueueItem.id == action_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Action not found")
+
+    # SECURITY: Faculty can only view their assigned students' cases
+    role_clean = (current_user.role or "").strip().lower()
+    if role_clean in ["faculty", "staff"]:
+        from backend.models import FacultyStudentAssignment
+        assignment = db.query(FacultyStudentAssignment).filter(
+            FacultyStudentAssignment.faculty_id == current_user.id,
+            FacultyStudentAssignment.student_id == item.student_id,
+            FacultyStudentAssignment.is_active == True
+        ).first()
+        if not assignment:
+            raise HTTPException(status_code=403, detail="Access restricted: This student is not assigned to your mentorship.")
 
     st = item.student
     stats = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id == st.id).first() if st else None
@@ -290,7 +331,12 @@ def get_single_faculty_action_endpoint(action_id: int, db: Session = Depends(get
 
 
 @router.patch("/faculty/actions/{action_id}")
-def patch_faculty_action_endpoint(action_id: int, req: FacultyActionUpdateRequest, db: Session = Depends(get_db)):
+def patch_faculty_action_endpoint(
+    action_id: int,
+    req: FacultyActionUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("faculty", "staff", "hod", "admin", "super_admin", "super admin"))
+):
     """
     Updates action details, status, notes, follow-up date with audit trail.
     """
@@ -314,7 +360,12 @@ def patch_faculty_action_endpoint(action_id: int, req: FacultyActionUpdateReques
 
 
 @router.post("/faculty/actions/{action_id}/assign")
-def post_assign_faculty_endpoint(action_id: int, req: FacultyAssignRequest, db: Session = Depends(get_db)):
+def post_assign_faculty_endpoint(
+    action_id: int,
+    req: FacultyAssignRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("faculty", "staff", "hod", "admin", "super_admin", "super admin"))
+):
     """
     Assigns faculty to an action.
     """
@@ -331,7 +382,12 @@ def post_assign_faculty_endpoint(action_id: int, req: FacultyAssignRequest, db: 
 
 
 @router.post("/faculty/actions/{action_id}/status")
-def post_status_faculty_endpoint(action_id: int, req: FacultyStatusRequest, db: Session = Depends(get_db)):
+def post_status_faculty_endpoint(
+    action_id: int,
+    req: FacultyStatusRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("faculty", "staff", "hod", "admin", "super_admin", "super admin"))
+):
     """
     Updates action status with validation.
     """
@@ -349,7 +405,12 @@ def post_status_faculty_endpoint(action_id: int, req: FacultyStatusRequest, db: 
 
 
 @router.post("/faculty/actions/{action_id}/follow-up")
-def post_follow_up_endpoint(action_id: int, req: FacultyFollowUpRequest, db: Session = Depends(get_db)):
+def post_follow_up_endpoint(
+    action_id: int,
+    req: FacultyFollowUpRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("faculty", "staff", "hod", "admin", "super_admin", "super admin"))
+):
     """
     Schedules a follow-up review date.
     """
@@ -368,7 +429,12 @@ def post_follow_up_endpoint(action_id: int, req: FacultyFollowUpRequest, db: Ses
 
 
 @router.post("/faculty/actions/{action_id}/escalate")
-def post_escalate_endpoint(action_id: int, req: FacultyEscalateRequest, db: Session = Depends(get_db)):
+def post_escalate_endpoint(
+    action_id: int,
+    req: FacultyEscalateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("faculty", "staff", "hod", "admin", "super_admin", "super admin"))
+):
     """
     Escalates an unresolved critical action to HOD.
     """
@@ -386,7 +452,11 @@ def post_escalate_endpoint(action_id: int, req: FacultyEscalateRequest, db: Sess
 
 
 @router.get("/faculty/actions/{action_id}/timeline")
-def get_action_timeline_endpoint(action_id: int, db: Session = Depends(get_db)):
+def get_action_timeline_endpoint(
+    action_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("faculty", "staff", "hod", "admin", "super_admin", "super admin"))
+):
     """
     Returns complete chronological event audit trail for an action.
     """

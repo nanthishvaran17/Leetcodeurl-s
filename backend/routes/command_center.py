@@ -19,6 +19,7 @@ from backend.models import (
 )
 from backend.services.faculty_assignment_service import faculty_assignment_service, MAX_STUDENTS_PER_FACULTY
 from backend.websocket_manager import connection_manager
+from backend.security import require_role
 from backend.logger import logger
 
 router = APIRouter(prefix="/command-center", tags=["Command Center Operations & Analytics"])
@@ -93,7 +94,8 @@ def get_command_center_summary(
     staff_id: Optional[int] = None,
     year_level: Optional[str] = None,
     section_id: Optional[int] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin"))
 ):
     from backend.services.hod_analytics_engine import (
         calculate_department_health_score,
@@ -169,7 +171,8 @@ def get_students(
     status_filter: Optional[str] = None,
     allocation_filter: Optional[str] = None, # ALLOCATED, UNASSIGNED
     include_inactive: bool = True,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin"))
 ):
     real_ids = _real_dept_ids(db)
     q = db.query(Student).filter(Student.department_id.in_(real_ids))
@@ -288,7 +291,11 @@ def get_students(
 # ── 3. HOD STAFF ALLOCATION MANAGEMENT ENDPOINTS ──────────────────────────────
 
 @router.post("/faculty/assign-batch")
-def assign_students_batch(req: BatchAssignRequest, db: Session = Depends(get_db)):
+def assign_students_batch(
+    req: BatchAssignRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin"))
+):
     """Assigns multiple students to a faculty mentor with quota enforcement."""
     res = faculty_assignment_service.assign_students_to_faculty(
         db=db,
@@ -305,7 +312,11 @@ def assign_students_batch(req: BatchAssignRequest, db: Session = Depends(get_db)
     return res
 
 @router.post("/faculty/unassign-batch")
-def unassign_students_batch(req: BatchUnassignRequest, db: Session = Depends(get_db)):
+def unassign_students_batch(
+    req: BatchUnassignRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin"))
+):
     """Unassigns students from a faculty member."""
     res = faculty_assignment_service.unassign_students(
         db=db,
@@ -320,7 +331,11 @@ def unassign_students_batch(req: BatchUnassignRequest, db: Session = Depends(get
     return res
 
 @router.post("/faculty/auto-distribute")
-def auto_distribute_department(req: AutoDistributeRequest, db: Session = Depends(get_db)):
+def auto_distribute_department(
+    req: AutoDistributeRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin"))
+):
     """Auto-distributes unassigned students among department faculty mentors."""
     res = faculty_assignment_service.auto_distribute_department(
         db=db,
@@ -335,7 +350,11 @@ def auto_distribute_department(req: AutoDistributeRequest, db: Session = Depends
     return res
 
 @router.get("/faculty/workload")
-def get_faculty_workload(dept_id: Optional[int] = None, db: Session = Depends(get_db)):
+def get_faculty_workload(
+    dept_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin"))
+):
     """Returns detailed workload and assigned student roster for each faculty member."""
     query = db.query(User).options(joinedload(User.department)).filter(
         User.is_active == True,
@@ -395,7 +414,8 @@ def get_faculty_workload(dept_id: Optional[int] = None, db: Session = Depends(ge
 def get_report_data(
     report_type: str = Query(..., description="EXECUTIVE, FACULTY_ALLOCATION, INACTIVE_AT_RISK, CONTEST, SKILL_GAP"),
     dept_id: Optional[int] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin"))
 ):
     """
     Returns structured data for on-screen report rendering & multi-format export.

@@ -51,58 +51,113 @@ interface NavSection {
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, onClose }) => {
   const { user } = useAuth();
   const roleClean = (user?.role || '').trim().toLowerCase();
-  const isStaff = roleClean === 'staff' || roleClean === 'faculty';
+  const isFaculty = roleClean === 'staff' || roleClean === 'faculty' || roleClean === 'professor';
+  const isHOD = roleClean === 'hod';
+  const isAdmin = roleClean === 'admin' || roleClean === 'super admin' || roleClean === 'super_admin';
+  const isStudent = roleClean === 'student';
 
-  const sections: NavSection[] = isStaff
-    ? [
-        {
-          title: 'MENTORING WORKSPACE',
-          items: [
-            { id: 'dashboard', label: 'My Mentoring Dashboard', icon: LayoutDashboard, badge: 'MY MENTOR', badgeColor: 'indigo' },
-            { id: 'faculty-action-center', label: 'Faculty Action Center', icon: Zap, badge: 'STAFF', badgeColor: 'indigo' },
-            { id: 'weekly-contest', label: 'Weekly Contest Tracker', icon: Calendar, pulse: true, badge: 'LIVE', badgeColor: 'emerald' },
-          ]
-        },
-        {
-          title: 'REPORTS & VIEW',
-          items: [
-            { id: 'reports', label: 'Reports & Export', icon: FileSpreadsheet },
-            { id: 'public', label: 'Public Shareable View', icon: Globe },
-          ]
-        }
+  // ── FACULTY/STAFF: Strict isolation — NO HOD/Admin navigation items ────────
+  const facultySections: NavSection[] = [
+    {
+      title: 'FACULTY PORTAL',
+      items: [
+        { id: 'dashboard', label: 'My Dashboard', icon: LayoutDashboard, badge: 'MENTOR', badgeColor: 'indigo' },
+        { id: 'faculty-action-center', label: 'Faculty Action Center', icon: Zap, badge: 'LIVE', badgeColor: 'rose', pulse: true },
       ]
-    : [
-        {
-          title: 'EXECUTIVE INTELLIGENCE',
-          items: [
-            { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-            { id: 'hod-command-center', label: 'HOD Command Center', icon: Cpu, badge: 'HOD', badgeColor: 'purple' },
-            { id: 'faculty-action-center', label: 'Faculty Action Center', icon: Zap, badge: 'STAFF', badgeColor: 'indigo' },
-            { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
-          ]
-        },
-        {
-          title: 'ACADEMIC & CONTEST TRACKING',
-          items: [
-            { id: 'departments', label: 'Departments & Sections', icon: Layers },
-            { id: 'weekly-contest', label: 'Weekly Contest Tracker', icon: Calendar, pulse: true, badge: 'LIVE', badgeColor: 'emerald' },
-            { id: 'students', label: 'Student Leaderboard', icon: Users },
-            { id: 'compare', label: 'Student Comparison', icon: BarChart3 },
-            { id: 'quality', label: 'Data Quality Board', icon: CheckCircle2 },
-            { id: 'data-issues', label: 'Student Data Issues', icon: AlertOctagon, badge: 'RECOVERY', badgeColor: 'rose' },
-          ]
-        },
-        {
-          title: 'INSTITUTIONAL OPERATIONS',
-          items: [
-            { id: 'system-health', label: 'Institutional Operations', icon: Activity, badge: 'PROD', badgeColor: 'emerald' },
-            { id: 'reports', label: 'Reports & Export', icon: FileSpreadsheet },
-            { id: 'public', label: 'Public Shareable View', icon: Globe },
-            { id: 'settings', label: 'Admin Settings', icon: Settings },
-            { id: 'audit', label: 'Audit Log', icon: ShieldAlert },
-          ]
-        }
-      ];
+    },
+    {
+      title: 'ACADEMIC TOOLS',
+      items: [
+        { id: 'weekly-contest', label: 'Weekly Contest Tracker', icon: Calendar, pulse: true, badge: 'LIVE', badgeColor: 'emerald' },
+        { id: 'reports', label: 'Reports & Export', icon: FileSpreadsheet },
+        { id: 'public', label: 'Public Shareable View', icon: Globe },
+      ]
+    }
+  ];
+
+  // ── HOD: Command center + faculty tools; NO admin-only pages ──────────────
+  const hodSections: NavSection[] = [
+    {
+      title: 'EXECUTIVE INTELLIGENCE',
+      items: [
+        { id: 'dashboard', label: 'HOD Dashboard', icon: LayoutDashboard },
+        { id: 'hod-command-center', label: 'HOD Command Center', icon: Cpu, badge: 'HOD', badgeColor: 'purple' },
+        { id: 'faculty-action-center', label: 'Faculty Action Center', icon: Zap, badge: 'FACULTY', badgeColor: 'indigo' },
+        { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
+      ]
+    },
+    {
+      title: 'ACADEMIC & CONTEST',
+      items: [
+        { id: 'departments', label: 'Departments & Sections', icon: Layers },
+        { id: 'weekly-contest', label: 'Weekly Contest Tracker', icon: Calendar, pulse: true, badge: 'LIVE', badgeColor: 'emerald' },
+        { id: 'compare', label: 'Student Comparison', icon: BarChart3 },
+        { id: 'quality', label: 'Data Quality Board', icon: CheckCircle2 },
+        { id: 'data-issues', label: 'Student Data Issues', icon: AlertOctagon, badge: 'RECOVERY', badgeColor: 'rose' },
+      ]
+    },
+    {
+      title: 'REPORTS',
+      items: [
+        { id: 'reports', label: 'Reports & Export', icon: FileSpreadsheet },
+        { id: 'public', label: 'Public Shareable View', icon: Globe },
+      ]
+    }
+  ];
+
+  // ── ADMIN / SUPER ADMIN: Full system access ─────────────────────────────
+  const adminSections: NavSection[] = [
+    {
+      title: 'EXECUTIVE INTELLIGENCE',
+      items: [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'hod-command-center', label: 'HOD Command Center', icon: Cpu, badge: 'HOD', badgeColor: 'purple' },
+        { id: 'faculty-action-center', label: 'Faculty Action Center', icon: Zap, badge: 'STAFF', badgeColor: 'indigo' },
+        { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
+      ]
+    },
+    {
+      title: 'ACADEMIC & CONTEST TRACKING',
+      items: [
+        { id: 'departments', label: 'Departments & Sections', icon: Layers },
+        { id: 'weekly-contest', label: 'Weekly Contest Tracker', icon: Calendar, pulse: true, badge: 'LIVE', badgeColor: 'emerald' },
+        { id: 'students', label: 'Student Leaderboard', icon: Users },
+        { id: 'compare', label: 'Student Comparison', icon: BarChart3 },
+        { id: 'quality', label: 'Data Quality Board', icon: CheckCircle2 },
+        { id: 'data-issues', label: 'Student Data Issues', icon: AlertOctagon, badge: 'RECOVERY', badgeColor: 'rose' },
+      ]
+    },
+    {
+      title: 'INSTITUTIONAL OPERATIONS',
+      items: [
+        { id: 'system-health', label: 'Institutional Operations', icon: Activity, badge: 'PROD', badgeColor: 'emerald' },
+        { id: 'reports', label: 'Reports & Export', icon: FileSpreadsheet },
+        { id: 'public', label: 'Public Shareable View', icon: Globe },
+        { id: 'settings', label: 'Admin Settings', icon: Settings },
+        { id: 'audit', label: 'Audit Log', icon: ShieldAlert },
+      ]
+    }
+  ];
+
+  // ── STUDENT: Minimal access ───────────────────────────────────────
+  const studentSections: NavSection[] = [
+    {
+      title: 'MY PORTAL',
+      items: [
+        { id: 'dashboard', label: 'My Dashboard', icon: LayoutDashboard },
+        { id: 'public', label: 'Public Leaderboard', icon: Globe },
+      ]
+    }
+  ];
+
+  const sections: NavSection[] = isFaculty
+    ? facultySections
+    : isHOD
+    ? hodSections
+    : isStudent
+    ? studentSections
+    : adminSections;
+
 
   if (typeof document === 'undefined') return null;
 

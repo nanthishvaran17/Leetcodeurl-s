@@ -717,40 +717,55 @@ export const FacultyActionCenter: React.FC = () => {
 
                       {/* Actions */}
                       <td className={tdCls} onClick={e => e.stopPropagation()}>
-                        <button
-                          onClick={() => setUpdateItem(item)}
-                          title="Update Mentoring Action"
-                          className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white transition cursor-pointer shadow-md shadow-violet-500/20 flex items-center gap-1.5 text-xs font-bold"
-                        >
-                          <FileText size={13} />
-                          <span>Update</span>
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => setUpdateItem(item)}
+                            title="Take Action on Student"
+                            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white transition cursor-pointer shadow-md shadow-violet-500/20 flex items-center gap-1.5 text-xs font-black"
+                          >
+                            <Zap size={12} />
+                            <span>Take Action</span>
+                          </button>
+                          <button
+                            onClick={() => setViewItem(item)}
+                            title="View Student Coding Profile"
+                            className="p-1.5 rounded-xl bg-slate-100 dark:bg-navy-700 hover:bg-slate-200 dark:hover:bg-navy-600 text-slate-600 dark:text-slate-300 transition cursor-pointer"
+                          >
+                            <Eye size={14} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
 
                     {/* Expanded detail row */}
                     {isExpanded && (
-                      <tr className="bg-brand-500/3 dark:bg-navy-900/40">
+                      <tr className="bg-brand-500/5 dark:bg-navy-900/60">
                         <td colSpan={8} className="px-5 py-4">
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
                             <div>
-                              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-navy-400 mb-1">Recommended Action</div>
-                              <div className="text-xs text-brand-500 italic font-medium">{item.recommended_action || '—'}</div>
+                              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Recommended Action</div>
+                              <div className="text-xs text-brand-600 dark:text-brand-400 font-bold">{item.recommended_action || '—'}</div>
                             </div>
                             <div>
-                              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-navy-400 mb-1">Action Taken</div>
-                              <div className="text-xs text-slate-600 dark:text-slate-300">{item.action_taken || '—'}</div>
+                              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Action Taken</div>
+                              <div className="text-xs text-slate-700 dark:text-slate-300">{item.action_taken || 'No action recorded yet'}</div>
                             </div>
                             <div>
-                              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-navy-400 mb-1">Faculty Notes</div>
-                              <div className="text-xs text-slate-600 dark:text-slate-300">{item.faculty_notes || '—'}</div>
+                              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Faculty Notes</div>
+                              <div className="text-xs text-slate-700 dark:text-slate-300">{item.faculty_notes || 'No private notes'}</div>
                             </div>
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => setUpdateItem(item)}
-                                className="px-3.5 py-2 rounded-xl bg-violet-500/15 border border-violet-500/30 text-violet-400 text-xs font-bold hover:bg-violet-500/25 transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                                className="px-3.5 py-2 rounded-xl bg-violet-500/15 border border-violet-500/30 text-violet-600 dark:text-violet-400 text-xs font-black hover:bg-violet-500/25 transition flex items-center gap-1.5 cursor-pointer"
                               >
-                                <FileText size={13} /> Edit Action & Follow-up
+                                <FileText size={13} /> Update & Follow-up
+                              </button>
+                              <button
+                                onClick={() => setViewItem(item)}
+                                className="px-3 py-2 rounded-xl bg-brand-500/15 border border-brand-500/30 text-brand-600 dark:text-brand-400 text-xs font-black hover:bg-brand-500/25 transition flex items-center gap-1.5 cursor-pointer"
+                              >
+                                <Eye size={13} /> Full Profile
                               </button>
                             </div>
                           </div>
@@ -782,8 +797,10 @@ export const FacultyActionCenter: React.FC = () => {
 
       {/* ── Modals ── */}
       {updateItem && <UpdateModal item={updateItem} onClose={() => setUpdateItem(null)} onSaved={loadData} />}
+      {viewItem && <StudentViewModal item={viewItem} onClose={() => setViewItem(null)} onOpenUpdate={() => setUpdateItem(viewItem)} />}
     </div>
   );
 };
 
 export default FacultyActionCenter;
+

@@ -289,12 +289,23 @@ def get_faculty_actions_list(
     year_level: Optional[str] = None,
     search: Optional[str] = None,
     limit: int = 100,
-    offset: int = 0
+    offset: int = 0,
+    faculty_id: Optional[int] = None  # Scope to assigned students only
 ) -> Dict[str, Any]:
     """
     Returns filtered and sorted faculty action queue items with real student context.
+    When faculty_id is provided, data is scoped to only that faculty's assigned students.
     """
     query = db.query(FacultyActionQueueItem).join(Student, FacultyActionQueueItem.student_id == Student.id)
+
+    # SECURITY: Scope to faculty's assigned students only
+    if faculty_id:
+        from backend.models import FacultyStudentAssignment
+        assigned_ids = db.query(FacultyStudentAssignment.student_id).filter(
+            FacultyStudentAssignment.faculty_id == faculty_id,
+            FacultyStudentAssignment.is_active == True
+        ).subquery()
+        query = query.filter(FacultyActionQueueItem.student_id.in_(assigned_ids))
 
     if priority and priority.upper() != "ALL":
         query = query.filter(FacultyActionQueueItem.priority.ilike(priority))
@@ -412,14 +423,23 @@ def get_faculty_actions_list(
 
 
 # ── Top KPI Aggregator ────────────────────────────────────────────────────────
-def get_faculty_kpis(db: Session, department_id: Optional[int] = None) -> Dict[str, Any]:
+def get_faculty_kpis(db: Session, department_id: Optional[int] = None, faculty_id: Optional[int] = None) -> Dict[str, Any]:
     """
     Computes real database KPI card metrics for Faculty Action Center:
     🔴 Critical, 🟠 High, 🟡 Monitoring, 🔵 In Progress, 🟢 Completed, ✅ Resolved.
+    When faculty_id is provided, scopes to that faculty's assigned students only.
     """
     query = db.query(FacultyActionQueueItem).join(Student, FacultyActionQueueItem.student_id == Student.id)
     if department_id and department_id > 0:
         query = query.filter(Student.department_id == department_id)
+    # SECURITY: Scope to faculty's assigned students only
+    if faculty_id:
+        from backend.models import FacultyStudentAssignment
+        assigned_ids = db.query(FacultyStudentAssignment.student_id).filter(
+            FacultyStudentAssignment.faculty_id == faculty_id,
+            FacultyStudentAssignment.is_active == True
+        ).subquery()
+        query = query.filter(FacultyActionQueueItem.student_id.in_(assigned_ids))
 
     total_actions = query.count()
     critical_count = query.filter(FacultyActionQueueItem.priority == "Critical").count()
