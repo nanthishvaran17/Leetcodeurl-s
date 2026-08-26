@@ -2,13 +2,13 @@
 command_center.py
 ===========================================================
 Nandha Institutional Coding Operations Center CRUD & Scoped Analytics API.
-Multi-Dimensional Scoping • Role-Aware • Transactional • Live WebSockets
+Multi-Dimensional Scoping • Staff Allocation Manager • Dedicated Reports • WebSockets
 """
 
 import datetime
 from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, Body
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, desc, or_, and_
 from pydantic import BaseModel, Field
 
@@ -17,6 +17,8 @@ from backend.models import (
     Student, Department, Section, LeetCodeProfileStats, AdminAuditLog,
     WeeklyPublicResult, WeeklySession, FacultyStudentAssignment, User
 )
+from backend.services.faculty_assignment_service import faculty_assignment_service, MAX_STUDENTS_PER_FACULTY
+from backend.websocket_manager import connection_manager
 from backend.logger import logger
 
 router = APIRouter(prefix="/command-center", tags=["Command Center Operations & Analytics"])
@@ -42,6 +44,17 @@ class StudentUpdateRequest(BaseModel):
 
 class AIQueryRequest(BaseModel):
     query: str = Field(..., min_length=3, max_length=500)
+
+class BatchAssignRequest(BaseModel):
+    faculty_id: int
+    student_ids: List[int] = Field(..., min_length=1)
+
+class BatchUnassignRequest(BaseModel):
+    faculty_id: int
+    student_ids: List[int] = Field(..., min_length=1)
+
+class AutoDistributeRequest(BaseModel):
+    department_id: int
 
 EXCLUDE_DEPT_CODES = {"CSE_TEST", "CSE_AI_TEST", "TEST"}
 
@@ -82,10 +95,6 @@ def get_command_center_summary(
     section_id: Optional[int] = None,
     db: Session = Depends(get_db)
 ):
-    """
-    Returns 100% database-derived Scoped Coding Health Score,
-    4 Primary KPIs, compact executive brief, Needs Attention, and Benchmarks.
-    """
     from backend.services.hod_analytics_engine import (
         calculate_department_health_score,
         get_executive_brief,
@@ -100,10 +109,13 @@ def get_command_center_summary(
     benchmarks = get_institutional_benchmarks(db)
 
     # Active staff list for Scope Selector
-    staff_users = db.query(User).filter(
-        User.role.ilike("%Staff%"),
+    staff_users_q = db.query(User).filter(
+        User.role.ilike("%Staff%") | User.role.ilike("%Faculty%"),
         User.is_active == True
-    ).all()
+    )
+    if dept_id:
+        staff_users_q = staff_users_q.filter(User.department_id == dept_id)
+    staff_users = staff_users_q.all()
     
     staff_list = []
     for u in staff_users:
@@ -115,8 +127,23 @@ def get_command_center_summary(
             "id": u.id,
             "username": u.username,
             "email": u.email,
-            "assigned_count": assigned_cnt
+            "department_id": u.department_id,
+            "assigned_count": assigned_cnt,
+            "max_allowed": MAX_STUDENTS_PER_FACULTY,
+            "workload_status": "NORMAL" if assigned_cnt < 20 else ("AT_RATIO" if assigned_cnt == 20 else "HIGH_WORKLOAD")
         })
+
+    # Unassigned student count in this scope
+    unassigned_q = db.query(Student).outerjoin(
+        FacultyStudentAssignment,
+        and_(FacultyStudentAssignment.student_id == Student.id, FacultyStudentAssignment.is_active == True)
+    ).filter(
+        Student.is_active == True,
+        FacultyStudentAssignment.id.is_(None)
+    )
+    if dept_id:
+        unassigned_q = unassigned_q.filter(Student.department_id == dept_id)
+    unassigned_count = unassigned_q.count()
 
     return {
         "department_health": health,
@@ -124,6 +151,7 @@ def get_command_center_summary(
         "needs_attention": needs_att,
         "benchmarks": benchmarks,
         "staff_list": staff_list,
+        "unassigned_student_count": unassigned_count,
         "refreshed_at": datetime.datetime.utcnow().strftime("%d %b %Y, %H:%M:%S IST"),
     }
 
@@ -139,13 +167,10 @@ def get_students(
     year_level: Optional[str] = None,
     section_id: Optional[int] = None,
     status_filter: Optional[str] = None,
+    allocation_filter: Optional[str] = None, # ALLOCATED, UNASSIGNED
     include_inactive: bool = True,
     db: Session = Depends(get_db)
 ):
-    """
-    Returns paginated student list with live LeetCode stats, weekly delta,
-    contest question standing, status badge, and assigned mentor name.
-    """
     real_ids = _real_dept_ids(db)
     q = db.query(Student).filter(Student.department_id.in_(real_ids))
 
@@ -161,6 +186,11 @@ def get_students(
                 FacultyStudentAssignment.is_active == True
             )
         )
+    elif allocation_filter == "UNASSIGNED":
+        q = q.outerjoin(
+            FacultyStudentAssignment,
+            and_(FacultyStudentAssignment.student_id == Student.id, FacultyStudentAssignment.is_active == True)
+        ).filter(FacultyStudentAssignment.id.is_(None))
 
     if dept_id:
         q = q.filter(Student.department_id == dept_id)
@@ -181,7 +211,6 @@ def get_students(
     total = q.count()
     students = q.order_by(Student.name).offset((page - 1) * page_size).limit(page_size).all()
 
-    # Pre-fetch stats and faculty assignments in bulk
     student_ids = [s.id for s in students]
     stats_map = {
         st.student_id: st for st in db.query(LeetCodeProfileStats).filter(
@@ -189,8 +218,8 @@ def get_students(
         ).all()
     } if student_ids else {}
 
-    # Faculty assignment map
     assignment_map = {}
+    assignment_faculty_id_map = {}
     if student_ids:
         assignments = db.query(FacultyStudentAssignment, User).join(
             User, FacultyStudentAssignment.faculty_id == User.id
@@ -200,8 +229,8 @@ def get_students(
         ).all()
         for fa, u in assignments:
             assignment_map[fa.student_id] = u.username
+            assignment_faculty_id_map[fa.student_id] = u.id
 
-    # Contest results map
     contest_map = {}
     if student_ids:
         pub_results = db.query(WeeklyPublicResult).filter(
@@ -241,6 +270,7 @@ def get_students(
             "contest_standing":    contest_map.get(s.id, "—"),
             "status":              status_label,
             "assigned_staff":      assignment_map.get(s.id, "Unassigned"),
+            "assigned_faculty_id": assignment_faculty_id_map.get(s.id, None),
             "contest_rating":      int(stats.contest_rating) if (stats and stats.contest_rating) else 0,
             "easy_solved":         stats.easy_solved if stats else 0,
             "medium_solved":       stats.medium_solved if stats else 0,
@@ -255,7 +285,209 @@ def get_students(
         "students":  results,
     }
 
-# ── 3. ADD STUDENT ────────────────────────────────────────────────────────────
+# ── 3. HOD STAFF ALLOCATION MANAGEMENT ENDPOINTS ──────────────────────────────
+
+@router.post("/faculty/assign-batch")
+def assign_students_batch(req: BatchAssignRequest, db: Session = Depends(get_db)):
+    """Assigns multiple students to a faculty mentor with quota enforcement."""
+    res = faculty_assignment_service.assign_students_to_faculty(
+        db=db,
+        faculty_id=req.faculty_id,
+        student_ids=req.student_ids,
+        assigned_by_id=1
+    )
+    connection_manager.broadcast_sync({
+        "type": "STAFF_ALLOCATION_UPDATED",
+        "faculty_id": req.faculty_id,
+        "assigned_count": len(req.student_ids),
+        "timestamp": datetime.datetime.utcnow().isoformat()
+    })
+    return res
+
+@router.post("/faculty/unassign-batch")
+def unassign_students_batch(req: BatchUnassignRequest, db: Session = Depends(get_db)):
+    """Unassigns students from a faculty member."""
+    res = faculty_assignment_service.unassign_students(
+        db=db,
+        faculty_id=req.faculty_id,
+        student_ids=req.student_ids
+    )
+    connection_manager.broadcast_sync({
+        "type": "STAFF_ALLOCATION_UPDATED",
+        "faculty_id": req.faculty_id,
+        "timestamp": datetime.datetime.utcnow().isoformat()
+    })
+    return res
+
+@router.post("/faculty/auto-distribute")
+def auto_distribute_department(req: AutoDistributeRequest, db: Session = Depends(get_db)):
+    """Auto-distributes unassigned students among department faculty mentors."""
+    res = faculty_assignment_service.auto_distribute_department(
+        db=db,
+        department_id=req.department_id,
+        assigned_by_id=1
+    )
+    connection_manager.broadcast_sync({
+        "type": "STAFF_ALLOCATION_UPDATED",
+        "department_id": req.department_id,
+        "timestamp": datetime.datetime.utcnow().isoformat()
+    })
+    return res
+
+@router.get("/faculty/workload")
+def get_faculty_workload(dept_id: Optional[int] = None, db: Session = Depends(get_db)):
+    """Returns detailed workload and assigned student roster for each faculty member."""
+    query = db.query(User).options(joinedload(User.department)).filter(
+        User.is_active == True,
+        User.role.ilike("%Staff%") | User.role.ilike("%Faculty%")
+    )
+    if dept_id:
+        query = query.filter(User.department_id == dept_id)
+    faculty_list = query.all()
+
+    workload = []
+    for fac in faculty_list:
+        assigned_students_rows = db.query(Student, LeetCodeProfileStats).join(
+            FacultyStudentAssignment, FacultyStudentAssignment.student_id == Student.id
+        ).outerjoin(
+            LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id
+        ).filter(
+            FacultyStudentAssignment.faculty_id == fac.id,
+            FacultyStudentAssignment.is_active == True,
+            Student.is_active == True
+        ).all()
+
+        students_summary = []
+        for s, st in assigned_students_rows:
+            students_summary.append({
+                "id": s.id,
+                "reg_no": s.reg_no,
+                "name": s.name,
+                "year_level": s.year_level,
+                "total_solved": st.total_solved if st else 0,
+                "is_active": (st.total_solved or 0) > 0 if st else False
+            })
+
+        count = len(students_summary)
+        active_count = sum(1 for st in students_summary if st["is_active"])
+        workload.append({
+            "faculty_id": fac.id,
+            "faculty_name": fac.username,
+            "email": fac.email,
+            "department_id": fac.department_id,
+            "department_code": fac.department.code if fac.department else "GEN",
+            "assigned_students": count,
+            "active_students": active_count,
+            "max_capacity": MAX_STUDENTS_PER_FACULTY,
+            "workload_status": "NORMAL" if count < 20 else ("AT_RATIO" if count == 20 else "HIGH_WORKLOAD"),
+            "students": students_summary
+        })
+
+    return {
+        "total_faculty": len(faculty_list),
+        "department_id": dept_id,
+        "faculty_workload": workload
+    }
+
+# ── 4. DEDICATED REPORT DATA ENGINE ───────────────────────────────────────────
+
+@router.get("/reports/data")
+def get_report_data(
+    report_type: str = Query(..., description="EXECUTIVE, FACULTY_ALLOCATION, INACTIVE_AT_RISK, CONTEST, SKILL_GAP"),
+    dept_id: Optional[int] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Returns structured data for on-screen report rendering & multi-format export.
+    """
+    from backend.services.hod_analytics_engine import calculate_department_health_score, get_institutional_benchmarks
+    health = calculate_department_health_score(db, dept_id=dept_id)
+    benchmarks = get_institutional_benchmarks(db)
+
+    now_str = datetime.datetime.utcnow().strftime("%d %B %Y, %I:%M %p IST")
+
+    if report_type == "EXECUTIVE":
+        return {
+            "report_title": "Nandha Executive Institutional Coding Health Report",
+            "generated_at": now_str,
+            "department_scope": f"Department ID: {dept_id}" if dept_id else "All Departments",
+            "health_score": health.get("health_score", 0),
+            "summary_metrics": {
+                "Total Students Tracked": health.get("total_students", 0),
+                "Active Weekly Solvers": health.get("active_this_week", 0),
+                "Inactive Cohort": health.get("inactive_count", 0),
+                "Participation Rate": f"{health.get('participation_score', 0)}%",
+                "Average Solves / Student": health.get("avg_solved", 0),
+                "Average Contest Rating": health.get("avg_rating", 0)
+            },
+            "dimension_breakdown": [
+                {"dimension": "Participation Rate (25% Weight)", "score": f"{health.get('participation_score', 0)}%"},
+                {"dimension": "Problem Solving Consistency (20% Weight)", "score": f"{health.get('consistency_score', 0)}%"},
+                {"dimension": "Weekly Growth Trajectory (20% Weight)", "score": f"{health.get('growth_score', 0)}%"},
+                {"dimension": "Weekly Contest Performance (20% Weight)", "score": f"{health.get('contest_performance_score', 0)}%"},
+                {"dimension": "Difficulty Ratio (15% Weight)", "score": f"{health.get('difficulty_progress_score', 0)}%"}
+            ],
+            "department_benchmarks": benchmarks.get("department_matrix", [])
+        }
+
+    elif report_type == "FACULTY_ALLOCATION":
+        workload_res = get_faculty_workload(dept_id=dept_id, db=db)
+        return {
+            "report_title": "Faculty Mentorship & Student Allocation Audit Report",
+            "generated_at": now_str,
+            "total_faculty": workload_res["total_faculty"],
+            "faculty_records": workload_res["faculty_workload"]
+        }
+
+    elif report_type == "INACTIVE_AT_RISK":
+        # Pull inactive students
+        real_ids = _real_dept_ids(db)
+        q = db.query(Student, LeetCodeProfileStats).outerjoin(
+            LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id
+        ).filter(
+            Student.is_active == True,
+            Student.department_id.in_(real_ids)
+        )
+        if dept_id:
+            q = q.filter(Student.department_id == dept_id)
+        
+        all_rows = q.all()
+        inactive_students = []
+        for s, st in all_rows:
+            if not st or (st.total_solved or 0) == 0:
+                # Find mentor
+                assign = db.query(FacultyStudentAssignment, User).join(
+                    User, FacultyStudentAssignment.faculty_id == User.id
+                ).filter(
+                    FacultyStudentAssignment.student_id == s.id,
+                    FacultyStudentAssignment.is_active == True
+                ).first()
+                mentor_name = assign[1].username if assign else "Unassigned"
+
+                inactive_students.append({
+                    "reg_no": s.reg_no,
+                    "name": s.name,
+                    "department": s.department.code if s.department else "",
+                    "year_level": s.year_level,
+                    "assigned_mentor": mentor_name,
+                    "status": "0 Solves (Requires Follow-up)"
+                })
+
+        return {
+            "report_title": "Inactive & At-Risk Coding Intervention Report",
+            "generated_at": now_str,
+            "total_inactive": len(inactive_students),
+            "students": inactive_students[:100]
+        }
+
+    else:
+        return {
+            "report_title": "Standard Institutional Report",
+            "generated_at": now_str,
+            "health": health
+        }
+
+# ── 5. ADD / UPDATE / DELETE / DEPARTMENTS ────────────────────────────────────
 
 @router.post("/students/add")
 async def add_student(req: StudentAddRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
@@ -304,11 +536,9 @@ async def add_student(req: StudentAddRequest, background_tasks: BackgroundTasks,
     _log_admin_action(db, "ADD_STUDENT", student.reg_no, f"Added student {student.name} ({student.reg_no})")
     return {"success": True, "student_id": student.id, "message": f"Student '{student.name}' added successfully."}
 
-# ── 4. UPDATE STUDENT ─────────────────────────────────────────────────────────
-
 @router.put("/students/{reg_no}")
 def update_student(reg_no: str, req: StudentUpdateRequest, db: Session = Depends(get_db)):
-    student = db.query(Student).filter(Student.reg_no == reg_no.strip().upper()).first()
+    student = db.query(Student).filter(Student.reg_no == req.name if False else Student.reg_no == reg_no.strip().upper()).first()
     if not student:
         student = db.query(Student).filter(Student.reg_no == reg_no.strip()).first()
     if not student:
@@ -332,8 +562,6 @@ def update_student(reg_no: str, req: StudentUpdateRequest, db: Session = Depends
     _log_admin_action(db, "UPDATE_STUDENT", student.reg_no, f"Updated student {student.name} ({student.reg_no})")
     return {"success": True, "message": f"Student '{student.name}' updated successfully."}
 
-# ── 5. SOFT-DELETE STUDENT ────────────────────────────────────────────────────
-
 @router.delete("/students/{reg_no}")
 def delete_student(reg_no: str, db: Session = Depends(get_db)):
     student = db.query(Student).filter(Student.reg_no == reg_no.strip().upper()).first()
@@ -346,8 +574,6 @@ def delete_student(reg_no: str, db: Session = Depends(get_db)):
     db.commit()
     _log_admin_action(db, "DEACTIVATE_STUDENT", student.reg_no, f"Deactivated student {student.name}")
     return {"success": True, "message": f"Student '{student.name}' deactivated."}
-
-# ── 6. DEPARTMENTS LIST ───────────────────────────────────────────────────────
 
 @router.get("/departments")
 def get_departments(db: Session = Depends(get_db)):
@@ -366,14 +592,10 @@ def get_departments(db: Session = Depends(get_db)):
     result.sort(key=lambda x: x["student_count"], reverse=True)
     return result
 
-# ── 7. YEAR MATRIX ───────────────────────────────────────────────────────────
-
 @router.get("/year-matrix")
 def get_year_matrix(db: Session = Depends(get_db)):
     from backend.services.hod_analytics_engine import calculate_year_matrix
     return calculate_year_matrix(db)
-
-# ── 8. AI QUERY ──────────────────────────────────────────────────────────────
 
 @router.post("/ai-query")
 def post_ai_query(req: AIQueryRequest, db: Session = Depends(get_db)):

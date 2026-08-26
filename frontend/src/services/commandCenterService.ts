@@ -70,7 +70,30 @@ export interface StaffRecord {
   id: number;
   username: string;
   email: string;
+  department_id?: number;
   assigned_count: number;
+  max_allowed?: number;
+  workload_status?: string;
+}
+
+export interface FacultyWorkloadItem {
+  faculty_id: number;
+  faculty_name: string;
+  email: string;
+  department_id?: number;
+  department_code?: string;
+  assigned_students: number;
+  active_students: number;
+  max_capacity: number;
+  workload_status: string;
+  students?: Array<{
+    id: number;
+    reg_no: string;
+    name: string;
+    year_level: string;
+    total_solved: number;
+    is_active: boolean;
+  }>;
 }
 
 export interface CommandCenterSummary {
@@ -82,6 +105,7 @@ export interface CommandCenterSummary {
     year_matrix: YearBenchmark[];
   };
   staff_list?: StaffRecord[];
+  unassigned_student_count?: number;
   refreshed_at: string;
 }
 
@@ -101,6 +125,7 @@ export interface StudentRecord {
   contest_standing?: string;
   status?: 'ACTIVE' | 'INACTIVE' | 'IMPROVING' | 'DECLINING';
   assigned_staff?: string;
+  assigned_faculty_id?: number | null;
   contest_rating: number;
   easy_solved: number;
   medium_solved: number;
@@ -162,9 +187,35 @@ export async function getCommandCenterStudents(params: {
   year_level?: string;
   section_id?: number;
   status_filter?: string;
+  allocation_filter?: string;
   include_inactive?: boolean;
 }): Promise<StudentListResponse> {
   const res = await api.get<StudentListResponse>('/command-center/students', { params });
+  return res.data;
+}
+
+export async function getFacultyWorkload(dept_id?: number): Promise<{ total_faculty: number; faculty_workload: FacultyWorkloadItem[] }> {
+  const res = await api.get('/command-center/faculty/workload', { params: { dept_id } });
+  return res.data;
+}
+
+export async function assignStudentsBatch(faculty_id: number, student_ids: number[]): Promise<any> {
+  const res = await api.post('/command-center/faculty/assign-batch', { faculty_id, student_ids });
+  return res.data;
+}
+
+export async function unassignStudentsBatch(faculty_id: number, student_ids: number[]): Promise<any> {
+  const res = await api.post('/command-center/faculty/unassign-batch', { faculty_id, student_ids });
+  return res.data;
+}
+
+export async function autoDistributeDepartment(department_id: number): Promise<any> {
+  const res = await api.post('/command-center/faculty/auto-distribute', { department_id });
+  return res.data;
+}
+
+export async function getReportData(report_type: string, dept_id?: number): Promise<any> {
+  const res = await api.get('/command-center/reports/data', { params: { report_type, dept_id } });
   return res.data;
 }
 

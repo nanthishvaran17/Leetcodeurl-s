@@ -7,13 +7,15 @@ import {
   SlidersHorizontal, ChevronRight, FileSpreadsheet, FileText,
   HelpCircle, Eye, Compass, Target, PieChart, Layers, BrainCircuit,
   Award, Flame, Filter, ChevronDown, Check, AlertCircle, ArrowRight,
-  Sliders, User, CheckCircle, XCircle, ExternalLink, Calendar, Info
+  Sliders, User, CheckCircle, XCircle, ExternalLink, Calendar, Info,
+  UserPlus, UserMinus, Shuffle, Printer, Share2
 } from 'lucide-react';
 import {
   getCommandCenterSummary, getCommandCenterStudents, addStudent, updateStudent,
   deleteStudent, getCommandCenterDepartments, askCommandCenterAI,
-  CommandCenterSummary, StudentRecord, DeptBenchmark, YearBenchmark, DepartmentRecord,
-  StaffRecord, StudentAddPayload, StudentUpdatePayload
+  getFacultyWorkload, assignStudentsBatch, unassignStudentsBatch, autoDistributeDepartment,
+  getReportData, CommandCenterSummary, StudentRecord, DeptBenchmark, YearBenchmark,
+  DepartmentRecord, StaffRecord, FacultyWorkloadItem
 } from '../services/commandCenterService';
 import { simulateWhatIfScenario, askAIDepartmentQuery } from '../services/intelligenceService';
 
@@ -29,8 +31,10 @@ const Card: React.FC<{ children: React.ReactNode; className?: string; id?: strin
 
 const StudentDetailDrawer: React.FC<{
   student: StudentRecord | null;
+  staffList: StaffRecord[];
   onClose: () => void;
-}> = ({ student, onClose }) => {
+  onReassign: (studentId: number, targetFacultyId: number) => void;
+}> = ({ student, staffList, onClose, onReassign }) => {
   if (!student) return null;
 
   return (
@@ -94,6 +98,41 @@ const StudentDetailDrawer: React.FC<{
             </div>
           </div>
 
+          {/* Mentorship Allocation Control */}
+          <div className="space-y-2.5">
+            <h4 className="font-display text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">
+              Faculty Mentorship Allocation
+            </h4>
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-100 dark:border-navy-700 space-y-3">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-500">Current Mentor:</span>
+                <span className="font-bold text-slate-900 dark:text-white font-mono">
+                  {student.assigned_staff || 'Unassigned'}
+                </span>
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase text-slate-400 font-mono mb-1">
+                  Reassign Faculty Mentor:
+                </label>
+                <select
+                  defaultValue=""
+                  onChange={e => {
+                    if (e.target.value) {
+                      onReassign(student.id, Number(e.target.value));
+                      e.target.value = "";
+                    }
+                  }}
+                  className="w-full text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-slate-800 dark:text-slate-100 outline-none focus:border-brand-500"
+                >
+                  <option value="" disabled>Select target faculty member...</option>
+                  {staffList.map(s => (
+                    <option key={s.id} value={s.id}>{s.username} ({s.assigned_count}/20)</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
           {/* Details list */}
           <div className="space-y-2.5 text-xs">
             <h4 className="font-display text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">
@@ -105,10 +144,6 @@ const StudentDetailDrawer: React.FC<{
                 <a href={`https://leetcode.com/${student.leetcode_username}`} target="_blank" rel="noreferrer" className="font-mono font-bold text-brand-600 hover:underline inline-flex items-center gap-1">
                   @{student.leetcode_username} <ExternalLink size={11} />
                 </a>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Assigned Faculty Mentor:</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200">{student.assigned_staff || 'Unassigned'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Activity Status:</span>
@@ -128,6 +163,468 @@ const StudentDetailDrawer: React.FC<{
           <button onClick={onClose} className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-bold transition">
             Close Drawer
           </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── HOD Staff Allocation Manager Modal ───────────────────────────────────────
+
+const StaffAllocationModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  deptId?: number;
+  departments: DepartmentRecord[];
+  onRefreshAll: () => void;
+}> = ({ isOpen, onClose, deptId, departments, onRefreshAll }) => {
+  const [selectedDeptId, setSelectedDeptId] = useState<number>(deptId || 1);
+  const [workload, setWorkload] = useState<FacultyWorkloadItem[]>([]);
+  const [unassignedStudents, setUnassignedStudents] = useState<StudentRecord[]>([]);
+  const [selectedUnassigned, setSelectedUnassigned] = useState<number[]>([]);
+  const [targetFacultyId, setTargetFacultyId] = useState<number | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [actionLoading, setActionLoading] = useState<boolean>(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setMessage(null);
+    try {
+      const wRes = await getFacultyWorkload(selectedDeptId);
+      setWorkload(wRes.faculty_workload || []);
+
+      const uRes = await getCommandCenterStudents({
+        dept_id: selectedDeptId,
+        allocation_filter: 'UNASSIGNED',
+        page_size: 50
+      });
+      setUnassignedStudents(uRes.students || []);
+      setSelectedUnassigned([]);
+    } catch (e: any) {
+      console.error('Workload load failed:', e);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedDeptId]);
+
+  useEffect(() => {
+    if (isOpen) loadData();
+  }, [isOpen, selectedDeptId, loadData]);
+
+  const handleAutoDistribute = async () => {
+    setActionLoading(true);
+    setMessage(null);
+    try {
+      const res = await autoDistributeDepartment(selectedDeptId);
+      setMessage({ type: 'success', text: `Auto-distribution complete: ${res.assigned_count || 0} students assigned across faculty mentors.` });
+      await loadData();
+      onRefreshAll();
+    } catch (e: any) {
+      setMessage({ type: 'error', text: e?.response?.data?.detail || 'Auto-distribution failed.' });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleBatchAssign = async () => {
+    if (!targetFacultyId || selectedUnassigned.length === 0) return;
+    setActionLoading(true);
+    setMessage(null);
+    try {
+      await assignStudentsBatch(targetFacultyId, selectedUnassigned);
+      setMessage({ type: 'success', text: `Successfully allocated ${selectedUnassigned.length} students to mentor.` });
+      await loadData();
+      onRefreshAll();
+    } catch (e: any) {
+      setMessage({ type: 'error', text: e?.response?.data?.detail || 'Batch assignment failed.' });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUnassignStudent = async (facultyId: number, studentId: number) => {
+    setActionLoading(true);
+    try {
+      await unassignStudentsBatch(facultyId, [studentId]);
+      setMessage({ type: 'success', text: 'Student unassigned and returned to queue.' });
+      await loadData();
+      onRefreshAll();
+    } catch (e: any) {
+      setMessage({ type: 'error', text: 'Unassign failed.' });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-none animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="w-full max-w-4xl max-h-[90vh] bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-2xl flex flex-col justify-between overflow-hidden">
+        {/* Modal Header */}
+        <div className="p-5 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-brand-50 text-brand-600">
+              <Users size={18} />
+            </div>
+            <div>
+              <h3 className="font-display text-base font-bold text-slate-900 dark:text-white">
+                HOD Faculty Mentorship & Student Allocation Manager
+              </h3>
+              <p className="text-xs text-slate-500">Enforces institutional 1:20 faculty-to-student mentor ratio</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <select
+              value={selectedDeptId}
+              onChange={e => setSelectedDeptId(Number(e.target.value))}
+              className="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-800"
+            >
+              {departments.map(d => (
+                <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
+              ))}
+            </select>
+            <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100"><X size={18} /></button>
+          </div>
+        </div>
+
+        {/* Modal Body */}
+        <div className="p-5 overflow-y-auto space-y-5 flex-1 text-xs">
+          {message && (
+            <div className={`p-3 rounded-xl font-medium ${message.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'}`}>
+              {message.text}
+            </div>
+          )}
+
+          {/* Quick Actions Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-100 dark:border-navy-700">
+            <div>
+              <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">Unassigned Students Queue: </span>
+              <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold font-mono">{unassignedStudents.length}</span>
+            </div>
+            <button
+              onClick={handleAutoDistribute}
+              disabled={actionLoading || unassignedStudents.length === 0}
+              className="px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold inline-flex items-center gap-1.5 disabled:opacity-50 transition"
+            >
+              <Shuffle size={13} />
+              <span>Auto-Distribute to Active Faculty (1:20)</span>
+            </button>
+          </div>
+
+          {/* Faculty Workload Grid */}
+          <div className="space-y-2.5">
+            <h4 className="font-bold font-mono text-slate-500 uppercase tracking-wider">
+              Department Faculty Workload Matrix
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {workload.map(fac => {
+                const count = fac.assigned_students || 0;
+                const pct = Math.min(100, Math.round((count / 20) * 100));
+                return (
+                  <div key={fac.faculty_id} className="p-3.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 space-y-2.5">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-bold text-slate-900 dark:text-white font-display text-sm">{fac.faculty_name}</div>
+                        <div className="text-[11px] text-slate-400 font-mono">{fac.email}</div>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${fac.workload_status === 'NORMAL' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : fac.workload_status === 'AT_RATIO' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
+                        {count}/20 ({pct}%)
+                      </span>
+                    </div>
+
+                    {/* Progress bar */}
+                    <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-navy-800 overflow-hidden">
+                      <div className={`h-full rounded-full ${count <= 20 ? 'bg-emerald-500' : 'bg-rose-500'}`} style={{ width: `${pct}%` }} />
+                    </div>
+
+                    {/* Assigned Student Mini Tags */}
+                    {fac.students && fac.students.length > 0 && (
+                      <div className="space-y-1">
+                        <div className="text-[10px] text-slate-400 font-mono">Assigned Students ({fac.students.length}):</div>
+                        <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+                          {fac.students.map(s => (
+                            <span key={s.id} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-navy-800 text-[10px] font-mono">
+                              <span>{s.name.split(' ')[0]}</span>
+                              <button onClick={() => handleUnassignStudent(fac.faculty_id, s.id)} className="text-slate-400 hover:text-rose-600">×</button>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Unassigned Students Selection Box */}
+          {unassignedStudents.length > 0 && (
+            <div className="p-4 rounded-xl border border-slate-200 dark:border-navy-700 space-y-3">
+              <div className="flex justify-between items-center">
+                <h4 className="font-bold font-mono text-slate-700 dark:text-slate-200">
+                  Manual Student Allocation ({unassignedStudents.length} unassigned)
+                </h4>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={targetFacultyId || ''}
+                    onChange={e => setTargetFacultyId(Number(e.target.value))}
+                    className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-slate-200 dark:border-navy-700"
+                  >
+                    <option value="">Select target faculty...</option>
+                    {workload.map(f => (
+                      <option key={f.faculty_id} value={f.faculty_id}>{f.faculty_name} ({f.assigned_students}/20)</option>
+                    ))}
+                  </select>
+                  <button
+                    disabled={!targetFacultyId || selectedUnassigned.length === 0 || actionLoading}
+                    onClick={handleBatchAssign}
+                    className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold disabled:opacity-50"
+                  >
+                    Assign ({selectedUnassigned.length})
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto">
+                {unassignedStudents.map(s => {
+                  const isChecked = selectedUnassigned.includes(s.id);
+                  return (
+                    <label key={s.id} className={`p-2 rounded-lg border flex items-center gap-2 cursor-pointer transition ${isChecked ? 'bg-brand-50 border-brand-300 font-bold' : 'border-slate-100 bg-slate-50'}`}>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={e => {
+                          if (e.target.checked) setSelectedUnassigned(prev => [...prev, s.id]);
+                          else setSelectedUnassigned(prev => prev.filter(id => id !== s.id));
+                        }}
+                      />
+                      <div className="truncate">
+                        <div className="truncate text-slate-800 dark:text-slate-200">{s.name}</div>
+                        <div className="text-[10px] text-slate-400 font-mono">{s.reg_no}</div>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-slate-100 dark:border-navy-800 flex justify-end gap-2">
+          <button onClick={onClose} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 text-xs">
+            Close Manager
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Dedicated Report Hub Modal ───────────────────────────────────────────────
+
+const ReportHubModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  deptId?: number;
+  departments: DepartmentRecord[];
+}> = ({ isOpen, onClose, deptId, departments }) => {
+  const [selectedReportType, setSelectedReportType] = useState<string>('EXECUTIVE');
+  const [selectedDeptId, setSelectedDeptId] = useState<number | undefined>(deptId);
+  const [reportData, setReportData] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  const loadReport = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getReportData(selectedReportType, selectedDeptId);
+      setReportData(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedReportType, selectedDeptId]);
+
+  useEffect(() => {
+    if (isOpen) loadReport();
+  }, [isOpen, selectedReportType, selectedDeptId, loadReport]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-none animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="w-full max-w-4xl max-h-[90vh] bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-2xl flex flex-col justify-between overflow-hidden">
+        {/* Header */}
+        <div className="p-5 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-brand-50 text-brand-600">
+              <FileSpreadsheet size={18} />
+            </div>
+            <div>
+              <h3 className="font-display text-base font-bold text-slate-900 dark:text-white">
+                Institutional Executive Report Generator
+              </h3>
+              <p className="text-xs text-slate-500">Live generated audit and accreditation reports</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100"><X size={18} /></button>
+        </div>
+
+        {/* Body */}
+        <div className="p-5 overflow-y-auto space-y-4 flex-1 text-xs">
+          {/* Controls */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-100">
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase font-mono mb-1">Select Report Type</label>
+              <select
+                value={selectedReportType}
+                onChange={e => setSelectedReportType(e.target.value)}
+                className="w-full text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white"
+              >
+                <option value="EXECUTIVE">📑 Executive Department Coding Health Report</option>
+                <option value="FACULTY_ALLOCATION">👥 Faculty Mentorship & Allocation Audit Report</option>
+                <option value="INACTIVE_AT_RISK">⚠️ Inactive & At-Risk Intervention Report</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase font-mono mb-1">Department Scope</label>
+              <select
+                value={selectedDeptId || ''}
+                onChange={e => setSelectedDeptId(e.target.value ? Number(e.target.value) : undefined)}
+                className="w-full text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white"
+              >
+                <option value="">All Institutional Departments</option>
+                {departments.map(d => (
+                  <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Live Preview Paper */}
+          {loading ? (
+            <div className="p-12 text-center text-slate-400">Loading live report data...</div>
+          ) : (
+            <div className="p-6 rounded-xl border border-slate-200 bg-white shadow-sm space-y-4 text-slate-900">
+              <div className="border-b pb-3 flex justify-between items-end">
+                <div>
+                  <div className="text-[10px] font-mono uppercase font-bold text-slate-400">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</div>
+                  <h2 className="text-base font-bold font-display text-slate-900">{reportData?.report_title}</h2>
+                </div>
+                <div className="text-right text-[10px] font-mono text-slate-500">
+                  {reportData?.generated_at}
+                </div>
+              </div>
+
+              {/* Report Contents */}
+              {selectedReportType === 'EXECUTIVE' && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-3 gap-2">
+                    {Object.entries(reportData?.summary_metrics || {}).map(([k, v]: any) => (
+                      <div key={k} className="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+                        <div className="text-[10px] text-slate-400 font-mono">{k}</div>
+                        <div className="text-base font-bold font-mono mt-0.5">{String(v)}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b font-mono font-bold text-slate-500">
+                        <th className="py-1.5">Dimension</th>
+                        <th className="py-1.5 text-right">Score</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y font-mono">
+                      {(reportData?.dimension_breakdown || []).map((row: any, i: number) => (
+                        <tr key={i}>
+                          <td className="py-1.5 font-sans">{row.dimension}</td>
+                          <td className="py-1.5 text-right font-bold">{row.score}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {selectedReportType === 'FACULTY_ALLOCATION' && (
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b font-mono font-bold text-slate-500">
+                      <th className="py-1.5">Faculty Mentor</th>
+                      <th className="py-1.5">Dept</th>
+                      <th className="py-1.5 text-right">Assigned</th>
+                      <th className="py-1.5 text-right">Active Solvers</th>
+                      <th className="py-1.5 text-center">Ratio Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y font-mono">
+                    {(reportData?.faculty_records || []).map((fac: any) => (
+                      <tr key={fac.faculty_id}>
+                        <td className="py-1.5 font-bold">{fac.faculty_name}</td>
+                        <td className="py-1.5">{fac.department_code}</td>
+                        <td className="py-1.5 text-right">{fac.assigned_students}/20</td>
+                        <td className="py-1.5 text-right text-emerald-600 font-bold">{fac.active_students}</td>
+                        <td className="py-1.5 text-center">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${fac.workload_status === 'NORMAL' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                            {fac.workload_status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+
+              {selectedReportType === 'INACTIVE_AT_RISK' && (
+                <div className="space-y-2">
+                  <div className="text-xs font-bold text-rose-600">Total Inactive Solvers: {reportData?.total_inactive}</div>
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b font-mono font-bold text-slate-500">
+                        <th className="py-1.5">Reg No</th>
+                        <th className="py-1.5">Student Name</th>
+                        <th className="py-1.5">Dept</th>
+                        <th className="py-1.5">Assigned Faculty Mentor</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y font-mono">
+                      {(reportData?.students || []).map((st: any) => (
+                        <tr key={st.reg_no}>
+                          <td className="py-1.5 font-bold">{st.reg_no}</td>
+                          <td className="py-1.5 font-sans">{st.name}</td>
+                          <td className="py-1.5">{st.department}</td>
+                          <td className="py-1.5 text-brand-600 font-bold">{st.assigned_mentor}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-slate-100 dark:border-navy-800 flex justify-between items-center">
+          <button onClick={() => window.print()} className="px-3.5 py-1.5 rounded-xl border border-slate-200 text-xs font-bold inline-flex items-center gap-1.5 hover:bg-slate-50">
+            <Printer size={14} /> Print Document
+          </button>
+          <div className="flex gap-2">
+            <a
+              href="/api/reports/export/excel"
+              download
+              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold inline-flex items-center gap-1.5"
+            >
+              <Download size={13} /> Export Excel (.xlsx)
+            </a>
+            <button onClick={onClose} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 text-xs">
+              Close Hub
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -162,8 +659,12 @@ export const HODCommandCenter: React.FC = () => {
   const [studentsSearch, setStudentsSearch] = useState<string>('');
   const [studentsLoading, setStudentsLoading] = useState<boolean>(false);
   const [selectedStudentDetail, setSelectedStudentDetail] = useState<StudentRecord | null>(null);
+  const [selectedStudentIds, setSelectedStudentIds] = useState<number[]>([]);
+  const [batchTargetFaculty, setBatchTargetFaculty] = useState<number | null>(null);
 
   // Modals
+  const [showStaffAllocationModal, setShowStaffAllocationModal] = useState<boolean>(false);
+  const [showReportHubModal, setShowReportHubModal] = useState<boolean>(false);
   const [showMethodologyModal, setShowMethodologyModal] = useState<boolean>(false);
   const [showAIModal, setShowAIModal] = useState<boolean>(false);
   const [showWhatIfModal, setShowWhatIfModal] = useState<boolean>(false);
@@ -220,6 +721,7 @@ export const HODCommandCenter: React.FC = () => {
       });
       setStudents(res.students || []);
       setStudentsTotal(res.total || 0);
+      setSelectedStudentIds([]);
     } catch (err) {
       console.error('Students load failed:', err);
     } finally {
@@ -258,7 +760,6 @@ export const HODCommandCenter: React.FC = () => {
         try {
           const data = JSON.parse(event.data);
 
-          // 1. Single Student Update (In-Place Row Update)
           if (data.type === 'CONTEST_RESULT_UPDATED' || data.type === 'STUDENT_ACTIVITY_UPDATED') {
             const sid = data.studentId || data.student_id;
             const solved = data.solvedCount ?? data.total_solved;
@@ -279,19 +780,15 @@ export const HODCommandCenter: React.FC = () => {
             setLastLiveTimestamp(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }));
           }
 
-          // 2. Staff Allocation Update (Rebalances active cohort)
           if (data.type === 'STAFF_ALLOCATION_UPDATED') {
             loadScopedData(false);
             loadStudents();
           }
 
-          // 3. Department Metrics Update
           if (data.type === 'DEPARTMENT_METRICS_UPDATED') {
             loadScopedData(false);
           }
-        } catch (e) {
-          // ignore non-json pings
-        }
+        } catch (e) {}
       };
     } catch (e) {
       setWsConnected(false);
@@ -301,6 +798,29 @@ export const HODCommandCenter: React.FC = () => {
       if (socket) socket.close();
     };
   }, [loadScopedData, loadStudents]);
+
+  const handleReassign = async (studentId: number, targetFacultyId: number) => {
+    try {
+      await assignStudentsBatch(targetFacultyId, [studentId]);
+      setSelectedStudentDetail(null);
+      loadScopedData(false);
+      loadStudents();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleBatchAssignFromTable = async () => {
+    if (!batchTargetFaculty || selectedStudentIds.length === 0) return;
+    try {
+      await assignStudentsBatch(batchTargetFaculty, selectedStudentIds);
+      setSelectedStudentIds([]);
+      loadScopedData(false);
+      loadStudents();
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const handleAIQuery = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -349,7 +869,6 @@ export const HODCommandCenter: React.FC = () => {
   const improvingInScope = health?.improving_count || 0;
   const partRateInScope = health?.participation_score || 0;
 
-  // Active Scope Label
   const scopeStaffName = staffList.find(s => String(s.id) === selectedStaff)?.username || 'All Staff';
   const scopeDeptCode = departments.find(d => String(d.id) === selectedDept)?.code || 'All Departments';
 
@@ -370,7 +889,7 @@ export const HODCommandCenter: React.FC = () => {
             </h1>
           </div>
 
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5 flex-wrap">
             {/* Live Status Pill */}
             {wsConnected ? (
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 text-xs font-mono font-semibold border border-emerald-200 dark:border-emerald-800">
@@ -384,22 +903,31 @@ export const HODCommandCenter: React.FC = () => {
               </div>
             )}
 
+            {/* HOD Staff Allocation Manager Button */}
+            <button
+              onClick={() => setShowStaffAllocationModal(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-bold transition shadow-sm"
+            >
+              <Users size={13} />
+              <span>Staff Allocation</span>
+            </button>
+
+            {/* Dedicated Report Hub Button */}
+            <button
+              onClick={() => setShowReportHubModal(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold transition shadow-sm"
+            >
+              <FileSpreadsheet size={13} />
+              <span>Dedicated Reports</span>
+            </button>
+
             <button
               onClick={() => { setRefreshing(true); loadScopedData(false); loadStudents(); }}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-bold transition border border-slate-200 dark:border-navy-700"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-bold transition border border-slate-200 dark:border-navy-700"
             >
               <RotateCcw size={13} className={refreshing ? 'animate-spin' : ''} />
               <span>Refresh</span>
             </button>
-
-            <a
-              href="/api/reports/export/excel"
-              download
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-sm transition"
-            >
-              <Download size={13} />
-              <span>Export Report</span>
-            </a>
           </div>
         </div>
       </div>
@@ -513,8 +1041,13 @@ export const HODCommandCenter: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="text-xs text-slate-400 font-mono">
-          Last Activity: {lastLiveTimestamp}
+        <div className="flex items-center gap-3 text-xs font-mono">
+          <span className="text-slate-400">Last Activity: {lastLiveTimestamp}</span>
+          {summary?.unassigned_student_count ? (
+            <button onClick={() => setShowStaffAllocationModal(true)} className="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 font-bold border border-amber-200 hover:bg-amber-100">
+              {summary.unassigned_student_count} Unassigned Students
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -714,12 +1247,56 @@ export const HODCommandCenter: React.FC = () => {
           </div>
         </div>
 
+        {/* Batch Allocation Floating Bar */}
+        {selectedStudentIds.length > 0 && (
+          <div className="p-3 rounded-xl bg-brand-50 border border-brand-200 flex flex-wrap items-center justify-between gap-3 animate-fade-in">
+            <div className="text-xs font-bold text-brand-900 font-mono">
+              Selected {selectedStudentIds.length} students for faculty allocation:
+            </div>
+            <div className="flex items-center gap-2">
+              <select
+                value={batchTargetFaculty || ''}
+                onChange={e => setBatchTargetFaculty(Number(e.target.value))}
+                className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-brand-200 bg-white"
+              >
+                <option value="">Select Target Staff Mentor...</option>
+                {staffList.map(s => (
+                  <option key={s.id} value={s.id}>{s.username} ({s.assigned_count}/20)</option>
+                ))}
+              </select>
+              <button
+                onClick={handleBatchAssignFromTable}
+                disabled={!batchTargetFaculty}
+                className="px-3.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold disabled:opacity-50 transition"
+              >
+                Allocate Selected
+              </button>
+              <button
+                onClick={() => setSelectedStudentIds([])}
+                className="px-2.5 py-1.5 rounded-lg text-slate-500 hover:bg-slate-200 text-xs"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Table */}
         <div className="overflow-x-auto border border-slate-100 dark:border-navy-800 rounded-xl">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-slate-50 dark:bg-navy-800 text-[11px] font-bold uppercase tracking-wider text-slate-500 font-mono">
-                <th className="py-3 px-3.5">Student</th>
+                <th className="py-3 px-3 w-8">
+                  <input
+                    type="checkbox"
+                    checked={students.length > 0 && selectedStudentIds.length === students.length}
+                    onChange={e => {
+                      if (e.target.checked) setSelectedStudentIds(students.map(s => s.id));
+                      else setSelectedStudentIds([]);
+                    }}
+                  />
+                </th>
+                <th className="py-3 px-3">Student</th>
                 <th className="py-3 px-3">LeetCode Handle</th>
                 <th className="py-3 px-3 text-right">Solved</th>
                 <th className="py-3 px-3 text-right">Weekly Δ</th>
@@ -733,56 +1310,69 @@ export const HODCommandCenter: React.FC = () => {
             <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
               {studentsLoading ? (
                 <tr>
-                  <td colSpan={9} className="py-8 text-center text-slate-400">Loading live student roster...</td>
+                  <td colSpan={10} className="py-8 text-center text-slate-400">Loading live student roster...</td>
                 </tr>
               ) : students.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-8 text-center text-slate-400">No student records match the active scope filter.</td>
+                  <td colSpan={10} className="py-8 text-center text-slate-400">No student records match the active scope filter.</td>
                 </tr>
               ) : (
-                students.map(s => (
-                  <tr
-                    key={s.id}
-                    onClick={() => setSelectedStudentDetail(s)}
-                    className="hover:bg-slate-50/80 dark:hover:bg-navy-800/60 cursor-pointer transition"
-                  >
-                    <td className="py-3 px-3.5 font-semibold text-slate-900 dark:text-white">
-                      <div>{s.name}</div>
-                      <div className="text-[10px] text-slate-400 font-mono font-normal">{s.reg_no} • {s.year_level} Year</div>
-                    </td>
-                    <td className="py-3 px-3 font-mono font-bold text-brand-600 dark:text-brand-400">
-                      @{s.leetcode_username || 'unlinked'}
-                    </td>
-                    <td className="py-3 px-3 text-right font-mono font-extrabold text-slate-900 dark:text-white">
-                      {s.total_solved}
-                    </td>
-                    <td className="py-3 px-3 text-right font-mono font-bold text-emerald-600">
-                      {s.weekly_change || '0'}
-                    </td>
-                    <td className="py-3 px-3 text-center font-mono font-bold">
-                      {s.contest_standing || '—'}
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      <span className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded ${s.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : s.status === 'IMPROVING' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
-                        {s.status || 'ACTIVE'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-slate-600 dark:text-slate-300 font-medium">
-                      {s.assigned_staff || 'Unassigned'}
-                    </td>
-                    <td className="py-3 px-3 text-slate-400 font-mono text-[11px]">
-                      {s.last_updated}
-                    </td>
-                    <td className="py-3 px-3 text-center" onClick={e => e.stopPropagation()}>
-                      <button
-                        onClick={() => setSelectedStudentDetail(s)}
-                        className="px-2 py-1 rounded bg-slate-100 dark:bg-navy-800 hover:bg-brand-50 hover:text-brand-600 text-slate-600 text-[10px] font-bold transition"
-                      >
-                        Inspect
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                students.map(s => {
+                  const isChecked = selectedStudentIds.includes(s.id);
+                  return (
+                    <tr
+                      key={s.id}
+                      onClick={() => setSelectedStudentDetail(s)}
+                      className={`hover:bg-slate-50/80 dark:hover:bg-navy-800/60 cursor-pointer transition ${isChecked ? 'bg-brand-50/30' : ''}`}
+                    >
+                      <td className="py-3 px-3" onClick={e => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={e => {
+                            if (e.target.checked) setSelectedStudentIds(prev => [...prev, s.id]);
+                            else setSelectedStudentIds(prev => prev.filter(id => id !== s.id));
+                          }}
+                        />
+                      </td>
+                      <td className="py-3 px-3 font-semibold text-slate-900 dark:text-white">
+                        <div>{s.name}</div>
+                        <div className="text-[10px] text-slate-400 font-mono font-normal">{s.reg_no} • {s.year_level} Year</div>
+                      </td>
+                      <td className="py-3 px-3 font-mono font-bold text-brand-600 dark:text-brand-400">
+                        @{s.leetcode_username || 'unlinked'}
+                      </td>
+                      <td className="py-3 px-3 text-right font-mono font-extrabold text-slate-900 dark:text-white">
+                        {s.total_solved}
+                      </td>
+                      <td className="py-3 px-3 text-right font-mono font-bold text-emerald-600">
+                        {s.weekly_change || '0'}
+                      </td>
+                      <td className="py-3 px-3 text-center font-mono font-bold">
+                        {s.contest_standing || '—'}
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <span className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded ${s.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : s.status === 'IMPROVING' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
+                          {s.status || 'ACTIVE'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-slate-600 dark:text-slate-300 font-medium">
+                        {s.assigned_staff || 'Unassigned'}
+                      </td>
+                      <td className="py-3 px-3 text-slate-400 font-mono text-[11px]">
+                        {s.last_updated}
+                      </td>
+                      <td className="py-3 px-3 text-center" onClick={e => e.stopPropagation()}>
+                        <button
+                          onClick={() => setSelectedStudentDetail(s)}
+                          className="px-2 py-1 rounded bg-slate-100 dark:bg-navy-800 hover:bg-brand-50 hover:text-brand-600 text-slate-600 text-[10px] font-bold transition"
+                        >
+                          Inspect
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -894,7 +1484,26 @@ export const HODCommandCenter: React.FC = () => {
       {/* ── Student Detail Drawer ── */}
       <StudentDetailDrawer
         student={selectedStudentDetail}
+        staffList={staffList}
         onClose={() => setSelectedStudentDetail(null)}
+        onReassign={handleReassign}
+      />
+
+      {/* ── HOD Staff Allocation Manager Modal ── */}
+      <StaffAllocationModal
+        isOpen={showStaffAllocationModal}
+        onClose={() => setShowStaffAllocationModal(false)}
+        deptId={selectedDept !== 'ALL' ? Number(selectedDept) : undefined}
+        departments={departments}
+        onRefreshAll={() => { loadScopedData(false); loadStudents(); }}
+      />
+
+      {/* ── Dedicated Report Hub Modal ── */}
+      <ReportHubModal
+        isOpen={showReportHubModal}
+        onClose={() => setShowReportHubModal(false)}
+        deptId={selectedDept !== 'ALL' ? Number(selectedDept) : undefined}
+        departments={departments}
       />
 
       {/* ── View Methodology Modal ── */}
