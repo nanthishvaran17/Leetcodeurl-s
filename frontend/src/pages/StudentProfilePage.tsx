@@ -181,110 +181,94 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   return (
     <div className="h-full flex flex-col overflow-hidden animate-fade-in bg-white dark:bg-navy-900 rounded-3xl">
       
-      {/* Sticky Header Bar with Close Button */}
-      <div className="p-4 sm:p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-gray-800 shrink-0">
-        <div className="flex items-center space-x-3">
+      {/* Sticky Header Bar with Close Button & Actions */}
+      <div className="p-4 sm:p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex flex-col md:flex-row items-center justify-between gap-4 border-b border-gray-800 shrink-0 z-10 sticky top-0 shadow-xl">
+        <div className="flex items-center space-x-4 w-full md:w-auto">
           <button
             type="button"
             onClick={onBack}
-            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer flex items-center space-x-1 text-xs font-bold"
-            title="Back / Close"
+            className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer flex items-center space-x-2 text-xs font-bold shadow-sm"
+            title="Back"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Back</span>
+            <span className="hidden sm:inline">Back</span>
           </button>
-          <div>
-            <h2 className="text-base sm:text-lg font-black text-white">{detail?.name || student?.name}</h2>
-            <span className="text-xs text-brand-300 font-mono font-bold">{detail?.reg_no || student?.reg_no} • {detail?.department?.code || student?.department?.code}</span>
+          <div className="flex-1">
+            <h2 className="text-lg sm:text-xl font-black text-white">{detail?.name || student?.name}</h2>
+            <p className="text-[10px] sm:text-xs text-brand-300 font-mono font-bold mt-0.5 truncate max-w-sm">
+              {detail?.reg_no || student?.reg_no} • {detail?.department?.name || detail?.department?.code || student?.department?.code} {detail?.year_level ? `• ${detail.year_level} Year` : ''}
+            </p>
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={onBack}
-          className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500 text-white transition-all font-black text-xs flex items-center space-x-1 cursor-pointer"
-          title="Close Modal"
-        >
-          <span className="text-base leading-none">✕</span>
-          <span>Close</span>
-        </button>
-      </div>
-
-      {/* Scrollable Body Content */}
-      <div className="p-5 sm:p-6 overflow-y-auto overscroll-contain flex-1 min-h-0 space-y-6 custom-scrollbar">
-
-      {/* Student Profile Header Banner */}
-      <div className="glass-card p-6 rounded-3xl border space-y-4 bg-gradient-to-r from-brand-900/10 via-navy-900/10 to-indigo-900/10 shadow-xl">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          
-          <div>
-            <div className="flex items-center space-x-3">
-              <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white">{detail?.name}</h2>
-              <span className="px-3 py-1 rounded-full text-xs font-bold bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300 font-mono">
-                {detail?.reg_no}
-              </span>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Department of <b>{detail?.department?.name}</b> • {detail?.year_level} Year
-            </p>
-          </div>
-
-          <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
             {detail?.leetcode_url && (
               <a
                 href={detail.leetcode_url}
                 target="_blank"
                 rel="noreferrer"
-                className="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md shadow-brand-600/30 transition-all hover:scale-105"
+                className="px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-[10px] flex items-center space-x-1.5 shadow-md shadow-brand-600/30 transition-all hover:scale-105"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
-                <span>LeetCode Profile</span>
+                <span className="hidden lg:inline">LeetCode Profile</span>
               </a>
             )}
 
             <button
               onClick={() => setShowEditOverlay(true)}
-              className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs flex items-center space-x-1.5 shadow-md transition-all hover:scale-105 cursor-pointer"
+              className="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-[10px] flex items-center space-x-1.5 shadow-md transition-all hover:scale-105 cursor-pointer"
             >
               <Edit3 className="w-3.5 h-3.5" />
-              <span>Edit Student</span>
+              <span className="hidden lg:inline">Edit Student</span>
             </button>
 
             <button
               onClick={handleLiveFetch}
               disabled={isLiveFetching}
-              className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md shadow-indigo-600/30 transition-all hover:scale-105 disabled:opacity-50"
+              className="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] flex items-center space-x-1.5 shadow-md shadow-indigo-600/30 transition-all hover:scale-105 disabled:opacity-50 cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLiveFetching ? 'animate-spin' : ''}`} />
-              <span>{isLiveFetching ? 'Fetching...' : 'Live Sync'}</span>
+              <span className="hidden lg:inline">{isLiveFetching ? 'Fetching...' : 'Live Sync'}</span>
             </button>
 
             <button
               onClick={handleGenerateCert}
               disabled={downloadingCert}
-              className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md shadow-amber-600/30 transition-all hover:scale-105 disabled:opacity-50"
+              className="px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] flex items-center space-x-1.5 shadow-md shadow-amber-600/30 transition-all hover:scale-105 disabled:opacity-50 cursor-pointer"
             >
               <Award className="w-3.5 h-3.5" />
-              <span>{downloadingCert ? 'Downloading Gold PDF...' : 'Issue Gold Certificate'}</span>
+              <span className="hidden lg:inline">Gold Certificate</span>
             </button>
 
             <button
               onClick={handleDownloadForensicCert}
               disabled={downloadingForensic}
-              className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md shadow-emerald-600/30 transition-all hover:scale-105 disabled:opacity-50"
+              className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] flex items-center space-x-1.5 shadow-md shadow-emerald-600/30 transition-all hover:scale-105 disabled:opacity-50 cursor-pointer"
             >
               <FileText className="w-3.5 h-3.5" />
-              <span>{downloadingForensic ? 'Downloading Report...' : 'Forensic Audit Report'}</span>
+              <span className="hidden lg:inline">Audit Report</span>
             </button>
-          </div>
 
+          <button
+            type="button"
+            onClick={onBack}
+            className="px-3 py-2 rounded-xl bg-white/10 hover:bg-rose-500 text-white transition-all font-black text-[10px] flex items-center space-x-1 cursor-pointer"
+            title="Close Modal"
+          >
+            <span className="text-sm leading-none">✕</span>
+            <span className="hidden lg:inline">Close</span>
+          </button>
         </div>
-        {liveFetchError && (
-          <div className="mt-3 text-xs font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/50 p-2 rounded-lg border border-rose-200 dark:border-rose-800">
-            {liveFetchError}
-          </div>
-        )}
       </div>
+      
+      {liveFetchError && (
+        <div className="mx-5 sm:mx-6 mt-4 text-xs font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/50 p-3 rounded-xl border border-rose-200 dark:border-rose-800 animate-fade-in shadow-sm">
+          {liveFetchError}
+        </div>
+      )}
+
+      {/* Scrollable Body Content */}
+      <div className="p-5 sm:p-6 overflow-y-auto overscroll-contain flex-1 min-h-0 space-y-6 custom-scrollbar pt-2">
 
       {/* Ranks & Streaks Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

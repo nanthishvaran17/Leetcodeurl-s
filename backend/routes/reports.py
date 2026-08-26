@@ -66,6 +66,7 @@ def download_student_performance_detail_excel(
         raise HTTPException(status_code=500, detail=f"Failed to generate Student Performance Detail Excel: {str(e)}")
 
 @router.get("/export-excel")
+@router.get("/export/excel")
 @router.get("/export-official-college-summary")
 def download_official_college_summary_excel(
     db: Session = Depends(get_db),

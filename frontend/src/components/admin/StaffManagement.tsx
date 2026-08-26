@@ -39,7 +39,8 @@ export const StaffManagement: React.FC = () => {
       username: staff.username || '',
       email: staff.email || '',
       role: staff.role || 'Faculty',
-      department_id: String(staff.department_id || departments[0]?.id || 1),
+      // Use '0' when no department (means "All Departments")
+      department_id: staff.department_id ? String(staff.department_id) : '0',
       is_active: staff.is_active ?? true
     });
   };
@@ -54,11 +55,17 @@ export const StaffManagement: React.FC = () => {
 
     setIsUpdating(true);
     try {
+      const rawDeptId = parseInt(editFormData.department_id, 10);
+      // 0 = "All Departments" → null (institution-wide, no dept binding)
+      const deptIdToSend = (rawDeptId > 0 && ['Staff', 'Faculty', 'HOD'].includes(editFormData.role))
+        ? rawDeptId
+        : null;
+
       const payload = {
         username: editFormData.username.trim(),
         email: editFormData.email.trim().toLowerCase(),
         role: editFormData.role,
-        department_id: ['Staff', 'Faculty', 'HOD'].includes(editFormData.role) ? parseInt(editFormData.department_id, 10) : null,
+        department_id: deptIdToSend,
         is_active: editFormData.is_active
       };
 
@@ -261,9 +268,11 @@ export const StaffManagement: React.FC = () => {
   };
 
   const confirmAndSubmitStaff = async () => {
-    const deptIdNumber = formData.department_id
-      ? parseInt(String(formData.department_id), 10)
-      : (departments[0]?.id || 1);
+    const rawDeptId = formData.department_id ? parseInt(String(formData.department_id), 10) : 0;
+    // 0 = "All Departments" → send null (institution-wide, no dept binding)
+    const deptIdToSend = (rawDeptId > 0 && ['Staff', 'Faculty', 'HOD'].includes(formData.role))
+      ? rawDeptId
+      : null;
 
     setSubmitting(true);
     try {
@@ -273,7 +282,7 @@ export const StaffManagement: React.FC = () => {
         email: formData.email.trim().toLowerCase(),
         password: formData.password?.trim() || 'Staff@123456!',
         role: formData.role || 'Faculty',
-        department_id: ['Staff', 'Faculty', 'HOD'].includes(formData.role) ? deptIdNumber : null,
+        department_id: deptIdToSend,
         academic_year: formData.academic_year || undefined,
         mentoring_role: formData.mentoring_role || undefined,
         date_of_birth: formData.date_of_birth || undefined,
@@ -369,8 +378,8 @@ export const StaffManagement: React.FC = () => {
               type="button"
               onClick={() => setRoleFilter(tab.id)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${roleFilter === tab.id
-                  ? 'bg-brand-600 text-white shadow-sm'
-                  : 'bg-white dark:bg-navy-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-700 border border-gray-200/60 dark:border-navy-700'
+                ? 'bg-brand-600 text-white shadow-sm'
+                : 'bg-white dark:bg-navy-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-700 border border-gray-200/60 dark:border-navy-700'
                 }`}
             >
               {tab.label}
@@ -412,8 +421,8 @@ export const StaffManagement: React.FC = () => {
         {!loading && errorState && (
           <div className="p-16 text-center space-y-4 max-w-md mx-auto">
             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto ${errorState.type === 'FORBIDDEN'
-                ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-600'
-                : 'bg-rose-100 dark:bg-rose-500/20 text-rose-600'
+              ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-600'
+              : 'bg-rose-100 dark:bg-rose-500/20 text-rose-600'
               }`}>
               <AlertCircle className="w-7 h-7" />
             </div>
@@ -504,22 +513,22 @@ export const StaffManagement: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${staff.department === 'CSE(CS)'
-                            ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
-                            : (staff.department === 'CSE(IOT)'
-                              ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20'
-                              : 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20')
+                          ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
+                          : (staff.department === 'CSE(IOT)'
+                            ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20'
+                            : 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20')
                           }`}>
                           {staff.department || 'INSTITUTIONAL'}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border ${staff.role === 'Faculty'
-                            ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20'
-                            : (staff.role === 'HOD'
-                              ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
-                              : (staff.role?.includes('Admin')
-                                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-                                : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'))
+                          ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20'
+                          : (staff.role === 'HOD'
+                            ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
+                            : (staff.role?.includes('Admin')
+                              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                              : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'))
                           }`}>
                           {staff.role || 'Staff'}
                         </span>
@@ -632,15 +641,24 @@ export const StaffManagement: React.FC = () => {
                       id="staff-dept-select"
                       label="Department *"
                       labelClassName="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center justify-between h-5 mb-1.5"
-                      options={(departments.length > 0 ? departments : DEFAULT_DEPARTMENTS).map(d => ({
-                        value: String(d.id),
-                        label: d.name,
-                        badge: d.code || 'DEPT',
-                        badgeColor: d.code === 'CSE(CS)'
-                          ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
-                          : 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
-                        icon: Building2
-                      }))}
+                      options={[
+                        {
+                          value: '0',
+                          label: 'All Departments',
+                          badge: 'ALL',
+                          badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+                          icon: Building2
+                        },
+                        ...(departments.length > 0 ? departments : DEFAULT_DEPARTMENTS).map(d => ({
+                          value: String(d.id),
+                          label: d.name,
+                          badge: d.code || 'DEPT',
+                          badgeColor: d.code === 'CSE(CS)'
+                            ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
+                            : 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
+                          icon: Building2
+                        }))
+                      ]}
                       value={formData.department_id}
                       onChange={(val) => handleDeptChange(val)}
                       icon={Building2}
@@ -661,7 +679,7 @@ export const StaffManagement: React.FC = () => {
                       label="Academic Year Cohort"
                       labelClassName="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center justify-between h-5 mb-1.5"
                       options={[
-                        { value: '', label: 'All Academic Years (N/A)', badge: 'ALL', icon: GraduationCap },
+                        { value: '', label: 'All Academic Years ', badge: 'ALL', icon: GraduationCap },
                         { value: 'I Year', label: '1st Year (Batch 2030)', badge: 'I Year', icon: GraduationCap },
                         { value: 'II Year', label: '2nd Year (Batch 2029)', badge: 'II Year', icon: GraduationCap },
                         { value: 'III Year', label: '3rd Year (Batch 2028)', badge: 'III Year', icon: GraduationCap },
@@ -1019,8 +1037,8 @@ export const StaffManagement: React.FC = () => {
                       type="button"
                       onClick={() => setEditFormData({ ...editFormData, role: r.id })}
                       className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${editFormData.role === r.id
-                          ? 'border-brand-500 bg-brand-500/10 text-brand-600 dark:text-brand-400 shadow-sm'
-                          : 'border-gray-200 dark:border-navy-700 hover:border-gray-300 text-gray-700 dark:text-gray-300'
+                        ? 'border-brand-500 bg-brand-500/10 text-brand-600 dark:text-brand-400 shadow-sm'
+                        : 'border-gray-200 dark:border-navy-700 hover:border-gray-300 text-gray-700 dark:text-gray-300'
                         }`}
                     >
                       <div className="text-xs font-black">{r.label}</div>
@@ -1041,6 +1059,7 @@ export const StaffManagement: React.FC = () => {
                     onChange={(e) => setEditFormData({ ...editFormData, department_id: e.target.value })}
                     className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500"
                   >
+                    <option value="0">All Departments (Institution-wide)</option>
                     {departments.map(d => (
                       <option key={d.id} value={d.id}>
                         {d.name} ({d.code})
@@ -1094,8 +1113,8 @@ export const StaffManagement: React.FC = () => {
                   type="button"
                   onClick={() => setEditFormData({ ...editFormData, is_active: !editFormData.is_active })}
                   className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${editFormData.is_active
-                      ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/30'
-                      : 'bg-rose-500/20 text-rose-500 border border-rose-500/30'
+                    ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/30'
+                    : 'bg-rose-500/20 text-rose-500 border border-rose-500/30'
                     }`}
                 >
                   {editFormData.is_active ? '🟢 Active' : '🔴 Suspended'}

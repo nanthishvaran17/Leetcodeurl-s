@@ -453,7 +453,7 @@ export const FacultyActionCenter: React.FC = () => {
   const [filterYear, setFilterYear] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const PAGE_SIZE = 20;
+  const [pageSize, setPageSize] = useState(50);
 
   // Sort
   const [sortBy, setSortBy] = useState('priority_score');
@@ -472,7 +472,7 @@ export const FacultyActionCenter: React.FC = () => {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const params: Record<string, any> = { page, page_size: PAGE_SIZE, sort_by: sortBy, sort_dir: sortDir };
+      const params: Record<string, any> = { page, page_size: pageSize, sort_by: sortBy, sort_dir: sortDir };
       if (filterPriority) params.priority = filterPriority;
       if (filterStatus) params.status = filterStatus;
       if (filterYear) params.year_level = filterYear;
@@ -487,7 +487,7 @@ export const FacultyActionCenter: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, sortBy, sortDir, filterPriority, filterStatus, filterYear, search]);
+  }, [page, pageSize, sortBy, sortDir, filterPriority, filterStatus, filterYear, search]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -519,7 +519,7 @@ export const FacultyActionCenter: React.FC = () => {
       ? sortDir === 'desc' ? <ChevronDown size={11} className="opacity-60" /> : <ChevronUp size={11} className="opacity-60" />
       : null;
 
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const totalPages = Math.ceil(total / pageSize);
   const hasFilters = !!(filterPriority || filterStatus || filterYear || search);
 
   const thCls = "text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-navy-400 text-left py-3 px-3 first:pl-4";
@@ -623,7 +623,25 @@ export const FacultyActionCenter: React.FC = () => {
             <X size={11} /> Clear
           </button>
         )}
-        <span className="ml-auto text-xs text-slate-400 dark:text-navy-400 font-medium">{total} records</span>
+        <div className="ml-auto flex items-center gap-3">
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-800 p-1 rounded-xl border border-slate-200 dark:border-navy-700">
+            <span className="text-[10px] font-bold text-slate-400 dark:text-navy-400 px-1.5 font-mono">Show:</span>
+            {[20, 50, 100, 200].map((sz) => (
+              <button
+                key={sz}
+                onClick={() => { setPageSize(sz); setPage(1); }}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  pageSize === sz
+                    ? 'bg-violet-600 text-white shadow-sm font-black'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                {sz}
+              </button>
+            ))}
+          </div>
+          <span className="text-xs text-slate-500 dark:text-navy-300 font-extrabold font-mono">{total} records</span>
+        </div>
       </div>
 
       {/* ── Table ── */}

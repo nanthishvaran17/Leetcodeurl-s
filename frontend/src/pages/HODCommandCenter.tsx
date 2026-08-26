@@ -20,6 +20,8 @@ import {
 import { simulateWhatIfScenario, askAIDepartmentQuery } from '../services/intelligenceService';
 import { CustomDropdown } from '../components/CustomDropdown';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
+import api from '../services/api';
 
 // ─── Shared Card Component ───────────────────────────────────────────────────
 
@@ -450,6 +452,28 @@ const ReportHubModal: React.FC<{
     }
   }, [selectedReportType, selectedDeptId]);
 
+  const [downloadingExcel, setDownloadingExcel] = useState(false);
+
+  const handleDownloadExcel = async () => {
+    setDownloadingExcel(true);
+    try {
+      const response = await api.get('/reports/export-official-college-summary', { responseType: 'blob' });
+      const blobUrl = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.setAttribute('download', 'Nandha_College_Official_Weekly_Report.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error("Report download error:", err);
+      alert("Failed to download Excel report.");
+    } finally {
+      setDownloadingExcel(false);
+    }
+  };
+
   useEffect(() => {
     if (isOpen) loadReport();
   }, [isOpen, selectedReportType, selectedDeptId, loadReport]);
@@ -616,13 +640,14 @@ const ReportHubModal: React.FC<{
             <Printer size={14} /> Print Document
           </button>
           <div className="flex gap-2">
-            <a
-              href="/api/reports/export/excel"
-              download
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold inline-flex items-center gap-1.5"
+            <button
+              onClick={handleDownloadExcel}
+              disabled={downloadingExcel}
+              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
-              <Download size={13} /> Export Excel (.xlsx)
-            </a>
+              <Download size={13} className={downloadingExcel ? 'animate-spin' : ''} />
+              <span>{downloadingExcel ? 'Downloading...' : 'Export Excel (.xlsx)'}</span>
+            </button>
             <button onClick={onClose} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 text-xs">
               Close Hub
             </button>
@@ -637,6 +662,7 @@ const ReportHubModal: React.FC<{
 
 export const HODCommandCenter: React.FC = () => {
   const { user } = useAuth();
+  const { notify } = useNotification();
   // ── Multi-Dimensional View Scope ──
   const [selectedStaff, setSelectedStaff] = useState<string>('ALL');
   const [selectedDept, setSelectedDept] = useState<string>('ALL');
@@ -671,6 +697,8 @@ export const HODCommandCenter: React.FC = () => {
   const [showMethodologyModal, setShowMethodologyModal] = useState<boolean>(false);
   const [showAIModal, setShowAIModal] = useState<boolean>(false);
   const [showWhatIfModal, setShowWhatIfModal] = useState<boolean>(false);
+  const [confirmUnassignTarget, setConfirmUnassignTarget] = useState<{ id: number; name: string } | null>(null);
+  const [confirmUnassignLoading, setConfirmUnassignLoading] = useState(false);
   const [aiQuery, setAiQuery] = useState<string>('');
   const [aiResponse, setAiResponse] = useState<any>(null);
   const [aiLoading, setAiLoading] = useState<boolean>(false);
@@ -825,6 +853,26 @@ export const HODCommandCenter: React.FC = () => {
     }
   };
 
+  const handleUnassignAllForStaff = (staffId: number, staffName: string) => {
+    setConfirmUnassignTarget({ id: staffId, name: staffName });
+  };
+
+  const executeUnassignAll = async () => {
+    if (!confirmUnassignTarget) return;
+    setConfirmUnassignLoading(true);
+    try {
+      await unassignStudentsBatch(confirmUnassignTarget.id, []);
+      notify.success(`All mentees unassigned from ${confirmUnassignTarget.name}.`, '', { category: 'ALLOCATION' });
+      setConfirmUnassignTarget(null);
+      loadScopedData(false);
+      loadStudents();
+    } catch (err: any) {
+      notify.error('Failed to unassign mentees.', '', { category: 'ALLOCATION' });
+    } finally {
+      setConfirmUnassignLoading(false);
+    }
+  };
+
   const handleAIQuery = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!aiQuery.trim()) return;
@@ -876,12 +924,12 @@ export const HODCommandCenter: React.FC = () => {
   const scopeDeptCode = departments.find(d => String(d.id) === selectedDept)?.code || 'All Departments';
 
   const staffOptions = [
-    { value: 'ALL', label: 'All Staff Mentors', icon: Users, badge: 'ALL', badgeColor: 'bg-brand-500 text-white' },
+    { value: 'ALL', label: user?.role?.toLowerCase() === 'hod' ? 'All Department Staff Mentors' : 'All Staff Mentors', icon: Users, badge: 'ALL', badgeColor: 'bg-brand-500 text-white' },
     ...staffList.map(s => ({ value: String(s.id), label: s.username, sublabel: `${s.assigned_count} students`, icon: User }))
   ];
 
   const deptOptions = [
-    { value: 'ALL', label: 'All Departments', icon: Building2, badge: 'ALL', badgeColor: 'bg-brand-500 text-white' },
+    ...(user?.role?.toLowerCase() === 'hod' ? [] : [{ value: 'ALL', label: 'All Departments', icon: Building2, badge: 'ALL', badgeColor: 'bg-brand-500 text-white' }]),
     ...departments.map(d => ({ value: String(d.id), label: d.code, count: d.student_count, icon: Building2 }))
   ];
 
@@ -910,79 +958,25 @@ export const HODCommandCenter: React.FC = () => {
   return (
     <div className="space-y-5 pb-16 font-sans text-slate-900 dark:text-slate-100 antialiased">
 
-      {/* ── 1. PROMINENT SCOPE SELECTOR (Controls EVERYTHING) — FIRST ─────── */}
-      <Card className="p-4 bg-slate-50/70 dark:bg-navy-800/40 border-slate-200 dark:border-navy-700">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
-            <Sliders size={15} className="text-brand-600" />
-            <span className="uppercase tracking-wider font-mono">VIEW SCOPE:</span>
-          </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 flex-1 max-w-4xl">
-            {/* Staff Mentor */}
-            <CustomDropdown
-              id="hod-staff-filter"
-              label="Staff Mentor"
-              options={staffOptions}
-              value={selectedStaff}
-              onChange={setSelectedStaff}
-              icon={Users}
-            />
-
-            {/* Department */}
-            <CustomDropdown
-              id="hod-dept-filter"
-              label="Department"
-              options={deptOptions}
-              value={selectedDept}
-              onChange={setSelectedDept}
-              icon={Building2}
-            />
-
-            {/* Academic Year */}
-            <CustomDropdown
-              id="hod-year-filter"
-              label="Academic Year"
-              options={yearOptions}
-              value={selectedYear}
-              onChange={setSelectedYear}
-              icon={Calendar}
-            />
-
-            {/* Section */}
-            <CustomDropdown
-              id="hod-section-filter"
-              label="Section"
-              options={sectionOptions}
-              value={selectedSection}
-              onChange={setSelectedSection}
-              icon={Layers}
-            />
-
-            {/* Status Filter */}
-            <CustomDropdown
-              id="hod-status-filter"
-              label="Student Status"
-              options={statusOptions}
-              value={selectedStatus}
-              onChange={setSelectedStatus}
-              icon={Activity}
-            />
-          </div>
-        </div>
-      </Card>
 
       {/* ── 1. HEADER ──────────────────────────────────────────────────────── */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-lg border border-brand-500/30">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="space-y-3">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
-              <span className="uppercase tracking-tight">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</span>
+              <span className="uppercase tracking-tight">
+                {user?.role?.toLowerCase() === 'hod' ? `DEPARTMENT: ${departments[0]?.code || 'Loading...'}` : "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)"}
+              </span>
             </div>
             <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white mt-1 uppercase">
               {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') ? (
                 <>
                   MY FACULTY <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">ACTION CENTER</span>
+                </>
+              ) : user?.role?.toLowerCase() === 'hod' ? (
+                <>
+                  DEPARTMENT EXECUTIVE <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">OPERATIONS CENTER</span>
                 </>
               ) : (
                 <>
@@ -1064,7 +1058,13 @@ export const HODCommandCenter: React.FC = () => {
 
       {/* ── 4. FOUR PRIMARY KPI CARDS ──────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <Card className="p-4 flex flex-col justify-between">
+        <Card 
+          className={`p-4 flex flex-col justify-between cursor-pointer transition-all hover:-translate-y-1 hover:shadow-md ${selectedStatus === 'ALL' ? 'ring-2 ring-slate-400 bg-slate-50 dark:bg-navy-800' : ''}`}
+          onClick={() => {
+            setSelectedStatus('ALL');
+            document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+        >
           <div className="flex items-center justify-between text-slate-400">
             <span className="text-[10px] font-bold uppercase tracking-wider font-mono">TOTAL STUDENTS</span>
             <Users size={15} className="text-slate-600" />
@@ -1075,7 +1075,13 @@ export const HODCommandCenter: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="p-4 flex flex-col justify-between">
+        <Card 
+          className={`p-4 flex flex-col justify-between cursor-pointer transition-all hover:-translate-y-1 hover:shadow-md ${selectedStatus === 'ACTIVE' ? 'ring-2 ring-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20' : ''}`}
+          onClick={() => {
+            setSelectedStatus('ACTIVE');
+            document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+        >
           <div className="flex items-center justify-between text-emerald-600">
             <span className="text-[10px] font-bold uppercase tracking-wider font-mono">ACTIVE SOLVERS</span>
             <CheckCircle2 size={15} />
@@ -1086,7 +1092,13 @@ export const HODCommandCenter: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="p-4 flex flex-col justify-between">
+        <Card 
+          className={`p-4 flex flex-col justify-between cursor-pointer transition-all hover:-translate-y-1 hover:shadow-md ${selectedStatus === 'INACTIVE' ? 'ring-2 ring-rose-500 bg-rose-50/50 dark:bg-rose-900/20' : ''}`}
+          onClick={() => {
+            setSelectedStatus('INACTIVE');
+            document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+        >
           <div className="flex items-center justify-between text-rose-600">
             <span className="text-[10px] font-bold uppercase tracking-wider font-mono">INACTIVE SOLVERS</span>
             <Clock size={15} />
@@ -1097,7 +1109,13 @@ export const HODCommandCenter: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="p-4 flex flex-col justify-between">
+        <Card 
+          className={`p-4 flex flex-col justify-between cursor-pointer transition-all hover:-translate-y-1 hover:shadow-md ${selectedStatus === 'IMPROVING' ? 'ring-2 ring-blue-500 bg-blue-50/50 dark:bg-blue-900/20' : ''}`}
+          onClick={() => {
+            setSelectedStatus('IMPROVING');
+            document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+        >
           <div className="flex items-center justify-between text-blue-600">
             <span className="text-[10px] font-bold uppercase tracking-wider font-mono">IMPROVING TREND</span>
             <TrendingUp size={15} />
@@ -1235,7 +1253,7 @@ export const HODCommandCenter: React.FC = () => {
       </div>
 
       {/* ── 6. LIVE STUDENT ACTIVITY (MOST IMPORTANT MAIN OPERATIONAL TABLE) ── */}
-      <Card className="p-5 space-y-4">
+      <Card id="student-directory-section" className="p-5 space-y-4 scroll-mt-20">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2">
           <div>
             <h2 className="font-display text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -1492,6 +1510,124 @@ export const HODCommandCenter: React.FC = () => {
         </div>
       </div>
 
+      {/* ── 8. FACULTY MENTORS PERFORMANCE & COMPLETION MATRIX ─────────────── */}
+      <Card className="p-5 space-y-3.5">
+        <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-navy-800">
+          <div>
+            <h3 className="font-display text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Users size={16} className="text-brand-500" />
+              <span>Faculty Mentors Performance & Progress Matrix</span>
+            </h3>
+            <p className="text-xs text-slate-500">Track mentorship workload, active solver rates, and student completion across staff members</p>
+          </div>
+          <button
+            onClick={() => setShowStaffAllocationModal(true)}
+            className="px-3 py-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-600 font-bold text-xs flex items-center gap-1 transition cursor-pointer"
+          >
+            <Users size={13} />
+            <span>Manage Allocation</span>
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="text-[10px] font-bold uppercase text-slate-400 font-mono border-b border-slate-100 dark:border-navy-800">
+                <th className="py-2.5 px-3">Faculty Mentor</th>
+                <th className="py-2.5 px-3">Dept</th>
+                <th className="py-2.5 px-3 text-right">Assigned Mentees</th>
+                <th className="py-2.5 px-3 text-right">Active Solvers</th>
+                <th className="py-2.5 px-3 text-right">Completion Rate</th>
+                <th className="py-2.5 px-3 text-center">Workload Status</th>
+                <th className="py-2.5 px-3 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50 dark:divide-navy-800 font-mono">
+              {staffList.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-6 text-center text-slate-400">No staff members found for the selected scope.</td>
+                </tr>
+              ) : (
+                staffList.map(s => {
+                  const assigned = s.assigned_count || 0;
+                  const maxAllowed = s.max_allowed || 30;
+                  const active = (s as any).active_count || 0;
+                  const completionRate = assigned > 0 ? Math.round((active / assigned) * 100) : 0;
+                  const isSelected = selectedStaff === String(s.id);
+                  return (
+                    <tr
+                      key={s.id}
+                      onClick={() => setSelectedStaff(isSelected ? 'ALL' : String(s.id))}
+                      className={`hover:bg-brand-50/50 dark:hover:bg-navy-800 cursor-pointer transition ${isSelected ? 'bg-brand-50/80 font-bold' : ''}`}
+                    >
+                      <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-white font-sans flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-600 dark:text-brand-300 font-extrabold flex items-center justify-center text-xs border border-brand-200 shadow-sm shrink-0">
+                          {s.username ? s.username.charAt(0).toUpperCase() : 'S'}
+                        </div>
+                        <div>
+                          <div className="font-bold text-slate-900 dark:text-white">{s.username}</div>
+                          <div className="text-[10px] text-slate-400 font-mono font-normal">{s.email}</div>
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300 font-mono font-semibold">
+                        <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 text-[10px]">
+                          {(s as any).department_code || 'CSE'}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
+                        {assigned} / {maxAllowed}
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono text-emerald-600 font-bold">
+                        {active} <span className="text-[10px] text-slate-400 font-normal">active</span>
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono">
+                        <div className="flex items-center justify-end gap-2">
+                          <div className="w-16 h-1.5 rounded-full bg-slate-100 dark:bg-navy-800 overflow-hidden">
+                            <div className={`h-full rounded-full ${completionRate >= 80 ? 'bg-emerald-500' : completionRate >= 50 ? 'bg-amber-500' : 'bg-rose-500'}`} style={{ width: `${completionRate}%` }} />
+                          </div>
+                          <span className="font-bold text-slate-900 dark:text-white">{completionRate}%</span>
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-3 text-center">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${assigned >= 30 ? 'bg-purple-50 text-purple-700 border border-purple-200' : assigned >= 20 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}>
+                          {assigned >= 30 ? 'MAX CAPACITY (30)' : assigned >= 20 ? 'TARGET REACHED (20+)' : 'WITHIN CAPACITY'}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-center" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => setSelectedStaff(isSelected ? 'ALL' : String(s.id))}
+                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer ${isSelected ? 'bg-brand-600 text-white' : 'bg-slate-100 hover:bg-brand-50 hover:text-brand-600 text-slate-600 dark:bg-navy-800 dark:text-slate-300'}`}
+                          >
+                            {isSelected ? 'Reset Filter' : 'Inspect Cohort →'}
+                          </button>
+                          <button
+                            onClick={() => setShowStaffAllocationModal(true)}
+                            className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-navy-800 dark:text-slate-300 text-[10px] font-bold transition cursor-pointer"
+                            title="Manage Faculty Allocation"
+                          >
+                            Reassign ⇄
+                          </button>
+                          {assigned > 0 && (
+                            <button
+                              onClick={() => handleUnassignAllForStaff(s.id, s.username)}
+                              className="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 text-[10px] font-bold transition cursor-pointer border border-rose-200 dark:border-rose-900/50"
+                              title="Unassign All Mentees from this Staff Mentor"
+                            >
+                              Unassign 🗑
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
       {/* ── Student Detail Drawer ── */}
       <StudentDetailDrawer
         student={selectedStudentDetail}
@@ -1508,6 +1644,60 @@ export const HODCommandCenter: React.FC = () => {
         departments={departments}
         onRefreshAll={() => { loadScopedData(false); loadStudents(); }}
       />
+
+      {/* ── Unassign All Mentees Confirmation Modal ── */}
+      {confirmUnassignTarget && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+          onClick={e => { if (e.target === e.currentTarget) setConfirmUnassignTarget(null); }}
+        >
+          <div className="w-full max-w-md bg-white dark:bg-navy-900 rounded-2xl shadow-2xl border border-rose-200 dark:border-rose-800/60 overflow-hidden">
+            {/* Red warning header */}
+            <div className="bg-rose-50 dark:bg-rose-900/30 px-6 py-4 border-b border-rose-100 dark:border-rose-800/50 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-rose-100 dark:bg-rose-800/60 flex items-center justify-center flex-shrink-0">
+                <span className="text-rose-600 dark:text-rose-400 text-lg">⚠</span>
+              </div>
+              <div>
+                <div className="font-display text-sm font-bold text-rose-800 dark:text-rose-200">Unassign All Mentees</div>
+                <div className="text-xs text-rose-600 dark:text-rose-400 font-mono">This action cannot be undone automatically</div>
+              </div>
+            </div>
+            {/* Body */}
+            <div className="px-6 py-5 space-y-3">
+              <p className="text-sm text-slate-700 dark:text-slate-300">
+                You are about to remove <span className="font-bold text-slate-900 dark:text-white">all assigned students</span> from:
+              </p>
+              <div className="px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 font-mono font-bold text-slate-900 dark:text-white text-sm">
+                {confirmUnassignTarget.name}
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                All students will be moved back to the <span className="font-semibold text-amber-600">unassigned queue</span>. They can be reassigned manually or via auto-distribute.
+              </p>
+            </div>
+            {/* Actions */}
+            <div className="px-6 py-4 bg-slate-50 dark:bg-navy-950/50 border-t border-slate-100 dark:border-navy-800 flex items-center justify-end gap-3">
+              <button
+                onClick={() => setConfirmUnassignTarget(null)}
+                disabled={confirmUnassignLoading}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-navy-800 border border-slate-200 dark:border-navy-700 hover:bg-slate-100 transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeUnassignAll}
+                disabled={confirmUnassignLoading}
+                className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition disabled:opacity-60 flex items-center gap-2"
+              >
+                {confirmUnassignLoading ? (
+                  <><span className="animate-spin inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full" />Unassigning...</>
+                ) : (
+                  <>Confirm Unassign All</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Dedicated Report Hub Modal ── */}
       <ReportHubModal

@@ -20,6 +20,7 @@ from backend.models import (
 from backend.services.faculty_assignment_service import faculty_assignment_service, MAX_STUDENTS_PER_FACULTY
 from backend.websocket_manager import connection_manager
 from backend.security import require_role
+from backend.routes.auth import get_current_user
 from backend.logger import logger
 
 router = APIRouter(prefix="/command-center", tags=["Command Center Operations & Analytics"])
@@ -52,7 +53,7 @@ class BatchAssignRequest(BaseModel):
 
 class BatchUnassignRequest(BaseModel):
     faculty_id: int
-    student_ids: List[int] = Field(..., min_length=1)
+    student_ids: List[int] = Field(default_factory=list)
 
 class AutoDistributeRequest(BaseModel):
     department_id: int
@@ -111,26 +112,44 @@ def get_command_center_summary(
     benchmarks = get_institutional_benchmarks(db, current_user)
 
     # Active staff list for Scope Selector
-    staff_users_q = db.query(User).filter(
+    staff_users_q = db.query(User).options(joinedload(User.department)).filter(
         User.role.ilike("%Staff%") | User.role.ilike("%Faculty%"),
         User.is_active == True
     )
-    if dept_id:
+    role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
+    if role_clean == "hod" and current_user.department_id:
+        staff_users_q = staff_users_q.filter(User.department_id == current_user.department_id)
+    elif dept_id:
         staff_users_q = staff_users_q.filter(User.department_id == dept_id)
     staff_users = staff_users_q.all()
     
     staff_list = []
     for u in staff_users:
-        assigned_cnt = db.query(FacultyStudentAssignment).filter(
+        assigned_rows = db.query(Student, LeetCodeProfileStats).join(
+            FacultyStudentAssignment, FacultyStudentAssignment.student_id == Student.id
+        ).outerjoin(
+            LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id
+        ).filter(
             FacultyStudentAssignment.faculty_id == u.id,
-            FacultyStudentAssignment.is_active == True
-        ).count()
+            FacultyStudentAssignment.is_active == True,
+            Student.is_active == True
+        ).all()
+
+        assigned_cnt = len(assigned_rows)
+        active_cnt = sum(
+            1 for s, st in assigned_rows
+            if st and ((st.total_solved or 0) > 0 or (st.easy_solved or 0) + (st.medium_solved or 0) + (st.hard_solved or 0) > 0)
+        )
+        dept_code = u.department.code if u.department else "CSE"
+
         staff_list.append({
             "id": u.id,
             "username": u.username,
             "email": u.email,
             "department_id": u.department_id,
+            "department_code": dept_code,
             "assigned_count": assigned_cnt,
+            "active_count": active_cnt,
             "max_allowed": MAX_STUDENTS_PER_FACULTY,
             "workload_status": "NORMAL" if assigned_cnt < 20 else ("AT_RATIO" if assigned_cnt == 20 else "HIGH_WORKLOAD")
         })
@@ -328,10 +347,18 @@ def unassign_students_batch(
     current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin"))
 ):
     """Unassigns students from a faculty member."""
+    student_ids = req.student_ids
+    if not student_ids:
+        assigned_rows = db.query(FacultyStudentAssignment.student_id).filter(
+            FacultyStudentAssignment.faculty_id == req.faculty_id,
+            FacultyStudentAssignment.is_active == True
+        ).all()
+        student_ids = [r[0] for r in assigned_rows]
+
     res = faculty_assignment_service.unassign_students(
         db=db,
         faculty_id=req.faculty_id,
-        student_ids=req.student_ids
+        student_ids=student_ids
     )
     connection_manager.broadcast_sync({
         "type": "STAFF_ALLOCATION_UPDATED",
@@ -433,9 +460,33 @@ def get_report_data(
 ):
     """
     Returns structured data for on-screen report rendering & multi-format export.
+    HOD's department scope is always enforced server-side — the client-supplied dept_id is ignored.
     """
     from backend.services.hod_analytics_engine import calculate_department_health_score, get_institutional_benchmarks
-    health = calculate_department_health_score(db, current_user, dept_id=dept_id)
+    from backend.models import Department
+
+    role_clean = (current_user.role or "").strip().lower()
+
+    # HOD: always override with their own department — never trust client
+    if role_clean == "hod":
+        if not current_user.department_id:
+            return {"error": "HOD has no department assigned.", "items": [], "total": 0}
+        eff_dept_id = current_user.department_id
+    elif role_clean in ("faculty", "staff"):
+        # Faculty: scope is always their assigned students, dept is advisory only
+        eff_dept_id = current_user.department_id or dept_id
+    else:
+        # Admin / super_admin: use whatever the client passed (can be None for all)
+        eff_dept_id = dept_id
+
+    # Resolve a human-readable department label
+    if eff_dept_id:
+        dept_obj = db.query(Department).filter(Department.id == eff_dept_id).first()
+        dept_label = dept_obj.name if dept_obj else f"Department {eff_dept_id}"
+    else:
+        dept_label = "All Institutional Departments"
+
+    health = calculate_department_health_score(db, current_user, dept_id=eff_dept_id)
     benchmarks = get_institutional_benchmarks(db, current_user)
 
     now_str = datetime.datetime.utcnow().strftime("%d %B %Y, %I:%M %p IST")
@@ -444,7 +495,7 @@ def get_report_data(
         return {
             "report_title": "Nandha Executive Institutional Coding Health Report",
             "generated_at": now_str,
-            "department_scope": f"Department ID: {dept_id}" if dept_id else "All Departments",
+            "department_scope": dept_label,
             "health_score": health.get("health_score", 0),
             "summary_metrics": {
                 "Total Students Tracked": health.get("total_students", 0),
@@ -465,7 +516,7 @@ def get_report_data(
         }
 
     elif report_type == "FACULTY_ALLOCATION":
-        workload_res = get_faculty_workload(dept_id=dept_id, db=db)
+        workload_res = get_faculty_workload(dept_id=eff_dept_id, db=db, current_user=current_user)
         return {
             "report_title": "Faculty Mentorship & Student Allocation Audit Report",
             "generated_at": now_str,
@@ -482,8 +533,12 @@ def get_report_data(
             Student.is_active == True,
             Student.department_id.in_(real_ids)
         )
-        if dept_id:
-            q = q.filter(Student.department_id == dept_id)
+        
+        from backend.services.authorization_service import apply_role_based_student_filter
+        q = apply_role_based_student_filter(q, current_user, db)
+        
+        if eff_dept_id:
+            q = q.filter(Student.department_id == eff_dept_id)
         
         all_rows = q.all()
         inactive_students = []
@@ -610,26 +665,33 @@ def delete_student(reg_no: str, db: Session = Depends(get_db)):
     return {"success": True, "message": f"Student '{student.name}' deactivated."}
 
 @router.get("/departments")
-def get_departments(db: Session = Depends(get_db)):
-    depts = db.query(Department).all()
+def get_departments(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
+    
+    if role_clean == "hod" and current_user.department_id:
+        depts = db.query(Department).filter(Department.id == current_user.department_id).all()
+    else:
+        depts = db.query(Department).all()
+
     result = []
     for d in depts:
         if d.code and "TEST" in d.code.upper():
             continue
         count = db.query(Student).filter(Student.department_id == d.id, Student.is_active == True).count()
-        result.append({
-            "id": d.id,
-            "name": d.name,
-            "code": d.code,
-            "student_count": count,
-        })
+        if count > 0:
+            result.append({
+                "id": d.id,
+                "name": d.name,
+                "code": d.code,
+                "student_count": count,
+            })
     result.sort(key=lambda x: x["student_count"], reverse=True)
     return result
 
 @router.get("/year-matrix")
-def get_year_matrix(db: Session = Depends(get_db)):
+def get_year_matrix(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     from backend.services.hod_analytics_engine import calculate_year_matrix
-    return calculate_year_matrix(db)
+    return calculate_year_matrix(db, current_user=current_user)
 
 @router.post("/ai-query")
 def post_ai_query(req: AIQueryRequest, db: Session = Depends(get_db)):

@@ -243,30 +243,17 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
 
           <div className="flex items-center space-x-2.5">
             {/* View Mode Switch */}
-            <div className="flex items-center space-x-1 p-1 bg-gray-100 dark:bg-slate-800/80 rounded-2xl border border-gray-200 dark:border-gray-700">
-              <button
-                onClick={() => setViewMode('cards')}
-                className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  viewMode === 'cards'
-                    ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
-                }`}
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span>Card Grid</span>
-              </button>
-              <button
-                onClick={() => setViewMode('table')}
-                className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  viewMode === 'table'
-                    ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
-                }`}
-              >
-                <List className="w-3.5 h-3.5" />
-                <span>Roster Table</span>
-              </button>
-            </div>
+            <button
+              onClick={() => setViewMode(viewMode === 'cards' ? 'table' : 'cards')}
+              className="p-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-2xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 transition-all cursor-pointer shadow-sm flex items-center justify-center"
+              title={viewMode === 'cards' ? 'Switch to Table View' : 'Switch to Grid View'}
+            >
+              {viewMode === 'cards' ? (
+                <List className="w-4 h-4" />
+              ) : (
+                <LayoutGrid className="w-4 h-4" />
+              )}
+            </button>
 
             {/* Reset Filters Button */}
             <button

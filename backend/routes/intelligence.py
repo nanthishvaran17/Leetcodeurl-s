@@ -155,7 +155,15 @@ def get_faculty_kpis_endpoint(
     from backend.services.faculty_action_engine import get_faculty_kpis
     role_clean = (current_user.role or "").strip().lower()
     faculty_id = current_user.id if role_clean in ["faculty", "staff"] else None
-    return get_faculty_kpis(db, department_id=dept_id, faculty_id=faculty_id)
+    eff_dept_id = dept_id
+
+    # HOD: enforce department scope — override any client-supplied dept_id
+    if role_clean == "hod":
+        if not current_user.department_id:
+            return {"Critical": 0, "High": 0, "Monitoring": 0, "In Progress": 0, "Completed": 0, "Resolved": 0, "Overdue": 0, "Escalated": 0, "total": 0}
+        eff_dept_id = current_user.department_id
+
+    return get_faculty_kpis(db, department_id=eff_dept_id, faculty_id=faculty_id)
 
 
 @router.get("/faculty/actions")
@@ -178,12 +186,21 @@ def get_faculty_actions_endpoint(
     """
     Returns filtered and sorted Faculty Action Queue.
     Faculty/Staff see only their assigned students.
-    HOD/Admin see all.
+    HOD sees only their department's students.
+    Admin sees all.
     """
     from backend.services.faculty_action_engine import get_faculty_actions_list, detect_and_sync_faculty_signals
     role_clean = (current_user.role or "").strip().lower()
     faculty_id = current_user.id if role_clean in ["faculty", "staff"] else None
     eff_dept_id = department_id or dept_id
+
+    # HOD: enforce department scope — ignore any client-supplied dept_id
+    if role_clean == "hod":
+        if not current_user.department_id:
+            # Fail closed — HOD without department sees nothing
+            return {"items": [], "total": 0, "page": page, "page_size": page_size, "kpi": {}}
+        eff_dept_id = current_user.department_id  # always override
+
     eff_limit = limit if limit is not None else page_size
     eff_offset = offset if offset is not None else (page - 1) * page_size
     data = get_faculty_actions_list(

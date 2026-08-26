@@ -238,7 +238,8 @@ def calculate_year_matrix(db: Session, current_user: Optional[User] = None) -> L
         Student.is_active == True,
         Student.department_id.in_(dept_map.keys())
     )
-    q = apply_role_based_student_filter(q, current_user, db)
+    if current_user:
+        q = apply_role_based_student_filter(q, current_user, db)
     student_stats = q.all()
     
     stats_by_year = {}

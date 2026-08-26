@@ -224,49 +224,7 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
 
       </div>
 
-      {/* 24/7 Compact Health Strip */}
-      <div className="flex flex-wrap items-center justify-between sm:justify-start sm:space-x-6 gap-y-3 pt-3 border-t border-slate-200/80 dark:border-navy-800/80">
-        <div className="flex items-center space-x-2 text-[10px] font-extrabold text-slate-500 dark:text-slate-400">
-          <Database className="w-3.5 h-3.5 text-emerald-500" />
-          <span>DATABASE</span>
-          <span className={`px-1.5 py-0.5 rounded-full ${isDbHealthy ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'}`}>● {isDbHealthy ? 'HEALTHY' : 'DEGRADED'}</span>
-        </div>
 
-        <div className="flex items-center space-x-2 text-[10px] font-extrabold text-slate-500 dark:text-slate-400">
-          <Cpu className="w-3.5 h-3.5 text-brand-500" />
-          <span>API ENGINE</span>
-          <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">● HEALTHY</span>
-        </div>
-
-        <div className="flex items-center space-x-2 text-[10px] font-extrabold text-slate-500 dark:text-slate-400">
-          <Activity className="w-3.5 h-3.5 text-indigo-500" />
-          <span>SYNC WORKER</span>
-          <span className={`px-1.5 py-0.5 rounded-full ${isWorkerRunning ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'}`}>● {isWorkerRunning ? 'RUNNING' : 'IDLE'}</span>
-        </div>
-
-        <div className="flex items-center space-x-2 text-[10px] font-extrabold text-slate-500 dark:text-slate-400">
-          <Layers className="w-3.5 h-3.5 text-amber-500" />
-          <span>SYNC QUEUE</span>
-          <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">● HEALTHY</span>
-        </div>
-
-        <div className="flex items-center space-x-2 text-[10px] font-extrabold text-slate-500 dark:text-slate-400 hidden lg:flex">
-          <Clock className="w-3.5 h-3.5 text-teal-500" />
-          <span>SCHEDULER</span>
-          <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">● ACTIVE</span>
-        </div>
-
-        <div className="flex items-center space-x-2 text-[10px] font-extrabold text-slate-500 dark:text-slate-400 hidden lg:flex">
-          <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />
-          <span>BACKUP</span>
-          <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">● OK</span>
-        </div>
-
-        <div className="flex items-center space-x-2 text-[10px] font-extrabold text-slate-500 dark:text-slate-400 ml-auto">
-          <span>DATA FRESHNESS</span>
-          <span className={`px-2 py-0.5 rounded-full ${freshnessBadge === 'FRESH' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'}`}>● {freshnessBadge}</span>
-        </div>
-      </div>
     </div>
   );
 };

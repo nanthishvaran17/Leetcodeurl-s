@@ -71,7 +71,9 @@ export interface StaffRecord {
   username: string;
   email: string;
   department_id?: number;
+  department_code?: string;
   assigned_count: number;
+  active_count?: number;
   max_allowed?: number;
   workload_status?: string;
 }

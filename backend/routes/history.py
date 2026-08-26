@@ -19,8 +19,10 @@ from zoneinfo import ZoneInfo
 from collections import defaultdict
 
 from backend.database import get_db
-from backend.models import Student, StudentStatSnapshot, Department, LeetCodeProfileStats, WeeklyPublicResult
+from backend.models import Student, StudentStatSnapshot, Department, LeetCodeProfileStats, WeeklyPublicResult, User
 from backend.schemas import StudentStatSnapshotOut, ImproverOut
+from backend.security import get_current_user_optional
+from backend.services.authorization_service import apply_role_based_student_filter
 
 router = APIRouter(prefix="/api", tags=["History & Growth Intelligence"])
 
@@ -45,7 +47,8 @@ def _filtered_growth_students(
     dept: Optional[str], 
     dept_id: Optional[int], 
     year: Optional[str], 
-    year_level: Optional[str]
+    year_level: Optional[str],
+    current_user: Optional[User] = None
 ) -> List[Student]:
     query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
     effective_dept = (dept or "").strip()
@@ -59,6 +62,10 @@ def _filtered_growth_students(
         )
     if effective_year.upper() not in ("", "ALL", "ALL YEARS", "ALL ACADEMIC YEARS"):
         query = query.filter(func.upper(Student.year_level) == effective_year.upper().replace(" YEAR", ""))
+        
+    if current_user:
+        query = apply_role_based_student_filter(query, current_user, db)
+        
     return query.all()
 
 
@@ -135,11 +142,11 @@ def _derived_growth(db: Session, students: List[Student], cutoff: datetime.datet
         b_hard = baseline_snap.hard_solved or 0
         b_rat = baseline_snap.contest_rating or cur_rat
 
-        l_tot = latest_snap.total_solved or cur_tot
-        l_easy = latest_snap.easy_solved or cur_easy
-        l_med = latest_snap.medium_solved or cur_med
-        l_hard = latest_snap.hard_solved or cur_hard
-        l_rat = latest_snap.contest_rating or cur_rat
+        l_tot = max(cur_tot, latest_snap.total_solved or 0)
+        l_easy = max(cur_easy, latest_snap.easy_solved or 0)
+        l_med = max(cur_med, latest_snap.medium_solved or 0)
+        l_hard = max(cur_hard, latest_snap.hard_solved or 0)
+        l_rat = cur_rat if cur_rat else (latest_snap.contest_rating or 1500.0)
 
         d_tot = max(0, l_tot - b_tot)
         d_easy = max(0, l_easy - b_easy)
@@ -263,15 +270,16 @@ def get_top_improvers(
     dept_id: Optional[int] = None,
     year: Optional[str] = None,
     year_level: Optional[str] = None,
-    limit: int = Query(25, ge=1, le=100),
-    db: Session = Depends(get_db)
+    limit: int = Query(200, ge=1, le=1000),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     """
     Returns top problem solving improvers (biggest delta) over specified period.
     Supports filtering by department code/id and academic year.
     """
     cutoff = _growth_cutoff(period)
-    students = _filtered_growth_students(db, dept, dept_id, year, year_level)
+    students = _filtered_growth_students(db, dept, dept_id, year, year_level, current_user=current_user)
     growth = _derived_growth(db, students, cutoff, period=period)
     
     results = []
@@ -280,8 +288,6 @@ def get_top_improvers(
         cur_solved = (current.total_solved or 0) if current else 0
         values = growth.get(student.id, {"total": 0, "easy": 0, "medium": 0, "hard": 0, "rating": 0.0})
         
-        if period != "all" and values["total"] <= 0:
-            continue
         if period == "all":
             values = {
                 "total": cur_solved, 
@@ -339,13 +345,19 @@ def get_top_improvers(
 
 
 @router.get("/growth/options")
-def get_growth_options(db: Session = Depends(get_db)):
+def get_growth_options(db: Session = Depends(get_db), current_user: Optional[User] = Depends(get_current_user_optional)):
     """Return filter values from the active student records."""
-    departments = db.query(Department.id, Department.code, Department.name).join(
+    departments_query = db.query(Department.id, Department.code, Department.name).join(
         Student, Student.department_id == Department.id
     ).filter(
         (Student.is_active == True) | (Student.is_active.is_(None))
-    ).distinct().order_by(Department.name.asc()).all()
+    )
+    
+    role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower() if current_user else ""
+    if role_clean == "hod" and current_user.department_id:
+        departments_query = departments_query.filter(Department.id == current_user.department_id)
+        
+    departments = departments_query.distinct().order_by(Department.name.asc()).all()
     
     years = db.query(Student.year_level).filter(
         ((Student.is_active == True) | (Student.is_active.is_(None))) &
@@ -368,14 +380,15 @@ def get_college_delta(
     dept_id: Optional[int] = None,
     year: Optional[str] = None,
     year_level: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     """
     Returns aggregate college problem solved growth and difficulty breakdown over period,
     with support for department and academic year filters.
     """
     cutoff = _growth_cutoff(period)
-    student_rows = _filtered_growth_students(db, dept, dept_id, year, year_level)
+    student_rows = _filtered_growth_students(db, dept, dept_id, year, year_level, current_user=current_user)
     growth = _derived_growth(db, student_rows, cutoff, period=period)
     
     period_totals = {
@@ -393,9 +406,7 @@ def get_college_delta(
     current_hard = sum((student.stats.hard_solved or 0) for student in student_rows if student.stats)
     
     active_students = sum(1 for student in student_rows if (
-        period == "all" and ((student.stats.total_solved or 0) > 0 if student.stats else False)
-    ) or (
-        period != "all" and growth.get(student.id, {}).get("total", 0) > 0
+        student.stats and ((student.stats.total_solved or 0) > 0 or (student.stats.easy_solved or 0) + (student.stats.medium_solved or 0) + (student.stats.hard_solved or 0) > 0)
     ))
     
     if period == "all":

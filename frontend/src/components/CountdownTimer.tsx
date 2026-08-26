@@ -139,7 +139,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
           : 'border-brand-500/20 bg-gradient-to-r from-brand-900/10 via-indigo-900/10 to-purple-900/10'
       }`}
     >
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="flex flex-col justify-center items-start gap-6">
         
         <div className="flex items-center space-x-3.5">
           <div className={`p-3 rounded-2xl text-white shadow-lg ${

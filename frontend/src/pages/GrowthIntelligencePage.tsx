@@ -84,12 +84,16 @@ interface StatSnapshot {
 }
 
 import { useNotification } from '../context/NotificationContext';
+import { useAuth } from '../context/AuthContext';
 
 export const GrowthIntelligencePage: React.FC = () => {
   const { notify } = useNotification();
+  const { user } = useAuth();
   const [period, setPeriod] = useState<'today' | '7d' | '30d' | 'all'>('7d');
   const [deptFilter, setDeptFilter] = useState<string>('ALL');
   const [yearFilter, setYearFilter] = useState<string>('ALL');
+  const [displayLimit, setDisplayLimit] = useState<number | 'ALL'>(10);
+  const [sortMode, setSortMode] = useState<'total' | 'growth'>('total');
   const [deptOpen, setDeptOpen] = useState<boolean>(false);
   const [yearOpen, setYearOpen] = useState<boolean>(false);
   const [improvers, setImprovers] = useState<Improver[]>([]);
@@ -110,6 +114,10 @@ export const GrowthIntelligencePage: React.FC = () => {
 
   useEffect(() => {
     fetchGrowthData();
+    const interval = setInterval(() => {
+      fetchGrowthData(true);
+    }, 30000);
+    return () => clearInterval(interval);
   }, [period, deptFilter, yearFilter]);
 
   useEffect(() => {
@@ -117,44 +125,58 @@ export const GrowthIntelligencePage: React.FC = () => {
       .then((response) => {
         setDepartments(response.data?.departments || []);
         setAvailableYears(response.data?.years || []);
+        if (user?.role?.toLowerCase() === 'hod' && response.data?.departments?.length === 1) {
+          setDeptFilter(response.data.departments[0].code);
+        }
       })
       .catch((err) => console.error('Growth filter options fetch error:', err));
-  }, []);
+  }, [user]);
 
-  const fetchGrowthData = async () => {
-    setLoading(true);
+  const sortImprovers = (data: Improver[], mode = sortMode): Improver[] => [...data].sort((left, right) => {
+    if (mode === 'total') {
+      return (
+        right.total_solved - left.total_solved ||
+        right.delta_solved - left.delta_solved ||
+        right.delta_hard - left.delta_hard ||
+        right.delta_medium - left.delta_medium ||
+        left.name.localeCompare(right.name)
+      );
+    }
+    return (
+      right.delta_solved - left.delta_solved ||
+      right.delta_hard - left.delta_hard ||
+      right.delta_medium - left.delta_medium ||
+      right.delta_easy - left.delta_easy ||
+      right.delta_rating - left.delta_rating ||
+      right.total_solved - left.total_solved ||
+      left.name.localeCompare(right.name)
+    );
+  });
+
+  const fetchGrowthData = async (isBackground = false) => {
+    if (!isBackground) setLoading(true);
     setError(null);
     try {
       const [impRes, deltaRes] = await Promise.all([
-        api.get(`/growth/improvers?period=${period}&limit=25&dept=${deptFilter}&year=${yearFilter}`),
+        api.get(`/growth/improvers?period=${period}&limit=200&dept=${deptFilter}&year=${yearFilter}`),
         api.get(`/growth/college-delta?period=${period}&dept=${deptFilter}&year=${yearFilter}`)
       ]);
       setImprovers(sortImprovers(impRes.data || []));
       setCollegeDelta(deltaRes.data || null);
     } catch (err) {
       console.error("Growth data fetch error:", err);
-      setError('Unable to load student analytics. Please try again.');
+      if (!isBackground) setError('Unable to load student analytics. Please try again.');
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   };
-
-  const sortImprovers = (data: Improver[]): Improver[] => [...data].sort((left, right) =>
-    right.delta_solved - left.delta_solved ||
-    right.delta_hard - left.delta_hard ||
-    right.delta_medium - left.delta_medium ||
-    right.delta_easy - left.delta_easy ||
-    right.delta_rating - left.delta_rating ||
-    right.total_solved - left.total_solved ||
-    left.name.localeCompare(right.name)
-  );
 
   const handleManualRefresh = async () => {
     setIsRefreshing(true);
     setError(null);
     try {
       const [impRes, deltaRes] = await Promise.all([
-        api.get(`/growth/improvers?period=${period}&limit=25&dept=${deptFilter}&year=${yearFilter}`),
+        api.get(`/growth/improvers?period=${period}&limit=200&dept=${deptFilter}&year=${yearFilter}`),
         api.get(`/growth/college-delta?period=${period}&dept=${deptFilter}&year=${yearFilter}`)
       ]);
       setImprovers(sortImprovers(impRes.data || []));
@@ -272,20 +294,22 @@ export const GrowthIntelligencePage: React.FC = () => {
 
               {deptOpen && (
                 <div className="absolute z-[200] top-full left-0 mt-1 min-w-[220px] bg-navy-900 border border-gray-700 rounded-2xl shadow-lg max-h-64 overflow-y-auto divide-y divide-navy-800">
-                  <button
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => { setDeptFilter('ALL'); setDeptOpen(false); }}
-                    className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left text-xs transition-colors ${
-                      deptFilter === 'ALL' ? 'bg-brand-950/80 text-brand-300 font-black' : 'text-gray-300 hover:bg-navy-800 font-bold'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 truncate">
-                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300">ALL</span>
-                      <span className="truncate">All Departments</span>
-                    </div>
-                    {deptFilter === 'ALL' && <Check className="w-3.5 h-3.5 text-brand-400 shrink-0" />}
-                  </button>
+                  {user?.role?.toLowerCase() !== 'hod' && (
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => { setDeptFilter('ALL'); setDeptOpen(false); }}
+                      className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left text-xs transition-colors ${
+                        deptFilter === 'ALL' ? 'bg-brand-950/80 text-brand-300 font-black' : 'text-gray-300 hover:bg-navy-800 font-bold'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300">ALL</span>
+                        <span className="truncate">All Departments</span>
+                      </div>
+                      {deptFilter === 'ALL' && <Check className="w-3.5 h-3.5 text-brand-400 shrink-0" />}
+                    </button>
+                  )}
                   {departments.map((d) => (
                     <button
                       key={d.id}
@@ -469,9 +493,54 @@ export const GrowthIntelligencePage: React.FC = () => {
             </div>
           </div>
 
-          <span className="px-4 py-1.5 rounded-2xl bg-gray-100 dark:bg-navy-950 text-gray-800 dark:text-gray-200 font-black text-xs border border-gray-200 dark:border-gray-800 self-start md:self-auto">
-            {collegeDelta?.active_students ?? 0} Active Solvers in Period
-          </span>
+          <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
+            {/* Rank By Sort Mode Toggle */}
+            <div className="flex items-center gap-1 bg-gray-100 dark:bg-navy-950 p-1 rounded-2xl border border-gray-200 dark:border-gray-800">
+              <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 font-mono">Rank By:</span>
+              <button
+                onClick={() => { setSortMode('total'); setImprovers(prev => sortImprovers(prev, 'total')); }}
+                className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                  sortMode === 'total'
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                }`}
+              >
+                Total Solved 🏆
+              </button>
+              <button
+                onClick={() => { setSortMode('growth'); setImprovers(prev => sortImprovers(prev, 'growth')); }}
+                className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                  sortMode === 'growth'
+                    ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                }`}
+              >
+                Growth (+Delta) ⚡
+              </button>
+            </div>
+
+            {/* Display Limit Selector Pills */}
+            <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-navy-950 p-1 rounded-2xl border border-gray-200 dark:border-gray-800">
+              <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 font-mono">Show:</span>
+              {[10, 25, 50, 100, 'ALL'].map((limitVal) => (
+                <button
+                  key={String(limitVal)}
+                  onClick={() => setDisplayLimit(limitVal as any)}
+                  className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                    displayLimit === limitVal
+                      ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/50 dark:hover:bg-navy-800'
+                  }`}
+                >
+                  {limitVal === 'ALL' ? 'All' : limitVal}
+                </button>
+              ))}
+            </div>
+
+            <span className="px-3.5 py-1.5 rounded-2xl bg-gray-100 dark:bg-navy-950 text-gray-800 dark:text-gray-200 font-black text-xs border border-gray-200 dark:border-gray-800">
+              {collegeDelta?.active_students ?? 0} Active Solvers
+            </span>
+          </div>
         </div>
 
         {loading ? (
@@ -499,7 +568,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:border-gray-800 dark:divide-gray-800/80 bg-white dark:bg-navy-900 font-medium">
-                {improvers.map((imp, idx) => {
+                {(displayLimit === 'ALL' ? improvers : improvers.slice(0, Number(displayLimit))).map((imp, idx) => {
                   const isExpanded = String(expandedStudentId) === String(imp.student_id);
                   return (
                     <React.Fragment key={imp.student_id}>
