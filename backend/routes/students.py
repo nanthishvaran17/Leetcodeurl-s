@@ -856,6 +856,7 @@ class StudentUpdateSchema(BaseModel):
     department_id: Optional[int] = None
     year_level: Optional[str] = None
     section_id: Optional[int] = None
+    section: Optional[str] = None
     email: Optional[str] = None
     leetcode_url: Optional[str] = None
     username: Optional[str] = None
@@ -897,6 +898,16 @@ def update_student(
         student.year_level = payload.year_level.strip().upper()
     if payload.section_id is not None:
         student.section_id = payload.section_id
+    elif payload.section and str(payload.section).strip():
+        sec_str = str(payload.section).strip()
+        # Look up section ID if available
+        from backend.models import Section
+        matched_sec = db.query(Section).filter(
+            Section.department_id == student.department_id,
+            Section.name.ilike(sec_str)
+        ).first()
+        if matched_sec:
+            student.section_id = matched_sec.id
     if payload.email is not None:
         student.email = payload.email.strip().lower() if payload.email else None
 

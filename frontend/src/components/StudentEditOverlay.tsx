@@ -134,6 +134,8 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   // Initial Snapshot for Unsaved Changes Comparison
   const initialRef = useRef<any>(null);
   const scrollPosRef = useRef<number>(0);
+  const debounceTimerRef = useRef<any>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Fetch departments list
   useEffect(() => {
@@ -239,34 +241,70 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
     }
   }, [isOpen]);
 
-  // LeetCode URL live validation
-  const handleUrlChange = async (urlVal: string) => {
-    setLeetcodeUrl(urlVal);
-    const trimmed = urlVal.trim();
+  // Debounced LeetCode live validation
+  const triggerDebouncedValidation = useCallback((inputVal: string) => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    const trimmed = inputVal.trim();
     if (!trimmed) {
       setLcValidation({ status: 'idle' });
       return;
     }
-    if (!trimmed.includes('leetcode.com')) return;
 
-    setLcValidation({ status: 'validating' });
-    try {
-      const res = await api.post(`/students/${student?.id || 0}/validate-leetcode`, { leetcode_url: trimmed });
-      const vs = res.data?.validation_status;
-      if (vs === 'VALID') {
-        setLcValidation({
-          status: 'valid',
-          username: res.data.username,
-          canonical_url: res.data.canonical_url,
-          total_solved: res.data.profile_data?.total_solved,
-          contest_rating: res.data.profile_data?.contest_rating
-        });
-      } else {
-        setLcValidation({ status: 'fetch_failed', message: res.data?.message || 'Validation error' });
+    debounceTimerRef.current = setTimeout(async () => {
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+      setLcValidation({ status: 'validating' });
+
+      try {
+        const res = await api.post(
+          `/students/${student?.id || 0}/validate-leetcode`,
+          { leetcode_url: trimmed.includes('leetcode.com') ? trimmed : undefined, username: !trimmed.includes('leetcode.com') ? trimmed : undefined },
+          { signal: controller.signal }
+        );
+        const vs = res.data?.validation_status;
+        if (vs === 'VALID') {
+          setLcValidation({
+            status: 'valid',
+            username: res.data.username,
+            canonical_url: res.data.canonical_url,
+            total_solved: res.data.profile_data?.total_solved,
+            contest_rating: res.data.profile_data?.contest_rating
+          });
+        } else {
+          setLcValidation({ status: 'fetch_failed', message: res.data?.message || 'Validation note' });
+        }
+      } catch (err: any) {
+        if (err.name !== 'CanceledError') {
+          setLcValidation({ status: 'idle' });
+        }
       }
-    } catch (err: any) {
-      setLcValidation({ status: 'idle' });
+    }, 450);
+  }, [student?.id]);
+
+  const handleUrlChange = (urlVal: string) => {
+    setLeetcodeUrl(urlVal);
+    const trimmed = urlVal.trim();
+    // Auto extract username handle
+    const match = trimmed.match(/leetcode\.com\/(?:u\/)?([a-zA-Z0-9_-]+)/i);
+    if (match && match[1]) {
+      setUsername(match[1]);
     }
+    triggerDebouncedValidation(trimmed);
+  };
+
+  const handleUsernameChange = (userVal: string) => {
+    setUsername(userVal);
+    const trimmed = userVal.trim();
+    if (trimmed && !trimmed.includes('leetcode.com')) {
+      setLeetcodeUrl(`https://leetcode.com/u/${trimmed}/`);
+    }
+    triggerDebouncedValidation(trimmed);
   };
 
   // Submit & Save Form
@@ -488,7 +526,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
               <input
                 type="text"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => handleUsernameChange(e.target.value)}
                 placeholder="e.g. AADHISH_S_B"
                 className="w-full px-4 py-2.5 text-xs font-mono bg-white dark:bg-navy-950 border border-gray-300 dark:border-navy-700 rounded-xl text-gray-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-amber-500"
               />
