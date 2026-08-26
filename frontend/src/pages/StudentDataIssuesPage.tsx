@@ -592,18 +592,9 @@ export const StudentDataIssuesPage: React.FC = () => {
               onChange={(e) => setSelectedDept(e.target.value)}
               className="w-full px-3.5 py-2 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl text-xs text-gray-900 dark:text-white font-bold cursor-pointer focus:ring-2 focus:ring-brand-500"
             >
-              <option value="all">All Departments (11 Institutional Cohorts)</option>
-              <option value="CSE">Computer Science and Engineering (CSE)</option>
+              <option value="all">All Departments (Cyber Security &amp; IoT)</option>
               <option value="CSE(CS)">CSE (Cyber Security)</option>
               <option value="CSE(IOT)">CSE (Internet of Things)</option>
-              <option value="IT">Information Technology (IT)</option>
-              <option value="AIDS">Artificial Intelligence &amp; Data Science (AIDS)</option>
-              <option value="ECE">Electronics and Communication Engineering (ECE)</option>
-              <option value="EEE">Electrical and Electronics Engineering (EEE)</option>
-              <option value="MECH">Mechanical Engineering (MECH)</option>
-              <option value="CIVIL">Civil Engineering (CIVIL)</option>
-              <option value="BME">Biomedical Engineering (BME)</option>
-              <option value="AGRI">Agricultural Engineering (AGRI)</option>
             </select>
           </div>
 

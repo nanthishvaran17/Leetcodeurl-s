@@ -312,25 +312,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   };
 
   const DEFAULT_DEPARTMENTS = [
-    { id: 5, name: 'Computer Science and Engineering', code: 'CSE' },
     { id: 1, name: 'Computer Science and Engineering (Cyber Security)', code: 'CSE(CS)' },
-    { id: 2, name: 'Computer Science and Engineering (IoT)', code: 'CSE(IOT)' },
-    { id: 10, name: 'Information Technology', code: 'IT' },
-    { id: 14, name: 'Artificial Intelligence and Data Science', code: 'AIDS' },
-    { id: 8, name: 'Electronics and Communication Engineering', code: 'ECE' },
-    { id: 11, name: 'Electrical and Electronics Engineering', code: 'EEE' },
-    { id: 12, name: 'Mechanical Engineering', code: 'MECH' },
-    { id: 13, name: 'Civil Engineering', code: 'CIVIL' },
-    { id: 16, name: 'Biomedical Engineering', code: 'BME' },
-    { id: 17, name: 'Agricultural Engineering', code: 'AGRI' }
+    { id: 2, name: 'Computer Science and Engineering (IoT)', code: 'CSE(IOT)' }
   ];
 
   const fetchDepartments = async () => {
     try {
       const res = await api.get('/departments');
-      if (res.data && Array.isArray(res.data) && res.data.length >= 2) {
-        // Filter out any stale/unwanted test departments
-        const validCodes = ['CSE', 'CSE(CS)', 'CSE(IOT)', 'IT', 'AIDS', 'ECE', 'EEE', 'MECH', 'CIVIL', 'BME', 'AGRI'];
+      if (res.data && Array.isArray(res.data) && res.data.length >= 1) {
+        // Strictly filter to Cyber Security and IoT departments
+        const validCodes = ['CSE(CS)', 'CSE(IOT)'];
         const cleanDepts = res.data.filter((d: any) => d.code && validCodes.includes(d.code.trim().toUpperCase()));
         setDepartments(cleanDepts.length > 0 ? cleanDepts : DEFAULT_DEPARTMENTS);
       } else {
@@ -487,9 +478,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
-            className="text-xs md:text-sm text-slate-200 font-medium max-w-2xl leading-relaxed drop-shadow"
-          >
-            Track • Verify • Analyze • Report • Recognize. Institutional competitive programming intelligence across 1500+ students in all Engineering and Technology departments with verified Sunday contest forensics and automated reporting.
+            className="text-sm md:text-base text-gray-300 max-w-2xl mx-auto leading-relaxed">
+            <span className="font-semibold text-amber-400">Track • Verify • Analyze • Report • Recognize.</span> Institutional competitive programming intelligence across Cyber Security & IoT departments with verified Sunday contest forensics and automated reporting.
           </motion.p>
 
 

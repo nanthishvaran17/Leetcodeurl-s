@@ -143,7 +143,12 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       try {
         const res = await api.get('/departments');
         if (Array.isArray(res.data) && res.data.length > 0) {
-          setDepartments(res.data);
+          const validCodes = ['CSE(CS)', 'CSE(IOT)'];
+          const filtered = res.data.filter((d: any) => d.code && validCodes.includes(d.code.trim().toUpperCase()));
+          setDepartments(filtered.length > 0 ? filtered : [
+            { id: 1, name: 'Computer Science and Engineering (Cyber Security)', code: 'CSE(CS)' },
+            { id: 2, name: 'Computer Science and Engineering (IoT)', code: 'CSE(IOT)' }
+          ]);
         }
       } catch (e) {
         console.warn('Failed to load departments in edit overlay:', e);
@@ -465,19 +470,13 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                 {departments.length > 0 ? (
                   departments.map((d: any) => (
                     <option key={d.id} value={d.id}>
-                      {d.code || d.name}
+                      {d.code ? `${d.code} - ${d.name}` : d.name}
                     </option>
                   ))
                 ) : (
                   <>
-                    <option value={1}>CSE</option>
-                    <option value={2}>IT</option>
-                    <option value={3}>ECE</option>
-                    <option value={4}>EEE</option>
-                    <option value={5}>MECH</option>
-                    <option value={6}>CIVIL</option>
-                    <option value={7}>AIDS</option>
-                    <option value={8}>AIML</option>
+                    <option value={1}>CSE(CS) - Cyber Security</option>
+                    <option value={2}>CSE(IOT) - IoT</option>
                   </>
                 )}
               </select>

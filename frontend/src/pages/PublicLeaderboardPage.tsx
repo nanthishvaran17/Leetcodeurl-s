@@ -73,9 +73,8 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
 
   const totalSolved = students.reduce((acc, s) => acc + (s.stats?.total_solved || 0), 0);
   const avgSolved = students.length ? Math.round(totalSolved / students.length) : 0;
-  const topSolver = students[0];
   const uniqueYears = [...new Set(students.map(s => s.year_level).filter(Boolean))];
-  const uniqueDepts = [...new Set(students.map(s => s.department?.code || s.department?.name || (typeof s.department === 'string' ? s.department : '')).filter(Boolean))] as string[];
+  const uniqueDepts = ['CSE(CS)', 'CSE(IOT)'];
 
   const MEDAL_CONFIGS = [
     { rank: 2, color: 'from-slate-400 to-slate-500', borderColor: 'border-slate-300', textColor: 'text-slate-300', emoji: '🥈', label: 'SILVER', size: 'scale-90', order: 'order-1' },

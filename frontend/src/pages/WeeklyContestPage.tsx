@@ -1812,17 +1812,8 @@ export const WeeklyContestPage: React.FC = () => {
           {(() => {
             const DEPT_OPTIONS = [
               { value: 'ALL', label: 'All Departments', code: 'ALL', color: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300' },
-              { value: 'CSE', label: 'Computer Science and Engineering', code: 'CSE', color: 'text-blue-600 bg-blue-50 dark:bg-blue-950 dark:text-blue-300' },
               { value: 'CSE(CS)', label: 'CSE (Cyber Security)', code: 'CSE(CS)', color: 'text-purple-600 bg-purple-50 dark:bg-purple-950 dark:text-purple-300' },
               { value: 'CSE(IOT)', label: 'CSE (Internet of Things)', code: 'CSE(IOT)', color: 'text-cyan-600 bg-cyan-50 dark:bg-cyan-950 dark:text-cyan-300' },
-              { value: 'IT', label: 'Information Technology', code: 'IT', color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300' },
-              { value: 'AIDS', label: 'AI & Data Science', code: 'AIDS', color: 'text-rose-600 bg-rose-50 dark:bg-rose-950 dark:text-rose-300' },
-              { value: 'ECE', label: 'Electronics & Communication Engg.', code: 'ECE', color: 'text-orange-600 bg-orange-50 dark:bg-orange-950 dark:text-orange-300' },
-              { value: 'EEE', label: 'Electrical & Electronics Engg.', code: 'EEE', color: 'text-yellow-600 bg-yellow-50 dark:bg-yellow-950 dark:text-yellow-300' },
-              { value: 'MECH', label: 'Mechanical Engineering', code: 'MECH', color: 'text-teal-600 bg-teal-50 dark:bg-teal-950 dark:text-teal-300' },
-              { value: 'CIVIL', label: 'Civil Engineering', code: 'CIVIL', color: 'text-lime-600 bg-lime-50 dark:bg-lime-950 dark:text-lime-300' },
-              { value: 'BME', label: 'Biomedical Engineering', code: 'BME', color: 'text-pink-600 bg-pink-50 dark:bg-pink-950 dark:text-pink-300' },
-              { value: 'AGRI', label: 'Agricultural Engineering', code: 'AGRI', color: 'text-green-600 bg-green-50 dark:bg-green-950 dark:text-green-300' },
             ];
             const selectedDeptObj = DEPT_OPTIONS.find(o => o.value === selectedDeptFilter) || DEPT_OPTIONS[0];
             return (

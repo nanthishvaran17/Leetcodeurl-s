@@ -31,24 +31,15 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   }, []);
 
   const DEFAULT_DEPARTMENTS = [
-    { id: 5, name: 'Computer Science and Engineering', code: 'CSE' },
     { id: 1, name: 'Computer Science and Engineering (Cyber Security)', code: 'CSE(CS)' },
-    { id: 2, name: 'Computer Science and Engineering (IoT)', code: 'CSE(IOT)' },
-    { id: 10, name: 'Information Technology', code: 'IT' },
-    { id: 14, name: 'Artificial Intelligence and Data Science', code: 'AIDS' },
-    { id: 8, name: 'Electronics and Communication Engineering', code: 'ECE' },
-    { id: 11, name: 'Electrical and Electronics Engineering', code: 'EEE' },
-    { id: 12, name: 'Mechanical Engineering', code: 'MECH' },
-    { id: 13, name: 'Civil Engineering', code: 'CIVIL' },
-    { id: 16, name: 'Biomedical Engineering', code: 'BME' },
-    { id: 17, name: 'Agricultural Engineering', code: 'AGRI' }
+    { id: 2, name: 'Computer Science and Engineering (IoT)', code: 'CSE(IOT)' }
   ];
 
   const fetchDepartments = async () => {
     try {
       const res = await api.get('/departments', { timeout: 3000 });
-      if (res.data && Array.isArray(res.data) && res.data.length >= 2) {
-        const validCodes = ['CSE', 'CSE(CS)', 'CSE(IOT)', 'IT', 'AIDS', 'ECE', 'EEE', 'MECH', 'CIVIL', 'BME', 'AGRI'];
+      if (res.data && Array.isArray(res.data) && res.data.length >= 1) {
+        const validCodes = ['CSE(CS)', 'CSE(IOT)'];
         const cleanDepts = res.data.filter((d: any) => d.code && validCodes.includes(d.code.trim().toUpperCase()));
         setDepartments(cleanDepts.length > 0 ? cleanDepts : DEFAULT_DEPARTMENTS);
       } else {

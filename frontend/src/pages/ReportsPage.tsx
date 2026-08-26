@@ -511,24 +511,15 @@ export const ReportsPage: React.FC = () => {
               >
                 <Building2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
                 {(() => {
-                  const DEPT_SLUGS: Record<string,{code:string;color:string}> = {
+                  const DEPT_SLUGS: Record<string,{code:string; color:string}> = {
                     'ALL':     { code:'ALL',      color:'text-indigo-600 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300' },
-                    'CSE':     { code:'CSE',      color:'text-blue-600 bg-blue-50 dark:bg-blue-950 dark:text-blue-300' },
                     'CSE(CS)': { code:'CSE(CS)',  color:'text-purple-600 bg-purple-50 dark:bg-purple-950 dark:text-purple-300' },
                     'CSE(IOT)':{ code:'CSE(IOT)', color:'text-cyan-600 bg-cyan-50 dark:bg-cyan-950 dark:text-cyan-300' },
-                    'IT':      { code:'IT',       color:'text-emerald-600 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300' },
-                    'AIDS':    { code:'AIDS',     color:'text-rose-600 bg-rose-50 dark:bg-rose-950 dark:text-rose-300' },
-                    'ECE':     { code:'ECE',      color:'text-orange-600 bg-orange-50 dark:bg-orange-950 dark:text-orange-300' },
-                    'EEE':     { code:'EEE',      color:'text-yellow-600 bg-yellow-50 dark:bg-yellow-950 dark:text-yellow-300' },
-                    'MECH':    { code:'MECH',     color:'text-teal-600 bg-teal-50 dark:bg-teal-950 dark:text-teal-300' },
-                    'CIVIL':   { code:'CIVIL',    color:'text-lime-600 bg-lime-50 dark:bg-lime-950 dark:text-lime-300' },
-                    'BME':     { code:'BME',      color:'text-pink-600 bg-pink-50 dark:bg-pink-950 dark:text-pink-300' },
-                    'AGRI':    { code:'AGRI',     color:'text-green-600 bg-green-50 dark:bg-green-950 dark:text-green-300' },
                   };
                   const s = DEPT_SLUGS[selectedDept] || DEPT_SLUGS['ALL'];
-                  const LABELS: Record<string,string> = { 'ALL':'All Departments','CSE':'Computer Science and Engineering','CSE(CS)':'CSE (Cyber Security)','CSE(IOT)':'CSE (Internet of Things)','IT':'Information Technology','AIDS':'AI & Data Science','ECE':'Electronics & Communication','EEE':'Electrical & Electronics','MECH':'Mechanical Engineering','CIVIL':'Civil Engineering','BME':'Biomedical Engineering','AGRI':'Agricultural Engineering' };
+                  const LABELS: Record<string,string> = { 'ALL':'All Departments','CSE(CS)':'CSE (Cyber Security)','CSE(IOT)':'CSE (Internet of Things)' };
                   return (<>
-                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${s.color}`}>{s.code}</span>
+                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${s.code}`}>{s.code}</span>
                     <span className="text-xs font-bold text-gray-900 dark:text-white truncate flex-1">{LABELS[selectedDept] || selectedDept}</span>
                   </>);
                 })()}
@@ -538,17 +529,8 @@ export const ReportsPage: React.FC = () => {
                 <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-64 overflow-y-auto">
                   {[
                     { value:'ALL',      code:'ALL',      label:'All Departments',                color:'text-indigo-600 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300' },
-                    { value:'CSE',      code:'CSE',      label:'Computer Science and Engineering',color:'text-blue-600 bg-blue-50 dark:bg-blue-950 dark:text-blue-300' },
                     { value:'CSE(CS)',  code:'CSE(CS)',  label:'CSE (Cyber Security)',            color:'text-purple-600 bg-purple-50 dark:bg-purple-950 dark:text-purple-300' },
                     { value:'CSE(IOT)', code:'CSE(IOT)', label:'CSE (Internet of Things)',        color:'text-cyan-600 bg-cyan-50 dark:bg-cyan-950 dark:text-cyan-300' },
-                    { value:'IT',       code:'IT',       label:'Information Technology',          color:'text-emerald-600 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300' },
-                    { value:'AIDS',     code:'AIDS',     label:'AI & Data Science',               color:'text-rose-600 bg-rose-50 dark:bg-rose-950 dark:text-rose-300' },
-                    { value:'ECE',      code:'ECE',      label:'Electronics & Communication',     color:'text-orange-600 bg-orange-50 dark:bg-orange-950 dark:text-orange-300' },
-                    { value:'EEE',      code:'EEE',      label:'Electrical & Electronics',        color:'text-yellow-600 bg-yellow-50 dark:bg-yellow-950 dark:text-yellow-300' },
-                    { value:'MECH',     code:'MECH',     label:'Mechanical Engineering',          color:'text-teal-600 bg-teal-50 dark:bg-teal-950 dark:text-teal-300' },
-                    { value:'CIVIL',    code:'CIVIL',    label:'Civil Engineering',               color:'text-lime-600 bg-lime-50 dark:bg-lime-950 dark:text-lime-300' },
-                    { value:'BME',      code:'BME',      label:'Biomedical Engineering',          color:'text-pink-600 bg-pink-50 dark:bg-pink-950 dark:text-pink-300' },
-                    { value:'AGRI',     code:'AGRI',     label:'Agricultural Engineering',        color:'text-green-600 bg-green-50 dark:bg-green-950 dark:text-green-300' },
                   ].map(opt => (
                     <button key={opt.value} type="button"
                       onMouseDown={(e) => e.preventDefault()}
