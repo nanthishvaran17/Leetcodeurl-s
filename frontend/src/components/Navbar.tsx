@@ -29,6 +29,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const [freshness, setFreshness] = useState<any>(null);
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState<boolean>(false);
 
   useEffect(() => {
     loadFreshness();
@@ -161,7 +162,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
                   <button
                     type="button"
-                    onClick={logout}
+                    onClick={() => setShowLogoutConfirm(true)}
                     className="p-2 rounded-xl text-gray-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors flex items-center space-x-1 cursor-pointer"
                     title="Sign Out"
                   >
@@ -186,8 +187,44 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </header>
 
-      {/* Mobile / Tablet Responsive Drawer Navigation Overlay */}
-
+      {/* Sign Out Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl p-6 w-full max-w-sm shadow-2xl space-y-4 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center mx-auto">
+              <LogOut className="w-7 h-7" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-black text-gray-900 dark:text-white">
+                Sign Out Confirmation
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Are you sure you want to sign out from <span className="font-bold text-gray-800 dark:text-gray-200">{user?.name || user?.username}</span>?
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 hover:bg-gray-100 dark:hover:bg-navy-800 text-gray-700 dark:text-gray-300 font-bold text-xs transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLogoutConfirm(false);
+                  logout();
+                }}
+                className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-lg shadow-rose-600/30 transition-all cursor-pointer flex items-center justify-center space-x-1.5"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Yes, Sign Out</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Sync Engine Status Top-Level Portal Modal */}
       <SyncStatusModal

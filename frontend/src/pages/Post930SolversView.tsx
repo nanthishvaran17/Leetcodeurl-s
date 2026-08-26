@@ -283,7 +283,7 @@ export const Post930SolversView: React.FC = () => {
                       {st.register_number || st.reg_no}
                     </td>
                     <td className="px-4 py-3.5 text-gray-600 dark:text-gray-300">
-                      {st.department} ({st.year || st.year_level} - {st.section})
+                      {st.department} ({st.year || st.year_level} Year)
                     </td>
                     <td className="px-4 py-3.5 text-right font-bold text-gray-700 dark:text-gray-300">
                       {st.official_locked_solved}
@@ -337,7 +337,7 @@ export const Post930SolversView: React.FC = () => {
                   <span>{selectedStudent.student_name}</span>
                 </h3>
                 <p className="text-xs text-gray-400 font-mono">
-                  Reg: {selectedStudent.register_number || selectedStudent.reg_no} • {selectedStudent.department} ({selectedStudent.year || selectedStudent.year_level} - {selectedStudent.section})
+                  Reg: {selectedStudent.register_number || selectedStudent.reg_no} • {selectedStudent.department} ({selectedStudent.year || selectedStudent.year_level} Year)
                 </p>
               </div>
               <button

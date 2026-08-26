@@ -67,8 +67,8 @@ export const SettingsPage: React.FC = () => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [showFullAuditLog, setShowFullAuditLog] = useState(false);
 
-  // New Search & Filter State
-  const [activeSectionFilter, setActiveSectionFilter] = useState<string>('ALL');
+  // Search & Filter State (Default single section: staff)
+  const [activeSectionFilter, setActiveSectionFilter] = useState<string>('staff');
   const [settingsSearch, setSettingsSearch] = useState<string>('');
   const [auditSearch, setAuditSearch] = useState<string>('');
   const [auditActionFilter, setAuditActionFilter] = useState<string>('ALL');
@@ -551,25 +551,49 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. COMPACT SYSTEM STATUS STRIP */}
-      <div className="glass-card p-3.5 rounded-2xl border border-gray-200 dark:border-navy-700">
+      {/* 2. COMPACT SYSTEM STATUS STRIP WITH LIVE PROBING */}
+      <div className="glass-card p-4 rounded-2xl border border-gray-200 dark:border-navy-700 space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Activity className="w-4 h-4 text-emerald-500" />
+            <span className="text-xs font-black uppercase tracking-wider text-gray-700 dark:text-gray-200">
+              Live Subsystem Health Probes
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => { setSystemHealth(null); fetchSystemHealth(); }}
+            className="inline-flex items-center gap-1.5 text-[10px] font-bold text-brand-600 dark:text-brand-400 hover:text-brand-700 bg-brand-500/10 hover:bg-brand-500/20 px-2.5 py-1 rounded-lg transition-all cursor-pointer"
+          >
+            <RefreshCw className={`w-3 h-3 ${systemHealth === null ? 'animate-spin' : ''}`} />
+            <span>Probe Now</span>
+          </button>
+        </div>
+
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2 font-mono text-[11px]">
           {HEALTH_ITEMS.map((item) => {
             const rawVal = systemHealth?.components?.[item.key];
+            const isChecking = systemHealth === null;
             const isHealthy = rawVal === 'HEALTHY';
-            const isUnknown = rawVal === undefined || rawVal === null;
+            const isDegraded = rawVal === 'DEGRADED';
+            const isOffline = rawVal === 'OFFLINE';
 
             return (
               <div key={item.key} className="p-2.5 rounded-xl border bg-gray-50/50 dark:bg-navy-950/50 border-gray-200 dark:border-navy-800 flex flex-col items-center justify-center text-center">
                 <span className="text-[9px] uppercase font-bold text-gray-400 tracking-wider truncate w-full">{item.label}</span>
-                <span className={`font-black text-[10px] mt-1 px-2 py-0.5 rounded-full ${
-                  isHealthy 
-                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' 
-                    : isUnknown 
-                      ? 'bg-gray-500/10 text-gray-400 border border-gray-500/20' 
-                      : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+                <span className={`font-black text-[10px] mt-1 px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${
+                  isChecking
+                    ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20 animate-pulse'
+                    : isHealthy 
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' 
+                      : isDegraded
+                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                        : isOffline
+                          ? 'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+                          : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
                 }`}>
-                  {isHealthy ? 'Healthy' : isUnknown ? 'Unknown' : 'Failed'}
+                  {isChecking && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />}
+                  {isChecking ? 'Checking' : (isHealthy ? 'Healthy' : (isDegraded ? 'Degraded' : (isOffline ? 'Offline' : 'Error')))}
                 </span>
               </div>
             );
@@ -581,29 +605,29 @@ export const SettingsPage: React.FC = () => {
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl glass-card border border-gray-200 dark:border-navy-700">
         <div className="flex flex-wrap items-center gap-1.5">
           {[
-            { id: 'ALL', label: 'All Sections' },
-            { id: 'staff', label: 'Staff Management' },
-            { id: 'allocation', label: 'Student Allocation' },
-            { id: 'automation', label: 'Weekly Automation' },
-            { id: 'contest', label: 'Contest Engine' },
-            { id: 'integrity', label: 'Data Integrity Guard' },
-            { id: 'smtp', label: 'Email & SMTP' },
-            { id: 'snapshots', label: 'Database Snapshots' },
-            { id: 'audit', label: 'Audit Stream' },
-            { id: 'maintenance', label: 'Maintenance' },
-            { id: 'security', label: 'Security Activity' }
+            { id: 'staff', label: 'Staff Management', icon: Shield },
+            { id: 'allocation', label: 'Student Allocation', icon: Layers },
+            { id: 'automation', label: 'Weekly Automation', icon: Clock },
+            { id: 'contest', label: 'Contest Engine', icon: RefreshCw },
+            { id: 'integrity', label: 'Data Integrity Guard', icon: ShieldCheck },
+            { id: 'smtp', label: 'Email & SMTP', icon: Mail },
+            { id: 'snapshots', label: 'Database Snapshots', icon: Database },
+            { id: 'audit', label: 'Audit Stream', icon: Activity },
+            { id: 'maintenance', label: 'Maintenance', icon: Server },
+            { id: 'security', label: 'Security Activity', icon: Lock }
           ].map(tab => (
             <button
               key={tab.id}
               type="button"
               onClick={() => setActiveSectionFilter(tab.id)}
-              className={`px-3 py-1.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center space-x-1.5 cursor-pointer ${
                 activeSectionFilter === tab.id
-                  ? 'bg-brand-600 text-white shadow-md'
+                  ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20'
                   : 'bg-gray-100 dark:bg-navy-900 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-navy-800'
               }`}
             >
-              {tab.label}
+              <tab.icon className="w-3.5 h-3.5" />
+              <span>{tab.label}</span>
             </button>
           ))}
         </div>
@@ -630,22 +654,22 @@ export const SettingsPage: React.FC = () => {
       <form onSubmit={handleSave} className="space-y-6">
 
         {/* SECTION: STAFF MANAGEMENT */}
-        {(activeSectionFilter === 'ALL' || activeSectionFilter === 'staff') && (
-          <div className="glass-card p-5 rounded-2xl border border-gray-200 dark:border-navy-700">
+        {activeSectionFilter === 'staff' && (
+          <div className="glass-card p-5 rounded-2xl border border-gray-200 dark:border-navy-700 animate-fade-in">
             <StaffManagement />
           </div>
         )}
 
         {/* SECTION: STUDENT ALLOCATION */}
-        {(activeSectionFilter === 'ALL' || activeSectionFilter === 'allocation') && (
-          <div className="glass-card p-5 rounded-2xl border border-gray-200 dark:border-navy-700">
+        {activeSectionFilter === 'allocation' && (
+          <div className="glass-card p-5 rounded-2xl border border-gray-200 dark:border-navy-700 animate-fade-in">
             <StudentAllocationCenter />
           </div>
         )}
 
         {/* 4. SECTION I — WEEKLY AUTOMATION */}
-        {(activeSectionFilter === 'ALL' || activeSectionFilter === 'automation') && (
-          <div className="glass-card p-5 rounded-2xl border border-gray-200 dark:border-navy-700 space-y-3.5">
+        {activeSectionFilter === 'automation' && (
+          <div className="glass-card p-5 rounded-2xl border border-gray-200 dark:border-navy-700 space-y-3.5 animate-fade-in">
             <div className="flex items-center justify-between border-b pb-2.5 dark:border-navy-700">
               <h2 className="font-extrabold text-sm text-gray-900 dark:text-white flex items-center space-x-2 uppercase tracking-wide">
                 <Clock className="w-4 h-4 text-brand-500" />
@@ -731,8 +755,8 @@ export const SettingsPage: React.FC = () => {
         )}
 
         {/* 5. SECTION II — CONTEST DATA ENGINE */}
-        {(activeSectionFilter === 'ALL' || activeSectionFilter === 'contest') && (
-          <div className="glass-card p-5 rounded-2xl border border-gray-200 dark:border-navy-700 space-y-3.5">
+        {activeSectionFilter === 'contest' && (
+          <div className="glass-card p-5 rounded-2xl border border-gray-200 dark:border-navy-700 space-y-3.5 animate-fade-in">
             <div className="flex items-center justify-between border-b pb-2.5 dark:border-navy-700">
               <h2 className="font-extrabold text-sm text-gray-900 dark:text-white flex items-center space-x-2 uppercase tracking-wide">
                 <RefreshCw className="w-4 h-4 text-indigo-500" />
@@ -808,8 +832,8 @@ export const SettingsPage: React.FC = () => {
         )}
 
         {/* 6. SECTION III — DATA INTEGRITY GUARD */}
-        {(activeSectionFilter === 'ALL' || activeSectionFilter === 'integrity') && (
-          <div className="glass-card p-5 rounded-2xl border-2 border-emerald-500/40 bg-emerald-500/5 space-y-3.5">
+        {activeSectionFilter === 'integrity' && (
+          <div className="glass-card p-5 rounded-2xl border-2 border-emerald-500/40 bg-emerald-500/5 space-y-3.5 animate-fade-in">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-emerald-500/20 pb-2.5">
               <div>
                 <h2 className="font-black text-base text-emerald-900 dark:text-emerald-300 flex items-center space-x-2 uppercase tracking-wide">
@@ -865,8 +889,8 @@ export const SettingsPage: React.FC = () => {
           </div>
         )}
 
-        {/* 7. SECTION IV — REPORT INTEGRITY */}
-        {(activeSectionFilter === 'ALL' || activeSectionFilter === 'smtp') && (
+        {/* 7. SECTION IV — REPORT INTEGRITY & EMAIL DELIVERY */}
+        {activeSectionFilter === 'smtp' && (
           <div className="glass-card p-5 rounded-2xl border border-gray-200 dark:border-navy-700 space-y-3.5">
             <div className="flex items-center justify-between border-b pb-2.5 dark:border-navy-700">
               <h2 className="font-extrabold text-sm text-gray-900 dark:text-white flex items-center space-x-2 uppercase tracking-wide">
@@ -1092,8 +1116,8 @@ export const SettingsPage: React.FC = () => {
         )}
 
         {/* 9. SECTION VI — DATABASE SNAPSHOT & RECOVERY */}
-        {(activeSectionFilter === 'ALL' || activeSectionFilter === 'snapshots') && (
-          <div className="glass-card p-5 rounded-2xl border border-gray-200 dark:border-navy-700 space-y-3.5">
+        {activeSectionFilter === 'snapshots' && (
+          <div className="glass-card p-5 rounded-2xl border border-gray-200 dark:border-navy-700 space-y-3.5 animate-fade-in">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-2.5 dark:border-navy-700">
               <div>
                 <h2 className="font-extrabold text-sm text-gray-900 dark:text-white flex items-center space-x-2 uppercase tracking-wide">
@@ -1239,8 +1263,8 @@ export const SettingsPage: React.FC = () => {
         )}
 
         {/* 10. SECTION VII — ADMIN SECURITY */}
-        {(activeSectionFilter === 'ALL' || activeSectionFilter === 'security') && (
-          <div className="glass-card p-5 rounded-2xl border border-gray-200 dark:border-navy-700 space-y-3.5">
+        {activeSectionFilter === 'security' && (
+          <div className="glass-card p-5 rounded-2xl border border-gray-200 dark:border-navy-700 space-y-3.5 animate-fade-in">
             <div className="flex items-center justify-between border-b pb-2.5 dark:border-navy-700">
               <h2 className="font-extrabold text-sm text-gray-900 dark:text-white flex items-center space-x-2 uppercase tracking-wide">
                 <Lock className="w-4 h-4 text-amber-500" />
@@ -1275,8 +1299,8 @@ export const SettingsPage: React.FC = () => {
         )}
 
         {/* 11. SECTION VIII — ADMIN IDENTITY & AUDIT LOG STREAM */}
-        {(activeSectionFilter === 'ALL' || activeSectionFilter === 'audit') && (
-          <div className="p-6 rounded-3xl bg-gradient-to-br from-navy-950 via-slate-900 to-indigo-950 text-white border border-brand-500/30 shadow-lg space-y-4">
+        {activeSectionFilter === 'audit' && (
+          <div className="p-6 rounded-3xl bg-gradient-to-br from-navy-950 via-slate-900 to-indigo-950 text-white border border-brand-500/30 shadow-lg space-y-4 animate-fade-in">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
               <div className="space-y-0.5">
                 <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full bg-brand-500/20 border border-brand-400/30 text-amber-300 text-[10px] font-black uppercase">
@@ -1375,33 +1399,35 @@ export const SettingsPage: React.FC = () => {
         )}
 
         {/* SINGLE SAVE CONFIGURATION BUTTON WITH CHANGE DETECTION */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-          <div className="text-xs font-bold">
-            {changedKeys.length > 0 ? (
-              <span className="text-amber-600 dark:text-amber-400 flex items-center space-x-1">
-                <AlertTriangle className="w-4 h-4" />
-                <span>Unsaved configuration changes: {changedKeys.length} ({changedKeys.join(', ')})</span>
-              </span>
-            ) : (
-              <span className="text-gray-400">No unsaved changes</span>
-            )}
-          </div>
+        {['automation', 'contest', 'integrity', 'smtp', 'security'].includes(activeSectionFilter) && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+            <div className="text-xs font-bold">
+              {changedKeys.length > 0 ? (
+                <span className="text-amber-600 dark:text-amber-400 flex items-center space-x-1">
+                  <AlertTriangle className="w-4 h-4" />
+                  <span>Unsaved configuration changes: {changedKeys.length} ({changedKeys.join(', ')})</span>
+                </span>
+              ) : (
+                <span className="text-gray-400">No unsaved changes</span>
+              )}
+            </div>
 
-          <button
-            type="submit"
-            disabled={saving || changedKeys.length === 0}
-            className="px-8 py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold text-xs shadow-lg shadow-brand-600/30 flex items-center space-x-2 cursor-pointer"
-          >
-            <Save className="w-4 h-4" />
-            <span>{saving ? 'Saving Configuration...' : '[ SAVE CONFIGURATION ]'}</span>
-          </button>
-        </div>
+            <button
+              type="submit"
+              disabled={saving || changedKeys.length === 0}
+              className="px-8 py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold text-xs shadow-lg shadow-brand-600/30 flex items-center space-x-2 cursor-pointer"
+            >
+              <Save className="w-4 h-4" />
+              <span>{saving ? 'Saving Configuration...' : '[ SAVE CONFIGURATION ]'}</span>
+            </button>
+          </div>
+        )}
 
       </form>
 
       {/* 12. SECTION IX — ADVANCED SYSTEM MAINTENANCE */}
-      {(activeSectionFilter === 'ALL' || activeSectionFilter === 'maintenance') && (
-        <div className="glass-card p-5 rounded-2xl border-2 border-rose-500/40 bg-rose-500/5 space-y-3.5 mt-8">
+      {activeSectionFilter === 'maintenance' && (
+        <div className="glass-card p-5 rounded-2xl border-2 border-rose-500/40 bg-rose-500/5 space-y-3.5 mt-8 animate-fade-in">
           <div className="flex items-center justify-between border-b border-rose-500/20 pb-2.5">
             <h2 className="font-extrabold text-sm text-rose-700 dark:text-rose-400 flex items-center space-x-2 uppercase tracking-wide">
               <AlertTriangle className="w-4.5 h-4.5 text-rose-500" />
@@ -1467,8 +1493,8 @@ export const SettingsPage: React.FC = () => {
       )}
 
       {/* 13. SECTION X — SECURITY ACTIVITY */}
-      {(activeSectionFilter === 'ALL' || activeSectionFilter === 'security') && (
-        <div className="mt-8">
+      {activeSectionFilter === 'security' && (
+        <div className="mt-8 animate-fade-in">
           <SecurityActivitySection />
         </div>
       )}

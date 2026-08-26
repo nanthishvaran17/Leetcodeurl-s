@@ -296,10 +296,10 @@ def require_security_access(
                 headers={"WWW-Authenticate": "Bearer"}
             )
 
-        user_role_clean = (user.role or "").strip().lower()
+        user_role_clean = (getattr(user, "override_role", None) or user.role or "").strip().lower()
         
         # 2. ROLE & PERMISSION CHECK
-        if user_role_clean in ["admin", "super admin", "super_admin"]:
+        if user_role_clean in ["admin", "super admin", "super_admin"] and (not required_roles or any(r.lower() in ["admin", "super admin", "super_admin"] for r in required_roles)):
             log_security_access_event(
                 db, request, user, action="ACCESS_RESOURCE",
                 resource=target_resource, result="SUCCESS", session_id=session_id

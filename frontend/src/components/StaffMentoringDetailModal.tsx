@@ -20,6 +20,7 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
   onRefresh
 }) => {
   const { notify } = useNotification();
+  const [currentStudent, setCurrentStudent] = useState<any>(student);
   const [activeTab, setActiveTab] = useState<'overview' | 'notes' | 'followups'>('overview');
   const [notes, setNotes] = useState<any[]>([]);
   const [followUps, setFollowUps] = useState<any[]>([]);
@@ -41,9 +42,24 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
   });
   const [followUpNotes, setFollowUpNotes] = useState<string>('');
   const [submittingFollowUp, setSubmittingFollowUp] = useState<boolean>(false);
+  const [refreshingLive, setRefreshingLive] = useState<boolean>(false);
+
+  const fetchStudentDetails = async () => {
+    if (!student?.id) return;
+    try {
+      const res = await api.get(`/students/${student.id}`);
+      if (res.data) {
+        setCurrentStudent(res.data);
+      }
+    } catch (err) {
+      console.error('Error fetching student details:', err);
+    }
+  };
 
   useEffect(() => {
     if (student?.id) {
+      setCurrentStudent(student);
+      fetchStudentDetails();
       fetchNotes();
       fetchFollowUps();
     }
@@ -133,14 +149,38 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
     }
   };
 
-  const totalSolved = student?.stats?.total_solved || 0;
-  const easySolved = student?.stats?.easy_solved || 0;
-  const mediumSolved = student?.stats?.medium_solved || 0;
-  const hardSolved = student?.stats?.hard_solved || 0;
-  const rating = student?.stats?.contest_rating || 0;
-  const streak = student?.stats?.max_streak || 0;
-  const statusLabel = student?.status_label || (totalSolved >= 100 ? 'Excellent' : totalSolved >= 30 ? 'Improving' : 'Needs Improvement');
-  const statusColor = student?.badge_color || (statusLabel === 'Excellent' ? 'emerald' : statusLabel === 'At Risk' ? 'rose' : 'amber');
+  const handleRefreshLive = async () => {
+    if (refreshingLive || !student?.id) return;
+    setRefreshingLive(true);
+    notify.info('Live Sync Started', `Fetching live LeetCode stats for ${currentStudent.name || student.name}...`);
+    try {
+      const res = await api.post(`/students/${student.id}/refresh-live`);
+      notify.success('Live Stats Updated', `Successfully updated live statistics for ${currentStudent.name || student.name}.`);
+      await fetchStudentDetails();
+      if (onRefresh) onRefresh();
+    } catch (err: any) {
+      notify.error('Refresh Failed', err.response?.data?.detail || 'Failed to refresh live data.');
+    } finally {
+      setRefreshingLive(false);
+    }
+  };
+
+  // Robust Stat Value Resolution across nested stats & root student object
+  const totalSolved = currentStudent?.stats?.total_solved ?? currentStudent?.total_solved ?? student?.stats?.total_solved ?? student?.total_solved ?? 0;
+  const easySolved = currentStudent?.stats?.easy_solved ?? currentStudent?.easy_solved ?? student?.stats?.easy_solved ?? student?.easy_solved ?? 0;
+  const mediumSolved = currentStudent?.stats?.medium_solved ?? currentStudent?.medium_solved ?? student?.stats?.medium_solved ?? student?.medium_solved ?? 0;
+  const hardSolved = currentStudent?.stats?.hard_solved ?? currentStudent?.hard_solved ?? student?.stats?.hard_solved ?? student?.hard_solved ?? 0;
+  const rating = currentStudent?.stats?.contest_rating ?? currentStudent?.contest_rating ?? student?.stats?.contest_rating ?? student?.contest_rating ?? 0;
+  const streak = currentStudent?.stats?.max_streak ?? currentStudent?.stats?.current_streak ?? currentStudent?.max_streak ?? student?.max_streak ?? 0;
+  const leetcodeHandle = currentStudent?.stats?.leetcode_username || currentStudent?.username || student?.username;
+
+  const statusLabel = currentStudent?.status_label || student?.status_label || (totalSolved >= 100 ? 'Excellent' : totalSolved >= 30 ? 'Improving' : 'Needs Improvement');
+  const statusColor = currentStudent?.badge_color || student?.badge_color || (statusLabel === 'Excellent' ? 'emerald' : statusLabel === 'At Risk' ? 'rose' : 'amber');
+
+  const displayName = currentStudent?.name || student?.name || 'Student';
+  const displayRegNo = currentStudent?.reg_no || student?.reg_no;
+  const displayDept = currentStudent?.department?.code || currentStudent?.department || student?.department?.code || student?.department || 'CSE';
+  const displayYear = currentStudent?.year_level || student?.year_level || 'III';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 overflow-y-auto animate-fade-in">
@@ -150,31 +190,49 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
         <div className="p-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-indigo-500/20">
           <div className="flex items-center space-x-4">
             <div className="w-14 h-14 rounded-2xl bg-indigo-600/30 border border-indigo-400/40 flex items-center justify-center font-black text-2xl text-indigo-300">
-              {student.name ? student.name.charAt(0) : 'S'}
+              {displayName ? displayName.charAt(0) : 'S'}
             </div>
             <div>
               <div className="flex items-center space-x-3">
-                <h2 className="text-xl font-black">{student.name}</h2>
-                <span className={`px-3 py-0.5 rounded-full text-xs font-black bg-${statusColor}-500/20 text-${statusColor}-400 border border-${statusColor}-500/30`}>
+                <h2 className="text-xl font-black">{displayName}</h2>
+                <span className={`px-3 py-0.5 rounded-full text-xs font-black ${
+                  statusLabel === 'Excellent'
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                    : (statusLabel === 'At Risk'
+                        ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                        : 'bg-amber-500/20 text-amber-300 border border-amber-500/30')
+                }`}>
                   {statusLabel}
                 </span>
               </div>
               <p className="text-xs text-gray-300 font-mono mt-0.5">
-                Reg: <span className="font-bold text-white">{student.reg_no}</span> • {student.department?.code || student.department || 'CSE'} ({student.year_level} Year - {student.section?.name || student.section || 'A'})
+                Reg: <span className="font-bold text-white">{displayRegNo}</span> • {displayDept} ({displayYear} Year)
               </p>
             </div>
           </div>
 
           <div className="flex items-center space-x-2">
             <button
+              type="button"
+              onClick={handleRefreshLive}
+              disabled={refreshingLive}
+              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center space-x-1 transition-all cursor-pointer shadow disabled:opacity-50"
+            >
+              <Activity className={`w-3.5 h-3.5 ${refreshingLive ? 'animate-spin' : ''}`} />
+              <span>{refreshingLive ? 'Syncing...' : 'Refresh Live Data'}</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setShowEditOverlay(true)}
               className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs flex items-center space-x-1 transition-all cursor-pointer shadow"
             >
-              <Edit3 className="w-4 h-4" />
+              <Edit3 className="w-3.5 h-3.5" />
               <span>Edit Details</span>
             </button>
 
             <button
+              type="button"
               onClick={onClose}
               className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 transition-colors"
             >
@@ -230,17 +288,17 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
             <div className="space-y-6">
 
               {/* Profile Link Banner */}
-              {student.username && (
+              {leetcodeHandle && (
                 <div className="flex items-center justify-between p-4 rounded-2xl bg-indigo-50 dark:bg-navy-800 border border-indigo-100 dark:border-navy-700">
                   <div className="flex items-center space-x-3">
                     <User className="w-5 h-5 text-indigo-500" />
                     <div>
                       <p className="text-xs font-bold text-gray-700 dark:text-gray-300">LeetCode Profile Handle</p>
-                      <p className="text-sm font-black text-brand-600 dark:text-brand-400">@{student.username}</p>
+                      <p className="text-sm font-black text-brand-600 dark:text-brand-400">@{leetcodeHandle}</p>
                     </div>
                   </div>
                   <a
-                    href={`https://leetcode.com/u/${student.username}/`}
+                    href={`https://leetcode.com/u/${leetcodeHandle}/`}
                     target="_blank"
                     rel="noreferrer"
                     className="px-3.5 py-1.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold flex items-center space-x-1.5 transition-all shadow-md"
@@ -311,7 +369,7 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
             <div className="space-y-6">
 
               {/* Add Note Form */}
-              <form onSubmit={handleAddNote} className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-800 border space-y-3">
+              <form onSubmit={handleAddNote} className="p-5 rounded-2xl bg-gray-50 dark:bg-navy-800 border border-gray-200 dark:border-navy-700 space-y-3.5 shadow-sm">
                 <h4 className="text-xs font-black uppercase tracking-wider text-gray-700 dark:text-gray-300">
                   Add Private Mentoring Note
                 </h4>
@@ -323,24 +381,33 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
                   className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs focus:ring-2 focus:ring-brand-500"
                   required
                 />
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-500 font-bold">Priority:</span>
-                    <select
-                      value={escalation}
-                      onChange={(e) => setEscalation(e.target.value)}
-                      className="px-3 py-1 rounded-lg border border-gray-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs font-bold"
-                    >
-                      <option value="NORMAL">Normal</option>
-                      <option value="WARNING">Warning</option>
-                      <option value="CRITICAL">Critical Escalation</option>
-                    </select>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-xs text-gray-500 font-bold mr-1">Priority:</span>
+                    {[
+                      { id: 'NORMAL', label: 'Normal', color: 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30' },
+                      { id: 'WARNING', label: 'Warning', color: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30' },
+                      { id: 'CRITICAL', label: 'Critical Escalation', color: 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30' }
+                    ].map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => setEscalation(opt.id)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                          escalation === opt.id
+                            ? `${opt.color} ring-2 ring-brand-500 shadow-sm font-black`
+                            : 'bg-white dark:bg-navy-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-navy-700 hover:bg-gray-100 dark:hover:bg-navy-800'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
                   </div>
 
                   <button
                     type="submit"
                     disabled={submittingNote || !newNote.trim()}
-                    className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs font-bold flex items-center space-x-2 transition-all"
+                    className="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs font-bold flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-md shadow-brand-600/20"
                   >
                     <Send className="w-3.5 h-3.5" />
                     <span>Save Note</span>
@@ -357,7 +424,7 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
                   <p className="text-xs text-gray-400 italic">No private notes recorded yet.</p>
                 ) : (
                   notes.map((n: any) => (
-                    <div key={n.id} className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-800 border space-y-2">
+                    <div key={n.id} className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-800 border border-gray-200 dark:border-navy-700 space-y-2">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-bold text-brand-600 dark:text-brand-400">{n.faculty_name}</span>
                         <span className="text-gray-400 text-[10px]">{n.created_at ? new Date(n.created_at).toLocaleDateString() : ''}</span>
@@ -376,38 +443,74 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
             <div className="space-y-6">
 
               {/* Schedule Follow-Up Form */}
-              <form onSubmit={handleAddFollowUp} className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-800 border space-y-3">
+              <form onSubmit={handleAddFollowUp} className="p-5 rounded-2xl bg-gray-50 dark:bg-navy-800 border border-gray-200 dark:border-navy-700 space-y-3.5 shadow-sm">
                 <h4 className="text-xs font-black uppercase tracking-wider text-gray-700 dark:text-gray-300">
                   Schedule Follow-Up Task
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">Task Title</label>
                   <input
                     type="text"
                     value={followUpTitle}
                     onChange={(e) => setFollowUpTitle(e.target.value)}
-                    placeholder="Task Title (e.g. Check Weekly 10 Problems)"
-                    className="px-4 py-2 rounded-xl border border-gray-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs font-bold"
-                    required
-                  />
-                  <input
-                    type="date"
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
-                    className="px-4 py-2 rounded-xl border border-gray-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs font-bold"
+                    placeholder="e.g. Check Weekly 10 Problems"
+                    className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs font-bold"
                     required
                   />
                 </div>
-                <textarea
-                  value={followUpNotes}
-                  onChange={(e) => setFollowUpNotes(e.target.value)}
-                  placeholder="Optional instruction details..."
-                  rows={2}
-                  className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs"
-                />
+
+                {/* Modern Due Date Selector with Quick Preset Chips */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs font-bold text-gray-600 dark:text-gray-400">
+                    <span>Due Date Target</span>
+                    <span className="font-mono text-brand-600 dark:text-brand-400 font-black">{dueDate}</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {[
+                      { label: '+3 Days', days: 3 },
+                      { label: '+7 Days (1 Wk)', days: 7 },
+                      { label: '+14 Days (2 Wks)', days: 14 },
+                      { label: '+30 Days (1 Mo)', days: 30 }
+                    ].map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => {
+                          const d = new Date();
+                          d.setDate(d.getDate() + preset.days);
+                          setDueDate(d.toISOString().split('T')[0]);
+                        }}
+                        className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-navy-900 border border-gray-300 dark:border-navy-700 hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-400 text-gray-700 dark:text-gray-300 transition-all cursor-pointer shadow-sm"
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                    <input
+                      type="text"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                      placeholder="YYYY-MM-DD"
+                      className="flex-1 min-w-[130px] px-3 py-1.5 rounded-xl border border-gray-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs font-mono font-bold text-center"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">Instruction Notes (Optional)</label>
+                  <textarea
+                    value={followUpNotes}
+                    onChange={(e) => setFollowUpNotes(e.target.value)}
+                    placeholder="Optional instruction details..."
+                    rows={2}
+                    className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs"
+                  />
+                </div>
+
                 <button
                   type="submit"
                   disabled={submittingFollowUp || !followUpTitle.trim()}
-                  className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs font-bold flex items-center space-x-2 transition-all"
+                  className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer shadow-md shadow-brand-600/20"
                 >
                   <PlusCircle className="w-3.5 h-3.5" />
                   <span>Schedule Task</span>
@@ -471,9 +574,10 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
 
       <StudentEditOverlay
         isOpen={showEditOverlay}
-        student={student}
+        student={currentStudent || student}
         onClose={() => setShowEditOverlay(false)}
         onSaveSuccess={() => {
+          fetchStudentDetails();
           if (onRefresh) onRefresh();
           setShowEditOverlay(false);
         }}

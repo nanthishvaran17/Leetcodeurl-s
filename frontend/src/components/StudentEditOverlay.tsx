@@ -374,18 +374,18 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       }}
     >
       <div
-        className="modal-container-responsive max-w-xl bg-white dark:bg-navy-900 rounded-3xl shadow-lg border border-gray-200 dark:border-navy-700 animate-modal-content text-gray-900 dark:text-gray-100"
+        className="modal-container-responsive max-w-xl bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-navy-700 animate-modal-content text-slate-900 dark:text-slate-100 antialiased"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Sticky Top Header */}
-        <div className="sticky top-0 z-20 px-6 py-4 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-gray-800 shrink-0">
+        <div className="sticky top-0 z-20 px-6 py-4 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
           <div className="flex items-center space-x-3">
             <div className="p-2 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
               <Edit3 className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-black tracking-tight">Edit Student Record</h3>
-              <p className="text-xs text-gray-300 font-mono">
+              <h3 className="text-base font-bold text-white tracking-tight">Edit Student Record</h3>
+              <p className="text-xs text-slate-300 font-mono font-medium mt-0.5">
                 {student.reg_no || student.register_number || 'ID: ' + student.id}
               </p>
             </div>
@@ -395,7 +395,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
             type="button"
             onClick={handleAttemptClose}
             title="Close Editor"
-            className="p-2 rounded-xl bg-white/10 hover:bg-rose-500/80 text-gray-300 hover:text-white transition-all cursor-pointer"
+            className="p-2 rounded-xl bg-white/10 hover:bg-rose-500/80 text-slate-300 hover:text-white transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -406,7 +406,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
 
           {/* Inline Error Alert */}
           {errorMessage && (
-            <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs font-bold flex items-center space-x-2 animate-shake">
+            <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center space-x-2 animate-shake">
               <AlertTriangle className="w-4 h-4 shrink-0" />
               <span>{errorMessage}</span>
             </div>
@@ -414,8 +414,8 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
 
           {/* Student Full Name */}
           <div className="space-y-1.5">
-            <label className="text-xs font-black uppercase text-gray-500 dark:text-gray-400 tracking-wider">
-              Student Full Name <span className="text-rose-500">*</span>
+            <label className="block text-[11px] font-semibold uppercase text-slate-700 dark:text-slate-200 tracking-wider">
+              Student Full Name <span className="text-rose-500 font-bold">*</span>
             </label>
             <input
               type="text"
@@ -423,14 +423,14 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
               onChange={(e) => setName(e.target.value)}
               required
               placeholder="e.g. SANTHOSH KUMAR M"
-              className="w-full px-4 py-2.5 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-navy-700 rounded-xl text-gray-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-4 py-2.5 text-xs bg-white dark:bg-navy-950 border border-slate-300 dark:border-navy-700 rounded-xl text-slate-900 dark:text-white font-semibold outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors"
             />
           </div>
 
           {/* Register Number & Email */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
             <div className="space-y-1.5">
-              <label className="text-xs font-black uppercase text-gray-500 dark:text-gray-400 tracking-wider">
+              <label className="block text-[11px] font-semibold uppercase text-slate-700 dark:text-slate-200 tracking-wider">
                 Register Number
               </label>
               <input
@@ -438,12 +438,12 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                 value={regNo}
                 onChange={(e) => setRegNo(e.target.value)}
                 placeholder="e.g. 732221104001"
-                className="w-full px-4 py-2.5 text-xs font-mono bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-navy-700 rounded-xl text-gray-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-4 py-2.5 text-xs font-mono bg-white dark:bg-navy-950 border border-slate-300 dark:border-navy-700 rounded-xl text-slate-900 dark:text-white font-semibold outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-black uppercase text-gray-500 dark:text-gray-400 tracking-wider">
+              <label className="block text-[11px] font-semibold uppercase text-slate-700 dark:text-slate-200 tracking-wider">
                 College Email
               </label>
               <input
@@ -451,7 +451,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="student@nandha.edu.in"
-                className="w-full px-4 py-2.5 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-navy-700 rounded-xl text-gray-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-4 py-2.5 text-xs bg-white dark:bg-navy-950 border border-slate-300 dark:border-navy-700 rounded-xl text-slate-900 dark:text-white font-semibold outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors"
               />
             </div>
           </div>
@@ -459,13 +459,13 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
           {/* Department, Year, Section */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-black uppercase text-gray-500 dark:text-gray-400 tracking-wider">
+              <label className="block text-[11px] font-semibold uppercase text-slate-700 dark:text-slate-200 tracking-wider">
                 Department
               </label>
               <select
                 value={deptId}
                 onChange={(e) => setDeptId(Number(e.target.value))}
-                className="w-full px-4 py-2.5 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-navy-700 rounded-xl text-gray-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
+                className="w-full px-4 py-2.5 text-xs bg-white dark:bg-navy-950 border border-slate-300 dark:border-navy-700 rounded-xl text-slate-900 dark:text-white font-semibold outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 cursor-pointer transition-colors"
               >
                 {departments.length > 0 ? (
                   departments.map((d: any) => (
@@ -483,13 +483,13 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-black uppercase text-gray-500 dark:text-gray-400 tracking-wider">
+              <label className="block text-[11px] font-semibold uppercase text-slate-700 dark:text-slate-200 tracking-wider">
                 Year Level
               </label>
               <select
                 value={yearLevel}
                 onChange={(e) => setYearLevel(e.target.value)}
-                className="w-full px-4 py-2.5 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-navy-700 rounded-xl text-gray-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
+                className="w-full px-4 py-2.5 text-xs bg-white dark:bg-navy-950 border border-slate-300 dark:border-navy-700 rounded-xl text-slate-900 dark:text-white font-semibold outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 cursor-pointer transition-colors"
               >
                 <option value="I">I Year</option>
                 <option value="II">II Year</option>
@@ -499,7 +499,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-black uppercase text-gray-500 dark:text-gray-400 tracking-wider">
+              <label className="block text-[11px] font-semibold uppercase text-slate-700 dark:text-slate-200 tracking-wider">
                 Section
               </label>
               <input
@@ -507,19 +507,19 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                 value={section}
                 onChange={(e) => setSection(e.target.value)}
                 placeholder="A, B, C"
-                className="w-full px-4 py-2.5 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-navy-700 rounded-xl text-gray-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-4 py-2.5 text-xs bg-white dark:bg-navy-950 border border-slate-300 dark:border-navy-700 rounded-xl text-slate-900 dark:text-white font-semibold outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors"
               />
             </div>
           </div>
 
           {/* LeetCode Details Section */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 space-y-4">
-            <h4 className="text-xs font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider">
+          <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/25 space-y-4">
+            <h4 className="text-xs font-bold uppercase text-amber-800 dark:text-amber-300 tracking-wider">
               LeetCode Integration Details
             </h4>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-black uppercase text-gray-500 dark:text-gray-400 tracking-wider">
+              <label className="block text-[11px] font-semibold uppercase text-slate-700 dark:text-slate-200 tracking-wider">
                 LeetCode Username Handle
               </label>
               <input
@@ -527,12 +527,12 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                 value={username}
                 onChange={(e) => handleUsernameChange(e.target.value)}
                 placeholder="e.g. AADHISH_S_B"
-                className="w-full px-4 py-2.5 text-xs font-mono bg-white dark:bg-navy-950 border border-gray-300 dark:border-navy-700 rounded-xl text-gray-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-4 py-2.5 text-xs font-mono bg-white dark:bg-navy-950 border border-slate-300 dark:border-navy-700 rounded-xl text-slate-900 dark:text-white font-semibold outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-black uppercase text-gray-500 dark:text-gray-400 tracking-wider">
+              <label className="block text-[11px] font-semibold uppercase text-slate-700 dark:text-slate-200 tracking-wider">
                 LeetCode Profile URL
               </label>
               <input
@@ -540,7 +540,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                 value={leetcodeUrl}
                 onChange={(e) => handleUrlChange(e.target.value)}
                 placeholder="https://leetcode.com/u/..."
-                className="w-full px-4 py-2.5 text-xs bg-white dark:bg-navy-950 border border-gray-300 dark:border-navy-700 rounded-xl text-gray-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-4 py-2.5 text-xs bg-white dark:bg-navy-950 border border-slate-300 dark:border-navy-700 rounded-xl text-slate-900 dark:text-white font-semibold outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors"
               />
               <LcValidationChip state={lcValidation} />
             </div>
@@ -549,11 +549,11 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         </form>
 
         {/* Sticky Bottom Footer */}
-        <div className="sticky bottom-0 z-20 px-6 py-4 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-navy-800 flex items-center justify-between shrink-0">
+        <div className="sticky bottom-0 z-20 px-6 py-4 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0">
           <button
             type="button"
             onClick={handleAttemptClose}
-            className="px-4 py-2.5 rounded-xl border border-gray-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 transition-all cursor-pointer"
+            className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors cursor-pointer"
           >
             Cancel
           </button>
@@ -562,7 +562,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
             type="button"
             onClick={handleSave}
             disabled={isSaving}
-            className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black shadow-lg flex items-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
+            className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white text-xs font-bold shadow-md flex items-center space-x-2 transition-colors cursor-pointer disabled:opacity-50"
           >
             {isSaving ? (
               <>

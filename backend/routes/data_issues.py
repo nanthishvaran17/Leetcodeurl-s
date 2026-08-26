@@ -161,9 +161,11 @@ def classify_student_issue(student: Student) -> dict:
 @router.get("/summary")
 def get_data_issues_summary(db: Session = Depends(get_db)):
     """
-    Computes real, ground-truth issue counts across all students.
+    Computes real, ground-truth issue counts across Cyber Security and IoT students.
     """
-    students = db.query(Student).options(
+    students = db.query(Student).join(Department, Student.department_id == Department.id).filter(
+        Department.code.in_(["CSE(CS)", "CSE(IOT)"])
+    ).options(
         joinedload(Student.stats),
         joinedload(Student.department)
     ).all()
@@ -242,9 +244,11 @@ def get_data_issues_students(
     db: Session = Depends(get_db)
 ):
     """
-    Returns filtered student issues list with full URL validation metadata.
+    Returns filtered student issues list for Cyber Security and IoT with full URL validation metadata.
     """
-    students = db.query(Student).options(
+    students = db.query(Student).join(Department, Student.department_id == Department.id).filter(
+        Department.code.in_(["CSE(CS)", "CSE(IOT)"])
+    ).options(
         joinedload(Student.stats),
         joinedload(Student.department)
     ).all()

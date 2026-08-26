@@ -8,7 +8,7 @@ from backend.services.report_data_service import fetch_normalized_students, fetc
 from backend.services.report_validators import validate_data_quality
 from backend.services.contest_performance_service import build_contest_performance_report
 
-def build_universal_report(db: Session, config: ReportConfig) -> Dict[str, Any]:
+def build_universal_report(db: Session, config: ReportConfig, current_user: Optional[Any] = None) -> Dict[str, Any]:
     """
     UNIVERSAL REPORT ENGINE
     Single Source of Truth generator that creates normalized datasets for all report types.
@@ -16,13 +16,18 @@ def build_universal_report(db: Session, config: ReportConfig) -> Dict[str, Any]:
     if config.report_type in ("CONTEST_PERFORMANCE", "OFFICIAL_CONTEST", "WEEKLY_CONTEST"):
         return build_contest_performance_report(db, config)
 
-    raw_students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+    from backend.services.authorization_service import apply_role_based_student_filter
+    base_query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+    if current_user:
+        base_query = apply_role_based_student_filter(base_query, current_user, db)
+    raw_students = base_query.all()
     data_quality = validate_data_quality(raw_students)
 
     students = fetch_normalized_students(
         db,
         dept_filter=config.department,
-        year_filter=config.year
+        year_filter=config.year,
+        current_user=current_user
     )
 
     total_students = len(students)

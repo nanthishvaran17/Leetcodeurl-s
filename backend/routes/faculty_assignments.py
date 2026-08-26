@@ -8,6 +8,7 @@ and faculty-scoped student lists.
 from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
+import datetime
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
@@ -94,7 +95,7 @@ def get_my_assigned_students(
         student_list.append(st_out)
 
     count = len(student_list)
-    workload_status = "NORMAL" if count < 20 else ("AT_RATIO" if count == 20 else ("ABOVE_RATIO" if count <= 30 else "HIGH_WORKLOAD"))
+    workload_status = "WITHIN CAPACITY" if count < 30 else ("AT CAPACITY" if count == 30 else "OVER CAPACITY")
 
     return {
         "faculty_id": current_user.id,
@@ -218,150 +219,134 @@ def delete_staff_member(
             detail="Access restricted: HOD can only delete staff members in their own department."
         )
 
-    # 1. Unassign all students assigned to this faculty member
-    unassigned_count = db.query(FacultyStudentAssignment).filter(
-        FacultyStudentAssignment.faculty_id == faculty_id
-    ).delete(synchronize_session=False)
+        # 1. Unassign all students assigned to this faculty member
+        unassigned_count = db.query(FacultyStudentAssignment).filter(
+            FacultyStudentAssignment.faculty_id == faculty_id
+        ).delete(synchronize_session=False)
 
-    # 2. Delete the faculty user record
-    faculty_name = faculty.username
-    try:
+        # 2. Delete the faculty user record
+        faculty_name = faculty.username
         db.delete(faculty)
         db.commit()
-    except Exception as e:
-        # Fallback to Soft Delete if foreign keys (mentor notes, history, alerts) prevent physical deletion
-        db.rollback()
-        faculty.is_active = False
-        faculty.role = "Deleted_Staff"
-        
-        # Anonymize to free up unique constraints (username, email, institutional_id)
-        import time
-        timestamp = int(time.time())
-        faculty.email = f"deleted_{timestamp}_{faculty.email}"[:150]
-        faculty.username = f"deleted_{timestamp}_{faculty.username}"[:100]
-        if faculty.institutional_id:
-            faculty.institutional_id = f"deleted_{timestamp}_{faculty.institutional_id}"[:50]
-            
-        db.commit()
 
-    return {
-        "success": True,
-        "message": f"Staff member '{faculty_name}' deleted successfully. {unassigned_count} students returned to allocation queue.",
-        "unassigned_count": unassigned_count
-    }
+        return {
+            "success": True,
+            "message": f"Staff member '{faculty_name}' deleted successfully. {unassigned_count} students returned to allocation queue.",
+            "unassigned_count": unassigned_count
+        }
 
 
-@router.post("/auto-distribute")
-def auto_distribute_students(
-    payload: AutoDistributeRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("Admin", "Super Admin", "super admin", "HOD", "hod", dept_scoped=True))
-):
-    """
-    Auto-allocates unassigned department students to active department faculty
-    up to 20 students per faculty member in round-robin fashion.
-    """
-    user_role = (current_user.role or "").strip().lower()
-    if user_role in ["hod"] and current_user.department_id != payload.department_id:
-        raise HTTPException(
-            status_code=403,
-            detail="Access restricted: HOD can only auto-distribute students in their own department."
+    @router.post("/auto-distribute")
+    def auto_distribute_students(
+        payload: AutoDistributeRequest,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(require_role("Admin", "Super Admin", "super admin", "HOD", "hod", dept_scoped=True))
+    ):
+        """
+        Auto-allocates unassigned department students to active department faculty
+        up to 20 students per faculty member in round-robin fashion.
+        """
+        user_role = (current_user.role or "").strip().lower()
+        if user_role in ["hod"] and current_user.department_id != payload.department_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Access restricted: HOD can only auto-distribute students in their own department."
+            )
+
+        return faculty_assignment_service.auto_distribute_department(
+            db=db,
+            department_id=payload.department_id,
+            assigned_by_id=current_user.id
         )
 
-    return faculty_assignment_service.auto_distribute_department(
-        db=db,
-        department_id=payload.department_id,
-        assigned_by_id=current_user.id
-    )
+
+    @router.get("/workload-summary")
+    def get_faculty_workload_summary(
+        dept_id: Optional[int] = Query(None),
+        db: Session = Depends(get_db),
+        current_user: User = Depends(require_role("Admin", "Super Admin", "super admin", "HOD", "hod", dept_scoped=True))
+    ):
+        """
+        Returns faculty workload distribution (e.g. 18/20, 20/20) across a department.
+        """
+        user_role = (current_user.role or "").strip().lower()
+        target_dept_id = current_user.department_id if user_role in ["hod"] else dept_id
+
+        query = db.query(User).options(joinedload(User.department)).filter(
+            User.is_active == True,
+            User.role.in_(["Faculty", "faculty", "Staff", "staff", "HOD", "hod"])
+        )
+        if target_dept_id:
+            query = query.filter(User.department_id == target_dept_id)
+
+        faculty_list = query.all()
+
+        # Efficient single grouped query for all active faculty student counts
+        fac_ids = [f.id for f in faculty_list]
+        count_rows = db.query(
+            FacultyStudentAssignment.faculty_id,
+            func.count(FacultyStudentAssignment.id)
+        ).filter(
+            FacultyStudentAssignment.faculty_id.in_(fac_ids),
+            FacultyStudentAssignment.is_active == True
+        ).group_by(FacultyStudentAssignment.faculty_id).all() if fac_ids else []
+
+        assigned_counts = {r[0]: r[1] for r in count_rows}
+        workload = []
+
+        for fac in faculty_list:
+            count = assigned_counts.get(fac.id, 0)
+            status_code = "NORMAL" if count < 20 else ("AT_RATIO" if count == 20 else ("ABOVE_RATIO" if count <= 30 else "HIGH_WORKLOAD"))
+            status_label = "Normal" if count < 20 else ("At Ratio" if count == 20 else ("Above Ratio" if count <= 30 else "High Workload"))
+            workload.append({
+                "faculty_id": fac.id,
+                "faculty_name": fac.username,
+                "email": fac.email,
+                "role": fac.role,
+                "department_id": fac.department_id,
+                "department_name": fac.department.name if fac.department else "General",
+                "assigned_students": count,
+                "recommended_ratio": 20,
+                "workload_status": status_code,
+                "workload_label": status_label,
+                "is_above_ratio": count > 20
+            })
+
+        return {
+            "total_faculty": len(faculty_list),
+            "target_department_id": target_dept_id,
+            "recommended_ratio_per_faculty": 20,
+            "max_capacity_per_faculty": 30,
+            "faculty_workload": workload
+        }
 
 
-@router.get("/workload-summary")
-def get_faculty_workload_summary(
-    dept_id: Optional[int] = Query(None),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("Admin", "Super Admin", "super admin", "HOD", "hod", dept_scoped=True))
-):
-    """
-    Returns faculty workload distribution (e.g. 18/20, 20/20) across a department.
-    """
-    user_role = (current_user.role or "").strip().lower()
-    target_dept_id = current_user.department_id if user_role in ["hod"] else dept_id
+    # =========================================================================
+    # STAFF MENTORING & MONITORING ENDPOINTS
+    # =========================================================================
 
-    query = db.query(User).options(joinedload(User.department)).filter(
-        User.is_active == True,
-        User.role.in_(["Faculty", "faculty", "Staff", "staff", "HOD", "hod"])
-    )
-    if target_dept_id:
-        query = query.filter(User.department_id == target_dept_id)
-
-    faculty_list = query.all()
-
-    # Efficient single grouped query for all active faculty student counts
-    fac_ids = [f.id for f in faculty_list]
-    count_rows = db.query(
-        FacultyStudentAssignment.faculty_id,
-        func.count(FacultyStudentAssignment.id)
-    ).filter(
-        FacultyStudentAssignment.faculty_id.in_(fac_ids),
-        FacultyStudentAssignment.is_active == True
-    ).group_by(FacultyStudentAssignment.faculty_id).all() if fac_ids else []
-
-    assigned_counts = {r[0]: r[1] for r in count_rows}
-    workload = []
-
-    for fac in faculty_list:
-        count = assigned_counts.get(fac.id, 0)
-        status_code = "NORMAL" if count < 20 else ("AT_RATIO" if count == 20 else ("ABOVE_RATIO" if count <= 30 else "HIGH_WORKLOAD"))
-        status_label = "Normal" if count < 20 else ("At Ratio" if count == 20 else ("Above Ratio" if count <= 30 else "High Workload"))
-        workload.append({
-            "faculty_id": fac.id,
-            "faculty_name": fac.username,
-            "email": fac.email,
-            "role": fac.role,
-            "department_id": fac.department_id,
-            "department_name": fac.department.name if fac.department else "General",
-            "assigned_students": count,
-            "recommended_ratio": 20,
-            "workload_status": status_code,
-            "workload_label": status_label,
-            "is_above_ratio": count > 20
-        })
-
-    return {
-        "total_faculty": len(faculty_list),
-        "target_department_id": target_dept_id,
-        "recommended_ratio_per_faculty": 20,
-        "max_capacity_per_faculty": 30,
-        "faculty_workload": workload
-    }
+    class NoteCreateRequest(BaseModel):
+        student_id: int
+        note: str
+        escalation_level: Optional[str] = "NORMAL"
 
 
-# =========================================================================
-# STAFF MENTORING & MONITORING ENDPOINTS
-# =========================================================================
-
-class NoteCreateRequest(BaseModel):
-    student_id: int
-    note: str
-    escalation_level: Optional[str] = "NORMAL"
+    class FollowUpCreateRequest(BaseModel):
+        student_id: int
+        title: str
+        due_date: str  # YYYY-MM-DD
+        notes: Optional[str] = None
 
 
-class FollowUpCreateRequest(BaseModel):
-    student_id: int
-    title: str
-    due_date: str  # YYYY-MM-DD
-    notes: Optional[str] = None
+    class FollowUpUpdateRequest(BaseModel):
+        status: str  # PENDING, COMPLETED, CANCELLED
+        notes: Optional[str] = None
 
 
-class FollowUpUpdateRequest(BaseModel):
-    status: str  # PENDING, COMPLETED, CANCELLED
-    notes: Optional[str] = None
-
-
-class WeeklyTargetRequest(BaseModel):
-    student_id: int
-    target_problems: int = 10
-    target_contests: int = 1
+    class WeeklyTargetRequest(BaseModel):
+        student_id: int
+        target_problems: int = 10
+        target_contests: int = 1
 
 
 def calculate_student_performance_status(s: Student) -> Dict[str, Any]:
@@ -480,14 +465,18 @@ def get_my_mentoring_summary(
     ).count()
 
     # Calculate post-9:30 solvers count for assigned students
-    from backend.routes.weekly_contests import get_post_930_solvers
-    post_930_data = get_post_930_solvers(
-        request=Depends(get_db), session_date=None, dept=None,
-        year_level=None, section=None, min_post_window_solves=1,
-        sort_by="latest", search=None, student_id=None, db=db
-    ) if hasattr(db, 'query') else {"summary": {"students_detected": 0, "total_post_930_solves": 0}}
-
-    post_930_summary = post_930_data.get("summary", {}) if isinstance(post_930_data, dict) else {}
+    post_930_summary = {"students_detected": 0, "total_post_930_solves": 0}
+    try:
+        from backend.routes.weekly_contests import get_post_930_solvers
+        post_930_data = get_post_930_solvers(
+            session_date=None, dept=None,
+            year_level=None, section=None, min_post_window_solves=1,
+            sort_by="latest", search=None, student_id=None, db=db
+        )
+        if isinstance(post_930_data, dict):
+            post_930_summary = post_930_data.get("summary", post_930_summary)
+    except Exception:
+        pass
 
     return {
         "faculty_id": current_user.id,
@@ -503,7 +492,7 @@ def get_my_mentoring_summary(
         "post_930_solvers_count": post_930_summary.get("students_detected", 0),
         "post_930_total_solves": post_930_summary.get("total_post_930_solves", 0),
         "workload_capacity": 30,
-        "workload_status": "NORMAL" if total_assigned <= 20 else ("FULL" if total_assigned == 30 else "ABOVE_TARGET"),
+        "workload_status": "WITHIN CAPACITY" if total_assigned < 30 else ("AT CAPACITY" if total_assigned == 30 else "OVER CAPACITY"),
         "weekly_progress_avg": avg_solved,
         "overall_performance": "High" if at_risk_count == 0 else ("Moderate" if at_risk_count <= 3 else "Needs Action")
     }
@@ -819,4 +808,107 @@ def get_weekly_staff_report(
         "follow_ups": pending_followups,
         "report_date": datetime.datetime.utcnow().strftime("%Y-%m-%d")
     }
+
+
+# In-memory concurrency locks to prevent duplicate live-sync operations
+_faculty_sync_locks: Dict[int, bool] = {}
+
+@router.post("/live-sync")
+async def faculty_live_sync(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("Faculty", "faculty", "Staff", "staff", "HOD", "hod", "Admin", "Super Admin"))
+):
+    """
+    Executes a production live LeetCode data sync STRICTLY scoped to the authenticated
+    staff member's assigned portfolio.
+    Guarantees:
+    - Never trusts client-supplied student IDs.
+    - Concurrency lock prevents duplicate sync jobs.
+    - Uses existing live LeetCode sync engine with concurrency control.
+    - Transactionally writes live updates to PostgreSQL / SQLite.
+    - Logs audit record in faculty_action_audit_logs.
+    """
+    faculty_id = current_user.id
+    if _faculty_sync_locks.get(faculty_id, False):
+        return {
+            "status": "ALREADY_RUNNING",
+            "message": "Live sync is already running for your assigned portfolio. Please wait for it to complete.",
+            "faculty_id": faculty_id
+        }
+
+    _faculty_sync_locks[faculty_id] = True
+    try:
+        # Resolve authoritative assigned students from database
+        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, faculty_id)
+        if not assigned_ids:
+            return {
+                "status": "COMPLETED",
+                "message": "No students currently assigned to your portfolio.",
+                "total_assigned": 0,
+                "success_count": 0,
+                "unavailable_count": 0,
+                "failed_count": 0,
+                "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
+            }
+
+        from backend.sync_engine import sync_single_student_by_id
+        
+        success_count = 0
+        unavailable_count = 0
+        failed_count = 0
+        results = []
+
+        for st_id in assigned_ids:
+            try:
+                res = await sync_single_student_by_id(st_id, timeout=20.0)
+                st_status = res.get("status")
+                if st_status == "success":
+                    success_count += 1
+                elif "NOT FOUND" in str(res.get("error", "")).upper() or "INVALID" in str(res.get("error", "")).upper():
+                    unavailable_count += 1
+                else:
+                    failed_count += 1
+                results.append({
+                    "student_id": st_id,
+                    "status": st_status,
+                    "name": res.get("name")
+                })
+            except Exception as e:
+                failed_count += 1
+                results.append({
+                    "student_id": st_id,
+                    "status": "failed",
+                    "error": str(e)
+                })
+
+        # Record Audit Log
+        from backend.models import AuditLog
+        try:
+            audit = AuditLog(
+                user_id=faculty_id,
+                user_name=current_user.username,
+                action="LIVE_SYNC_PORTFOLIO",
+                details=f"Live sync completed for {len(assigned_ids)} students: {success_count} success, {unavailable_count} unavailable, {failed_count} failed."
+            )
+            db.add(audit)
+            db.commit()
+        except Exception as a_err:
+            logger.warning(f"Failed to record live-sync audit log: {a_err}")
+
+        now_utc = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        return {
+            "status": "COMPLETED",
+            "message": f"Live sync completed: {success_count} profiles updated, {unavailable_count} unavailable, {failed_count} failed.",
+            "faculty_id": faculty_id,
+            "faculty_name": current_user.username,
+            "total_assigned": len(assigned_ids),
+            "success_count": success_count,
+            "unavailable_count": unavailable_count,
+            "failed_count": failed_count,
+            "timestamp": now_utc,
+            "results": results
+        }
+    finally:
+        _faculty_sync_locks[faculty_id] = False
+
 

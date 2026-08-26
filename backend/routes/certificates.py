@@ -20,6 +20,7 @@ from backend.certificate_generator import (
     resolve_department_name
 )
 from backend.logger import logger
+from backend.security import get_current_user_optional
 
 router = APIRouter(tags=["Certificates & Signatures"])
 
@@ -409,13 +410,20 @@ def verify_certificate_public(
 
 @router.get("/certificates")
 def list_certificates(
-    limit: int = Query(50, ge=1, le=500),
-    department: Optional[str] = None,
-    search: Optional[str] = None,
-    db: Session = Depends(get_db)
+    department: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    limit: int = Query(200, ge=1, le=1000),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """Lists issued certificates for administrator dashboard."""
+    """Lists issued certificates, scoped to assigned students if caller is Staff/Faculty."""
     query = db.query(CertificateRecord)
+
+    if current_user and getattr(current_user, "role", "").lower() in ("staff", "faculty"):
+        from backend.services.faculty_assignment_service import faculty_assignment_service
+        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, current_user.id)
+        query = query.filter(CertificateRecord.student_id.in_(assigned_ids))
+
     if department:
         query = query.filter(CertificateRecord.department == department)
     if search:
@@ -450,11 +458,12 @@ def list_certificates(
 @router.post("/certificates/generate")
 def generate_certificate_endpoint(
     req: CertificateGenerateRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     """
     Generates an authoritative Certificate of Excellence for the specified student.
-    Enforces Top Performer validation, unique verification ID, scannable QR, and PDF generation.
+    Enforces Staff assigned student authorization, Top Performer validation, unique verification ID, and PDF generation.
     """
     student = None
     if req.student_id:

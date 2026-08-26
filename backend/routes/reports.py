@@ -262,7 +262,7 @@ def generate_report(
         filters=filters
     )
 
-    dataset = build_universal_report(db, config)
+    dataset = build_universal_report(db, config, current_user=current_user)
     return dataset
 
 @router.get("/history")

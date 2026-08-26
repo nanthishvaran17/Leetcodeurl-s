@@ -277,27 +277,19 @@ def run_migrations():
                     conn.commit()
                     print("[DB Migration] Added students column: whatsapp_verified")
 
-            # Promote nanthishvaran17@gmail.com to Admin role
+            # Ensure system default Admin account exists
             admin_check = conn.execute(
-                __import__('sqlalchemy').text("SELECT id, role FROM users WHERE email = 'nanthishvaran17@gmail.com'")
+                __import__('sqlalchemy').text("SELECT id, role FROM users WHERE email = 'admin@college.edu' OR role = 'Admin'")
             ).fetchone()
-
-            if admin_check:
-                if admin_check[1] != "Admin" and admin_check[1] != "admin":
-                    conn.execute(
-                        __import__('sqlalchemy').text("UPDATE users SET role = 'Admin', is_active = 1 WHERE email = 'nanthishvaran17@gmail.com'")
-                    )
-                    conn.commit()
-                    print("[DB Migration] Promoted nanthishvaran17@gmail.com to Admin role.")
-            else:
+            if not admin_check:
                 conn.execute(
                     __import__('sqlalchemy').text(
                         "INSERT INTO users (username, email, hashed_password, role, is_active) "
-                        "VALUES ('nanthishvaran17', 'nanthishvaran17@gmail.com', 'N/A_OTP_USER', 'Admin', 1)"
+                        "VALUES ('admin', 'admin@college.edu', 'N/A_SYSTEM_ADMIN', 'Admin', 1)"
                     )
                 )
                 conn.commit()
-                print("[DB Migration] Created Admin User account for nanthishvaran17@gmail.com.")
+                print("[DB Migration] Ensured default Admin account exists.")
 
             # Check official_weekly_snapshots columns
             result_snaps = conn.execute(

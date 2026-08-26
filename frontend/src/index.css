@@ -120,8 +120,9 @@
   overflow: hidden !important;
   box-sizing: border-box !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
-  will-change: transform, opacity;
-  transform: translateZ(0);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 /* Production Responsive Layout & Table Containers */

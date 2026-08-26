@@ -6,6 +6,7 @@ import {
   Filter, Search, Zap, Calendar, ArrowRight, ExternalLink, Check, CheckSquare, Square, Info
 } from 'lucide-react';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { StatusNotificationModal, NotificationState } from './StatusNotificationModal';
 
 interface EmailRecipient {
@@ -119,6 +120,9 @@ const STATUS_BADGES: Record<string, { icon: React.ReactNode; bg: string; text: s
 export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated' | 'recipients' | 'history' }> = ({
   defaultSection = 'manual'
 }) => {
+  const { user } = useAuth();
+  const isStaff = ['faculty', 'staff'].includes(user?.role?.toLowerCase() || '');
+
   // Navigation & Data States
   const [activeSection, setActiveSection] = useState<'manual' | 'automated' | 'recipients' | 'history'>(defaultSection);
   const [recipients, setRecipients] = useState<EmailRecipient[]>([]);
@@ -177,7 +181,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
   // Test Mode Diagnostics State
   const [showDiagnostics, setShowDiagnostics] = useState(false);
-  const [testRecipient, setTestRecipient] = useState('nanthishvaran17@gmail.com');
+  const [testRecipient, setTestRecipient] = useState(user?.email || 'nanthishvaran17@gmail.com');
   const [isTestingProvider, setIsTestingProvider] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string; error?: string; provider?: string } | null>(null);
 
@@ -189,6 +193,12 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
   useEffect(() => {
     if (defaultSection) setActiveSection(defaultSection);
   }, [defaultSection]);
+
+  useEffect(() => {
+    if (user?.email) {
+      setTestRecipient(user.email);
+    }
+  }, [user?.email]);
 
   // Main Data Fetching Function
   const fetchAllData = useCallback(async (isSilent = false) => {
@@ -203,12 +213,39 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
         api.get('/system/schedule').catch(() => ({ data: null })),
       ]);
 
-      const recs = Array.isArray(rRes.data) ? rRes.data : (rRes.data?.recipients || []);
-      setRecipients(recs);
+      let recs: EmailRecipient[] = Array.isArray(rRes.data) ? rRes.data : (rRes.data?.recipients || []);
+      
+      // If caller is Staff, ensure staff's own email is placed at top and pre-selected
+      if (isStaff && user?.email) {
+        const userEmailLower = user.email.toLowerCase().trim();
+        const existingIdx = recs.findIndex((r: any) => (r.email || '').toLowerCase().trim() === userEmailLower);
+        if (existingIdx >= 0) {
+          // Promote to top
+          const selfRec = recs[existingIdx];
+          recs = [selfRec, ...recs.filter((_, idx) => idx !== existingIdx)];
+          setSelectedRecipientEmails(new Set([selfRec.email]));
+        } else {
+          const selfRec: EmailRecipient = {
+            id: 999999,
+            name: user.name || user.username || 'My Mentoring Email',
+            email: user.email,
+            role: 'STAFF',
+            department: typeof user.department === 'string' ? user.department : ((user.department as any)?.code || 'CSE'),
+            is_active: true,
+            receive_weekly_reports: true,
+            receive_hod_reports: false,
+            receive_error_reports: false,
+            created_at: new Date().toISOString()
+          };
+          recs = [selfRec, ...recs];
+          setSelectedRecipientEmails(new Set([selfRec.email]));
+        }
+      } else {
+        const activeEmails = new Set<string>(recs.filter((r: any) => r.is_active).map((r: any) => r.email));
+        setSelectedRecipientEmails(activeEmails);
+      }
 
-      // Pre-select all active recipients by default for manual send convenience
-      const activeEmails = new Set<string>(recs.filter((r: any) => r.is_active).map((r: any) => r.email));
-      setSelectedRecipientEmails(activeEmails);
+      setRecipients(recs);
 
       const logsData = Array.isArray(lRes.data) ? lRes.data : (lRes.data?.deliveries || []);
       setLogs(logsData);
@@ -244,7 +281,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
       setLoading(false);
       setRefreshing(false);
     }
-  }, [selectedSessionId]);
+  }, [selectedSessionId, isStaff, user]);
 
   useEffect(() => {
     fetchAllData();
@@ -677,11 +714,13 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             </div>
 
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">
-              Email <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Operations Center</span>
+              {isStaff ? 'My Staff ' : 'Email '}<span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Operations Center</span>
             </h1>
 
             <p className="text-xs sm:text-sm text-gray-300 font-bold leading-relaxed">
-              Monitor, control, and verify institutional report delivery across manual and automated email workflows.
+              {isStaff
+                ? "Dispatch and manage weekly LeetCode mentoring performance reports for your assigned students directly to your authenticated email."
+                : "Monitor, control, and verify institutional report delivery across manual and automated email workflows."}
             </p>
           </div>
 
@@ -714,6 +753,28 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           </div>
         </div>
       </div>
+
+      {/* Staff Mentoring Safe Delivery Banner */}
+      {isStaff && (
+        <div className="p-5 rounded-3xl bg-gradient-to-r from-indigo-950/60 via-slate-900/60 to-brand-950/60 border border-indigo-500/30 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg">
+          <div className="flex items-center space-x-3.5">
+            <div className="p-3 rounded-2xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              <Mail className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-black tracking-tight text-white">Staff Mentoring Safe Delivery Desk</h4>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  🟢 Authenticated Recipient
+                </span>
+              </div>
+              <p className="text-xs text-gray-300 font-medium mt-0.5">
+                All manual and scheduled reports are formatted with strictly your <strong>30 assigned students</strong> and pre-routed to your primary staff email: <strong className="text-indigo-300 font-mono">{user?.email || 'nanthishvaran17@gmail.com'}</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 2. TOP KPI CARDS */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">

@@ -31,13 +31,18 @@ def fetch_normalized_students(
     db: Session,
     dept_filter: Optional[str] = "ALL",
     year_filter: Optional[str] = "ALL",
-    section_filter: Optional[str] = "ALL"
+    section_filter: Optional[str] = "ALL",
+    current_user: Optional[Any] = None
 ) -> List[StudentRow]:
     """
     Fetches raw student data from database and normalizes all fields into StudentRow objects.
     Centralized Total Solved calculation: Total Solved = Easy + Medium + Hard.
     """
+    from backend.services.authorization_service import apply_role_based_student_filter
     query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+
+    if current_user:
+        query = apply_role_based_student_filter(query, current_user, db)
 
     if dept_filter and dept_filter.upper() != "ALL":
         query = query.join(Department).filter(

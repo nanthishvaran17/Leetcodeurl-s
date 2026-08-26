@@ -1110,20 +1110,47 @@ def get_students_sync_status(run_id: Optional[str] = None):
     return sync_tracker.to_dict()
 
 @router.post("/{student_id}/refresh")
-async def refresh_single_student(student_id: int):
+@router.post("/{student_id}/refresh-live")
+async def refresh_single_student(
+    student_id: int,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user)
+):
     """
     Refreshes single student statistics within target 30-second limit.
+    Enforces strict role-based access control: Staff can only refresh assigned students.
     """
+    from backend.services.authorization_service import require_staff_student_access
+    require_staff_student_access(db, current_user, student_id)
+
     try:
         result = await sync_single_student_by_id(student_id, timeout=30.0)
         if result.get("status") == "failed":
             raise HTTPException(status_code=400, detail=result.get("error", "Sync failed"))
+
+        # Log Audit Record
+        try:
+            if current_user:
+                from backend.models import AuditLog
+                audit = AuditLog(
+                    user_id=current_user.id,
+                    user_name=current_user.username,
+                    action="REFRESH_STUDENT_LIVE",
+                    details=f"Refreshed live stats for student {student_id} ({result.get('name')}) - status: {result.get('status')}"
+                )
+                db.add(audit)
+                db.commit()
+        except Exception:
+            pass
+
         return {
             "message": f"Refreshed stats for {result.get('name')}",
             "status": result.get("status"),
             "last_verified_at": result.get("last_verified_at"),
             "stats": result.get("stats")
         }
+    except HTTPException:
+        raise
     except ValueError as val_err:
         raise HTTPException(status_code=404, detail=str(val_err))
     except Exception as err:

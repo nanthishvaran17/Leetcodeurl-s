@@ -149,6 +149,7 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
             payload = jwt.decode(raw_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
             username: Optional[str] = payload.get("sub")
             email_claim: Optional[str] = payload.get("email")
+            role_claim: Optional[str] = payload.get("role")
             if username or email_claim:
                 query_filter = []
                 if username:
@@ -160,6 +161,8 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
                     User.is_active == True
                 ).first()
                 if user:
+                    if role_claim:
+                        user.override_role = role_claim
                     return user
                 if payload.get("role") in ["Student", "student"]:
                     st = db.query(Student).filter(
@@ -187,25 +190,27 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
                     return user
                 # If authorized admin email
                 if fb_email in EXACT_TWO_ADMIN_EMAILS:
-                    user = db.query(User).filter(User.role.ilike("admin"), User.is_active == True).first()
-                    if user:
-                        setattr(user, "email", str(fb_email))
-                        db.commit()
-                        return user
-                    else:
-                        user = User(
-                            username=fb_email.split('@')[0],
-                            email=fb_email,
-                            hashed_password=get_password_hash("admin123"),
-                            role="Admin",
-                            is_active=True
-                        )
-                        db.add(user)
-                        db.commit()
-                        db.refresh(user)
-                        return user
+                    user_by_name = db.query(User).filter(User.username.ilike(fb_email.split('@')[0]), User.is_active == True).first()
+                    if user_by_name:
+                        return user_by_name
+                    # Check if email is already used by another user
+                    existing_email_user = db.query(User).filter(User.email.ilike(fb_email)).first()
+                    if existing_email_user:
+                        return existing_email_user
+                    
+                    user = User(
+                        username=fb_email.split('@')[0],
+                        email=fb_email,
+                        hashed_password=get_password_hash("admin123"),
+                        role="Admin",
+                        is_active=True
+                    )
+                    db.add(user)
+                    db.commit()
+                    db.refresh(user)
+                    return user
         except Exception:
-            pass
+            db.rollback()
 
         # 3. Try parsing unverified JWT payload for Firebase/Google Token (Fail-safe for offline/local)
         try:
@@ -219,25 +224,26 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
                 if user:
                     return user
                 if t_email in EXACT_TWO_ADMIN_EMAILS:
-                    user = db.query(User).filter(User.role.ilike("admin"), User.is_active == True).first()
-                    if user:
-                        setattr(user, "email", str(t_email))
-                        db.commit()
-                        return user
-                    else:
-                        user = User(
-                            username=t_email.split('@')[0],
-                            email=t_email,
-                            hashed_password=get_password_hash("admin123"),
-                            role="Admin",
-                            is_active=True
-                        )
-                        db.add(user)
-                        db.commit()
-                        db.refresh(user)
-                        return user
+                    user_by_name = db.query(User).filter(User.username.ilike(t_email.split('@')[0]), User.is_active == True).first()
+                    if user_by_name:
+                        return user_by_name
+                    existing_email_user = db.query(User).filter(User.email.ilike(t_email)).first()
+                    if existing_email_user:
+                        return existing_email_user
+
+                    user = User(
+                        username=t_email.split('@')[0],
+                        email=t_email,
+                        hashed_password=get_password_hash("admin123"),
+                        role="Admin",
+                        is_active=True
+                    )
+                    db.add(user)
+                    db.commit()
+                    db.refresh(user)
+                    return user
         except Exception:
-            pass
+            db.rollback()
 
     # Check Server Session Table
     t_hash = hashlib.sha256(raw_token.encode('utf-8')).hexdigest()

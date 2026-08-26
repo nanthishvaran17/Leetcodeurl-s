@@ -325,7 +325,7 @@ export const App: React.FC = () => {
       <div className="flex-1 w-full py-4 sm:py-6 px-3 sm:px-5 lg:px-7 2xl:px-8 max-w-full mx-auto relative">
         
         {/* Slide-out Sidebar Drawer */}
-        {isAuthenticated && activeTab !== 'landing' && (
+        {isAuthenticated && (
           <Sidebar 
             activeTab={activeTab} 
             setActiveTab={(tab) => {

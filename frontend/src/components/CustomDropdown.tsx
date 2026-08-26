@@ -22,6 +22,7 @@ interface CustomDropdownProps {
   placeholder?: string;
   align?: 'left' | 'right' | 'auto';
   className?: string;
+  labelClassName?: string;
 }
 
 export const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -33,7 +34,8 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   icon: HeaderIcon,
   placeholder = 'Select option...',
   align = 'auto',
-  className = ''
+  className = '',
+  labelClassName
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -74,7 +76,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
 
   return (
     <div className={`space-y-1.5 min-w-0 relative ${isOpen ? 'z-[100]' : 'z-10'} ${className}`} ref={dropdownRef} id={id}>
-      <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate flex items-center justify-between">
+      <label className={labelClassName || "block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate flex items-center justify-between"}>
         <span>{label}</span>
         {selectedOption?.count !== undefined && selectedOption.count > 0 && (
           <span className="text-[9px] font-mono font-bold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-1.5 py-0.5 rounded-full border border-brand-500/20">

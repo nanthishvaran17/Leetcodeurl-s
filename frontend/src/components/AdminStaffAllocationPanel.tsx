@@ -8,6 +8,7 @@ import {
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
+import { AllocationConfirmationModal } from './admin/AllocationConfirmationModal';
 
 export const AdminStaffAllocationPanel: React.FC = () => {
   const { user } = useAuth();
@@ -20,6 +21,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
   const [targetStaffId, setTargetStaffId] = useState<number | ''>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [showAllocationConfirmModal, setShowAllocationConfirmModal] = useState<boolean>(false);
 
   // Filter States for Unassigned Queue
   const [selectedDept, setSelectedDept] = useState<string>('ALL');
@@ -333,7 +335,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
   };
 
   // ─── 6. Bulk Manual Student Assignment ───────────────────────────────────
-  const handleBulkAssign = async () => {
+  const handleBulkAssign = () => {
     if (!targetStaffId || selectedStudents.length === 0) {
       notify.warning('Selection Required', 'Please select a target staff member and at least one student.');
       return;
@@ -348,21 +350,18 @@ export const AdminStaffAllocationPanel: React.FC = () => {
       }
     }
 
-    setSubmitting(true);
-    try {
-      await api.post('/admin/bulk-assign', {
-        staff_id: Number(targetStaffId),
-        student_ids: selectedStudents
-      });
-      notify.success('Students Assigned', `Successfully assigned ${selectedStudents.length} students.`);
-      setSelectedStudents([]);
-      setTargetStaffId('');
-      fetchAllocationData();
-    } catch (err: any) {
-      notify.error('Assignment Failed', err.response?.data?.detail || 'Failed to assign students.');
-    } finally {
-      setSubmitting(false);
-    }
+    setShowAllocationConfirmModal(true);
+  };
+
+  const executeConfirmAllocation = async () => {
+    await api.post('/admin/bulk-assign', {
+      staff_id: Number(targetStaffId),
+      student_ids: selectedStudents
+    });
+    notify.success('Students Assigned', `Successfully assigned ${selectedStudents.length} students.`);
+    setSelectedStudents([]);
+    setTargetStaffId('');
+    fetchAllocationData();
   };
 
   const toggleSelectStudent = (id: number) => {
@@ -1081,6 +1080,15 @@ export const AdminStaffAllocationPanel: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Premium Institutional Allocation Confirmation Modal */}
+      <AllocationConfirmationModal
+        isOpen={showAllocationConfirmModal}
+        onClose={() => setShowAllocationConfirmModal(false)}
+        onConfirm={executeConfirmAllocation}
+        targetStaff={staffList.find(s => s.id === Number(targetStaffId)) || null}
+        selectedCount={selectedStudents.length}
+      />
 
     </div>
   );
