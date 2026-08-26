@@ -639,14 +639,19 @@ def create_staff_user(
     if current_user.role not in ["Super Admin", "Admin"]:
         raise HTTPException(status_code=403, detail="Only Admins can create staff accounts.")
 
-    # Validate duplicate institutional_id if provided
-    if payload.institutional_id:
-        inst_id = payload.institutional_id.strip()
-        import re
-        if not re.match(r"^NEC-[A-Z]+-[A-Z]+-\d+$", inst_id):
-            raise HTTPException(status_code=400, detail="Invalid Institutional ID format. Expected format: NEC-{DEPT}-{ROLE}-{NUMBER} (e.g. NEC-CSE-FAC-001).")
+    # Flexible institutional_id: accept any custom format or auto-generate if missing
+    inst_id = payload.institutional_id.strip().upper() if (payload.institutional_id and str(payload.institutional_id).strip()) else None
+    if not inst_id and payload.department_id:
+        from backend.models import Department
+        dept = db.query(Department).filter(Department.id == payload.department_id).first()
+        dept_code = (dept.code if dept and dept.code else "GEN").replace("(", "").replace(")", "").replace("-", "").upper()
+        role_prefix = "FAC" if payload.role in ["Faculty", "Staff"] else ("HOD" if payload.role == "HOD" else "ADM")
+        existing_count = db.query(User).filter(User.institutional_id.like(f"NEC-{dept_code}-{role_prefix}-%")).count()
+        inst_id = f"NEC-{dept_code}-{role_prefix}-{existing_count + 1:03d}"
+
+    if inst_id:
         if db.query(User).filter(User.institutional_id == inst_id).first():
-            raise HTTPException(status_code=400, detail="A user with this Institutional ID already exists.")
+            raise HTTPException(status_code=400, detail=f"A user with Institutional ID '{inst_id}' already exists. Please choose a different ID.")
 
     existing = db.query(User).filter(
         (User.username.ilike(payload.username.strip())) | (User.email.ilike(payload.email.strip()))

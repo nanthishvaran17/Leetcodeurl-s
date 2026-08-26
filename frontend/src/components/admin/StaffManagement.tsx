@@ -26,10 +26,27 @@ export const StaffManagement: React.FC = () => {
 
   const [passwordStrengthError, setPasswordStrengthError] = useState('');
 
-  useEffect(() => {
-    fetchStaff();
-    fetchDepartments();
-  }, []);
+  const autoGenerateInstId = (deptIdVal: string, roleVal: string) => {
+    const dept = departments.find(d => String(d.id) === String(deptIdVal));
+    const deptCode = (dept?.code || 'GEN').replace(/[\(\)-]/g, '').toUpperCase();
+    const rolePrefix = roleVal === 'Faculty' ? 'FAC' : (roleVal === 'Staff' ? 'STF' : (roleVal === 'HOD' ? 'HOD' : 'ADM'));
+    const randomNum = Math.floor(100 + Math.random() * 900);
+    return `NEC-${deptCode}-${rolePrefix}-${randomNum}`;
+  };
+
+  const handleDeptChange = (newDeptId: string) => {
+    const nextId = (!formData.institutional_id || formData.institutional_id.startsWith('NEC-'))
+      ? autoGenerateInstId(newDeptId, formData.role)
+      : formData.institutional_id;
+    setFormData({ ...formData, department_id: newDeptId, institutional_id: nextId });
+  };
+
+  const handleRoleChange = (newRole: string) => {
+    const nextId = (!formData.institutional_id || formData.institutional_id.startsWith('NEC-'))
+      ? autoGenerateInstId(formData.department_id, newRole)
+      : formData.institutional_id;
+    setFormData({ ...formData, role: newRole, institutional_id: nextId });
+  };
 
   const fetchDepartments = async () => {
     try {
@@ -225,42 +242,17 @@ export const StaffManagement: React.FC = () => {
             ) : (
               <div className="p-6 space-y-8 max-h-[75vh] overflow-y-auto custom-scrollbar">
                 
-                {/* SECTION A: IDENTITY */}
+                {/* SECTION 1: ROLE & ACADEMIC COHORT FIRST */}
                 <div className="space-y-4">
                   <h4 className="text-xs font-black text-brand-500 tracking-wider uppercase border-b border-gray-100 dark:border-navy-700 pb-2">
-                    Identity Details
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Institutional ID *</label>
-                      <input type="text" placeholder="e.g. NEC-CSE-FAC-001" required value={formData.institutional_id} onChange={(e) => setFormData({ ...formData, institutional_id: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Username *</label>
-                      <input type="text" required value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Official Email *</label>
-                      <input type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Date of Birth *</label>
-                      <input type="date" required value={formData.date_of_birth} onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* SECTION B: ACADEMIC DETAILS */}
-                <div className="space-y-4">
-                  <h4 className="text-xs font-black text-brand-500 tracking-wider uppercase border-b border-gray-100 dark:border-navy-700 pb-2">
-                    Academic Details
+                    1. Role &amp; Academic Scope (Select First)
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
                       <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Role *</label>
-                      <select value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm focus:ring-2 focus:ring-brand-500 outline-none font-semibold">
-                        <option value="Staff">Staff</option>
+                      <select value={formData.role} onChange={(e) => handleRoleChange(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm focus:ring-2 focus:ring-brand-500 outline-none font-semibold">
                         <option value="Faculty">Faculty</option>
+                        <option value="Staff">Staff</option>
                         <option value="HOD">HOD</option>
                         <option value="Admin">Admin</option>
                         <option value="Super Admin">Super Admin</option>
@@ -270,7 +262,7 @@ export const StaffManagement: React.FC = () => {
                     {['Staff', 'Faculty', 'HOD'].includes(formData.role) && (
                       <div>
                         <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Department *</label>
-                        <select value={formData.department_id} onChange={(e) => setFormData({ ...formData, department_id: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                        <select value={formData.department_id} onChange={(e) => handleDeptChange(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
                           <option value="">Select Department</option>
                           {departments.map(d => (
                             <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
@@ -304,6 +296,47 @@ export const StaffManagement: React.FC = () => {
                         </select>
                       </div>
                     )}
+                  </div>
+                </div>
+
+                {/* SECTION 2: IDENTITY DETAILS */}
+                <div className="space-y-4">
+                  <h4 className="text-xs font-black text-brand-500 tracking-wider uppercase border-b border-gray-100 dark:border-navy-700 pb-2">
+                    2. User Identity &amp; ID Details
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="block text-xs font-bold text-gray-700 dark:text-gray-300">Institutional ID</label>
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, institutional_id: autoGenerateInstId(formData.department_id, formData.role) })}
+                          className="text-[10px] text-brand-600 dark:text-brand-400 font-bold hover:underline"
+                        >
+                          Auto-Generate
+                        </button>
+                      </div>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. NEC-CSECS-FAC-001 or any custom ID" 
+                        value={formData.institutional_id} 
+                        onChange={(e) => setFormData({ ...formData, institutional_id: e.target.value })} 
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm focus:ring-2 focus:ring-brand-500 outline-none font-mono" 
+                      />
+                      <p className="text-[10px] text-gray-400 mt-1">Manual custom ID or auto-generated by Department.</p>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Username *</label>
+                      <input type="text" required value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Official Email *</label>
+                      <input type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Date of Birth *</label>
+                      <input type="date" required value={formData.date_of_birth} onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
+                    </div>
                   </div>
                 </div>
 
