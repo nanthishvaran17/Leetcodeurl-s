@@ -121,15 +121,11 @@ def classify_student_issue(student: Student) -> dict:
         recommended_action = "Faculty mentoring and introductory problem assignment."
         url_status = "VERIFIED"
 
-    # Format department names consistently
+    # Use actual department name and code from DB (supports all 11 departments)
     dept_code = student.department.code if student.department else "CSE"
     dept_name = student.department.name if student.department else "Computer Science and Engineering"
-    if "IOT" in dept_code.upper():
-        canonical_dept = "Computer Science and Engineering (IoT)"
-        short_dept = "CSE (IoT)"
-    else:
-        canonical_dept = "Computer Science and Engineering (Cyber Security)"
-        short_dept = "CSE (Cyber Security)"
+    short_dept = dept_code  # Use the actual department code as short label
+    canonical_dept = dept_name  # Use the actual full name
 
     last_sync_str = "Never"
     if stats and stats.last_successful_sync:

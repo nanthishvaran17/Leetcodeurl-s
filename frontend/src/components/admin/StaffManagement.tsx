@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Search, UserPlus, Edit2, Shield, Ban, CheckCircle, RefreshCcw, UserX } from 'lucide-react';
+import { Search, UserPlus, Edit2, Shield, Ban, CheckCircle, RefreshCcw, UserX, AlertCircle, ArrowRight } from 'lucide-react';
 import api from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
 
 export const StaffManagement: React.FC = () => {
   const [staffList, setStaffList] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [creationSuccess, setCreationSuccess] = useState<any>(null);
   const { notify } = useNotification();
 
   const [formData, setFormData] = useState({
@@ -16,11 +18,27 @@ export const StaffManagement: React.FC = () => {
     password: '',
     role: 'Staff',
     department_id: '',
+    academic_year: '',
+    mentoring_role: '',
+    date_of_birth: '',
+    require_password_change: false
   });
+
+  const [passwordStrengthError, setPasswordStrengthError] = useState('');
 
   useEffect(() => {
     fetchStaff();
+    fetchDepartments();
   }, []);
+
+  const fetchDepartments = async () => {
+    try {
+      const res = await api.get('/departments');
+      if (res.data) setDepartments(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const fetchStaff = async () => {
     setLoading(true);
@@ -38,6 +56,11 @@ export const StaffManagement: React.FC = () => {
 
   const handleCreateStaff = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (passwordStrengthError) {
+      notify.error('Please fix password strength requirements before continuing.');
+      return;
+    }
+    
     try {
       await api.post('/admin/staff', {
         institutional_id: formData.institutional_id || undefined,
@@ -45,10 +68,14 @@ export const StaffManagement: React.FC = () => {
         email: formData.email,
         password: formData.password || 'Staff@123',
         role: formData.role,
-        department_id: formData.department_id ? parseInt(formData.department_id) : null
+        department_id: formData.department_id ? parseInt(formData.department_id) : null,
+        academic_year: formData.academic_year || undefined,
+        mentoring_role: formData.mentoring_role || undefined,
+        date_of_birth: formData.date_of_birth || undefined,
+        require_password_change: formData.require_password_change
       });
-      notify.success('Staff Member Created Successfully.', '', { category: 'ADMIN' });
-      setShowModal(false);
+      setCreationSuccess(formData);
+      // Don't close modal immediately, show success screen
       fetchStaff();
     } catch (err: any) {
       notify.error(err.response?.data?.detail || 'Failed to create staff account.', '', { category: 'ADMIN' });
@@ -142,86 +169,180 @@ export const StaffManagement: React.FC = () => {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-navy-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-gray-200 dark:border-navy-700">
-            <div className="p-6 border-b border-gray-100 dark:border-navy-700 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <Shield className="w-5 h-5 text-brand-500" /> Create Staff Account
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in overflow-y-auto">
+          <div className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl border border-gray-200 dark:border-navy-700 my-8">
+            <div className="p-6 border-b border-gray-100 dark:border-navy-800 flex justify-between items-center bg-gray-50/50 dark:bg-navy-800/50">
+              <h3 className="text-xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3">
+                <Shield className="w-6 h-6 text-brand-500" /> 
+                {creationSuccess ? 'Staff Account Created' : 'Create Institutional Account'}
               </h3>
+              <button onClick={() => { setShowModal(false); setCreationSuccess(null); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <UserX className="w-5 h-5" />
+              </button>
             </div>
-            <form onSubmit={handleCreateStaff} className="p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Institutional ID (Optional)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. NEC-CSE-STF-001"
-                  value={formData.institutional_id}
-                  onChange={(e) => setFormData({ ...formData, institutional_id: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-900 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Username *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-900 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Email *</label>
-                <input
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-900 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-all"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Role</label>
-                  <select
-                    value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-900 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-all"
-                  >
-                    <option value="Staff">Staff</option>
-                    <option value="Faculty">Faculty</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Super Admin">Super Admin</option>
-                  </select>
+            
+            {creationSuccess ? (
+              <div className="p-8 text-center space-y-6">
+                <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="w-10 h-10 text-emerald-500" />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Initial Password</label>
-                  <input
-                    type="text"
-                    placeholder="Staff@123"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-900 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-all"
-                  />
+                <h4 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight">
+                  Account Ready
+                </h4>
+                <div className="bg-gray-50 dark:bg-navy-800 p-6 rounded-2xl border border-gray-100 dark:border-navy-700 max-w-md mx-auto text-left space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 text-sm font-medium">Name:</span>
+                    <span className="text-gray-900 dark:text-white font-bold">{creationSuccess.username}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 text-sm font-medium">Role:</span>
+                    <span className="text-brand-600 dark:text-brand-400 font-bold">{creationSuccess.role}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-3 border-t border-gray-200 dark:border-navy-700">
+                    <span className="text-gray-500 text-sm font-medium">Assigned Students:</span>
+                    <span className="px-3 py-1 bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400 rounded-lg font-black text-sm">
+                      0 Students
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-4 rounded-xl text-left flex gap-3 max-w-md mx-auto">
+                  <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                  <p className="text-sm text-amber-800 dark:text-amber-200">
+                    This account currently has no student access. You must allocate students to this staff member for them to view dashboard data.
+                  </p>
+                </div>
+                
+                <div className="pt-6 flex gap-4 max-w-md mx-auto">
+                  <button onClick={() => { setShowModal(false); setCreationSuccess(null); }} className="flex-1 px-5 py-3 rounded-xl font-bold bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-navy-700 transition-colors">
+                    Close
+                  </button>
+                  <button onClick={() => { setShowModal(false); setCreationSuccess(null); document.querySelector<HTMLButtonElement>('[data-section="allocation"]')?.click(); }} className="flex-1 px-5 py-3 rounded-xl font-bold bg-brand-600 text-white hover:bg-brand-700 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-brand-500/30">
+                    Open Allocation <ArrowRight className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
-              
-              <div className="pt-4 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2 rounded-xl font-bold text-sm bg-gray-100 dark:bg-navy-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-navy-600 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 rounded-xl font-bold text-sm bg-brand-600 text-white hover:bg-brand-700 transition-colors"
-                >
-                  Create Account
-                </button>
+            ) : (
+              <div className="p-6 space-y-8 max-h-[75vh] overflow-y-auto custom-scrollbar">
+                
+                {/* SECTION A: IDENTITY */}
+                <div className="space-y-4">
+                  <h4 className="text-xs font-black text-brand-500 tracking-wider uppercase border-b border-gray-100 dark:border-navy-700 pb-2">
+                    Identity Details
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Institutional ID *</label>
+                      <input type="text" placeholder="e.g. NEC-CSE-FAC-001" required value={formData.institutional_id} onChange={(e) => setFormData({ ...formData, institutional_id: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Username *</label>
+                      <input type="text" required value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Official Email *</label>
+                      <input type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Date of Birth *</label>
+                      <input type="date" required value={formData.date_of_birth} onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* SECTION B: ACADEMIC DETAILS */}
+                <div className="space-y-4">
+                  <h4 className="text-xs font-black text-brand-500 tracking-wider uppercase border-b border-gray-100 dark:border-navy-700 pb-2">
+                    Academic Details
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Role *</label>
+                      <select value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm focus:ring-2 focus:ring-brand-500 outline-none font-semibold">
+                        <option value="Staff">Staff</option>
+                        <option value="Faculty">Faculty</option>
+                        <option value="HOD">HOD</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Super Admin">Super Admin</option>
+                      </select>
+                    </div>
+                    
+                    {['Staff', 'Faculty', 'HOD'].includes(formData.role) && (
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Department *</label>
+                        <select value={formData.department_id} onChange={(e) => setFormData({ ...formData, department_id: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                          <option value="">Select Department</option>
+                          {departments.map(d => (
+                            <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    
+                    {['Staff', 'Faculty', 'HOD'].includes(formData.role) && (
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Academic Year</label>
+                        <select value={formData.academic_year} onChange={(e) => setFormData({ ...formData, academic_year: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                          <option value="">N/A</option>
+                          <option value="I Year">I Year</option>
+                          <option value="II Year">II Year</option>
+                          <option value="III Year">III Year</option>
+                          <option value="IV Year">IV Year</option>
+                        </select>
+                      </div>
+                    )}
+
+                    {['Staff', 'Faculty'].includes(formData.role) && (
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Mentoring Role</label>
+                        <select value={formData.mentoring_role} onChange={(e) => setFormData({ ...formData, mentoring_role: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                          <option value="">Select Role</option>
+                          <option value="Faculty Mentor">Faculty Mentor</option>
+                          <option value="Class Mentor">Class Mentor</option>
+                          <option value="Department Staff">Department Staff</option>
+                          <option value="Contest Coordinator">Contest Coordinator</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* SECTION C: ACCOUNT SECURITY */}
+                <div className="space-y-4">
+                  <h4 className="text-xs font-black text-brand-500 tracking-wider uppercase border-b border-gray-100 dark:border-navy-700 pb-2">
+                    Account Security
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Initial Password *</label>
+                      <input type="text" placeholder="Minimum 12 chars, upper, lower, num, spec" value={formData.password} onChange={(e) => {
+                        const pwd = e.target.value;
+                        setFormData({ ...formData, password: pwd });
+                        if (pwd && (pwd.length < 12 || !/[A-Z]/.test(pwd) || !/[a-z]/.test(pwd) || !/[0-9]/.test(pwd) || !/[!@#$%^&*(),.?":{}|<>]/.test(pwd))) {
+                          setPasswordStrengthError('Needs 12+ chars, 1 uppercase, 1 lowercase, 1 number, 1 special char.');
+                        } else {
+                          setPasswordStrengthError('');
+                        }
+                      }} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
+                      {passwordStrengthError && <p className="text-[10px] text-rose-500 mt-1 font-semibold">{passwordStrengthError}</p>}
+                    </div>
+                  </div>
+                  <label className="flex items-center gap-3 mt-4 p-3 border border-gray-200 dark:border-navy-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-navy-800 transition-colors">
+                    <input type="checkbox" checked={formData.require_password_change} onChange={(e) => setFormData({ ...formData, require_password_change: e.target.checked })} className="w-4 h-4 text-brand-600 rounded border-gray-300 focus:ring-brand-600" />
+                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Require password change on first login</span>
+                  </label>
+                </div>
+                
+                <div className="pt-6 flex gap-4 border-t border-gray-100 dark:border-navy-700">
+                  <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-5 py-3 rounded-xl font-bold text-sm bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-navy-700 transition-colors">
+                    Cancel
+                  </button>
+                  <button type="button" onClick={handleCreateStaff} className="flex-1 px-5 py-3 rounded-xl font-bold text-sm bg-brand-600 text-white hover:bg-brand-700 transition-colors shadow-lg shadow-brand-500/20">
+                    Create Account
+                  </button>
+                </div>
               </div>
-            </form>
+            )}
           </div>
         </div>
       )}

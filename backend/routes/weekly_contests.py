@@ -734,12 +734,14 @@ def get_session_matrix(
     dept: Optional[str] = Query(None), 
     year: Optional[str] = Query(None), 
     attendance: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Weekly Contest Matrix", required_roles=["admin", "super admin", "faculty", "staff", "hod"]))
 ):
     """
-    Delegates strictly to the single canonical normalized dataset function.
+    Delegates strictly to the single canonical normalized dataset function with institutional RBAC.
     """
     return get_normalized_contest_data(session_id, dept=dept, year=year, attendance=attendance, db=db)
+
 
 @router.get("/sessions/{session_id}/data-quality")
 def get_session_data_quality_board(

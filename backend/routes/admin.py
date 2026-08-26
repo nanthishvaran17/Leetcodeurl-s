@@ -557,6 +557,10 @@ class CreateStaffRequest(BaseModel):
     role: str = "Staff"
     department_id: Optional[int] = None
     section_id: Optional[int] = None
+    academic_year: Optional[str] = None
+    mentoring_role: Optional[str] = None
+    date_of_birth: Optional[str] = None
+    require_password_change: bool = False
 
 class UpdateStaffRequest(BaseModel):
     institutional_id: Optional[str] = None
@@ -637,7 +641,11 @@ def create_staff_user(
 
     # Validate duplicate institutional_id if provided
     if payload.institutional_id:
-        if db.query(User).filter(User.institutional_id == payload.institutional_id.strip()).first():
+        inst_id = payload.institutional_id.strip()
+        import re
+        if not re.match(r"^NEC-[A-Z]+-[A-Z]+-\d+$", inst_id):
+            raise HTTPException(status_code=400, detail="Invalid Institutional ID format. Expected format: NEC-{DEPT}-{ROLE}-{NUMBER} (e.g. NEC-CSE-FAC-001).")
+        if db.query(User).filter(User.institutional_id == inst_id).first():
             raise HTTPException(status_code=400, detail="A user with this Institutional ID already exists.")
 
     existing = db.query(User).filter(
@@ -646,14 +654,22 @@ def create_staff_user(
     if existing:
         raise HTTPException(status_code=400, detail="A user with this username or email already exists.")
 
+    import re
+    if len(payload.password) < 12 or not re.search(r"[A-Z]", payload.password) or not re.search(r"[a-z]", payload.password) or not re.search(r"[0-9]", payload.password) or not re.search(r"[!@#$%^&*(),.?\":{}|<>]", payload.password):
+        raise HTTPException(status_code=400, detail="Password must be at least 12 characters and contain uppercase, lowercase, number, and special character.")
+
     staff_user = User(
         institutional_id=payload.institutional_id.strip() if payload.institutional_id else None,
         username=payload.username.strip(),
         email=payload.email.strip().lower(),
         hashed_password=get_password_hash(payload.password),
-        role=payload.role if payload.role in ["Super Admin", "Admin", "Faculty", "Staff", "Viewer"] else "Staff",
+        role=payload.role if payload.role in ["Super Admin", "Admin", "Faculty", "Staff", "HOD", "Viewer"] else "Staff",
         department_id=payload.department_id,
         section_id=payload.section_id,
+        academic_year=payload.academic_year.strip() if payload.academic_year else None,
+        mentoring_role=payload.mentoring_role.strip() if payload.mentoring_role else None,
+        date_of_birth=payload.date_of_birth.strip() if payload.date_of_birth else None,
+        require_password_change=payload.require_password_change,
         is_active=True
     )
     db.add(staff_user)

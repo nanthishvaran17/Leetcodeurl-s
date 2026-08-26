@@ -16,8 +16,10 @@ import {
   getFacultyWorkload, assignStudentsBatch, unassignStudentsBatch, autoDistributeDepartment,
   getReportData, CommandCenterSummary, StudentRecord, DeptBenchmark, YearBenchmark,
   DepartmentRecord, StaffRecord, FacultyWorkloadItem
-} from '../services/commandCenterService';
+from '../services/commandCenterService';
 import { simulateWhatIfScenario, askAIDepartmentQuery } from '../services/intelligenceService';
+import { CustomDropdown } from '../components/CustomDropdown';
+import { useAuth } from '../context/AuthContext';
 
 // ─── Shared Card Component ───────────────────────────────────────────────────
 
@@ -634,6 +636,7 @@ const ReportHubModal: React.FC<{
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export const HODCommandCenter: React.FC = () => {
+  const { user } = useAuth();
   // ── Multi-Dimensional View Scope ──
   const [selectedStaff, setSelectedStaff] = useState<string>('ALL');
   const [selectedDept, setSelectedDept] = useState<string>('ALL');
@@ -872,67 +875,42 @@ export const HODCommandCenter: React.FC = () => {
   const scopeStaffName = staffList.find(s => String(s.id) === selectedStaff)?.username || 'All Staff';
   const scopeDeptCode = departments.find(d => String(d.id) === selectedDept)?.code || 'All Departments';
 
+  const staffOptions = [
+    { value: 'ALL', label: 'All Staff Mentors', icon: Users, badge: 'ALL', badgeColor: 'bg-brand-500 text-white' },
+    ...staffList.map(s => ({ value: String(s.id), label: s.username, sublabel: `${s.assigned_count} students`, icon: User }))
+  ];
+
+  const deptOptions = [
+    { value: 'ALL', label: 'All Departments', icon: Building2, badge: 'ALL', badgeColor: 'bg-brand-500 text-white' },
+    ...departments.map(d => ({ value: String(d.id), label: d.code, count: d.student_count, icon: Building2 }))
+  ];
+
+  const yearOptions = [
+    { value: 'ALL', label: 'All Years', badge: 'ALL', icon: Calendar },
+    { value: 'I', label: 'I Year', badge: '1st', icon: Calendar },
+    { value: 'II', label: 'II Year', badge: '2nd', icon: Calendar },
+    { value: 'III', label: 'III Year', badge: '3rd', icon: Calendar },
+    { value: 'IV', label: 'IV Year', badge: '4th', icon: Calendar }
+  ];
+
+  const sectionOptions = [
+    { value: 'ALL', label: 'All Sections', badge: 'ALL', icon: Layers },
+    { value: 'A', label: 'Section A', badge: 'A', icon: Layers },
+    { value: 'B', label: 'Section B', badge: 'B', icon: Layers },
+    { value: 'C', label: 'Section C', badge: 'C', icon: Layers }
+  ];
+
+  const statusOptions = [
+    { value: 'ALL', label: 'All Status', badge: 'ALL', icon: Activity },
+    { value: 'ACTIVE', label: 'Active Solvers', badge: 'Active', badgeColor: 'bg-emerald-500/10 text-emerald-600', icon: CheckCircle2 },
+    { value: 'INACTIVE', label: 'Inactive', badge: 'Inactive', badgeColor: 'bg-rose-500/10 text-rose-600', icon: AlertTriangle },
+    { value: 'IMPROVING', label: 'Improving', badge: 'Improving', badgeColor: 'bg-blue-500/10 text-blue-600', icon: TrendingUp }
+  ];
+
   return (
     <div className="space-y-5 pb-16 font-sans text-slate-900 dark:text-slate-100 antialiased">
 
-      {/* ── 1. HEADER ──────────────────────────────────────────────────────── */}
-      <div className="bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 rounded-2xl p-5 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-xs font-bold text-slate-500 uppercase tracking-tight">
-                NANDHA ENGINEERING COLLEGE (AUTONOMOUS)
-              </span>
-            </div>
-            <h1 className="font-display text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-0.5">
-              Executive Coding Operations Center
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-2.5 flex-wrap">
-            {/* Live Status Pill */}
-            {wsConnected ? (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 text-xs font-mono font-semibold border border-emerald-200 dark:border-emerald-800">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>LIVE • {lastLiveTimestamp}</span>
-              </div>
-            ) : (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-mono font-semibold border border-amber-200">
-                <AlertTriangle size={13} />
-                <span>RECONNECTING...</span>
-              </div>
-            )}
-
-            {/* HOD Staff Allocation Manager Button */}
-            <button
-              onClick={() => setShowStaffAllocationModal(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-bold transition shadow-sm"
-            >
-              <Users size={13} />
-              <span>Staff Allocation</span>
-            </button>
-
-            {/* Dedicated Report Hub Button */}
-            <button
-              onClick={() => setShowReportHubModal(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold transition shadow-sm"
-            >
-              <FileSpreadsheet size={13} />
-              <span>Dedicated Reports</span>
-            </button>
-
-            <button
-              onClick={() => { setRefreshing(true); loadScopedData(false); loadStudents(); }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-bold transition border border-slate-200 dark:border-navy-700"
-            >
-              <RotateCcw size={13} className={refreshing ? 'animate-spin' : ''} />
-              <span>Refresh</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ── 2. PROMINENT SCOPE SELECTOR (Controls EVERYTHING) ───────────────── */}
+      {/* ── 1. PROMINENT SCOPE SELECTOR (Controls EVERYTHING) — FIRST ─────── */}
       <Card className="p-4 bg-slate-50/70 dark:bg-navy-800/40 border-slate-200 dark:border-navy-700">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -941,90 +919,123 @@ export const HODCommandCenter: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 flex-1 max-w-4xl">
-            {/* Staff Selector */}
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase font-mono mb-1">Staff Mentor</label>
-              <select
-                value={selectedStaff}
-                onChange={e => setSelectedStaff(e.target.value)}
-                className="w-full text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-slate-800 dark:text-slate-100 outline-none focus:border-brand-500"
-              >
-                <option value="ALL">All Staff Mentors</option>
-                {staffList.map(s => (
-                  <option key={s.id} value={s.id}>{s.username} ({s.assigned_count} students)</option>
-                ))}
-              </select>
-            </div>
+            {/* Staff Mentor */}
+            <CustomDropdown
+              id="hod-staff-filter"
+              label="Staff Mentor"
+              options={staffOptions}
+              value={selectedStaff}
+              onChange={setSelectedStaff}
+              icon={Users}
+            />
 
-            {/* Department Selector */}
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase font-mono mb-1">Department</label>
-              <select
-                value={selectedDept}
-                onChange={e => setSelectedDept(e.target.value)}
-                className="w-full text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-slate-800 dark:text-slate-100 outline-none focus:border-brand-500"
-              >
-                <option value="ALL">All Departments</option>
-                {departments.map(d => (
-                  <option key={d.id} value={d.id}>{d.code} ({d.student_count})</option>
-                ))}
-              </select>
-            </div>
+            {/* Department */}
+            <CustomDropdown
+              id="hod-dept-filter"
+              label="Department"
+              options={deptOptions}
+              value={selectedDept}
+              onChange={setSelectedDept}
+              icon={Building2}
+            />
 
-            {/* Year Selector */}
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase font-mono mb-1">Academic Year</label>
-              <select
-                value={selectedYear}
-                onChange={e => setSelectedYear(e.target.value)}
-                className="w-full text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-slate-800 dark:text-slate-100 outline-none focus:border-brand-500"
-              >
-                <option value="ALL">All Years</option>
-                {['I', 'II', 'III', 'IV'].map(y => (
-                  <option key={y} value={y}>{y} Year</option>
-                ))}
-              </select>
-            </div>
+            {/* Academic Year */}
+            <CustomDropdown
+              id="hod-year-filter"
+              label="Academic Year"
+              options={yearOptions}
+              value={selectedYear}
+              onChange={setSelectedYear}
+              icon={Calendar}
+            />
 
-            {/* Section Selector */}
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase font-mono mb-1">Section</label>
-              <select
-                value={selectedSection}
-                onChange={e => setSelectedSection(e.target.value)}
-                className="w-full text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-slate-800 dark:text-slate-100 outline-none focus:border-brand-500"
-              >
-                <option value="ALL">All Sections</option>
-                {['A', 'B', 'C'].map(sec => (
-                  <option key={sec} value={sec}>Section {sec}</option>
-                ))}
-              </select>
-            </div>
+            {/* Section */}
+            <CustomDropdown
+              id="hod-section-filter"
+              label="Section"
+              options={sectionOptions}
+              value={selectedSection}
+              onChange={setSelectedSection}
+              icon={Layers}
+            />
 
             {/* Status Filter */}
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase font-mono mb-1">Student Status</label>
-              <select
-                value={selectedStatus}
-                onChange={e => setSelectedStatus(e.target.value)}
-                className="w-full text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-slate-800 dark:text-slate-100 outline-none focus:border-brand-500"
-              >
-                <option value="ALL">All Status</option>
-                <option value="ACTIVE">🟢 Active Solvers</option>
-                <option value="INACTIVE">🔴 Inactive</option>
-                <option value="IMPROVING">🔵 Improving</option>
-              </select>
-            </div>
+            <CustomDropdown
+              id="hod-status-filter"
+              label="Student Status"
+              options={statusOptions}
+              value={selectedStatus}
+              onChange={setSelectedStatus}
+              icon={Activity}
+            />
           </div>
         </div>
       </Card>
 
-      {/* Scope Loading Indicator */}
-      {scopeLoading && (
-        <div className="p-3 text-center text-xs font-mono font-bold text-brand-600 bg-brand-50 rounded-xl animate-pulse">
-          Loading {scopeDeptCode} • {scopeStaffName} scope telemetry...
+      {/* ── 1. HEADER ──────────────────────────────────────────────────────── */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-lg border border-brand-500/30">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="space-y-3">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
+              <span className="uppercase tracking-tight">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white mt-1 uppercase">
+              {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') ? (
+                <>
+                  MY FACULTY <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">ACTION CENTER</span>
+                </>
+              ) : (
+                <>
+                  Executive Coding <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Operations Center</span>
+                </>
+              )}
+            </h1>
+          </div>
+
+          <div className="flex items-center gap-2.5 flex-wrap">
+            {/* Live Status Pill */}
+            {wsConnected ? (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/60 text-emerald-400 text-xs font-mono font-semibold border border-emerald-800/60 shadow-inner">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+                <span>LIVE • {lastLiveTimestamp}</span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/60 text-amber-400 text-xs font-mono font-semibold border border-amber-800/60 shadow-inner">
+                <AlertTriangle size={13} />
+                <span>RECONNECTING...</span>
+              </div>
+            )}
+
+            {/* HOD Staff Allocation Manager Button */}
+            <button
+              onClick={() => setShowStaffAllocationModal(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-900/30 hover:bg-purple-900/50 text-purple-300 border border-purple-800/50 text-xs font-bold transition cursor-pointer shadow-sm"
+            >
+              <Users size={13} />
+              <span>Staff Allocation</span>
+            </button>
+
+            {/* Dedicated Report Hub Button */}
+            <button
+              onClick={() => setShowReportHubModal(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-800/50 text-xs font-bold transition cursor-pointer shadow-sm"
+            >
+              <FileSpreadsheet size={13} />
+              <span>Dedicated Reports</span>
+            </button>
+
+            <button
+              onClick={() => { setRefreshing(true); loadScopedData(false); loadStudents(); }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 text-xs font-bold transition cursor-pointer border border-slate-700/50"
+            >
+              <RotateCcw size={13} className={refreshing ? 'animate-spin' : ''} />
+              <span>Refresh</span>
+            </button>
+          </div>
         </div>
-      )}
+      </div>
+
+
 
       {/* ── 3. STUDENT COHORT SUMMARY BANNER ───────────────────────────────── */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700">

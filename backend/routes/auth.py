@@ -15,7 +15,7 @@ from sqlalchemy import or_
 from backend.database import get_db
 from backend.config import settings
 from backend.models import User, Student, AdminSession, AuditLog, PasswordResetAuthorization
-from backend.schemas import UserLogin, Token, UserOut, UserCreate, SendOtpRequest, VerifyOtpRequest, VerifyDobRequest, ResetPasswordOtpRequest, ResetPasswordSubmitRequest
+from backend.schemas import UserLogin, Token, UserOut, UserCreate, SendOtpRequest, VerifyOtpRequest, VerifyDobRequest, ResetPasswordSubmitRequest
 from backend.services.otp_service import create_otp_transaction, verify_otp_transaction
 from backend.logger import logger
 
@@ -33,17 +33,24 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     if not hashed_password or hashed_password == "N/A_OTP_USER":
         return False
     try:
-        pwd_bytes = plain_password.encode('utf-8')[:72]
-        hash_bytes = hashed_password.encode('utf-8')
-        return bcrypt.checkpw(pwd_bytes, hash_bytes)
+        clean_stored = str(hashed_password).strip()
+        # Standard bcrypt check
+        if clean_stored.startswith("$2b$") or clean_stored.startswith("$2a$") or clean_stored.startswith("$2y$"):
+            pwd_bytes = plain_password.encode('utf-8')[:72]
+            hash_bytes = clean_stored.encode('utf-8')
+            return bcrypt.checkpw(pwd_bytes, hash_bytes)
+        # Fail-safe plain match for legacy accounts (will be auto-upgraded to bcrypt on login)
+        return plain_password == clean_stored
     except Exception:
         return False
 
 
 def get_password_hash(password: str) -> str:
+    """Cryptographically hashes a plain password using bcrypt with 12 rounds and random salt."""
     pwd_bytes = password.encode('utf-8')[:72]
-    salt = bcrypt.gensalt()
+    salt = bcrypt.gensalt(rounds=12)
     return bcrypt.hashpw(pwd_bytes, salt).decode('utf-8')
+
 
 
 def create_access_token(data: dict, expires_delta: Optional[datetime.timedelta] = None) -> str:
@@ -739,6 +746,15 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
         logger.warning(f"[ADMIN_LOGIN_FAILURE] Account deactivated for username: {clean_username}")
         raise HTTPException(status_code=400, detail="Account is currently deactivated.")
 
+    # Ensure password is strictly encrypted with bcrypt in the database (auto-upgrades any plain/legacy passwords)
+    if user.hashed_password and not (str(user.hashed_password).startswith("$2b$") or str(user.hashed_password).startswith("$2a$")):
+        try:
+            setattr(user, "hashed_password", get_password_hash(clean_password))
+            db.commit()
+            logger.info(f"[SECURITY] Automatically upgraded password for user {user.username} to 12-round Bcrypt hash.")
+        except Exception:
+            db.rollback()
+
     old_last_login = user.last_login
     try:
         setattr(user, "last_login", _utcnow())
@@ -771,7 +787,8 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
             "email": user.email,
             "role": user.role,
             "department_id": user.department_id,
-            "section_id": user.section_id
+            "section_id": user.section_id,
+            "require_password_change": getattr(user, "require_password_change", False)
         }
     }
 
@@ -792,7 +809,8 @@ def get_auth_session(request: Request, db: Session = Depends(get_db)):
             "role": user.role,
             "department_id": user.department_id,
             "section_id": user.section_id,
-            "is_active": user.is_active
+            "is_active": user.is_active,
+            "require_password_change": getattr(user, "require_password_change", False)
         }
     }
 
@@ -877,95 +895,157 @@ def forgot_password_verify_dob(req: VerifyDobRequest, db: Session = Depends(get_
 
     return {"success": True, "message": "DOB Verified"}
 
+from backend.schemas import ForgotPasswordRequest, ForgotPasswordVerifyRequest
 
-@router.post("/forgot-password/send-otp")
-async def forgot_password_send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(get_db)):
-    # Very similar to send-otp, but only if they verified DOB
+@router.post("/forgot-password/request")
+async def forgot_password_request(req: ForgotPasswordRequest, request: Request, db: Session = Depends(get_db)):
     email_clean = (req.email or "").strip().lower()
-    user = db.query(User).filter(User.email.ilike(email_clean)).first()
-    student = None
+    inst_id_clean = (req.institutional_id or "").strip()
+    dob_clean = (req.date_of_birth or "").strip()
+
+    user = db.query(User).filter(
+        User.email.ilike(email_clean),
+        User.institutional_id.ilike(inst_id_clean),
+        User.date_of_birth == dob_clean
+    ).first()
+
     if not user:
-        student = db.query(Student).filter(Student.email.ilike(email_clean)).first()
-        
-    if not user and not student:
-        raise HTTPException(status_code=400, detail="Account not found.")
-        
-    client_ip = request.client.host if request and request.client else "127.0.0.1"
-    try:
-        plain_otp, otp_rec = create_otp_transaction(db, email_clean, client_ip)
-    except ValueError as ve:
-        raise HTTPException(status_code=429, detail=str(ve))
-        
+        # Delay to prevent timing attacks
+        import time
+        time.sleep(0.5)
+        raise HTTPException(status_code=400, detail="Identity verification failed. Please verify your details and try again.")
+    
+    # Check rate limit on OTP generation (prevent spamming)
+    from backend.models import PasswordResetOTP
+    recent_otps = db.query(PasswordResetOTP).filter(
+        PasswordResetOTP.user_id == user.id,
+        PasswordResetOTP.created_at > datetime.datetime.utcnow() - datetime.timedelta(minutes=15)
+    ).count()
+
+    if recent_otps >= 5:
+        raise HTTPException(status_code=429, detail="Too many password reset requests. Please try again later.")
+
+    # Generate a real OTP
+    plain_otp = f"{secrets.randbelow(1000000):06d}"
+    otp_hash = pwd_context.hash(plain_otp)
+    
+    otp_rec = PasswordResetOTP(
+        user_id=user.id,
+        institutional_id=user.institutional_id,
+        email=user.email,
+        otp_hash=otp_hash,
+        expires_at=datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+    )
+    db.add(otp_rec)
+    db.commit()
+
+    # Send OTP
     from backend.services.email_service import send_fast_otp_email
-    email_sent, status_code_or_err, msg_id = await asyncio.to_thread(
-        send_fast_otp_email, email_clean, plain_otp, str(otp_rec.request_id)
+    email_sent, _, _ = await asyncio.to_thread(
+        send_fast_otp_email, email_clean, plain_otp, str(otp_rec.id)
     )
     
-    from backend.services.otp_service import update_otp_delivery_status
     if not email_sent:
-        update_otp_delivery_status(db, str(otp_rec.request_id), "DELIVERY_FAILED", None)
+        db.delete(otp_rec)
+        db.commit()
         raise HTTPException(status_code=502, detail="Verification code could not be sent. Please try again.")
-        
-    update_otp_delivery_status(db, str(otp_rec.request_id), "PROVIDER_ACCEPTED", str(msg_id) if msg_id else None)
-    return {"success": True, "message": "Verification code sent to registered email.", "request_id": otp_rec.request_id}
 
-
-@router.post("/forgot-password/verify-otp")
-def forgot_password_verify_otp(req: VerifyOtpRequest, db: Session = Depends(get_db)):
-    email_clean = (req.email or "").strip().lower()
-    raw_otp = (req.otp or "").strip()
-    
-    is_valid, msg, otp_rec = verify_otp_transaction(db, email_clean, raw_otp, req.request_id)
-    if not is_valid:
-        raise HTTPException(status_code=400, detail=msg)
-        
-    # Generate a temporary reset token and store its hash in the database
-    reset_token = secrets.token_urlsafe(32)
-    token_hash = pwd_context.hash(reset_token)
-    
-    auth_record = PasswordResetAuthorization(
-        email=email_clean,
-        reset_token_hash=token_hash,
-        expires_at=datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
+    from backend.services.audit_service import log_admin_action
+    log_admin_action(
+        db, action="PASSWORD_RESET_OTP_SENT", action_type="SECURITY",
+        description=f"OTP sent for password reset for {user.username}",
+        current_user=None, target_type="User", target_id=str(user.id)
     )
-    db.add(auth_record)
+    
+    return {"success": True, "message": "Verification code sent to registered email."}
+
+
+@router.post("/forgot-password/verify")
+def forgot_password_verify(req: ForgotPasswordVerifyRequest, db: Session = Depends(get_db)):
+    email_clean = (req.email or "").strip().lower()
+    inst_id_clean = (req.institutional_id or "").strip()
+    raw_otp = (req.otp or "").strip()
+
+    from backend.models import PasswordResetOTP
+    otp_rec = db.query(PasswordResetOTP).filter(
+        PasswordResetOTP.email.ilike(email_clean),
+        PasswordResetOTP.institutional_id.ilike(inst_id_clean),
+        PasswordResetOTP.is_used == False,
+        PasswordResetOTP.is_locked == False
+    ).order_by(PasswordResetOTP.created_at.desc()).first()
+
+    if not otp_rec:
+        raise HTTPException(status_code=400, detail="Invalid request or OTP expired.")
+
+    if otp_rec.expires_at < datetime.datetime.utcnow():
+        raise HTTPException(status_code=400, detail="OTP has expired. Please request a new one.")
+
+    if not pwd_context.verify(raw_otp, otp_rec.otp_hash):
+        otp_rec.attempts += 1
+        if otp_rec.attempts >= otp_rec.max_attempts:
+            otp_rec.is_locked = True
+        db.commit()
+        
+        from backend.services.audit_service import log_admin_action
+        log_admin_action(
+            db, action="PASSWORD_RESET_FAILED", action_type="SECURITY",
+            description=f"Invalid OTP attempt for {email_clean}",
+            current_user=None, target_type="User", target_id=str(otp_rec.user_id)
+        )
+        raise HTTPException(status_code=400, detail="Invalid OTP.")
+
+    otp_rec.is_used = True
     db.commit()
     
-    return {"success": True, "message": "OTP Verified.", "reset_token": reset_token}
+    from backend.services.audit_service import log_admin_action
+    log_admin_action(
+        db, action="PASSWORD_RESET_OTP_VERIFIED", action_type="SECURITY",
+        description=f"OTP successfully verified for {email_clean}",
+        current_user=None, target_type="User", target_id=str(otp_rec.user_id)
+    )
+
+    return {"success": True, "message": "OTP Verified."}
 
 
 @router.post("/forgot-password/reset")
-def reset_password(req: ResetPasswordSubmitRequest, db: Session = Depends(get_db)):
+def forgot_password_reset(req: ResetPasswordSubmitRequest, db: Session = Depends(get_db)):
     email_clean = (req.email or "").strip().lower()
-    token = (req.reset_token or "").strip()
+    inst_id_clean = (req.institutional_id or "").strip()
+    raw_otp = (req.otp or "").strip()
     
-    if len(req.new_password) < 8:
-        raise HTTPException(status_code=400, detail="Password must be at least 8 characters long.")
-    
-    if not token:
-        raise HTTPException(status_code=401, detail="Missing reset authorization token.")
-        
-    # Verify the reset token from the DB
-    valid_record = None
-    records = db.query(PasswordResetAuthorization).filter(
-        PasswordResetAuthorization.email == email_clean,
-        PasswordResetAuthorization.used == False,
-        PasswordResetAuthorization.expires_at > datetime.datetime.utcnow()
-    ).all()
-    
-    for r in records:
-        if pwd_context.verify(token, r.reset_token_hash):
-            valid_record = r
-            break
-            
-    if not valid_record:
-        raise HTTPException(status_code=401, detail="Invalid or expired reset authorization.")
-    
-    user = db.query(User).filter(User.email.ilike(email_clean)).first()
+    # We must re-verify the OTP to ensure they didn't skip the verify step
+    from backend.models import PasswordResetOTP
+    otp_rec = db.query(PasswordResetOTP).filter(
+        PasswordResetOTP.email.ilike(email_clean),
+        PasswordResetOTP.institutional_id.ilike(inst_id_clean),
+        PasswordResetOTP.is_used == True, # It must be used (verified in previous step)
+        PasswordResetOTP.created_at > datetime.datetime.utcnow() - datetime.timedelta(minutes=15)
+    ).order_by(PasswordResetOTP.created_at.desc()).first()
+
+    if not otp_rec or not pwd_context.verify(raw_otp, otp_rec.otp_hash):
+        raise HTTPException(status_code=401, detail="Invalid or expired session. Please start over.")
+
+    # Check password strength
+    pwd = req.new_password
+    import re
+    if len(pwd) < 12 or not re.search(r"[A-Z]", pwd) or not re.search(r"[a-z]", pwd) or not re.search(r"[0-9]", pwd) or not re.search(r"[!@#$%^&*(),.?\":{}|<>]", pwd):
+        raise HTTPException(status_code=400, detail="Password must be at least 12 characters and contain uppercase, lowercase, number, and special character.")
+
+    user = db.query(User).filter(User.id == otp_rec.user_id).first()
     if user:
-        user.hashed_password = get_password_hash(req.new_password)
-        valid_record.used = True
+        if pwd_context.verify(pwd, str(user.hashed_password or "")):
+            raise HTTPException(status_code=400, detail="New password cannot be the same as the old password.")
+
+        user.hashed_password = get_password_hash(pwd)
+        user.require_password_change = False
         db.commit()
+        
+        from backend.services.audit_service import log_admin_action
+        log_admin_action(
+            db, action="PASSWORD_CHANGED", action_type="SECURITY",
+            description=f"Password successfully changed via recovery for {user.username}",
+            current_user=None, target_type="User", target_id=str(user.id)
+        )
         return {"success": True, "message": "Password reset successfully."}
         
     raise HTTPException(status_code=400, detail="User account not found for password reset.")

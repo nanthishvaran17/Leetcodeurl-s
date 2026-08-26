@@ -343,7 +343,10 @@ class User(Base):
     
     department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
     section_id = Column(Integer, ForeignKey("sections.id"), nullable=True)
+    academic_year = Column(String(20), nullable=True) # I Year, II Year, etc.
+    mentoring_role = Column(String(50), nullable=True) # Faculty Mentor, Class Mentor, etc.
     
+    require_password_change = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
     last_login = Column(DateTime, nullable=True)
     last_activity = Column(DateTime, nullable=True)
@@ -358,6 +361,23 @@ class User(Base):
         back_populates="faculty",
         cascade="all, delete-orphan"
     )
+
+class PasswordResetOTP(Base):
+    __tablename__ = "password_reset_otps"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    institutional_id = Column(String(50), index=True, nullable=False)
+    email = Column(String(150), index=True, nullable=False)
+    otp_hash = Column(String(128), nullable=False)
+    attempts = Column(Integer, default=0)
+    max_attempts = Column(Integer, default=3)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    expires_at = Column(DateTime, nullable=False)
+    is_used = Column(Boolean, default=False)
+    is_locked = Column(Boolean, default=False)
+
+    user = relationship("User")
 
 class FacultyStudentAssignment(Base):
     __tablename__ = "faculty_student_assignments"

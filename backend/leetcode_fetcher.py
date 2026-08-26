@@ -10,6 +10,35 @@ from backend.logger import logger
 # In-memory cache: username -> { "timestamp": float, "data": dict }
 _profile_cache: Dict[str, Dict[str, Any]] = {}
 
+LEETCODE_GRAPHQL_URL = "https://leetcode.com/graphql"
+USER_CONTEST_QUERY = """
+query userContestRankingInfo($username: String!) {
+  userContestRanking(username: $username) {
+    attendedContestsCount
+    rating
+    globalRanking
+    totalParticipants
+    topPercentage
+    badge {
+      name
+    }
+  }
+  userContestRankingHistory(username: $username) {
+    attended
+    trendDirection
+    problemsSolved
+    totalProblems
+    finishTimeInSeconds
+    rating
+    ranking
+    contest {
+      title
+      startTime
+    }
+  }
+}
+"""
+
 RESERVED_USERNAMES = {
     'contest', 'problems', 'explore', 'discuss', 'interview',
     'store', 'signup', 'login', 'profile', 'account', 'problemset'

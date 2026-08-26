@@ -112,3 +112,4 @@ class ConnectionManager:
 
 
 manager = ConnectionManager()
+connection_manager = manager

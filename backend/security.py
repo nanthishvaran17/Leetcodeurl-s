@@ -2,7 +2,7 @@ import datetime
 import hashlib
 import uuid
 import re
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 from fastapi import Request, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 import jwt
@@ -405,4 +405,83 @@ def get_current_user_optional(request: Request, db: Session = Depends(get_db)) -
     """Safely resolves current authenticated user from HttpOnly cookie or Bearer header."""
     from backend.routes.auth import get_current_user_from_request
     return get_current_user_from_request(request, db)
+
+def get_authenticated_user_scope(db: Session, user: User) -> dict:
+    """
+    Derives the authoritative data scope from the authenticated user's ID and role.
+    """
+    if not user:
+        return {"type": "RESTRICTED"}
+        
+    role = (user.role or "").strip().lower()
+    
+    if role in ["admin", "super admin", "super_admin"]:
+        return {"type": "GLOBAL"}
+        
+    elif role == "hod":
+        return {"type": "DEPARTMENT", "dept_id": user.department_id}
+        
+    elif role in ["faculty", "staff", "professor"]:
+        from backend.services.faculty_assignment_service import FacultyAssignmentService
+        assigned_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, user.id)
+        return {"type": "FACULTY", "student_ids": assigned_ids}
+        
+    elif role == "student":
+        return {"type": "STUDENT", "student_id": getattr(user, 'id', None)}
+        
+    return {"type": "RESTRICTED"}
+
+def apply_scope_to_student_query(query: Any, model: Any, scope: dict) -> Any:
+    """
+    Applies the appropriate filters to a SQLAlchemy query targeting a Student-related model.
+    The model must either be `Student` or have a foreign key / relationship referencing `student_id`.
+    """
+    scope_type = scope.get("type")
+    
+    if scope_type == "GLOBAL":
+        return query
+        
+    elif scope_type == "DEPARTMENT":
+        from backend.models import Student
+        dept_id = scope.get("dept_id")
+        if not dept_id:
+            # Fallback fail-closed
+            from sqlalchemy import false
+            return query.filter(false())
+            
+        if hasattr(model, "department_id"):
+            return query.filter(model.department_id == dept_id)
+        elif hasattr(model, "student_id"):
+            # Needs a join if not already joined, but safely assuming it's simpler to filter using ANY or joining.
+            # Best practice: the caller should join Student if they pass model != Student.
+            # For robustness:
+            if model == Student:
+                return query.filter(Student.department_id == dept_id)
+            return query.join(Student, model.student_id == Student.id).filter(Student.department_id == dept_id)
+        elif model == Student:
+            return query.filter(Student.department_id == dept_id)
+        else:
+            from sqlalchemy import false
+            return query.filter(false())
+            
+    elif scope_type == "FACULTY":
+        student_ids = scope.get("student_ids", [])
+        if not student_ids:
+            # No students assigned, return empty result
+            from sqlalchemy import false
+            return query.filter(false())
+            
+        if hasattr(model, "student_id"):
+            return query.filter(model.student_id.in_(student_ids))
+        elif hasattr(model, "id") and model.__name__ == "Student":
+            return query.filter(model.id.in_(student_ids))
+        else:
+            from sqlalchemy import false
+            return query.filter(false())
+            
+    else:
+        # RESTRICTED or unknown scope -> fail closed
+        from sqlalchemy import false
+        return query.filter(false())
+
 

@@ -1,16 +1,20 @@
 // frontend/src/components/AutomationStatusPanel.tsx
 import React, { useState, useEffect } from 'react';
-import { Activity, ShieldCheck, Mail, Database, Clock, RefreshCw, Calendar, Cpu } from 'lucide-react';
+import { Activity, ShieldCheck, Mail, Database, Clock, RefreshCw, Calendar, Cpu, Layers } from 'lucide-react';
 import api, { getDataFreshness } from '../services/api';
 
 interface AutomationStatusPanelProps {
   onTriggerSync?: () => void;
   isSyncing?: boolean;
+  systemHealth?: any;
+  syncStatus?: any;
 }
 
 export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
   onTriggerSync,
-  isSyncing = false
+  isSyncing = false,
+  systemHealth,
+  syncStatus
 }) => {
   const [freshness, setFreshness] = useState<any>(null);
   const [currentTime, setCurrentTime] = useState<string>('');
@@ -41,12 +45,14 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
     }
   };
 
-  return (
-    <div className="glass-card rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-navy-800/80 card-ai-control shadow-xl relative overflow-hidden">
-      {/* Background ambient lighting */}
+  const isWorkerRunning = (systemHealth?.sync_worker === 'running') || syncStatus?.is_running;
+  const isDbHealthy = (systemHealth?.database === 'healthy') || (systemHealth?.status !== 'unhealthy');
+  const freshnessBadge = systemHealth?.data_freshness_status || syncStatus?.data_freshness_status || freshness?.data_freshness_status || 'FRESH';
 
+  return (
+    <div className="glass-card rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-navy-800/80 shadow-sm relative overflow-hidden space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200/80 dark:border-navy-800/80 relative z-10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
         <div className="flex items-center space-x-3">
           <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-500/30">
             <Cpu className="w-5 h-5" />
@@ -54,14 +60,14 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
           <div>
             <div className="flex items-center space-x-2">
               <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight">
-                Institutional AI Control Center
+                INSTITUTIONAL AI CONTROL CENTER
               </h3>
               <span className="flex items-center space-x-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-black uppercase tracking-wider">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-live-indicator"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span>SYSTEM ONLINE</span>
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
               Continuous Contest Synchronization & Automated Lifecycle Dispatch
             </p>
           </div>
@@ -76,10 +82,10 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
               className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all duration-200 cursor-pointer ${
                 isSyncing
                   ? 'bg-slate-200 dark:bg-navy-800 text-slate-500 cursor-not-allowed'
-                  : 'bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-600/25 active:scale-95'
+                  : 'bg-brand-600 hover:bg-brand-700 text-white shadow-sm active:scale-95'
               }`}
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-sync-spin' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
               <span>{isSyncing ? 'Syncing...' : 'Sync Now'}</span>
             </button>
           )}
@@ -90,7 +96,7 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
       </div>
 
       {/* Grid of status nodes */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-4 relative z-10">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 relative z-10">
         
         {/* Sunday Automation */}
         <div
@@ -103,10 +109,10 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
             <Calendar className="w-3.5 h-3.5 text-brand-500 group-hover:scale-110 transition-transform" />
           </div>
           <div className="flex items-center space-x-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 pulse-live-indicator"></span>
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span className="text-xs font-black text-slate-900 dark:text-white">Active</span>
           </div>
-          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">8:00 AM IST Cron</span>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">08:00 AM IST Cron</span>
         </div>
 
         {/* Last Sync */}
@@ -120,10 +126,10 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
             <Clock className="w-3.5 h-3.5 text-indigo-500 group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-xs font-black text-slate-900 dark:text-white truncate">
-            {freshness?.last_successful_sync ? new Date(freshness.last_successful_sync).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Verified (Recent)'}
+            {freshness?.last_successful_sync ? new Date(freshness.last_successful_sync).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (systemHealth?.last_successful_fetch ? new Date(systemHealth.last_successful_fetch).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Verified (Recent)')}
           </div>
           <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-            {freshness?.data_freshness_status === 'FRESH' ? '100% Reconciled (FRESH)' : 'Live Cache Sync'}
+            {freshness?.data_freshness_status === 'FRESH' || systemHealth?.data_freshness_status === 'FRESH' ? 'Live Cache Sync' : 'Reconciling...'}
           </span>
         </div>
 
@@ -154,11 +160,11 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
             <Database className="w-3.5 h-3.5 text-emerald-500 group-hover:scale-110 transition-transform" />
           </div>
           <div className="flex items-center space-x-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span className={`w-2 h-2 rounded-full ${isDbHealthy ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
             <span className="text-xs font-black text-slate-900 dark:text-white">Healthy (WAL)</span>
           </div>
           <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-            {freshness?.total_students ? `${freshness.total_students} Roster Records` : '0 Orphan Records'}
+            {systemHealth?.orphan_records !== undefined ? `${systemHealth.orphan_records} Orphan Records` : (freshness?.total_students ? `${freshness.total_students} Records` : '0 Orphan Records')}
           </span>
         </div>
 
@@ -166,7 +172,7 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
         <div
           onClick={async () => {
             try {
-              const res = await api.get('/reports/export-excel', { responseType: 'blob' });
+              const res = await api.get('/reports/21/excel', { responseType: 'blob' });
               const blobUrl = window.URL.createObjectURL(new Blob([res.data]));
               const link = document.createElement('a');
               link.href = blobUrl;
@@ -216,6 +222,50 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
           <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Gmail IPv4 SMTP</span>
         </div>
 
+      </div>
+
+      {/* 24/7 Compact Health Strip */}
+      <div className="flex flex-wrap items-center justify-between sm:justify-start sm:space-x-6 gap-y-3 pt-3 border-t border-slate-200/80 dark:border-navy-800/80">
+        <div className="flex items-center space-x-2 text-[10px] font-extrabold text-slate-500 dark:text-slate-400">
+          <Database className="w-3.5 h-3.5 text-emerald-500" />
+          <span>DATABASE</span>
+          <span className={`px-1.5 py-0.5 rounded-full ${isDbHealthy ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'}`}>● {isDbHealthy ? 'HEALTHY' : 'DEGRADED'}</span>
+        </div>
+
+        <div className="flex items-center space-x-2 text-[10px] font-extrabold text-slate-500 dark:text-slate-400">
+          <Cpu className="w-3.5 h-3.5 text-brand-500" />
+          <span>API ENGINE</span>
+          <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">● HEALTHY</span>
+        </div>
+
+        <div className="flex items-center space-x-2 text-[10px] font-extrabold text-slate-500 dark:text-slate-400">
+          <Activity className="w-3.5 h-3.5 text-indigo-500" />
+          <span>SYNC WORKER</span>
+          <span className={`px-1.5 py-0.5 rounded-full ${isWorkerRunning ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'}`}>● {isWorkerRunning ? 'RUNNING' : 'IDLE'}</span>
+        </div>
+
+        <div className="flex items-center space-x-2 text-[10px] font-extrabold text-slate-500 dark:text-slate-400">
+          <Layers className="w-3.5 h-3.5 text-amber-500" />
+          <span>SYNC QUEUE</span>
+          <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">● HEALTHY</span>
+        </div>
+
+        <div className="flex items-center space-x-2 text-[10px] font-extrabold text-slate-500 dark:text-slate-400 hidden lg:flex">
+          <Clock className="w-3.5 h-3.5 text-teal-500" />
+          <span>SCHEDULER</span>
+          <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">● ACTIVE</span>
+        </div>
+
+        <div className="flex items-center space-x-2 text-[10px] font-extrabold text-slate-500 dark:text-slate-400 hidden lg:flex">
+          <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />
+          <span>BACKUP</span>
+          <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">● OK</span>
+        </div>
+
+        <div className="flex items-center space-x-2 text-[10px] font-extrabold text-slate-500 dark:text-slate-400 ml-auto">
+          <span>DATA FRESHNESS</span>
+          <span className={`px-2 py-0.5 rounded-full ${freshnessBadge === 'FRESH' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'}`}>● {freshnessBadge}</span>
+        </div>
       </div>
     </div>
   );

@@ -2,20 +2,20 @@ import React, { useState, useEffect } from 'react';
 import {
   Users, Trophy, Activity, AlertTriangle, FileSpreadsheet,
   RefreshCw, Plus, Building2, PieChart, ShieldCheck,
-  FileText, CheckCircle2, Play, Clock, Database, Server,
-  History, AlertOctagon, CheckCircle, ShieldAlert, Cpu, Layers
+  FileText, CheckCircle2, Play, Clock, History,
+  AlertOctagon, TrendingUp, Database
 } from 'lucide-react';
 import { StatCard } from '../components/StatCard';
 import { CountdownTimer } from '../components/CountdownTimer';
 import { AutomationStatusPanel } from '../components/AutomationStatusPanel';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
-import { AdminStaffAllocationPanel } from '../components/AdminStaffAllocationPanel';
 import { SyncHistoryModal } from '../components/SyncHistoryModal';
 import { FailedSyncModal } from '../components/FailedSyncModal';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import api, { triggerSingleStudentSync } from '../services/api';
 import { CANONICAL_ROSTER, getCanonicalSummary } from '../data/canonicalRoster';
 import { useNotification } from '../context/NotificationContext';
+import { useAuth } from '../context/AuthContext';
 
 interface DashboardPageProps {
   onSelectStudent: (student: StudentData) => void;
@@ -29,6 +29,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   onNavigateTab
 }) => {
   const { notify, confirmAction } = useNotification();
+  const { user } = useAuth();
   const [summary, setSummary] = useState<any>(getCanonicalSummary());
   const [students, setStudents] = useState<StudentData[]>(CANONICAL_ROSTER);
   const [departments, setDepartments] = useState<any[]>([]);
@@ -109,7 +110,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         setDataQuality(qualRes.value.data);
       }
       if (studRes.status === 'fulfilled' && studRes.value.data && Array.isArray(studRes.value.data)) {
-        setStudents(studRes.value.data);
+        const sortedData = [...studRes.value.data].sort((a: any, b: any) => (b.weekly_progress || 0) - (a.weekly_progress || 0));
+        setStudents(sortedData);
       }
       if (healthRes.status === 'fulfilled' && healthRes.value.data) {
         setSystemHealth(healthRes.value.data);
@@ -279,475 +281,379 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   };
 
   // Metrics resolution directly from current database state
-  const totalStudents = systemHealth?.total_students ?? summary?.total_students ?? 302;
-  const successfulCount = systemHealth?.successful_count ?? syncStatus?.successful ?? 237;
-  const pendingCount = systemHealth?.pending_count ?? syncStatus?.pending ?? 21;
-  const failedCount = systemHealth?.failed_count ?? syncStatus?.failed ?? 44;
+  const totalStudents = systemHealth?.total_students ?? summary?.total_students ?? 1395;
+  const successfulCount = systemHealth?.successful_count ?? syncStatus?.successful ?? 0;
+  const pendingCount = systemHealth?.pending_count ?? syncStatus?.pending ?? 0;
+  const failedCount = systemHealth?.failed_count ?? syncStatus?.failed ?? 0;
 
   const activeStudents = summary?.active_students ?? successfulCount;
   const notStartedStudents = summary?.not_started_students ?? pendingCount;
   const participationRate = totalStudents > 0 ? ((activeStudents / totalStudents) * 100).toFixed(1) : "0";
 
-  const absoluteLastFetchFormatted = systemHealth?.last_successful_fetch_formatted || syncStatus?.last_sync_timestamp || '19 Aug 2026 • 07:45:32 AM IST';
-  const freshnessBadge = systemHealth?.data_freshness_status || syncStatus?.data_freshness_status || 'FRESH';
-
+  const absoluteLastFetchFormatted = systemHealth?.last_successful_fetch_formatted || syncStatus?.last_sync_timestamp || 'N/A';
+  
   const isWorkerRunning = (systemHealth?.sync_worker === 'running') || syncStatus?.is_running;
-  const isDbHealthy = (systemHealth?.database === 'healthy') || (systemHealth?.status !== 'unhealthy');
 
   return (
-    <div className="space-y-6 py-2 animate-page-enter">
+    <div className="space-y-6 py-2 animate-page-enter w-full">
       
-      {/* 1. TOP INSTITUTIONAL STATUS BAR & AUTOMATION PANEL */}
-      <div className="stagger-1">
-        <AutomationStatusPanel onTriggerSync={handleStartSync} isSyncing={syncStarting || isWorkerRunning} />
-      </div>
-
-      {/* 2. MAIN EXECUTIVE BANNER */}
-      <div className="stagger-2 relative overflow-hidden rounded-2xl bg-white dark:bg-navy-900 p-6 sm:p-8 shadow-sm border border-gray-200 dark:border-navy-700">
-
-        <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
-          <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/25 text-emerald-300 text-xs font-bold tracking-wider">
-              <Building2 className="w-3 h-3 text-emerald-400" />
+      {/* 1. INSTITUTIONAL PERFORMANCE OVERVIEW */}
+      <div className="stagger-1 relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-lg border border-brand-500/30">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-3 max-w-3xl">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[11px] font-black tracking-wider uppercase">
+              <Building2 className="w-3.5 h-3.5 text-amber-400" />
               <span>NANDHA ENGINEERING COLLEGE • ERODE</span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold tracking-tight text-gray-900 dark:text-white">
-              Institutional Performance Overview
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-display font-extrabold tracking-tight text-white uppercase">
+              {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') ? (
+                <>MY ASSIGNED STUDENTS <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">OVERVIEW</span></>
+              ) : (
+                <>Institutional Performance <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Overview</span></>
+              )}
             </h1>
 
-            <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 font-medium leading-relaxed">
-              1500+ students across all departments — live sync, contest verification, leaderboard analytics, and automated reporting
+            <p className="text-sm text-gray-300 font-bold tracking-wide leading-relaxed">
+              {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') 
+                ? "Your exclusive mentorship cohort — live sync, contest verification, and analytics."
+                : "1500+ students across all departments — live sync, contest verification, leaderboard analytics, and automated reporting."}
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={handleStartSync}
               disabled={syncStarting || isWorkerRunning}
-              className="px-4 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-sm flex items-center space-x-2 transition-colors cursor-pointer disabled:opacity-50"
-              title="Perform full live synchronization for active student roster"
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-bold text-xs shadow-lg shadow-brand-600/30 flex items-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
             >
-              <RefreshCw className={`w-4 h-4 ${syncStarting || isWorkerRunning ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${syncStarting || isWorkerRunning ? 'animate-spin' : ''}`} />
               <span>{isWorkerRunning ? 'Syncing...' : 'Fetch Live Data'}</span>
             </button>
             <button
               onClick={onOpenImport}
-              className="px-4 py-3 rounded-xl bg-white dark:bg-navy-800 hover:bg-gray-50 dark:hover:bg-navy-700 text-gray-700 dark:text-white font-bold text-xs shadow-sm border border-gray-200 dark:border-navy-700 flex items-center space-x-2 transition-colors cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 font-bold text-xs shadow-sm border border-slate-700/50 flex items-center space-x-2 transition-colors cursor-pointer"
             >
-              <Plus className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <Plus className="w-3.5 h-3.5 text-slate-400" />
               <span>Import Roster</span>
             </button>
             <button
               onClick={handleExportExcel}
-              className="px-4 py-3 rounded-xl bg-white dark:bg-navy-800 hover:bg-gray-50 dark:hover:bg-navy-700 text-gray-700 dark:text-white font-bold text-xs shadow-sm border border-gray-200 dark:border-navy-700 flex items-center space-x-2 transition-colors cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 font-bold text-xs shadow-sm border border-slate-700/50 flex items-center space-x-2 transition-colors cursor-pointer"
             >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
               <span>Export Excel</span>
             </button>
             <button
               onClick={handleGenerateReport}
               disabled={generatingReport}
-              className="px-4 py-3 rounded-xl bg-white dark:bg-navy-800 hover:bg-gray-50 dark:hover:bg-navy-700 text-gray-700 dark:text-white font-bold text-xs shadow-sm border border-gray-200 dark:border-navy-700 flex items-center space-x-2 transition-colors cursor-pointer disabled:opacity-50"
+              className="px-4 py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 font-bold text-xs shadow-sm border border-slate-700/50 flex items-center space-x-2 transition-colors cursor-pointer disabled:opacity-50"
             >
-              <FileText className="w-4 h-4 text-amber-500" />
+              <FileText className="w-3.5 h-3.5 text-amber-400" />
               <span>{generatingReport ? "Generating..." : "Generate Weekly Report"}</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* 3. PROMINENT DATA OPERATIONS & SYSTEM HEALTH PANEL */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        
-        {/* Left 2 Cols: Main Data Synchronization Operations Panel */}
-        <div className="lg:col-span-2 p-6 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 shadow-sm space-y-5">
-          <div className="flex items-center justify-between border-b border-gray-100 dark:border-navy-800 pb-4">
-            <div>
-              <div className="flex items-center space-x-2">
-                <h2 className="text-base font-black text-gray-900 dark:text-white uppercase tracking-wider">DATA OPERATIONS</h2>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                  ● SYSTEM HEALTHY
-                </span>
-              </div>
-              <p className="text-xs font-bold text-gray-500 mt-0.5">
-                All Departments • All Academic Years ({totalStudents} Enrolled Students)
-              </p>
-            </div>
+      {/* 2. INSTITUTIONAL AI CONTROL CENTER (Merged with 24/7 Status) */}
+      <div className="stagger-2">
+        <AutomationStatusPanel 
+          onTriggerSync={handleStartSync} 
+          isSyncing={syncStarting || isWorkerRunning} 
+          systemHealth={systemHealth}
+          syncStatus={syncStatus}
+        />
+      </div>
 
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setShowSyncHistory(true)}
-                className="px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-navy-800 hover:bg-gray-200 text-gray-700 dark:text-gray-300 font-bold text-xs flex items-center space-x-1.5 transition-colors cursor-pointer"
-              >
-                <History className="w-3.5 h-3.5 text-indigo-500" />
-                <span>Sync History</span>
-              </button>
-            </div>
+      {/* 3 & 4. INSTITUTIONAL METRICS & WEEKLY SESSION */}
+      <div className="stagger-3 grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2 space-y-4">
+          <h3 className="font-extrabold text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wider pl-1">
+            Institutional Metrics
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <StatCard title="Total Students" value={totalStudents.toLocaleString()} icon={Users} color="blue" />
+            <StatCard title="Active Students" value={activeStudents.toLocaleString()} icon={CheckCircle2} color="green" />
+            <StatCard title="Not Started" value={notStartedStudents.toLocaleString()} icon={AlertTriangle} color="rose" />
+            <StatCard title="Total Problems Solved" value={(summary?.total_problems_solved ?? 0).toLocaleString()} icon={Trophy} color="purple" />
+            <StatCard title="Avg Weekly Progress" value={`+${summary?.average_weekly_progress ?? 0}`} icon={TrendingUp} color="indigo" />
           </div>
+        </div>
 
-          {/* Sync Progress Banner */}
-          <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-gray-800 space-y-2">
-            <div className="flex justify-between items-center text-xs">
-              <span className="font-extrabold text-gray-700 dark:text-gray-300 flex items-center space-x-2">
-                <Activity className="w-4 h-4 text-brand-500" />
-                <span>DATA SYNCHRONIZATION JOB</span>
-              </span>
-              <span className="font-black text-emerald-600 dark:text-emerald-400">
-                SYNC JOB COMPLETED (100%)
-              </span>
-            </div>
-            
-            <div className="w-full h-2.5 bg-gray-200 dark:bg-navy-800 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-brand-500 to-emerald-500 rounded-full w-full"></div>
-            </div>
-
-            <div className="flex flex-wrap justify-between items-center text-[11px] font-bold text-gray-500 pt-1">
-              <div>
-                <span>Last successful fetch: </span>
-                <strong className="text-gray-900 dark:text-white">{absoluteLastFetchFormatted}</strong>
-                <span className="ml-2 text-brand-600 dark:text-brand-400 font-black">({relativeTimeStr})</span>
+        <div className="space-y-4">
+          <h3 className="font-extrabold text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wider pl-1">
+            Weekly Session
+          </h3>
+          <div className="glass-card p-5 rounded-2xl border border-brand-500/20 shadow-sm space-y-4 h-[calc(100%-2rem)] flex flex-col justify-between bg-white dark:bg-navy-900">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                  ● SESSION {summary?.current_session?.status || 'UPCOMING'}
+                </span>
+                <span className="text-xs font-bold text-gray-500">Sun 08:00 – 09:30 AM IST</span>
               </div>
               
-              {systemHealth?.last_failed_fetch && (
-                <div className="text-rose-500">
-                  Last attempt: <strong>FAILED — {systemHealth.last_failed_fetch_reason || 'TIMEOUT'}</strong>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-gray-800">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase">Baseline Snapshot</span>
+                  <span className="text-xs font-black text-gray-900 dark:text-white">08:00 AM</span>
                 </div>
-              )}
+                <button
+                  onClick={handleTriggerStart}
+                  disabled={triggering}
+                  className="p-1.5 rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 transition-colors disabled:opacity-50"
+                  title="Trigger Baseline"
+                >
+                  <Play className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-gray-800">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase">Final Evaluation</span>
+                  <span className="text-xs font-black text-gray-900 dark:text-white">09:30 AM</span>
+                </div>
+                <button
+                  onClick={handleTriggerEnd}
+                  disabled={triggering}
+                  className="p-1.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 transition-colors disabled:opacity-50"
+                  title="Trigger Final Evaluation"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-gray-100 dark:border-gray-800">
+              <span className="text-[10px] font-bold text-gray-400 block mb-1">Next Sunday LeetCode Session</span>
+              <CountdownTimer targetSeconds={summary?.next_session_countdown_seconds || 86400} isLive={summary?.is_session_live} />
             </div>
           </div>
-
-          {/* Quick Interactive Data Counts */}
-          <div className="grid grid-cols-3 gap-3.5">
-            <div
-              onClick={() => onNavigateTab('students')}
-              className="p-4 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 cursor-pointer hover:scale-[1.02] transition-transform text-center space-y-0.5"
-            >
-              <p className="text-[10px] font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">SUCCESSFUL</p>
-              <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{successfulCount}</p>
-              <p className="text-[10px] font-bold text-emerald-600/80">Verified DB Profiles</p>
-            </div>
-
-            <div
-              onClick={() => onNavigateTab('students')}
-              className="p-4 rounded-2xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 cursor-pointer hover:scale-[1.02] transition-transform text-center space-y-0.5"
-            >
-              <p className="text-[10px] font-black text-amber-700 dark:text-amber-300 uppercase tracking-wider">PENDING</p>
-              <p className="text-2xl font-black text-amber-600 dark:text-amber-400">{pendingCount}</p>
-              <p className="text-[10px] font-bold text-amber-600/80">Queued for Verification</p>
-            </div>
-
-            <div
-              onClick={() => setShowFailedModal(true)}
-              className="p-4 rounded-2xl bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 cursor-pointer hover:scale-[1.02] transition-transform text-center space-y-0.5"
-            >
-              <p className="text-[10px] font-black text-rose-700 dark:text-rose-300 uppercase tracking-wider">FAILED</p>
-              <p className="text-2xl font-black text-rose-600 dark:text-rose-400">{failedCount}</p>
-              <p className="text-[10px] font-bold text-rose-600/80">View Failure Audit →</p>
-            </div>
-          </div>
-
-          {/* Action Control Buttons */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={handleStartSync}
-                disabled={syncStarting || isWorkerRunning}
-                className="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-black text-xs flex items-center space-x-1.5 shadow-md shadow-brand-600/30 transition-all cursor-pointer disabled:opacity-50"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${syncStarting || isWorkerRunning ? 'animate-spin' : ''}`} />
-                <span>{isWorkerRunning ? 'Syncing...' : 'Refresh Now'}</span>
-              </button>
-
-              <button
-                onClick={() => setShowFailedModal(true)}
-                className="px-4 py-2.5 rounded-xl bg-rose-100 dark:bg-rose-950/60 hover:bg-rose-200 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center space-x-1.5 border border-rose-200 dark:border-rose-900/50 transition-colors cursor-pointer"
-              >
-                <AlertOctagon className="w-3.5 h-3.5" />
-                <span>View Failed ({failedCount})</span>
-              </button>
-            </div>
-
-            <span className="text-[11px] font-bold text-gray-400">
-              Next Automatic Check: <strong className="text-gray-700 dark:text-gray-300">Every 15 min (24/7)</strong>
-            </span>
-          </div>
-
         </div>
-
-        {/* Right 1 Col: 24/7 SYSTEM STATUS PANEL */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 shadow-sm space-y-4">
-          <h3 className="font-extrabold text-base text-gray-900 dark:text-white flex items-center space-x-2 border-b border-gray-100 dark:border-navy-800 pb-3">
-            <Server className="w-5 h-5 text-indigo-500" />
-            <span>24/7 SYSTEM STATUS</span>
-          </h3>
-
-          <div className="space-y-2.5 text-xs font-bold">
-            
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-gray-800">
-              <span className="text-gray-500 flex items-center space-x-2">
-                <Database className="w-3.5 h-3.5 text-emerald-500" />
-                <span>DATABASE</span>
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                ● {isDbHealthy ? 'HEALTHY' : 'DEGRADED'}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-gray-800">
-              <span className="text-gray-500 flex items-center space-x-2">
-                <Cpu className="w-3.5 h-3.5 text-brand-500" />
-                <span>API ENGINE</span>
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                ● HEALTHY
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-gray-800">
-              <span className="text-gray-500 flex items-center space-x-2">
-                <Activity className="w-3.5 h-3.5 text-indigo-500" />
-                <span>SYNC WORKER</span>
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                ● {isWorkerRunning ? 'RUNNING' : 'RUNNING (24/7)'}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-gray-800">
-              <span className="text-gray-500 flex items-center space-x-2">
-                <Layers className="w-3.5 h-3.5 text-amber-500" />
-                <span>SYNC QUEUE</span>
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                ● HEALTHY
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-gray-800">
-              <span className="text-gray-500 flex items-center space-x-2">
-                <Clock className="w-3.5 h-3.5 text-teal-500" />
-                <span>SCHEDULER</span>
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                ● ACTIVE
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-gray-800">
-              <span className="text-gray-500 flex items-center space-x-2">
-                <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />
-                <span>BACKUP</span>
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                ● OK
-              </span>
-            </div>
-
-          </div>
-
-          <div className="pt-2 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-[11px] font-bold text-gray-500">
-            <span>DATA FRESHNESS:</span>
-            <span className="font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full">
-              ● {freshnessBadge}
-            </span>
-          </div>
-
-        </div>
-
       </div>
 
-      {/* 4. Top College Institutional KPIs Grid */}
-      <div className="stagger-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5 sm:gap-4">
-        <StatCard title="Total Students" value={totalStudents} icon={Users} color="blue" />
-        <StatCard title="Active Students" value={activeStudents} icon={CheckCircle2} color="green" />
-        <StatCard title="Not Started" value={notStartedStudents} icon={AlertTriangle} color="rose" />
-        <StatCard title="Total Problems Solved" value={(summary?.total_problems_solved ?? 0).toLocaleString()} icon={Trophy} color="purple" />
-        <StatCard title="Avg Weekly Progress" value={`+${summary?.average_weekly_progress ?? 0}`} icon={Activity} color="indigo" />
-      </div>
-
-      {/* 5. Weekly Session Monitoring & Countdown Controls (Preserved Sunday Engine) */}
-      <div className="stagger-4 glass-card p-6 rounded-3xl border border-brand-500/30 space-y-4 shadow-xl card-ai-control">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-4">
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                🟢 SESSION {summary?.current_session?.status || 'UPCOMING'}
-              </span>
-              <span className="text-xs font-bold text-gray-500">Sunday 08:00 AM – 09:30 AM IST</span>
+      {/* REAL-TIME GROWTH & DELTA ENGINE */}
+      <div className="stagger-4 relative overflow-hidden rounded-xl bg-white dark:bg-navy-900 p-6 sm:p-8 shadow-sm border border-gray-200 dark:border-navy-700 mt-6">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-3 max-w-3xl">
+            <div className="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[11px] font-black tracking-wider uppercase">
+              <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+              <span>NANDHA ENGINEERING COLLEGE • ERODE</span>
             </div>
-            <h3 className="text-lg font-black text-gray-900 dark:text-white">Weekly Session Snapshot Controls</h3>
+
+            <h2 className="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-gray-900 dark:text-white flex items-center space-x-3">
+              <span>REAL-TIME GROWTH & DELTA ENGINE</span>
+              <span className="px-2 py-0.5 rounded-md text-[10px] bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400 font-bold uppercase tracking-widest border border-brand-200 dark:border-brand-800/50">LIVE</span>
+            </h2>
+
+            <p className="text-sm text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
+              <strong className="text-gray-700 dark:text-gray-300">Growth Intelligence & Time Machine</strong> — Track student problem-solving deltas, biggest improvers leaderboard, difficulty velocity, and granular historical stat snapshots across custom timeframe windows.
+            </p>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex flex-wrap items-center gap-3">
             <button
-              type="button"
-              onClick={handleTriggerStart}
-              disabled={triggering}
-              className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs flex items-center space-x-1.5 shadow-md shadow-indigo-600/30 disabled:opacity-50 transition-all cursor-pointer"
+              onClick={() => onNavigateTab('growth')}
+              className="px-5 py-3 rounded-lg bg-gray-900 hover:bg-gray-800 dark:bg-brand-600 dark:hover:bg-brand-500 text-white font-bold text-xs shadow-md shadow-gray-900/20 dark:shadow-brand-500/20 flex items-center space-x-2 transition-all cursor-pointer transform hover:scale-[1.02]"
             >
-              <Play className="w-3.5 h-3.5 fill-white" />
-              <span>8:00 AM Baseline Snapshot</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleTriggerEnd}
-              disabled={triggering}
-              className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs flex items-center space-x-1.5 shadow-md shadow-emerald-600/30 disabled:opacity-50 transition-all cursor-pointer"
-            >
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>9:30 AM Final Evaluation</span>
+              <Activity className="w-4 h-4" />
+              <span>Launch Growth Engine</span>
             </button>
           </div>
         </div>
-
-        <CountdownTimer targetSeconds={summary?.next_session_countdown_seconds || 86400} isLive={summary?.is_session_live} />
       </div>
 
-      {/* 6. College Participation Analytics & Data Quality Summary Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* 5 & 6. COLLEGE PARTICIPATION & DATA QUALITY */}
+      <div className="stagger-5 grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         
-        {/* Participation Rate Card */}
-        <div className="glass-card p-6 rounded-3xl border space-y-4 shadow-lg md:col-span-2">
+        {/* Participation Analytics */}
+        <div className="glass-card p-6 rounded-2xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-900 shadow-sm space-y-5">
           <div className="flex items-center justify-between">
-            <h3 className="font-extrabold text-base text-gray-900 dark:text-white flex items-center space-x-2">
-              <PieChart className="w-5 h-5 text-indigo-500" />
-              <span>College Participation Analytics</span>
+            <h3 className="font-extrabold text-sm text-gray-900 dark:text-white flex items-center space-x-2">
+              <PieChart className="w-4 h-4 text-indigo-500" />
+              <span className="uppercase tracking-wider">College Participation Analytics</span>
             </h3>
-            <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200">
-              {participationRate}% Participation Rate
-            </span>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs font-bold text-gray-500">
-              <span>Active Students ({activeStudents} / {totalStudents})</span>
-              <span>Not Started ({notStartedStudents})</span>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 py-2">
+            <div className="relative w-32 h-32 flex items-center justify-center shrink-0">
+              <svg className="w-full h-full transform -rotate-90 drop-shadow-xl" viewBox="0 0 36 36">
+                <circle
+                  className="text-gray-100 dark:text-navy-800"
+                  strokeWidth="3.5"
+                  stroke="currentColor"
+                  fill="none"
+                  cx="18" cy="18" r="16"
+                />
+                <circle
+                  className="text-indigo-500 transition-all duration-1000 ease-out"
+                  strokeDasharray={`${participationRate}, 100`}
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  stroke="currentColor"
+                  fill="none"
+                  cx="18" cy="18" r="16"
+                  style={{ strokeDashoffset: '0' }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-navy-900 rounded-full m-3 shadow-inner border border-gray-50 dark:border-navy-800">
+                <span className="text-2xl font-display font-black text-indigo-600 dark:text-indigo-400">{participationRate}%</span>
+              </div>
             </div>
-
-            <div className="w-full h-4 bg-rose-100 dark:bg-rose-950/60 rounded-full overflow-hidden flex">
-              <div
-                style={{ width: `${participationRate}%` }}
-                className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
-              ></div>
+            
+            <div className="flex flex-col space-y-1 text-center sm:text-left">
+              <span className="text-sm font-extrabold text-gray-900 dark:text-white">Active Participation</span>
+              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                Out of {totalStudents.toLocaleString()} total enrolled students across all departments, {activeStudents.toLocaleString()} have actively verified LeetCode profiles.
+              </span>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 text-center text-xs font-bold pt-2">
-            <div className="p-3 rounded-2xl bg-gray-50 dark:bg-navy-900 border">
-              <p className="text-[10px] text-gray-400 uppercase">Total Enrolled</p>
-              <p className="text-lg font-black text-gray-900 dark:text-white mt-0.5">{totalStudents}</p>
+          <div className="grid grid-cols-2 gap-3 text-xs font-bold">
+            <div className="flex flex-col p-3 rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-gray-800">
+              <span className="text-gray-500">Active Students</span>
+              <span className="text-base text-gray-900 dark:text-white">{activeStudents.toLocaleString()}</span>
             </div>
-
-            <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 text-emerald-700 dark:text-emerald-300">
-              <p className="text-[10px] uppercase">Active Coding</p>
-              <p className="text-lg font-black mt-0.5">{activeStudents}</p>
+            <div className="flex flex-col p-3 rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-gray-800">
+              <span className="text-gray-500">Not Started</span>
+              <span className="text-base text-gray-900 dark:text-white">{notStartedStudents.toLocaleString()}</span>
             </div>
-
-            <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 text-rose-700 dark:text-rose-300">
-              <p className="text-[10px] uppercase">Action Needed</p>
-              <p className="text-lg font-black mt-0.5">{notStartedStudents}</p>
+            <div className="col-span-2 flex flex-col p-3 rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-gray-800 text-center">
+              <span className="text-gray-500">Total Enrolled</span>
+              <span className="text-base text-gray-900 dark:text-white">{totalStudents.toLocaleString()}</span>
             </div>
           </div>
         </div>
 
-        {/* Institutional Data Quality Card */}
-        <div className="glass-card p-6 rounded-3xl border space-y-4 shadow-lg">
-          <h3 className="font-extrabold text-base text-gray-900 dark:text-white flex items-center space-x-2">
-            <ShieldCheck className="w-5 h-5 text-emerald-500" />
-            <span>Data Quality Board</span>
-          </h3>
+        {/* Data Quality Board */}
+        <div className="glass-card p-6 rounded-2xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-900 shadow-sm flex flex-col justify-between">
+          <div className="space-y-5">
+            <h3 className="font-extrabold text-sm text-gray-900 dark:text-white flex items-center space-x-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-500" />
+              <span className="uppercase tracking-wider">Data Quality Board</span>
+            </h3>
 
-          <div className="space-y-3 text-xs font-bold">
-            <div className="flex justify-between items-center py-1.5 border-b border-gray-100 dark:border-gray-800">
-              <span className="text-gray-500">Valid Profiles</span>
-              <span className="text-emerald-600 dark:text-emerald-400 font-black">{dataQuality?.valid_profiles || totalStudents}</span>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/30">
+                <span className="text-xs font-bold text-gray-600 dark:text-gray-400">Valid Profiles</span>
+                <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">{dataQuality?.valid_profiles ?? totalStudents}</span>
+              </div>
+
+              <div className="flex justify-between items-center p-3 rounded-xl bg-rose-50/50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-800/30">
+                <span className="text-xs font-bold text-gray-600 dark:text-gray-400">Missing Profile URLs</span>
+                <span className="text-sm font-black text-rose-600 dark:text-rose-400">{dataQuality?.missing_links ?? 0}</span>
+              </div>
+
+              <div className="flex justify-between items-center p-3 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/30">
+                <span className="text-xs font-bold text-gray-600 dark:text-gray-400">Profile Health Score</span>
+                <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">{dataQuality?.health_score_percentage ?? 100}%</span>
+              </div>
             </div>
-
-            <div className="flex justify-between items-center py-1.5 border-b border-gray-100 dark:border-gray-800">
-              <span className="text-gray-500">Missing Profile URLs</span>
-              <span className="text-amber-500 font-black">{dataQuality?.missing_links || 0}</span>
-            </div>
-
-            <div className="flex justify-between items-center py-1.5 border-b border-gray-100 dark:border-gray-800">
-              <span className="text-gray-500">Profile Health Score</span>
-              <span className="text-indigo-600 dark:text-indigo-400 font-black">{dataQuality?.health_score_percentage || 100}%</span>
-            </div>
-
-            <button
-              onClick={() => onNavigateTab('quality')}
-              className="w-full py-2 rounded-xl bg-gray-100 dark:bg-navy-900 hover:bg-gray-200 text-gray-700 dark:text-gray-300 text-xs font-bold transition-all cursor-pointer"
-            >
-              Open Data Quality Details →
-            </button>
           </div>
+
+          <button
+            onClick={() => onNavigateTab('quality')}
+            className="w-full mt-4 py-2.5 rounded-xl bg-gray-50 dark:bg-navy-950 hover:bg-gray-100 dark:hover:bg-navy-800 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 text-xs font-bold transition-all cursor-pointer"
+          >
+            Open Data Quality Details →
+          </button>
         </div>
 
       </div>
 
-      {/* 7. Department Performance Overview */}
-      <div className="glass-card p-6 rounded-3xl border space-y-4 shadow-xl">
-        <h3 className="font-extrabold text-lg text-gray-900 dark:text-white flex items-center space-x-2">
-          <Building2 className="w-5 h-5 text-brand-500" />
-          <span>Department Performance Matrix</span>
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {departments.map((dept) => (
-            <div key={dept.department_code || dept.department_id} className="p-5 rounded-2xl bg-white dark:bg-navy-900 border space-y-3 shadow-md">
-              <div className="flex items-center justify-between">
-                <span className="font-black text-sm text-gray-900 dark:text-white">
-                  {dept.department_name} ({dept.department_code})
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-brand-500/20 text-brand-600 dark:text-brand-300">
-                  {dept.total_students} Students
-                </span>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 text-center text-xs font-bold">
-                <div className="p-2 rounded-xl bg-gray-50 dark:bg-navy-950 border">
-                  <p className="text-[10px] text-gray-400">Avg Solved</p>
-                  <p className="text-base font-black text-emerald-600 dark:text-emerald-400 mt-0.5">{dept.avg_solved}</p>
-                </div>
-                <div className="p-2 rounded-xl bg-gray-50 dark:bg-navy-950 border">
-                  <p className="text-[10px] text-gray-400">Participation</p>
-                  <p className="text-base font-black text-indigo-600 dark:text-indigo-400 mt-0.5">{dept.participation_rate}%</p>
-                </div>
-                <div className="p-2 rounded-xl bg-gray-50 dark:bg-navy-950 border flex flex-col justify-between">
-                  <div>
-                    <p className="text-[10px] text-gray-400">Top Performer</p>
-                    <p className="text-xs font-black text-amber-500 truncate mt-0.5" title={dept.top_student_name}>
-                      {dept.top_student_name}
-                    </p>
-                  </div>
-                  {dept.top_student_id && (
-                    <button
-                      onClick={() => handleSingleStudentRefresh(dept.top_student_id, dept.top_student_name)}
-                      disabled={refreshingStudentId === dept.top_student_id}
-                      className="mt-1 px-2 py-0.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[9.5px] font-black flex items-center justify-center space-x-1 w-full transition-all cursor-pointer border border-amber-400/30 disabled:opacity-50"
-                      title={`Recalculate & fetch live stats for ${dept.top_student_name}`}
-                    >
-                      <RefreshCw className={`w-2.5 h-2.5 ${refreshingStudentId === dept.top_student_id ? 'animate-spin' : ''}`} />
-                      <span>{refreshingStudentId === dept.top_student_id ? 'Syncing...' : 'Single Refresh'}</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 7.5 Staff Workload & Student Capacity Allocation Panel */}
-      <AdminStaffAllocationPanel />
-
-      {/* 8. Top Institutional Leaderboard */}
-      <div className="space-y-4">
+      {/* 7. DEPARTMENT PERFORMANCE MATRIX */}
+      <div className="stagger-6 glass-card p-6 rounded-2xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-900 shadow-sm space-y-4 overflow-hidden mt-6">
         <div className="flex items-center justify-between">
-          <h3 className="font-extrabold text-lg text-gray-900 dark:text-white flex items-center space-x-2">
-            <Trophy className="w-5 h-5 text-amber-500" />
-            <span>Top College Leaderboard</span>
+          <h3 className="font-extrabold text-sm text-gray-900 dark:text-white flex items-center space-x-2">
+            <Building2 className="w-4 h-4 text-brand-500" />
+            <span className="uppercase tracking-wider">Department Performance Matrix</span>
+          </h3>
+          <button onClick={() => onNavigateTab('departments')} className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">
+            View Full Department Report →
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs whitespace-nowrap">
+            <thead>
+              <tr className="border-b border-gray-200 dark:border-navy-700 text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">
+                <th className="py-3 px-4 font-extrabold">Department</th>
+                <th className="py-3 px-4 font-extrabold">Students</th>
+                <th className="py-3 px-4 font-extrabold">Active</th>
+                <th className="py-3 px-4 font-extrabold">Participation</th>
+                <th className="py-3 px-4 font-extrabold">Avg Solved</th>
+                <th className="py-3 px-4 font-extrabold text-right">Top Performer</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-navy-800">
+              {departments.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12">
+                    <div className="flex flex-col items-center justify-center text-center space-y-3">
+                      <div className="w-12 h-12 rounded-full bg-gray-50 dark:bg-navy-800 flex items-center justify-center border border-gray-100 dark:border-navy-700">
+                        <Building2 className="w-5 h-5 text-gray-400" />
+                      </div>
+                      <span className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                        {loading ? 'Aggregating Department Matrices...' : 'Matrix Waiting for Initial Sync'}
+                      </span>
+                      <span className="text-xs text-gray-500 max-w-sm">
+                        Department comparative analytics will populate here automatically once sufficient institutional data is gathered.
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                departments.map((dept) => (
+                  <tr key={dept.department_code || dept.department_id} className="hover:bg-gray-50 dark:hover:bg-navy-800/50 transition-colors">
+                    <td className="py-3 px-4">
+                      <div className="font-black text-gray-900 dark:text-white">{dept.department_code}</div>
+                      <div className="text-[10px] text-gray-500 truncate max-w-[200px]">{dept.department_name}</div>
+                    </td>
+                    <td className="py-3 px-4 font-medium text-gray-600 dark:text-gray-300">{dept.total_students}</td>
+                    <td className="py-3 px-4 font-medium text-emerald-600 dark:text-emerald-400">{dept.active_count || Math.round((dept.participation_rate / 100) * dept.total_students)}</td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-16 h-1.5 bg-gray-200 dark:bg-navy-700 rounded-full overflow-hidden">
+                          <div style={{ width: `${dept.participation_rate}%` }} className="h-full bg-indigo-500 rounded-full"></div>
+                        </div>
+                        <span className="font-bold text-gray-700 dark:text-gray-300">{dept.participation_rate}%</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 font-bold text-gray-900 dark:text-white">{dept.avg_solved}</td>
+                    <td className="py-3 px-4 text-right">
+                      {dept.top_student_name ? (
+                        <div className="flex items-center justify-end space-x-2">
+                          <span className="font-bold text-amber-600 dark:text-amber-400">{dept.top_student_name}</span>
+                          {dept.top_student_id && (
+                            <button
+                              onClick={() => handleSingleStudentRefresh(dept.top_student_id, dept.top_student_name)}
+                              disabled={refreshingStudentId === dept.top_student_id}
+                              className="p-1 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-navy-700 dark:hover:bg-navy-600 text-gray-500 transition-colors disabled:opacity-50"
+                              title={`Refresh ${dept.top_student_name}`}
+                            >
+                              <RefreshCw className={`w-3 h-3 ${refreshingStudentId === dept.top_student_id ? 'animate-spin' : ''}`} />
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 8. TOP COLLEGE LEADERBOARD (PREVIEW) */}
+      <div className="stagger-7 space-y-4 mt-6">
+        <div className="flex items-center justify-between">
+          <h3 className="font-extrabold text-sm text-gray-900 dark:text-white flex items-center space-x-2">
+            <Trophy className="w-4 h-4 text-amber-500" />
+            <span className="uppercase tracking-wider">Top College Leaderboard</span>
           </h3>
           <button
             onClick={() => onNavigateTab('students')}
@@ -758,13 +664,94 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
 
         <LeaderboardTable
-          students={students}
+          students={students.slice(0, 10)}
           onSelectStudent={onSelectStudent}
           onRefreshStudent={() => fetchDashboardData()}
         />
+        
+        <div className="text-center pt-2">
+           <span className="text-[11px] font-bold text-gray-400 bg-gray-50 dark:bg-navy-950 px-3 py-1.5 rounded-full border border-gray-100 dark:border-gray-800">
+             Showing Top {Math.min(students.length, 10)} of {totalStudents} students. 
+             <button onClick={() => onNavigateTab('students')} className="text-brand-500 hover:underline ml-1">View Full Roster</button>
+           </span>
+        </div>
       </div>
 
-      {/* 9. Sync History & Failed Audit Modals */}
+      {/* 9. DATA OPERATIONS (Moved to Bottom) */}
+      <div className="stagger-8 mt-8 p-6 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 shadow-sm space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 dark:border-navy-800 pb-4">
+          <div>
+            <div className="flex items-center space-x-2">
+              <h2 className="text-sm font-extrabold text-gray-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
+                <Database className="w-4 h-4 text-slate-500" />
+                <span>DATA OPERATIONS</span>
+              </h2>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                ● SYSTEM HEALTHY
+              </span>
+            </div>
+            <p className="text-xs font-bold text-gray-500 mt-1">
+              All Departments • All Academic Years
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setShowSyncHistory(true)}
+              className="px-3 py-2 rounded-xl bg-gray-50 dark:bg-navy-950 hover:bg-gray-100 dark:hover:bg-navy-800 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 font-bold text-xs flex items-center space-x-1.5 transition-colors cursor-pointer"
+            >
+              <History className="w-3.5 h-3.5 text-indigo-500" />
+              <span>Sync History</span>
+            </button>
+            <button
+              onClick={handleStartSync}
+              disabled={syncStarting || isWorkerRunning}
+              className="px-3 py-2 rounded-xl bg-brand-50 dark:bg-brand-900/10 hover:bg-brand-100 dark:hover:bg-brand-900/20 border border-brand-200 dark:border-brand-800/30 text-brand-700 dark:text-brand-300 font-bold text-xs flex items-center space-x-1.5 transition-all cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${syncStarting || isWorkerRunning ? 'animate-spin' : ''}`} />
+              <span>{isWorkerRunning ? 'Syncing...' : 'Refresh Now'}</span>
+            </button>
+            <button
+              onClick={() => setShowFailedModal(true)}
+              className="px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center space-x-1.5 transition-colors cursor-pointer"
+            >
+              <AlertOctagon className="w-3.5 h-3.5" />
+              <span>View Failed ({failedCount})</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Sync Progress Banner */}
+        <div className="p-4 rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-gray-800 space-y-3">
+          <div className="flex justify-between items-center text-xs">
+            <span className="font-extrabold text-gray-700 dark:text-gray-300 flex items-center space-x-2">
+              <Activity className="w-3.5 h-3.5 text-brand-500" />
+              <span>DATA SYNCHRONIZATION JOB</span>
+            </span>
+            <span className="font-black text-emerald-600 dark:text-emerald-400">
+              {isWorkerRunning ? 'SYNCING...' : 'SYNC JOB COMPLETED (100%)'}
+            </span>
+          </div>
+          
+          <div className="w-full h-2 bg-gray-200 dark:bg-navy-800 rounded-full overflow-hidden">
+            <div className={`h-full rounded-full ${isWorkerRunning ? 'w-1/2 animate-pulse bg-brand-500' : 'w-full bg-gradient-to-r from-brand-500 to-emerald-500'}`}></div>
+          </div>
+
+          <div className="flex flex-wrap justify-between items-center text-[11px] font-bold text-gray-500 pt-1">
+            <div>
+              <span>Last successful fetch: </span>
+              <strong className="text-gray-900 dark:text-white">{absoluteLastFetchFormatted}</strong>
+            </div>
+            <div className="flex space-x-4">
+              <span className="text-emerald-600">Verified: {successfulCount}</span>
+              <span className="text-amber-500">Queued: {pendingCount}</span>
+              <span className="text-rose-500">Failed: {failedCount}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modals */}
       <SyncHistoryModal
         isOpen={showSyncHistory}
         onClose={() => setShowSyncHistory(false)}

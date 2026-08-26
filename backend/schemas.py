@@ -221,13 +221,20 @@ class VerifyDobRequest(BaseModel):
     email: str
     date_of_birth: str
 
-class ResetPasswordOtpRequest(BaseModel):
+class ForgotPasswordRequest(BaseModel):
+    institutional_id: str
+    email: str
+    date_of_birth: str
+
+class ForgotPasswordVerifyRequest(BaseModel):
+    institutional_id: str
     email: str
     otp: str
 
 class ResetPasswordSubmitRequest(BaseModel):
+    institutional_id: str
     email: str
-    reset_token: str
+    otp: str
     new_password: str
 
 # Weekly Session Schemas

@@ -95,7 +95,7 @@ def get_command_center_summary(
     year_level: Optional[str] = None,
     section_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin"))
+    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "faculty", "staff"))
 ):
     from backend.services.hod_analytics_engine import (
         calculate_department_health_score,
@@ -104,11 +104,11 @@ def get_command_center_summary(
         get_institutional_benchmarks
     )
     health = calculate_department_health_score(
-        db, dept_id=dept_id, staff_id=staff_id, year_level=year_level, section_id=section_id
+        db, current_user, dept_id=dept_id, staff_id=staff_id, year_level=year_level, section_id=section_id
     )
-    brief = get_executive_brief(db, dept_id=dept_id, staff_id=staff_id)
-    needs_att = get_needs_attention_metrics(db, dept_id=dept_id, staff_id=staff_id)
-    benchmarks = get_institutional_benchmarks(db)
+    brief = get_executive_brief(db, current_user, dept_id=dept_id, staff_id=staff_id)
+    needs_att = get_needs_attention_metrics(db, current_user, dept_id=dept_id, staff_id=staff_id)
+    benchmarks = get_institutional_benchmarks(db, current_user)
 
     # Active staff list for Scope Selector
     staff_users_q = db.query(User).filter(
@@ -172,8 +172,9 @@ def get_students(
     allocation_filter: Optional[str] = None, # ALLOCATED, UNASSIGNED
     include_inactive: bool = True,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin"))
+    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "faculty", "staff"))
 ):
+    from backend.services.authorization_service import apply_role_based_student_filter
     real_ids = _real_dept_ids(db)
     q = db.query(Student).filter(Student.department_id.in_(real_ids))
 
@@ -197,6 +198,15 @@ def get_students(
 
     if dept_id:
         q = q.filter(Student.department_id == dept_id)
+    else:
+        # Exclude test departments if no dept specified
+        test_depts = db.query(Department.id).filter(or_(Department.code.ilike('%TEST%'))).all()
+        test_dept_ids = [d[0] for d in test_depts]
+        if test_dept_ids:
+            q = q.filter(Student.department_id.notin_(test_dept_ids))
+
+    q = apply_role_based_student_filter(q, current_user, db)
+
     if year_level and year_level != "ALL":
         q = q.filter(Student.year_level == year_level)
     if section_id:
@@ -353,7 +363,7 @@ def auto_distribute_department(
 def get_faculty_workload(
     dept_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin"))
+    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "faculty", "staff"))
 ):
     """Returns detailed workload and assigned student roster for each faculty member."""
     query = db.query(User).options(joinedload(User.department)).filter(
@@ -362,6 +372,10 @@ def get_faculty_workload(
     )
     if dept_id:
         query = query.filter(User.department_id == dept_id)
+    # Apply department filtering based on user permissions
+    if current_user.role.lower() not in ["admin", "super_admin", "super admin"]:
+        query = query.filter(User.department_id == current_user.department_id)
+
     faculty_list = query.all()
 
     workload = []
@@ -415,14 +429,14 @@ def get_report_data(
     report_type: str = Query(..., description="EXECUTIVE, FACULTY_ALLOCATION, INACTIVE_AT_RISK, CONTEST, SKILL_GAP"),
     dept_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin"))
+    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "faculty", "staff"))
 ):
     """
     Returns structured data for on-screen report rendering & multi-format export.
     """
     from backend.services.hod_analytics_engine import calculate_department_health_score, get_institutional_benchmarks
-    health = calculate_department_health_score(db, dept_id=dept_id)
-    benchmarks = get_institutional_benchmarks(db)
+    health = calculate_department_health_score(db, current_user, dept_id=dept_id)
+    benchmarks = get_institutional_benchmarks(db, current_user)
 
     now_str = datetime.datetime.utcnow().strftime("%d %B %Y, %I:%M %p IST")
 

@@ -225,8 +225,24 @@ def delete_staff_member(
 
     # 2. Delete the faculty user record
     faculty_name = faculty.username
-    db.delete(faculty)
-    db.commit()
+    try:
+        db.delete(faculty)
+        db.commit()
+    except Exception as e:
+        # Fallback to Soft Delete if foreign keys (mentor notes, history, alerts) prevent physical deletion
+        db.rollback()
+        faculty.is_active = False
+        faculty.role = "Deleted_Staff"
+        
+        # Anonymize to free up unique constraints (username, email, institutional_id)
+        import time
+        timestamp = int(time.time())
+        faculty.email = f"deleted_{timestamp}_{faculty.email}"[:150]
+        faculty.username = f"deleted_{timestamp}_{faculty.username}"[:100]
+        if faculty.institutional_id:
+            faculty.institutional_id = f"deleted_{timestamp}_{faculty.institutional_id}"[:50]
+            
+        db.commit()
 
     return {
         "success": True,

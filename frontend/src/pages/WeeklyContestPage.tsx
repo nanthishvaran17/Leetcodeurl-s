@@ -11,6 +11,7 @@ import { LiveStudentMonitor } from '../components/LiveStudentMonitor';
 import { Post930SolversView } from './Post930SolversView';
 import { StudentEditOverlay } from '../components/StudentEditOverlay';
 import { PreviousWeekContestPanel } from '../components/PreviousWeekContestPanel';
+import { useAuth } from '../context/AuthContext';
 
 // Animated Count-Up component for headline stat numbers
 const AnimatedNumber: React.FC<{ value: number; suffix?: string; duration?: number }> = ({ value, suffix = '', duration = 600 }) => {
@@ -89,6 +90,7 @@ const Sparkline: React.FC<{ data: number[]; color?: string }> = ({ data, color =
 };
 
 export const WeeklyContestPage: React.FC = () => {
+  const { user } = useAuth();
   const [sessionsList, setSessionsList] = useState<any[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
   const [currentSession, setCurrentSession] = useState<any>(null);
@@ -1027,9 +1029,19 @@ export const WeeklyContestPage: React.FC = () => {
               )}
             </div>
 
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
-              {activeSessionObj?.contestName || 'Weekly Contest 515'} <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300 font-extrabold">Dashboard</span>
-            </h1>
+            <div className="flex flex-col gap-1.5 md:gap-2 max-w-xl">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-display tracking-tight text-white flex items-center gap-3 uppercase">
+                {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') ? (
+                  <>
+                    MY <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300 font-extrabold">{activeSessionObj?.contestName || 'WEEKLY CONTEST'}</span>
+                  </>
+                ) : (
+                  <>
+                    {activeSessionObj?.contestName || 'Weekly Contest 515'} <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300 font-extrabold">Dashboard</span>
+                  </>
+                )}
+              </h1>
+            </div>
 
             <div className="flex items-center flex-wrap gap-2 text-xs sm:text-sm text-gray-300 font-bold tracking-wide">
               <span>NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</span>

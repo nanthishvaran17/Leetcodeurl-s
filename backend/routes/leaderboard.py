@@ -7,11 +7,15 @@ from backend.database import get_db
 from backend.models import Student, WeeklyStudentProgress, Department, Section, LeetCodeProfileStats
 from backend.schemas import StudentOut
 from backend.cache import cache
+from backend.security import get_current_user_optional
+from backend.services.authorization_service import apply_role_based_student_filter
+from fastapi import Request
 
 router = APIRouter(prefix="/api/leaderboard", tags=["Leaderboard"])
 
 @router.get("", response_model=List[StudentOut])
 def get_leaderboard(
+    request: Request,
     dept_id: Optional[int] = Query(None),
     year_level: Optional[str] = Query(None),
     section_id: Optional[int] = Query(None),
@@ -19,7 +23,10 @@ def get_leaderboard(
     limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(get_db)
 ):
-    cache_key = f"leaderboard:{dept_id}:{year_level}:{section_id}:{sort_by}:{limit}"
+    current_user = get_current_user_optional(request, db)
+    user_scope = f"{current_user.id}:{current_user.role}" if current_user else "public"
+    
+    cache_key = f"leaderboard:{user_scope}:{dept_id}:{year_level}:{section_id}:{sort_by}:{limit}"
     cached_res = cache.get(cache_key)
     if cached_res is not None:
         return cached_res
@@ -37,6 +44,9 @@ def get_leaderboard(
         LeetCodeProfileStats.sync_status.in_(["success", "OK", "verified"]),
         LeetCodeProfileStats.total_solved.isnot(None)
     )
+
+    if current_user:
+        query = apply_role_based_student_filter(query, current_user, db)
 
     if dept_id:
         query = query.filter(Student.department_id == dept_id)

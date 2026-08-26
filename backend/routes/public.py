@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
@@ -10,7 +10,8 @@ router = APIRouter(prefix="/api/public", tags=["Public Endpoints"])
 
 @router.get("/leaderboard")
 def get_public_leaderboard(
-    limit: int = 300,
+    request: Request,
+    limit: int = 3000,
     sort_by: Optional[str] = "solved_desc",
     dept_id: Optional[int] = None,
     year_level: Optional[str] = None,
@@ -21,6 +22,7 @@ def get_public_leaderboard(
     """
     from backend.routes.students import get_students
     return get_students(
+        request=request,
         dept_id=dept_id,
         year_level=year_level,
         section_id=None,

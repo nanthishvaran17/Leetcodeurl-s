@@ -5,11 +5,12 @@ import { ReportPreview } from '../components/ReportPreview';
 import { EmailDeliveryTab } from '../components/EmailDeliveryTab';
 import { CertificateManagementModal } from '../components/CertificateManagementModal';
 import { ConfirmDeleteModal, DeleteItemInfo } from '../components/ConfirmDeleteModal';
-
 import { useNotification } from '../context/NotificationContext';
+import { useAuth } from '../context/AuthContext';
 
 export const ReportsPage: React.FC = () => {
   const { notify } = useNotification();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'reports' | 'email' | 'manual_email' | 'auto_email'>('reports');
   const [showCertModal, setShowCertModal] = useState<boolean>(false);
   const [emailLogs, setEmailLogs] = useState<any[]>([]);
@@ -352,22 +353,32 @@ export const ReportsPage: React.FC = () => {
           <div className="space-y-3 max-w-2xl">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>NANDHA ENGINEERING COLLEGE EXPORT SUITE</span>
+              <span>NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</span>
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight">
-              Reports & <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Export Center</span>
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight uppercase">
+              {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') ? (
+                <>
+                  MY <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">EXPORT SUITE</span>
+                </>
+              ) : (
+                <>
+                  Reports & <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Export Center</span>
+                </>
+              )}
             </h1>
 
             <p className="text-xs md:text-sm text-gray-300 font-bold tracking-wide">
-              Download individual formatted Excel workbooks, executive PDF summaries, and dispatch automated Sunday email reports to management
+              {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') 
+                ? "Download individual formatted Excel workbooks and reports for your assigned students."
+                : "Download individual formatted Excel workbooks, executive PDF summaries, and dispatch automated Sunday email reports to management"}
             </p>
           </div>
 
-          <div className="flex items-center space-x-2.5 flex-wrap gap-2">
+          <div className="flex items-center space-x-3 flex-wrap gap-2">
             <button
               onClick={() => setShowCertModal(true)}
-              className="flex items-center space-x-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-2xl text-xs font-black shadow-xl shadow-amber-500/30 transition-all transform hover:scale-105 cursor-pointer"
+              className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-2xl text-xs font-bold shadow-lg shadow-brand-600/30 transition-all transform hover:scale-105 cursor-pointer"
             >
               <Award className="w-4 h-4" />
               <span>Generate Merit Certificates</span>

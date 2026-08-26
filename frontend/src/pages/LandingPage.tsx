@@ -409,9 +409,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     return opts;
   }, []);
 
-  // Academic Year Dropdown Options (Removed 1st Year; Batches: 2029, 2028, 2027)
+  // Academic Year Dropdown Options (Batches: 2030, 2029, 2028, 2027)
   const yearOptions: DropdownOption[] = [
     { value: 'all', label: 'All Academic Years', badge: 'ALL', icon: GraduationCap },
+    { value: 'I', label: '1st Year (Batch 2030)', badge: 'I Year', icon: GraduationCap },
     { value: 'II', label: '2nd Year (Batch 2029)', badge: 'II Year', icon: GraduationCap },
     { value: 'III', label: '3rd Year (Batch 2028)', badge: 'III Year', icon: GraduationCap },
     { value: 'IV', label: 'Final Year (Batch 2027)', badge: 'IV Year', icon: GraduationCap },
@@ -477,7 +478,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             transition={{ delay: 0.3, duration: 0.5 }}
             className="text-xs md:text-sm text-slate-200 font-medium max-w-2xl leading-relaxed drop-shadow"
           >
-            Track • Verify • Analyze • Report • Recognize. Institutional competitive programming intelligence across 1500+ students in Cyber Security, IoT, and Engineering Departments with verified Sunday contest forensics and automated reporting.
+            Track • Verify • Analyze • Report • Recognize. Institutional competitive programming intelligence across 1500+ students in all Engineering and Technology departments with verified Sunday contest forensics and automated reporting.
           </motion.p>
 
 
@@ -797,7 +798,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <h3 className="font-black text-lg text-gray-900 dark:text-white">
             {selectedDept === 'all' || selectedDept === 'ALL'
               ? 'All Departments'
-              : (departments.find(d => String(d.id) === String(selectedDept) || d.code === selectedDept)?.name || selectedDept)}
+              : (DEFAULT_DEPARTMENTS.find(d => String(d.id) === String(selectedDept) || d.code === selectedDept)?.name || selectedDept)}
             {' • '}
             {yearLevel === 'all' || yearLevel === 'ALL'
               ? 'All Academic Years'

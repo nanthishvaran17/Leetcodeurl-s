@@ -365,3 +365,4 @@ if os.path.exists(FRONTEND_DIST):
     app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")
 
 logger.info("LeetCode Performance Tracker API is fully ready & live sync engine active.")
+# reload trigger

@@ -381,33 +381,32 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     <div className="space-y-6">
 
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-navy-900 p-8 shadow-sm border border-gray-200 dark:border-navy-700">
-
-        <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-lg border border-brand-500/30">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[11px] font-black tracking-wider uppercase">
               <UserPlus className="w-3.5 h-3.5 text-amber-400" />
               <span>STUDENT REPOSITORY • {students.length} ENROLLED STUDENTS</span>
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-gray-900 dark:text-white">
-              Student Master Management Registry
+            <h1 className="text-3xl md:text-4xl font-display font-extrabold tracking-tight text-white mt-1">
+              Student Master <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Management Registry</span>
             </h1>
 
-            <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 font-medium tracking-wide">
+            <p className="text-sm text-gray-300 font-bold tracking-wide leading-relaxed">
               Manage student profiles across all departments (CSE, IT, ECE, EEE, MECH, CIVIL, AIML, AIDS, Cyber Security &amp; IoT), LeetCode profile links, and live sync status
             </p>
           </div>
 
-          <div className="flex items-center space-x-2.5 flex-wrap">
+          <div className="flex items-center space-x-2.5 flex-wrap gap-2">
             {/* View Mode Toggle */}
-            <div className="flex items-center space-x-1 p-1 bg-gray-100 dark:bg-navy-800 rounded-xl border border-gray-200 dark:border-navy-700">
+            <div className="flex items-center space-x-1 p-1 bg-slate-800/60 rounded-xl border border-slate-700/50">
               <button
                 onClick={() => setViewMode('table')}
-                className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+                className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   viewMode === 'table'
-                    ? 'bg-white dark:bg-navy-700 text-brand-600 dark:text-brand-400 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                    ? 'bg-slate-700 text-brand-300 shadow-sm'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <List className="w-3.5 h-3.5" />
@@ -415,10 +414,10 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
               </button>
               <button
                 onClick={() => setViewMode('cards')}
-                className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+                className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   viewMode === 'cards'
-                    ? 'bg-white dark:bg-navy-700 text-brand-600 dark:text-brand-400 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                    ? 'bg-slate-700 text-brand-300 shadow-sm'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
@@ -428,15 +427,15 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
             <button
               onClick={onOpenImport}
-              className="px-4 py-2.5 rounded-xl bg-white dark:bg-navy-800 hover:bg-gray-50 dark:hover:bg-navy-700 border border-gray-200 dark:border-navy-700 text-gray-700 dark:text-gray-200 font-bold text-xs flex items-center space-x-2 shadow-sm transition-colors cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/50 text-slate-300 font-bold text-xs flex items-center space-x-2 shadow-sm transition-colors cursor-pointer"
             >
-              <UploadCloud className="w-4 h-4 text-emerald-600" />
+              <UploadCloud className="w-4 h-4 text-emerald-400" />
               <span>Bulk Excel Import</span>
             </button>
 
             <button
               onClick={handleOpenAddModal}
-              className="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-sm flex items-center space-x-2 transition-colors cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-bold text-xs shadow-lg shadow-brand-600/30 flex items-center space-x-2 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Add Single Student</span>

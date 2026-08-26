@@ -15,6 +15,7 @@ from backend.models import (
     Student, Department, Section, WeeklySession, WeeklyPublicResult,
     LeetCodeProfileStats, StudentRiskProfile, FacultyStudentAssignment, User
 )
+from backend.services.authorization_service import apply_role_based_student_filter
 from backend.logger import logger
 
 EXCLUDE_DEPT_CODES = {"CSE_TEST", "CSE_AI_TEST", "TEST"}
@@ -26,6 +27,7 @@ def _is_real_dept(dept_code: Optional[str]) -> bool:
 
 def calculate_department_health_score(
     db: Session,
+    current_user: Optional[User] = None,
     dept_id: Optional[int] = None,
     staff_id: Optional[int] = None,
     year_level: Optional[str] = None,
@@ -57,6 +59,8 @@ def calculate_department_health_score(
         base_q = base_q.filter(Student.year_level == year_level)
     if section_id:
         base_q = base_q.filter(Student.section_id == section_id)
+        
+    base_q = apply_role_based_student_filter(base_q, current_user, db)
 
     total_students = base_q.count()
     if total_students == 0:
@@ -84,6 +88,8 @@ def calculate_department_health_score(
         stats_q = stats_q.filter(Student.year_level == year_level)
     if section_id:
         stats_q = stats_q.filter(Student.section_id == section_id)
+
+    stats_q = apply_role_based_student_filter(stats_q, current_user, db)
 
     stats_rows = stats_q.all()
 
@@ -149,16 +155,18 @@ def _empty_health() -> Dict[str, Any]:
         "improving_count": 0, "avg_rating": 0, "avg_solved": 0,
     }
 
-def get_institutional_benchmarks(db: Session) -> Dict[str, Any]:
+def get_institutional_benchmarks(db: Session, current_user: Optional[User] = None) -> Dict[str, Any]:
     departments = db.query(Department).all()
     dept_map = {d.id: d for d in departments if _is_real_dept(d.code)}
     
-    student_stats = db.query(Student, LeetCodeProfileStats).outerjoin(
+    q = db.query(Student, LeetCodeProfileStats).outerjoin(
         LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id
     ).filter(
         Student.is_active == True,
         Student.department_id.in_(dept_map.keys())
-    ).all()
+    )
+    q = apply_role_based_student_filter(q, current_user, db)
+    student_stats = q.all()
     
     dept_stats = {}
     for student, stats in student_stats:
@@ -212,24 +220,26 @@ def get_institutional_benchmarks(db: Session) -> Dict[str, Any]:
         })
 
     dept_matrix.sort(key=lambda x: x["health_score"], reverse=True)
-    year_matrix = calculate_year_matrix(db)
+    year_matrix = calculate_year_matrix(db, current_user)
 
     return {
         "department_matrix": dept_matrix,
         "year_matrix":       year_matrix,
     }
 
-def calculate_year_matrix(db: Session) -> List[Dict[str, Any]]:
+def calculate_year_matrix(db: Session, current_user: Optional[User] = None) -> List[Dict[str, Any]]:
     departments = db.query(Department).all()
     dept_map = {d.id: d for d in departments if _is_real_dept(d.code)}
     YEAR_ORDER = {"I": 1, "II": 2, "III": 3, "IV": 4}
     
-    student_stats = db.query(Student, LeetCodeProfileStats).outerjoin(
+    q = db.query(Student, LeetCodeProfileStats).outerjoin(
         LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id
     ).filter(
         Student.is_active == True,
         Student.department_id.in_(dept_map.keys())
-    ).all()
+    )
+    q = apply_role_based_student_filter(q, current_user, db)
+    student_stats = q.all()
     
     stats_by_year = {}
     for student, stats in student_stats:
@@ -281,6 +291,7 @@ def calculate_year_matrix(db: Session) -> List[Dict[str, Any]]:
 
 def get_executive_brief(
     db: Session,
+    current_user: Optional[User] = None,
     dept_id: Optional[int] = None,
     staff_id: Optional[int] = None
 ) -> Dict[str, str]:
@@ -288,7 +299,7 @@ def get_executive_brief(
     Returns concise 4-row executive brief:
     Improved, Attention, Skill, Action (no giant paragraphs).
     """
-    health = calculate_department_health_score(db, dept_id=dept_id, staff_id=staff_id)
+    health = calculate_department_health_score(db, current_user, dept_id=dept_id, staff_id=staff_id)
     return {
         "improved": f"+{health.get('improving_count', 0)} students accelerating rating velocity",
         "attention": f"{health.get('inactive_count', 0)} inactive students needing faculty follow-up",
@@ -298,10 +309,11 @@ def get_executive_brief(
 
 def get_needs_attention_metrics(
     db: Session,
+    current_user: Optional[User] = None,
     dept_id: Optional[int] = None,
     staff_id: Optional[int] = None
 ) -> Dict[str, int]:
-    health = calculate_department_health_score(db, dept_id=dept_id, staff_id=staff_id)
+    health = calculate_department_health_score(db, current_user, dept_id=dept_id, staff_id=staff_id)
     return {
         "inactive_count": health.get("inactive_count", 0),
         "declining_count": max(0, int(health.get("inactive_count", 0) * 0.3)),
@@ -311,10 +323,11 @@ def get_needs_attention_metrics(
 
 def get_hod_what_is_happening_summary(
     db: Session,
+    current_user: Optional[User] = None,
     dept_id: Optional[int] = None
 ) -> Dict[str, Any]:
-    brief = get_executive_brief(db, dept_id=dept_id)
-    health = calculate_department_health_score(db, dept_id=dept_id)
+    brief = get_executive_brief(db, current_user, dept_id=dept_id)
+    health = calculate_department_health_score(db, current_user, dept_id=dept_id)
     return {
         "executive_title": f"Institutional Coding Health Index: {health.get('health_score', 0)}/100",
         "timestamp": datetime.datetime.utcnow().strftime("%d %b %Y, %H:%M UTC"),

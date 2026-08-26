@@ -231,11 +231,15 @@ def get_active_students(db: Session) -> List[Student]:
 
 import threading
 
+_background_tasks = set()
+
 def dispatch_background_task(coro):
     """Dispatches async coroutine task reliably and non-blockingly (<10ms) across all execution contexts."""
     try:
         loop = asyncio.get_running_loop()
-        loop.create_task(coro)
+        task = loop.create_task(coro)
+        _background_tasks.add(task)
+        task.add_done_callback(_background_tasks.discard)
     except RuntimeError:
         t = threading.Thread(target=asyncio.run, args=(coro,), daemon=True)
         t.start()

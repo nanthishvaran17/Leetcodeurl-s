@@ -89,14 +89,14 @@ interface SavedView {
 }
 
 const DEFAULT_SAVED_VIEWS: SavedView[] = [
-  { id: 'all_critical', name: '🔴 All Critical Issues', dept: 'all', year: 'all', issue: 'CRITICAL', search: '' },
-  { id: 'sync_failures', name: '🔴 Sync Failures Only', dept: 'all', year: 'all', issue: 'SYNC_FAILED', search: '' },
-  { id: 'missing_user', name: '⚠ Missing Username Profiles', dept: 'all', year: 'all', issue: 'MISSING_USERNAME', search: '' },
-  { id: 'never_synced', name: '⏳ Never Synced Roster', dept: 'all', year: 'all', issue: 'NEVER_SYNCED', search: '' },
-  { id: 'not_started_only', name: '🟢 Not Started (0 Solved)', dept: 'all', year: 'all', issue: 'NOT_STARTED', search: '' },
-  { id: 'stale_records', name: '🟡 Stale Data (>7 Days)', dept: 'all', year: 'all', issue: 'STALE_DATA', search: '' },
-  { id: 'cs_iii_sync', name: 'Cyber Security • III Year Sync Issues', dept: 'CSE(CS)', year: 'III', issue: 'SYNC_FAILED', search: '' },
-  { id: 'iot_all_issues', name: 'IoT • All Attention Items', dept: 'CSE(IOT)', year: 'all', issue: 'ISSUES', search: '' }
+  { id: 'all_critical',    name: 'All Critical Issues',         dept: 'all',      year: 'all', issue: 'CRITICAL',        search: '' },
+  { id: 'sync_failures',  name: 'Sync Failures Only',          dept: 'all',      year: 'all', issue: 'SYNC_FAILED',     search: '' },
+  { id: 'missing_user',   name: 'Missing Username Profiles',   dept: 'all',      year: 'all', issue: 'MISSING_USERNAME', search: '' },
+  { id: 'never_synced',  name: 'Never Synced Roster',         dept: 'all',      year: 'all', issue: 'NEVER_SYNCED',    search: '' },
+  { id: 'not_started_only', name: 'Not Started (0 Solved)',    dept: 'all',      year: 'all', issue: 'NOT_STARTED',     search: '' },
+  { id: 'stale_records',  name: 'Stale Data (>7 Days)',        dept: 'all',      year: 'all', issue: 'STALE_DATA',      search: '' },
+  { id: 'cs_iii_sync',    name: 'Cyber Security - III Year',   dept: 'CSE(CS)',  year: 'III', issue: 'SYNC_FAILED',     search: '' },
+  { id: 'iot_all_issues', name: 'IoT - All Attention Items',   dept: 'CSE(IOT)', year: 'all', issue: 'ISSUES',          search: '' }
 ];
 
 export const StudentDataIssuesPage: React.FC = () => {
@@ -550,12 +550,133 @@ export const StudentDataIssuesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── 2. ADMINISTRATIVE QUICK VIEWS & SAVED PRESETS BAR ── */}
+      {/* ── 2. MULTI-DIMENSIONAL SMART FILTERING WORKSPACE — FIRST ── */}
+      <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-3 border-b border-gray-100 dark:border-gray-800 pb-3">
+          <div>
+            <h3 className="text-sm font-black text-gray-900 dark:text-white flex items-center space-x-2">
+              <Filter className="w-4 h-4 text-indigo-600 dark:text-brand-400" />
+              <span>Multi-Dimensional Issue Filtration Matrix</span>
+            </h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+              Isolate students by Department + Academic Year + Specific LeetCode Problem Severity.
+            </p>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => {
+                setSelectedDept('all');
+                setSelectedYear('all');
+                setSelectedIssue('all');
+                setSearchQuery('');
+              }}
+              className="px-3.5 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-navy-950 dark:hover:bg-navy-800 text-gray-700 dark:text-gray-300 text-xs font-bold border border-gray-200 dark:border-gray-800 transition-all cursor-pointer flex items-center space-x-1.5"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset Filters</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Filter Controls Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Department Selector */}
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase flex items-center space-x-1">
+              <Building2 className="w-3.5 h-3.5 text-indigo-600 dark:text-brand-400" />
+              <span>Department Filter</span>
+            </label>
+            <select
+              value={selectedDept}
+              onChange={(e) => setSelectedDept(e.target.value)}
+              className="w-full px-3.5 py-2 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl text-xs text-gray-900 dark:text-white font-bold cursor-pointer focus:ring-2 focus:ring-brand-500"
+            >
+              <option value="all">All Departments (11 Institutional Cohorts)</option>
+              <option value="CSE">Computer Science and Engineering (CSE)</option>
+              <option value="CSE(CS)">CSE (Cyber Security)</option>
+              <option value="CSE(IOT)">CSE (Internet of Things)</option>
+              <option value="IT">Information Technology (IT)</option>
+              <option value="AIDS">Artificial Intelligence &amp; Data Science (AIDS)</option>
+              <option value="ECE">Electronics and Communication Engineering (ECE)</option>
+              <option value="EEE">Electrical and Electronics Engineering (EEE)</option>
+              <option value="MECH">Mechanical Engineering (MECH)</option>
+              <option value="CIVIL">Civil Engineering (CIVIL)</option>
+              <option value="BME">Biomedical Engineering (BME)</option>
+              <option value="AGRI">Agricultural Engineering (AGRI)</option>
+            </select>
+          </div>
+
+          {/* Academic Year Selector */}
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase flex items-center space-x-1">
+              <GraduationCap className="w-3.5 h-3.5 text-indigo-600 dark:text-brand-400" />
+              <span>Academic Year</span>
+            </label>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="w-full px-3.5 py-2 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl text-xs text-gray-900 dark:text-white font-bold cursor-pointer focus:ring-2 focus:ring-brand-500"
+            >
+              <option value="all">All Academic Years</option>
+              <option value="I">I Year (1st Year)</option>
+              <option value="II">II Year (2nd Year)</option>
+              <option value="III">III Year (3rd Year)</option>
+              <option value="IV">IV Year (Final Year)</option>
+            </select>
+          </div>
+
+          {/* Issue Category Selector */}
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase flex items-center space-x-1">
+              <Sliders className="w-3.5 h-3.5 text-amber-500" />
+              <span>Issue Category</span>
+            </label>
+            <select
+              value={selectedIssue}
+              onChange={(e) => setSelectedIssue(e.target.value)}
+              className="w-full px-3.5 py-2 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl text-xs text-gray-900 dark:text-white font-bold cursor-pointer focus:ring-2 focus:ring-brand-500"
+            >
+              <option value="all">All Categories ({summary?.total_students ?? 0})</option>
+              <option value="CRITICAL">Critical Issues ({summary?.critical_issues ?? 0})</option>
+              <option value="SYNC_FAILED">Sync Failed ({summary?.sync_failed ?? 0})</option>
+              <option value="NOT_STARTED">Not Started — 0 Solved ({summary?.not_started ?? 0})</option>
+              <option value="NEVER_SYNCED">Never Synced ({summary?.never_synced ?? 0})</option>
+              <option value="MISSING_USERNAME">Missing Username ({summary?.missing_username ?? 0})</option>
+              <option value="INVALID_USERNAME">Profile Not Found ({summary?.invalid_username ?? 0})</option>
+              <option value="INVALID_URL">Invalid URL ({summary?.invalid_url ?? 0})</option>
+              <option value="STALE_DATA">Stale Data &gt;7 Days ({summary?.stale_data ?? 0})</option>
+              <option value="DATA_MISMATCH">Data Mismatch ({summary?.data_mismatch ?? 0})</option>
+              <option value="HEALTHY">Healthy Records ({summary?.healthy ?? 0})</option>
+            </select>
+          </div>
+
+          {/* Search Input */}
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase flex items-center space-x-1">
+              <Search className="w-3.5 h-3.5 text-indigo-600 dark:text-brand-400" />
+              <span>Search Query</span>
+            </label>
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 absolute left-3.5 top-2.5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search Name, Reg No (732224CC044)..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3.5 py-2 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl text-xs text-gray-900 dark:text-white placeholder-gray-400 font-bold focus:ring-2 focus:ring-brand-500"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 3. ADMINISTRATIVE QUICK VIEWS & SAVED PRESETS BAR ── */}
       <div className="p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-xs font-black text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center space-x-1.5">
             <Bookmark className="w-4 h-4 text-amber-500" />
-            <span>Administrative Quick Views & Saved Presets</span>
+            <span>Administrative Quick Views &amp; Saved Presets</span>
           </span>
           <button
             onClick={() => setShowSaveViewModal(true)}
@@ -591,126 +712,6 @@ export const StudentDataIssuesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── 3. MULTI-DIMENSIONAL SMART FILTERING WORKSPACE ── */}
-      <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-3 border-b border-gray-100 dark:border-gray-800 pb-3">
-          <div>
-            <h3 className="text-sm font-black text-gray-900 dark:text-white flex items-center space-x-2">
-              <Filter className="w-4 h-4 text-indigo-600 dark:text-brand-400" />
-              <span>Multi-Dimensional Issue Filtration Matrix</span>
-            </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-              Isolate students by Department + Academic Year + Specific LeetCode Problem Severity.
-            </p>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => {
-                setSelectedDept('all');
-                setSelectedYear('all');
-                setSelectedIssue('all');
-                setSearchQuery('');
-              }}
-              className="px-3.5 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-navy-950 dark:hover:bg-navy-800 text-gray-700 dark:text-gray-300 text-xs font-bold border border-gray-200 dark:border-gray-800 transition-all cursor-pointer flex items-center space-x-1.5"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset Filters</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Filter Controls Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Department Selector */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase flex items-center space-x-1">
-              <Building2 className="w-3.5 h-3.5 text-indigo-600 dark:text-brand-400" />
-              <span>Department</span>
-            </label>
-            <select
-              value={selectedDept}
-              onChange={(e) => setSelectedDept(e.target.value)}
-              className="w-full px-3.5 py-2 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl text-xs text-gray-900 dark:text-white font-bold cursor-pointer focus:ring-2 focus:ring-brand-500"
-            >
-              <option value="all">All Departments (11 Institutional Cohorts)</option>
-              <option value="CSE">Computer Science and Engineering (CSE)</option>
-              <option value="CSE(CS)">CSE (Cyber Security)</option>
-              <option value="CSE(IOT)">CSE (Internet of Things)</option>
-              <option value="IT">Information Technology (IT)</option>
-              <option value="AIDS">Artificial Intelligence & Data Science (AIDS)</option>
-              <option value="ECE">Electronics and Communication Engineering (ECE)</option>
-              <option value="EEE">Electrical and Electronics Engineering (EEE)</option>
-              <option value="MECH">Mechanical Engineering (MECH)</option>
-              <option value="CIVIL">Civil Engineering (CIVIL)</option>
-              <option value="BME">Biomedical Engineering (BME)</option>
-              <option value="AGRI">Agricultural Engineering (AGRI)</option>
-            </select>
-          </div>
-
-          {/* Academic Year Selector */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase flex items-center space-x-1">
-              <GraduationCap className="w-3.5 h-3.5 text-indigo-600 dark:text-brand-400" />
-              <span>Academic Year</span>
-            </label>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              className="w-full px-3.5 py-2 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl text-xs text-gray-900 dark:text-white font-bold cursor-pointer focus:ring-2 focus:ring-brand-500"
-            >
-              <option value="all">All Academic Years</option>
-              <option value="II">II Year</option>
-              <option value="III">III Year</option>
-              <option value="IV">IV Year</option>
-            </select>
-          </div>
-
-          {/* Issue Category Selector */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase flex items-center space-x-1">
-              <Sliders className="w-3.5 h-3.5 text-amber-500" />
-              <span>Issue Category</span>
-            </label>
-            <select
-              value={selectedIssue}
-              onChange={(e) => setSelectedIssue(e.target.value)}
-              className="w-full px-3.5 py-2 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl text-xs text-gray-900 dark:text-white font-bold cursor-pointer focus:ring-2 focus:ring-brand-500"
-            >
-              <option value="all">All Categories ({summary?.total_students ?? 302})</option>
-              <option value="CRITICAL">🔴 Critical Issues Only ({summary?.critical_issues ?? 0})</option>
-              <option value="SYNC_FAILED">🔴 Sync Failed ({summary?.sync_failed ?? 0})</option>
-              <option value="NOT_STARTED">🟢 Not Started (0 Solved) ({summary?.not_started ?? 0})</option>
-              <option value="NEVER_SYNCED">⏳ Never Synced ({summary?.never_synced ?? 0})</option>
-              <option value="MISSING_USERNAME">⚠ Missing Username ({summary?.missing_username ?? 0})</option>
-              <option value="INVALID_USERNAME">⚠ Profile Not Found ({summary?.invalid_username ?? 0})</option>
-              <option value="INVALID_URL">⚠ Invalid URL ({summary?.invalid_url ?? 0})</option>
-              <option value="STALE_DATA">🟡 Stale Data ({summary?.stale_data ?? 0})</option>
-              <option value="DATA_MISMATCH">🟡 Data Mismatch ({summary?.data_mismatch ?? 0})</option>
-              <option value="HEALTHY">✓ Healthy Records ({summary?.healthy ?? 0})</option>
-            </select>
-          </div>
-
-          {/* Search Input */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase flex items-center space-x-1">
-              <Search className="w-3.5 h-3.5 text-indigo-600 dark:text-brand-400" />
-              <span>Search Query</span>
-            </label>
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-3.5 top-2.5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search Name, Reg No (732224CC044)..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3.5 py-2 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl text-xs text-gray-900 dark:text-white placeholder-gray-400 font-bold focus:ring-2 focus:ring-brand-500"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* ── 4. DEPARTMENT & ACADEMIC YEAR BREAKDOWN MATRICES ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Department Breakdown */}
@@ -739,10 +740,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                 {deptBreakdown.map((row, idx) => (
                   <tr
                     key={idx}
-                    onClick={() => {
-                      const code = row.department.includes('IoT') ? 'CSE(IOT)' : 'CSE(CS)';
-                      setSelectedDept(code);
-                    }}
+                    onClick={() => setSelectedDept(row.department)}
                     className="hover:bg-gray-50 dark:hover:bg-navy-800/60 transition-colors cursor-pointer"
                   >
                     <td className="py-2.5 px-3 font-extrabold text-gray-900 dark:text-white">{row.department}</td>
@@ -1250,3 +1248,4 @@ export const StudentDataIssuesPage: React.FC = () => {
     </div>
   );
 };
+export default StudentDataIssuesPage;

@@ -26,7 +26,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
 
   const fetchPublicData = async () => {
     try {
-      const res = await api.get('/public/leaderboard?limit=300&sort_by=solved_desc');
+      const res = await api.get('/public/leaderboard?limit=3000&sort_by=solved_desc');
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setStudents(res.data);
         saveCachedStudents(res.data);
