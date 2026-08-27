@@ -55,23 +55,10 @@ def normalize_participation_status(raw_status: Optional[str], fetch_status: Opti
     return "PENDING"
 
 
-# ─── IN-MEMORY ULTRA-FAST SNAPSHOT CACHE ──────────────────────────────────────
-_CANONICAL_DATASET_CACHE: Dict[Tuple[int, str, str, str], Dict[str, Any]] = {}
-_CANONICAL_CACHE_TIMESTAMPS: Dict[Tuple[int, str, str, str], float] = {}
-CACHE_TTL_SECONDS = 300  # 5 minutes TTL for finalized sessions
-
-
 def invalidate_canonical_cache(session_id: Optional[int] = None):
     """Invalidates the in-memory cache for a specific session or globally."""
-    global _CANONICAL_DATASET_CACHE, _CANONICAL_CACHE_TIMESTAMPS
-    if session_id:
-        keys_to_del = [k for k in _CANONICAL_DATASET_CACHE if k[0] == session_id]
-        for k in keys_to_del:
-            _CANONICAL_DATASET_CACHE.pop(k, None)
-            _CANONICAL_CACHE_TIMESTAMPS.pop(k, None)
-    else:
-        _CANONICAL_DATASET_CACHE.clear()
-        _CANONICAL_CACHE_TIMESTAMPS.clear()
+    from backend.cache import cache
+    cache.invalidate_tag("contests")
 
 
 def build_canonical_contest_dataset(
@@ -79,7 +66,8 @@ def build_canonical_contest_dataset(
     db: Session,
     dept: str = "ALL",
     year: str = "ALL",
-    attendance: str = "ALL"
+    attendance: str = "ALL",
+    current_user: Optional[User] = None
 ) -> Dict[str, Any]:
     """
     Builds the SINGLE SOURCE OF TRUTH (SSOT) Canonical Contest Dataset.
@@ -90,23 +78,46 @@ def build_canonical_contest_dataset(
     if not session_obj:
         raise ValueError(f"Contest Session ID {session_id} not found in database.")
 
-    # High-Performance Fast-Path: Read from memory cache if session is finalized and clean
-    cache_key = (session_id, str(dept).upper(), str(year).upper(), str(attendance).upper())
-    import time
-    now_time = time.time()
-    if session_obj.status == "FINALIZED" and cache_key in _CANONICAL_DATASET_CACHE:
-        cache_ts = _CANONICAL_CACHE_TIMESTAMPS.get(cache_key, 0)
-        if (now_time - cache_ts) < CACHE_TTL_SECONDS:
-            return _CANONICAL_DATASET_CACHE[cache_key]
+    user_scope = f"{current_user.id}:{current_user.role}" if current_user else "public"
+    cache_key = f"canonical_contest_{session_id}_{dept}_{year}_{attendance}_{user_scope}"
+    
+    # Context-aware TTLs: 15s during live, 300s post-finalization
+    ttl = 300 if session_obj.status == "FINALIZED" else 15
+    
+    from backend.cache import cache
+    return cache.get_or_compute(
+        key=cache_key,
+        compute_func=lambda: _build_canonical_contest_dataset_internal(
+            session_id, session_obj, db, dept, year, attendance, current_user
+        ),
+        ttl_seconds=ttl,
+        tags=["contests"]
+    )
+
+def _build_canonical_contest_dataset_internal(
+    session_id: int,
+    session_obj: WeeklySession,
+    db: Session,
+    dept: str,
+    year: str,
+    attendance: str,
+    current_user: Optional[User]
+) -> Dict[str, Any]:
 
     # 1. Fetch Authoritative Master Students with eager loaded department
     from sqlalchemy.orm import joinedload
+    from backend.services.authorization_service import apply_role_based_student_filter
+    
     student_query = db.query(Student).options(
         joinedload(Student.department),
         joinedload(Student.stats)
     ).filter(
         (Student.is_active == True) | (Student.is_active.is_(None))
     )
+    
+    if current_user:
+        student_query = apply_role_based_student_filter(student_query, current_user, db)
+        
     all_master_students = student_query.order_by(Student.id.asc()).all()
     total_master_count = len(all_master_students)
 

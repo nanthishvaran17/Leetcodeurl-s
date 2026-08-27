@@ -98,7 +98,8 @@ def generate_weekly_performance_data(
     last_week_contest: Optional[int] = None,
     current_week_contest: Optional[int] = None,
     report_date: Optional[str] = None,
-    save_snapshot: bool = False
+    save_snapshot: bool = False,
+    current_user: Optional[Any] = None
 ) -> Dict[str, Any]:
     """
     CANONICAL WEEKLY PERFORMANCE DATASET GENERATOR
@@ -131,12 +132,13 @@ def generate_weekly_performance_data(
     last_date = session_res.get("last_week_date") or getattr(last_ws, "session_date", "Not Available")
 
     # Step 2: Load Full Master Roster
-    students = (
-        db.query(Student)
-        .filter((Student.is_active == True) | (Student.is_active.is_(None)))
-        .order_by(Student.department_id, Student.year_level, Student.reg_no)
-        .all()
-    )
+    from backend.services.authorization_service import apply_role_based_student_filter
+    student_query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+    
+    if current_user:
+        student_query = apply_role_based_student_filter(student_query, current_user, db)
+        
+    students = student_query.order_by(Student.department_id, Student.year_level, Student.reg_no).all()
     total_students_count = len(students)
 
     # Step 3: Load Contest Results for Both Sessions (Without Filtering Attended Only)

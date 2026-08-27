@@ -45,6 +45,13 @@ def get_leaderboard_fast(
         from starlette.responses import Response
         return Response(content=cached_bytes, media_type="application/json")
 
+    key_lock = cache._get_key_lock(cache_key)
+    with key_lock:
+        cached_bytes = cache.get(cache_key)
+        if cached_bytes is not None:
+            from starlette.responses import Response
+            return Response(content=cached_bytes, media_type="application/json")
+
     from sqlalchemy import text
     from backend.models import (
         WeeklyPublicResult, WeeklyVirtualResult, WeeklySession,
@@ -119,7 +126,7 @@ def get_leaderboard_fast(
 
     if not students:
         empty_bytes = b'[]'
-        cache.set(cache_key, empty_bytes, ttl_seconds=60, tags=["students", "leaderboard"])
+        cache.set(cache_key, empty_bytes, ttl_seconds=600, tags=["students", "leaderboard"])
         from starlette.responses import Response
         return Response(content=empty_bytes, media_type="application/json")
 
@@ -244,7 +251,7 @@ def get_leaderboard_fast(
 
     import json
     json_bytes = json.dumps(results, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
-    cache.set(cache_key, json_bytes, ttl_seconds=120, tags=["students", "leaderboard"])
+    cache.set(cache_key, json_bytes, ttl_seconds=600, tags=["students", "leaderboard"])
     from starlette.responses import Response
     return Response(content=json_bytes, media_type="application/json")
 
@@ -847,7 +854,7 @@ def bulk_delete_students(
     db.commit()
 
     update_all_rankings_and_badges(db)
-    cache.clear()
+    cache.invalidate_tag("students")
 
     return {"message": msg, "count": count}
 
@@ -1020,7 +1027,7 @@ def update_student(
             _bg_db.close()
 
     background_tasks.add_task(_bg_post_update_processing)
-    cache.clear()
+    cache.invalidate_tag("students")
 
     return StudentOut.model_validate(student)
 
@@ -1071,7 +1078,7 @@ def delete_student(
     db.commit()
 
     update_all_rankings_and_badges(db)
-    cache.clear()
+    cache.invalidate_tag("students")
 
     return {"message": f"Successfully deactivated student roster record {reg_no} ({name})", "reg_no": reg_no}
 

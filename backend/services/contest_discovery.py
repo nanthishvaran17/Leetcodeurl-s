@@ -108,6 +108,7 @@ def discover_contest_metadata(target_date: datetime.date = None) -> Dict[str, An
     """
     Dynamic LeetCode Weekly Contest Discovery Engine.
     Discovers contest ID, title, date, start time, end time, and dynamic problem list.
+    Now uses live API fetching with fallback and discovery failure flagging.
     """
     if target_date is None:
         target_date = get_most_recent_sunday_date()
@@ -116,13 +117,44 @@ def discover_contest_metadata(target_date: datetime.date = None) -> Dict[str, An
     formatted_date = target_date.strftime("%d.%m.%Y")
     session_code = f"WEEK-{date_str}"
 
+    start_dt = datetime.datetime.combine(target_date, datetime.time(8, 0, 0), tzinfo=IST_TZ)
+    end_dt = datetime.datetime.combine(target_date, datetime.time(9, 30, 0), tzinfo=IST_TZ)
+
+    # 100/10 Hardening: Fetch authoritative contest ID from LeetCode
     contest_num = calculate_contest_number(target_date)
     contest_id = f"weekly-contest-{contest_num}"
     contest_name = f"Weekly Contest {contest_num}"
     status = calculate_contest_status(target_date)
-
-    start_dt = datetime.datetime.combine(target_date, datetime.time(8, 0, 0), tzinfo=IST_TZ)
-    end_dt = datetime.datetime.combine(target_date, datetime.time(9, 30, 0), tzinfo=IST_TZ)
+    
+    import requests
+    try:
+        query = """
+        {
+          topTwoContests {
+            title
+            titleSlug
+            startTime
+          }
+        }
+        """
+        # Timeout quickly to avoid hanging the autopilot loop
+        resp = requests.post("https://leetcode.com/graphql", json={"query": query}, timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            contests = data.get("data", {}).get("topTwoContests", [])
+            for c in contests:
+                if "weekly" in c.get("titleSlug", "").lower() and "biweekly" not in c.get("titleSlug", "").lower():
+                    # Very simple heuristic: if it's within 3 days of target start
+                    c_start = datetime.datetime.fromtimestamp(c.get("startTime", 0), tz=datetime.timezone.utc)
+                    if abs((c_start - start_dt).total_seconds()) < 86400 * 3:
+                        contest_id = c.get("titleSlug")
+                        contest_name = c.get("title")
+                        break
+        else:
+            raise Exception(f"HTTP {resp.status_code}")
+    except Exception as e:
+        status = "DISCOVERY_FAILED"
+        print(f"[CONTEST_DISCOVERY_ERROR] Failed to fetch live contest metadata: {e}")
 
     problems = [
         {"problem_index": 1, "title": "Q1 (Easy)", "difficulty": "Easy", "max_score": 3},

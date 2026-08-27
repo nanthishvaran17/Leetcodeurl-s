@@ -102,6 +102,11 @@ class UniversalWeeklyContestAutopilot:
             now_ist = get_current_ist_datetime()
             upcoming_sunday = get_upcoming_sunday_date(now_ist)
             meta = discover_contest_metadata(upcoming_sunday)
+            
+            if meta.get("status") == "DISCOVERY_FAILED":
+                logger.warning("[AUTOPILOT] Discovery API failed. Scheduling retry.")
+                self.health_status = "🟡 DEGRADED"
+                return {"phase": "PREPARATION", "success": False, "error": "DISCOVERY_FAILED", "retry": True}
 
             # Get or create WeeklySession for upcoming contest
             session = db.query(WeeklySession).filter(
@@ -133,12 +138,34 @@ class UniversalWeeklyContestAutopilot:
             valid_unames = [s for s in active_students if s.username and s.username.strip()]
             missing_unames = [s for s in active_students if not s.username or not s.username.strip()]
 
+            # 100/10 Hardening: Pre-contest validation error logging
+            if missing_unames:
+                for ms in missing_unames:
+                    existing_err = db.query(WeeklyContestErrorLog).filter(
+                        WeeklyContestErrorLog.session_id == session.id,
+                        WeeklyContestErrorLog.student_id == ms.id
+                    ).first()
+                    if not existing_err:
+                        err = WeeklyContestErrorLog(
+                            session_id=session.id,
+                            student_id=ms.id,
+                            reg_no=ms.register_no,
+                            name=ms.name,
+                            error_type="MISSING_USERNAME",
+                            error_message="Student has no registered LeetCode username.",
+                            severity="HIGH"
+                        )
+                        db.add(err)
+
             session.total_students = len(active_students)
             if session.status not in ("LIVE", "FINALIZED", "COMPLETED", "LOCKED"):
                 session.status = "SCHEDULED"
+            if session.pipeline_state == "DISCOVERED" or not session.pipeline_state:
+                session.pipeline_state = "READY"
+                session.pipeline_last_updated = datetime.datetime.utcnow()
             db.commit()
 
-            self.current_phase = AutopilotState.READY
+            self.current_phase = session.pipeline_state
             self.last_sync_timestamp = datetime.datetime.now(datetime.timezone.utc)
             self.last_action_summary = f"Prepared Contest {session.contest_name} for {session.session_date}"
 
@@ -180,9 +207,12 @@ class UniversalWeeklyContestAutopilot:
 
             session.status = "LIVE"
             session.sync_status = "🟡 Syncing"
+            if session.pipeline_state != "LIVE":
+                session.pipeline_state = "LIVE"
+                session.pipeline_last_updated = datetime.datetime.utcnow()
             db.commit()
 
-            self.current_phase = AutopilotState.MONITORING
+            self.current_phase = session.pipeline_state
             self.last_sync_timestamp = datetime.datetime.now(datetime.timezone.utc)
             self.last_action_summary = f"Contest {session.contest_name} is LIVE. Monitoring active."
 
@@ -278,7 +308,11 @@ class UniversalWeeklyContestAutopilot:
             virt_cnt = reconciliation.get("verified_virtual", reconciliation.get("virtual_attended", 0))
             not_cnt = reconciliation.get("not_attended", 0)
 
-            self.current_phase = AutopilotState.VIRTUAL_MONITORING
+            session.pipeline_state = "FINALIZED"
+            session.pipeline_last_updated = datetime.datetime.utcnow()
+            db.commit()
+
+            self.current_phase = session.pipeline_state
             self.last_sync_timestamp = datetime.datetime.now(datetime.timezone.utc)
             self.last_action_summary = f"Contest {session.contest_name} Finalized: {live_cnt} Live | {virt_cnt} Virtual | {not_cnt} Absent"
 
@@ -342,7 +376,11 @@ class UniversalWeeklyContestAutopilot:
             zip_bytes = zip_buffer.getvalue()
             with open(zip_path, "wb") as f: f.write(zip_bytes)
 
-            self.current_phase = AutopilotState.REPORT_GENERATION
+            session.pipeline_state = "REPORTS_GENERATED"
+            session.pipeline_last_updated = datetime.datetime.utcnow()
+            db.commit()
+
+            self.current_phase = session.pipeline_state
             self.last_sync_timestamp = datetime.datetime.now(datetime.timezone.utc)
             self.last_action_summary = f"Generated Excel, PDF, Word & ZIP for {session.contest_name}"
 
@@ -384,7 +422,11 @@ class UniversalWeeklyContestAutopilot:
             # Email dispatch
             email_res = queue_weekly_report_dispatches(db=db, session_id=session.id, report_type="WEEKLY_CONTEST_AUTO")
 
-            self.current_phase = AutopilotState.PUBLISHED
+            session.pipeline_state = "PUBLISHED"
+            session.pipeline_last_updated = datetime.datetime.utcnow()
+            db.commit()
+
+            self.current_phase = session.pipeline_state
             self.last_sync_timestamp = datetime.datetime.now(datetime.timezone.utc)
             self.last_action_summary = f"Reports dispatched for {session.contest_name}"
 
@@ -476,11 +518,17 @@ class UniversalWeeklyContestAutopilot:
                     total_students=1450,
                     sync_status="🟢 Verified"
                 )
+                session.pipeline_state = "DISCOVERED"
+                session.pipeline_last_updated = datetime.datetime.utcnow()
                 db.add(session)
                 db.commit()
                 db.refresh(session)
+            elif not session.pipeline_state:
+                session.pipeline_state = "DISCOVERED"
+                session.pipeline_last_updated = datetime.datetime.utcnow()
+                db.commit()
 
-            self.current_phase = AutopilotState.SCHEDULED
+            self.current_phase = session.pipeline_state
             self.last_action_summary = f"Next Contest {session.contest_name} ({session.session_date}) Scheduled Automatically"
 
             return {
@@ -589,7 +637,10 @@ class UniversalWeeklyContestAutopilot:
             if is_sunday and time_0800 <= current_time < time_0930:
                 logger.info(f"[AUTOPILOT_RECOVERY] Detected Sunday live contest window ({now_ist.strftime('%H:%M:%S IST')}). Resuming LIVE engine...")
                 session.status = "LIVE"
+                session.pipeline_state = "LIVE"
+                session.pipeline_last_updated = datetime.datetime.utcnow()
                 db.commit()
+                self.current_phase = "LIVE"
             elif is_sunday and current_time >= time_0930 and session.status in ("LIVE", "RUNNING", "SCHEDULED"):
                 logger.info(f"[AUTOPILOT_RECOVERY] Detected unfinalized contest past 09:30 AM IST. Running auto finalization...")
                 self.phase_4_finalization_and_reconciliation(session.id, db)

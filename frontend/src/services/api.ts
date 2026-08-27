@@ -29,14 +29,16 @@ const api = axios.create({
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
+    'Bypass-Tunnel-Reminder': 'true' // Bypasses localtunnel's "Click to Continue" warning page
   },
 });
 
 
 // In-flight GET request deduplication map to prevent redundant concurrent network round-trips
 const inFlightRequests = new Map<string, Promise<any>>();
+const activeControllers = new Map<string, AbortController>();
 const responseCache = new Map<string, { timestamp: number; data: any }>();
-const CACHE_TTL_MS = 30000; // 30 seconds TTL
+const CACHE_TTL_MS = 60000; // Increased to 60 seconds
 
 export const getCachedData = (key: string) => {
   const cached = responseCache.get(key);
@@ -54,11 +56,17 @@ export const clearApiCache = () => {
   responseCache.clear();
 };
 
-export const getRequestKey = (config: any): string => {
-  const method = (config.method || 'get').toLowerCase();
-  const url = config.url || '';
-  const params = config.params ? JSON.stringify(config.params) : '';
-  return `${method}:${url}:${params}`;
+export const getRequestKey = (url: string, config?: any): string => {
+  const params = config?.params ? JSON.stringify(config.params) : '';
+  let userScope = 'public';
+  try {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      userScope = `${user.id || 'N/A'}:${user.role || 'N/A'}:${user.department_id || 'N/A'}`;
+    }
+  } catch (e) {}
+  return `get:${userScope}:${url}:${params}`;
 };
 
 api.interceptors.request.use(async (config) => {
@@ -110,6 +118,82 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Stale-While-Revalidate GET Override for extreme speed
+const originalGet = api.get;
+api.get = async function (url: string, config?: any) {
+  const key = getRequestKey(url, config);
+  const cached = responseCache.get(key);
+  
+  // URL-based cancellation (base URL without query params)
+  // Ensures that rapid filter changes cancel obsolete requests.
+  const baseUrl = url.split('?')[0];
+  
+  // Only cancel if this isn't a duplicate in-flight request (handled below)
+  if (!inFlightRequests.has(key)) {
+    if (activeControllers.has(baseUrl)) {
+      activeControllers.get(baseUrl)?.abort();
+    }
+    const controller = new AbortController();
+    activeControllers.set(baseUrl, controller);
+    if (!config) config = {};
+    config.signal = controller.signal;
+  }
+  
+  // If we have any cache, return it IMMEDIATELY
+  if (cached) {
+    // If it's stale (older than TTL), fetch fresh data in background silently
+    if (Date.now() - cached.timestamp > CACHE_TTL_MS) {
+      if (!inFlightRequests.has(key)) {
+        const req = originalGet.call(api, url, config)
+          .then(res => {
+            setCachedData(key, res.data); // Fixed: should be res.data, not res
+            return res;
+          })
+          .catch(err => {
+            if (axios.isCancel(err)) {
+              console.log(`[Request Cancelled] ${url}`);
+            } else {
+              console.warn("[Background SWR Fetch Failed]", err);
+            }
+          })
+          .finally(() => {
+            inFlightRequests.delete(key);
+            if (activeControllers.get(baseUrl)?.signal === config?.signal) {
+                activeControllers.delete(baseUrl);
+            }
+          });
+        inFlightRequests.set(key, req);
+      }
+    }
+    // Return cached data as an Axios Response object
+    return { data: cached.data, status: 200, statusText: 'OK', headers: {}, config: config || {} } as any;
+  }
+
+  // If no cache, wait for existing in-flight request to prevent dupes
+  if (inFlightRequests.has(key)) {
+    return inFlightRequests.get(key);
+  }
+
+  // Otherwise, make the real request
+  const req = originalGet.call(api, url, config).then(res => {
+    setCachedData(key, res.data); // Store only data in cache
+    return res;
+  }).catch(err => {
+      if (axios.isCancel(err)) {
+        console.log(`[Request Cancelled] ${url}`);
+      }
+      throw err;
+  }).finally(() => {
+    inFlightRequests.delete(key);
+    if (activeControllers.get(baseUrl)?.signal === config?.signal) {
+        activeControllers.delete(baseUrl);
+    }
+  });
+  
+  inFlightRequests.set(key, req);
+  return req;
+};
 
 
 export const triggerFullSync = async (triggeredBy = 'admin') => {

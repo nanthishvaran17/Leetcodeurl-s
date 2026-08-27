@@ -149,7 +149,7 @@ def download_pdf_report(
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export PDF Report", dept_scoped=True))
 ):
-    pdf_bytes = generate_pdf_summary_report(db, dept_id=dept_id)
+    pdf_bytes = generate_pdf_summary_report(db, dept_id=dept_id, current_user=current_user)
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
@@ -164,7 +164,7 @@ def download_word_report(
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export Word Report", dept_scoped=True))
 ):
-    word_bytes = generate_word_report(db, dept_id=dept_id)
+    word_bytes = generate_word_report(db, dept_id=dept_id, current_user=current_user)
     return Response(
         content=word_bytes,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",

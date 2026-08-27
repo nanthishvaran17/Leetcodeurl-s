@@ -39,10 +39,10 @@ class Student(Base):
     id = Column(Integer, primary_key=True, index=True)
     reg_no = Column(String(50), unique=True, index=True, nullable=False)
     name = Column(String(150), nullable=False)
-    department_id = Column(Integer, ForeignKey("departments.id"), nullable=False)
-    year_level = Column(String(10), nullable=False) # II, III, IV
-    section_id = Column(Integer, ForeignKey("sections.id"), nullable=True)
-    email = Column(String(150), nullable=True)
+    department_id = Column(Integer, ForeignKey("departments.id"), nullable=False, index=True)
+    year_level = Column(String(10), nullable=False, index=True) # II, III, IV
+    section_id = Column(Integer, ForeignKey("sections.id"), nullable=True, index=True)
+    email = Column(String(150), nullable=True, index=True)
     phone_number = Column(String(30), unique=True, index=True, nullable=True)
     whatsapp_verified = Column(Boolean, default=False)
     date_of_birth = Column(String(20), nullable=True)
@@ -52,7 +52,7 @@ class Student(Base):
     codeforces_username = Column(String(100), nullable=True)
     hackerrank_username = Column(String(100), nullable=True)
     
-    is_active = Column(Boolean, default=True)
+    is_active = Column(Boolean, default=True, index=True)
     version = Column(Integer, default=1, nullable=False)
     joining_date = Column(DateTime, default=datetime.datetime.utcnow)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
@@ -169,6 +169,12 @@ class WeeklySession(Base):
 
     session_data_hash = Column(String(128), nullable=True)
     reconciliation_summary = Column(JSON, nullable=True)
+    
+    # 100/10 Production Hardening: Pipeline State Machine
+    pipeline_state = Column(String(50), default="DISCOVERED", index=True)
+    pipeline_last_updated = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    pipeline_error = Column(Text, nullable=True)
+    
     snapshots = relationship("WeeklySessionSnapshot", back_populates="session", cascade="all, delete-orphan")
     public_results = relationship("WeeklyPublicResult", back_populates="session", cascade="all, delete-orphan")
     virtual_results = relationship("WeeklyVirtualResult", back_populates="session", cascade="all, delete-orphan")
@@ -334,20 +340,20 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     institutional_id = Column(String(50), unique=True, index=True, nullable=True) # e.g. NEC-CSE-STF-001
     username = Column(String(100), unique=True, index=True, nullable=False)
-    email = Column(String(150), unique=True, nullable=False)
+    email = Column(String(150), unique=True, nullable=False, index=True)
     hashed_password = Column(String(255), nullable=False)
-    role = Column(String(30), default="Faculty") # Super Admin, Admin, Faculty, Staff, CR, Viewer
+    role = Column(String(30), default="Faculty", index=True) # Super Admin, Admin, Faculty, Staff, CR, Viewer
     phone_number = Column(String(30), unique=True, index=True, nullable=True)
     whatsapp_verified = Column(Boolean, default=False)
     date_of_birth = Column(String(20), nullable=True)
     
-    department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
-    section_id = Column(Integer, ForeignKey("sections.id"), nullable=True)
-    academic_year = Column(String(20), nullable=True) # I Year, II Year, etc.
-    mentoring_role = Column(String(50), nullable=True) # Faculty Mentor, Class Mentor, etc.
+    department_id = Column(Integer, ForeignKey("departments.id"), nullable=True, index=True)
+    section_id = Column(Integer, ForeignKey("sections.id"), nullable=True, index=True)
+    academic_year = Column(String(20), nullable=True, index=True) # I Year, II Year, etc.
+    mentoring_role = Column(String(50), nullable=True, index=True) # Faculty Mentor, Class Mentor, etc.
     
     require_password_change = Column(Boolean, default=False)
-    is_active = Column(Boolean, default=True)
+    is_active = Column(Boolean, default=True, index=True)
     last_login = Column(DateTime, nullable=True)
     last_activity = Column(DateTime, nullable=True)
     totp_secret = Column(String(100), nullable=True)

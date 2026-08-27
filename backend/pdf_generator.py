@@ -209,7 +209,8 @@ def generate_pdf_report(db, dept_id: Optional[int] = None, *args, **kwargs) -> b
     Legacy compatibility wrapper: queries canonical dataset and builds PDF.
     """
     from backend.services.weekly_report_service import generate_weekly_performance_data
-    data = generate_weekly_performance_data(db)
+    current_user = kwargs.get('current_user')
+    data = generate_weekly_performance_data(db, current_user=current_user)
     return build_weekly_performance_pdf(data, dept_id=dept_id)
 
 

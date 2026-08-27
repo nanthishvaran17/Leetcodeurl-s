@@ -758,6 +758,10 @@ def update_staff_user(
     db.commit()
     db.refresh(staff_user)
 
+    from backend.cache import cache
+    cache.invalidate_tag(f"user_auth_{staff_id}")
+    cache.invalidate_tag("students")
+
     log_admin_action(
         db, action="UPDATE_STAFF_ACCOUNT", action_type="USER_MANAGEMENT",
         description=f"Updated staff account {staff_user.username} (Role: {staff_user.role}, Dept: {staff_user.department_id})",

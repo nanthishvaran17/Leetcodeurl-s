@@ -1029,8 +1029,8 @@ export const WeeklyContestPage: React.FC = () => {
               )}
             </div>
 
-            <div className="flex flex-col gap-1.5 md:gap-2 max-w-xl">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-display tracking-tight text-white flex items-center gap-3 uppercase">
+            <div className="flex flex-col gap-1.5 md:gap-2">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-display tracking-tight text-white uppercase">
                 {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') ? (
                   <>
                     MY <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300 font-extrabold">{activeSessionObj?.contestName || 'WEEKLY CONTEST'}</span>

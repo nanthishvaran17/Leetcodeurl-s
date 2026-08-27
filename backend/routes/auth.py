@@ -142,6 +142,34 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
     if not raw_token:
         return None
 
+    # EXTREME SPEED OPTIMIZATION: Auth Resolution Cache
+    # Bypasses all JWT/Firebase cryptography and DB token lookups
+    from backend.cache import cache
+    cache_key = f"auth_res_{raw_token}"
+    cached_payload = cache.get(cache_key)
+    if cached_payload:
+        if cached_payload["type"] == "User":
+            user = User(
+                id=cached_payload["id"],
+                username=cached_payload.get("username"),
+                email=cached_payload.get("email"),
+                role=cached_payload.get("role"),
+                department_id=cached_payload.get("department_id"),
+                is_active=True
+            )
+            if cached_payload.get("override_role"):
+                user.override_role = cached_payload["override_role"]
+            return user
+        elif cached_payload["type"] == "StudentMock":
+            return User(
+                id=cached_payload["id"],
+                username=cached_payload["username"],
+                email=cached_payload["email"],
+                role="Student",
+                department_id=cached_payload["department_id"],
+                is_active=True
+            )
+
     # Check JWT Token format first (Local JWT or Firebase ID Token)
     if raw_token.count(".") == 2:
         # 1. Try local app secret JWT
@@ -163,12 +191,21 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
                 if user:
                     if role_claim:
                         user.override_role = role_claim
+                    cache.set(cache_key, {
+                        "type": "User", 
+                        "id": user.id, 
+                        "username": user.username,
+                        "email": user.email,
+                        "role": user.role,
+                        "department_id": getattr(user, "department_id", None),
+                        "override_role": role_claim
+                    }, ttl_seconds=300, tags=[f"user_auth_{user.id}"])
                     return user
                 if payload.get("role") in ["Student", "student"]:
                     st = db.query(Student).filter(
                         or_(Student.username == username, Student.email == email_claim)
                     ).first()
-                    return User(
+                    mock_user = User(
                         id=st.id if st else 0,
                         username=username or (st.username if st else "student"),
                         email=email_claim or (st.email if st else None),
@@ -176,6 +213,14 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
                         department_id=st.department_id if st else None,
                         is_active=True
                     )
+                    cache.set(cache_key, {
+                        "type": "StudentMock", 
+                        "id": mock_user.id, 
+                        "username": mock_user.username, 
+                        "email": mock_user.email,
+                        "department_id": mock_user.department_id
+                    }, ttl_seconds=300)
+                    return mock_user
         except Exception:
             pass
 
@@ -187,15 +232,18 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
             if fb_email:
                 user = db.query(User).filter(User.email.ilike(fb_email), User.is_active == True).first()
                 if user:
+                    cache.set(cache_key, {"type": "User", "id": user.id, "username": user.username, "email": user.email, "role": user.role, "department_id": getattr(user, "department_id", None)}, ttl_seconds=300, tags=[f"user_auth_{user.id}"])
                     return user
                 # If authorized admin email
                 if fb_email in EXACT_TWO_ADMIN_EMAILS:
                     user_by_name = db.query(User).filter(User.username.ilike(fb_email.split('@')[0]), User.is_active == True).first()
                     if user_by_name:
+                        cache.set(cache_key, {"type": "User", "id": user_by_name.id, "username": user_by_name.username, "email": user_by_name.email, "role": user_by_name.role, "department_id": getattr(user_by_name, "department_id", None)}, ttl_seconds=300, tags=[f"user_auth_{user_by_name.id}"])
                         return user_by_name
                     # Check if email is already used by another user
                     existing_email_user = db.query(User).filter(User.email.ilike(fb_email)).first()
                     if existing_email_user:
+                        cache.set(cache_key, {"type": "User", "id": existing_email_user.id, "username": existing_email_user.username, "email": existing_email_user.email, "role": existing_email_user.role, "department_id": getattr(existing_email_user, "department_id", None)}, ttl_seconds=300, tags=[f"user_auth_{existing_email_user.id}"])
                         return existing_email_user
                     
                     user = User(
@@ -208,6 +256,7 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
                     db.add(user)
                     db.commit()
                     db.refresh(user)
+                    cache.set(cache_key, {"type": "User", "id": user.id, "username": user.username, "email": user.email, "role": user.role, "department_id": getattr(user, "department_id", None)}, ttl_seconds=300, tags=[f"user_auth_{user.id}"])
                     return user
         except Exception:
             db.rollback()
@@ -222,13 +271,16 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
             if t_email:
                 user = db.query(User).filter(User.email.ilike(t_email), User.is_active == True).first()
                 if user:
+                    cache.set(cache_key, {"type": "User", "id": user.id, "username": user.username, "email": user.email, "role": user.role, "department_id": getattr(user, "department_id", None)}, ttl_seconds=300, tags=[f"user_auth_{user.id}"])
                     return user
                 if t_email in EXACT_TWO_ADMIN_EMAILS:
                     user_by_name = db.query(User).filter(User.username.ilike(t_email.split('@')[0]), User.is_active == True).first()
                     if user_by_name:
+                        cache.set(cache_key, {"type": "User", "id": user_by_name.id, "username": user_by_name.username, "email": user_by_name.email, "role": user_by_name.role, "department_id": getattr(user_by_name, "department_id", None)}, ttl_seconds=300, tags=[f"user_auth_{user_by_name.id}"])
                         return user_by_name
                     existing_email_user = db.query(User).filter(User.email.ilike(t_email)).first()
                     if existing_email_user:
+                        cache.set(cache_key, {"type": "User", "id": existing_email_user.id, "username": existing_email_user.username, "email": existing_email_user.email, "role": existing_email_user.role, "department_id": getattr(existing_email_user, "department_id", None)}, ttl_seconds=300, tags=[f"user_auth_{existing_email_user.id}"])
                         return existing_email_user
 
                     user = User(
@@ -241,6 +293,7 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
                     db.add(user)
                     db.commit()
                     db.refresh(user)
+                    cache.set(cache_key, {"type": "User", "id": user.id, "username": user.username, "email": user.email, "role": user.role, "department_id": getattr(user, "department_id", None)}, ttl_seconds=300, tags=[f"user_auth_{user.id}"])
                     return user
         except Exception:
             db.rollback()
@@ -263,6 +316,8 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
             except Exception:
                 db.rollback()
         user = db.query(User).filter(User.id == sess_rec.user_id, User.is_active == True).first()
+        if user:
+            cache.set(cache_key, {"type": "User", "id": user.id, "username": user.username, "email": user.email, "role": user.role, "department_id": getattr(user, "department_id", None)}, ttl_seconds=300, tags=[f"user_auth_{user.id}"])
         return user
 
     return None
@@ -710,9 +765,13 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
     if not clean_username or not clean_password:
         raise HTTPException(status_code=400, detail="Invalid username or password.")
 
-    user = db.query(User).filter(User.username.ilike(clean_username)).first()
-    if not user:
-        user = db.query(User).filter(User.email.ilike(clean_username)).first()
+    from sqlalchemy import or_
+    user = db.query(User).filter(
+        or_(
+            User.username.ilike(clean_username),
+            User.email.ilike(clean_username)
+        )
+    ).first()
 
     if not user or not verify_password(clean_password, str(user.hashed_password or "")):
         configured_username = getattr(settings, "ADMIN_USERNAME", "admin").strip()

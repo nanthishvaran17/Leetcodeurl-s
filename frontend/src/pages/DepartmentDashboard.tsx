@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Layers, Users, Trophy, CheckCircle2, RefreshCw, LayoutGrid, List, ChevronDown, Building2, GraduationCap, RotateCcw, Filter, AlertCircle, Search, X, ArrowUpDown, Star, Flame } from 'lucide-react';
+import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import api from '../services/api';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { StudentFlipCard } from '../components/StudentFlipCard';
@@ -30,24 +31,14 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
     fetchStudents();
   }, []);
 
-  const DEFAULT_DEPARTMENTS = [
-    { id: 1, name: 'Computer Science and Engineering (Cyber Security)', code: 'CSE(CS)' },
-    { id: 2, name: 'Computer Science and Engineering (IoT)', code: 'CSE(IOT)' }
-  ];
-
   const fetchDepartments = async () => {
     try {
       const res = await api.get('/departments', { timeout: 3000 });
       if (res.data && Array.isArray(res.data) && res.data.length >= 1) {
-        const validCodes = ['CSE(CS)', 'CSE(IOT)'];
-        const cleanDepts = res.data.filter((d: any) => d.code && validCodes.includes(d.code.trim().toUpperCase()));
-        setDepartments(cleanDepts.length > 0 ? cleanDepts : DEFAULT_DEPARTMENTS);
-      } else {
-        setDepartments(DEFAULT_DEPARTMENTS);
+        setDepartments(res.data);
       }
     } catch (err) {
-      console.warn("Using default department fallback list:", err);
-      setDepartments(DEFAULT_DEPARTMENTS);
+      console.warn("Failed to fetch departments", err);
     }
   };
 
@@ -109,40 +100,6 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
     notify.info('Filters Reset', 'Department filters restored to default.', { category: 'FILTERS' });
   };
 
-  // Department Dropdown Options
-  const departmentOptions: DropdownOption[] = useMemo(() => {
-    const opts: DropdownOption[] = [
-      { value: 'all', label: 'All Departments', badge: 'ALL', badgeColor: 'bg-slate-500/10 text-slate-600 dark:text-slate-300 border-slate-500/20', icon: Building2 }
-    ];
-
-    const deptBadges: Record<string, string> = {
-      'CSE': 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
-      'CSE(CS)': 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
-      'CSE(IOT)': 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
-      'IT': 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
-      'AIDS': 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-      'ECE': 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-      'EEE': 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20',
-      'MECH': 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
-      'CIVIL': 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20',
-      'BME': 'bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20',
-      'AGRI': 'bg-lime-500/10 text-lime-600 dark:text-lime-400 border-lime-500/20'
-    };
-
-    // Always show all 11 official institutional departments
-    DEFAULT_DEPARTMENTS.forEach(d => {
-      const code = d.code || '';
-      opts.push({
-        value: code || String(d.id),
-        label: d.name,
-        badge: code,
-        badgeColor: deptBadges[code] || 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20',
-        icon: Building2
-      });
-    });
-
-    return opts;
-  }, []);
 
   // Academic Year Dropdown Options (Removed 1st Year; Batches: 2029, 2028, 2027)
   const yearOptions: DropdownOption[] = [
@@ -271,17 +228,13 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5 sm:gap-4">
           
           {/* 1. Department Filter */}
-          <CustomDropdown
-            id="dept-dashboard-department-filter"
-            label="Department Filter"
-            options={departmentOptions}
-            value={selectedDept}
+          <PremiumDepartmentSelect
+            selectedDept={selectedDept === 'all' ? 'ALL' : selectedDept}
             onChange={(val) => {
-              setSelectedDept(val);
+              setSelectedDept(val === 'ALL' ? 'all' : val);
               setDisplayCount(32);
             }}
-            icon={Building2}
-            align="left"
+            useIdAsValue={false}
           />
 
           {/* 2. Academic Year Filter */}

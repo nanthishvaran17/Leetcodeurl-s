@@ -321,12 +321,13 @@ def build_weekly_performance_docx(data: Dict[str, Any], dept_id: Optional[int] =
     return buffer.getvalue()
 
 
-def generate_word_report(db: Session, dept_id: Optional[int] = None) -> bytes:
+def generate_word_report(db: Session, dept_id: Optional[int] = None, *args, **kwargs) -> bytes:
     """
     Compatibility wrapper: produces Word document from canonical dataset.
     """
     from backend.services.weekly_report_service import generate_weekly_performance_data
-    data = generate_weekly_performance_data(db)
+    current_user = kwargs.get('current_user')
+    data = generate_weekly_performance_data(db, current_user=current_user)
     return build_weekly_performance_docx(data, dept_id=dept_id)
 
 

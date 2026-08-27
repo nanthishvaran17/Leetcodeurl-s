@@ -33,7 +33,7 @@ from backend.exporters.word_exporter import export_word_from_dataset
 from backend.exporters.csv_exporter import export_csv_from_dataset
 from backend.exporters.zip_exporter import export_zip_bundle_from_dataset
 
-from backend.security import require_security_access
+from backend.security import require_security_access, get_current_user_optional
 
 router = APIRouter(prefix="/contests", tags=["Weekly Contests"])
 
@@ -197,11 +197,18 @@ def get_previous_week_summary(
     return PreviousWeekAnalyzer.get_previous_week_summary_role_scoped(db, current_user)
 
 @router.get("/sessions/{session_id}/live-status")
-def get_session_live_telemetry(session_id: int, db: Session = Depends(get_db)):
+def get_session_live_telemetry(
+    request: Request,
+    session_id: int, 
+    db: Session = Depends(get_db)
+):
     """
     Returns real-time live telemetry, countdown, question progress, and verified events.
     Auto-spawns continuous live sweep worker if contest is LIVE.
     """
+    from backend.routes.auth import get_current_user_from_request
+    current_user = get_current_user_from_request(request, db)
+
     session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
     if session and session.status == "LIVE" and not sunday_live_engine.is_running and not sunday_live_engine.is_paused:
         try:
@@ -209,7 +216,25 @@ def get_session_live_telemetry(session_id: int, db: Session = Depends(get_db)):
             asyncio.create_task(sunday_live_engine.run_live_sync_cycle(session_id, SessionLocal))
         except Exception:
             pass
-    return sunday_live_engine.get_telemetry(session_id, db)
+    
+    # Scoped telemetry
+    telemetry = sunday_live_engine.get_telemetry(session_id, db)
+    
+    if current_user and hasattr(current_user, 'role'):
+        role = (getattr(current_user, "override_role", None) or current_user.role or "").lower()
+        if "staff" in role or "faculty" in role:
+            from backend.services.faculty_assignment_service import faculty_assignment_service
+            assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, current_user.id)
+            if assigned_ids:
+                # Filter leaderboard
+                telemetry["topLeaderboard"] = [
+                    row for row in telemetry.get("topLeaderboard", [])
+                    if row.get("student_id") in assigned_ids
+                ]
+            else:
+                telemetry["topLeaderboard"] = []
+
+    return telemetry
 
 @router.post("/sessions/{session_id}/admin-control")
 async def execute_admin_live_control(
@@ -599,7 +624,8 @@ def get_normalized_contest_data(
     dept: Optional[str] = None,
     year: Optional[str] = None,
     attendance: Optional[str] = None,
-    db: Session = None
+    db: Session = None,
+    current_user: Optional[User] = None
 ) -> Dict[str, Any]:
     """
     CANONICAL SINGLE SOURCE OF TRUTH: Normalized Weekly Contest Data Engine.
@@ -623,7 +649,8 @@ def get_normalized_contest_data(
         db=db,
         dept=dept,
         year=year,
-        attendance=attendance
+        attendance=attendance,
+        current_user=current_user
     )
 
     metrics = canonical_data["metrics"]
@@ -740,7 +767,7 @@ def get_session_matrix(
     """
     Delegates strictly to the single canonical normalized dataset function with institutional RBAC.
     """
-    return get_normalized_contest_data(session_id, dept=dept, year=year, attendance=attendance, db=db)
+    return get_normalized_contest_data(session_id, dept=dept, year=year, attendance=attendance, db=db, current_user=current_user)
 
 
 @router.get("/sessions/{session_id}/data-quality")
@@ -771,7 +798,8 @@ def get_week_comparison(
     dept: Optional[str] = Query(None),
     year: Optional[str] = Query(None),
     attendance: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     """
     Calculates dynamic Week-to-Week comparison metrics comparing the selected Weekly Contest
@@ -805,8 +833,8 @@ def get_week_comparison(
         ).order_by(WeeklySession.id.desc()).first()
 
     # Read from single canonical normalized dataset engine
-    curr_data = get_normalized_contest_data(current_session.id, dept=dept, year=year, attendance=attendance, db=db)
-    prev_data = get_normalized_contest_data(prev_session.id, dept=dept, year=year, attendance=attendance, db=db) if prev_session else None
+    curr_data = get_normalized_contest_data(current_session.id, dept=dept, year=year, attendance=attendance, db=db, current_user=current_user)
+    prev_data = get_normalized_contest_data(prev_session.id, dept=dept, year=year, attendance=attendance, db=db, current_user=current_user) if prev_session else None
 
     curr_metrics = curr_data["metrics"]
     prev_metrics = prev_data["metrics"] if prev_data else {
@@ -1365,15 +1393,16 @@ def get_post_930_solvers(
                 logger.warning(f"Error parsing snapshot dataset: {e}")
 
     # Query active students
+    from backend.services.authorization_service import apply_role_based_student_filter
     query = db.query(Student).outerjoin(Student.stats).options(
         joinedload(Student.department),
         joinedload(Student.section),
         joinedload(Student.stats)
     ).filter((Student.is_active == True) | (Student.is_active.is_(None)))
 
-    # Apply Staff scoping
-    if assigned_student_ids is not None:
-        query = query.filter(Student.id.in_(assigned_student_ids))
+    # Apply centralized role-based data scoping
+    if user:
+        query = apply_role_based_student_filter(query, user, db)
 
     if student_id:
         query = query.filter(Student.id == student_id)

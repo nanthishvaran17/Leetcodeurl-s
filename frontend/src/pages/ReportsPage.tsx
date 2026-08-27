@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Sparkles, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers, Inbox, Trash2, Award, Clock, Building2, GraduationCap, ChevronDown, Check, Target } from 'lucide-react';
+import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import api from '../services/api';
 import { ReportPreview } from '../components/ReportPreview';
 import { EmailDeliveryTab } from '../components/EmailDeliveryTab';
@@ -24,7 +25,7 @@ export const ReportsPage: React.FC = () => {
   const [selectedDept, setSelectedDept] = useState<string>('ALL');
   const [selectedYear, setSelectedYear] = useState<string>('ALL');
   const [selectedOutputScope, setSelectedOutputScope] = useState<string>('COLLEGE');
-  const [rptDeptOpen,  setRptDeptOpen]  = useState<boolean>(false);
+
   const [rptYearOpen,  setRptYearOpen]  = useState<boolean>(false);
   const [rptScopeOpen, setRptScopeOpen] = useState<boolean>(false);
   const [rptTypeOpen,  setRptTypeOpen]  = useState<boolean>(false);
@@ -420,7 +421,7 @@ export const ReportsPage: React.FC = () => {
         <>
 
       {/* Universal Institutional Reports Section */}
-      <div className={`glass-card p-6 md:p-8 rounded-3xl border border-blue-500/30 dark:border-blue-500/20 shadow-xl space-y-6 bg-gradient-to-r from-blue-500/5 via-cyan-500/5 to-transparent relative ${rptTypeOpen || rptDeptOpen || rptYearOpen || rptScopeOpen ? 'z-50' : 'z-10'}`}>
+      <div className={`glass-card p-6 md:p-8 rounded-3xl border border-blue-500/30 dark:border-blue-500/20 shadow-xl space-y-6 bg-gradient-to-r from-blue-500/5 via-cyan-500/5 to-transparent relative ${rptTypeOpen || rptYearOpen || rptScopeOpen ? 'z-50' : 'z-10'}`}>
         <div className="flex items-center justify-between flex-wrap gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
           <div className="flex items-center space-x-3">
             <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
@@ -449,7 +450,7 @@ export const ReportsPage: React.FC = () => {
             <div className={`relative ${rptTypeOpen ? 'z-30' : 'z-10'}`}>
               <button
                 type="button"
-                onClick={() => { setRptTypeOpen(p => !p); setRptDeptOpen(false); setRptYearOpen(false); setRptScopeOpen(false); }}
+                onClick={() => { setRptTypeOpen(p => !p); setRptYearOpen(false); setRptScopeOpen(false); }}
                 className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${
                   rptTypeOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-gray-300 dark:border-gray-700 hover:border-brand-300'
                 }`}
@@ -499,55 +500,12 @@ export const ReportsPage: React.FC = () => {
           </div>
 
           {/* 2. Department — Premium Dropdown */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-black uppercase text-gray-600 dark:text-gray-400 tracking-wider">Department</label>
-            <div className={`relative ${rptDeptOpen ? 'z-30' : 'z-10'}`}>
-              <button
-                type="button"
-                onClick={() => { setRptDeptOpen(p => !p); setRptTypeOpen(false); setRptYearOpen(false); setRptScopeOpen(false); }}
-                className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${
-                  rptDeptOpen ? 'border-indigo-400 ring-2 ring-indigo-400/20' : 'border-gray-300 dark:border-gray-700 hover:border-indigo-300'
-                }`}
-              >
-                <Building2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                {(() => {
-                  const DEPT_SLUGS: Record<string,{code:string; color:string}> = {
-                    'ALL':     { code:'ALL',      color:'text-indigo-600 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300' },
-                    'CSE(CS)': { code:'CSE(CS)',  color:'text-purple-600 bg-purple-50 dark:bg-purple-950 dark:text-purple-300' },
-                    'CSE(IOT)':{ code:'CSE(IOT)', color:'text-cyan-600 bg-cyan-50 dark:bg-cyan-950 dark:text-cyan-300' },
-                  };
-                  const s = DEPT_SLUGS[selectedDept] || DEPT_SLUGS['ALL'];
-                  const LABELS: Record<string,string> = { 'ALL':'All Departments','CSE(CS)':'CSE (Cyber Security)','CSE(IOT)':'CSE (Internet of Things)' };
-                  return (<>
-                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${s.code}`}>{s.code}</span>
-                    <span className="text-xs font-bold text-gray-900 dark:text-white truncate flex-1">{LABELS[selectedDept] || selectedDept}</span>
-                  </>);
-                })()}
-                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${rptDeptOpen ? 'rotate-180' : ''}`} />
-              </button>
-              {rptDeptOpen && (
-                <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-64 overflow-y-auto">
-                  {[
-                    { value:'ALL',      code:'ALL',      label:'All Departments',                color:'text-indigo-600 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300' },
-                    { value:'CSE(CS)',  code:'CSE(CS)',  label:'CSE (Cyber Security)',            color:'text-purple-600 bg-purple-50 dark:bg-purple-950 dark:text-purple-300' },
-                    { value:'CSE(IOT)', code:'CSE(IOT)', label:'CSE (Internet of Things)',        color:'text-cyan-600 bg-cyan-50 dark:bg-cyan-950 dark:text-cyan-300' },
-                  ].map(opt => (
-                    <button key={opt.value} type="button"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => { setSelectedDept(opt.value); setRptDeptOpen(false); }}
-                      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${
-                        selectedDept === opt.value ? 'bg-indigo-50 dark:bg-indigo-950/60' : 'hover:bg-gray-50 dark:hover:bg-navy-800'
-                      }`}
-                    >
-                      <Building2 className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                      <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${opt.color}`}>{opt.code}</span>
-                      <span className={`text-xs truncate flex-1 ${selectedDept === opt.value ? 'font-black text-indigo-700 dark:text-indigo-300' : 'font-semibold text-gray-700 dark:text-gray-300'}`}>{opt.label}</span>
-                      {selectedDept === opt.value && <Check className="w-3.5 h-3.5 text-indigo-500 shrink-0" />}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+          <div className="space-y-1.5 z-20">
+            <PremiumDepartmentSelect
+              selectedDept={selectedDept}
+              onChange={setSelectedDept}
+              label="Department"
+            />
           </div>
 
           {/* 3. Year / Batch — Premium Dropdown */}
@@ -556,7 +514,7 @@ export const ReportsPage: React.FC = () => {
             <div className={`relative ${rptYearOpen ? 'z-30' : 'z-10'}`}>
               <button
                 type="button"
-                onClick={() => { setRptYearOpen(p => !p); setRptTypeOpen(false); setRptDeptOpen(false); setRptScopeOpen(false); }}
+                onClick={() => { setRptYearOpen(p => !p); setRptTypeOpen(false); setRptScopeOpen(false); }}
                 className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${
                   rptYearOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-gray-300 dark:border-gray-700 hover:border-brand-300'
                 }`}
@@ -608,7 +566,7 @@ export const ReportsPage: React.FC = () => {
             <div className={`relative ${rptScopeOpen ? 'z-30' : 'z-10'}`}>
               <button
                 type="button"
-                onClick={() => { setRptScopeOpen(p => !p); setRptTypeOpen(false); setRptDeptOpen(false); setRptYearOpen(false); }}
+                onClick={() => { setRptScopeOpen(p => !p); setRptTypeOpen(false); setRptYearOpen(false); }}
                 className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${
                   rptScopeOpen ? 'border-purple-400 ring-2 ring-purple-400/20' : 'border-gray-300 dark:border-gray-700 hover:border-purple-300'
                 }`}
