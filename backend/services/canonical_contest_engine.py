@@ -4,7 +4,7 @@ from typing import Dict, Any, List, Optional, Tuple
 from sqlalchemy.orm import Session
 from backend.models import (
     WeeklySession, WeeklyPublicResult, WeeklyVirtualResult,
-    WeeklyContestErrorLog, Student, Department
+    WeeklyContestErrorLog, Student, Department, User
 )
 from backend.logger import logger
 
