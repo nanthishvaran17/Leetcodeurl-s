@@ -43,6 +43,24 @@ class NoteCreateRequest(BaseModel):
     escalation_level: Optional[str] = "NORMAL"
 
 
+class FollowUpCreateRequest(BaseModel):
+    student_id: int
+    title: str
+    due_date: str  # YYYY-MM-DD
+    notes: Optional[str] = None
+
+
+class FollowUpUpdateRequest(BaseModel):
+    status: str  # PENDING, COMPLETED, CANCELLED
+    notes: Optional[str] = None
+
+
+class WeeklyTargetRequest(BaseModel):
+    student_id: int
+    target_problems: int = 10
+    target_contests: int = 1
+
+
 @router.get("/my-students")
 def get_my_assigned_students(
     db: Session = Depends(get_db),
@@ -330,29 +348,6 @@ def delete_staff_member(
     # =========================================================================
     # STAFF MENTORING & MONITORING ENDPOINTS
     # =========================================================================
-
-    class NoteCreateRequest(BaseModel):
-        student_id: int
-        note: str
-        escalation_level: Optional[str] = "NORMAL"
-
-
-    class FollowUpCreateRequest(BaseModel):
-        student_id: int
-        title: str
-        due_date: str  # YYYY-MM-DD
-        notes: Optional[str] = None
-
-
-    class FollowUpUpdateRequest(BaseModel):
-        status: str  # PENDING, COMPLETED, CANCELLED
-        notes: Optional[str] = None
-
-
-    class WeeklyTargetRequest(BaseModel):
-        student_id: int
-        target_problems: int = 10
-        target_contests: int = 1
 
 
 def calculate_student_performance_status(s: Student) -> Dict[str, Any]:
