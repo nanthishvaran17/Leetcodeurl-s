@@ -243,111 +243,111 @@ def delete_staff_member(
             detail="Access restricted: HOD can only delete staff members in their own department."
         )
 
-        # 1. Unassign all students assigned to this faculty member
-        unassigned_count = db.query(FacultyStudentAssignment).filter(
-            FacultyStudentAssignment.faculty_id == faculty_id
-        ).delete(synchronize_session=False)
+    # 1. Unassign all students assigned to this faculty member
+    unassigned_count = db.query(FacultyStudentAssignment).filter(
+        FacultyStudentAssignment.faculty_id == faculty_id
+    ).delete(synchronize_session=False)
 
-        # 2. Delete the faculty user record
-        faculty_name = faculty.username
-        db.delete(faculty)
-        db.commit()
+    # 2. Delete the faculty user record
+    faculty_name = faculty.username
+    db.delete(faculty)
+    db.commit()
 
-        return {
-            "success": True,
-            "message": f"Staff member '{faculty_name}' deleted successfully. {unassigned_count} students returned to allocation queue.",
-            "unassigned_count": unassigned_count
-        }
+    return {
+        "success": True,
+        "message": f"Staff member '{faculty_name}' deleted successfully. {unassigned_count} students returned to allocation queue.",
+        "unassigned_count": unassigned_count
+    }
 
 
-    @router.post("/auto-distribute")
-    def auto_distribute_students(
-        payload: AutoDistributeRequest,
-        db: Session = Depends(get_db),
-        current_user: User = Depends(require_role("Admin", "Super Admin", "super admin", "HOD", "hod", dept_scoped=True))
-    ):
-        """
-        Auto-allocates unassigned department students to active department faculty
-        up to 20 students per faculty member in round-robin fashion.
-        """
-        user_role = (current_user.role or "").strip().lower()
-        if user_role in ["hod"] and current_user.department_id != payload.department_id:
-            raise HTTPException(
-                status_code=403,
-                detail="Access restricted: HOD can only auto-distribute students in their own department."
-            )
-
-        return faculty_assignment_service.auto_distribute_department(
-            db=db,
-            department_id=payload.department_id,
-            assigned_by_id=current_user.id
+@router.post("/auto-distribute")
+def auto_distribute_students(
+    payload: AutoDistributeRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("Admin", "Super Admin", "super admin", "HOD", "hod", dept_scoped=True))
+):
+    """
+    Auto-allocates unassigned department students to active department faculty
+    up to 20 students per faculty member in round-robin fashion.
+    """
+    user_role = (current_user.role or "").strip().lower()
+    if user_role in ["hod"] and current_user.department_id != payload.department_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Access restricted: HOD can only auto-distribute students in their own department."
         )
 
-
-    @router.get("/workload-summary")
-    def get_faculty_workload_summary(
-        dept_id: Optional[int] = Query(None),
-        db: Session = Depends(get_db),
-        current_user: User = Depends(require_role("Admin", "Super Admin", "super admin", "HOD", "hod", dept_scoped=True))
-    ):
-        """
-        Returns faculty workload distribution (e.g. 18/20, 20/20) across a department.
-        """
-        user_role = (current_user.role or "").strip().lower()
-        target_dept_id = current_user.department_id if user_role in ["hod"] else dept_id
-
-        query = db.query(User).options(joinedload(User.department)).filter(
-            User.is_active == True,
-            User.role.in_(["Faculty", "faculty", "Staff", "staff", "HOD", "hod"])
-        )
-        if target_dept_id:
-            query = query.filter(User.department_id == target_dept_id)
-
-        faculty_list = query.all()
-
-        # Efficient single grouped query for all active faculty student counts
-        fac_ids = [f.id for f in faculty_list]
-        count_rows = db.query(
-            FacultyStudentAssignment.faculty_id,
-            func.count(FacultyStudentAssignment.id)
-        ).filter(
-            FacultyStudentAssignment.faculty_id.in_(fac_ids),
-            FacultyStudentAssignment.is_active == True
-        ).group_by(FacultyStudentAssignment.faculty_id).all() if fac_ids else []
-
-        assigned_counts = {r[0]: r[1] for r in count_rows}
-        workload = []
-
-        for fac in faculty_list:
-            count = assigned_counts.get(fac.id, 0)
-            status_code = "NORMAL" if count < 20 else ("AT_RATIO" if count == 20 else ("ABOVE_RATIO" if count <= 30 else "HIGH_WORKLOAD"))
-            status_label = "Normal" if count < 20 else ("At Ratio" if count == 20 else ("Above Ratio" if count <= 30 else "High Workload"))
-            workload.append({
-                "faculty_id": fac.id,
-                "faculty_name": fac.username,
-                "email": fac.email,
-                "role": fac.role,
-                "department_id": fac.department_id,
-                "department_name": fac.department.name if fac.department else "General",
-                "assigned_students": count,
-                "recommended_ratio": 20,
-                "workload_status": status_code,
-                "workload_label": status_label,
-                "is_above_ratio": count > 20
-            })
-
-        return {
-            "total_faculty": len(faculty_list),
-            "target_department_id": target_dept_id,
-            "recommended_ratio_per_faculty": 20,
-            "max_capacity_per_faculty": 30,
-            "faculty_workload": workload
-        }
+    return faculty_assignment_service.auto_distribute_department(
+        db=db,
+        department_id=payload.department_id,
+        assigned_by_id=current_user.id
+    )
 
 
-    # =========================================================================
-    # STAFF MENTORING & MONITORING ENDPOINTS
-    # =========================================================================
+@router.get("/workload-summary")
+def get_faculty_workload_summary(
+    dept_id: Optional[int] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("Admin", "Super Admin", "super admin", "HOD", "hod", dept_scoped=True))
+):
+    """
+    Returns faculty workload distribution (e.g. 18/20, 20/20) across a department.
+    """
+    user_role = (current_user.role or "").strip().lower()
+    target_dept_id = current_user.department_id if user_role in ["hod"] else dept_id
+
+    query = db.query(User).options(joinedload(User.department)).filter(
+        User.is_active == True,
+        User.role.in_(["Faculty", "faculty", "Staff", "staff", "HOD", "hod"])
+    )
+    if target_dept_id:
+        query = query.filter(User.department_id == target_dept_id)
+
+    faculty_list = query.all()
+
+    # Efficient single grouped query for all active faculty student counts
+    fac_ids = [f.id for f in faculty_list]
+    count_rows = db.query(
+        FacultyStudentAssignment.faculty_id,
+        func.count(FacultyStudentAssignment.id)
+    ).filter(
+        FacultyStudentAssignment.faculty_id.in_(fac_ids),
+        FacultyStudentAssignment.is_active == True
+    ).group_by(FacultyStudentAssignment.faculty_id).all() if fac_ids else []
+
+    assigned_counts = {r[0]: r[1] for r in count_rows}
+    workload = []
+
+    for fac in faculty_list:
+        count = assigned_counts.get(fac.id, 0)
+        status_code = "NORMAL" if count < 20 else ("AT_RATIO" if count == 20 else ("ABOVE_RATIO" if count <= 30 else "HIGH_WORKLOAD"))
+        status_label = "Normal" if count < 20 else ("At Ratio" if count == 20 else ("Above Ratio" if count <= 30 else "High Workload"))
+        workload.append({
+            "faculty_id": fac.id,
+            "faculty_name": fac.username,
+            "email": fac.email,
+            "role": fac.role,
+            "department_id": fac.department_id,
+            "department_name": fac.department.name if fac.department else "General",
+            "assigned_students": count,
+            "recommended_ratio": 20,
+            "workload_status": status_code,
+            "workload_label": status_label,
+            "is_above_ratio": count > 20
+        })
+
+    return {
+        "total_faculty": len(faculty_list),
+        "target_department_id": target_dept_id,
+        "recommended_ratio_per_faculty": 20,
+        "max_capacity_per_faculty": 30,
+        "faculty_workload": workload
+    }
+
+
+# =========================================================================
+# STAFF MENTORING & MONITORING ENDPOINTS
+# =========================================================================
 
 
 def calculate_student_performance_status(s: Student) -> Dict[str, Any]:

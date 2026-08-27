@@ -102,17 +102,17 @@ export interface SystemAlertItem {
 }
 
 export const getStudentDigitalProfile = async (studentId: number): Promise<DigitalCodingProfile> => {
-  const response = await api.get(`/api/intelligence/student/${studentId}/digital-profile`);
+  const response = await api.get(`/intelligence/student/${studentId}/digital-profile`);
   return response.data;
 };
 
 export const getFacultyAttentionItems = async (deptId?: number) => {
-  const response = await api.get('/api/intelligence/faculty/attention', { params: { dept_id: deptId } });
+  const response = await api.get('/intelligence/faculty/attention', { params: { dept_id: deptId } });
   return response.data;
 };
 
 export const getFacultyActionQueue = async (facultyId?: number, status = 'ALL'): Promise<ActionQueueItem[]> => {
-  const response = await api.get('/api/intelligence/faculty/action-queue', { params: { faculty_id: facultyId, status } });
+  const response = await api.get('/intelligence/faculty/action-queue', { params: { faculty_id: facultyId, status } });
   return response.data;
 };
 
@@ -124,12 +124,12 @@ export const createFacultyIntervention = async (payload: {
   assigned_topics: string[];
   priority?: string;
 }) => {
-  const response = await api.post('/api/intelligence/faculty/interventions', payload);
+  const response = await api.post('/intelligence/faculty/interventions', payload);
   return response.data;
 };
 
 export const updateInterventionStatus = async (interventionId: number, status: string, improvementNotes?: string) => {
-  const response = await api.put(`/api/intelligence/faculty/interventions/${interventionId}`, {
+  const response = await api.put(`/intelligence/faculty/interventions/${interventionId}`, {
     status,
     improvement_notes: improvementNotes
   });
@@ -137,22 +137,22 @@ export const updateInterventionStatus = async (interventionId: number, status: s
 };
 
 export const getInterventionEffectiveness = async () => {
-  const response = await api.get('/api/intelligence/faculty/interventions/effectiveness');
+  const response = await api.get('/intelligence/faculty/interventions/effectiveness');
   return response.data;
 };
 
 export const getHODCommandCenterData = async (deptId?: number) => {
-  const response = await api.get('/api/intelligence/hod/command-center', { params: { dept_id: deptId } });
+  const response = await api.get('/intelligence/hod/command-center', { params: { dept_id: deptId } });
   return response.data;
 };
 
 export const getInstitutionalBenchmarks = async () => {
-  const response = await api.get('/api/intelligence/hod/benchmarks');
+  const response = await api.get('/intelligence/hod/benchmarks');
   return response.data;
 };
 
 export const simulateWhatIfScenario = async (currentPartPct: number, targetPartPct: number, currentAtRisk: number) => {
-  const response = await api.post('/api/intelligence/hod/what-if', {
+  const response = await api.post('/intelligence/hod/what-if', {
     current_participation_pct: currentPartPct,
     target_participation_pct: targetPartPct,
     current_at_risk_count: currentAtRisk
@@ -161,22 +161,22 @@ export const simulateWhatIfScenario = async (currentPartPct: number, targetPartP
 };
 
 export const askAIDepartmentQuery = async (queryText: string) => {
-  const response = await api.post('/api/intelligence/hod/ai-query', { query: queryText });
+  const response = await api.post('/intelligence/hod/ai-query', { query: queryText });
   return response.data;
 };
 
 export const getSystemAlerts = async (): Promise<SystemAlertItem[]> => {
-  const response = await api.get('/api/intelligence/alerts');
+  const response = await api.get('/intelligence/alerts');
   return response.data;
 };
 
 export const markAlertRead = async (alertId: number) => {
-  const response = await api.post(`/api/intelligence/alerts/${alertId}/read`);
+  const response = await api.post(`/intelligence/alerts/${alertId}/read`);
   return response.data;
 };
 
 export const markAlertResolve = async (alertId: number) => {
-  const response = await api.post(`/api/intelligence/alerts/${alertId}/resolve`);
+  const response = await api.post(`/intelligence/alerts/${alertId}/resolve`);
   return response.data;
 };
 
@@ -258,7 +258,7 @@ export interface UpdateActionPayload {
 }
 
 export const getFacultyActionKPIs = async (deptId?: number): Promise<FacultyActionKPIs> => {
-  const response = await api.get('/api/intelligence/faculty/actions/kpis', { params: { dept_id: deptId } });
+  const response = await api.get('/intelligence/faculty/actions/kpis', { params: { dept_id: deptId } });
   return response.data;
 };
 
@@ -273,12 +273,12 @@ export const getFacultyActionsList = async (params: {
   page?: number;
   page_size?: number;
 }): Promise<{ items: FacultyActionItem[]; total: number; page: number; page_size: number }> => {
-  const response = await api.get('/api/intelligence/faculty/actions', { params });
+  const response = await api.get('/intelligence/faculty/actions', { params });
   return response.data;
 };
 
 export const getSingleFacultyAction = async (actionId: number): Promise<FacultyActionItem> => {
-  const response = await api.get(`/api/intelligence/faculty/actions/${actionId}`);
+  const response = await api.get(`/intelligence/faculty/actions/${actionId}`);
   return response.data;
 };
 
@@ -286,7 +286,7 @@ export const updateFacultyAction = async (
   actionId: number,
   payload: UpdateActionPayload
 ): Promise<{ status: string; message: string }> => {
-  const response = await api.put(`/api/intelligence/faculty/actions/${actionId}`, payload);
+  const response = await api.put(`/intelligence/faculty/actions/${actionId}`, payload);
   return response.data;
 };
 
@@ -295,7 +295,7 @@ export const assignFacultyAction = async (
   facultyName: string,
   updatedByName?: string
 ): Promise<{ status: string; message: string }> => {
-  const response = await api.post(`/api/intelligence/faculty/actions/${actionId}/assign`, {
+  const response = await api.post(`/intelligence/faculty/actions/${actionId}/assign`, {
     faculty_name: facultyName,
     updated_by_name: updatedByName,
   });
@@ -308,7 +308,7 @@ export const updateActionStatus = async (
   reason?: string,
   updatedByName?: string
 ): Promise<{ status: string; message: string }> => {
-  const response = await api.post(`/api/intelligence/faculty/actions/${actionId}/status`, {
+  const response = await api.post(`/intelligence/faculty/actions/${actionId}/status`, {
     status,
     reason,
     updated_by_name: updatedByName,
@@ -322,7 +322,7 @@ export const scheduleActionFollowUp = async (
   nextReviewDate?: string,
   updatedByName?: string
 ): Promise<{ status: string; message: string }> => {
-  const response = await api.post(`/api/intelligence/faculty/actions/${actionId}/follow-up`, {
+  const response = await api.post(`/intelligence/faculty/actions/${actionId}/follow-up`, {
     follow_up_date: followUpDate,
     next_review_date: nextReviewDate,
     updated_by_name: updatedByName,
@@ -336,7 +336,7 @@ export const escalateAction = async (
   reason: string,
   updatedByName?: string
 ): Promise<{ status: string; message: string }> => {
-  const response = await api.post(`/api/intelligence/faculty/actions/${actionId}/escalate`, {
+  const response = await api.post(`/intelligence/faculty/actions/${actionId}/escalate`, {
     escalated_to: escalatedTo,
     reason,
     updated_by_name: updatedByName,
@@ -345,7 +345,7 @@ export const escalateAction = async (
 };
 
 export const getActionTimeline = async (actionId: number): Promise<ActionTimelineEvent[]> => {
-  const response = await api.get(`/api/intelligence/faculty/actions/${actionId}/timeline`);
+  const response = await api.get(`/intelligence/faculty/actions/${actionId}/timeline`);
   return response.data;
 };
 
@@ -356,6 +356,6 @@ export const triggerSignalDetection = async (): Promise<{
   total_processed: number;
   message: string;
 }> => {
-  const response = await api.post('/api/intelligence/faculty/actions/detect-signals');
+  const response = await api.post('/intelligence/faculty/actions/detect-signals');
   return response.data;
 };

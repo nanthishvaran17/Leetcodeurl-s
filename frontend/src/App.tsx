@@ -293,8 +293,20 @@ export const App: React.FC = () => {
     return (
       <LoginPage
         onSuccess={() => {
-          // Role-aware redirect after login
-          const roleClean = (user?.role || '').trim().toLowerCase();
+          // Role-aware redirect after login.
+          // IMPORTANT: user state from useAuth() is async — it hasn't updated yet here.
+          // Read role directly from localStorage where AuthContext writes it synchronously.
+          let roleClean = '';
+          try {
+            const stored = localStorage.getItem('user');
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              roleClean = (parsed?.role || '').trim().toLowerCase();
+            }
+          } catch (_e) {}
+          // Fallback to context if localStorage not yet written
+          if (!roleClean) roleClean = (user?.role || '').trim().toLowerCase();
+
           if (roleClean === 'faculty' || roleClean === 'staff' || roleClean === 'professor') {
             setActiveTab('faculty-action-center');
           } else if (roleClean === 'hod') {

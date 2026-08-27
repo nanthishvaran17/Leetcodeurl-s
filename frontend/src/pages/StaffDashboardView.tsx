@@ -5,7 +5,7 @@ import {
   FileText, Clock, AlertCircle, ArrowRight, Download, Zap, Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
+import api, { clearApiCache } from '../services/api';
 import { StaffMentoringDetailModal } from '../components/StaffMentoringDetailModal';
 import { useNotification } from '../context/NotificationContext';
 
@@ -75,6 +75,8 @@ export const StaffDashboardView: React.FC = () => {
         setLastSyncTime(nowFormatted);
         setSyncStatusMsg(`LIVE SYNC COMPLETED • ${totalChecked} Students Checked (${successCnt} Updated, ${unavailCnt} Unavailable, ${failedCnt} Failed)`);
         notify.success('Live Sync Complete', `Updated ${successCnt} profiles successfully.`);
+        // Clear GET cache so fresh data loads immediately — not 60s stale data
+        clearApiCache();
         await fetchMentoringData();
       }
     } catch (err: any) {
