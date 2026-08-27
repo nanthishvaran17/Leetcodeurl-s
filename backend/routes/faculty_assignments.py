@@ -37,6 +37,12 @@ class AutoDistributeRequest(BaseModel):
     department_id: int
 
 
+class NoteCreateRequest(BaseModel):
+    student_id: int
+    note: str
+    escalation_level: Optional[str] = "NORMAL"
+
+
 @router.get("/my-students")
 def get_my_assigned_students(
     db: Session = Depends(get_db),
