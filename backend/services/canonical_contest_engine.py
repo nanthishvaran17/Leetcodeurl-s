@@ -608,8 +608,4 @@ def _build_canonical_contest_dataset_internal(
         }
     }
 
-    if session_obj.status == "FINALIZED":
-        _CANONICAL_DATASET_CACHE[cache_key] = result_payload
-        _CANONICAL_CACHE_TIMESTAMPS[cache_key] = time.time()
-
     return result_payload
