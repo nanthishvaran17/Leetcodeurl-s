@@ -10,7 +10,7 @@ from backend.database import get_db, SessionLocal
 logger = logging.getLogger(__name__)
 from backend.models import (
     WeeklySession, WeeklyPublicResult, WeeklyVirtualResult, 
-    WeeklyContestErrorLog, OfficialWeeklySnapshot, Student
+    WeeklyContestErrorLog, OfficialWeeklySnapshot, Student, User
 )
 from backend.services.weekly_session_manager import (
     get_or_create_current_weekly_session,
