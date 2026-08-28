@@ -763,14 +763,51 @@ def google_auth(payload: dict, request: Request, response: Response, db: Session
 def debug_login(login_data: UserLogin, request: Request, response: Response, db: Session = Depends(get_db)):
     """Temporary debug endpoint — REMOVE AFTER DIAGNOSIS"""
     import traceback
+    results = {}
+    # Test 1: User query
     try:
         clean_username = login_data.username.strip()
-        clean_password = login_data.password.strip()
         from sqlalchemy import or_
         user = db.query(User).filter(or_(User.username.ilike(clean_username), User.email.ilike(clean_username))).first()
-        return {"found_user": bool(user), "username": user.username if user else None, "role": user.role if user else None}
+        results["user_query"] = {"ok": True, "found": bool(user), "username": user.username if user else None}
     except Exception as e:
-        return {"error": str(e), "traceback": traceback.format_exc()}
+        results["user_query"] = {"ok": False, "error": str(e)[:300]}
+    # Test 2: Students query
+    try:
+        from backend.models import Student
+        s = db.query(Student).limit(1).first()
+        results["student_query"] = {"ok": True, "found": bool(s)}
+    except Exception as e:
+        results["student_query"] = {"ok": False, "error": str(e)[:300]}
+    # Test 3: WeeklySession query
+    try:
+        from backend.models import WeeklySession
+        ws = db.query(WeeklySession).limit(1).first()
+        results["weekly_session_query"] = {"ok": True, "found": bool(ws)}
+    except Exception as e:
+        results["weekly_session_query"] = {"ok": False, "error": str(e)[:300]}
+    # Test 4: LeetCodeProfileStats query
+    try:
+        from backend.models import LeetCodeProfileStats
+        lc = db.query(LeetCodeProfileStats).limit(1).first()
+        results["lc_stats_query"] = {"ok": True, "found": bool(lc)}
+    except Exception as e:
+        results["lc_stats_query"] = {"ok": False, "error": str(e)[:300]}
+    # Test 5: AdminAuditLog query
+    try:
+        from backend.models import AdminAuditLog
+        al = db.query(AdminAuditLog).limit(1).first()
+        results["audit_log_query"] = {"ok": True, "found": bool(al)}
+    except Exception as e:
+        results["audit_log_query"] = {"ok": False, "error": str(e)[:300]}
+    # Test 6: Raw SQL column check on students
+    try:
+        from sqlalchemy import text as sql_text
+        cols = db.execute(sql_text("SELECT column_name FROM information_schema.columns WHERE table_name='students' ORDER BY ordinal_position")).fetchall()
+        results["students_columns"] = [c[0] for c in cols]
+    except Exception as e:
+        results["students_columns"] = {"error": str(e)[:300]}
+    return results
 
 
 @router.post("/login")
