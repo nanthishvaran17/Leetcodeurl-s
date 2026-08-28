@@ -7,7 +7,7 @@ import asyncio
 import bcrypt
 import jwt
 from typing import Optional, Any, cast
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Response, BackgroundTasks
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
@@ -1082,7 +1082,7 @@ def forgot_password_verify(req: ForgotPasswordVerifyRequest, db: Session = Depen
 
 
 @router.post("/forgot-password/reset")
-def forgot_password_reset(req: ResetPasswordSubmitRequest, db: Session = Depends(get_db)):
+def forgot_password_reset(req: ResetPasswordSubmitRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     email_clean = (req.email or "").strip().lower()
     inst_id_clean = (req.institutional_id or "").strip()
     raw_otp = (req.otp or "").strip()
@@ -1120,6 +1120,11 @@ def forgot_password_reset(req: ResetPasswordSubmitRequest, db: Session = Depends
             description=f"Password successfully changed via recovery for {user.username}",
             current_user=None, target_type="User", target_id=str(user.id)
         )
+        
+        if user.email:
+            from backend.services.email_notifications import notify_password_changed
+            background_tasks.add_task(notify_password_changed, staff_email=user.email, staff_name=user.username)
+            
         return {"success": True, "message": "Password reset successfully."}
         
     raise HTTPException(status_code=400, detail="User account not found for password reset.")

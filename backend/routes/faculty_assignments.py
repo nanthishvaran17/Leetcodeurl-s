@@ -5,7 +5,7 @@ Provides endpoints for managing 1:20 faculty-to-student assignments, workload di
 and faculty-scoped student lists.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Body, status, BackgroundTasks
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 import datetime
@@ -182,6 +182,7 @@ def get_faculty_assignments(
 @router.post("/assign")
 def assign_students(
     payload: AssignStudentsRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("Admin", "Super Admin", "super admin", "HOD", "hod", dept_scoped=True))
 ):
@@ -204,13 +205,15 @@ def assign_students(
         db=db,
         faculty_id=payload.faculty_id,
         student_ids=payload.student_ids,
-        assigned_by_id=current_user.id
+        assigned_by_id=current_user.id,
+        background_tasks=background_tasks
     )
 
 
 @router.post("/unassign")
 def unassign_students(
     payload: UnassignStudentsRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("Admin", "Super Admin", "super admin", "HOD", "hod", dept_scoped=True))
 ):
@@ -218,7 +221,8 @@ def unassign_students(
     return faculty_assignment_service.unassign_students(
         db=db,
         faculty_id=payload.faculty_id,
-        student_ids=payload.student_ids
+        student_ids=payload.student_ids,
+        background_tasks=background_tasks
     )
 
 

@@ -13,6 +13,7 @@ from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session, joinedload
 from fastapi import HTTPException, status
 import datetime
+from fastapi import BackgroundTasks
 
 from backend.models import User, Student, FacultyStudentAssignment, Department, LeetCodeProfileStats, StudentAssignmentHistory
 from backend.logger import logger
@@ -55,7 +56,8 @@ class FacultyAssignmentService:
         db: Session,
         faculty_id: int,
         student_ids: List[int],
-        assigned_by_id: Optional[int] = None
+        assigned_by_id: Optional[int] = None,
+        background_tasks: Optional[BackgroundTasks] = None
     ) -> Dict[str, Any]:
         """
         Assigns one or more students to a faculty member.
@@ -135,8 +137,16 @@ class FacultyAssignmentService:
             assigned_count = 0
             reassigned_count = 0
             now = datetime.datetime.utcnow()
+            students_allocated_data = []
 
             for sid in new_ids:
+                st_obj = found_map[sid]
+                students_allocated_data.append({
+                    "name": st_obj.name,
+                    "reg_no": st_obj.reg_no,
+                    "department": st_obj.department.name if st_obj.department else "N/A"
+                })
+
                 existing_assignment = db.query(FacultyStudentAssignment).filter(
                     FacultyStudentAssignment.student_id == sid
                 ).first()
@@ -179,6 +189,15 @@ class FacultyAssignmentService:
             cache.invalidate_tag(f"user_auth_{faculty_id}")
             new_total = FacultyAssignmentService.get_faculty_assigned_count(db, faculty_id)
 
+            if background_tasks and faculty.email and students_allocated_data:
+                from backend.services.email_notifications import notify_faculty_allocation
+                background_tasks.add_task(
+                    notify_faculty_allocation,
+                    faculty_email=faculty.email,
+                    faculty_name=faculty.username,
+                    students=students_allocated_data
+                )
+
             # Determine informational workload status
             if new_total < RECOMMENDED_FACULTY_STUDENT_RATIO:
                 workload_status = "NORMAL"
@@ -216,10 +235,21 @@ class FacultyAssignmentService:
     def unassign_students(
         db: Session,
         faculty_id: int,
-        student_ids: List[int]
+        student_ids: List[int],
+        background_tasks: Optional[BackgroundTasks] = None
     ) -> Dict[str, Any]:
         """Removes students from a faculty member's allocation."""
         now = datetime.datetime.utcnow()
+        students_unallocated_data = []
+
+        students = db.query(Student).filter(Student.id.in_(student_ids)).all()
+        for st in students:
+            students_unallocated_data.append({
+                "name": st.name,
+                "reg_no": st.reg_no,
+                "department": st.department.name if st.department else "N/A"
+            })
+
         for sid in student_ids:
             history_record = StudentAssignmentHistory(
                 student_id=sid,
@@ -242,6 +272,17 @@ class FacultyAssignmentService:
         cache.invalidate_tag("students")
         cache.invalidate_tag(f"user_auth_{faculty_id}")
         remaining = FacultyAssignmentService.get_faculty_assigned_count(db, faculty_id)
+
+        if background_tasks and students_unallocated_data:
+            faculty = db.query(User).filter(User.id == faculty_id).first()
+            if faculty and faculty.email:
+                from backend.services.email_notifications import notify_faculty_unallocation
+                background_tasks.add_task(
+                    notify_faculty_unallocation,
+                    faculty_email=faculty.email,
+                    faculty_name=faculty.username,
+                    students=students_unallocated_data
+                )
 
         return {
             "success": True,

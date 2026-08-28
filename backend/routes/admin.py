@@ -1,6 +1,6 @@
 import datetime
 import random
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
@@ -629,6 +629,7 @@ def get_unassigned_students(
 @router.post("/staff")
 def create_staff_user(
     payload: CreateStaffRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_admin_user_or_default)
 ):
@@ -687,6 +688,23 @@ def create_staff_user(
         current_user=current_user, target_type="User", target_id=str(staff_user.id)
     )
 
+    from backend.services.email_notifications import notify_staff_created
+    from backend.models import Department
+    dept_name = "N/A"
+    if staff_user.department_id:
+        dept = db.query(Department).filter(Department.id == staff_user.department_id).first()
+        dept_name = dept.name if dept else "N/A"
+        
+    if staff_user.email:
+        background_tasks.add_task(
+            notify_staff_created,
+            staff_email=staff_user.email,
+            staff_name=staff_user.username,
+            role=staff_user.role,
+            department=dept_name,
+            raw_password=raw_pwd
+        )
+
     return {
         "success": True,
         "message": f"Staff account for '{staff_user.username}' created successfully.",
@@ -707,6 +725,7 @@ def create_staff_user(
 def update_staff_user(
     staff_id: int,
     payload: UpdateStaffRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_admin_user_or_default)
 ):
@@ -719,40 +738,57 @@ def update_staff_user(
     if payload.role and payload.role.strip() in ["Super Admin", "Admin"] and current_user.role not in ["Super Admin", "super admin"]:
         raise HTTPException(status_code=403, detail="Only Super Admins can promote users to Admin roles.")
 
+    changes_made = {}
+
     if payload.institutional_id is not None:
         if payload.institutional_id.strip() != "":
             existing_id = db.query(User).filter(User.institutional_id == payload.institutional_id.strip(), User.id != staff_id).first()
             if existing_id:
                 raise HTTPException(status_code=400, detail="Institutional ID already in use.")
-            staff_user.institutional_id = payload.institutional_id.strip()
+            if staff_user.institutional_id != payload.institutional_id.strip():
+                changes_made['institutional_id'] = payload.institutional_id.strip()
+                staff_user.institutional_id = payload.institutional_id.strip()
         else:
-            staff_user.institutional_id = None
+            if staff_user.institutional_id is not None:
+                changes_made['institutional_id'] = "Removed"
+                staff_user.institutional_id = None
 
     if payload.username is not None and payload.username.strip():
         existing_username = db.query(User).filter(User.username.ilike(payload.username.strip()), User.id != staff_id).first()
         if existing_username:
             raise HTTPException(status_code=400, detail="Username already in use.")
-        staff_user.username = payload.username.strip()
+        if staff_user.username != payload.username.strip():
+            changes_made['username'] = payload.username.strip()
+            staff_user.username = payload.username.strip()
 
     if payload.email is not None and payload.email.strip():
         existing_email = db.query(User).filter(User.email.ilike(payload.email.strip()), User.id != staff_id).first()
         if existing_email:
             raise HTTPException(status_code=400, detail="Email already in use.")
-        staff_user.email = payload.email.strip().lower()
+        new_email = payload.email.strip().lower()
+        if staff_user.email != new_email:
+            changes_made['email'] = new_email
+            staff_user.email = new_email
 
     if payload.role is not None and payload.role.strip():
         r_cleaned = payload.role.strip()
         valid_roles = {"super admin": "Super Admin", "admin": "Admin", "faculty": "Faculty", "staff": "Staff", "hod": "HOD", "viewer": "Viewer"}
         matched_role = valid_roles.get(r_cleaned.lower(), r_cleaned)
-        staff_user.role = matched_role
+        if staff_user.role != matched_role:
+            changes_made['role'] = matched_role
+            staff_user.role = matched_role
 
-    if payload.department_id is not None:
+    if payload.department_id is not None and staff_user.department_id != payload.department_id:
+        from backend.models import Department
+        dept = db.query(Department).filter(Department.id == payload.department_id).first()
+        changes_made['department'] = dept.name if dept else f"ID: {payload.department_id}"
         staff_user.department_id = payload.department_id
 
-    if payload.section_id is not None:
+    if payload.section_id is not None and staff_user.section_id != payload.section_id:
         staff_user.section_id = payload.section_id
 
-    if payload.is_active is not None:
+    if payload.is_active is not None and staff_user.is_active != payload.is_active:
+        changes_made['status'] = "Active" if payload.is_active else "Inactive"
         staff_user.is_active = payload.is_active
 
     db.commit()
@@ -767,6 +803,15 @@ def update_staff_user(
         description=f"Updated staff account {staff_user.username} (Role: {staff_user.role}, Dept: {staff_user.department_id})",
         current_user=current_user, target_type="User", target_id=str(staff_user.id)
     )
+
+    if changes_made and staff_user.email:
+        from backend.services.email_notifications import notify_staff_updated
+        background_tasks.add_task(
+            notify_staff_updated,
+            staff_email=staff_user.email,
+            staff_name=staff_user.username,
+            changes=changes_made
+        )
 
     return {
         "success": True,

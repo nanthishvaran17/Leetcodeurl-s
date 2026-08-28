@@ -814,6 +814,24 @@ def create_student(
         background_tasks.add_task(_bg_sync_new_student)
         logger.info(f"[CREATE_STUDENT] Background sync queued for new student {student.reg_no} (username={username})")
 
+    if student.email:
+        from backend.services.email_notifications import notify_student_created
+        from backend.models import Department
+        dept_name = "N/A"
+        if student.department_id:
+            dept = db.query(Department).filter(Department.id == student.department_id).first()
+            if dept:
+                dept_name = dept.name
+                
+        background_tasks.add_task(
+            notify_student_created,
+            student_email=student.email,
+            student_name=student.name,
+            reg_no=student.reg_no,
+            department=dept_name,
+            year=student.year_level or "N/A"
+        )
+
     return StudentOut.model_validate(student)
 
 from pydantic import BaseModel
@@ -825,6 +843,7 @@ class BulkDeleteRequest(BaseModel):
 @router.post("/bulk-delete")
 def bulk_delete_students(
     req: BulkDeleteRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user=Depends(require_security_access(resource_name="Bulk Delete Students", required_roles=["admin", "super admin"]))
 ):
@@ -833,10 +852,19 @@ def bulk_delete_students(
 
     count = len(req.student_ids)
 
+    students = db.query(Student).filter(Student.id.in_(req.student_ids)).all()
+    emails_to_notify = [(s.email, s.name) for s in students if s.email]
+
     if req.soft_delete:
         db.query(Student).filter(Student.id.in_(req.student_ids)).update({"is_active": False}, synchronize_session=False)
         action_name = "BULK_DEACTIVATE_STUDENTS"
         msg = f"Successfully deactivated {count} student records."
+        
+        # Send archiving notification for soft-deletes
+        from backend.services.email_notifications import notify_student_archived
+        for email, name in emails_to_notify:
+            background_tasks.add_task(notify_student_archived, student_email=email, student_name=name)
+            
     else:
         db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id.in_(req.student_ids)).delete(synchronize_session=False)
         db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id.in_(req.student_ids)).delete(synchronize_session=False)
@@ -896,27 +924,40 @@ def update_student(
         student.version = current_version + 1
 
     old_username = student.username
+    changes_made = {}
 
     if payload.name and payload.name.strip():
-        student.name = payload.name.strip()
+        if student.name != payload.name.strip():
+            changes_made['name'] = payload.name.strip()
+            student.name = payload.name.strip()
     if payload.department_id is not None:
-        student.department_id = payload.department_id
+        if student.department_id != payload.department_id:
+            from backend.models import Department
+            dept = db.query(Department).filter(Department.id == payload.department_id).first()
+            changes_made['department'] = dept.name if dept else str(payload.department_id)
+            student.department_id = payload.department_id
     if payload.year_level and payload.year_level.strip():
-        student.year_level = payload.year_level.strip().upper()
+        new_yl = payload.year_level.strip().upper()
+        if student.year_level != new_yl:
+            changes_made['year_level'] = new_yl
+            student.year_level = new_yl
     if payload.section_id is not None:
-        student.section_id = payload.section_id
+        if student.section_id != payload.section_id:
+            student.section_id = payload.section_id
     elif payload.section and str(payload.section).strip():
         sec_str = str(payload.section).strip()
-        # Look up section ID if available
         from backend.models import Section
         matched_sec = db.query(Section).filter(
             Section.department_id == student.department_id,
             Section.name.ilike(sec_str)
         ).first()
-        if matched_sec:
+        if matched_sec and student.section_id != matched_sec.id:
             student.section_id = matched_sec.id
     if payload.email is not None:
-        student.email = payload.email.strip().lower() if payload.email else None
+        new_email = payload.email.strip().lower() if payload.email else None
+        if student.email != new_email:
+            changes_made['email'] = new_email or "Removed"
+            student.email = new_email
 
     # ── LeetCode URL / username normalisation ─────────────────────────────────
     url_changed = False
@@ -997,6 +1038,17 @@ def update_student(
     db.commit()
 
     # ── Background Post-Processing (Async Rankings & Cloud Sync) ─────────────────
+    if changes_made and student.email:
+        from backend.services.email_notifications import notify_student_updated
+        background_tasks.add_task(
+            notify_student_updated,
+            recipient_email=student.email,
+            recipient_name=student.name,
+            student_name=student.name,
+            reg_no=student.reg_no,
+            changes=changes_made
+        )
+
     reg_no_val = student.reg_no
     student_payload = {
         "reg_no": student.reg_no,
