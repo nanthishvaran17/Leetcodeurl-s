@@ -296,7 +296,9 @@ def get_students(
     query = db.query(Student).outerjoin(Student.stats).options(
         joinedload(Student.department),
         joinedload(Student.section),
-        joinedload(Student.stats)
+        joinedload(Student.stats),
+        joinedload(Student.lc_profile),
+        joinedload(Student.lc_activity)
     ).filter(Student.is_active == True)
 
     # Centralized Authorization Scope
@@ -449,7 +451,7 @@ def get_students(
 
     results = []
     for st in students:
-        st_out = StudentOut.model_validate(st)
+        st_out = StudentListOut.model_validate(st)
 
         # Rule 1 & 2: Canonical accuracy check — zero out fake/guessed data on invalid/pending profiles
         is_verified = bool(st.stats and st.stats.sync_status in ("success", "verified") and st.stats.status == "verified" and st.stats.total_solved is not None)
