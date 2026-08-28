@@ -4,10 +4,21 @@ from typing import List, Optional
 
 class Settings(BaseSettings):
     APP_NAME: str = "College LeetCode Weekly Tracker"
-    DATABASE_URL: str = "sqlite:///./data/leetcode_tracker.db"
-    
     # Auth & Security Configuration
     ENVIRONMENT: str = os.environ.get("ENVIRONMENT", "production")
+    
+    # Strictly require PostgreSQL in production
+    DATABASE_URL: Optional[str] = os.environ.get("DATABASE_URL")
+    if ENVIRONMENT == "production":
+        if not DATABASE_URL or "sqlite" in DATABASE_URL.lower():
+            raise ValueError(
+                "CRITICAL: Production deployment detected but DATABASE_URL is missing or pointing to local SQLite. "
+                "You MUST provide a PostgreSQL connection string (e.g., from Render or Supabase) in production."
+            )
+    else:
+        # Fallback for local development only
+        DATABASE_URL = DATABASE_URL or "sqlite:///./data/leetcode_tracker.db"
+
     PRODUCTION_DOMAIN: str = os.environ.get("PRODUCTION_DOMAIN", "api.nandhaengg.org")
     SECRET_KEY: str = os.environ.get("SECRET_KEY", "super-secret-key-change-this-in-production-2026")
     OTP_HMAC_SECRET: str = os.environ.get("OTP_HMAC_SECRET", "nec-leetcode-tracker-otp-secret-key-2026")
@@ -15,7 +26,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080 # 7 Days
     SESSION_EXPIRE_MINUTES: int = int(os.environ.get("SESSION_EXPIRE_MINUTES", "10080")) # 7 Days
     SESSION_COOKIE_NAME: str = os.environ.get("SESSION_COOKIE_NAME", "admin_session_token")
-    FRONTEND_ORIGIN: str = os.environ.get("FRONTEND_ORIGIN", "http://localhost:5173")
+    FRONTEND_ORIGIN: str = os.environ.get("FRONTEND_ORIGIN", "https://leetcodeurls.netlify.app")
     CORS_ALLOWED_ORIGINS: str = os.environ.get("CORS_ALLOWED_ORIGINS", "")
     
     # Official Administrator Credentials Configuration

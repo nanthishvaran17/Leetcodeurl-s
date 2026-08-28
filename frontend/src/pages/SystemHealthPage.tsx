@@ -525,17 +525,9 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
     );
   }, [paletteQuery]);
 
+  // Render dashboard immediately, use skeleton/loading state for data
   if (loading && !data) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 animate-pulse">
-          <Activity className="w-6 h-6 animate-spin" />
-        </div>
-        <p className="text-xs font-black uppercase text-gray-500 tracking-wider">
-          Initializing Institutional Operations Intelligence Center…
-        </p>
-      </div>
-    );
+    // We will render the skeleton within the dashboard layout instead of blocking the whole page
   }
 
   const hero = data?.heroMetrics || {};

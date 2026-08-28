@@ -29,7 +29,7 @@ from backend.routes import (
     whatsapp_webhook, deep_tech_intelligence
 )
 from backend.routes import admin, email_reports, ai_assistant, leetcode, ai_control_center, intelligence
-from backend.routes import command_center
+from backend.routes import command_center, scheduler
 from backend import leetcode_tracker
 from backend.services.heartbeat_service import get_deep_health_telemetry
 from backend.websocket_manager import manager
@@ -213,12 +213,6 @@ app.add_middleware(PerformanceMonitoringMiddleware)
 
 # CORS Configuration
 origins = [
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:5174",
     "https://leetcode-frontend-deploy.vercel.app",
     "https://leetcodeurls.netlify.app",
     "https://leetcode-student-data.web.app",
@@ -236,7 +230,7 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+|https://.*\.netlify\.app|https://.*\.web\.app|https://.*\.firebaseapp\.com|https://.*\.vercel\.app|https://.*\.pages\.dev|https://.*\.loca\.lt|https://.*\.onrender\.com",
+    allow_origin_regex=r"https://.*\.netlify\.app|https://.*\.web\.app|https://.*\.firebaseapp\.com|https://.*\.vercel\.app|https://.*\.pages\.dev|https://.*\.loca\.lt|https://.*\.onrender\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -317,6 +311,7 @@ app.include_router(gamification.router)
 app.include_router(accreditation.router, prefix="/api")
 app.include_router(deep_tech_intelligence.router, prefix="/api")
 app.include_router(deep_tech_intelligence.router)
+app.include_router(scheduler.router)
 
 from backend.routes import stats_snapshot
 app.include_router(stats_snapshot.router, prefix="/api")
