@@ -81,15 +81,23 @@ def get_current_sync_status(db: Session = Depends(get_db)):
             return _cached
     cfg = Settings()
 
-    tot = db.query(Student).filter(Student.is_active == True).count()
-    verified_cnt = db.query(LeetCodeProfileStats).join(Student, LeetCodeProfileStats.student_id == Student.id).filter(
-        Student.is_active == True,
-        (LeetCodeProfileStats.total_solved != None) | (LeetCodeProfileStats.sync_status.in_(["success", "OK", "verified", "stale"]))
-    ).count()
-    pending_cnt = db.query(LeetCodeProfileStats).join(Student, LeetCodeProfileStats.student_id == Student.id).filter(
-        Student.is_active == True,
-        LeetCodeProfileStats.sync_status.in_(["pending", "pending_username", "not_started"])
-    ).count()
+    # Single-query aggregation: COUNT students + profile status buckets in one round-trip
+    from sqlalchemy import func, case, text
+    from sqlalchemy import Integer as SAInteger
+    agg = db.query(
+        func.count(Student.id).label("tot"),
+        func.count(LeetCodeProfileStats.id).filter(
+            (LeetCodeProfileStats.total_solved != None) | (LeetCodeProfileStats.sync_status.in_(["success", "OK", "verified", "stale"]))
+        ).label("verified"),
+        func.count(LeetCodeProfileStats.id).filter(
+            LeetCodeProfileStats.sync_status.in_(["pending", "pending_username", "not_started"])
+        ).label("pending"),
+    ).outerjoin(LeetCodeProfileStats, LeetCodeProfileStats.student_id == Student.id).filter(
+        Student.is_active == True
+    ).one()
+    tot = agg.tot
+    verified_cnt = agg.verified
+    pending_cnt = agg.pending
     failed_cnt = max(0, tot - verified_cnt - pending_cnt)
 
     # Reconcile any zombie RUNNING jobs if in-memory sync worker is not active
@@ -102,12 +110,11 @@ def get_current_sync_status(db: Session = Depends(get_db)):
         db.commit()
         running_job = None
 
-    last_completed_job = db.query(SyncJob).filter(
-        SyncJob.status.in_(["COMPLETED", "PARTIAL"])
-    ).order_by(SyncJob.id.desc()).first()
-
-    last_failed_job = db.query(SyncJob).filter(SyncJob.status == "FAILED").order_by(SyncJob.id.desc()).first()
-    last_any_job = db.query(SyncJob).order_by(SyncJob.id.desc()).first()
+    # Fetch last 3 relevant jobs in one query (completed, failed, any)
+    recent_jobs = db.query(SyncJob).order_by(SyncJob.id.desc()).limit(10).all()
+    last_completed_job = next((j for j in recent_jobs if j.status in ("COMPLETED", "PARTIAL")), None)
+    last_failed_job = next((j for j in recent_jobs if j.status == "FAILED"), None)
+    last_any_job = recent_jobs[0] if recent_jobs else None
 
     is_running = bool(sync_tracker.is_running or (running_job is not None))
     now_utc = datetime.datetime.utcnow()
