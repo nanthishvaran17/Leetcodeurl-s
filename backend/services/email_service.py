@@ -438,6 +438,43 @@ def send_email_via_brevo(
                 return False, f"BREVO_API_TIMEOUT: {err_str}"
 
     return False, "BREVO_MAX_RETRIES_EXCEEDED"
+    
+import uuid
+import email.utils
+
+def _log_to_db(msg_id: str, recipient: str, subject: str, status: str, err: Optional[str], last_error: Optional[str], provider: str, trigger_type: str = "AUTOMATED"):
+    try:
+        from backend.database import SessionLocal
+        from backend.models import EmailDelivery
+        
+        db = SessionLocal()
+        try:
+            # Upsert logic to handle retries without duplicating
+            existing = db.query(EmailDelivery).filter(EmailDelivery.message_id == msg_id).first()
+            if existing:
+                existing.status = status
+                existing.error_message = err or last_error
+                if status == "SENT":
+                    existing.sent_at = datetime.datetime.utcnow()
+                else:
+                    existing.failed_at = datetime.datetime.utcnow()
+            else:
+                new_delivery = EmailDelivery(
+                    message_id=msg_id,
+                    recipient_email=recipient,
+                    subject=subject,
+                    status=status,
+                    error_message=err or last_error,
+                    trigger_type=trigger_type,
+                    sent_at=datetime.datetime.utcnow() if status == "SENT" else None,
+                    failed_at=datetime.datetime.utcnow() if status != "SENT" else None
+                )
+                db.add(new_delivery)
+            db.commit()
+        finally:
+            db.close()
+    except Exception as e:
+        logger.error(f"[EMAIL_DB_LOG_FAILED] Failed to record email delivery to DB: {e}")
 
 def send_email(
     recipient: str,
@@ -470,7 +507,8 @@ def send_email(
     from_email = (os.environ.get("REPORT_FROM_EMAIL") or smtp_user or "nanthishvaran17@gmail.com").strip()
 
     last_error = None
-
+    generated_msg_id = f"MSG-AUTO-{uuid.uuid4().hex[:12].upper()}"
+    
     # Priority 1: Direct Gmail SMTP (Port 587) for instant delivery
     if smtp_user and smtp_pass:
         try:
@@ -493,6 +531,9 @@ def send_email(
                     encoders.encode_base64(part)
                     part.add_header('Content-Disposition', f'attachment; filename="{fname}"')
                     msg.attach(part)
+            
+            msg['Message-ID'] = f"<{generated_msg_id}@leetcoder.nandha.edu.in>"
+            msg['Date'] = email.utils.formatdate(localtime=True)
 
             ctx = ssl.create_default_context()
             server = smtplib.SMTP(smtp_host, smtp_port, timeout=12)
@@ -517,7 +558,8 @@ def send_email(
                 error_code=None,
                 is_permanent=False
             )
-            return True, None
+            _log_to_db(generated_msg_id, recipient, subject, "SENT", None, None, "SMTP", "AUTOMATED")
+            return True, generated_msg_id
         except Exception as smtp_local_err:
             logger.warning(f"[GMAIL_SMTP_LOCAL_FAILED] Falling back to Brevo HTTPS API: {smtp_local_err}")
             last_error = str(smtp_local_err)
@@ -537,7 +579,8 @@ def send_email(
                     error_code=None,
                     is_permanent=False
                 )
-                return True, None
+                _log_to_db(generated_msg_id, recipient, subject, "SENT", err, None, "BREVO", "AUTOMATED")
+                return True, err
             
             # If error is quota or rate limit related (402, 403, 429), try next key
             last_error = err
@@ -557,6 +600,7 @@ def send_email(
         error_code="DELIVERY_FAILED_ALL_TRANSPORTS",
         is_permanent=False
     )
+    _log_to_db(generated_msg_id, recipient, subject, "FAILED", None, str(last_error or "Provider error"), "SYSTEM", "AUTOMATED")
     return False, last_error or "EMAIL_PROVIDER_NOT_CONFIGURED: Failed to deliver email."
 
 

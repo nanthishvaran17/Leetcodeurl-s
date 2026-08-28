@@ -189,7 +189,9 @@ class FacultyAssignmentService:
             cache.invalidate_tag(f"user_auth_{faculty_id}")
             new_total = FacultyAssignmentService.get_faculty_assigned_count(db, faculty_id)
 
+            logger.info(f"[FACULTY_ASSIGNMENT] Evaluating email notification for {faculty.username} (Email: {faculty.email}). Students assigned: {len(students_allocated_data)}")
             if background_tasks and faculty.email and students_allocated_data:
+                logger.info(f"[FACULTY_ASSIGNMENT] Queueing background email to {faculty.email} for {len(students_allocated_data)} students.")
                 from backend.services.email_notifications import notify_faculty_allocation
                 background_tasks.add_task(
                     notify_faculty_allocation,
@@ -197,6 +199,8 @@ class FacultyAssignmentService:
                     faculty_name=faculty.username,
                     students=students_allocated_data
                 )
+            else:
+                logger.warning(f"[FACULTY_ASSIGNMENT] SKIPPED email notification. background_tasks={bool(background_tasks)}, email={bool(faculty.email)}, students={bool(students_allocated_data)}")
 
             # Determine informational workload status
             if new_total < RECOMMENDED_FACULTY_STUDENT_RATIO:
