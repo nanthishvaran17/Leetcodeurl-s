@@ -1230,41 +1230,58 @@ def get_contest_question_analytics(
     }
 
 
-@router.post("/sessions/{session_id}/sync")
+from fastapi import BackgroundTasks
 
+def _run_sync_in_background(session_id: int):
+    # Separate DB session for background task
+    from backend.database import SessionLocal
+    db = SessionLocal()
+    try:
+        from backend.services.contest_reconciliation_service import Contest516ReconciliationService
+        from backend.services.weekly_session_manager import sync_single_historical_session
+        from backend.models import WeeklySession
+        from backend.logger import logger
+
+        session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+        is_516 = False
+        if session:
+            c_name = session.contest_name or ""
+            c_id = session.contest_id or ""
+            c_date = str(session.session_date or "")
+            if "516" in c_name or "516" in c_id or "23.08.2026" in c_date:
+                is_516 = True
+
+        if is_516 or session_id == 21:
+            logger.info(f"Starting background reconciliation for Contest 516 (Session {session_id})")
+            Contest516ReconciliationService.reconcile_contest(session_id, db)
+            logger.info(f"Completed background reconciliation for Contest 516 (Session {session_id})")
+        else:
+            logger.info(f"Starting background sync for Session {session_id}")
+            sync_single_historical_session(db, session_id)
+            logger.info(f"Completed background sync for Session {session_id}")
+    except Exception as e:
+        from backend.logger import logger
+        logger.error(f"Background single session sync failed for {session_id}: {e}")
+    finally:
+        db.close()
+
+@router.post("/sessions/{session_id}/sync")
 def sync_single_weekly_contest(
-    session_id: int, 
+    session_id: int,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Weekly Contest Sync", required_roles=["admin", "super admin", "hod"]))
 ):
     """
     Sync ONLY the selected contest session using authoritative 4-state reconciliation engine.
+    Runs asynchronously in the background so the dashboard remains responsive.
     """
-    from backend.services.contest_reconciliation_service import Contest516ReconciliationService
-    from backend.services.weekly_session_manager import sync_single_historical_session
-    try:
-        if session_id == 21:
-            res = Contest516ReconciliationService.reconcile_session_21(db)
-            audit = res["audit"]
-            return {
-                "success": True,
-                "sessionId": session_id,
-                "totalStudents": audit["total_roster"],
-                "liveAttended": audit["live_attended"],
-                "virtualAttended": audit["virtual_attended"],
-                "notAttended": audit["not_attended"],
-                "dataErrors": audit["data_errors"],
-                "reconciliationPassed": audit["reconciliation_passed"],
-                "message": audit["virtual_audit_explanation"],
-                "sampleAudit": audit["audit_table_sample"]
-            }
-        else:
-            result = sync_single_historical_session(db, session_id)
-            return result
-    except Exception as e:
-        from backend.logger import logger
-        logger.error(f"Single session sync failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    background_tasks.add_task(_run_sync_in_background, session_id)
+    return {
+        "success": True,
+        "sessionId": session_id,
+        "message": f"Synchronization for session {session_id} has been queued in the background."
+    }
 
 @router.post("/sync-all")
 async def sync_all_weekly_contests(

@@ -778,10 +778,19 @@ export const HODCommandCenter: React.FC = () => {
   useEffect(() => {
     let socket: WebSocket | null = null;
     try {
-      const isHttps = window.location.protocol === 'https:';
-      const wsProtocol = isHttps ? 'wss:' : 'ws:';
-      const wsHost = window.location.host;
-      socket = new WebSocket(`${wsProtocol}//${wsHost}/ws/leaderboard`);
+      const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+      let wsUrl = '';
+      if (envUrl) {
+        const targetHost = envUrl.replace(/^https?:\/\//, '').replace(/\/api\/?$/, '').replace(/\/+$/, '');
+        const wsProtocol = envUrl.startsWith('https') ? 'wss:' : 'ws:';
+        wsUrl = `${wsProtocol}//${targetHost}/ws/leaderboard`;
+      } else {
+        const isHttps = window.location.protocol === 'https:';
+        const wsProtocol = isHttps ? 'wss:' : 'ws:';
+        const wsHost = window.location.host;
+        wsUrl = `${wsProtocol}//${wsHost}/ws/leaderboard`;
+      }
+      socket = new WebSocket(wsUrl);
 
       socket.onopen = () => setWsConnected(true);
       socket.onclose = () => setWsConnected(false);

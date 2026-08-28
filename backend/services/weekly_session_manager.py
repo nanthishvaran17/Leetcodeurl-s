@@ -30,6 +30,12 @@ def get_or_create_current_weekly_session(db: Session) -> WeeklySession:
     latest_session = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
     
     if latest_session and latest_session.session_code == session_code:
+        # 100/10 Self-Healing: Repair missing contest metadata that was created prematurely
+        if not latest_session.contest_name or not latest_session.contest_id:
+            latest_session.contest_name = meta.get("contest_name")
+            latest_session.contest_id = meta.get("contest_id")
+            db.commit()
+
         dynamic_status = meta.get("status", "SCHEDULED")
         if dynamic_status == "FINALIZED" and latest_session.status in ("LIVE", "ACTIVE"):
             latest_session.status = "FINALIZED"
