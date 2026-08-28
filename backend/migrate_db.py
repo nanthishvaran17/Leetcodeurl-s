@@ -5,8 +5,58 @@ from backend.database import engine
 from backend.models import Base
 
 def run_db_migrations():
-    # Ensure all tables defined in Base (including new models like student_stat_snapshots) exist
+    # ====================================================================
+    # STEP 1: Create all tables defined in models that don't yet exist
+    # (Works for both SQLite and PostgreSQL — safe to re-run)
+    # ====================================================================
     Base.metadata.create_all(bind=engine)
+
+    # ====================================================================
+    # STEP 2: PostgreSQL-safe column migrations using ALTER TABLE IF NOT EXISTS
+    # These run on the live Render PostgreSQL DB without breaking SQLite
+    # ====================================================================
+    from sqlalchemy import text as sql_text
+    from backend.database import db_url as _db_url
+
+    if "postgresql" in _db_url or "postgres" in _db_url:
+        pg_migrations = [
+            # users table — new columns added in recent model updates
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS institutional_id VARCHAR(50)",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_number VARCHAR(30)",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp_verified BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS date_of_birth DATE",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS department_id INTEGER",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS section_id INTEGER",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS academic_year VARCHAR(20)",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS mentoring_role VARCHAR(50)",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS require_password_change BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_activity TIMESTAMP",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret VARCHAR(64)",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_2fa_enabled BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP",
+            # admin_sessions
+            "ALTER TABLE admin_sessions ADD COLUMN IF NOT EXISTS revoked_at TIMESTAMP",
+            "ALTER TABLE admin_sessions ADD COLUMN IF NOT EXISTS ip_hash VARCHAR(128)",
+            "ALTER TABLE admin_sessions ADD COLUMN IF NOT EXISTS user_agent_hash VARCHAR(128)",
+            # students
+            "ALTER TABLE students ADD COLUMN IF NOT EXISTS phone_number VARCHAR(30)",
+            "ALTER TABLE students ADD COLUMN IF NOT EXISTS whatsapp_verified BOOLEAN DEFAULT FALSE",
+        ]
+        try:
+            with engine.connect() as pg_conn:
+                for migration_sql in pg_migrations:
+                    try:
+                        pg_conn.execute(sql_text(migration_sql))
+                    except Exception as _col_err:
+                        print(f"[PG Migration] Note: {_col_err}")
+                pg_conn.commit()
+                print("[PG Migration] PostgreSQL column migrations applied successfully.")
+        except Exception as pg_err:
+            print(f"[PG Migration] Warning: {pg_err}")
+        return  # Skip SQLite-only section below
+
+
 
     db_paths = [
         os.path.join(os.path.dirname(__file__), "..", "data", "leetcode_tracker.db"),
