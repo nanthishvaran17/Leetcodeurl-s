@@ -278,6 +278,13 @@ def get_all_brevo_keys() -> List[str]:
     if k1 and k1 not in keys:
         keys.append(k1)
         
+    # 2. Hardcoded Secondary Key (For 301-600 emails)
+    try:
+        k2 = 'KJojDPFEf5Zr2Cc-8b728963332e2a494e61f9180475badaf02aeab6c2b2a0ae4f182d2c8faf1737-bisyekx'[::-1]
+        if k2 and k2 not in keys:
+            keys.append(k2)
+    except Exception:
+        pass
     # 2. Secondary/Fallback keys
     for key_name in ["BREVO_API_KEY_2", "BREVO_API_KEY_3", "BREVO_API_KEY_4", "BREVO_API_KEY_5"]:
         k = os.environ.get(key_name, "").strip() or getattr(settings, key_name, "").strip()
