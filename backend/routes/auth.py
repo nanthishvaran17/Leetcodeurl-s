@@ -759,6 +759,20 @@ def google_auth(payload: dict, request: Request, response: Response, db: Session
     }
 
 
+@router.post("/debug-login")
+def debug_login(login_data: UserLogin, request: Request, response: Response, db: Session = Depends(get_db)):
+    """Temporary debug endpoint — REMOVE AFTER DIAGNOSIS"""
+    import traceback
+    try:
+        clean_username = login_data.username.strip()
+        clean_password = login_data.password.strip()
+        from sqlalchemy import or_
+        user = db.query(User).filter(or_(User.username.ilike(clean_username), User.email.ilike(clean_username))).first()
+        return {"found_user": bool(user), "username": user.username if user else None, "role": user.role if user else None}
+    except Exception as e:
+        return {"error": str(e), "traceback": traceback.format_exc()}
+
+
 @router.post("/login")
 def login(login_data: UserLogin, request: Request, response: Response, db: Session = Depends(get_db)):
     validate_csrf_origin(request)
@@ -838,13 +852,16 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
 
     logger.info(f"[ADMIN_LOGIN_SUCCESS] Administrator {user.username} logged in successfully.")
 
-    if not old_last_login or (_utcnow() - old_last_login).total_seconds() > 5:
-        from backend.services.audit_service import log_admin_action
-        log_admin_action(
-            db, action="ADMIN_LOGIN", action_type="SECURITY",
-            description=f"Admin {user.username} ({user.email}) logged in successfully with role {user.role}",
-            current_user=user, target_type="User", target_id=str(user.id)
-        )
+    try:
+        if not old_last_login or (_utcnow() - old_last_login).total_seconds() > 5:
+            from backend.services.audit_service import log_admin_action
+            log_admin_action(
+                db, action="ADMIN_LOGIN", action_type="SECURITY",
+                description=f"Admin {user.username} ({user.email}) logged in successfully with role {user.role}",
+                current_user=user, target_type="User", target_id=str(user.id)
+            )
+    except Exception as e:
+        logger.warning(f"[AUDIT_LOG_SKIP] Could not write audit log: {e}")
 
     access_token = create_access_token(data={"sub": user.username, "role": user.role, "email": user.email, "user_id": user.id})
 
