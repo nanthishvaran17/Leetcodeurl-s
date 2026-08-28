@@ -46,7 +46,10 @@ class CircuitBreaker:
                 self.state = "OPEN"
                 logger.error("[CIRCUIT_BREAKER] Failure during HALF_OPEN. State returned to OPEN.")
 
-circuit_breaker = CircuitBreaker(failure_threshold=15, recovery_timeout=60.0)
+circuit_breaker = CircuitBreaker(
+    failure_threshold=settings.LEETCODE_CIRCUIT_FAILURE_THRESHOLD, 
+    recovery_timeout=settings.LEETCODE_CIRCUIT_COOLDOWN
+)
 
 LEETCODE_GRAPHQL_URL = "https://leetcode.com/graphql"
 USER_CONTEST_QUERY = """
@@ -243,8 +246,8 @@ async def fetch_leetcode_profile(
     Strictly distinguishes Public Profile stats, Official Contest participation, and Virtual Contest participation.
     """
     start_time = time.time()
-    req_timeout = timeout or float(settings.REQUEST_TIMEOUT)
-    retries = max_retries or int(settings.MAX_RETRIES)
+    req_timeout = timeout or settings.LEETCODE_READ_TIMEOUT
+    retries = max_retries or settings.LEETCODE_MAX_RETRIES
 
     username, profile_url, url_status = extract_leetcode_username(url_or_username)
     if url_status != "OK" or not username:
@@ -315,8 +318,13 @@ async def fetch_leetcode_profile(
     last_error_detail = ""
 
     # Fine-grained timeouts
-    timeout_cfg = httpx.Timeout(connect=5.0, read=req_timeout, write=5.0, pool=5.0)
-    limits_cfg = httpx.Limits(max_keepalive_connections=10, max_connections=20)
+    timeout_cfg = httpx.Timeout(
+        connect=settings.LEETCODE_CONNECT_TIMEOUT, 
+        read=req_timeout, 
+        write=settings.LEETCODE_CONNECT_TIMEOUT, 
+        pool=settings.LEETCODE_CONNECT_TIMEOUT
+    )
+    limits_cfg = httpx.Limits(max_keepalive_connections=settings.LEETCODE_MAX_CONCURRENCY, max_connections=settings.LEETCODE_MAX_CONCURRENCY * 2)
 
     async with httpx.AsyncClient(timeout=timeout_cfg, limits=limits_cfg, follow_redirects=True, http2=False) as client:
         # 1. Fetch Profile & Submission Stats
@@ -654,7 +662,7 @@ def _make_headers(username: str) -> dict:
 import os
 import random
 
-_LEETCODE_MAX_CONCURRENCY = int(os.environ.get("LEETCODE_MAX_CONCURRENCY", 15))
+_LEETCODE_MAX_CONCURRENCY = settings.LEETCODE_MAX_CONCURRENCY
 _GQL_SEMAPHORE = asyncio.Semaphore(_LEETCODE_MAX_CONCURRENCY)
 
 async def _gql_post(

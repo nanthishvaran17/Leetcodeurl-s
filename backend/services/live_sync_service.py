@@ -250,44 +250,49 @@ from backend.config import Settings
 settings = Settings()
 
 def _acquire_global_lock(db: Session, job_id: str, timeout_minutes: int = 120) -> bool:
-    """Atomic acquisition of the global sync lock."""
+    """Atomic acquisition of the global sync lock using a single transaction."""
     now = datetime.datetime.utcnow()
-    # Ensure a lock row exists (id=1)
-    lock_row = db.query(GlobalSyncLock).filter(GlobalSyncLock.id == 1).first()
-    if not lock_row:
-        try:
-            lock_row = GlobalSyncLock(id=1, is_locked=False)
-            db.add(lock_row)
-            db.commit()
-        except Exception:
-            db.rollback()
+    
+    try:
+        # Ensure a lock row exists (id=1)
+        lock_row = db.query(GlobalSyncLock).filter(GlobalSyncLock.id == 1).first()
+        if not lock_row:
+            try:
+                lock_row = GlobalSyncLock(id=1, is_locked=False)
+                db.add(lock_row)
+                db.commit()
+            except Exception:
+                db.rollback()
 
-    # Clear expired locks automatically
-    stmt_clear = (
-        update(GlobalSyncLock)
-        .where(GlobalSyncLock.id == 1)
-        .where(GlobalSyncLock.is_locked == True)
-        .where(GlobalSyncLock.expires_at < now)
-        .values(is_locked=False, locked_by_job_id=None, locked_at=None, expires_at=None)
-    )
-    db.execute(stmt_clear)
-    db.commit()
-
-    # Attempt to acquire lock atomically
-    stmt_lock = (
-        update(GlobalSyncLock)
-        .where(GlobalSyncLock.id == 1)
-        .where(GlobalSyncLock.is_locked == False)
-        .values(
-            is_locked=True,
-            locked_by_job_id=job_id,
-            locked_at=now,
-            expires_at=now + datetime.timedelta(minutes=timeout_minutes)
+        # Clear expired locks automatically
+        stmt_clear = (
+            update(GlobalSyncLock)
+            .where(GlobalSyncLock.id == 1)
+            .where(GlobalSyncLock.is_locked == True)
+            .where(GlobalSyncLock.expires_at < now)
+            .values(is_locked=False, locked_by_job_id=None, locked_at=None, expires_at=None)
         )
-    )
-    result = db.execute(stmt_lock)
-    db.commit()
-    return result.rowcount > 0
+        db.execute(stmt_clear)
+
+        # Attempt to acquire lock atomically
+        stmt_lock = (
+            update(GlobalSyncLock)
+            .where(GlobalSyncLock.id == 1)
+            .where(GlobalSyncLock.is_locked == False)
+            .values(
+                is_locked=True,
+                locked_by_job_id=job_id,
+                locked_at=now,
+                expires_at=now + datetime.timedelta(minutes=timeout_minutes)
+            )
+        )
+        result = db.execute(stmt_lock)
+        db.commit()
+        return result.rowcount > 0
+    except Exception as e:
+        db.rollback()
+        logger.error(f"[SYNC_LOCK] Error acquiring global lock: {e}")
+        return False
 
 def _release_global_lock(db: Session, job_id: str = None):
     """Release the global sync lock."""
@@ -499,7 +504,7 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
             sync_mode=sync_mode
         )
 
-        final_status = "COMPLETED" if summary.get("fetch_failed", 0) == 0 else "PARTIAL"
+        final_status = "COMPLETED" if summary.get("fetch_failed", 0) == 0 else "PARTIAL_SUCCESS"
         job_record = db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
         if job_record:
             now_t = datetime.datetime.utcnow()

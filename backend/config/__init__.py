@@ -47,6 +47,14 @@ class Settings(BaseSettings):
     SYNC_FRESHNESS_HOURS: float = float(os.environ.get("SYNC_FRESHNESS_HOURS", "6.0"))
     CONCURRENCY_WORKERS: int = int(os.environ.get("CONCURRENCY_WORKERS", "15"))
     
+    # Production LeetCode Hardening
+    LEETCODE_MAX_CONCURRENCY: int = int(os.environ.get("LEETCODE_MAX_CONCURRENCY", "15"))
+    LEETCODE_CONNECT_TIMEOUT: float = float(os.environ.get("LEETCODE_CONNECT_TIMEOUT", "5.0"))
+    LEETCODE_READ_TIMEOUT: float = float(os.environ.get("LEETCODE_READ_TIMEOUT", "10.0"))
+    LEETCODE_MAX_RETRIES: int = int(os.environ.get("LEETCODE_MAX_RETRIES", "3"))
+    LEETCODE_CIRCUIT_FAILURE_THRESHOLD: int = int(os.environ.get("LEETCODE_CIRCUIT_FAILURE_THRESHOLD", "15"))
+    LEETCODE_CIRCUIT_COOLDOWN: float = float(os.environ.get("LEETCODE_CIRCUIT_COOLDOWN", "60.0"))
+    
     # Session Configuration
     SESSION_START: str = "08:00"
     SESSION_END: str = "09:30"

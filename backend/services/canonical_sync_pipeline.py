@@ -543,16 +543,24 @@ async def run_full_pipeline(
 
         total_students = len(students)
         effective_job_id = job_id or f"SYNC-{int(start_time.timestamp())}"
-        logger.info(f"[CANONICAL_PIPELINE] Starting {sync_mode} for {total_students} students (Job: {effective_job_id})")
+        duplicates_skipped = len(student_records) - total_students
+        
+        logger.info(f"[CANONICAL_PIPELINE] Starting {sync_mode} (Job: {effective_job_id})")
+        logger.info(f"[CANONICAL_PIPELINE] Total active records: {len(student_records)} | Unique students: {total_students} | Duplicates skipped: {duplicates_skipped}")
 
         if progress_callback and hasattr(progress_callback, "start"):
             progress_callback.start(effective_job_id, total_students)
 
-        timeout_cfg = httpx.Timeout(connect=2.5, read=5.0, write=2.5, pool=2.5)
-        limits_cfg = httpx.Limits(max_keepalive_connections=50, max_connections=50)
+        timeout_cfg = httpx.Timeout(
+            connect=settings.LEETCODE_CONNECT_TIMEOUT, 
+            read=settings.LEETCODE_READ_TIMEOUT, 
+            write=settings.LEETCODE_CONNECT_TIMEOUT, 
+            pool=settings.LEETCODE_CONNECT_TIMEOUT
+        )
+        limits_cfg = httpx.Limits(max_keepalive_connections=settings.LEETCODE_MAX_CONCURRENCY, max_connections=settings.LEETCODE_MAX_CONCURRENCY * 2)
 
-        _SYNC_MAX_CONCURRENCY = int(os.environ.get("SYNC_MAX_CONCURRENCY", 10))
-        sem = asyncio.Semaphore(_SYNC_MAX_CONCURRENCY)
+        from backend.config import settings
+        sem = asyncio.Semaphore(settings.LEETCODE_MAX_CONCURRENCY)
         lock = asyncio.Lock()
 
         async with httpx.AsyncClient(timeout=timeout_cfg, limits=limits_cfg, follow_redirects=True, http2=False) as client:
@@ -620,7 +628,15 @@ async def run_full_pipeline(
         if progress_callback and hasattr(progress_callback, "finish"):
             progress_callback.finish("COMPLETED")
 
-        logger.info(f"[CANONICAL_PIPELINE] Streaming sync completed in {duration_sec}s. Synced={sync_tracker.successful}, Invalid={sync_tracker.invalid}, Pending={sync_tracker.pending_usernames}, Failed={sync_tracker.failed}")
+        logger.info(f"========== LEETCODE SYNC SUMMARY ({effective_job_id}) ==========")
+        logger.info(f"Total Unique Students : {total_students}")
+        logger.info(f"Successful Syncs      : {sync_tracker.successful}")
+        logger.info(f"Timeouts/Failures     : {sync_tracker.failed}")
+        logger.info(f"Invalid Usernames     : {sync_tracker.invalid}")
+        logger.info(f"Pending Usernames     : {sync_tracker.pending_usernames}")
+        logger.info(f"Total Duration        : {duration_sec}s")
+        logger.info("================================================================")
+        
         return summary
 
     except Exception as exc:

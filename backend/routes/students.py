@@ -1215,6 +1215,8 @@ async def refresh_single_student(
 
 from fastapi import Header, HTTPException
 
+from backend.services.live_sync_service import start_full_sync_job, sync_tracker
+
 @router.post("/refresh-all")
 @router.post("/sync-all")
 @router.post("/admin/sync/start")
@@ -1225,12 +1227,11 @@ async def trigger_batch_sync(
     mode: Optional[str] = Query("async", description="'async' for frontend triggering, 'sync' for Cloud Scheduler triggering"),
     x_scheduler_token: Optional[str] = Header(None, alias="X-CloudScheduler-Token"),
     current_user: Optional[User] = Depends(get_current_user),
-    background_tasks: BackgroundTasks = None
+    db: Session = Depends(get_db)
 ):
     """
-    Triggers a global batch sync of all active LeetCode profiles.
-    Returns immediately with a run_id for frontend tracking if mode=async.
-    If mode=sync, runs synchronously so Cloud Run maintains CPU allocation.
+    Triggers a global batch sync of all active LeetCode profiles safely.
+    Returns immediately with a job_id for frontend tracking.
     """
     # Security: Require either a valid logged-in user OR the exact secret Cloud Scheduler token
     expected_token = os.getenv("CLOUD_SCHEDULER_SECRET", "super-secret-sync-token")
@@ -1241,38 +1242,31 @@ async def trigger_batch_sync(
 
     if current_user and current_user.role not in ["Admin", "Super Admin", "HOD", "Staff", "admin", "super admin"]:
         raise HTTPException(status_code=403, detail="Insufficient privileges to trigger sync")
-    if sync_tracker.is_running:
-        existing_run_id = sync_tracker.run_id or "current"
-        return {
-            "runId": existing_run_id,
-            "message": "Live stats refresh is already running in background.",
-            "status": "busy",
-            "progress": sync_tracker.to_dict()
-        }
 
-    # Pre-generate a deterministic runId so the frontend can subscribe to Firestore immediately
-    run_id = f"sync_{datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
-    
-    if mode == "sync":
-        await run_batch_sync(limit=limit, pre_run_id=run_id)
-        return {"runId": run_id, "status": "completed", "message": "Batch sync finished."}
-    
-    background_tasks.add_task(run_batch_sync, limit=limit, pre_run_id=run_id)
-    db = SessionLocal()
+    triggered_by = "scheduler" if is_scheduler else (current_user.email if current_user else "admin")
+
     try:
-        active_count = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count()
-    except Exception:
-        active_count = 300
-    finally:
-        db.close()
-
-    return {
-        "runId": run_id,
-        "status": "started",
-        "total": active_count,
-        "message": f"Live stats batch sync started in background for {active_count} active students!",
-        "sync_status_url": f"/api/students/admin/sync/status/{run_id}"
-    }
+        # The service enforces atomic DB-level locking and returns immediately.
+        result = start_full_sync_job(db, triggered_by=triggered_by)
+        
+        if result.get("already_running"):
+            return {
+                "runId": result.get("job_id"),
+                "status": "busy",
+                "message": result.get("message"),
+                "progress": sync_tracker.to_dict() if sync_tracker.is_running else {}
+            }
+            
+        return {
+            "runId": result.get("job_id"),
+            "status": "started",
+            "total": result.get("total_records"),
+            "message": result.get("message"),
+            "sync_status_url": f"/api/students/admin/sync/status/{result.get('job_id')}"
+        }
+    except Exception as e:
+        logger.error(f"[API] Error triggering full sync: {e}")
+        raise HTTPException(status_code=500, detail="Failed to trigger synchronization job")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
