@@ -586,6 +586,12 @@ def get_unassigned_students(
     """Admin: Retrieves list of active students currently without an assigned mentor."""
     from backend.models import Student, FacultyStudentAssignment
     from sqlalchemy.orm import joinedload
+    from backend.cache import cache
+
+    cache_key = f"admin:unassigned_students:{dept_id}:{year_level}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
 
     assigned_subquery = db.query(FacultyStudentAssignment.student_id).filter(
         FacultyStudentAssignment.is_active == True
@@ -607,7 +613,7 @@ def get_unassigned_students(
 
     unassigned = query.order_by(Student.year_level, Student.reg_no).all()
 
-    return {
+    result = {
         "total_unassigned": len(unassigned),
         "students": [
             {
@@ -624,6 +630,8 @@ def get_unassigned_students(
             for s in unassigned
         ]
     }
+    cache.set(cache_key, result, ttl_seconds=15)
+    return result
 
 
 @router.post("/staff")
@@ -908,6 +916,12 @@ def get_all_staff_users(
     from backend.models import FacultyStudentAssignment
     from sqlalchemy.orm import joinedload
     from sqlalchemy import func
+    from backend.cache import cache
+
+    cache_key = f"admin:staff_list:{dept_id}:{role}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
 
     query = db.query(User).options(joinedload(User.department)).filter(
         User.role.notin_(["Student", "student", "Deleted_Staff", "deleted_staff"])
@@ -930,7 +944,7 @@ def get_all_staff_users(
 
     counts_map = {r[0]: r[1] for r in count_rows}
 
-    return [
+    result = [
         {
             "id": s.id,
             "institutional_id": s.institutional_id or f"NEC-STAFF-{s.id:03d}",
@@ -948,6 +962,8 @@ def get_all_staff_users(
         }
         for s in staff_list
     ]
+    cache.set(cache_key, result, ttl_seconds=15)
+    return result
 
 
 @router.post("/bulk-assign")

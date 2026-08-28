@@ -73,6 +73,12 @@ def get_current_sync_status(db: Session = Depends(get_db)):
     """
     import datetime
     from backend.config import Settings
+    from backend.cache import cache as _cache
+    # Fast-path: if sync is not running, serve cached result for up to 10 seconds
+    if not sync_tracker.is_running:
+        _cached = _cache.get("sync:status")
+        if _cached is not None:
+            return _cached
     cfg = Settings()
 
     tot = db.query(Student).filter(Student.is_active == True).count()
@@ -221,6 +227,10 @@ def get_current_sync_status(db: Session = Depends(get_db)):
         "retrying": 0,
         "recent_logs": sync_tracker.recent_logs[-10:] if sync_tracker.recent_logs else [f"[{last_sync_time}] Synchronization worker ready. {successful} student profiles verified."]
     }
+    # Cache result only when idle/completed (not while actively syncing)
+    if not is_running:
+        _cache.set("sync:status", result, ttl_seconds=10)
+    return result
 
 
 @router.get("/jobs/{job_id}")
