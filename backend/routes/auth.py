@@ -616,8 +616,11 @@ def verify_otp(req: VerifyOtpRequest, request: Request, response: Response, db: 
     except Exception:
         db.rollback()
 
-    # 3. Create Server Session & Set HttpOnly Cookie
-    create_server_admin_session(db, user, request, response)
+    # 3. Create Server Session & Set HttpOnly Cookie (Graceful fallback)
+    try:
+        create_server_admin_session(db, user, request, response)
+    except Exception as e:
+        logger.error(f"[SESSION_CREATION_FAILED] Could not create server session: {e}")
 
     access_token = create_access_token(data={
         "sub": user.username,
@@ -827,8 +830,11 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
     except Exception:
         db.rollback()
 
-    # Create Server Session & Set HttpOnly Cookie
-    create_server_admin_session(db, user, request, response)
+    # Create Server Session & Set HttpOnly Cookie (Graceful fallback)
+    try:
+        create_server_admin_session(db, user, request, response)
+    except Exception as e:
+        logger.error(f"[SESSION_CREATION_FAILED] Could not create server session: {e}")
 
     logger.info(f"[ADMIN_LOGIN_SUCCESS] Administrator {user.username} logged in successfully.")
 
