@@ -80,7 +80,8 @@ class SnapshotSyncService {
 
   public async checkLatestVersion(): Promise<SnapshotVersionInfo | null> {
     try {
-      const res = await api.get<SnapshotVersionInfo>('/api/stats/version');
+      const res = await api.get<SnapshotVersionInfo>('/stats/version');
+
       const latestInfo = res.data;
       if (latestInfo && latestInfo.data_version) {
         if (this.currentVersion === 0) {

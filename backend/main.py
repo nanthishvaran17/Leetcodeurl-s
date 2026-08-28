@@ -252,96 +252,117 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origin_regex=r"https://.*\.netlify\.app|https://.*\.web\.app|https://.*\.firebaseapp\.com|https://.*\.vercel\.app|https://.*\.pages\.dev|https://.*\.loca\.lt|https://.*\.onrender\.com",
+    allow_origin_regex=r"https://.*\.netlify\.app|https://.*\.web\.app|https://.*\.firebaseapp\.com|https://.*\.vercel\.app|https://.*\.pages\.dev|https://.*\.loca\.lt",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["Content-Disposition", "Content-Length", "Content-Type"],
 )
 
-# Mount All API Routers (both with /api prefix and root for full compatibility)
-app.include_router(auth.router, prefix="/api")
+# Mount All API Routers
+# RULE: Routers whose own prefix already starts with /api are mounted ONCE (no extra prefix).
+#       Routers with short/no prefix get BOTH a /api-prefixed and root mount for compat.
+
+# auth: prefix="/api/auth" (self-prefixed) — mount once
 app.include_router(auth.router)
-app.include_router(admin.router, prefix="/api")
+# admin: prefix="/api/admin" (self-prefixed) — mount once
 app.include_router(admin.router)
-app.include_router(students.router, prefix="/api")
+# students: prefix="/api/students" (self-prefixed) — mount once
 app.include_router(students.router)
+# sync: typically short prefix — keep both mounts
 app.include_router(sync.router, prefix="/api")
 app.include_router(sync.router)
-app.include_router(departments.router, prefix="/api")
+# departments: prefix="/api/departments" (self-prefixed)
 app.include_router(departments.router)
-app.include_router(sessions.router, prefix="/api")
+# sessions: prefix="/api/sessions" (self-prefixed)
 app.include_router(sessions.router)
-app.include_router(leaderboard.router, prefix="/api")
+# leaderboard: prefix="/api/leaderboard" (self-prefixed)
 app.include_router(leaderboard.router)
-app.include_router(analytics.router, prefix="/api")
+# analytics: prefix="/api/analytics" (self-prefixed)
 app.include_router(analytics.router)
-app.include_router(reports.router, prefix="/api")
+# reports: prefix="/api/reports" (self-prefixed)
 app.include_router(reports.router)
-app.include_router(settings_route.router, prefix="/api")
+# settings: prefix="/api/settings" (self-prefixed)
 app.include_router(settings_route.router)
-app.include_router(audit.router, prefix="/api")
+# audit: prefix="/api/audit" (self-prefixed)
 app.include_router(audit.router)
-app.include_router(public.router, prefix="/api")
+# public: prefix="/api/public" (self-prefixed)
 app.include_router(public.router)
-app.include_router(history.router, prefix="/api")
+# history: prefix="/api" (self-prefixed — routes are /api/something)
 app.include_router(history.router)
-app.include_router(risk.router, prefix="/api")
+# risk: prefix="/api/risk" (self-prefixed)
 app.include_router(risk.router)
-app.include_router(goals.router, prefix="/api")
+# goals: prefix="/api/goals" (self-prefixed)
 app.include_router(goals.router)
-app.include_router(system_health.router, prefix="/api")
+# system_health: prefix="/api/system" (self-prefixed)
 app.include_router(system_health.router)
+# weekly_contests: prefix="/contests" — keep both
 app.include_router(weekly_contests.router, prefix="/api")
 app.include_router(weekly_contests.router)
-app.include_router(email_reports.router, prefix="/api")
+# email_reports: prefix="/api/email" (self-prefixed) — mount ONCE to fix /api/api/email
 app.include_router(email_reports.router)
-app.include_router(scheduled_reports.router, prefix="/api")
+# scheduled_reports: prefix="/api/system/schedule" (self-prefixed)
 app.include_router(scheduled_reports.router)
+# certificates — short prefix, keep both
 app.include_router(certificates.router, prefix="/api")
 app.include_router(certificates.router)
+# leetcode — short prefix
 app.include_router(leetcode.router, prefix="/api")
 app.include_router(leetcode.router)
+# ai_assistant — short prefix
 app.include_router(ai_assistant.router, prefix="/api")
 app.include_router(ai_assistant.router)
+# ai_control_center — short prefix
 app.include_router(ai_control_center.router, prefix="/api")
 app.include_router(ai_control_center.router)
-app.include_router(intelligence.router, prefix="/api")
+# intelligence: prefix="/api/intelligence" (self-prefixed)
 app.include_router(intelligence.router)
-app.include_router(data_issues.router, prefix="/api")
+# data_issues: prefix="/api/data-issues" (self-prefixed)
 app.include_router(data_issues.router)
+# command_center — short prefix
 app.include_router(command_center.router, prefix="/api")
 app.include_router(command_center.router)
+# leetcode_tracker — short prefix
 app.include_router(leetcode_tracker.router, prefix="/api")
 app.include_router(leetcode_tracker.router)
+# faculty_assignments — short prefix, keep both + faculty aliases
 app.include_router(faculty_assignments.router, prefix="/api")
 app.include_router(faculty_assignments.router)
 app.include_router(faculty_assignments.router, prefix="/api/faculty", tags=["Faculty"])
 app.include_router(faculty_assignments.router, prefix="/faculty", tags=["Faculty"])
+# institutional_dashboards — short prefix
 app.include_router(institutional_dashboards.router, prefix="/api")
 app.include_router(institutional_dashboards.router)
+# email_campaigns — short prefix
 app.include_router(email_campaigns.router, prefix="/api")
 app.include_router(email_campaigns.router)
+# bot_notifications — short prefix
 app.include_router(bot_notifications.router, prefix="/api")
 app.include_router(bot_notifications.router)
+# anti_cheat — short prefix
 app.include_router(anti_cheat.router, prefix="/api")
 app.include_router(anti_cheat.router)
+# placement_eligibility — short prefix
 app.include_router(placement_eligibility.router, prefix="/api")
 app.include_router(placement_eligibility.router)
+# gamification — short prefix
 app.include_router(gamification.router, prefix="/api")
 app.include_router(gamification.router)
+# accreditation — short prefix
 app.include_router(accreditation.router, prefix="/api")
-app.include_router(deep_tech_intelligence.router, prefix="/api")
+# deep_tech_intelligence: prefix="/api/intelligence/deep-tech" (self-prefixed)
 app.include_router(deep_tech_intelligence.router)
+# scheduler — no prefix
 app.include_router(scheduler.router)
+
 
 from backend.routes import stats_snapshot
 app.include_router(stats_snapshot.router, prefix="/api")
 app.include_router(stats_snapshot.router)
-
 # Mount Static File Directories
 is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")
 if is_vercel:
+
     REPORTS_DIR = "/tmp/reports"
 else:
     REPORTS_DIR = os.path.join(os.path.dirname(__file__), "reports")

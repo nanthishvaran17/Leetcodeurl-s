@@ -245,7 +245,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
   const fetchRecipients = async () => {
     try {
-      const res = await api.get('/api/email/recipients');
+      const res = await api.get('/email/recipients');
       setRecipientsList(res.data || []);
       const activeEmails = (res.data || []).filter((r: any) => r.is_active !== false).map((r: any) => r.email);
       setSelectedRecipients(activeEmails);
@@ -638,7 +638,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         is_safe_test: isSafeTest
       };
 
-      const res = await api.post('/api/email/send-manual', payload);
+      const res = await api.post('/email/send-manual', payload);
       setShowEmailModal(false);
       const fn = res.data?.excel_filename || 'Weekly_Contest.xlsx';
       const execId = res.data?.execution_id || 'EXEC-PASS';

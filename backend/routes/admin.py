@@ -971,6 +971,7 @@ def get_all_staff_users(
 @router.post("/bulk-assign")
 def bulk_assign_students_admin(
     payload: BulkAssignRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_admin_user_or_default)
 ):
@@ -981,7 +982,8 @@ def bulk_assign_students_admin(
         db=db,
         faculty_id=payload.staff_id,
         student_ids=payload.student_ids,
-        assigned_by_id=current_user.id
+        assigned_by_id=current_user.id,
+        background_tasks=background_tasks
     )
 
     log_admin_action(
@@ -991,6 +993,7 @@ def bulk_assign_students_admin(
     )
 
     return result
+
 
 
 @router.post("/auto-rebalance")

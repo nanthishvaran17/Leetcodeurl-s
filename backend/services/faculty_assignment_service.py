@@ -178,19 +178,58 @@ class FacultyAssignmentService:
             cache.invalidate_tag("students")
             cache.invalidate_tag(f"user_auth_{faculty_id}")
             new_total = FacultyAssignmentService.get_faculty_assigned_count(db, faculty_id)
-
-            logger.info(f"[FACULTY_ASSIGNMENT] Evaluating email notification for {faculty.username} (Email: {faculty.email}). Students assigned: {len(students_allocated_data)}")
-            if background_tasks and faculty.email and students_allocated_data:
-                logger.info(f"[FACULTY_ASSIGNMENT] Queueing background email to {faculty.email} for {len(students_allocated_data)} students.")
+            logger.info(
+                f"[FACULTY_ASSIGNMENT] Staff {faculty.username} assigned {len(students_allocated_data)} student(s). "
+                f"Email: {'configured' if faculty.email else 'MISSING'}, "
+                f"BackgroundTasks: {'available' if background_tasks else 'unavailable'}"
+            )
+            if faculty.email and students_allocated_data:
                 from backend.services.email_notifications import notify_faculty_allocation
-                background_tasks.add_task(
-                    notify_faculty_allocation,
-                    faculty_email=faculty.email,
-                    faculty_name=faculty.username,
-                    students=students_allocated_data
-                )
+                recipient = faculty.email
+                if background_tasks:
+                    logger.info(f"[FACULTY_ASSIGNMENT_EMAIL] Dispatching notification to {recipient} for {len(students_allocated_data)} student(s)")
+                    background_tasks.add_task(
+                        notify_faculty_allocation,
+                        faculty_email=recipient,
+                        faculty_name=faculty.username,
+                        students=students_allocated_data
+                    )
+                else:
+                    # Fallback: dispatch via thread so the response is not blocked
+                    logger.warning(
+                        f"[FACULTY_ASSIGNMENT_EMAIL] BackgroundTasks unavailable — using thread fallback "
+                        f"for {recipient}"
+                    )
+                    import threading
+
+                    def _send_in_thread():
+                        import asyncio as _asyncio
+                        try:
+                            loop = _asyncio.new_event_loop()
+                            loop.run_until_complete(
+                                notify_faculty_allocation(
+                                    faculty_email=recipient,
+                                    faculty_name=faculty.username,
+                                    students=students_allocated_data
+                                )
+                            )
+                            logger.info(f"[FACULTY_ASSIGNMENT_EMAIL] Thread fallback delivery succeeded for {recipient}")
+                        except Exception as _te:
+                            logger.error(f"[FACULTY_ASSIGNMENT_EMAIL] Thread fallback FAILED for {recipient}: {_te}")
+                        finally:
+                            loop.close()
+
+                    t = threading.Thread(target=_send_in_thread, daemon=True)
+                    t.start()
             else:
-                logger.warning(f"[FACULTY_ASSIGNMENT] SKIPPED email notification. background_tasks={bool(background_tasks)}, email={bool(faculty.email)}, students={bool(students_allocated_data)}")
+                missing = []
+                if not faculty.email:
+                    missing.append("faculty_email=MISSING")
+                if not students_allocated_data:
+                    missing.append("students=EMPTY")
+                logger.warning(
+                    f"[FACULTY_ASSIGNMENT_EMAIL] Skipped — prerequisites not met: {', '.join(missing)}"
+                )
 
             # Determine informational workload status
             if new_total < RECOMMENDED_FACULTY_STUDENT_RATIO:
