@@ -99,6 +99,19 @@ def run_migrations():
     except Exception as _t_err:
         pass
 
+    try:
+        with engine.connect() as conn:
+            # Create PostgreSQL performance indexes if applicable
+            if "postgresql" in db_url or "postgres" in db_url:
+                conn.execute(__import__('sqlalchemy').text("CREATE INDEX IF NOT EXISTS ix_leetcode_profile_stats_total_solved ON leetcode_profile_stats (total_solved);"))
+                conn.execute(__import__('sqlalchemy').text("CREATE INDEX IF NOT EXISTS ix_leetcode_profile_stats_sync_status ON leetcode_profile_stats (sync_status);"))
+                conn.execute(__import__('sqlalchemy').text("CREATE INDEX IF NOT EXISTS ix_faculty_student_assignments_faculty_id ON faculty_student_assignments (faculty_id);"))
+                conn.execute(__import__('sqlalchemy').text("CREATE INDEX IF NOT EXISTS ix_faculty_student_assignments_is_active ON faculty_student_assignments (is_active);"))
+                conn.commit()
+    except Exception as e:
+        import logging
+        logging.error(f"PostgreSQL migration error: {e}")
+
     if "sqlite" not in db_url:
         return  # Only needed for local SQLite
     try:

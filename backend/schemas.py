@@ -205,7 +205,7 @@ class StudentListOut(StudentBase):
 
 class StudentPaginatedOut(BaseModel):
     total: int
-    items: List[Union[StudentOut, StudentListOut]]
+    items: List[StudentListOut]
     page: int
     limit: int
     total_pages: int
