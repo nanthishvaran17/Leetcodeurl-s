@@ -527,4 +527,4 @@ def run_migrations():
         except Exception as _pge:
             print(f"[DB Migration] PostgreSQL index note: {_pge}")
 
-run_migrations()
+# Migrations are deferred to FastAPI lifespan in main.py to prevent blocking port binding.
