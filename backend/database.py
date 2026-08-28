@@ -35,51 +35,32 @@ from sqlalchemy.pool import NullPool, QueuePool
 
 engine_kwargs = {}
 if "postgresql" in db_url or "postgres" in db_url:
-    if is_vercel:
-        engine_kwargs.update({
-            "poolclass": NullPool,
-            "pool_pre_ping": True,
-            "connect_args": {
-                "connect_timeout": 10,
-                "sslmode": "require"
-            }
-        })
-    else:
-        engine_kwargs.update({
-            "pool_size": 20,
-            "max_overflow": 10,
-            "pool_timeout": 30,
-            "pool_pre_ping": True,
-            "pool_recycle": 300,
-            "connect_args": {
-                "connect_timeout": 10,
-                "keepalives": 1,
-                "keepalives_idle": 30,
-                "keepalives_interval": 10,
-                "keepalives_count": 5
-            }
-        })
+    engine_kwargs.update({
+        "pool_size": 20,
+        "max_overflow": 10,
+        "pool_timeout": 30,
+        "pool_pre_ping": True,
+        "pool_recycle": 1800,  # Recycle connections every 30 mins
+        "connect_args": {
+            "connect_timeout": 10,
+            "keepalives": 1,
+            "keepalives_idle": 30,
+            "keepalives_interval": 10,
+            "keepalives_count": 5,
+            "sslmode": "require"
+        }
+    })
 else:
     engine_kwargs.update({
         "poolclass": NullPool,
         "connect_args": {"check_same_thread": False, "timeout": 60}
     })
 
-try:
-    engine = create_engine(
-        db_url,
-        echo=False,
-        **engine_kwargs
-    )
-except Exception as _e_init:
-    # Fallback to local SQLite if remote PostgreSQL URL is completely unreachable
-    sqlite_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "leetcode_tracker.db")
-    db_url = f"sqlite:///{sqlite_path}"
-    engine = create_engine(
-        db_url,
-        echo=False,
-        connect_args={"check_same_thread": False, "timeout": 60}
-    )
+engine = create_engine(
+    db_url,
+    echo=False,
+    **engine_kwargs
+)
 
 from sqlalchemy import event
 

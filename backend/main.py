@@ -42,15 +42,25 @@ from backend.websocket_manager import manager
 async def _deferred_startup_tasks():
     """Executes background DB migrations, admin reconcile, and scheduler asynchronously after port binding."""
     logger.info("[STARTUP] Running background post-bind initialization...")
+    def _run_blocking_migrations():
+        try:
+            from backend.migrate_db import run_db_migrations
+            run_db_migrations()
+        except Exception as _mig_err1:
+            logger.warning(f"[STARTUP] Database migrate_db note: {_mig_err1}")
+            
+        try:
+            from backend.database import run_migrations
+            run_migrations()
+        except Exception as _mig_err2:
+            logger.warning(f"[STARTUP] Database run_migrations note: {_mig_err2}")
+
     try:
-        from backend.migrate_db import run_db_migrations
-        run_db_migrations()
-        from backend.database import run_migrations
-        run_migrations()
+        await asyncio.to_thread(_run_blocking_migrations)
     except Exception as _mig_err:
         logger.warning(f"[STARTUP] Database migration note: {_mig_err}")
 
-    try:
+    def _run_blocking_db_init():
         from backend.database import SessionLocal
         from backend.models import Student, User, LeetCodeProfileStats, SyncJob
         from backend.routes.auth import get_password_hash, verify_password
@@ -86,7 +96,6 @@ async def _deferred_startup_tasks():
                 logger.warning(f"[STARTUP] Admin reconcile note: {_adm_err}")
 
             try:
-                # Clean up any zombie sync locks from previous server restarts
                 stale_jobs = db_init.query(SyncJob).filter(SyncJob.status == "RUNNING").all()
                 if stale_jobs:
                     for sj in stale_jobs:
@@ -95,9 +104,15 @@ async def _deferred_startup_tasks():
             except Exception as _sj_err:
                 logger.warning(f"[STARTUP] Sync job recovery note: {_sj_err}")
 
-            try:
+    try:
+        await asyncio.to_thread(_run_blocking_db_init)
+
+        # Weekly session resume is async, run directly
+        try:
+            from backend.database import SessionLocal
+            with SessionLocal() as db_init_async:
                 from backend.services.weekly_session_manager import resume_active_weekly_session
-                await resume_active_weekly_session(db_init)
+                await resume_active_weekly_session(db_init_async)
             except Exception as _sess_err:
                 logger.warning(f"[STARTUP] Weekly session resume note: {_sess_err}")
 

@@ -53,14 +53,17 @@ async def _sync_single_student_canonical(
     run_optional_phases: bool = False
 ):
     async with sem:
-        now_dt = datetime.datetime.utcnow()
-        streak_count = 0
-        total_active_days = 0
-        db_student = SessionLocal()
-        try:
-            st = db_student.query(Student).filter(Student.id == student.id).first()
-            if not st:
-                return
+        import sqlalchemy.exc
+        max_retries = 3
+        for attempt in range(1, max_retries + 1):
+            now_dt = datetime.datetime.utcnow()
+            streak_count = 0
+            total_active_days = 0
+            db_student = SessionLocal()
+            try:
+                st = db_student.query(Student).filter(Student.id == student.id).first()
+                if not st:
+                    return
 
             c_username, c_url, u_status = extract_leetcode_username(st.username or st.leetcode_url)
 
@@ -365,50 +368,65 @@ async def _sync_single_student_canonical(
                     "timestamp": datetime.datetime.utcnow().isoformat()
                 }
                 await broadcast_sync_event(payload)
-
-        except Exception as st_err:
-            logger.error(f"[CANONICAL_PIPELINE] Error syncing student {student.id} ({student.name}): {st_err}", exc_info=True)
-            async with lock:
-                from backend.services.live_sync_service import broadcast_sync_event, sync_tracker
-                if progress_callback and hasattr(progress_callback, "record_student_completion"):
-                    progress_callback.record_student_completion(
-                        student_name=student.name,
-                        username=student.username,
-                        status="FETCH_FAILED",
-                        total_solved=None,
-                        contest_rating=None,
-                        reg_no=student.reg_no,
-                        error_msg=str(st_err)
-                    )
-                payload = {
-                    "type": "sync_progress",
-                    "job_id": job_id,
-                    "processed": sync_tracker.students_processed,
-                    "total": sync_tracker.total_students,
-                    "successful": sync_tracker.successful,
-                    "failed": sync_tracker.failed,
-                    "pending": sync_tracker.pending_usernames,
-                    "invalid": sync_tracker.invalid,
-                    "unknown": sync_tracker.unknown,
-                    "current_student": student.name,
-                    "current_username": student.username or "",
-                    "current_status": "FETCH_FAILED",
-                    "progress_percent": sync_tracker.progress_percentage,
-                    "recent_completed": sync_tracker.recent_completed,
-                    "student_update": {
-                        "id": student.id,
-                        "reg_no": student.reg_no,
-                        "name": student.name,
-                        "username": student.username,
-                        "total_solved": None,
-                        "status": "FETCH_FAILED",
-                        "sync_status": "failed"
-                    },
-                    "timestamp": datetime.datetime.utcnow().isoformat()
-                }
-                await broadcast_sync_event(payload)
-        finally:
-            db_student.close()
+                break  # Success, exit retry loop
+            
+            except sqlalchemy.exc.OperationalError as op_err:
+                db_student.rollback()
+                logger.warning(f"[SYNC] OperationalError for {student.username} (Attempt {attempt}/{max_retries}): {op_err}")
+                if attempt == max_retries:
+                    raise op_err
+                await asyncio.sleep(2 * attempt)
+            except sqlalchemy.exc.PendingRollbackError as pr_err:
+                db_student.rollback()
+                logger.warning(f"[SYNC] PendingRollbackError for {student.username} (Attempt {attempt}/{max_retries}): {pr_err}")
+                if attempt == max_retries:
+                    raise pr_err
+                await asyncio.sleep(2 * attempt)
+            except Exception as st_err:
+                db_student.rollback()
+                logger.error(f"[CANONICAL_PIPELINE] Error syncing student {student.id} ({student.name}): {st_err}", exc_info=True)
+                async with lock:
+                    from backend.services.live_sync_service import broadcast_sync_event, sync_tracker
+                    if progress_callback and hasattr(progress_callback, "record_student_completion"):
+                        progress_callback.record_student_completion(
+                            student_name=student.name,
+                            username=student.username,
+                            status="FETCH_FAILED",
+                            total_solved=None,
+                            contest_rating=None,
+                            reg_no=student.reg_no,
+                            error_msg=str(st_err)
+                        )
+                    payload = {
+                        "type": "sync_progress",
+                        "job_id": job_id,
+                        "processed": sync_tracker.students_processed,
+                        "total": sync_tracker.total_students,
+                        "successful": sync_tracker.successful,
+                        "failed": sync_tracker.failed,
+                        "pending": sync_tracker.pending_usernames,
+                        "invalid": sync_tracker.invalid,
+                        "unknown": sync_tracker.unknown,
+                        "current_student": student.name,
+                        "current_username": student.username or "",
+                        "current_status": "FETCH_FAILED",
+                        "progress_percent": sync_tracker.progress_percentage,
+                        "recent_completed": sync_tracker.recent_completed,
+                        "student_update": {
+                            "id": student.id,
+                            "reg_no": student.reg_no,
+                            "name": student.name,
+                            "username": student.username,
+                            "total_solved": None,
+                            "status": "FETCH_FAILED",
+                            "sync_status": "failed"
+                        },
+                        "timestamp": datetime.datetime.utcnow().isoformat()
+                    }
+                    await broadcast_sync_event(payload)
+                break  # Unrecoverable error, exit retry loop
+            finally:
+                db_student.close()
 
 
 async def run_full_pipeline(
@@ -421,13 +439,29 @@ async def run_full_pipeline(
     Executes the full canonical sync pipeline for all active students with true real-time streaming progress.
     """
     start_time = datetime.datetime.utcnow()
-    db = SessionLocal()
-
     try:
-        query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
-        if student_ids:
-            query = query.filter(Student.id.in_(student_ids))
-        students = query.all()
+        db = SessionLocal()
+        try:
+            query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+            if student_ids:
+                query = query.filter(Student.id.in_(student_ids))
+            
+            # Fetch minimal data to detach from session
+            student_records = query.with_entities(Student.id, Student.name, Student.username, Student.leetcode_url, Student.reg_no).all()
+            
+            # Convert to detached dummy objects so we don't hit DetachedInstanceError
+            class DummyStudent:
+                def __init__(self, id, name, username, leetcode_url, reg_no):
+                    self.id = id
+                    self.name = name
+                    self.username = username
+                    self.leetcode_url = leetcode_url
+                    self.reg_no = reg_no
+
+            students = [DummyStudent(*r) for r in student_records]
+            
+        finally:
+            db.close()
 
         total_students = len(students)
         effective_job_id = job_id or f"SYNC-{int(start_time.timestamp())}"
@@ -459,7 +493,11 @@ async def run_full_pipeline(
 
         # Recalculate institutional multi-level rankings
         logger.info("[CANONICAL_PIPELINE] Recalculating college/department/year rankings post-sync...")
-        update_all_rankings_and_badges(db)
+        db_rank = SessionLocal()
+        try:
+            update_all_rankings_and_badges(db_rank)
+        finally:
+            db_rank.close()
 
         # Sync 100% updated data directly to Cloud Firestore & trigger WebSocket update
         try:
@@ -510,5 +548,3 @@ async def run_full_pipeline(
         if progress_callback and hasattr(progress_callback, "finish"):
             progress_callback.finish("FAILED", str(exc))
         raise
-    finally:
-        db.close()
