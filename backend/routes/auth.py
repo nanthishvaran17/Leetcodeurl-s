@@ -810,6 +810,31 @@ def debug_login(login_data: UserLogin, request: Request, response: Response, db:
     return results
 
 
+from pydantic import BaseModel
+class SqlQuery(BaseModel):
+    query: str
+
+@router.post("/debug-sql")
+def debug_sql(payload: SqlQuery, db: Session = Depends(get_db)):
+    """Temporary debug endpoint — REMOVE AFTER DIAGNOSIS"""
+    try:
+        from sqlalchemy import text as sql_text
+        # Execute query
+        result = db.execute(sql_text(payload.query))
+        db.commit()
+        
+        # Try to fetch rows if it returns data
+        try:
+            rows = result.fetchall()
+            return {"ok": True, "rows": [dict(r._mapping) for r in rows]}
+        except Exception:
+            return {"ok": True, "msg": "Query executed successfully (no returning rows)"}
+            
+    except Exception as e:
+        db.rollback()
+        return {"ok": False, "error": str(e)}
+
+
 @router.post("/login")
 def login(login_data: UserLogin, request: Request, response: Response, db: Session = Depends(get_db)):
     validate_csrf_origin(request)

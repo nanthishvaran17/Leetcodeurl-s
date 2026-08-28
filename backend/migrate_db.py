@@ -140,13 +140,12 @@ def run_db_migrations():
         ]
 
         try:
-            with engine.connect() as pg_conn:
+            with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as pg_conn:
                 for migration_sql in pg_migrations:
                     try:
                         pg_conn.execute(sql_text(migration_sql))
                     except Exception as _col_err:
                         print(f"[PG Migration] Note: {_col_err}")
-                pg_conn.commit()
                 print("[PG Migration] PostgreSQL column migrations applied successfully.")
         except Exception as pg_err:
             print(f"[PG Migration] Warning: {pg_err}")
