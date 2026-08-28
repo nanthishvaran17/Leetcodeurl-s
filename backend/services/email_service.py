@@ -264,15 +264,41 @@ def send_email_via_resend(
         logger.error(f"OTP_EMAIL_PROVIDER=RESEND_API OTP_PROVIDER_ACCEPTED=false Error: {exc}")
         return False, f"RESEND_API_ERROR: {exc}"
 
+def get_all_brevo_keys() -> List[str]:
+    """Returns a list of all available Brevo API keys for rotating when quotas are exceeded."""
+    keys = []
+    
+    # 1. Primary configured key
+    k1 = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
+    if not k1:
+        try:
+            k1 = 'wrDobdfWB9qOxlJv-e64910bfafe3e010a198b55863b85bb90a7d818c92f44d569007f34370916cb0-bisyekx'[::-1]
+        except Exception:
+            pass
+    if k1 and k1 not in keys:
+        keys.append(k1)
+        
+    # 2. Secondary/Fallback keys
+    for key_name in ["BREVO_API_KEY_2", "BREVO_API_KEY_3", "BREVO_API_KEY_4", "BREVO_API_KEY_5"]:
+        k = os.environ.get(key_name, "").strip() or getattr(settings, key_name, "").strip()
+        if k and k not in keys:
+            keys.append(k)
+            
+    # 3. Bulk comma-separated keys
+    bulk = os.environ.get("BREVO_API_KEYS", "").strip()
+    if bulk:
+        for k in bulk.split(","):
+            k = k.strip()
+            if k and k not in keys:
+                keys.append(k)
+                
+    return keys
+
 def get_active_email_provider() -> Dict[str, Any]:
     """Returns runtime metadata for the active email delivery provider."""
     resend_key = os.environ.get("RESEND_API_KEY", "").strip()
-    brevo_key = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
-    if not brevo_key:
-        try:
-            brevo_key = 'wrDobdfWB9qOxlJv-e64910bfafe3e010a198b55863b85bb90a7d818c92f44d569007f34370916cb0-bisyekx'[::-1]
-        except Exception:
-            pass
+    brevo_keys = get_all_brevo_keys()
+    brevo_key = brevo_keys[0] if brevo_keys else None
 
     if resend_key:
         return {
@@ -490,21 +516,31 @@ def send_email(
             last_error = str(smtp_local_err)
 
     # Priority 2: BREVO_API_KEY (HTTPS Port 443)
-    brevo_key = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
+    brevo_keys = get_all_brevo_keys()
 
-    if brevo_key:
-        ok, err = send_email_via_brevo(brevo_key, from_email, recipient, subject, html_body, attachments, text_body)
-        if ok:
-            record_email_delivery_diagnostic(
-                recipient=recipient,
-                smtp_server="BREVO_HTTPS_API",
-                smtp_response="201 Created Accepted by Brevo API",
-                delivery_status=STATUS_SMTP_ACCEPTED,
-                error_code=None,
-                is_permanent=False
-            )
-            return True, None
-        last_error = err
+    if brevo_keys:
+        for b_key in brevo_keys:
+            ok, err = send_email_via_brevo(b_key, from_email, recipient, subject, html_body, attachments, text_body)
+            if ok:
+                record_email_delivery_diagnostic(
+                    recipient=recipient,
+                    smtp_server="BREVO_HTTPS_API",
+                    smtp_response="201 Created Accepted by Brevo API",
+                    delivery_status=STATUS_SMTP_ACCEPTED,
+                    error_code=None,
+                    is_permanent=False
+                )
+                return True, None
+            
+            # If error is quota or rate limit related (402, 403, 429), try next key
+            last_error = err
+            err_lower = (err or "").lower()
+            if "402" in err_lower or "403" in err_lower or "429" in err_lower or "quota" in err_lower or "limit" in err_lower:
+                logger.warning(f"[BREVO_QUOTA_OR_AUTH] Key {b_key[:5]}... failed/exhausted. Trying next key if available.")
+                continue
+                
+            # If it's another error (like invalid email), do not retry next keys
+            break
 
     record_email_delivery_diagnostic(
         recipient=recipient,
@@ -803,8 +839,8 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
     
     generated_msg_id = f"<{uuid.uuid4().hex}.otp@{smtp_host}>"
 
-    # Resolve Brevo API key once for both paths
-    brevo_key = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
+    # Resolve Brevo API keys once for both paths
+    brevo_keys = get_all_brevo_keys()
 
     # ================================================================
     # DUAL HIGH-RELIABILITY TRANSPORT ENGINE
@@ -856,32 +892,42 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
             logger.warning(f"[{now_iso}] [OTP] Direct Gmail IPv4 SMTP failed ({direct_smtp_err}), falling back to Brevo HTTPS API...")
 
     # Secondary / Production Primary: Brevo HTTPS API (Port 443)
-    if brevo_key:
+    if brevo_keys:
         brevo_sender = (os.environ.get("BREVO_SENDER_EMAIL") or getattr(settings, "BREVO_SENDER_EMAIL", "nanthishvaran0106@gmail.com")).strip()
         if not brevo_sender or "@" not in brevo_sender:
             brevo_sender = "nanthishvaran0106@gmail.com"
-        logger.info(f"[{now_iso}] [OTP] stage=brevo_api using Brevo HTTPS API (Port 443) with verified sender: {brevo_sender}")
-        try:
-            t_brevo_start = time.time()
-            ok, msg_id = send_email_via_brevo(brevo_key, brevo_sender, clean_rec, subject, html_body, None, text_body, max_retries=2)
-            dur = (time.time() - t_brevo_start) * 1000
-            now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
-            if ok:
-                logger.info(f"[{now_iso}] [OTP] stage=brevo_accepted messageId={msg_id} in {dur:.0f}ms")
-                record_email_delivery_diagnostic(
-                    recipient=clean_rec,
-                    smtp_server="BREVO_HTTPS_API",
-                    smtp_response=f"201 Created Accepted by Brevo API (ID: {msg_id})",
-                    delivery_status=STATUS_SMTP_ACCEPTED,
-                    error_code=None,
-                    is_permanent=False
-                )
-                return True, STATUS_SMTP_ACCEPTED, str(msg_id)
-            else:
-                logger.error(f"[{now_iso}] [OTP] stage=brevo_failed error={msg_id}")
-        except Exception as brevo_err:
-            now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
-            logger.error(f"[{now_iso}] [OTP] Brevo exception: {brevo_err}")
+        logger.info(f"[{now_iso}] [OTP] stage=brevo_api using Brevo HTTPS API (Port 443) with verified sender: {brevo_sender} (keys: {len(brevo_keys)})")
+        
+        last_error = "BREVO_API_FAILED"
+        for b_key in brevo_keys:
+            try:
+                t_brevo_start = time.time()
+                ok, msg_id_or_err = send_email_via_brevo(b_key, brevo_sender, clean_rec, subject, html_body, None, text_body, max_retries=1)
+                dur = (time.time() - t_brevo_start) * 1000
+                now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
+                if ok:
+                    logger.info(f"[{now_iso}] [OTP] stage=brevo_accepted messageId={msg_id_or_err} in {dur:.0f}ms")
+                    record_email_delivery_diagnostic(
+                        recipient=clean_rec,
+                        smtp_server="BREVO_HTTPS_API",
+                        smtp_response=f"201 Created Accepted by Brevo API (ID: {msg_id_or_err})",
+                        delivery_status=STATUS_SMTP_ACCEPTED,
+                        error_code=None,
+                        is_permanent=False
+                    )
+                    return True, STATUS_SMTP_ACCEPTED, msg_id_or_err
+                
+                last_error = msg_id_or_err
+                err_lower = (msg_id_or_err or "").lower()
+                if "402" in err_lower or "403" in err_lower or "429" in err_lower or "quota" in err_lower or "limit" in err_lower:
+                    logger.warning(f"[{now_iso}] [OTP] Key {b_key[:5]}... exhausted. Trying next key.")
+                    continue
+                break
+                
+            except Exception as e:
+                logger.warning(f"[{now_iso}] [OTP] Brevo HTTP error with key {b_key[:5]}... : {e}")
+                last_error = str(e)
+                continue
 
     # ================================================================
     # LOCAL DEV PATH: Gmail SMTP FIRST (ports 587/465 available locally)
@@ -1258,7 +1304,8 @@ def _process_email_queue_worker():
             msg.attach(excel_part)
 
             resend_key = os.environ.get("RESEND_API_KEY", "").strip()
-            brevo_key = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
+            brevo_keys = get_all_brevo_keys()
+            brevo_key = brevo_keys[0] if brevo_keys else ""
 
             delivered = False
             err_details = None
@@ -1434,7 +1481,8 @@ def send_manual_report_email(
     smtp_pass = (os.environ.get("SMTP_PASSWORD") or getattr(settings, "SMTP_PASSWORD", "")).replace(" ", "")
     from_email = (os.environ.get("REPORT_FROM_EMAIL") or smtp_user or "nanthishvaran17@gmail.com").strip()
     resend_key = os.environ.get("RESEND_API_KEY", "").strip()
-    brevo_key = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
+    brevo_keys = get_all_brevo_keys()
+    brevo_key = brevo_keys[0] if brevo_keys else ""
 
     dispatched_count = 0
     errors = []
