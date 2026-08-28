@@ -36,17 +36,18 @@ from sqlalchemy.pool import NullPool, QueuePool
 engine_kwargs = {}
 if "postgresql" in db_url or "postgres" in db_url:
     engine_kwargs.update({
-        "pool_size": 20,
-        "max_overflow": 10,
-        "pool_timeout": 30,
-        "pool_pre_ping": True,
-        "pool_recycle": 1800,  # Recycle connections every 30 mins
+        # Render free tier allows ~25 connections max; keep headroom for other processes
+        "pool_size": 5,
+        "max_overflow": 5,          # max 10 total active connections
+        "pool_timeout": 30,         # wait up to 30s to checkout a connection
+        "pool_pre_ping": True,      # verify liveness before returning from pool
+        "pool_recycle": 300,        # recycle after 5min (Render drops idle connections ~60s)
         "connect_args": {
             "connect_timeout": 10,
             "keepalives": 1,
-            "keepalives_idle": 30,
-            "keepalives_interval": 10,
-            "keepalives_count": 5,
+            "keepalives_idle": 30,  # probe after 30s idle
+            "keepalives_interval": 5,
+            "keepalives_count": 3,
             "sslmode": "require"
         }
     })
@@ -80,9 +81,35 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
         except Exception:
             pass
 
-
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
+
+if "postgresql" in db_url or "postgres" in db_url:
+    try:
+        import psycopg2
+        from sqlalchemy import event as _pg_event
+
+        @_pg_event.listens_for(engine, "handle_error")
+        def _invalidate_broken_pg_connection(exception_context):
+            """
+            Automatically invalidates and discards any PostgreSQL connection that
+            raises OperationalError (e.g. SSL closed unexpectedly, connection reset).
+            This ensures the pool never returns a stale/broken connection on retry.
+            """
+            orig = getattr(exception_context, 'original_exception', None)
+            if orig and isinstance(orig, (psycopg2.OperationalError, psycopg2.InterfaceError)):
+                from backend.logger import logger as _logger
+                conn = exception_context.connection
+                if conn is not None:
+                    _logger.warning(
+                        "[DB_POOL] Invalidating broken PostgreSQL connection: "
+                        f"{type(orig).__name__}: {str(orig)[:120]}"
+                    )
+                    conn.invalidate()
+    except ImportError:
+        pass  # psycopg2 not available in this environment
+
 
 def get_db():
     db = SessionLocal()

@@ -54,22 +54,24 @@ async def _sync_single_student_canonical(
     run_optional_phases: bool = False
 ):
     import sqlalchemy.exc
+    import random
     max_retries = 3
     for attempt in range(1, max_retries + 1):
         try:
             return await _sync_single_student_canonical_impl(
                 student, client, sem, lock, job_id, progress_callback, run_optional_phases
             )
-        except sqlalchemy.exc.OperationalError as op_err:
-            logger.warning(f"[SYNC] OperationalError for {student.username or student.name} (Attempt {attempt}/{max_retries}): {op_err}")
+        except (sqlalchemy.exc.OperationalError, sqlalchemy.exc.PendingRollbackError) as db_err:
+            logger.warning(
+                f"[SYNC] Transient DB error for student '{student.username or student.name}' "
+                f"(Attempt {attempt}/{max_retries}): {type(db_err).__name__}: {db_err}"
+            )
             if attempt == max_retries:
+                logger.error(f"[SYNC] Max retries exhausted for '{student.username or student.name}'. Marking as failed.")
                 raise
-            await asyncio.sleep(2 * attempt)
-        except sqlalchemy.exc.PendingRollbackError as pr_err:
-            logger.warning(f"[SYNC] PendingRollbackError for {student.username or student.name} (Attempt {attempt}/{max_retries}): {pr_err}")
-            if attempt == max_retries:
-                raise
-            await asyncio.sleep(2 * attempt)
+            # Exponential backoff with jitter — fresh session will be acquired on next attempt
+            backoff = (2 ** attempt) + random.uniform(0.0, 1.0)
+            await asyncio.sleep(backoff)
 
 async def _sync_single_student_canonical_impl(
     student: Student,
@@ -84,13 +86,47 @@ async def _sync_single_student_canonical_impl(
         now_dt = datetime.datetime.utcnow()
         streak_count = 0
         total_active_days = 0
+
+        # ── PHASE 1: NETWORK ONLY — No DB session open during HTTP calls ────────
+        c_username, c_url, u_status = extract_leetcode_username(student.username or student.leetcode_url)
+
+        status_code = "PENDING_USERNAME"
+        sync_status_str = "pending"
+        error_msg = None
+        phase_a_res: Optional[Dict[str, Any]] = None
+        phase_b_res: Optional[Dict[str, Any]] = None
+
+        if u_status == "OK" and c_username:
+            # All LeetCode HTTP requests run BEFORE any DB session is opened
+            phase_a_res = await fetch_profile_and_stats(c_username, client)
+            await asyncio.sleep(0.08)
+
+            phase_a_status = phase_a_res.get("status")
+
+            if phase_a_status == "not_found":
+                status_code = "PROFILE_NOT_FOUND"
+            elif phase_a_status == "identity_mismatch":
+                status_code = "IDENTITY_MISMATCH"
+                error_msg = phase_a_res.get("detail")
+            elif phase_a_status == "ok" and phase_a_res.get("data"):
+                status_code = "SUCCESS"
+                # Phase B also runs before any DB connection
+                phase_b_res = await fetch_contest_data(c_username, client)
+                await asyncio.sleep(0.08)
+            else:
+                status_code = "FETCH_FAILED"
+                error_msg = phase_a_res.get("detail", "Fetch failed during Phase A")
+
+        # ── PHASE 2: DATABASE — Short-lived session, NO network calls inside ────
         db_student = SessionLocal()
         try:
             st = db_student.query(Student).filter(Student.id == student.id).first()
             if not st:
+                db_student.close()
                 return
 
-            c_username, c_url, u_status = extract_leetcode_username(st.username or st.leetcode_url)
+            # Preserve c_username from already-extracted value
+            effective_username = c_username
 
             lc_prof = db_student.query(LeetCodeProfile).filter(LeetCodeProfile.student_id == st.id).first()
             if not lc_prof:
@@ -109,239 +145,215 @@ async def _sync_single_student_canonical_impl(
 
             lc_prof.last_attempted_at = now_dt
 
-            status_code = "PENDING_USERNAME"
             total_solved = None
             easy_solved = None
             medium_solved = None
             hard_solved = None
             contest_rating = None
-            sync_status_str = "pending"
-            error_msg = None
 
-            if u_status != "OK" or not c_username:
+            # ── Apply network results to DB objects ─────────────────────────────
+            if status_code == "PENDING_USERNAME":
                 lc_prof.verification_status = "PENDING_USERNAME"
                 lc_prof.sync_state = "PENDING_USERNAME"
                 lc_prof.canonical_username = None
                 lc_prof.profile_url = None
                 shim_stats.status = "MISSING LINK"
                 shim_stats.sync_status = "pending"
-                status_code = "PENDING_USERNAME"
                 sync_status_str = "pending"
-            else:
-                # Phase A: Core Profile & Problem Stats
-                res_a = await fetch_profile_and_stats(c_username, client)
-                await asyncio.sleep(0.08)
-
-                phase_a_status = res_a.get("status")
-
-                if phase_a_status == "not_found":
-                    # Check if student was previously verified (Old Data Fallback Protection)
-                    if shim_stats.total_solved is not None and shim_stats.total_solved > 0:
-                        status_code = "SUCCESS"
-                        sync_status_str = "verified"
-                        total_solved = shim_stats.total_solved
-                        easy_solved = shim_stats.easy_solved
-                        medium_solved = shim_stats.medium_solved
-                        hard_solved = shim_stats.hard_solved
-                        contest_rating = shim_stats.contest_rating
-                        shim_stats.status = "verified"
-                        shim_stats.sync_status = "success"
-                        shim_stats.validation_status = "verified"
-                        lc_prof.verification_status = "PROFILE_VERIFIED"
-                        lc_prof.sync_state = "SYNCED"
-                    else:
-                        lc_prof.verification_status = "INVALID_USERNAME"
-                        lc_prof.sync_state = "INVALID_USERNAME"
-                        lc_prof.error_code = "404_NOT_FOUND"
-                        lc_prof.error_message = "LeetCode username does not resolve to a public profile"
-                        shim_stats.status = "INVALID_USERNAME"
-                        shim_stats.sync_status = "failed"
-                        shim_stats.error_code = "PROFILE_NOT_FOUND"
-                        status_code = "INVALID_USERNAME"
-                        sync_status_str = "failed"
-                        error_msg = "Profile not found (404)"
-
-                elif phase_a_status == "identity_mismatch":
-                    lc_prof.verification_status = "IDENTITY_MISMATCH"
-                    lc_prof.sync_state = "IDENTITY_MISMATCH"
-                    lc_prof.error_code = "IDENTITY_MISMATCH"
-                    lc_prof.error_message = res_a.get("detail")
-                    shim_stats.status = "IDENTITY_MISMATCH"
-                    shim_stats.sync_status = "mismatch"
-                    shim_stats.error_code = "MISMATCH"
-                    status_code = "IDENTITY_MISMATCH"
-                    sync_status_str = "mismatch"
-                    error_msg = res_a.get("detail")
-
-                elif phase_a_status == "ok" and res_a.get("data"):
-                    data = res_a["data"]
-                    c_user = data["canonical_username"]
-                    lc_prof.canonical_username = c_user
-                    lc_prof.profile_url = data["profile_url"]
-                    lc_prof.real_name = data.get("real_name")
-                    lc_prof.avatar_url = data.get("avatar_url")
-                    lc_prof.about_me = data.get("about_me")
-                    lc_prof.school = data.get("school")
-                    lc_prof.company = data.get("company")
-                    lc_prof.country = data.get("country")
-                    lc_prof.reputation = data.get("reputation")
-                    lc_prof.verification_status = "PROFILE_VERIFIED"
-                    lc_prof.sync_state = "SYNCED"
-                    lc_prof.last_verified_at = now_dt
-                    lc_prof.last_synced_at = now_dt
-                    lc_prof.error_code = None
-                    lc_prof.error_message = None
-
-                    st.username = c_user
-                    st.leetcode_url = data["profile_url"]
-
-                    total_solved = data.get("total_solved")
-                    easy_solved = data.get("easy_solved")
-                    medium_solved = data.get("medium_solved")
-                    hard_solved = data.get("hard_solved")
-
-                    lc_stats.total_solved = total_solved
-                    lc_stats.easy_solved = easy_solved
-                    lc_stats.medium_solved = medium_solved
-                    lc_stats.hard_solved = hard_solved
-                    lc_stats.profile_global_ranking = data.get("profile_global_ranking")
-                    lc_stats.fetched_at = now_dt
-
-                    shim_stats.total_solved = total_solved
-                    shim_stats.easy_solved = easy_solved
-                    shim_stats.medium_solved = medium_solved
-                    shim_stats.hard_solved = hard_solved
-                    shim_stats.public_profile_ranking = data.get("profile_global_ranking")
+            elif status_code == "IDENTITY_MISMATCH":
+                lc_prof.verification_status = "IDENTITY_MISMATCH"
+                lc_prof.sync_state = "IDENTITY_MISMATCH"
+                lc_prof.error_code = "IDENTITY_MISMATCH"
+                lc_prof.error_message = error_msg
+                shim_stats.status = "IDENTITY_MISMATCH"
+                shim_stats.sync_status = "mismatch"
+                shim_stats.error_code = "MISMATCH"
+                sync_status_str = "mismatch"
+            elif status_code in ("PROFILE_NOT_FOUND",):
+                # Check if student was previously verified (Old Data Fallback Protection)
+                if shim_stats.total_solved is not None and shim_stats.total_solved > 0:
+                    status_code = "SUCCESS"
+                    sync_status_str = "verified"
+                    total_solved = shim_stats.total_solved
+                    easy_solved = shim_stats.easy_solved
+                    medium_solved = shim_stats.medium_solved
+                    hard_solved = shim_stats.hard_solved
+                    contest_rating = shim_stats.contest_rating
                     shim_stats.status = "verified"
                     shim_stats.sync_status = "success"
                     shim_stats.validation_status = "verified"
-                    shim_stats.last_successful_sync = now_dt
-                    shim_stats.last_verified_at = now_dt
-
-                    # Phase A.1: Calendar & Activity Streaks
-                    streak_count = data.get("streak")
-                    total_active_days = data.get("total_active_days")
-                    cal_json = data.get("submission_calendar_json")
-
-                    lc_activity = db_student.query(LeetCodeActivity).filter(LeetCodeActivity.student_id == st.id).first()
-                    if not lc_activity:
-                        lc_activity = LeetCodeActivity(student_id=st.id)
-                        db_student.add(lc_activity)
-
-                    if streak_count is not None:
-                        lc_activity.current_streak = streak_count
-                        lc_activity.longest_streak = max(lc_activity.longest_streak or 0, streak_count)
-                        shim_stats.max_streak = streak_count
-                    if total_active_days is not None:
-                        lc_activity.total_active_days = total_active_days
-                        shim_stats.active_days = total_active_days
-                    if cal_json:
-                        lc_activity.submission_calendar_json = cal_json
-                    lc_activity.fetched_at = now_dt
-
-                    # Badges
-                    for b in data.get("badges", []):
-                        badge_id = b.get("badge_id")
-                        if badge_id:
-                            existing_b = db_student.query(LeetCodeBadge).filter(
-                                LeetCodeBadge.student_id == st.id, LeetCodeBadge.badge_id == badge_id
-                            ).first()
-                            if not existing_b:
-                                existing_b = LeetCodeBadge(student_id=st.id, badge_id=badge_id)
-                                db_student.add(existing_b)
-                            existing_b.display_name = b.get("display_name")
-                            existing_b.icon_url = b.get("icon_url")
-
-                    # Languages
-                    for lang in data.get("languages", []):
-                        l_name = lang.get("language_name")
-                        if l_name:
-                            existing_l = db_student.query(LeetCodeLanguageStats).filter(
-                                LeetCodeLanguageStats.student_id == st.id, LeetCodeLanguageStats.language_name == l_name
-                            ).first()
-                            if not existing_l:
-                                existing_l = LeetCodeLanguageStats(student_id=st.id, language_name=l_name)
-                                db_student.add(existing_l)
-                            existing_l.problems_solved = lang.get("problems_solved", 0)
-                            existing_l.fetched_at = now_dt
-
-                    # Phase B: Contest Standings & Rating History
-                    res_b = await fetch_contest_data(c_user, client)
-                    await asyncio.sleep(0.08)
-
-                    if res_b.get("status") == "ok" and res_b.get("data"):
-                        c_data = res_b["data"]
-                        contest_rating = c_data.get("contest_rating")
-
-                        lc_contest = db_student.query(LeetCodeContest).filter(LeetCodeContest.student_id == st.id).first()
-                        if not lc_contest:
-                            lc_contest = LeetCodeContest(student_id=st.id)
-                            db_student.add(lc_contest)
-
-                        lc_contest.contest_rating = contest_rating
-                        lc_contest.contest_global_ranking = c_data.get("contest_global_ranking")
-                        lc_contest.attended_count = c_data.get("attended_count")
-                        lc_contest.top_percentage = c_data.get("top_percentage")
-                        lc_contest.most_recent_contest_name = c_data.get("most_recent_contest_name")
-                        lc_contest.most_recent_contest_type = c_data.get("most_recent_contest_type")
-                        lc_contest.fetched_at = now_dt
-
-                        shim_stats.contest_rating = contest_rating
-                        shim_stats.contest_global_ranking = c_data.get("contest_global_ranking")
-                        shim_stats.recent_contest_name = c_data.get("most_recent_contest_name")
-
-                        for hist in c_data.get("history", []):
-                            c_name = hist.get("contest_name")
-                            if not c_name:
-                                continue
-                            is_att = hist.get("attended", False)
-                            existing_hist = db_student.query(LeetCodeContestRatingHistory).filter(
-                                LeetCodeContestRatingHistory.student_id == st.id,
-                                LeetCodeContestRatingHistory.contest_name == c_name,
-                                LeetCodeContestRatingHistory.attended == is_att
-                            ).first()
-                            if not existing_hist:
-                                existing_hist = LeetCodeContestRatingHistory(
-                                    student_id=st.id,
-                                    contest_name=c_name,
-                                    attended=is_att
-                                )
-                                db_student.add(existing_hist)
-                            existing_hist.contest_type = hist.get("contest_type")
-                            existing_hist.contest_start_time = hist.get("contest_start_time")
-                            existing_hist.problems_solved = hist.get("problems_solved", 0)
-                            existing_hist.total_problems = hist.get("total_problems", 4)
-                            existing_hist.finish_time_seconds = hist.get("finish_time_seconds")
-                            existing_hist.contest_rank = hist.get("contest_rank")
-                            existing_hist.rating_after = hist.get("rating_after")
-
-                    status_code = "SUCCESS"
-                    sync_status_str = "success"
-
+                    lc_prof.verification_status = "PROFILE_VERIFIED"
+                    lc_prof.sync_state = "SYNCED"
                 else:
-                    if shim_stats.total_solved is not None and shim_stats.total_solved > 0:
-                        status_code = "SUCCESS"
-                        sync_status_str = "verified"
-                        total_solved = shim_stats.total_solved
-                        easy_solved = shim_stats.easy_solved
-                        medium_solved = shim_stats.medium_solved
-                        hard_solved = shim_stats.hard_solved
-                        contest_rating = shim_stats.contest_rating
-                        shim_stats.status = "verified"
-                        shim_stats.sync_status = "success"
-                        shim_stats.validation_status = "verified"
-                        lc_prof.verification_status = "PROFILE_VERIFIED"
-                        lc_prof.sync_state = "SYNCED"
-                    else:
-                        lc_prof.sync_state = "FETCH_FAILED"
-                        lc_prof.error_code = phase_a_status.upper() if phase_a_status else "FETCH_FAILED"
-                        lc_prof.error_message = res_a.get("detail", "Fetch failed during Phase A")
-                        shim_stats.status = "FETCH_FAILED"
-                        shim_stats.sync_status = "failed"
-                        shim_stats.error_code = "NETWORK_ERROR"
-                        status_code = "FETCH_FAILED"
-                        sync_status_str = "failed"
-                        error_msg = res_a.get("detail", "Fetch failed")
+                    lc_prof.verification_status = "INVALID_USERNAME"
+                    lc_prof.sync_state = "INVALID_USERNAME"
+                    lc_prof.error_code = "404_NOT_FOUND"
+                    lc_prof.error_message = "LeetCode username does not resolve to a public profile"
+                    shim_stats.status = "INVALID_USERNAME"
+                    shim_stats.sync_status = "failed"
+                    shim_stats.error_code = "PROFILE_NOT_FOUND"
+                    status_code = "INVALID_USERNAME"
+                    sync_status_str = "failed"
+                    error_msg = "Profile not found (404)"
+            elif status_code == "FETCH_FAILED":
+                if shim_stats.total_solved is not None and shim_stats.total_solved > 0:
+                    status_code = "SUCCESS"
+                    sync_status_str = "verified"
+                    total_solved = shim_stats.total_solved
+                    easy_solved = shim_stats.easy_solved
+                    medium_solved = shim_stats.medium_solved
+                    hard_solved = shim_stats.hard_solved
+                    contest_rating = shim_stats.contest_rating
+                    shim_stats.status = "verified"
+                    shim_stats.sync_status = "success"
+                    shim_stats.validation_status = "verified"
+                    lc_prof.verification_status = "PROFILE_VERIFIED"
+                    lc_prof.sync_state = "SYNCED"
+                else:
+                    lc_prof.sync_state = "FETCH_FAILED"
+                    lc_prof.error_code = "FETCH_FAILED"
+                    lc_prof.error_message = error_msg or "Fetch failed during Phase A"
+                    shim_stats.status = "FETCH_FAILED"
+                    shim_stats.sync_status = "failed"
+                    shim_stats.error_code = "NETWORK_ERROR"
+                    sync_status_str = "failed"
+            elif status_code == "SUCCESS" and phase_a_res and phase_a_res.get("data"):
+                data = phase_a_res["data"]
+                c_user = data["canonical_username"]
+                lc_prof.canonical_username = c_user
+                lc_prof.profile_url = data["profile_url"]
+                lc_prof.real_name = data.get("real_name")
+                lc_prof.avatar_url = data.get("avatar_url")
+                lc_prof.about_me = data.get("about_me")
+                lc_prof.school = data.get("school")
+                lc_prof.company = data.get("company")
+                lc_prof.country = data.get("country")
+                lc_prof.reputation = data.get("reputation")
+                lc_prof.verification_status = "PROFILE_VERIFIED"
+                lc_prof.sync_state = "SYNCED"
+                lc_prof.last_verified_at = now_dt
+                lc_prof.last_synced_at = now_dt
+                lc_prof.error_code = None
+                lc_prof.error_message = None
+
+                st.username = c_user
+                st.leetcode_url = data["profile_url"]
+
+                total_solved = data.get("total_solved")
+                easy_solved = data.get("easy_solved")
+                medium_solved = data.get("medium_solved")
+                hard_solved = data.get("hard_solved")
+
+                lc_stats.total_solved = total_solved
+                lc_stats.easy_solved = easy_solved
+                lc_stats.medium_solved = medium_solved
+                lc_stats.hard_solved = hard_solved
+                lc_stats.profile_global_ranking = data.get("profile_global_ranking")
+                lc_stats.fetched_at = now_dt
+
+                shim_stats.total_solved = total_solved
+                shim_stats.easy_solved = easy_solved
+                shim_stats.medium_solved = medium_solved
+                shim_stats.hard_solved = hard_solved
+                shim_stats.public_profile_ranking = data.get("profile_global_ranking")
+                shim_stats.status = "verified"
+                shim_stats.sync_status = "success"
+                shim_stats.validation_status = "verified"
+                shim_stats.last_successful_sync = now_dt
+                shim_stats.last_verified_at = now_dt
+
+                streak_count = data.get("streak")
+                total_active_days = data.get("total_active_days")
+                cal_json = data.get("submission_calendar_json")
+
+                lc_activity = db_student.query(LeetCodeActivity).filter(LeetCodeActivity.student_id == st.id).first()
+                if not lc_activity:
+                    lc_activity = LeetCodeActivity(student_id=st.id)
+                    db_student.add(lc_activity)
+
+                if streak_count is not None:
+                    lc_activity.current_streak = streak_count
+                    lc_activity.longest_streak = max(lc_activity.longest_streak or 0, streak_count)
+                    shim_stats.max_streak = streak_count
+                if total_active_days is not None:
+                    lc_activity.total_active_days = total_active_days
+                    shim_stats.active_days = total_active_days
+                if cal_json:
+                    lc_activity.submission_calendar_json = cal_json
+                lc_activity.fetched_at = now_dt
+
+                for b in data.get("badges", []):
+                    badge_id = b.get("badge_id")
+                    if badge_id:
+                        existing_b = db_student.query(LeetCodeBadge).filter(
+                            LeetCodeBadge.student_id == st.id, LeetCodeBadge.badge_id == badge_id
+                        ).first()
+                        if not existing_b:
+                            existing_b = LeetCodeBadge(student_id=st.id, badge_id=badge_id)
+                            db_student.add(existing_b)
+                        existing_b.display_name = b.get("display_name")
+                        existing_b.icon_url = b.get("icon_url")
+
+                for lang in data.get("languages", []):
+                    l_name = lang.get("language_name")
+                    if l_name:
+                        existing_l = db_student.query(LeetCodeLanguageStats).filter(
+                            LeetCodeLanguageStats.student_id == st.id, LeetCodeLanguageStats.language_name == l_name
+                        ).first()
+                        if not existing_l:
+                            existing_l = LeetCodeLanguageStats(student_id=st.id, language_name=l_name)
+                            db_student.add(existing_l)
+                        existing_l.problems_solved = lang.get("problems_solved", 0)
+                        existing_l.fetched_at = now_dt
+
+                # Phase B contest data (already fetched in network phase)
+                if phase_b_res and phase_b_res.get("status") == "ok" and phase_b_res.get("data"):
+                    c_data = phase_b_res["data"]
+                    contest_rating = c_data.get("contest_rating")
+
+                    lc_contest = db_student.query(LeetCodeContest).filter(LeetCodeContest.student_id == st.id).first()
+                    if not lc_contest:
+                        lc_contest = LeetCodeContest(student_id=st.id)
+                        db_student.add(lc_contest)
+
+                    lc_contest.contest_rating = contest_rating
+                    lc_contest.contest_global_ranking = c_data.get("contest_global_ranking")
+                    lc_contest.attended_count = c_data.get("attended_count")
+                    lc_contest.top_percentage = c_data.get("top_percentage")
+                    lc_contest.most_recent_contest_name = c_data.get("most_recent_contest_name")
+                    lc_contest.most_recent_contest_type = c_data.get("most_recent_contest_type")
+                    lc_contest.fetched_at = now_dt
+
+                    shim_stats.contest_rating = contest_rating
+                    shim_stats.contest_global_ranking = c_data.get("contest_global_ranking")
+                    shim_stats.recent_contest_name = c_data.get("most_recent_contest_name")
+
+                    for hist in c_data.get("history", []):
+                        c_name = hist.get("contest_name")
+                        if not c_name:
+                            continue
+                        is_att = hist.get("attended", False)
+                        existing_hist = db_student.query(LeetCodeContestRatingHistory).filter(
+                            LeetCodeContestRatingHistory.student_id == st.id,
+                            LeetCodeContestRatingHistory.contest_name == c_name,
+                            LeetCodeContestRatingHistory.attended == is_att
+                        ).first()
+                        if not existing_hist:
+                            existing_hist = LeetCodeContestRatingHistory(
+                                student_id=st.id,
+                                contest_name=c_name,
+                                attended=is_att
+                            )
+                            db_student.add(existing_hist)
+                        existing_hist.contest_type = hist.get("contest_type")
+                        existing_hist.contest_start_time = hist.get("contest_start_time")
+                        existing_hist.problems_solved = hist.get("problems_solved", 0)
+                        existing_hist.total_problems = hist.get("total_problems", 4)
+                        existing_hist.finish_time_seconds = hist.get("finish_time_seconds")
+                        existing_hist.contest_rank = hist.get("contest_rank")
+                        existing_hist.rating_after = hist.get("rating_after")
+
+                sync_status_str = "success"
 
             db_student.commit()
 
