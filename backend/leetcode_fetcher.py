@@ -962,6 +962,7 @@ async def fetch_recent_submissions(
         if not isinstance(s, dict):
             continue
         ts = s.get("timestamp")
+        dt_val = int(ts) if ts else None
         submissions.append({
             "title_slug":           s.get("titleSlug", ""),
             "title":                s.get("title"),
@@ -969,7 +970,7 @@ async def fetch_recent_submissions(
             "status_display":       s.get("statusDisplay"),
             "runtime_display":      s.get("runtime"),
             "memory_display":       s.get("memory"),
-            "submission_timestamp": dt,
+            "submission_timestamp": dt_val,
         })
 
     return {"status": "ok", "data": {"submissions": submissions}}

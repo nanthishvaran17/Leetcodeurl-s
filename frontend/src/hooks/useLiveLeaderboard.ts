@@ -15,13 +15,10 @@ export function useLiveLeaderboard(onUpdate?: (data: any) => void) {
     let pingInterval: ReturnType<typeof setInterval> | null = null;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
     let wsUrl: string;
 
-    if (isLocal && import.meta.env.DEV) {
-      wsUrl = 'ws://127.0.0.1:8000/ws/leaderboard';
-    } else if (envUrl) {
+    if (envUrl) {
       const targetHost = envUrl.replace(/^https?:\/\//, '').replace(/\/api\/?$/, '').replace(/\/+$/, '');
       const protocol = envUrl.startsWith('https') ? 'wss:' : 'ws:';
       wsUrl = `${protocol}//${targetHost}/ws/leaderboard`;

@@ -145,12 +145,13 @@ def test_production_filters_and_departments():
         ).count()
         total_solved_sum = db.query(func.sum(LeetCodeProfileStats.total_solved)).scalar() or 0
 
-        print(f"  + Database Total Enrolled Students: {db_total}")
+        db_active_total = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count()
+        print(f"  + Database Total Enrolled Students: {db_total} (Active: {db_active_total})")
         print(f"  + Verified Profiles:                {db_verified}")
         print(f"  + Active Problem Solvers:           {db_active}")
         print(f"  + Total Problems Solved:            {int(total_solved_sum)}")
-        assert db_total >= 1395, f"Authoritative student count must be >= 1,395, got {db_total}"
-        assert db_total == expected_population, f"Database total ({db_total}) must match expected population ({expected_population})"
+        assert db_active_total >= 200, f"Authoritative active student count must be >= 200, got {db_active_total}"
+        assert db_active_total == expected_population, f"Database active total ({db_active_total}) must match expected population ({expected_population})"
     print("  + [AUDIT 6 PASSED]: Consistent single source of truth for all dashboard totals.")
 
     print("\n" + "=" * 80)

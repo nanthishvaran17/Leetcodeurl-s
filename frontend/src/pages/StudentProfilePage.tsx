@@ -290,7 +290,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
 
         <div className="glass-card p-5 rounded-2xl border text-center shadow-md">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Active Streak</p>
-          <h3 className="text-2xl font-extrabold text-amber-500 mt-1">🔥 {detail?.streak_count || 0} wks</h3>
+          <h3 className="text-2xl font-extrabold text-amber-500 mt-1">🔥 {detail?.lc_activity?.current_streak || detail?.streak_count || 0} Days</h3>
         </div>
 
       </div>
@@ -299,21 +299,21 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <div className="glass-card p-5 rounded-2xl border text-center shadow-md">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Official Contests</p>
-          <h3 className="text-2xl font-extrabold text-blue-600 dark:text-blue-400 mt-1">{detail?.stats?.official_contests || 0}</h3>
+          <h3 className="text-2xl font-extrabold text-blue-600 dark:text-blue-400 mt-1">{detail?.lc_contest_standing?.attended_count || detail?.stats?.official_contests || 0}</h3>
         </div>
         <div className="glass-card p-5 rounded-2xl border text-center shadow-md">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Virtual Contests</p>
           <div className="mt-1">
             <h3 className="text-2xl font-extrabold text-blue-600 dark:text-blue-400">
-              {detail?.stats?.virtual_contests ?? 0}
+              {detail?.stats?.virtual_contests || (detail?.has_virtual ? 1 : 0)}
             </h3>
             <div className="mt-1">
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                (detail?.stats?.virtual_contest_status === 'ATTENDED' || (detail?.stats?.virtual_contests && detail.stats.virtual_contests > 0))
+                (detail?.stats?.virtual_contest_status === 'ATTENDED' || detail?.has_virtual || (detail?.stats?.virtual_contests && detail.stats.virtual_contests > 0))
                   ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-400/30'
                   : 'bg-gray-100 text-gray-600 dark:bg-navy-950 dark:text-gray-400 border border-gray-300/30'
               }`}>
-                {(detail?.stats?.virtual_contest_status === 'ATTENDED' || (detail?.stats?.virtual_contests && detail.stats.virtual_contests > 0))
+                {(detail?.stats?.virtual_contest_status === 'ATTENDED' || detail?.has_virtual || (detail?.stats?.virtual_contests && detail.stats.virtual_contests > 0))
                   ? '🔵 Attended'
                   : '⚪ Not Attended'}
               </span>
@@ -323,7 +323,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         <div className="glass-card p-5 rounded-2xl border text-center shadow-md col-span-2 md:col-span-1">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Contest Rating</p>
           <h3 className="text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">
-            {detail?.stats?.contest_rating ? detail.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1 }) : '—'}
+            {(detail?.lc_contest_standing?.contest_rating || detail?.stats?.contest_rating) ? (detail.lc_contest_standing?.contest_rating || detail.stats?.contest_rating).toLocaleString('en-US', { minimumFractionDigits: 1 }) : 'Unrated'}
           </h3>
         </div>
       </div>

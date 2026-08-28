@@ -178,6 +178,7 @@ class WeeklySession(Base):
     snapshots = relationship("WeeklySessionSnapshot", back_populates="session", cascade="all, delete-orphan")
     public_results = relationship("WeeklyPublicResult", back_populates="session", cascade="all, delete-orphan")
     virtual_results = relationship("WeeklyVirtualResult", back_populates="session", cascade="all, delete-orphan")
+    live_events = relationship("WeeklyContestLiveEvent", back_populates="session", cascade="all, delete-orphan")
     error_logs = relationship("WeeklyContestErrorLog", back_populates="session", cascade="all, delete-orphan")
 
 class WeeklySessionSnapshot(Base):
@@ -264,6 +265,29 @@ class WeeklyVirtualResult(Base):
     completed_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     session = relationship("WeeklySession", back_populates="virtual_results")
+    student = relationship("Student")
+
+class WeeklyContestLiveEvent(Base):
+    __tablename__ = "weekly_contest_live_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("weekly_sessions.id"), nullable=False, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    reg_no = Column(String(50), nullable=False)
+    student_name = Column(String(150), nullable=False)
+    
+    question_id = Column(Integer, nullable=True) # e.g., 1, 2, 3, 4 for Q1, Q2, Q3, Q4
+    title_slug = Column(String(150), nullable=False)
+    submission_id = Column(String(50), nullable=True)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    
+    # Provenance tracking
+    event_type = Column(String(50), default="SOLVE") # SOLVE, ATTEMPT, RANK_CHANGE
+    old_rank = Column(Integer, nullable=True)
+    new_rank = Column(Integer, nullable=True)
+    is_verified = Column(Boolean, default=True)
+
+    session = relationship("WeeklySession", back_populates="live_events")
     student = relationship("Student")
 
 class WeeklyContestErrorLog(Base):

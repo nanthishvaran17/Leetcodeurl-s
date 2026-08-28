@@ -403,7 +403,7 @@ export const App: React.FC = () => {
 
               {activeTab === 'weekly-contest' && (
                 isTabAllowed('weekly-contest')
-                  ? <WeeklyContestPage />
+                  ? <WeeklyContestPage onSelectStudent={handleSelectStudent} />
                   : renderAccessDenied('Weekly Contest Tracker')
               )}
 

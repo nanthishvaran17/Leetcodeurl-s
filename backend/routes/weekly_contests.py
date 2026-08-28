@@ -119,83 +119,6 @@ def get_upcoming_session_info(db: Session = Depends(get_db)):
 # PREVIOUS WEEK CONTEST ANALYZER ENDPOINTS
 # ─────────────────────────────────────────────────────────────────────────────
 
-@router.get("/previous-week")
-def get_previous_week_info(db: Session = Depends(get_db)):
-    """
-    Returns metadata for the immediately previous Sunday LeetCode Weekly Contest.
-    """
-    from backend.services.previous_week_analyzer import PreviousWeekAnalyzer
-    return PreviousWeekAnalyzer.get_previous_week_metadata(db)
-
-
-@router.post("/previous-week/sync")
-async def sync_previous_week_contest(
-    payload: Optional[Dict[str, Any]] = None,
-    db: Session = Depends(get_db)
-):
-    """
-    Triggers complete single-flight Previous Week Contest synchronization.
-    Fetches official live leaderboard, verifies virtual participation for non-public students,
-    and publishes atomic dataset version.
-    """
-    from backend.services.previous_week_analyzer import PreviousWeekAnalyzer
-    force_resync = payload.get("force_resync", False) if payload else False
-    success, res = await PreviousWeekAnalyzer.sync_previous_week_contest(db, force_resync=force_resync)
-    if not success:
-        raise HTTPException(status_code=502 if "API_FETCH" in str(res) else 400, detail=res)
-    return res
-
-
-@router.get("/previous-week/participation")
-def get_previous_week_participation(
-    request: Request,
-    participation_type: Optional[str] = Query(None),
-    department_id: Optional[int] = Query(None),
-    year_level: Optional[str] = Query(None),
-    section_id: Optional[int] = Query(None),
-    search: Optional[str] = Query(None),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(50, ge=1, le=500),
-    db: Session = Depends(get_db)
-):
-    """
-    Role-scoped server-side query for Previous Week Contest participation records.
-    - Staff: Assigned students ONLY.
-    - HOD: Authorized department ONLY.
-    - Student: Self ONLY.
-    - Admin / Principal: Full institutional access.
-    """
-    from backend.routes.auth import get_current_user_from_request
-    from backend.services.previous_week_analyzer import PreviousWeekAnalyzer
-
-    current_user = get_current_user_from_request(request, db)
-    return PreviousWeekAnalyzer.get_previous_week_participation_role_scoped(
-        db, current_user,
-        participation_type=participation_type,
-        department_id=department_id,
-        year_level=year_level,
-        section_id=section_id,
-        search=search,
-        page=page,
-        page_size=page_size
-    )
-
-
-@router.get("/previous-week/summary")
-def get_previous_week_summary(
-    request: Request,
-    db: Session = Depends(get_db)
-):
-    """
-    Role-scoped summary statistics for Previous Week Contest.
-    Guarantees mathematical reconciliation across Public, Virtual, Not Participated, Not Verified, and Missing Username.
-    """
-    from backend.routes.auth import get_current_user_from_request
-    from backend.services.previous_week_analyzer import PreviousWeekAnalyzer
-
-    current_user = get_current_user_from_request(request, db)
-    return PreviousWeekAnalyzer.get_previous_week_summary_role_scoped(db, current_user)
-
 @router.get("/sessions/{session_id}/live-status")
 def get_session_live_telemetry(
     request: Request,
@@ -219,7 +142,54 @@ def get_session_live_telemetry(
     
     # Scoped telemetry
     telemetry = sunday_live_engine.get_telemetry(session_id, db)
-    
+
+    # ── Enrich with sync latency, WS connection count, verification status ──
+    from backend.websocket_manager import manager as ws_manager
+    telemetry["wsConnectionCount"] = len(ws_manager.active_connections)
+
+    # Verification status string for command bar
+    total_students = session.total_students if session else 302
+    public_results = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session_id).all()
+    verified_count = sum(1 for r in public_results if r.participation_status in (
+        "PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "NOT_ATTENDED",
+        "PUBLIC_NOT_ATTENDED", "VIRTUAL", "VIRTUAL_ATTENDED"
+    ))
+    pending_count = sum(1 for r in public_results if r.participation_status in ("PENDING", "UNKNOWN"))
+    error_count = sum(1 for r in public_results if r.participation_status in ("DATA_ERROR", "USERNAME_NOT_FOUND"))
+    attended_count = sum(1 for r in public_results if r.participation_status in (
+        "PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL", "VIRTUAL_ATTENDED"
+    ))
+
+    if session and session.status == "FINALIZED":
+        verification_status = "FINALIZED"
+    elif verified_count >= total_students:
+        verification_status = "FULLY_VERIFIED"
+    elif verified_count > 0:
+        verification_status = "PARTIALLY_VERIFIED"
+    else:
+        verification_status = "PENDING_VERIFICATION"
+
+    telemetry["verificationStatus"] = verification_status
+    telemetry["verifiedCount"] = verified_count
+    telemetry["pendingCount"] = pending_count
+    telemetry["errorCount"] = error_count
+    telemetry["attendedCount"] = attended_count
+    telemetry["totalStudents"] = total_students
+
+    # Per-question first solver / fastest solver from DB
+    q_stats: Dict[str, Any] = {}
+    for q_idx, q_col_name in [(1, "q1"), (2, "q2"), (3, "q3"), (4, "q4")]:
+        solvers = [r for r in public_results if getattr(r, q_col_name, 0) and getattr(r, q_col_name, 0) > 0]
+        total_solved = len(solvers)
+        q_stats[f"q{q_idx}"] = {
+            "totalSolved": total_solved,
+            "solvePercent": round((total_solved / max(total_students, 1)) * 100, 1) if total_students else 0,
+            "firstSolver": solvers[0].name if solvers else None,
+            "firstSolverDept": solvers[0].dept if solvers else None,
+            "firstSolverYear": solvers[0].year if solvers else None,
+        }
+    telemetry["questionStats"] = q_stats
+
     if current_user and hasattr(current_user, 'role'):
         role = (getattr(current_user, "override_role", None) or current_user.role or "").lower()
         if "staff" in role or "faculty" in role:
@@ -235,6 +205,7 @@ def get_session_live_telemetry(
                 telemetry["topLeaderboard"] = []
 
     return telemetry
+
 
 @router.post("/sessions/{session_id}/admin-control")
 async def execute_admin_live_control(
@@ -500,9 +471,11 @@ def get_or_create_custom_session(date: str = Query(..., description="Date YYYY-M
 def list_weekly_sessions(db: Session = Depends(get_db)):
     """
     Retrieves list of all canonical historical weekly contest sessions.
-    Pure read-only query optimized for sub-millisecond responses.
+    Automatically provisions the upcoming contest session if it doesn't exist.
     """
     try:
+        from backend.services.weekly_session_manager import get_or_create_current_weekly_session
+        get_or_create_current_weekly_session(db)
         sessions = db.query(WeeklySession).all()
         sessions.sort(
             key=lambda s: int(re.search(r'\d+', s.contest_name).group(0)) if (s.contest_name and re.search(r'\d+', s.contest_name)) else s.id,
@@ -1001,7 +974,264 @@ def get_session_diagnostics_detail(
         "sampleResults": sample_results
     }
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LIVE COMMAND CENTER: LEADERBOARD TIERS
+# ─────────────────────────────────────────────────────────────────────────────
+
+@router.get("/sessions/{session_id}/leaderboard")
+def get_contest_leaderboard(
+    session_id: int,
+    tier: Optional[str] = Query("overall", description="Tier: overall | dept | year"),
+    dept: Optional[str] = Query(None),
+    year: Optional[str] = Query(None),
+    limit: int = Query(25, ge=1, le=100),
+    db: Session = Depends(get_db)
+):
+    """
+    Multi-tier leaderboard for the Live Command Center.
+    Tier: overall (top N students) | dept (by department) | year (by academic year).
+    Returns ranked entries with rank delta and solve breakdown.
+    """
+    results = db.query(WeeklyPublicResult).filter(
+        WeeklyPublicResult.session_id == session_id,
+        WeeklyPublicResult.participation_status.in_([
+            "PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL", "VIRTUAL_ATTENDED"
+        ])
+    ).order_by(
+        WeeklyPublicResult.total_contest_solved.desc(),
+        WeeklyPublicResult.contest_score.desc(),
+        WeeklyPublicResult.contest_rank.asc()
+    ).all()
+
+    def make_entry(r: WeeklyPublicResult, rank: int) -> Dict[str, Any]:
+        return {
+            "rank": rank,
+            "studentId": r.student_id,
+            "name": r.name,
+            "regNo": r.reg_no,
+            "dept": r.dept,
+            "year": r.year,
+            "q1": r.q1 or 0,
+            "q2": r.q2 or 0,
+            "q3": r.q3 or 0,
+            "q4": r.q4 or 0,
+            "totalSolved": r.total_contest_solved or 0,
+            "score": r.contest_score or 0,
+            "contestRank": r.contest_rank,
+            "contestRating": r.contest_rating,
+            "participationStatus": r.participation_status,
+        }
+
+    tier_lower = (tier or "overall").lower()
+
+    if tier_lower == "overall":
+        entries = [make_entry(r, idx + 1) for idx, r in enumerate(results[:limit])]
+        return {"tier": "overall", "entries": entries, "total": len(results)}
+
+    elif tier_lower == "dept":
+        # Group by dept then rank within each dept
+        from collections import defaultdict
+        dept_groups: Dict[str, list] = defaultdict(list)
+        for r in results:
+            dept_groups[r.dept].append(r)
+
+        # If a specific dept filter is requested, return only that dept
+        target_dept = dept.strip().upper() if dept else None
+        output: Dict[str, Any] = {}
+        for dept_key, rows in dept_groups.items():
+            if target_dept and dept_key.upper() != target_dept:
+                continue
+            output[dept_key] = [make_entry(r, idx + 1) for idx, r in enumerate(rows[:limit])]
+        return {"tier": "dept", "departments": output}
+
+    elif tier_lower == "year":
+        from collections import defaultdict
+        year_groups: Dict[str, list] = defaultdict(list)
+        for r in results:
+            year_groups[r.year or "Unknown"].append(r)
+
+        target_year = year.strip().upper() if year else None
+        output_y: Dict[str, Any] = {}
+        for year_key, rows in year_groups.items():
+            if target_year and year_key.upper() != target_year:
+                continue
+            output_y[year_key] = [make_entry(r, idx + 1) for idx, r in enumerate(rows[:limit])]
+        return {"tier": "year", "years": output_y}
+
+    return {"tier": tier_lower, "entries": [], "total": 0}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LIVE COMMAND CENTER: DEPARTMENT ANALYTICS
+# ─────────────────────────────────────────────────────────────────────────────
+
+@router.get("/sessions/{session_id}/dept-analytics")
+def get_contest_dept_analytics(
+    session_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Per-department analytics for the Live Contest Command Center.
+    Returns participation stats, solve distribution, and top performer per department.
+    Data is pulled live from WeeklyPublicResult for the given session.
+    """
+    session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    all_results = db.query(WeeklyPublicResult).filter(
+        WeeklyPublicResult.session_id == session_id
+    ).all()
+
+    from collections import defaultdict
+    dept_map: Dict[str, list] = defaultdict(list)
+    for r in all_results:
+        dept_map[r.dept or "Unknown"].append(r)
+
+    total_students_in_session = session.total_students or len(all_results)
+    analytics = []
+    for dept_code, rows in sorted(dept_map.items()):
+        total = len(rows)
+        attended = [r for r in rows if r.participation_status in (
+            "PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL", "VIRTUAL_ATTENDED"
+        )]
+        not_attended = [r for r in rows if r.participation_status in (
+            "NOT_ATTENDED", "PUBLIC_NOT_ATTENDED"
+        )]
+        errors = [r for r in rows if r.participation_status in (
+            "DATA_ERROR", "USERNAME_NOT_FOUND", "UNKNOWN"
+        )]
+        pending = [r for r in rows if r.participation_status in ("PENDING",)]
+
+        total_solves = sum(r.total_contest_solved or 0 for r in attended)
+        avg_solved = round(total_solves / max(len(attended), 1), 2)
+        participation_pct = round((len(attended) / max(total, 1)) * 100, 1)
+
+        # Top performer by solved count then score
+        top_performer = None
+        if attended:
+            best = max(attended, key=lambda r: (r.total_contest_solved or 0, r.contest_score or 0))
+            top_performer = {
+                "name": best.name,
+                "regNo": best.reg_no,
+                "year": best.year,
+                "totalSolved": best.total_contest_solved or 0,
+                "rank": best.contest_rank,
+            }
+
+        # Q1..Q4 counts
+        q_counts = {
+            f"q{q}": sum(1 for r in attended if (getattr(r, f"q{q}", 0) or 0) > 0)
+            for q in range(1, 5)
+        }
+
+        analytics.append({
+            "dept": dept_code,
+            "total": total,
+            "attended": len(attended),
+            "notAttended": len(not_attended),
+            "errors": len(errors),
+            "pending": len(pending),
+            "totalSolves": total_solves,
+            "avgSolved": avg_solved,
+            "participationPct": participation_pct,
+            "topPerformer": top_performer,
+            "questionCounts": q_counts,
+        })
+
+    # Sort by attended count desc
+    analytics.sort(key=lambda x: x["attended"], reverse=True)
+    return {"sessionId": session_id, "departments": analytics, "totalDepts": len(analytics)}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LIVE COMMAND CENTER: QUESTION ANALYTICS
+# ─────────────────────────────────────────────────────────────────────────────
+
+@router.get("/sessions/{session_id}/question-analytics")
+def get_contest_question_analytics(
+    session_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Per-question analytics for the Live Contest Command Center.
+    Returns solve counts, solve rate, first solver, fastest solver, and distribution.
+    """
+    session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    total_students = session.total_students or 302
+
+    all_results = db.query(WeeklyPublicResult).filter(
+        WeeklyPublicResult.session_id == session_id
+    ).all()
+
+    attended = [r for r in all_results if r.participation_status in (
+        "PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL", "VIRTUAL_ATTENDED"
+    )]
+    total_attended = max(len(attended), 1)
+
+    questions = []
+    q_labels = {1: "Q1 (Easy)", 2: "Q2 (Medium)", 3: "Q3 (Med-Hard)", 4: "Q4 (Hard)"}
+    q_difficulty = {1: "easy", 2: "medium", 3: "medium_hard", 4: "hard"}
+
+    for q_idx in range(1, 5):
+        col = f"q{q_idx}"
+        solvers = [r for r in attended if (getattr(r, col, 0) or 0) > 0]
+        non_solvers_attended = [r for r in attended if (getattr(r, col, 0) or 0) == 0]
+        total_solved = len(solvers)
+        solve_pct = round((total_solved / total_attended) * 100, 1)
+
+        # First solver (by last_fetched_at timestamp if available, otherwise order as-is)
+        first_solver = None
+        if solvers:
+            first = solvers[0]
+            first_solver = {
+                "name": first.name,
+                "regNo": first.reg_no,
+                "dept": first.dept,
+                "year": first.year,
+            }
+
+        # Department distribution for this question
+        from collections import Counter
+        dept_dist = dict(Counter(r.dept for r in solvers))
+
+        # Year distribution
+        year_dist = dict(Counter(r.year for r in solvers))
+
+        questions.append({
+            "questionIndex": q_idx,
+            "label": q_labels[q_idx],
+            "difficulty": q_difficulty[q_idx],
+            "totalSolved": total_solved,
+            "solvePercent": solve_pct,
+            "notSolvedByAttended": len(non_solvers_attended),
+            "notAttempted": total_students - total_attended,
+            "firstSolver": first_solver,
+            "deptDistribution": dept_dist,
+            "yearDistribution": year_dist,
+        })
+
+    # Rank questions by difficulty (fewest solvers = hardest)
+    questions_sorted = sorted(questions, key=lambda q: q["totalSolved"])
+    for idx, q in enumerate(questions_sorted):
+        q["difficultyRank"] = idx + 1  # 1 = hardest
+
+    return {
+        "sessionId": session_id,
+        "totalAttended": total_attended,
+        "totalStudents": total_students,
+        "questions": questions,
+        "easiest": max(questions, key=lambda q: q["totalSolved"])["label"] if questions else None,
+        "hardest": min(questions, key=lambda q: q["totalSolved"])["label"] if questions else None,
+    }
+
+
 @router.post("/sessions/{session_id}/sync")
+
 def sync_single_weekly_contest(
     session_id: int, 
     db: Session = Depends(get_db),

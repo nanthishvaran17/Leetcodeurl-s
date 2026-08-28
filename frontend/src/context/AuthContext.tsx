@@ -233,11 +233,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('token', newToken);
     }
     const formattedUser: AuthUser = {
-      uid: `admin_${newUser.id || '1'}`,
-      name: newUser.username || 'Admin User',
-      email: newUser.email || 'nanthishvaran17@gmail.com',
-      role: newUser.role || 'Admin',
-      isProfileLinked: true,
+      uid: newUser.uid || `admin_${newUser.id || '1'}`,
+      name: newUser.username || newUser.name || 'User',
+      email: newUser.email || '',
+      role: newUser.role || 'student',
+      isProfileLinked: newUser.isProfileLinked !== undefined ? newUser.isProfileLinked : true,
       id: newUser.id,
       username: newUser.username
     };

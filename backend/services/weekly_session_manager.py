@@ -7,7 +7,8 @@ from typing import Dict, Any, Optional, List
 from sqlalchemy.orm import Session, joinedload
 from backend.models import (
     WeeklySession, WeeklyPublicResult, WeeklyVirtualResult, 
-    WeeklyContestErrorLog, OfficialWeeklySnapshot, Student
+    WeeklyContestErrorLog, OfficialWeeklySnapshot, Student,
+    WeeklyContestLiveEvent
 )
 from backend.services.contest_discovery import discover_contest_metadata, get_current_ist_datetime, get_most_recent_sunday_date, IST_TZ
 from backend.services.contest_merger import retry_failed_student_fetches, merge_contest_fetch_results
@@ -19,22 +20,26 @@ def get_or_create_current_weekly_session(db: Session) -> WeeklySession:
     Retrieves or creates the active/upcoming weekly contest session.
     Fast path: returns existing session from DB with dynamic IST status check.
     """
+    try:
+        meta = discover_contest_metadata()
+        session_code = meta["session_code"]
+    except Exception as e:
+        logger.warning(f"Contest discovery fallback note: {e}")
+        return db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+
     latest_session = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
-    if latest_session:
-        try:
-            meta = discover_contest_metadata()
-            dynamic_status = meta.get("status", "SCHEDULED")
-            if dynamic_status == "FINALIZED" and latest_session.status in ("LIVE", "ACTIVE"):
-                latest_session.status = "FINALIZED"
-                db.commit()
-            elif dynamic_status == "SCHEDULED" and latest_session.status in ("LIVE", "ACTIVE"):
-                latest_session.status = "SCHEDULED"
-                db.commit()
-            elif dynamic_status == "LIVE" and latest_session.status != "LIVE":
-                latest_session.status = "LIVE"
-                db.commit()
-        except Exception:
-            pass
+    
+    if latest_session and latest_session.session_code == session_code:
+        dynamic_status = meta.get("status", "SCHEDULED")
+        if dynamic_status == "FINALIZED" and latest_session.status in ("LIVE", "ACTIVE"):
+            latest_session.status = "FINALIZED"
+            db.commit()
+        elif dynamic_status == "SCHEDULED" and latest_session.status in ("LIVE", "ACTIVE"):
+            latest_session.status = "SCHEDULED"
+            db.commit()
+        elif dynamic_status == "LIVE" and latest_session.status != "LIVE":
+            latest_session.status = "LIVE"
+            db.commit()
         return latest_session
 
     try:
@@ -1389,6 +1394,12 @@ class SundayLiveContestEngine:
             self.active_session_id = session_id
             self.is_running = True
 
+            from backend.services.live_contest_poller import live_contest_poller
+            from backend.leetcode_fetcher import fetch_recent_submissions
+            from backend.services.canonical_contest_engine import _determine_rank
+            from backend.websocket_manager import manager
+            import httpx
+
             while self.is_running:
                 db = db_factory()
                 try:
@@ -1404,18 +1415,136 @@ class SundayLiveContestEngine:
                     self.worker_state = "RUNNING"
                     self.last_sync_dt = get_current_ist_datetime()
 
-                    # Perform quick live evidence synchronization for all students
-                    sync_single_historical_session(db, session_id)
+                    # 1. Ensure we have the contest questions
+                    questions_fetched = await live_contest_poller.fetch_contest_questions(session.contest_name)
+                    if not questions_fetched:
+                        self.worker_state = "WAITING_FOR_SOURCE"
+                        logger.warning(f"[SUNDAY_LIVE_ENGINE] Waiting for contest questions for {session.contest_name}...")
+                        await asyncio.sleep(10)
+                        continue
+                    
+                    self.worker_state = "RUNNING"
+                    
+                    # 2. Fetch all public participants for this session with student relationship
+                    public_results = db.query(WeeklyPublicResult).options(joinedload(WeeklyPublicResult.student)).filter(
+                        WeeklyPublicResult.session_id == session_id
+                    ).all()
+                    
+                    # Filter for students that have a valid LeetCode username
+                    valid_pairs = [
+                        (r, (r.student.username or r.student.leetcode_url) if r.student else None)
+                        for r in public_results
+                    ]
+                    valid_pairs = [(r, u) for r, u in valid_pairs if u]
+                    
+                    self.processed_count = len(valid_pairs)
+                    
+                    # 3. Sweep in batches of 15 to avoid rate limits
+                    batch_size = 15
+                    async with httpx.AsyncClient(timeout=10.0) as client:
+                        for i in range(0, len(valid_pairs), batch_size):
+                            if not self.is_running or self.is_paused:
+                                break
+                                
+                            batch = valid_pairs[i:i+batch_size]
+                            tasks = [fetch_recent_submissions(u, client, limit=15) for _, u in batch]
+                            results = await asyncio.gather(*tasks, return_exceptions=True)
+                            
+                            for r_idx, result in enumerate(results):
+                                if isinstance(result, Exception) or result.get("status") != "ok":
+                                    self.failed_count += 1
+                                    continue
+                                    
+                                public_result, username_val = batch[r_idx]
+                                submissions = result.get("data", {}).get("submissions", [])
+                                
+                                has_update = False
+                                
+                                for q_idx, q_slug in enumerate(live_contest_poller.sorted_question_slugs):
+                                    q_col = f"q{q_idx + 1}"
+                                    current_val = getattr(public_result, q_col)
+                                    
+                                    # If already solved, skip
+                                    if current_val and current_val > 0:
+                                        continue
+                                        
+                                    # Check if the student solved this question recently
+                                    for sub in submissions:
+                                        if sub.get("title_slug") == q_slug and sub.get("status_display") == "Accepted":
+                                            # Found a match!
+                                            setattr(public_result, q_col, 1)
+                                            has_update = True
+                                            
+                                            # Update total contest solved and contest score
+                                            public_result.total_contest_solved = (public_result.total_contest_solved or 0) + 1
+                                            q_credit = live_contest_poller.contest_questions[q_slug].get("credit", 3)
+                                            public_result.contest_score = (public_result.contest_score or 0) + q_credit
+                                            
+                                            # Ensure participation status is updated
+                                            if public_result.participation_status in ("NOT_ATTENDED", "PENDING", "UNKNOWN", "NOT_VERIFIED"):
+                                                public_result.participation_status = "PUBLIC_ATTENDED"
+                                            
+                                            self.successful_count += 1
+                                            
+                                            # Record Live Event
+                                            detail = f"Solved Problem Q{q_idx + 1} ({sub.get('title', q_slug)})"
+                                            self.record_live_event(
+                                                event_type=f"SOLVE_Q{q_idx + 1}",
+                                                student_name=public_result.name,
+                                                reg_no=public_result.reg_no,
+                                                dept=public_result.dept,
+                                                year=public_result.year,
+                                                detail=detail,
+                                                score=public_result.contest_score,
+                                                rank=public_result.contest_rank,
+                                                rank_change=None
+                                            )
+                                            
+                                            # Persist Event Provenance to DB
+                                            db_event = WeeklyContestLiveEvent(
+                                                session_id=session_id,
+                                                student_id=public_result.student_id,
+                                                reg_no=public_result.reg_no,
+                                                student_name=public_result.name,
+                                                question_id=q_idx + 1,
+                                                title_slug=q_slug,
+                                                submission_id=sub.get("id"),
+                                                event_type="SOLVE",
+                                                old_rank=None,
+                                                new_rank=public_result.contest_rank,
+                                                is_verified=True
+                                            )
+                                            db.add(db_event)
+                                            break
 
-                    self.processed_count = session.total_students or 1450
-                    self.successful_count = (session.total_students or 1450) - (session.failed_verification or 0)
-                    self.failed_count = session.failed_verification or 0
+                                if has_update:
+                                    db.commit()
+                                    db.refresh(public_result)
+                                    
+                                    # 4. Re-calculate rank if needed and broadcast event
+                                    payload = {
+                                        "student_id": public_result.student_id,
+                                        "username": username_val,
+                                        "q1": public_result.q1,
+                                        "q2": public_result.q2,
+                                        "q3": public_result.q3,
+                                        "q4": public_result.q4,
+                                        "total_solved": public_result.total_contest_solved,
+                                        "score": public_result.contest_score,
+                                        "participation_status": public_result.participation_status
+                                    }
+                                    
+                                    # Use a separate background task for WS broadcast to not block
+                                    asyncio.create_task(manager.broadcast_contest_result(session_id, payload))
+
+                            if self.is_paused:
+                                break
+                            await asyncio.sleep(1) # rate limit pause between batches
+
                     self.last_sync_dt = get_current_ist_datetime()
-                    self.worker_state = "READY"
-                    self.record_live_event("SYNC_SWEEP", "Contest Engine", "SYSTEM", "ALL", "ALL", f"Completed live solve sync cycle. {session.official_participants} active public solvers recorded.")
+                    self.worker_state = "WAITING_FOR_EVENTS"
                 except Exception as e:
                     logger.error(f"[SUNDAY_LIVE_ENGINE] Error in live cycle: {e}")
-                    self.failed_count += 1
                     self.worker_state = "ERROR"
                 finally:
                     db.close()
@@ -1424,8 +1553,7 @@ class SundayLiveContestEngine:
                     self.worker_state = "PAUSED"
                     await asyncio.sleep(5)
                 else:
-                    await asyncio.sleep(8)
-
+                    await asyncio.sleep(10)
 
 sunday_live_engine = SundayLiveContestEngine()
 

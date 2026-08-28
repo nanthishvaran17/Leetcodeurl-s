@@ -1093,8 +1093,8 @@ def forgot_password_reset(req: ResetPasswordSubmitRequest, db: Session = Depends
     # Check password strength
     pwd = req.new_password
     import re
-    if len(pwd) < 12 or not re.search(r"[A-Z]", pwd) or not re.search(r"[a-z]", pwd) or not re.search(r"[0-9]", pwd) or not re.search(r"[!@#$%^&*(),.?\":{}|<>]", pwd):
-        raise HTTPException(status_code=400, detail="Password must be at least 12 characters and contain uppercase, lowercase, number, and special character.")
+    if len(pwd) < 6 or len(pwd) > 8:
+        raise HTTPException(status_code=400, detail="Password must be between 6 and 8 characters.")
 
     user = db.query(User).filter(User.id == otp_rec.user_id).first()
     if user:

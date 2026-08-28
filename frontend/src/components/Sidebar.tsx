@@ -186,7 +186,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
 
             {/* ── Header ── */}
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-navy-800/80 shrink-0 mb-4 relative z-10">
-              <div className="flex items-center space-x-2.5">
+              <button 
+                type="button"
+                onClick={() => {
+                  setActiveTab('dashboard');
+                  if (window.innerWidth < 1024) onClose();
+                }}
+                className="flex items-center space-x-2.5 hover:opacity-80 transition-opacity text-left"
+              >
                 <CollegeLogo size={32} />
                 <div className="flex flex-col">
                   <span className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-wider">
@@ -196,7 +203,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                     Institutional Platform
                   </span>
                 </div>
-              </div>
+              </button>
               <button
                 type="button"
                 onClick={onClose}

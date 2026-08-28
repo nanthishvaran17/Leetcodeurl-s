@@ -88,8 +88,11 @@ const Sparkline: React.FC<{ data: number[]; color?: string }> = ({ data, color =
     </svg>
   );
 };
+interface WeeklyContestPageProps {
+  onSelectStudent?: (student: any) => void;
+}
 
-export const WeeklyContestPage: React.FC = () => {
+export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectStudent }) => {
   const { user } = useAuth();
   const [sessionsList, setSessionsList] = useState<any[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
@@ -1054,15 +1057,14 @@ export const WeeklyContestPage: React.FC = () => {
 
           {/* Right Controls: Unified Session Selector, Date Picker & Admin Monitor Toggle */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 bg-white/10 dark:bg-navy-900/80 p-2.5 rounded-2xl border border-white/15 backdrop-blur-md shadow-lg">
-            {/* Calendar Date Picker */}
-            <div className="flex items-center space-x-2 bg-navy-950/90 px-3.5 py-2.5 rounded-xl border border-gray-700/80 shadow-inner">
-              <Calendar className="w-4 h-4 text-brand-400" />
-              <span className="text-[11px] font-bold text-gray-400">Date:</span>
+            {/* Calendar Date Picker - Elegant Variant */}
+            <div className="flex items-center bg-gradient-to-r from-navy-950 to-slate-900/90 pl-3 pr-1.5 py-1.5 rounded-xl border border-indigo-500/20 shadow-lg hover:border-indigo-500/40 transition-all duration-300 focus-within:border-indigo-400 focus-within:ring-1 focus-within:ring-indigo-400/50">
+              <Calendar className="w-4 h-4 text-indigo-400 mr-2 shrink-0" />
               <input
                 type="date"
                 value={customCalendarDate}
                 onChange={(e) => handleCalendarDateChange(e.target.value)}
-                className="bg-transparent text-xs font-bold text-white outline-none cursor-pointer"
+                className="bg-transparent text-xs font-bold text-gray-200 outline-none cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-60 hover:[&::-webkit-calendar-picker-indicator]:opacity-100 transition-opacity"
               />
             </div>
 
@@ -1708,7 +1710,7 @@ export const WeeklyContestPage: React.FC = () => {
 
       {/* ── PREVIOUS WEEK CONTEST ANALYZER TAB ── */}
       {activeTab === 'previous_week' && (
-        <PreviousWeekContestPanel />
+        <PreviousWeekContestPanel onStudentClick={onSelectStudent} />
       )}
 
       {/* ── SESSION ANALYTICS & ROSTER MATRIX TAB ── */}
@@ -1726,7 +1728,7 @@ export const WeeklyContestPage: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search student by name, reg no, or LeetCode handle..."
-              className="w-full bg-transparent text-xs font-bold text-gray-900 dark:text-white placeholder-gray-400 outline-none"
+              className="w-full bg-transparent border-none p-0 m-0 text-xs font-bold text-gray-900 dark:text-white placeholder-gray-400 outline-none focus:ring-0 focus:outline-none focus:border-transparent"
             />
             {searchTerm && (
               <button
@@ -1734,7 +1736,7 @@ export const WeeklyContestPage: React.FC = () => {
                 className="w-5 h-5 rounded-full bg-gray-200 dark:bg-navy-800 text-gray-600 dark:text-gray-300 flex items-center justify-center text-[10px] hover:bg-gray-300 cursor-pointer shrink-0 ml-1"
                 title="Clear Search"
               >
-                ✕
+                <X className="w-3 h-3" />
               </button>
             )}
           </div>

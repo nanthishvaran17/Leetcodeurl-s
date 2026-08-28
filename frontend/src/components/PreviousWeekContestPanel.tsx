@@ -5,6 +5,7 @@ import {
   Radio, Wifi, WifiOff, Check, Minus, Play
 } from 'lucide-react';
 import api from '../services/api';
+import { useContestWebSocket } from '../hooks/useContestWebSocket';
 
 interface PreviousWeekSummary {
   session_id: number;
@@ -52,19 +53,47 @@ interface ParticipationRecord {
   verified_at?: string | null;
 }
 
-export const PreviousWeekContestPanel: React.FC = () => {
+interface PreviousWeekContestPanelProps {
+  onStudentClick?: (student: any) => void;
+}
+
+export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> = ({ onStudentClick }) => {
   const [summary, setSummary] = useState<PreviousWeekSummary | null>(null);
   const [records, setRecords] = useState<ParticipationRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [syncing, setSyncing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>('ALL');
+  const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>('PUBLIC');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedDeptFilter, setSelectedDeptFilter] = useState<string>('ALL');
 
   // Realtime WebSocket State
   const [wsConnected, setWsConnected] = useState<boolean>(false);
   const [lastLiveUpdate, setLastLiveUpdate] = useState<string>(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }));
+
+  // Hook up live websocket updates
+  useContestWebSocket({
+    sessionId: summary?.session_id || null,
+    onResultUpdate: (event: any) => {
+      if (!event || !event.studentId) return;
+      setRecords(prev => prev.map(rec => {
+        if (rec.student_id !== event.studentId) return rec;
+        
+        // Also update summary totals artificially if possible, but at minimum we update the records so the table stays fresh!
+        return {
+          ...rec,
+          participation_type: event.participationStatus || rec.participation_type,
+          q1: event.q1 ?? rec.q1,
+          q2: event.q2 ?? rec.q2,
+          q3: event.q3 ?? rec.q3,
+          q4: event.q4 ?? rec.q4,
+          problems_solved: event.solvedCount ?? rec.problems_solved,
+          official_rank: event.officialRank ?? rec.official_rank,
+        };
+      }));
+    }
+  });
+
   const [simulatingStudentId, setSimulatingStudentId] = useState<number | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
 
@@ -77,20 +106,75 @@ export const PreviousWeekContestPanel: React.FC = () => {
       }
       setError(null);
 
-      if (forceSync) {
-        await api.post('/contests/previous-week/sync', { force_resync: true });
+      let latestSessionId = summary?.session_id;
+
+      if (!latestSessionId) {
+        const sessionsRes = await api.get('/contests/sessions');
+        const sessions = sessionsRes.data;
+        if (!sessions || sessions.length === 0) {
+          throw new Error("No contest sessions found.");
+        }
+        latestSessionId = sessions[0].sessionId;
       }
 
-      const [summaryRes, recordsRes] = await Promise.all([
-        api.get('/contests/previous-week/summary'),
-        api.get('/contests/previous-week/participation')
+      if (forceSync && latestSessionId) {
+        await api.post(`/contests/sessions/${latestSessionId}/sync`);
+      }
+
+      const [summaryRes, matrixRes] = await Promise.all([
+        api.get(`/contests/sessions/${latestSessionId}/live-status`),
+        api.get(`/contests/sessions/${latestSessionId}/matrix`)
       ]);
 
       if (summaryRes.data) {
-        setSummary(summaryRes.data);
+        const d = summaryRes.data;
+        setSummary({
+          session_id: d.sessionId,
+          contest_slug: d.contestId,
+          contest_title: d.contestName,
+          target_date_ist: d.sessionDate,
+          validation_status: d.status,
+          publish_status: d.status,
+          cache_state: 'HIT',
+          dataset_version: 1,
+          sync_id: 'live',
+          sync_started_at: d.startIso,
+          metrics: {
+            PUBLIC: d.metrics?.public || 0,
+            VIRTUAL: d.metrics?.virtual || 0,
+            NOT_PARTICIPATED: d.metrics?.notAttended || 0,
+            NOT_VERIFIED: d.metrics?.notVerified || 0,
+            MISSING_LEETCODE_USERNAME: d.metrics?.sourceError || 0,
+            TOTAL_STUDENTS: d.metrics?.totalStudents || 0,
+          }
+        });
       }
-      if (recordsRes.data && recordsRes.data.records) {
-        setRecords(recordsRes.data.records);
+      
+      if (matrixRes.data && matrixRes.data.rows) {
+        const mappedRecords = matrixRes.data.rows.map((row: any) => ({
+          id: row.s_no,
+          session_id: latestSessionId,
+          contest_slug: row.contest_id,
+          contest_title: row.contest_name,
+          student_id: row.student_id,
+          leetcode_username: row.username,
+          student_name: row.name,
+          reg_no: row.reg_no,
+          department_name: row.dept,
+          year_level: row.year,
+          participation_type: row.participation_status === 'PUBLIC_ATTENDED' ? 'PUBLIC' : row.participation_status,
+          official_rank: row.rank !== '' && row.rank !== null ? row.rank : null,
+          official_score: row.score !== '' && row.score !== null ? row.score : null,
+          q1: (row.q1 === 1 || row.q1 === '1') ? 1 : 0,
+          q2: (row.q2 === 1 || row.q2 === '1') ? 1 : 0,
+          q3: (row.q3 === 1 || row.q3 === '1') ? 1 : 0,
+          q4: (row.q4 === 1 || row.q4 === '1') ? 1 : 0,
+          problems_solved: (!row.total_contest_solved || row.total_contest_solved === '' || row.total_contest_solved === '—') ? 0 : Number(row.total_contest_solved),
+          finish_time: null,
+          source: row.source_status || 'UNKNOWN',
+          verification_status: row.source_status || 'UNKNOWN'
+        }));
+        setRecords(mappedRecords);
       }
       setLastLiveUpdate(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }));
     } catch (err: any) {
@@ -477,7 +561,7 @@ export const PreviousWeekContestPanel: React.FC = () => {
               <th className="p-3.5 text-center">Solved</th>
               <th className="p-3.5">Official Rank</th>
               <th className="p-3.5">Status</th>
-              <th className="p-3.5 text-center">Live Test</th>
+              
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -490,7 +574,15 @@ export const PreviousWeekContestPanel: React.FC = () => {
                 const q4Done = Boolean(rec.q4) || (isPublic && rec.problems_solved >= 4);
 
                 return (
-                  <tr key={rec.id || rec.student_id} className="hover:bg-gray-50/50 dark:hover:bg-navy-800/50 transition-colors">
+                  <tr 
+                    key={rec.id || rec.student_id} 
+                    className="hover:bg-gray-50/50 dark:hover:bg-navy-800/50 transition-colors cursor-pointer"
+                    onClick={() => {
+                      if (onStudentClick) {
+                        onStudentClick({ id: rec.student_id, name: rec.student_name, reg_no: rec.reg_no, department: { name: rec.department_name }, year_level: rec.year_level, username: rec.leetcode_username });
+                      }
+                    }}
+                  >
                     <td className="p-3.5 font-mono text-gray-400 font-bold">{idx + 1}</td>
                     <td className="p-3.5">
                       <div className="font-extrabold text-gray-900 dark:text-white">{rec.student_name}</div>
@@ -510,44 +602,36 @@ export const PreviousWeekContestPanel: React.FC = () => {
                     {/* Question Q1 */}
                     <td className="p-3.5 text-center">
                       {q1Done ? (
-                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 font-black text-xs">
-                          ✓
-                        </span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-black">1</span>
                       ) : (
-                        <span className="text-gray-300 dark:text-gray-600 font-mono">—</span>
+                        <span className="text-gray-400 font-bold">0</span>
                       )}
                     </td>
 
                     {/* Question Q2 */}
                     <td className="p-3.5 text-center">
                       {q2Done ? (
-                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 font-black text-xs">
-                          ✓
-                        </span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-black">1</span>
                       ) : (
-                        <span className="text-gray-300 dark:text-gray-600 font-mono">—</span>
+                        <span className="text-gray-400 font-bold">0</span>
                       )}
                     </td>
 
                     {/* Question Q3 */}
                     <td className="p-3.5 text-center">
                       {q3Done ? (
-                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 font-black text-xs">
-                          ✓
-                        </span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-black">1</span>
                       ) : (
-                        <span className="text-gray-300 dark:text-gray-600 font-mono">—</span>
+                        <span className="text-gray-400 font-bold">0</span>
                       )}
                     </td>
 
                     {/* Question Q4 */}
                     <td className="p-3.5 text-center">
                       {q4Done ? (
-                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 font-black text-xs">
-                          ✓
-                        </span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-black">1</span>
                       ) : (
-                        <span className="text-gray-300 dark:text-gray-600 font-mono">—</span>
+                        <span className="text-gray-400 font-bold">0</span>
                       )}
                     </td>
 
@@ -596,28 +680,13 @@ export const PreviousWeekContestPanel: React.FC = () => {
                       )}
                     </td>
 
-                    {/* Test Harness Step Button */}
-                    <td className="p-3.5 text-center">
-                      <button
-                        onClick={() => handleSimulateStep(rec.student_id, rec.problems_solved)}
-                        disabled={simulatingStudentId === rec.student_id}
-                        className="px-2 py-1 rounded bg-slate-100 dark:bg-navy-800 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 dark:text-slate-300 text-[10px] font-mono font-bold transition border border-slate-200 dark:border-navy-700 disabled:opacity-50 inline-flex items-center gap-1"
-                        title="Simulate Next Live Problem Solve Transition (0/4 -> 1/4 -> 2/4 -> 3/4 -> 4/4)"
-                      >
-                        {simulatingStudentId === rec.student_id ? (
-                          <RefreshCw className="w-3 h-3 animate-spin" />
-                        ) : (
-                          <Play className="w-3 h-3" />
-                        )}
-                        <span>Solve +1</span>
-                      </button>
-                    </td>
+
                   </tr>
                 );
               })
             ) : (
               <tr>
-                <td colSpan={12} className="p-8 text-center text-gray-400 italic">
+                <td colSpan={11} className="p-8 text-center text-gray-400 italic">
                   No participation records match the selected filters.
                 </td>
               </tr>

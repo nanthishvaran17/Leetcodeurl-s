@@ -3,14 +3,6 @@ import { auth } from '../firebase';
 
 // Smart API Base URL Resolution for Local Development vs Production Hosting
 const getApiBaseUrl = () => {
-  const isLocal = typeof window !== 'undefined' && 
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-  
-  if (isLocal && import.meta.env.DEV) {
-    return 'http://127.0.0.1:8000/api';
-  }
-
-  // Production Cloud Hosting
   const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
   if (envUrl) {
     const cleanUrl = envUrl.replace(/\/+$/, '');
