@@ -113,8 +113,8 @@ async def _deferred_startup_tasks():
             with SessionLocal() as db_init_async:
                 from backend.services.weekly_session_manager import resume_active_weekly_session
                 await resume_active_weekly_session(db_init_async)
-            except Exception as _sess_err:
-                logger.warning(f"[STARTUP] Weekly session resume note: {_sess_err}")
+        except Exception as _sess_err:
+            logger.warning(f"[STARTUP] Weekly session resume note: {_sess_err}")
 
     except Exception as e:
         logger.warning(f"[STARTUP] Deferred DB init note: {e}")
