@@ -591,17 +591,24 @@ def _make_headers(username: str) -> dict:
     }
 
 
+import os
+import random
+
+_LEETCODE_MAX_CONCURRENCY = int(os.environ.get("LEETCODE_MAX_CONCURRENCY", 15))
+_GQL_SEMAPHORE = asyncio.Semaphore(_LEETCODE_MAX_CONCURRENCY)
+
 async def _gql_post(
     client: Any,
     query: str,
     variables: dict,
     operation: str,
     username: str,
-    retries: int = 3,
+    retries: int = 2,
     backoff_base: float = 1.5,
 ) -> Dict[str, Any]:
     """
-    Single GraphQL POST with exponential backoff.
+    Single GraphQL POST with exponential backoff and randomized jitter.
+    Strictly bounded by a global semaphore to prevent HTTP connection starvation.
     Handles 429 (rate limit), 5xx (server error), timeouts.
     Returns canonical result dict — never raises.
     """
@@ -610,10 +617,11 @@ async def _gql_post(
 
     for attempt in range(1, retries + 1):
         try:
-            res = await client.post(GRAPHQL_URL, json=payload, headers=headers)
+            async with _GQL_SEMAPHORE:
+                res = await client.post(GRAPHQL_URL, json=payload, headers=headers)
 
             if res.status_code == 429:
-                wait = min(backoff_base ** attempt, 60.0)
+                wait = min(backoff_base ** attempt, 60.0) + random.uniform(0.0, 1.0)
                 logger.warning(f"[RATE_LIMIT] {username}/{operation} attempt {attempt} — waiting {wait:.1f}s")
                 if attempt < retries:
                     await asyncio.sleep(wait)
@@ -621,7 +629,7 @@ async def _gql_post(
                 return {"status": "rate_limited", "data": None}
 
             if res.status_code >= 500:
-                wait = min(backoff_base ** attempt, 30.0)
+                wait = min(backoff_base ** attempt, 30.0) + random.uniform(0.0, 1.0)
                 logger.warning(f"[SERVER_ERROR] {username}/{operation} HTTP {res.status_code} attempt {attempt}")
                 if attempt < retries:
                     await asyncio.sleep(wait)
@@ -644,14 +652,14 @@ async def _gql_post(
         except httpx.TimeoutException:
             logger.warning(f"[TIMEOUT] {username}/{operation} attempt {attempt}")
             if attempt < retries:
-                await asyncio.sleep(backoff_base ** attempt)
+                await asyncio.sleep((backoff_base ** attempt) + random.uniform(0.0, 1.0))
                 continue
             return {"status": "timeout", "data": None}
 
         except (httpx.RemoteProtocolError, httpx.ConnectError, httpx.NetworkError) as net_err:
             logger.warning(f"[NETWORK] {username}/{operation} {type(net_err).__name__} attempt {attempt}")
             if attempt < retries:
-                await asyncio.sleep(backoff_base ** attempt)
+                await asyncio.sleep((backoff_base ** attempt) + random.uniform(0.0, 1.0))
                 continue
             return {"status": "error", "data": None, "detail": str(net_err)}
 

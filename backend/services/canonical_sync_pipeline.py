@@ -51,7 +51,8 @@ async def _sync_single_student_canonical(
     lock: asyncio.Lock,
     job_id: str,
     progress_callback: Optional[Any],
-    run_optional_phases: bool = False
+    run_optional_phases: bool = False,
+    sync_mode: str = "FULL_ADMIN_SYNC"
 ):
     import sqlalchemy.exc
     import random
@@ -59,7 +60,7 @@ async def _sync_single_student_canonical(
     for attempt in range(1, max_retries + 1):
         try:
             return await _sync_single_student_canonical_impl(
-                student, client, sem, lock, job_id, progress_callback, run_optional_phases
+                student, client, sem, lock, job_id, progress_callback, run_optional_phases, sync_mode
             )
         except (sqlalchemy.exc.OperationalError, sqlalchemy.exc.PendingRollbackError) as db_err:
             logger.warning(
@@ -80,7 +81,8 @@ async def _sync_single_student_canonical_impl(
     lock: asyncio.Lock,
     job_id: str,
     progress_callback: Optional[Any],
-    run_optional_phases: bool = False
+    run_optional_phases: bool = False,
+    sync_mode: str = "FULL_ADMIN_SYNC"
 ):
     async with sem:
         now_dt = datetime.datetime.utcnow()
@@ -98,24 +100,39 @@ async def _sync_single_student_canonical_impl(
 
         if u_status == "OK" and c_username:
             # All LeetCode HTTP requests run BEFORE any DB session is opened
-            phase_a_res = await fetch_profile_and_stats(c_username, client)
-            await asyncio.sleep(0.08)
-
-            phase_a_status = phase_a_res.get("status")
-
-            if phase_a_status == "not_found":
-                status_code = "PROFILE_NOT_FOUND"
-            elif phase_a_status == "identity_mismatch":
-                status_code = "IDENTITY_MISMATCH"
-                error_msg = phase_a_res.get("detail")
-            elif phase_a_status == "ok" and phase_a_res.get("data"):
-                status_code = "SUCCESS"
-                # Phase B also runs before any DB connection
+            # LIVE mode ONLY needs contest telemetry. Skip heavy Profile/Calendar fetches.
+            if sync_mode == "LIVE_MONITOR":
                 phase_b_res = await fetch_contest_data(c_username, client)
-                await asyncio.sleep(0.08)
+                status_code = "SUCCESS"
             else:
-                status_code = "FETCH_FAILED"
-                error_msg = phase_a_res.get("detail", "Fetch failed during Phase A")
+                # Decoupled independent parallel execution
+                phase_a_res, phase_b_res = await asyncio.gather(
+                    fetch_profile_and_stats(c_username, client),
+                    fetch_contest_data(c_username, client),
+                    return_exceptions=True
+                )
+                
+                # Handle exceptions inside gather (though they shouldn't happen with our safe _gql_post)
+                if isinstance(phase_a_res, Exception):
+                    phase_a_res = {"status": "error", "detail": str(phase_a_res)}
+                if isinstance(phase_b_res, Exception):
+                    phase_b_res = {"status": "error", "detail": str(phase_b_res)}
+
+                phase_a_status = phase_a_res.get("status")
+
+                if phase_a_status == "not_found":
+                    status_code = "PROFILE_NOT_FOUND"
+                elif phase_a_status == "identity_mismatch":
+                    status_code = "IDENTITY_MISMATCH"
+                    error_msg = phase_a_res.get("detail")
+                elif phase_a_status == "timeout":
+                    status_code = "TIMEOUT"
+                    error_msg = "LeetCode upstream timeout"
+                elif phase_a_status == "ok" and phase_a_res.get("data"):
+                    status_code = "SUCCESS"
+                else:
+                    status_code = "FETCH_FAILED"
+                    error_msg = phase_a_res.get("detail", "Fetch failed during Phase A")
 
         # ── PHASE 2: DATABASE — Short-lived session, NO network calls inside ────
         db_student = SessionLocal()
@@ -195,9 +212,10 @@ async def _sync_single_student_canonical_impl(
                     status_code = "INVALID_USERNAME"
                     sync_status_str = "failed"
                     error_msg = "Profile not found (404)"
-            elif status_code == "FETCH_FAILED":
+            elif status_code in ("FETCH_FAILED", "TIMEOUT"):
+                # Preserve last known good data (Data Integrity Axiom)
                 if shim_stats.total_solved is not None and shim_stats.total_solved > 0:
-                    status_code = "SUCCESS"
+                    status_code = "SUCCESS"  # Treat as success for pipeline progress
                     sync_status_str = "verified"
                     total_solved = shim_stats.total_solved
                     easy_solved = shim_stats.easy_solved
@@ -209,14 +227,19 @@ async def _sync_single_student_canonical_impl(
                     shim_stats.validation_status = "verified"
                     lc_prof.verification_status = "PROFILE_VERIFIED"
                     lc_prof.sync_state = "SYNCED"
+                    
+                    if status_code == "TIMEOUT":
+                        logger.warning(f"[TIMEOUT] student={st.id} username={c_username} endpoint=profile — preserving known good data")
                 else:
-                    lc_prof.sync_state = "FETCH_FAILED"
-                    lc_prof.error_code = "FETCH_FAILED"
-                    lc_prof.error_message = error_msg or "Fetch failed during Phase A"
-                    shim_stats.status = "FETCH_FAILED"
+                    lc_prof.sync_state = "TIMEOUT" if status_code == "TIMEOUT" else "FETCH_FAILED"
+                    lc_prof.error_code = "TIMEOUT" if status_code == "TIMEOUT" else "FETCH_FAILED"
+                    lc_prof.error_message = error_msg or ("LeetCode upstream timeout" if status_code == "TIMEOUT" else "Fetch failed during Phase A")
+                    shim_stats.status = "TIMEOUT" if status_code == "TIMEOUT" else "FETCH_FAILED"
                     shim_stats.sync_status = "failed"
-                    shim_stats.error_code = "NETWORK_ERROR"
+                    shim_stats.error_code = "TIMEOUT" if status_code == "TIMEOUT" else "NETWORK_ERROR"
                     sync_status_str = "failed"
+                    if status_code == "TIMEOUT":
+                        logger.warning(f"[TIMEOUT] student={st.id} username={c_username} endpoint=profile — no prior data exists")
             elif status_code == "SUCCESS" and phase_a_res and phase_a_res.get("data"):
                 data = phase_a_res["data"]
                 c_user = data["canonical_username"]
@@ -352,6 +375,8 @@ async def _sync_single_student_canonical_impl(
                         existing_hist.finish_time_seconds = hist.get("finish_time_seconds")
                         existing_hist.contest_rank = hist.get("contest_rank")
                         existing_hist.rating_after = hist.get("rating_after")
+                elif phase_b_res and phase_b_res.get("status") == "timeout":
+                    logger.warning(f"[TIMEOUT] student={st.id} username={c_username} endpoint=contest — preserving known good data")
 
                 sync_status_str = "success"
 
@@ -460,11 +485,14 @@ async def _sync_single_student_canonical_impl(
             db_student.close()
 
 
+import os
+
 async def run_full_pipeline(
     job_id: Optional[str] = None,
     student_ids: Optional[List[int]] = None,
     progress_callback: Optional[Any] = None,
-    run_optional_phases: bool = True
+    run_optional_phases: bool = True,
+    sync_mode: str = "FULL_ADMIN_SYNC"
 ) -> Dict[str, Any]:
     """
     Executes the full canonical sync pipeline for all active students with true real-time streaming progress.
@@ -477,10 +505,9 @@ async def run_full_pipeline(
             if student_ids:
                 query = query.filter(Student.id.in_(student_ids))
             
-            # Fetch minimal data to detach from session
+            # For BACKGROUND_SYNC, we can filter for stale students. For now, fetch all active and we'll process them.
             student_records = query.with_entities(Student.id, Student.name, Student.username, Student.leetcode_url, Student.reg_no).all()
             
-            # Convert to detached dummy objects so we don't hit DetachedInstanceError
             class DummyStudent:
                 def __init__(self, id, name, username, leetcode_url, reg_no):
                     self.id = id
@@ -496,7 +523,7 @@ async def run_full_pipeline(
 
         total_students = len(students)
         effective_job_id = job_id or f"SYNC-{int(start_time.timestamp())}"
-        logger.info(f"[CANONICAL_PIPELINE] Starting streaming per-student sync for {total_students} students (Job: {effective_job_id})")
+        logger.info(f"[CANONICAL_PIPELINE] Starting {sync_mode} for {total_students} students (Job: {effective_job_id})")
 
         if progress_callback and hasattr(progress_callback, "start"):
             progress_callback.start(effective_job_id, total_students)
@@ -504,7 +531,8 @@ async def run_full_pipeline(
         timeout_cfg = httpx.Timeout(connect=2.5, read=5.0, write=2.5, pool=2.5)
         limits_cfg = httpx.Limits(max_keepalive_connections=50, max_connections=50)
 
-        sem = asyncio.Semaphore(20)  # Match DB pool size to prevent connection exhaustion
+        _SYNC_MAX_CONCURRENCY = int(os.environ.get("SYNC_MAX_CONCURRENCY", 10))
+        sem = asyncio.Semaphore(_SYNC_MAX_CONCURRENCY)
         lock = asyncio.Lock()
 
         async with httpx.AsyncClient(timeout=timeout_cfg, limits=limits_cfg, follow_redirects=True, http2=False) as client:
@@ -516,7 +544,8 @@ async def run_full_pipeline(
                     lock=lock,
                     job_id=effective_job_id,
                     progress_callback=progress_callback,
-                    run_optional_phases=run_optional_phases
+                    run_optional_phases=run_optional_phases,
+                    sync_mode=sync_mode
                 )
                 for s in students
             ]

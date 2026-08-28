@@ -369,7 +369,7 @@ def start_stale_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, 
     db.commit()
 
     sync_tracker.start(job_id, total_count, triggered_by=triggered_by)
-    dispatch_background_task(_run_full_sync_worker(job_id, target_student_ids=target_ids))
+    dispatch_background_task(_run_full_sync_worker(job_id, target_student_ids=target_ids, sync_mode="BACKGROUND_SYNC"))
 
     return {
         "success": True,
@@ -415,7 +415,7 @@ def start_targeted_sync_job(db: Session, student_ids: List[int], triggered_by: s
     db.commit()
 
     sync_tracker.start(job_id, total_count, triggered_by=triggered_by)
-    dispatch_background_task(_run_full_sync_worker(job_id, target_student_ids=[s.id for s in valid_students]))
+    dispatch_background_task(_run_full_sync_worker(job_id, target_student_ids=[s.id for s in valid_students], sync_mode="RECOVERY_SYNC"))
 
     return {
         "success": True,
@@ -428,12 +428,12 @@ def start_targeted_sync_job(db: Session, student_ids: List[int], triggered_by: s
 
 from backend.leetcode_fetcher import extract_leetcode_username
 
-async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[int]] = None):
+async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[int]] = None, sync_mode: str = "FULL_ADMIN_SYNC"):
     """
     Asynchronous background worker that delegates to the canonical sync pipeline.
     Runs batched multi-phase fetch, updates database, recalculates rankings, and broadcasts progress.
     """
-    logger.info(f"[WORKER] Worker started for job: {job_id}")
+    logger.info(f"[WORKER] Worker started for job: {job_id} in mode {sync_mode}")
     from backend.services.canonical_sync_pipeline import run_full_pipeline
 
     db = SessionLocal()
@@ -442,7 +442,8 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
             job_id=job_id,
             student_ids=target_student_ids,
             progress_callback=sync_tracker,
-            run_optional_phases=True
+            run_optional_phases=True,
+            sync_mode=sync_mode
         )
 
         final_status = "COMPLETED" if summary.get("fetch_failed", 0) == 0 else "PARTIAL"

@@ -187,7 +187,8 @@ def start_scheduler():
         sunday_0755_init_job,
         CronTrigger(day_of_week='sun', hour=7, minute=55, timezone=tz),
         id='sunday_0755_init',
-        replace_existing=True
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=60
     )
 
     # 2. Sunday 08:00 AM IST — Baseline Snapshot & LIVE Mode Start
@@ -195,7 +196,8 @@ def start_scheduler():
         sunday_start_job,
         CronTrigger(day_of_week='sun', hour=8, minute=0, timezone=tz),
         id='sunday_start_snapshot',
-        replace_existing=True
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=60
     )
 
     # 3. Sunday 08:00–09:30 AM IST (Every 1 min) — Live Solves & Telemetry Monitoring
@@ -203,7 +205,8 @@ def start_scheduler():
         sunday_live_monitoring_job,
         IntervalTrigger(minutes=1, timezone=tz),
         id='sunday_live_telemetry_loop',
-        replace_existing=True
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=30
     )
 
     # 4. Sunday 09:30 AM IST — Final Snapshot, 5-State Reconciliation & Data Lock
@@ -211,7 +214,8 @@ def start_scheduler():
         sunday_end_job,
         CronTrigger(day_of_week='sun', hour=9, minute=30, timezone=tz),
         id='sunday_end_snapshot',
-        replace_existing=True
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=60
     )
 
     # 5. Sunday 09:35 AM IST — Multi-Format Report Generation (Excel, PDF, Word, Depts)

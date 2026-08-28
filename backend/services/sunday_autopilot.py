@@ -247,7 +247,7 @@ class UniversalWeeklyContestAutopilot:
 
             # Execute incremental reconciliation
             reconciliation = UniversalContestReconciliationEngine.reconcile_contest(
-                session.id, db, sync_mode="BACKGROUND_SYNC"
+                session.id, db, sync_mode="LIVE_MONITOR"
             )
             live_attended = reconciliation.get("live_attended", 0)
             data_errors = reconciliation.get("data_errors", 0)
