@@ -75,7 +75,7 @@ class LeetCodeProfileStats(Base):
     id = Column(Integer, primary_key=True, index=True)
     student_id = Column(Integer, ForeignKey("students.id"), unique=True, nullable=False)
     
-    total_solved = Column(Integer, nullable=True, default=None)
+    total_solved = Column(Integer, nullable=True, default=None, index=True)
     source_total_solved = Column(Integer, nullable=True, default=None)
     derived_total_solved = Column(Integer, nullable=True, default=None)
     easy_solved = Column(Integer, nullable=True, default=None)
@@ -93,7 +93,7 @@ class LeetCodeProfileStats(Base):
     recent_contest_score = Column(String(20), nullable=True) # e.g. "3 / 4"
     
     status = Column(String(50), default="pending") # OK, MISSING LINK, INVALID LINK, PROFILE NOT FOUND, pending
-    sync_status = Column(String(50), default="not_started") # success, failed, mismatch, not_started, pending
+    sync_status = Column(String(50), default="not_started", index=True) # success, failed, mismatch, not_started, pending
     validation_status = Column(String(50), nullable=True)  # verified, mismatch, pending, identity_mismatch
     source = Column(String(100), nullable=True)  # leetcode_public_profile — only set after real fetch
     error_message = Column(Text, nullable=True)

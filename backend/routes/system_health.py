@@ -97,6 +97,11 @@ def get_database_health_endpoint(db: Session = Depends(get_db)):
 @router.get("/health")
 @router.get("/status")
 def get_system_health(db: Session = Depends(get_db)):
+    from backend.cache import cache
+    cache_key = "system:health_diagnostics"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
 
     """
     Returns real-time health diagnostic metrics for all core application services
@@ -283,7 +288,7 @@ def get_system_health(db: Session = Depends(get_db)):
     else:
         overall_status = "healthy"
 
-    return {
+    resp = {
         "status": overall_status,
         "system_status": "Operational",
         "database": "healthy" if db_ok else "unhealthy",
@@ -314,6 +319,9 @@ def get_system_health(db: Session = Depends(get_db)):
             {"timestamp": now_str, "component": "LeetCode GraphQL", "status": "OPERATIONAL" if leetcode_ok else "SOURCE_UNAVAILABLE", "code": leetcode_code or "OK"}
         ]
     }
+    
+    cache.set(cache_key, resp, ttl_seconds=60)
+    return resp
 
 @router.get("/metrics")
 def get_system_metrics(

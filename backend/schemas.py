@@ -171,9 +171,41 @@ class StudentOut(StudentBase):
     has_virtual: Optional[bool] = False
     model_config = ConfigDict(from_attributes=True, extra="allow")
 
+class StudentListOut(StudentBase):
+    id: int
+    username: Optional[str] = None
+    canonical_username: Optional[str] = None
+    profile_url: Optional[str] = None
+    real_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+    sync_state: Optional[str] = "PENDING_USERNAME"
+    joining_date: Optional[Union[datetime.datetime, datetime.date, str]] = None
+    version: Optional[int] = None
+    department: Optional[DepartmentOut] = None
+    section: Optional[SectionOut] = None
+    stats: Optional[LeetCodeStatsOut] = None
+    
+    college_rank: Optional[int] = None
+    dept_rank: Optional[int] = None
+    year_rank: Optional[int] = None
+    section_rank: Optional[int] = None
+    weekly_progress: Optional[int] = 0
+    streak_count: Optional[int] = 0
+    longest_streak: Optional[int] = 0
+    total_active_days: Optional[int] = 0
+    consistency_score: Optional[float] = 0.0
+    badge_list: List[str] = []
+    contest_status: Optional[str] = None
+    contest_solved: Optional[int] = 0
+    contest_score_display: Optional[str] = None
+    contest_name: Optional[str] = None
+    contest_number: Optional[int] = None
+    has_virtual: Optional[bool] = False
+    model_config = ConfigDict(from_attributes=True, extra="allow")
+
 class StudentPaginatedOut(BaseModel):
     total: int
-    items: List[StudentOut]
+    items: List[Union[StudentOut, StudentListOut]]
     page: int
     limit: int
     total_pages: int

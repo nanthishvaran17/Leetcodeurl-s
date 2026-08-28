@@ -8,7 +8,7 @@ import os
 from backend.database import get_db, SessionLocal
 from backend.models import Student, LeetCodeProfileStats, Department, Section, AuditLog, WeeklyStudentProgress, User
 from backend.services.authorization_service import apply_role_based_student_filter, require_staff_student_access
-from backend.schemas import StudentOut, StudentCreate, StudentUpdate, ContestResultOut
+from backend.schemas import StudentOut, StudentCreate, StudentUpdate, ContestResultOut, StudentListOut
 from backend.routes.auth import get_current_user
 from backend.security import require_security_access, get_current_user_optional
 from backend.leetcode_client import fetch_leetcode_profile, extract_leetcode_username
@@ -259,7 +259,7 @@ def get_leaderboard_fast(
 from typing import Union
 from backend.schemas import StudentPaginatedOut
 
-@router.get("", response_model=Union[List[StudentOut], StudentPaginatedOut])
+@router.get("", response_model=Union[List[StudentListOut], StudentPaginatedOut])
 def get_students(
     request: Request,
     dept_id: Optional[int] = None,
@@ -296,11 +296,7 @@ def get_students(
     query = db.query(Student).outerjoin(Student.stats).options(
         joinedload(Student.department),
         joinedload(Student.section),
-        joinedload(Student.stats),
-        joinedload(Student.lc_profile),
-        joinedload(Student.lc_problem_stats),
-        joinedload(Student.lc_contest_standing),
-        joinedload(Student.lc_activity)
+        joinedload(Student.stats)
     ).filter(Student.is_active == True)
 
     # Centralized Authorization Scope
