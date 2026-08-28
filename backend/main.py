@@ -240,6 +240,12 @@ if getattr(settings, "CORS_ALLOWED_ORIGINS", None):
         o_clean = o.strip()
         if o_clean and o_clean not in origins:
             origins.append(o_clean)
+try:
+    from brotli_asgi import BrotliMiddleware
+    app.add_middleware(BrotliMiddleware, minimum_size=500)
+except ImportError:
+    pass
+
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
 app.add_middleware(

@@ -526,7 +526,8 @@ def get_priority_students(
             reasons = []
             if perf["days_inactive"] >= 5:
                 reasons.append(f"Inactive for {perf['days_inactive']} days")
-            if (s.stats.total_solved or 0) < 10:
+            total_solved = s.stats.total_solved if s.stats else 0
+            if total_solved < 10:
                 reasons.append("Low problem count")
             if perf["status_code"] == "AT_RISK":
                 reasons.append("At Risk performance status")

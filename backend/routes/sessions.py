@@ -24,45 +24,58 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
     if cached is not None:
         return cached
 
-    students = db.query(Student).options(
-        joinedload(Student.stats)
-    ).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
-    total_students = len(students)
-    total_departments = db.query(Department).count()
-    total_sections = db.query(Section).count()
+    from sqlalchemy import func
+    
+    # 1. Total counts
+    total_students = db.query(func.count(Student.id)).filter((Student.is_active == True) | (Student.is_active.is_(None))).scalar() or 0
+    total_departments = db.query(func.count(Department.id)).scalar() or 0
+    total_sections = db.query(func.count(Section.id)).scalar() or 0
 
     current_session = get_or_create_current_session(db)
 
-    active_students = 0
-    not_started_students = 0
-    total_problems = 0
-    highest_rating = None
-    top_college_ranker = None
+    # 2. Student aggregations using single SQL query
+    agg_result = db.query(
+        func.sum(LeetCodeProfileStats.total_solved).label("total_problems"),
+        func.max(LeetCodeProfileStats.contest_rating).label("highest_rating"),
+        func.count(LeetCodeProfileStats.id).filter(LeetCodeProfileStats.total_solved > 0).label("active_students"),
+        func.count(LeetCodeProfileStats.id).filter(LeetCodeProfileStats.sync_status.in_(['success', 'OK', 'verified', 'stale']) & (LeetCodeProfileStats.total_solved > 0)).label("verified_profiles"),
+        func.count(LeetCodeProfileStats.id).filter(LeetCodeProfileStats.sync_status.in_(['pending', 'not_started']) | (LeetCodeProfileStats.total_solved == 0)).label("pending_sync"),
+        func.count(LeetCodeProfileStats.id).filter(LeetCodeProfileStats.sync_status.in_(['failed', 'mismatch', 'MISSING LINK'])).label("failed_sync")
+    ).select_from(Student).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
+     .filter((Student.is_active == True) | (Student.is_active.is_(None))).first()
 
-    if students:
-        total_problems = sum((s.stats.total_solved or 0) if s.stats else 0 for s in students)
-        ratings = [s.stats.contest_rating for s in students if s.stats and s.stats.contest_rating]
-        if ratings:
-            highest_rating = max(ratings)
-
-        sorted_s = sorted(
-            students,
-            key=lambda x: (x.stats.total_solved or 0) if x.stats else 0,
-            reverse=True
-        )
-        if sorted_s:
-            top_college_ranker = sorted_s[0].name
-
-    active_students = sum(1 for s in students if s.stats and (s.stats.total_solved or 0) > 0)
+    total_problems = int(agg_result.total_problems) if agg_result and agg_result.total_problems else 0
+    highest_rating = float(agg_result.highest_rating) if agg_result and agg_result.highest_rating else None
+    active_students = int(agg_result.active_students) if agg_result and agg_result.active_students else 0
+    
+    verified_profiles = int(agg_result.verified_profiles) if agg_result and agg_result.verified_profiles else 0
+    pending_sync_stats = int(agg_result.pending_sync) if agg_result and agg_result.pending_sync else 0
+    failed_sync = int(agg_result.failed_sync) if agg_result and agg_result.failed_sync else 0
+    
+    # Calculate students with missing stats completely
+    stats_count = db.query(func.count(LeetCodeProfileStats.id)).select_from(Student).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id).filter((Student.is_active == True) | (Student.is_active.is_(None)), LeetCodeProfileStats.id.isnot(None)).scalar() or 0
+    missing_stats_count = total_students - stats_count
+    pending_sync = pending_sync_stats + missing_stats_count
+    
     not_started_students = total_students - active_students
+
+    # 3. Top ranker
+    top_college_ranker = None
+    top_student = db.query(Student.name).join(LeetCodeProfileStats).filter((Student.is_active == True) | (Student.is_active.is_(None))).order_by(LeetCodeProfileStats.total_solved.desc().nullslast()).first()
+    if top_student:
+        top_college_ranker = top_student[0]
 
     avg_solved = round(total_problems / total_students, 1) if total_students > 0 else 0.0
     
     avg_progress = 0.0
     if current_session:
-        snaps = db.query(WeeklySessionSnapshot).filter(WeeklySessionSnapshot.session_id == current_session.id).all()
-        if snaps and len(snaps) > 0:
-            avg_progress = round(sum(sn.problems_added for sn in snaps) / len(snaps), 1)
+        snaps_agg = db.query(
+            func.sum(WeeklySessionSnapshot.problems_added),
+            func.count(WeeklySessionSnapshot.id)
+        ).filter(WeeklySessionSnapshot.session_id == current_session.id).first()
+        
+        if snaps_agg and snaps_agg[1] and snaps_agg[1] > 0:
+            avg_progress = round((snaps_agg[0] or 0) / snaps_agg[1], 1)
         else:
             avg_progress = round(total_problems / max(total_students, 1), 1)
 
@@ -90,9 +103,7 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         countdown_sec = int((next_sunday - now_ist).total_seconds())
         session_phase = "SCHEDULED_NEXT_WEEK"
 
-    verified_profiles = sum(1 for s in students if s.stats and s.stats.sync_status in ('success', 'OK', 'verified', 'stale') and (s.stats.total_solved or 0) > 0)
-    pending_sync = sum(1 for s in students if not s.stats or s.stats.sync_status in ('pending', 'not_started') or (s.stats.total_solved or 0) == 0)
-    failed_sync = sum(1 for s in students if s.stats and s.stats.sync_status in ('failed', 'mismatch', 'MISSING LINK'))
+
 
     resp = {
         "total_students": int(total_students),

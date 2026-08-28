@@ -26,22 +26,12 @@ _allocation_lock = threading.RLock()
 class FacultyAssignmentService:
     @staticmethod
     def get_faculty_assigned_student_ids(db: Session, faculty_id: int) -> List[int]:
-        """Returns list of student IDs currently assigned to a faculty member."""
-        from backend.cache import cache
-        
-        def _fetch():
-            assignments = db.query(FacultyStudentAssignment.student_id).filter(
-                FacultyStudentAssignment.faculty_id == faculty_id,
-                FacultyStudentAssignment.is_active == True
-            ).all()
-            return [a[0] for a in assignments]
-            
-        return cache.get_or_compute(
-            key=f"assigned_students_{faculty_id}",
-            compute_func=_fetch,
-            ttl_seconds=3600,
-            tags=[f"user_auth_{faculty_id}", "students"]
-        )
+        """Returns list of student IDs currently assigned to a faculty member. Always fetches fresh from DB to prevent multi-worker cache staleness."""
+        assignments = db.query(FacultyStudentAssignment.student_id).filter(
+            FacultyStudentAssignment.faculty_id == faculty_id,
+            FacultyStudentAssignment.is_active == True
+        ).all()
+        return [a[0] for a in assignments]
 
     @staticmethod
     def get_faculty_assigned_count(db: Session, faculty_id: int) -> int:

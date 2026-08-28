@@ -13,6 +13,7 @@ import asyncio
 import datetime
 import httpx
 from typing import List, Dict, Any, Optional
+import sqlalchemy
 from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
