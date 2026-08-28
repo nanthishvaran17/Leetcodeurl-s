@@ -541,17 +541,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* Stat Cards Grid — Data-quality-aware with Framer Motion hover & AnimatedNumber */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {(() => {
-          const totalStudents = students.length > 0 ? students.length : (summaryData?.total_students ?? 1395);
-          const isVerifiedSt = (s: StudentData) => {
-            const st = s.stats?.sync_status;
-            const tot = s.stats?.total_solved ?? s.total_solved;
-            return st === 'success' || st === 'OK' || st === 'verified' || st === 'stale' || ((tot ?? 0) > 0);
-          };
-          const verified = summaryData?.verified_profiles ?? students.filter(isVerifiedSt).length;
-          const pending = summaryData?.pending_sync ?? students.filter(s => !s.stats?.sync_status || s.stats.sync_status === 'pending' || s.stats.sync_status === 'not_started' || (s.stats?.total_solved ?? 0) === 0).length;
-          const failed = summaryData?.failed_sync ?? students.filter(s => s.stats?.sync_status === 'failed' || s.stats?.sync_status === 'mismatch').length;
-          const activeSolvers = students.filter(s => (s.stats?.total_solved ?? s.total_solved ?? 0) > 0).length || (summaryData?.active_students ?? 0);
-          const verifiedProblems = students.reduce((sum, s) => sum + (s.stats?.total_solved ?? s.total_solved ?? 0), 0) || (summaryData?.total_problems_solved ?? 0);
+          const totalStudents = summaryData?.scope?.total_students ?? 0;
+          const verified = summaryData?.verification?.verified ?? 0;
+          const pending = summaryData?.verification?.pending ?? 0;
+          const failed = summaryData?.verification?.failed ?? 0;
+          const noUsername = summaryData?.verification?.no_username ?? 0;
+          
+          const activeSolvers = summaryData?.performance?.active_students ?? 0;
+          const verifiedProblems = summaryData?.performance?.total_problems_solved ?? 0;
 
           return (
             <>
@@ -581,9 +578,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <AnimatedNumber value={verified} />
                 </h4>
                 <p className="text-xs font-bold text-gray-500 dark:text-gray-400">Verified Profiles</p>
-                {(pending > 0 || failed > 0) && (
-                  <p className="text-[10px] font-bold text-gray-400">
-                    ⏳ {pending} Pending{failed > 0 ? ` • 🔴 ${failed} Failed` : ''}
+                {(pending > 0 || failed > 0 || noUsername > 0) && (
+                  <p className="text-[10px] font-bold text-gray-400 flex flex-wrap gap-1 mt-1">
+                    {pending > 0 && <span>⏳ {pending} Pending</span>}
+                    {noUsername > 0 && <span>• 🚫 {noUsername} No Username</span>}
+                    {failed > 0 && <span>• 🔴 {failed} Failed</span>}
                   </p>
                 )}
               </motion.div>
@@ -754,26 +753,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <div className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h3 className="font-black text-lg text-gray-900 dark:text-white">
-            {selectedDept === 'all' || selectedDept === 'ALL'
-              ? 'All Departments'
-              : (departments.find(d => String(d.id) === String(selectedDept) || d.code === selectedDept)?.name || selectedDept)}
-            {' • '}
-            {yearLevel === 'all' || yearLevel === 'ALL'
-              ? 'All Academic Years'
-              : `${yearLevel} Year`}
-            {solvedFilter !== 'all' && solvedFilter !== 'ALL'
-              ? ` • ${{
-                '500_plus': '500+',
-                'above_500': '500+',
-                '251_500': '251–500',
-                '250_500': '251–500',
-                '101_250': '101–250',
-                '1_100': '1–100',
-                'less_100': '1–100',
-                'not_started': 'Not Started'
-              }[solvedFilter] ?? ''} Solved`
-              : ''}
-            {` (${sortedList.length} Students)`}
+            <div className="flex flex-col">
+              <span>Showing {sortedList.length} of {summaryData?.scope?.total_students ?? 1395} Students</span>
+              {(selectedDept !== 'all' || yearLevel !== 'all' || solvedFilter !== 'all') && (
+                <span className="text-sm font-semibold text-gray-500 dark:text-gray-400 mt-1">
+                  Filtered by: {[
+                    selectedDept !== 'all' ? (departments.find(d => String(d.id) === String(selectedDept) || d.code === selectedDept)?.name || selectedDept) : null,
+                    yearLevel !== 'all' ? `${yearLevel} Year` : null,
+                    solvedFilter !== 'all' ? `${{
+                      '500_plus': '500+', 'above_500': '500+', '251_500': '251–500', '250_500': '251–500',
+                      '101_250': '101–250', '1_100': '1–100', 'less_100': '1–100', 'not_started': 'Not Started'
+                    }[solvedFilter] ?? ''} Solved` : null
+                  ].filter(Boolean).join(' • ')}
+                </span>
+              )}
+            </div>
           </h3>
           <button
             onClick={handleRefreshAll}

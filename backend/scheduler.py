@@ -25,7 +25,7 @@ except Exception:
     PDF_AVAILABLE = False
     generate_pdf_summary_report = None
 
-from backend.sync_engine import run_batch_sync
+from backend.services.live_sync_service import start_full_sync_job
 from backend.logger import logger
 
 from backend.services.weekly_session_manager import (
@@ -146,11 +146,14 @@ async def daily_auto_refresh_job():
     Scheduled daily: Auto-syncs live LeetCode stats for all active students.
     """
     logger.info("Executing Scheduled Job: Daily Live Stats Sync with LeetCode...")
+    db = SessionLocal()
     try:
-        await run_batch_sync()
-        logger.info("Daily Live Stats Sync completed successfully.")
+        start_full_sync_job(db, triggered_by="scheduler_daily_refresh")
+        logger.info("Daily Live Stats Sync triggered successfully.")
     except Exception as e:
         logger.error(f"Error in daily_auto_refresh_job: {e}")
+    finally:
+        db.close()
 
 last_public_run_time = None
 last_virtual_run_time = None
@@ -303,10 +306,13 @@ def start_scheduler():
     # Job: Daily Rating Updater (2:00 AM IST)
     async def daily_rating_update_job():
         logger.info("[SCHEDULER] 02:00 AM IST: Running daily rating updater...")
+        db = SessionLocal()
         try:
-            await run_batch_sync()
+            start_full_sync_job(db, triggered_by="scheduler_rating_updater")
         except Exception as e:
             logger.error(f"[SCHEDULER] Daily rating update error: {e}")
+        finally:
+            db.close()
 
     scheduler.add_job(
         daily_rating_update_job,

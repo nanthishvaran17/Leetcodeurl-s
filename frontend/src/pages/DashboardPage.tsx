@@ -13,7 +13,6 @@ import { SyncHistoryModal } from '../components/SyncHistoryModal';
 import { FailedSyncModal } from '../components/FailedSyncModal';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import api, { triggerSingleStudentSync } from '../services/api';
-import { CANONICAL_ROSTER, getCanonicalSummary } from '../data/canonicalRoster';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -30,11 +29,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 }) => {
   const { notify, confirmAction } = useNotification();
   const { user } = useAuth();
-  const [summary, setSummary] = useState<any>(getCanonicalSummary());
-  const [students, setStudents] = useState<StudentData[]>(CANONICAL_ROSTER);
+  const [summary, setSummary] = useState<any>(null);
+  const [students, setStudents] = useState<StudentData[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [dataQuality, setDataQuality] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Single Student Refresh State
   const [refreshingStudentId, setRefreshingStudentId] = useState<number | null>(null);
@@ -66,10 +65,23 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const [syncStarting, setSyncStarting] = useState(false);
   const [generatingReport, setGeneratingReport] = useState(false);
 
-  // Live WebSocket connection status — only refetch on real sync/leaderboard updates
   const { isConnected } = useLiveLeaderboard((data) => {
-    if (data?.type === 'leaderboard_update' || data?.type === 'sync_complete') {
+    if (data?.type === 'sync_complete') {
       fetchDashboardData(true);
+    } else if (data?.type === 'sync_progress') {
+      setSummary((prev: any) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          sync: {
+            ...prev.sync,
+            is_running: true,
+            processed: data.processed,
+            total: data.total,
+            percentage: data.total > 0 ? (data.processed / data.total) * 100 : 0
+          }
+        };
+      });
     } else if (data?.type === 'STUDENT_UPDATED') {
       setStudents(prev => prev.map(s => {
         if (s.id === data.student_id) {
@@ -280,19 +292,20 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     }
   };
 
-  // Metrics resolution directly from current database state
-  const totalStudents = systemHealth?.total_students ?? summary?.total_students ?? 1395;
-  const successfulCount = systemHealth?.successful_count ?? syncStatus?.successful ?? 0;
-  const pendingCount = systemHealth?.pending_count ?? syncStatus?.pending ?? 0;
-  const failedCount = systemHealth?.failed_count ?? syncStatus?.failed ?? 0;
+  // Metrics resolution directly from unified backend authoritative summary
+  const totalStudents = summary?.scope?.total_students ?? 0;
+  const verifiedCount = summary?.verification?.verified ?? 0;
+  const pendingCount = summary?.verification?.pending ?? 0;
+  const failedCount = summary?.verification?.failed ?? 0;
+  const noUsernameCount = summary?.verification?.no_username ?? 0;
 
-  const activeStudents = summary?.active_students ?? successfulCount;
-  const notStartedStudents = summary?.not_started_students ?? pendingCount;
+  const activeStudents = summary?.performance?.active_students ?? 0;
+  const notStartedStudents = totalStudents - activeStudents;
   const participationRate = totalStudents > 0 ? ((activeStudents / totalStudents) * 100).toFixed(1) : "0";
 
   const absoluteLastFetchFormatted = systemHealth?.last_successful_fetch_formatted || syncStatus?.last_sync_timestamp || 'N/A';
   
-  const isWorkerRunning = (systemHealth?.sync_worker === 'running') || syncStatus?.is_running;
+  const isWorkerRunning = summary?.sync?.is_running ?? false;
 
   return (
     <div className="space-y-6 py-2 animate-page-enter w-full">
@@ -317,7 +330,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <p className="text-sm text-gray-300 font-bold tracking-wide leading-relaxed">
               {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') 
                 ? "Your exclusive mentorship cohort — live sync, contest verification, and analytics."
-                : "1500+ students across all departments — live sync, contest verification, leaderboard analytics, and automated reporting."}
+                : `${loading ? '...' : totalStudents} enrolled students across all departments — live sync, contest verification, leaderboard analytics, and automated reporting.`}
             </p>
           </div>
 

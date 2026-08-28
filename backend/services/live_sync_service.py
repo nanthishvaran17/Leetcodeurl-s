@@ -4,7 +4,8 @@ from typing import Dict, Any, List, Optional, Tuple
 from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
-from backend.models import Student, LeetCodeProfileStats, SyncJob, SyncJobItem, WeeklySession, WeeklyPublicResult, StudentStatSnapshot, StudentContestSnapshot
+from backend.models import Student, LeetCodeProfileStats, SyncJob, SyncJobItem, WeeklySession, WeeklyPublicResult, StudentStatSnapshot, StudentContestSnapshot, GlobalSyncLock
+from sqlalchemy import update
 from backend.leetcode_fetcher import fetch_leetcode_profile
 from backend.ranking import update_all_rankings_and_badges
 from backend.logger import logger
@@ -248,37 +249,84 @@ def dispatch_background_task(coro):
 from backend.config import Settings
 settings = Settings()
 
+def _acquire_global_lock(db: Session, job_id: str, timeout_minutes: int = 120) -> bool:
+    """Atomic acquisition of the global sync lock."""
+    now = datetime.datetime.utcnow()
+    # Ensure a lock row exists (id=1)
+    lock_row = db.query(GlobalSyncLock).filter(GlobalSyncLock.id == 1).first()
+    if not lock_row:
+        try:
+            lock_row = GlobalSyncLock(id=1, is_locked=False)
+            db.add(lock_row)
+            db.commit()
+        except Exception:
+            db.rollback()
+
+    # Clear expired locks automatically
+    stmt_clear = (
+        update(GlobalSyncLock)
+        .where(GlobalSyncLock.id == 1)
+        .where(GlobalSyncLock.is_locked == True)
+        .where(GlobalSyncLock.expires_at < now)
+        .values(is_locked=False, locked_by_job_id=None, locked_at=None, expires_at=None)
+    )
+    db.execute(stmt_clear)
+    db.commit()
+
+    # Attempt to acquire lock atomically
+    stmt_lock = (
+        update(GlobalSyncLock)
+        .where(GlobalSyncLock.id == 1)
+        .where(GlobalSyncLock.is_locked == False)
+        .values(
+            is_locked=True,
+            locked_by_job_id=job_id,
+            locked_at=now,
+            expires_at=now + datetime.timedelta(minutes=timeout_minutes)
+        )
+    )
+    result = db.execute(stmt_lock)
+    db.commit()
+    return result.rowcount > 0
+
+def _release_global_lock(db: Session, job_id: str = None):
+    """Release the global sync lock."""
+    stmt = (
+        update(GlobalSyncLock)
+        .where(GlobalSyncLock.id == 1)
+    )
+    if job_id:
+        stmt = stmt.where(GlobalSyncLock.locked_by_job_id == job_id)
+    stmt = stmt.values(is_locked=False, locked_by_job_id=None, locked_at=None, expires_at=None)
+    db.execute(stmt)
+    db.commit()
+
 def start_full_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, Any]:
     """
     Enforces DB-level single-job lock and starts an asynchronous full sync background worker.
     Returns existing job if one is already RUNNING.
     """
-    # 1. DB-Level Single Job Lock Check
-    running_job = db.query(SyncJob).filter(SyncJob.status == "RUNNING").first()
-    if running_job:
-        if not sync_tracker.is_running:
-            logger.warning(f"Sync job {running_job.job_id} was marked RUNNING in DB but worker is inactive. Cleaning up zombie lock.")
-            running_job.status = "INTERRUPTED"
-            running_job.completed_at = datetime.datetime.utcnow()
-            db.commit()
-            running_job = None
-        else:
-            logger.info(f"[SYNC] Sync job {running_job.job_id} is already RUNNING. Reusing active job.")
-            return {
-                "success": True,
-                "status": "RUNNING",
-                "already_running": True,
-                "job_id": running_job.job_id,
-                "message": "A synchronization job is already in progress.",
-                "started_at": running_job.started_at.isoformat() if running_job.started_at else None
-            }
+    job_id = f"SYNC-{datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')}"
 
+    # 1. DB-Level Single Job Lock Check
+    if not _acquire_global_lock(db, job_id):
+        active_lock = db.query(GlobalSyncLock).filter(GlobalSyncLock.id == 1).first()
+        active_job_id = active_lock.locked_by_job_id if active_lock else "UNKNOWN"
+        logger.info(f"[SYNC] Sync job {active_job_id} is already RUNNING. Reusing active job.")
+        return {
+            "success": False,
+            "status": "SYNC_ALREADY_RUNNING",
+            "already_running": True,
+            "job_id": active_job_id,
+            "message": "A synchronization job is already in progress.",
+            "started_at": active_lock.locked_at.isoformat() if active_lock and active_lock.locked_at else None
+        }
+
+    logger.info(f"[SYNC] Creating session: {job_id}")
+    
     # 2. Dynamic Active Roster Count
     students = get_active_students(db)
     total_count = len(students)
-
-    job_id = f"SYNC-{datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')}"
-    logger.info(f"[SYNC] Creating session: {job_id}")
     new_job = SyncJob(
         job_id=job_id,
         job_type="FULL_SYNC",
@@ -320,12 +368,15 @@ def start_stale_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, 
     """
     Synchronizes only stale student profiles (older than SYNC_FRESHNESS_HOURS) or never synced.
     """
-    running_job = db.query(SyncJob).filter(SyncJob.status == "RUNNING").first()
-    if running_job and sync_tracker.is_running:
+    job_id = f"SYNC-STALE-{datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')}"
+    
+    if not _acquire_global_lock(db, job_id):
+        active_lock = db.query(GlobalSyncLock).filter(GlobalSyncLock.id == 1).first()
+        active_job_id = active_lock.locked_by_job_id if active_lock else "UNKNOWN"
         return {
             "success": False,
             "status": "SYNC_ALREADY_RUNNING",
-            "job_id": running_job.job_id,
+            "job_id": active_job_id,
             "message": "A synchronization job is already in progress."
         }
 
@@ -342,6 +393,7 @@ def start_stale_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, 
     ).all()
 
     if not stale_students:
+        _release_global_lock(db, job_id)
         return {
             "success": True,
             "status": "FRESH",
@@ -350,7 +402,6 @@ def start_stale_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, 
             "message": f"All student profiles are already fresh (synced within last {settings.SYNC_FRESHNESS_HOURS} hours)."
         }
 
-    job_id = f"SYNC-STALE-{datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')}"
     target_ids = [s.id for s in stale_students]
     total_count = len(target_ids)
 
@@ -384,20 +435,22 @@ def start_targeted_sync_job(db: Session, student_ids: List[int], triggered_by: s
     """
     Synchronizes only a specific allowlisted subset of student IDs (e.g. after username mapping update).
     """
-    running_job = db.query(SyncJob).filter(SyncJob.status == "RUNNING").first()
-    if running_job and sync_tracker.is_running:
+    job_id = f"SYNC-TARGET-{datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')}"
+    if not _acquire_global_lock(db, job_id):
+        active_lock = db.query(GlobalSyncLock).filter(GlobalSyncLock.id == 1).first()
+        active_job_id = active_lock.locked_by_job_id if active_lock else "UNKNOWN"
         return {
             "success": False,
             "status": "SYNC_ALREADY_RUNNING",
-            "job_id": running_job.job_id,
+            "job_id": active_job_id,
             "message": "A synchronization job is already in progress."
         }
 
     valid_students = db.query(Student).filter(Student.id.in_(student_ids)).all()
     if not valid_students:
+        _release_global_lock(db, job_id)
         return {"success": False, "status": "ERROR", "message": "No valid matching students found for targeted sync."}
 
-    job_id = f"SYNC-TARGET-{datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')}"
     total_count = len(valid_students)
 
     new_job = SyncJob(
@@ -485,6 +538,7 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
             job_record.error_message = str(exc)
             db.commit()
     finally:
+        _release_global_lock(db, job_id)
         db.close()
 
 

@@ -282,25 +282,43 @@ class WeeklySessionOut(BaseModel):
     completed_at: Optional[datetime.datetime] = None
     model_config = ConfigDict(from_attributes=True)
 
-# Dashboard Summary Schema
-class DashboardSummary(BaseModel):
+class DashboardScope(BaseModel):
     total_students: int
     total_departments: int
     total_sections: int
-    active_students: int
-    not_started_students: int
+
+class DashboardSync(BaseModel):
+    is_running: bool
+    processed: int
+    total: int
+    percentage: float
+
+class DashboardVerification(BaseModel):
+    verified: int
+    pending: int
+    failed: int
+    no_username: int
+
+class DashboardPerformance(BaseModel):
     total_problems_solved: int
+    active_students: int
     average_problems_solved: float
     average_weekly_progress: float
-    highest_contest_rating: Optional[float] = 0.0
+    highest_contest_rating: float
     top_college_ranker: Optional[str] = None
+
+class DashboardSessionContext(BaseModel):
     current_session: Optional[WeeklySessionOut] = None
-    is_session_live: Optional[bool] = False
-    session_phase: Optional[str] = "SCHEDULED"
+    is_session_live: bool = False
+    session_phase: str = "SCHEDULED"
     next_session_countdown_seconds: int = 86400
-    verified_profiles: Optional[int] = 0
-    pending_sync: Optional[int] = 0
-    failed_sync: Optional[int] = 0
+
+class DashboardSummary(BaseModel):
+    scope: DashboardScope
+    sync: DashboardSync
+    verification: DashboardVerification
+    performance: DashboardPerformance
+    session: DashboardSessionContext
     model_config = ConfigDict(from_attributes=True)
 
 # Audit Log Schema

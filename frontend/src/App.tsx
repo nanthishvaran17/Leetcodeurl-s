@@ -326,7 +326,7 @@ export const App: React.FC = () => {
       
       {/* Top Navbar */}
       <Navbar
-        currentSessionStatus={summaryData?.current_session?.status || "UPCOMING"}
+        currentSessionStatus={summaryData?.sync?.is_running ? "RUNNING" : (summaryData?.session?.current_session?.status || "UPCOMING")}
         onOpenLogin={() => setShowLoginModal(true)}
         activeTab={activeTab}
         setActiveTab={handleTabChange}

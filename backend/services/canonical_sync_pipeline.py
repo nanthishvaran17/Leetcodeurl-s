@@ -214,6 +214,7 @@ async def _sync_single_student_canonical_impl(
                     error_msg = "Profile not found (404)"
             elif status_code in ("FETCH_FAILED", "TIMEOUT"):
                 # Preserve last known good data (Data Integrity Axiom)
+                original_status_code = status_code
                 if shim_stats.total_solved is not None and shim_stats.total_solved > 0:
                     status_code = "SUCCESS"  # Treat as success for pipeline progress
                     sync_status_str = "verified"
@@ -228,7 +229,7 @@ async def _sync_single_student_canonical_impl(
                     lc_prof.verification_status = "PROFILE_VERIFIED"
                     lc_prof.sync_state = "SYNCED"
                     
-                    if status_code == "TIMEOUT":
+                    if original_status_code == "TIMEOUT":
                         logger.warning(f"[TIMEOUT] student={st.id} username={c_username} endpoint=profile — preserving known good data")
                 else:
                     lc_prof.sync_state = "TIMEOUT" if status_code == "TIMEOUT" else "FETCH_FAILED"
@@ -508,6 +509,25 @@ async def run_full_pipeline(
             # For BACKGROUND_SYNC, we can filter for stale students. For now, fetch all active and we'll process them.
             student_records = query.with_entities(Student.id, Student.name, Student.username, Student.leetcode_url, Student.reg_no).all()
             
+            # Deduplicate student records (could be duplicated if student_ids has duplicates)
+            unique_records = {}
+            for r in student_records:
+                unique_records[r.id] = r
+                
+            student_records_deduped = list(unique_records.values())
+
+            # Also deduplicate by username so we don't spam the same leetcode profile concurrently
+            unique_usernames = set()
+            final_students = []
+            
+            for r in student_records_deduped:
+                username, _, _ = extract_leetcode_username(r.username or r.leetcode_url)
+                username_key = username.lower() if username else f"ID_{r.id}"
+                
+                if username_key not in unique_usernames:
+                    unique_usernames.add(username_key)
+                    final_students.append(r)
+            
             class DummyStudent:
                 def __init__(self, id, name, username, leetcode_url, reg_no):
                     self.id = id
@@ -516,7 +536,7 @@ async def run_full_pipeline(
                     self.leetcode_url = leetcode_url
                     self.reg_no = reg_no
 
-            students = [DummyStudent(*r) for r in student_records]
+            students = [DummyStudent(*r) for r in final_students]
             
         finally:
             db.close()

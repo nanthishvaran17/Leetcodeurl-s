@@ -2076,3 +2076,16 @@ class PreviousWeekParticipationRecord(Base):
     student = relationship("Student")
 
 
+class GlobalSyncLock(Base):
+    """
+    Global Single-Flight Atomic Lock for LeetCode Sync.
+    Ensures that only one institutional sync operation runs at any given time across all workers.
+    """
+    __tablename__ = "global_sync_lock"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    is_locked = Column(Boolean, default=False, nullable=False)
+    locked_by_job_id = Column(String(100), nullable=True)
+    locked_at = Column(DateTime, nullable=True)
+    expires_at = Column(DateTime, nullable=True)

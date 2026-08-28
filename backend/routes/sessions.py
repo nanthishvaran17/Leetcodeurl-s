@@ -26,46 +26,59 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
 
     from sqlalchemy import func
     
-    # 1. Total counts
+    # 1. Total counts (Institutional Scope)
     total_students = db.query(func.count(Student.id)).filter((Student.is_active == True) | (Student.is_active.is_(None))).scalar() or 0
     total_departments = db.query(func.count(Department.id)).scalar() or 0
     total_sections = db.query(func.count(Section.id)).scalar() or 0
 
     current_session = get_or_create_current_session(db)
 
-    # 2. Student aggregations using single SQL query
+    # 2. Strict Mathematical Sync State Invariants (Mutually Exclusive)
+    # verified: sync_status = success AND total_solved > 0
+    verified = db.query(func.count(Student.id)).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
+        .filter((Student.is_active == True) | (Student.is_active.is_(None)))\
+        .filter(LeetCodeProfileStats.sync_status.in_(['success', 'OK', 'verified']))\
+        .filter(LeetCodeProfileStats.total_solved > 0).scalar() or 0
+
+    # no_username: student.username is null/empty OR sync_status = 'pending_username' or MISSING LINK
+    no_username = db.query(func.count(Student.id)).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
+        .filter((Student.is_active == True) | (Student.is_active.is_(None)))\
+        .filter(
+            (Student.username == None) | 
+            (Student.username == "") | 
+            (LeetCodeProfileStats.sync_status == "pending_username") | 
+            (LeetCodeProfileStats.status == "MISSING LINK")
+        ).scalar() or 0
+
+    # failed: sync_status in failed/TIMEOUT/IDENTITY_MISMATCH/INVALID_USERNAME (but has a username)
+    failed = db.query(func.count(Student.id)).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
+        .filter((Student.is_active == True) | (Student.is_active.is_(None)))\
+        .filter(Student.username != None, Student.username != "")\
+        .filter(LeetCodeProfileStats.sync_status.in_(['failed', 'mismatch', 'TIMEOUT', 'IDENTITY_MISMATCH', 'INVALID_USERNAME'])).scalar() or 0
+
+    # pending: everything else
+    pending = total_students - (verified + no_username + failed)
+    if pending < 0: pending = 0
+
+    # 3. Performance Aggregations
     agg_result = db.query(
         func.sum(LeetCodeProfileStats.total_solved).label("total_problems"),
         func.max(LeetCodeProfileStats.contest_rating).label("highest_rating"),
-        func.count(LeetCodeProfileStats.id).filter(LeetCodeProfileStats.total_solved > 0).label("active_students"),
-        func.count(LeetCodeProfileStats.id).filter(LeetCodeProfileStats.sync_status.in_(['success', 'OK', 'verified', 'stale']) & (LeetCodeProfileStats.total_solved > 0)).label("verified_profiles"),
-        func.count(LeetCodeProfileStats.id).filter(LeetCodeProfileStats.sync_status.in_(['pending', 'not_started']) | (LeetCodeProfileStats.total_solved == 0)).label("pending_sync"),
-        func.count(LeetCodeProfileStats.id).filter(LeetCodeProfileStats.sync_status.in_(['failed', 'mismatch', 'MISSING LINK'])).label("failed_sync")
+        func.count(LeetCodeProfileStats.id).filter(LeetCodeProfileStats.total_solved > 0).label("active_students")
     ).select_from(Student).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
      .filter((Student.is_active == True) | (Student.is_active.is_(None))).first()
 
     total_problems = int(agg_result.total_problems) if agg_result and agg_result.total_problems else 0
-    highest_rating = float(agg_result.highest_rating) if agg_result and agg_result.highest_rating else None
+    highest_rating = float(agg_result.highest_rating) if agg_result and agg_result.highest_rating else 0.0
     active_students = int(agg_result.active_students) if agg_result and agg_result.active_students else 0
     
-    verified_profiles = int(agg_result.verified_profiles) if agg_result and agg_result.verified_profiles else 0
-    pending_sync_stats = int(agg_result.pending_sync) if agg_result and agg_result.pending_sync else 0
-    failed_sync = int(agg_result.failed_sync) if agg_result and agg_result.failed_sync else 0
-    
-    # Calculate students with missing stats completely
-    stats_count = db.query(func.count(LeetCodeProfileStats.id)).select_from(Student).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id).filter((Student.is_active == True) | (Student.is_active.is_(None)), LeetCodeProfileStats.id.isnot(None)).scalar() or 0
-    missing_stats_count = total_students - stats_count
-    pending_sync = pending_sync_stats + missing_stats_count
-    
-    not_started_students = total_students - active_students
-
-    # 3. Top ranker
+    # 4. Top ranker
     top_college_ranker = None
     top_student = db.query(Student.name).join(LeetCodeProfileStats).filter((Student.is_active == True) | (Student.is_active.is_(None))).order_by(LeetCodeProfileStats.total_solved.desc().nullslast()).first()
     if top_student:
         top_college_ranker = top_student[0]
 
-    avg_solved = round(total_problems / total_students, 1) if total_students > 0 else 0.0
+    avg_solved = round(total_problems / max(total_students, 1), 1)
     
     avg_progress = 0.0
     if current_session:
@@ -103,28 +116,48 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         countdown_sec = int((next_sunday - now_ist).total_seconds())
         session_phase = "SCHEDULED_NEXT_WEEK"
 
-
+    # 5. Check if Sync Engine is running via SyncJob table
+    from backend.models import SyncJob
+    running_job = db.query(SyncJob).filter(SyncJob.status == "RUNNING").first()
+    is_running = running_job is not None
+    processed = running_job.processed_count if running_job else 0
+    total = running_job.total_records if running_job else total_students
+    percentage = round((processed / max(total, 1)) * 100, 2) if is_running else 0.0
 
     resp = {
-        "total_students": int(total_students),
-        "total_departments": int(total_departments),
-        "total_sections": int(total_sections),
-        "active_students": int(active_students),
-        "not_started_students": int(not_started_students),
-        "total_problems_solved": int(total_problems),
-        "average_problems_solved": float(avg_solved),
-        "average_weekly_progress": float(avg_progress),
-        "highest_contest_rating": float(highest_rating) if highest_rating is not None else 0.0,
-        "top_college_ranker": str(top_college_ranker) if top_college_ranker else "N/A",
-        "current_session": WeeklySessionOut.model_validate(current_session) if current_session else None,
-        "is_session_live": is_session_live,
-        "session_phase": session_phase,
-        "next_session_countdown_seconds": int(max(countdown_sec, 0)),
-        "verified_profiles": int(verified_profiles),
-        "pending_sync": int(pending_sync),
-        "failed_sync": int(failed_sync)
+        "scope": {
+            "total_students": total_students,
+            "total_departments": total_departments,
+            "total_sections": total_sections
+        },
+        "sync": {
+            "is_running": is_running,
+            "processed": processed,
+            "total": total,
+            "percentage": percentage
+        },
+        "verification": {
+            "verified": verified,
+            "pending": pending,
+            "failed": failed,
+            "no_username": no_username
+        },
+        "performance": {
+            "total_problems_solved": total_problems,
+            "active_students": active_students,
+            "average_problems_solved": avg_solved,
+            "average_weekly_progress": avg_progress,
+            "highest_contest_rating": highest_rating,
+            "top_college_ranker": top_college_ranker
+        },
+        "session": {
+            "current_session": WeeklySessionOut.model_validate(current_session) if current_session else None,
+            "is_session_live": is_session_live,
+            "session_phase": session_phase,
+            "next_session_countdown_seconds": max(countdown_sec, 0)
+        }
     }
-    cache.set(cache_key, resp, ttl_seconds=60, tags=["sessions", "students"])
+    cache.set(cache_key, resp, ttl_seconds=60, tags=["sessions", "students", "dashboard"])
     return resp
 
 @router.post("/trigger-start")

@@ -90,20 +90,22 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="hidden md:flex items-center space-x-4">
               <div className="flex items-center space-x-2.5 px-3.5 py-1.5 rounded-2xl bg-slate-100/90 dark:bg-navy-950/90 border border-slate-200 dark:border-navy-800 text-xs shadow-inner">
                 <div className={`w-2.5 h-2.5 rounded-full ${
-                  currentSessionStatus === 'ACTIVE' || currentSessionStatus === 'LIVE'
+                  currentSessionStatus === 'ACTIVE' || currentSessionStatus === 'LIVE' || currentSessionStatus === 'RUNNING'
                     ? 'bg-brand-500 pulse-live-indicator'
                     : currentSessionStatus === 'FINALIZED' || currentSessionStatus === 'COMPLETED' || currentSessionStatus === 'READY'
-                    ? 'bg-brand-500'
+                    ? 'bg-emerald-500'
                     : 'bg-brand-500'
                 }`} />
                 <span className="font-extrabold text-slate-700 dark:text-slate-300 tracking-tight flex items-center space-x-1.5">
                   <span>Sync Engine:</span>
                   <span className={`uppercase font-black tracking-wider px-2 py-0.5 rounded-md border text-[10px] ${
-                    currentSessionStatus === 'ACTIVE' || currentSessionStatus === 'LIVE'
+                    currentSessionStatus === 'ACTIVE' || currentSessionStatus === 'LIVE' || currentSessionStatus === 'RUNNING'
                       ? 'bg-brand-500/20 text-brand-600 dark:text-brand-400 border-brand-500/30'
+                      : currentSessionStatus === 'FINALIZED' 
+                      ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                       : 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20'
                   }`}>
-                    {currentSessionStatus === 'SCHEDULED' ? 'ACTIVE / READY' : currentSessionStatus}
+                    {currentSessionStatus === 'SCHEDULED' ? 'READY' : currentSessionStatus}
                   </span>
                 </span>
               </div>

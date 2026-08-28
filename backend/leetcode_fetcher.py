@@ -10,6 +10,44 @@ from backend.logger import logger
 # In-memory cache: username -> { "timestamp": float, "data": dict }
 _profile_cache: Dict[str, Dict[str, Any]] = {}
 
+class CircuitBreaker:
+    def __init__(self, failure_threshold: int = 15, recovery_timeout: float = 60.0):
+        self.state = "CLOSED"
+        self.failure_count = 0
+        self.last_failure_time = 0.0
+        self.failure_threshold = failure_threshold
+        self.recovery_timeout = recovery_timeout
+        self._lock = asyncio.Lock()
+
+    async def check(self) -> bool:
+        async with self._lock:
+            if self.state == "OPEN":
+                if time.time() - self.last_failure_time > self.recovery_timeout:
+                    self.state = "HALF_OPEN"
+                    return True
+                return False
+            return True
+
+    async def record_success(self):
+        async with self._lock:
+            if self.state != "CLOSED":
+                logger.info(f"[CIRCUIT_BREAKER] State recovered to CLOSED.")
+            self.state = "CLOSED"
+            self.failure_count = 0
+
+    async def record_failure(self):
+        async with self._lock:
+            self.failure_count += 1
+            self.last_failure_time = time.time()
+            if self.state == "CLOSED" and self.failure_count >= self.failure_threshold:
+                self.state = "OPEN"
+                logger.error(f"[CIRCUIT_BREAKER] Threshold reached ({self.failure_count}). State set to OPEN.")
+            elif self.state == "HALF_OPEN":
+                self.state = "OPEN"
+                logger.error("[CIRCUIT_BREAKER] Failure during HALF_OPEN. State returned to OPEN.")
+
+circuit_breaker = CircuitBreaker(failure_threshold=15, recovery_timeout=60.0)
+
 LEETCODE_GRAPHQL_URL = "https://leetcode.com/graphql"
 USER_CONTEST_QUERY = """
 query userContestRankingInfo($username: String!) {
@@ -250,6 +288,20 @@ async def fetch_leetcode_profile(
         if now - cached_item["timestamp"] < cache_ttl:
             return cached_item["data"]
 
+    if not await circuit_breaker.check():
+        duration = round(time.time() - start_time, 3)
+        return {
+            "username": username,
+            "profile_url": None,
+            "total_solved": None,
+            "status": "CIRCUIT_OPEN",
+            "sync_status": "failed",
+            "validation_status": "failed",
+            "error": "Circuit breaker OPEN",
+            "error_message": "Circuit breaker OPEN",
+            "fetch_duration": duration
+        }
+
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
         "Content-Type": "application/json",
@@ -286,18 +338,23 @@ async def fetch_leetcode_profile(
                     else:
                         matched_user = data.get("data", {}).get("matchedUser")
                         if matched_user is not None:
+                            await circuit_breaker.record_success()
                             break
                         else:
                             last_error_detail = f"User '{username}' does not exist on LeetCode (matchedUser is null)"
                             break
                 else:
+                    if res.status_code == 429 or res.status_code >= 500:
+                        await circuit_breaker.record_failure()
                     last_error_detail = f"HTTP {res.status_code} response from LeetCode"
                     logger.warning(f"LeetCode returned HTTP {res.status_code} for user '{username}' (Attempt {attempt}/{retries})")
             
             except httpx.TimeoutException:
+                await circuit_breaker.record_failure()
                 last_error_detail = "Network timeout"
                 logger.warning(f"Timeout fetching profile for '{username}' (Attempt {attempt}/{retries})")
             except (httpx.RemoteProtocolError, httpx.ConnectError, httpx.NetworkError) as net_err:
+                await circuit_breaker.record_failure()
                 last_error_detail = f"Network connection drop ({type(net_err).__name__})"
                 logger.warning(f"Connection issue for '{username}' (Attempt {attempt}/{retries}): {last_error_detail}")
             except Exception as e:
@@ -419,7 +476,10 @@ async def fetch_leetcode_profile(
             }
             res_contest = await client.post(GRAPHQL_URL, json=payload_contest, headers=headers)
             if res_contest.status_code == 200:
+                await circuit_breaker.record_success()
                 c_data = res_contest.json()
+            elif res_contest.status_code == 429 or res_contest.status_code >= 500:
+                await circuit_breaker.record_failure()
                 contest_info = c_data.get("data", {}).get("userContestRanking")
                 if isinstance(contest_info, dict):
                     c_rating = contest_info.get("rating")
@@ -612,6 +672,9 @@ async def _gql_post(
     Handles 429 (rate limit), 5xx (server error), timeouts.
     Returns canonical result dict — never raises.
     """
+    if not await circuit_breaker.check():
+        return {"status": "error", "data": None, "detail": "Circuit breaker OPEN"}
+
     headers = _make_headers(username)
     payload = {"query": query, "variables": variables, "operationName": operation}
 
@@ -621,6 +684,7 @@ async def _gql_post(
                 res = await client.post(GRAPHQL_URL, json=payload, headers=headers)
 
             if res.status_code == 429:
+                await circuit_breaker.record_failure()
                 wait = min(backoff_base ** attempt, 60.0) + random.uniform(0.0, 1.0)
                 logger.warning(f"[RATE_LIMIT] {username}/{operation} attempt {attempt} — waiting {wait:.1f}s")
                 if attempt < retries:
@@ -629,6 +693,7 @@ async def _gql_post(
                 return {"status": "rate_limited", "data": None}
 
             if res.status_code >= 500:
+                await circuit_breaker.record_failure()
                 wait = min(backoff_base ** attempt, 30.0) + random.uniform(0.0, 1.0)
                 logger.warning(f"[SERVER_ERROR] {username}/{operation} HTTP {res.status_code} attempt {attempt}")
                 if attempt < retries:
@@ -647,9 +712,11 @@ async def _gql_post(
                 msg = gql_errors[0].get("message", "") if gql_errors else ""
                 return {"status": "error", "data": None, "detail": msg}
 
+            await circuit_breaker.record_success()
             return {"status": "ok", "data": gql_data}
 
         except httpx.TimeoutException:
+            await circuit_breaker.record_failure()
             logger.warning(f"[TIMEOUT] {username}/{operation} attempt {attempt}")
             if attempt < retries:
                 await asyncio.sleep((backoff_base ** attempt) + random.uniform(0.0, 1.0))
@@ -657,6 +724,7 @@ async def _gql_post(
             return {"status": "timeout", "data": None}
 
         except (httpx.RemoteProtocolError, httpx.ConnectError, httpx.NetworkError) as net_err:
+            await circuit_breaker.record_failure()
             logger.warning(f"[NETWORK] {username}/{operation} {type(net_err).__name__} attempt {attempt}")
             if attempt < retries:
                 await asyncio.sleep((backoff_base ** attempt) + random.uniform(0.0, 1.0))
