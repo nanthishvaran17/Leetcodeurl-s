@@ -788,7 +788,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                   <div className="p-3 rounded-2xl bg-sky-50 dark:bg-navy-800 border border-sky-100 dark:border-navy-700">
                     <p className="text-[10px] font-bold text-sky-700 dark:text-sky-300 uppercase">Assigned Capacity</p>
                     <p className="text-xl font-black text-sky-900 dark:text-white mt-0.5">
-                      {viewRosterModal.data.total_assigned} / 30
+                      {viewRosterModal.data.total_assigned} / {viewRosterModal.data.max_allowed || 30}
                     </p>
                   </div>
                   <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40">

@@ -228,12 +228,13 @@ app.add_middleware(PerformanceMonitoringMiddleware)
 
 # CORS Configuration
 origins = [
-    "https://leetcode-frontend-deploy.vercel.app",
-    "https://leetcodeurls.netlify.app",
-    "https://leetcode-student-data.web.app",
-    "https://leetcode-student-data.firebaseapp.com",
+    "https://leetcodeurl-s-roan.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000"
 ]
-if getattr(settings, "FRONTEND_ORIGIN", None) and settings.FRONTEND_ORIGIN not in origins:
+if getattr(settings, "FRONTEND_ORIGIN", None) and settings.FRONTEND_ORIGIN.strip() not in origins:
     origins.append(settings.FRONTEND_ORIGIN.strip())
 if getattr(settings, "CORS_ALLOWED_ORIGINS", None):
     for o in settings.CORS_ALLOWED_ORIGINS.split(","):

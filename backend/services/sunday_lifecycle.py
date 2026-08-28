@@ -291,9 +291,9 @@ class SundayLifecycle:
                     virtual_evidence=evidence_data if (evidence_data and evidence_data.is_virtual) else None,
                 )
 
-                if classification.participation_status == "ACTUAL":
+                if classification.participation_type == "LIVE":
                     actual_count += 1
-                elif classification.participation_status == "VIRTUAL":
+                elif classification.participation_type == "VIRTUAL":
                     virtual_count += 1
                 else:
                     not_verified_count += 1
@@ -308,35 +308,34 @@ class SundayLifecycle:
                         contest_id=contest_id,
                         student_id=student.id,
                         leetcode_username=acc.leetcode_username,
-                        participation_status=classification.participation_status,
-                        verification_status=classification.verification_status,
+                        participation_status=classification.participation_type,
+                        verification_status="VERIFIED",
                         rank=classification.rank,
                         score=classification.score,
                         solved_count=classification.solved_count,
                         finish_time=classification.finish_time,
                         questions=classification.questions,
-                        evidence_source=classification.source,
-                        evidence_metadata=classification.conflict_details,
+                        evidence_source=classification.classification_reason,
+                        evidence_metadata=classification.evidence_summary,
                         confidence=classification.confidence,
                         first_fetched_at=now,
                         last_fetched_at=now,
-                        verified_at=now if classification.verification_status == "VERIFIED" else None,
+                        verified_at=now if classification.confidence in ["VERY_HIGH", "HIGH", "MODERATE"] else None,
                     )
                     db.add(part_record)
                 else:
                     # Update fields (Preserving 09:58 snapshot if already frozen)
-                    part_record.participation_status = classification.participation_status
-                    part_record.verification_status = classification.verification_status
+                    part_record.participation_status = classification.participation_type
                     part_record.rank = classification.rank
                     part_record.score = classification.score
                     part_record.solved_count = classification.solved_count
                     part_record.finish_time = classification.finish_time
                     part_record.questions = classification.questions
-                    part_record.evidence_source = classification.source
-                    part_record.evidence_metadata = classification.conflict_details
+                    part_record.evidence_source = classification.classification_reason
+                    part_record.evidence_metadata = classification.evidence_summary
                     part_record.confidence = classification.confidence
                     part_record.last_fetched_at = now
-                    if classification.verification_status == "VERIFIED" and not part_record.verified_at:
+                    if classification.confidence in ["VERY_HIGH", "HIGH", "MODERATE"] and not part_record.verified_at:
                         part_record.verified_at = now
 
                 classified_count += 1

@@ -116,14 +116,35 @@ def uuid_hex_short() -> str:
 
 
 def validate_csrf_origin(request: Request):
-    """Verifies request Origin/Referer for state-changing operations."""
+    """Verifies request Origin/Referer for state-changing operations and blocks unauthorized origins."""
     origin = request.headers.get("Origin") or request.headers.get("Referer")
-    if origin and getattr(settings, "FRONTEND_ORIGIN", None):
-        allowed = settings.FRONTEND_ORIGIN.rstrip("/")
-        clean_origin = origin.rstrip("/")
-        if not clean_origin.startswith("http://localhost") and not clean_origin.startswith("http://127.0.0.1"):
-            if allowed not in clean_origin:
-                logger.warning(f"[CSRF CHECK] Blocked request from unverified origin: {origin}")
+    if not origin:
+        return
+
+    clean_origin = origin.rstrip("/")
+    
+    # Core Production Vercel Origin
+    allowed_origins = [
+        "https://leetcodeurl-s-roan.vercel.app",
+    ]
+    
+    # Environment-provided Origin (if different)
+    env_origin = getattr(settings, "FRONTEND_ORIGIN", None)
+    if env_origin:
+        allowed_origins.append(env_origin.rstrip("/"))
+
+    if clean_origin.startswith("http://localhost") or clean_origin.startswith("http://127.0.0.1"):
+        return  # Allowed for development
+
+    # Verify if the origin matches any of the allowed origins exactly
+    is_allowed = any(allowed == clean_origin for allowed in allowed_origins)
+
+    if not is_allowed:
+        logger.warning(f"[CSRF CHECK] Blocked request from unverified origin: {origin}")
+        raise HTTPException(
+            status_code=403, 
+            detail="CSRF validation failed. Unrecognized request origin."
+        )
 
 
 def get_current_user_from_request(request: Request, db: Session) -> Optional[User]:

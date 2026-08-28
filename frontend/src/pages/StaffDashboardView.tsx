@@ -209,17 +209,17 @@ export const StaffDashboardView: React.FC = () => {
             <Users className="w-4 h-4 text-brand-500" />
           </div>
           <h3 className="text-2xl font-black text-gray-900 dark:text-white">
-            {totalAssignedCount} / 30
+            {totalAssignedCount} / {summary?.max_capacity || 30}
           </h3>
           <div className="flex items-center gap-1.5 mt-1">
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-              totalAssignedCount === 30
+              totalAssignedCount === (summary?.max_capacity || 30)
                 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                : (totalAssignedCount > 30
+                : (totalAssignedCount > (summary?.max_capacity || 30)
                     ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
                     : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20')
             }`}>
-              {summary?.workload_status || (totalAssignedCount === 30 ? 'AT CAPACITY' : 'WITHIN CAPACITY')}
+              {summary?.workload_status || (totalAssignedCount === (summary?.max_capacity || 30) ? 'AT CAPACITY' : 'WITHIN CAPACITY')}
             </span>
           </div>
         </div>

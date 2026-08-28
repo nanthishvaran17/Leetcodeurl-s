@@ -850,7 +850,20 @@ def delete_staff_user(
     if staff_user.id == current_user.id:
         raise HTTPException(status_code=400, detail="You cannot delete your own logged-in account.")
 
-    # 1. Clean up student assignments & assignment histories
+    # Check actual database allocation
+    assigned_count = db.query(FacultyStudentAssignment).filter(
+        FacultyStudentAssignment.faculty_id == staff_id,
+        FacultyStudentAssignment.is_active == True
+    ).count()
+
+    if assigned_count > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"This staff member has {assigned_count} assigned students. Reassign students before deletion."
+        )
+
+    # Clean up student assignment history safely to satisfy FK constraints if needed
+    # Only old inactive assignments would exist here since active is 0
     db.query(FacultyStudentAssignment).filter(
         (FacultyStudentAssignment.faculty_id == staff_id) | (FacultyStudentAssignment.assigned_by_id == staff_id)
     ).delete(synchronize_session=False)
@@ -1003,13 +1016,9 @@ def toggle_staff_status(
         raise HTTPException(status_code=404, detail="Staff account not found.")
 
     if staff.is_active:
-        # Disable staff and unassign students
-        res = faculty_assignment_service.disable_staff_account(
-            db=db,
-            staff_id=staff_id,
-            disabled_by_id=current_user.id
-        )
-        msg = f"Staff account disabled. {res.get('unassigned_count', 0)} students moved to unassigned queue."
+        staff.is_active = False
+        db.commit()
+        msg = "Staff account disabled successfully. Existing student allocations are preserved in history."
     else:
         staff.is_active = True
         db.commit()

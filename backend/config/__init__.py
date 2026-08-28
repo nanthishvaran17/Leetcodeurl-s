@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080 # 7 Days
     SESSION_EXPIRE_MINUTES: int = int(os.environ.get("SESSION_EXPIRE_MINUTES", "10080")) # 7 Days
     SESSION_COOKIE_NAME: str = os.environ.get("SESSION_COOKIE_NAME", "admin_session_token")
-    FRONTEND_ORIGIN: str = os.environ.get("FRONTEND_ORIGIN", "https://leetcodeurls.netlify.app")
+    FRONTEND_ORIGIN: str = os.environ.get("FRONTEND_ORIGIN", "https://leetcodeurl-s-roan.vercel.app")
     CORS_ALLOWED_ORIGINS: str = os.environ.get("CORS_ALLOWED_ORIGINS", "")
     
     # Official Administrator Credentials Configuration
