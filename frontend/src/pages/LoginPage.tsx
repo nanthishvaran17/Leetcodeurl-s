@@ -576,7 +576,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
               <div className="divider"><span>Or continue with</span></div>
 
               <button className="google-btn" type="button" onClick={() => {
-                const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+                const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '';
+                if (!envUrl) { alert('Production API URL is not configured. Please set VITE_API_URL.'); return; }
                 const baseUrl = envUrl.replace(/\/api\/?$/, '').replace(/\/+$/, '');
                 window.location.href = `${baseUrl}/api/v1/auth/google/login`;
               }} disabled={loading}>

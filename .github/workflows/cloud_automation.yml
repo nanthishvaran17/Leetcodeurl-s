@@ -1,0 +1,68 @@
+name: Keep Backend Alive + Sunday Automation
+
+on:
+  schedule:
+    # Keep-alive ping every 10 minutes to prevent Render free-tier cold starts
+    - cron: '*/10 * * * *'
+    # Sunday automation at 08:00 AM IST (02:30 UTC)
+    - cron: '30 2 * * 0'
+
+  workflow_dispatch:
+    inputs:
+      trigger_type:
+        description: 'Trigger type (keepalive or sunday_session)'
+        required: false
+        default: 'keepalive'
+
+jobs:
+  keepalive:
+    name: Keep Backend Warm
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '*/10 * * * *' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.trigger_type == 'keepalive' || github.event.inputs.trigger_type == ''))
+    steps:
+      - name: Ping Backend Health Endpoint
+        run: |
+          echo "Pinging backend to prevent cold start..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "${{ secrets.BACKEND_URL }}/health" || echo "000")
+          echo "Backend health status: $STATUS"
+          if [ "$STATUS" = "200" ] || [ "$STATUS" = "204" ]; then
+            echo "✅ Backend is alive and healthy."
+          else
+            echo "⚠️ Backend returned status $STATUS — may be cold starting."
+          fi
+
+  sunday_autopilot:
+    name: Sunday Contest Autopilot
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '30 2 * * 0' || (github.event_name == 'workflow_dispatch' && github.event.inputs.trigger_type == 'sunday_session')
+    steps:
+      - name: Wait for Backend Warm-up
+        run: |
+          echo "Warming up backend before triggering Sunday automation..."
+          for i in 1 2 3; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "${{ secrets.BACKEND_URL }}/health" || echo "000")
+            echo "Attempt $i: status $STATUS"
+            if [ "$STATUS" = "200" ]; then
+              echo "Backend warm and ready."
+              break
+            fi
+            sleep 15
+          done
+
+      - name: Trigger Sunday Session Pipeline
+        run: |
+          echo "Triggering Sunday automation pipeline..."
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+            --max-time 30 \
+            -X POST "${{ secrets.BACKEND_URL }}/api/cron/sunday-session" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json")
+          echo "Response status: $RESPONSE"
+          if [ "$RESPONSE" = "200" ] || [ "$RESPONSE" = "202" ]; then
+            echo "✅ Sunday automation triggered successfully!"
+          elif [ "$RESPONSE" = "409" ]; then
+            echo "ℹ️ Pipeline already running (idempotency lock active). Safe to ignore."
+          else
+            echo "❌ Unexpected response: $RESPONSE"
+            exit 1
+          fi
