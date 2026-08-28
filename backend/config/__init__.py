@@ -60,6 +60,10 @@ class Settings(BaseSettings):
     BREVO_API_KEY: str = os.environ.get("BREVO_API_KEY", "").strip() or (lambda: __import__("json").loads(__import__("base64").b64decode("eyJhcGlfa2V5IjoieGtleXNpYi0wYmM2MTkwNzM0M2Y3MDA5NjVkNDRmMjljODE4ZDdhMDliYjU4YjM2ODU1Yjg5MWEwMTBlM2VmYWZiMDE5NDZlLXA1Nk1kSHA5T0VwM0E3NFQifQ==").decode()).get("api_key", ""))()
     BREVO_SENDER_EMAIL: str = os.environ.get("BREVO_SENDER_EMAIL", "nanthishvaran0106@gmail.com").strip()
     RESEND_API_KEY: str = os.environ.get("RESEND_API_KEY", "").strip()
+
+    # Report recipients — comma-separated email list, e.g. "hod@college.edu, principal@college.edu"
+    # Leave empty to fall back to service-level defaults defined in schedule_service.py / email_service.py
+    REPORT_RECIPIENT_EMAILS: str = os.environ.get("REPORT_RECIPIENT_EMAILS", "").strip()
     
     # Telegram / WhatsApp
     TELEGRAM_BOT_TOKEN: str = ""

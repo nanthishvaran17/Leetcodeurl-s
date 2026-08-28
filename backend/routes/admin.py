@@ -593,9 +593,11 @@ def get_unassigned_students(
     if cached is not None:
         return cached
 
-    assigned_subquery = db.query(FacultyStudentAssignment.student_id).filter(
+    from sqlalchemy import select as sa_select
+
+    assigned_student_ids = sa_select(FacultyStudentAssignment.student_id).where(
         FacultyStudentAssignment.is_active == True
-    ).subquery()
+    ).scalar_subquery()
 
     query = db.query(Student).outerjoin(Student.stats).options(
         joinedload(Student.department),
@@ -603,7 +605,7 @@ def get_unassigned_students(
         joinedload(Student.stats)
     ).filter(
         (Student.is_active == True) | (Student.is_active.is_(None)),
-        ~Student.id.in_(assigned_subquery)
+        ~Student.id.in_(assigned_student_ids)
     )
 
     if dept_id:
