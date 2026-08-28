@@ -65,6 +65,9 @@ def apply_role_based_student_filter(query, user: Optional[User], db: Session):
         # Unauthenticated users shouldn't see any active private data, but we fail closed.
         return query.filter(Student.id == -1)
 
+    # STRICT ENFORCEMENT: ONLY ALLOW CS/IOT globally
+    query = query.filter(Student.department_id.in_([1, 2]))
+
     role_clean = (getattr(user, "override_role", None) or user.role or "").strip().lower()
     
     if role_clean in ("admin", "super admin", "super_admin", "principal", "placement coordinator"):

@@ -1157,6 +1157,12 @@ def import_commit(
     # Recalculate ranks
     update_all_rankings_and_badges(db)
     
+    # Force cache invalidation so all dashboards see the new students immediately
+    from backend.cache import cache
+    cache.invalidate_tag("students")
+    cache.invalidate_tag("settings")
+    cache.clear()
+    
     return {"message": f"Successfully imported {imported_count} students.", "count": imported_count}
 
 from backend.sync_engine import run_batch_sync, sync_single_student_by_id, sync_tracker

@@ -1404,14 +1404,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {(dataLineageData?.stages || [
-                { stage: '1. Source Roster', subsystem: 'Institutional Student Directory', recordCount: 1554, status: 'VERIFIED' },
-                { stage: '2. Ingestion Cache', subsystem: 'LeetCode Profile Ingestion Engine', recordCount: 1554, status: 'VERIFIED' },
-                { stage: '3. Production Database', subsystem: 'SQLite Student & Contest Tables', recordCount: 1554, status: 'VERIFIED' },
-                { stage: '4. API Serialization', subsystem: 'Canonical Dataset Normalizer', recordCount: 1554, status: 'VERIFIED' },
-                { stage: '5. Intelligence & Reports', subsystem: 'Multi-Format Export Builder', recordCount: 1554, status: 'VERIFIED' },
-                { stage: '6. UI Table Matrix', subsystem: 'React Operations Matrix Table', recordCount: 1554, status: 'VERIFIED' }
-              ]).map((stg: any, idx: number) => (
+              {(dataLineageData?.stages || []).map((stg: any, idx: number) => (
                 <div key={idx} className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950/40 border border-gray-200 dark:border-gray-800 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-black text-indigo-600 dark:text-indigo-400">{stg.stage}</span>

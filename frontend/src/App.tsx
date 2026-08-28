@@ -491,7 +491,13 @@ export const App: React.FC = () => {
       <ImportModal
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
-        onSuccess={() => { fetchSummary(); setActiveTab('students'); }}
+        onSuccess={() => { 
+          localStorage.removeItem('nec_leetcode_students_cache');
+          fetchSummary(); 
+          setActiveTab('students');
+          // Force a full page reload so all React Query or cached state wipes clean, making dashboards refresh instantly
+          window.location.reload();
+        }}
       />
 
       {/* Automated Alert Center Modal */}

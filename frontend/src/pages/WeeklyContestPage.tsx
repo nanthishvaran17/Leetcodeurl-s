@@ -857,13 +857,18 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const filteredMatrixRows = useMemo(() => {
     let rows = indexedMatrixRows;
 
-    if (selectedDeptFilter !== 'ALL') {
+    // Hard restrict to CS and IOT as requested by the user
+    if (selectedDeptFilter === 'ALL') {
+      rows = rows.filter(r => {
+        const d = r._deptKey;
+        return d.includes('CS') || d.includes('CYBER') || d.includes('IOT') || d.includes('INTERNET');
+      });
+    } else {
       const targetDept = selectedDeptFilter.toUpperCase();
       rows = rows.filter(r => {
         const d = r._deptKey;
         if (targetDept === 'CSE(CS)') return d.includes('CS') || d.includes('CYBER');
         if (targetDept === 'CSE(IOT)') return d.includes('IOT') || d.includes('INTERNET');
-        if (targetDept === 'CSE') return (d === 'CSE' || d.startsWith('CSE ') || d.includes('COMPUTER SCIENCE')) && !d.includes('CS') && !d.includes('CYBER') && !d.includes('IOT') && !d.includes('INTERNET');
         return d === targetDept || d.includes(targetDept);
       });
     }
@@ -1016,7 +1021,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
               <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
                 <Layers className="w-3.5 h-3.5 text-amber-400" />
-                <span>CONTEST ANALYTICS • INSTITUTIONAL EDITION (ALL 11 DEPARTMENTS)</span>
+                <span>CONTEST ANALYTICS • INSTITUTIONAL EDITION (CYBER SECURITY & IOT)</span>
               </div>
 
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/10 text-gray-300 text-xs font-mono font-bold">
@@ -1024,10 +1029,22 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <span>08:00 AM – 09:30 AM IST</span>
               </span>
 
-              {isLive && (
+              {activeSessionObj?.status === 'LIVE' && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-mono font-bold">
                   <Radio className="w-3 h-3 text-emerald-400 animate-pulse" />
-                  <span>● LIVE CONNECTED</span>
+                  <span>● LIVE SYNCING</span>
+                </span>
+              )}
+              {activeSessionObj?.status === 'FINALIZING' && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-mono font-bold">
+                  <Clock className="w-3 h-3 text-amber-400 animate-pulse" />
+                  <span>● FINALIZING</span>
+                </span>
+              )}
+              {activeSessionObj?.status === 'SCHEDULED' && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/40 text-xs font-mono font-bold">
+                  <Clock className="w-3 h-3 text-sky-400" />
+                  <span>UPCOMING</span>
                 </span>
               )}
             </div>
@@ -1813,9 +1830,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           {/* Department Select — Premium Custom Dropdown */}
           {(() => {
             const DEPT_OPTIONS = [
-              { value: 'ALL', label: 'All Departments', code: 'ALL', color: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300' },
+              { value: 'ALL', label: 'All Departments (CS & IOT)', code: 'ALL', color: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300' },
               { value: 'CSE(CS)', label: 'CSE (Cyber Security)', code: 'CSE(CS)', color: 'text-purple-600 bg-purple-50 dark:bg-purple-950 dark:text-purple-300' },
-              { value: 'CSE(IOT)', label: 'CSE (Internet of Things)', code: 'CSE(IOT)', color: 'text-cyan-600 bg-cyan-50 dark:bg-cyan-950 dark:text-cyan-300' },
+              { value: 'CSE(IOT)', label: 'CSE (IoT)', code: 'CSE(IOT)', color: 'text-cyan-600 bg-cyan-50 dark:bg-cyan-950 dark:text-cyan-300' }
             ];
             const selectedDeptObj = DEPT_OPTIONS.find(o => o.value === selectedDeptFilter) || DEPT_OPTIONS[0];
             return (

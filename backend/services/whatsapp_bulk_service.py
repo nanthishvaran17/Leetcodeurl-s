@@ -23,7 +23,7 @@ class MetaWhatsAppBulkEngine:
         student_name: str,
         rank: int,
         solved: int,
-        contest_name: str = "Weekly Contest 516"
+        contest_name: str = "Weekly Contest"
     ) -> bool:
         """
         Sends personalized WhatsApp contest results notification using official Meta Template.

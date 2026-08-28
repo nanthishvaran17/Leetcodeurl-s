@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   ShieldAlert, AlertTriangle, CheckCircle2, Clock, Search, RefreshCw,
-  ChevronDown, ChevronUp, X, Send, Activity, User,
+  ChevronDown, ChevronUp, X, Send, Activity, User, Check, Building2, GraduationCap,
   Calendar, Zap, FileText, ArrowUpRight, Bell, RotateCcw, Eye, Sparkles, Award
 } from 'lucide-react';
 import {
@@ -14,18 +14,18 @@ import { StudentCodingProfileView } from '../components/StudentCodingProfileView
 
 // ─── Priority Config ──────────────────────────────────────────────────────────
 const PRIORITY_CONFIG: Record<string, { tw: string; dot: string; icon: React.ReactNode }> = {
-  Critical: { tw: 'bg-red-500/15 text-red-400 border border-red-500/30',   dot: 'bg-red-400',    icon: <ShieldAlert size={11} /> },
-  High:     { tw: 'bg-orange-500/15 text-orange-400 border border-orange-500/30', dot: 'bg-orange-400', icon: <AlertTriangle size={11} /> },
-  Medium:   { tw: 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/30', dot: 'bg-yellow-400', icon: <Clock size={11} /> },
-  Low:      { tw: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25', dot: 'bg-emerald-400', icon: <Activity size={11} /> },
+  Critical: { tw: 'bg-red-50 dark:bg-red-500/15 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/30 shadow-sm',   dot: 'bg-red-500 dark:bg-red-400',    icon: <ShieldAlert size={12} strokeWidth={3} /> },
+  High:     { tw: 'bg-orange-50 dark:bg-orange-500/15 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-500/30 shadow-sm', dot: 'bg-orange-500 dark:bg-orange-400', icon: <AlertTriangle size={12} strokeWidth={2.5} /> },
+  Medium:   { tw: 'bg-yellow-50 dark:bg-yellow-500/15 text-yellow-700 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-500/30 shadow-sm', dot: 'bg-yellow-500 dark:bg-yellow-400', icon: <Clock size={12} strokeWidth={2.5} /> },
+  Low:      { tw: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/25 shadow-sm', dot: 'bg-emerald-500 dark:bg-emerald-400', icon: <Activity size={12} strokeWidth={2.5} /> },
 };
 
 const STATUS_CONFIG: Record<string, string> = {
-  Pending:       'bg-violet-500/15 text-violet-400 border border-violet-500/25',
-  'In Progress': 'bg-blue-500/15 text-blue-400 border border-blue-500/25',
-  Monitoring:    'bg-amber-500/15 text-amber-400 border border-amber-500/25',
-  Completed:     'bg-cyan-500/15 text-cyan-400 border border-cyan-500/25',
-  Resolved:      'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25',
+  Pending:       'bg-violet-50 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400 border border-violet-200 dark:border-violet-500/25 shadow-sm',
+  'In Progress': 'bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/25 shadow-sm',
+  Monitoring:    'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/25 shadow-sm',
+  Completed:     'bg-cyan-50 dark:bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-500/25 shadow-sm',
+  Resolved:      'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/25 shadow-sm',
 };
 
 const EVENT_COLOR: Record<string, string> = {
@@ -63,32 +63,145 @@ const PriorityBadge: React.FC<{ priority: string; score: number; reason: string 
   );
 };
 
+// ─── Custom Dropdown Select ──────────────────────────────────────────────────
+const CustomSelect: React.FC<{
+  value: string;
+  onChange: (v: string) => void;
+  options: { label: string; value: string; icon?: React.ReactNode; badge?: string; badgeColor?: string }[];
+  placeholder: string;
+  icon?: React.ReactNode;
+}> = ({ value, onChange, options, placeholder, icon }) => {
+  const [open, setOpen] = useState(false);
+  const selected = options.find(o => o.value === value);
+
+  // Close on outside click
+  useEffect(() => {
+    const handleClick = () => setOpen(false);
+    if (open) document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [open]);
+
+  return (
+    <div className="relative" onClick={(e) => e.stopPropagation()}>
+      <button
+        onClick={() => setOpen(!open)}
+        className={`flex items-center justify-between gap-3 min-w-[200px] px-4 py-2.5 rounded-xl border transition-all cursor-pointer font-bold text-sm ${
+          open 
+            ? 'border-brand-500 bg-white dark:bg-navy-900 ring-4 ring-brand-500/10 shadow-sm' 
+            : value 
+              ? 'border-brand-500/30 bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-300' 
+              : 'border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-200 hover:border-slate-300'
+        }`}
+      >
+        <div className="flex items-center gap-2">
+          <span className={value ? 'text-brand-500' : 'text-slate-400'}>{icon || selected?.icon}</span>
+          <div className="flex items-center gap-2">
+            {selected?.badge && (
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase ${selected.badgeColor || 'bg-slate-100 text-slate-500'}`}>
+                {selected.badge}
+              </span>
+            )}
+            <span>{selected ? selected.label : placeholder}</span>
+          </div>
+        </div>
+        <ChevronDown size={14} className={`transition-transform duration-300 ${open ? 'rotate-180 text-brand-500' : 'text-slate-400'}`} />
+      </button>
+
+      {open && (
+        <div className="absolute z-50 top-[110%] left-0 w-full min-w-[280px] p-1.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-xl animate-fade-in-up">
+          <button
+            onClick={() => { onChange(''); setOpen(false); }}
+            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
+              !value 
+                ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20' 
+                : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-navy-800'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <span className="opacity-70">{icon}</span>
+              <span>{placeholder}</span>
+            </div>
+            {!value && <Check size={16} strokeWidth={3} />}
+          </button>
+          
+          <div className="h-px bg-slate-100 dark:bg-navy-800 my-1.5 mx-2" />
+
+          <div className="max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
+            {options.map((opt) => {
+              const isSelected = value === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => { onChange(opt.value); setOpen(false); }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer mb-1 last:mb-0 ${
+                    isSelected 
+                      ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20' 
+                      : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-navy-800'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className={isSelected ? 'text-white opacity-90' : 'text-slate-400'}>{opt.icon}</span>
+                    {opt.badge && (
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase ${
+                        isSelected ? 'bg-white/20 text-white' : opt.badgeColor || 'bg-slate-100 text-slate-500'
+                      }`}>
+                        {opt.badge}
+                      </span>
+                    )}
+                    <span>{opt.label}</span>
+                  </div>
+                  {isSelected && <Check size={16} strokeWidth={3} />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Animated KPI Card ─────────────────────────────────────────────────────────
 const KPICard: React.FC<{
-  label: string; value: number; colorClass: string; icon: React.ReactNode;
+  label: string; value: number; colorTheme: string; icon: React.ReactNode;
   active: boolean; onClick: () => void; subtitle?: string;
-}> = ({ label, value, colorClass, icon, active, onClick, subtitle }) => (
-  <button
-    onClick={onClick}
-    className={`flex-1 min-w-[130px] text-left rounded-2xl p-4 border transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer relative overflow-hidden group ${
-      active
-        ? `${colorClass} ring-2 ring-current/40 shadow-xl shadow-brand-500/10`
-        : 'bg-white/80 dark:bg-navy-800/80 border-slate-200/80 dark:border-navy-700/80 hover:bg-white dark:hover:bg-navy-750 hover:shadow-md'
-    }`}
-  >
-    <div className="flex items-center justify-between gap-2 mb-2">
-      <div className="flex items-center gap-1.5">
-        <span className={`p-1.5 rounded-lg ${active ? 'bg-current/15' : 'bg-slate-100 dark:bg-navy-700 text-slate-500 dark:text-navy-300'} transition-colors`}>{icon}</span>
-        <span className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">{label}</span>
+}> = ({ label, value, colorTheme, icon, active, onClick, subtitle }) => {
+  // Use unified color theme for light/dark
+  const tColors: Record<string, { bg: string, text: string, border: string, shadow: string, hover: string }> = {
+    red: { bg: 'bg-red-50 dark:bg-red-500/10', text: 'text-red-600 dark:text-red-400', border: 'border-red-200 dark:border-red-500/30', shadow: 'shadow-red-500/15', hover: 'hover:border-red-300 dark:hover:border-red-400/50' },
+    orange: { bg: 'bg-orange-50 dark:bg-orange-500/10', text: 'text-orange-600 dark:text-orange-400', border: 'border-orange-200 dark:border-orange-500/30', shadow: 'shadow-orange-500/15', hover: 'hover:border-orange-300 dark:hover:border-orange-400/50' },
+    amber: { bg: 'bg-amber-50 dark:bg-amber-500/10', text: 'text-amber-600 dark:text-amber-400', border: 'border-amber-200 dark:border-amber-500/30', shadow: 'shadow-amber-500/15', hover: 'hover:border-amber-300 dark:hover:border-amber-400/50' },
+    blue: { bg: 'bg-blue-50 dark:bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-500/30', shadow: 'shadow-blue-500/15', hover: 'hover:border-blue-300 dark:hover:border-blue-400/50' },
+    cyan: { bg: 'bg-cyan-50 dark:bg-cyan-500/10', text: 'text-cyan-600 dark:text-cyan-400', border: 'border-cyan-200 dark:border-cyan-500/30', shadow: 'shadow-cyan-500/15', hover: 'hover:border-cyan-300 dark:hover:border-cyan-400/50' },
+    emerald: { bg: 'bg-emerald-50 dark:bg-emerald-500/10', text: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-200 dark:border-emerald-500/30', shadow: 'shadow-emerald-500/15', hover: 'hover:border-emerald-300 dark:hover:border-emerald-400/50' },
+    pink: { bg: 'bg-pink-50 dark:bg-pink-500/10', text: 'text-pink-600 dark:text-pink-400', border: 'border-pink-200 dark:border-pink-500/30', shadow: 'shadow-pink-500/15', hover: 'hover:border-pink-300 dark:hover:border-pink-400/50' },
+    violet: { bg: 'bg-violet-50 dark:bg-violet-500/10', text: 'text-violet-600 dark:text-violet-400', border: 'border-violet-200 dark:border-violet-500/30', shadow: 'shadow-violet-500/15', hover: 'hover:border-violet-300 dark:hover:border-violet-400/50' },
+  };
+  const theme = tColors[colorTheme] || tColors['blue'];
+  
+  return (
+    <button
+      onClick={onClick}
+      className={`flex-1 min-w-[130px] text-left rounded-2xl p-4 border transition-all duration-300 transform hover:-translate-y-1 cursor-pointer relative overflow-hidden group ${
+        active
+          ? `${theme.bg} ${theme.border} ring-2 ring-current/40 shadow-xl ${theme.shadow}`
+          : `bg-white dark:bg-navy-900 border-slate-200 dark:border-navy-700 hover:shadow-lg ${theme.hover}`
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <div className="flex items-center gap-1.5">
+          <span className={`p-1.5 rounded-lg ${active ? `bg-current/15 ${theme.text}` : `${theme.bg} ${theme.text}`} transition-colors`}>{icon}</span>
+          <span className="text-[10.5px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors">{label}</span>
+        </div>
+        {active && <span className={`w-2.5 h-2.5 rounded-full ${theme.bg.split(' ')[0].replace('10', '500')} ${theme.bg.split(' ')[1].replace('10', '400')} animate-ping opacity-75`} />}
       </div>
-      {active && <span className="w-2 h-2 rounded-full bg-current animate-ping" />}
-    </div>
-    <div className={`text-3xl font-black tracking-tight leading-none ${active ? '' : 'text-slate-800 dark:text-slate-100'}`}>
-      {value}
-    </div>
-    {subtitle && <div className="text-[10px] text-slate-400 dark:text-navy-400 mt-2 font-semibold truncate">{subtitle}</div>}
-  </button>
-);
+      <div className={`text-3xl font-black tracking-tight leading-none ${active ? theme.text : 'text-slate-700 dark:text-slate-100 group-hover:' + theme.text.split(' ')[0]}`}>
+        {value}
+      </div>
+      {subtitle && <div className="text-[10px] text-slate-400 dark:text-navy-400 mt-2.5 font-bold truncate">{subtitle}</div>}
+    </button>
+  );
+};
 
 // ─── Unified Student View & Pass Modal ─────────────────────────────────────────
 const StudentViewModal: React.FC<{
@@ -576,47 +689,73 @@ export const FacultyActionCenter: React.FC = () => {
       {/* ── KPI Cards ── */}
       {kpis && (
         <div className="flex flex-wrap gap-3">
-          <KPICard label="Critical" value={kpis.critical_count} colorClass="bg-red-500/10 text-red-500 border-red-500/30"
-            icon={<ShieldAlert size={14} />} active={kpiFilter === 'Critical'} onClick={() => applyKPIFilter('Critical', 'priority')} subtitle="Immediate action" />
-          <KPICard label="High" value={kpis.high_count} colorClass="bg-orange-500/10 text-orange-500 border-orange-500/30"
-            icon={<AlertTriangle size={14} />} active={kpiFilter === 'High'} onClick={() => applyKPIFilter('High', 'priority')} subtitle="Urgent review" />
-          <KPICard label="Monitoring" value={kpis.monitoring_count} colorClass="bg-amber-500/10 text-amber-500 border-amber-500/30"
-            icon={<Activity size={14} />} active={kpiFilter === 'Monitoring'} onClick={() => applyKPIFilter('Monitoring', 'status')} />
-          <KPICard label="In Progress" value={kpis.in_progress_count} colorClass="bg-blue-500/10 text-blue-500 border-blue-500/30"
-            icon={<Zap size={14} />} active={kpiFilter === 'In Progress'} onClick={() => applyKPIFilter('In Progress', 'status')} />
-          <KPICard label="Completed" value={kpis.completed_count} colorClass="bg-cyan-500/10 text-cyan-500 border-cyan-500/30"
-            icon={<CheckCircle2 size={14} />} active={kpiFilter === 'Completed'} onClick={() => applyKPIFilter('Completed', 'status')} />
-          <KPICard label="Resolved" value={kpis.resolved_count} colorClass="bg-emerald-500/10 text-emerald-500 border-emerald-500/30"
-            icon={<CheckCircle2 size={14} />} active={kpiFilter === 'Resolved'} onClick={() => applyKPIFilter('Resolved', 'status')} />
-          <KPICard label="Overdue" value={kpis.overdue_count} colorClass="bg-pink-500/10 text-pink-500 border-pink-500/30"
-            icon={<Bell size={14} />} active={false} onClick={() => {}} subtitle="Follow-up missed" />
-          <KPICard label="Escalated" value={kpis.escalated_count} colorClass="bg-violet-500/10 text-violet-500 border-violet-500/30"
-            icon={<ArrowUpRight size={14} />} active={false} onClick={() => {}} />
+          <KPICard label="Critical" value={kpis.critical_count} colorTheme="red"
+            icon={<ShieldAlert size={14} strokeWidth={2.5} />} active={kpiFilter === 'Critical'} onClick={() => applyKPIFilter('Critical', 'priority')} subtitle="Immediate action" />
+          <KPICard label="High" value={kpis.high_count} colorTheme="orange"
+            icon={<AlertTriangle size={14} strokeWidth={2.5} />} active={kpiFilter === 'High'} onClick={() => applyKPIFilter('High', 'priority')} subtitle="Urgent review" />
+          <KPICard label="Monitoring" value={kpis.monitoring_count} colorTheme="amber"
+            icon={<Activity size={14} strokeWidth={2.5} />} active={kpiFilter === 'Monitoring'} onClick={() => applyKPIFilter('Monitoring', 'status')} />
+          <KPICard label="In Progress" value={kpis.in_progress_count} colorTheme="blue"
+            icon={<Zap size={14} strokeWidth={2.5} />} active={kpiFilter === 'In Progress'} onClick={() => applyKPIFilter('In Progress', 'status')} />
+          <KPICard label="Completed" value={kpis.completed_count} colorTheme="cyan"
+            icon={<CheckCircle2 size={14} strokeWidth={2.5} />} active={kpiFilter === 'Completed'} onClick={() => applyKPIFilter('Completed', 'status')} />
+          <KPICard label="Resolved" value={kpis.resolved_count} colorTheme="emerald"
+            icon={<CheckCircle2 size={14} strokeWidth={2.5} />} active={kpiFilter === 'Resolved'} onClick={() => applyKPIFilter('Resolved', 'status')} />
+          <KPICard label="Overdue" value={kpis.overdue_count} colorTheme="pink"
+            icon={<Bell size={14} strokeWidth={2.5} />} active={false} onClick={() => {}} subtitle="Follow-up missed" />
+          <KPICard label="Escalated" value={kpis.escalated_count} colorTheme="violet"
+            icon={<ArrowUpRight size={14} strokeWidth={2.5} />} active={false} onClick={() => {}} />
         </div>
       )}
 
       {/* ── Filters ── */}
-      <div className="flex flex-wrap gap-2 items-center p-3 rounded-2xl bg-white/70 dark:bg-navy-800/70 border border-slate-200 dark:border-navy-700 backdrop-blur-sm">
-        <div className="flex items-center gap-2 flex-1 min-w-[200px] bg-slate-100 dark:bg-navy-900 rounded-xl px-3 py-2 border border-transparent focus-within:border-brand-500 transition">
-          <Search size={13} className="text-slate-400 flex-shrink-0" />
+      <div className="flex flex-wrap gap-3 items-center p-4 rounded-3xl bg-white/70 dark:bg-navy-800/70 border border-slate-200 dark:border-navy-700 backdrop-blur-md shadow-sm">
+        <div className="flex items-center gap-2 flex-1 min-w-[250px] bg-white dark:bg-navy-900 rounded-xl px-4 py-3 border border-slate-200 dark:border-navy-700 focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-500/10 shadow-sm transition-all group">
+          <Search size={16} className="text-slate-400 group-focus-within:text-brand-500 transition-colors flex-shrink-0" />
           <input
             value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
             placeholder="Search by name, reg no, username..."
-            className="flex-1 bg-transparent text-sm text-slate-700 dark:text-slate-200 outline-none placeholder:text-slate-400"
+            className="flex-1 bg-transparent text-sm font-bold text-slate-700 dark:text-slate-200 outline-none placeholder:text-slate-400 placeholder:font-medium"
           />
         </div>
-        <select value={filterPriority} onChange={e => { setFilterPriority(e.target.value); setKpiFilter(e.target.value); setPage(1); }} className={filterSelectCls}>
-          <option value="">All Priority</option>
-          {['Critical', 'High', 'Medium', 'Low'].map(p => <option key={p}>{p}</option>)}
-        </select>
-        <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }} className={filterSelectCls}>
-          <option value="">All Status</option>
-          {['Pending', 'In Progress', 'Monitoring', 'Completed', 'Resolved'].map(s => <option key={s}>{s}</option>)}
-        </select>
-        <select value={filterYear} onChange={e => { setFilterYear(e.target.value); setPage(1); }} className={filterSelectCls}>
-          <option value="">All Years</option>
-          {['II Year', 'III Year', 'IV Year'].map(y => <option key={y}>{y}</option>)}
-        </select>
+        <CustomSelect
+          value={filterPriority}
+          onChange={v => { setFilterPriority(v); setKpiFilter(v); setPage(1); }}
+          placeholder="All Priorities"
+          icon={<Building2 size={16} />}
+          options={[
+            { label: 'Critical', value: 'Critical', icon: <ShieldAlert size={14} />, badge: 'P1', badgeColor: 'bg-red-100 text-red-600' },
+            { label: 'High', value: 'High', icon: <AlertTriangle size={14} />, badge: 'P2', badgeColor: 'bg-orange-100 text-orange-600' },
+            { label: 'Medium', value: 'Medium', icon: <Clock size={14} />, badge: 'P3', badgeColor: 'bg-yellow-100 text-yellow-600' },
+            { label: 'Low', value: 'Low', icon: <Activity size={14} />, badge: 'P4', badgeColor: 'bg-emerald-100 text-emerald-600' }
+          ]}
+        />
+        
+        <CustomSelect
+          value={filterStatus}
+          onChange={v => { setFilterStatus(v); setPage(1); }}
+          placeholder="All Statuses"
+          icon={<Activity size={16} />}
+          options={[
+            { label: 'Pending', value: 'Pending', icon: <Clock size={14} />, badge: 'PEN', badgeColor: 'bg-violet-100 text-violet-600' },
+            { label: 'In Progress', value: 'In Progress', icon: <Zap size={14} />, badge: 'INP', badgeColor: 'bg-blue-100 text-blue-600' },
+            { label: 'Monitoring', value: 'Monitoring', icon: <Activity size={14} />, badge: 'MON', badgeColor: 'bg-amber-100 text-amber-600' },
+            { label: 'Completed', value: 'Completed', icon: <CheckCircle2 size={14} />, badge: 'COM', badgeColor: 'bg-cyan-100 text-cyan-600' },
+            { label: 'Resolved', value: 'Resolved', icon: <CheckCircle2 size={14} />, badge: 'RES', badgeColor: 'bg-emerald-100 text-emerald-600' }
+          ]}
+        />
+
+        <CustomSelect
+          value={filterYear}
+          onChange={v => { setFilterYear(v); setPage(1); }}
+          placeholder="All Years"
+          icon={<GraduationCap size={16} />}
+          options={[
+            { label: 'II Year (Sophomore)', value: 'II Year', icon: <User size={14} />, badge: 'Y2', badgeColor: 'bg-brand-100 text-brand-600' },
+            { label: 'III Year (Junior)', value: 'III Year', icon: <User size={14} />, badge: 'Y3', badgeColor: 'bg-indigo-100 text-indigo-600' },
+            { label: 'IV Year (Senior)', value: 'IV Year', icon: <User size={14} />, badge: 'Y4', badgeColor: 'bg-violet-100 text-violet-600' }
+          ]}
+        />
         {hasFilters && (
           <button onClick={() => { setFilterPriority(''); setFilterStatus(''); setFilterYear(''); setSearch(''); setKpiFilter(''); setPage(1); }}
             className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/25 text-red-400 text-xs font-semibold hover:bg-red-500/20 transition">

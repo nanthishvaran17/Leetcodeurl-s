@@ -211,7 +211,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
       color: "from-amber-500/10 to-yellow-500/10 border-amber-500/30 text-amber-400",
       actions: [
         { label: "Top 10 Latest Contest", query: "Who are the top 10 students in latest contest?" },
-        { label: "Scan Absentee Roster", query: "Find absent students in Weekly Contest 514" },
+        { label: "Scan Absentee Roster", query: "Find absent students in the latest Weekly Contest" },
         { label: "Compare Contests 514 vs 515", query: "Compare Contest 514 and Contest 515 performance" }
       ]
     },
@@ -258,7 +258,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
     { label: 'Run Deep Audit', query: 'Check the entire database for bugs, duplicate usernames, and unverified profiles' },
     { label: 'Draft Warning Email', query: 'mail panu low solvers-ukku' },
     { label: 'Compare 514 vs 515', query: 'Compare Contest 514 and Contest 515 performance' },
-    { label: 'Scan Absentee Roster', query: 'Find absent students in Weekly Contest 515' },
+    { label: 'Scan Absentee Roster', query: 'Find absent students in the latest Weekly Contest' },
     { label: 'Top Solvers', query: 'Who are the top 10 college solvers overall?' },
     { label: 'HOD Summary Report', query: 'Generate HOD weekly summary report' },
     { label: 'Last Sync Telemetry', query: 'last fetch kaatu' }

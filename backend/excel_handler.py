@@ -116,6 +116,9 @@ def validate_excel_import(db: Session, file_bytes: bytes) -> Dict[str, Any]:
         dept_obj = dept_map.get(target_code) or dept_code_map.get(target_code) or dept_map.get(dept_str) or dept_code_map.get(dept_str)
         if not dept_obj:
             errors.append(f"Invalid Department '{dept_str}'")
+        elif dept_obj.id not in [1, 2]:
+            errors.append(f"Department Not Allowed: Only CS/IOT supported")
+
 
         valid_years = ["II", "III", "IV", "2", "3", "4", "2ND", "3RD", "4TH"]
         if year_str not in valid_years:
@@ -172,6 +175,10 @@ def commit_excel_import(db: Session, valid_rows: List[dict]) -> int:
         username = row.get("username")
 
         if not reg_no or not name:
+            continue
+            
+        # STRICT ENFORCEMENT: ONLY ALLOW CS/IOT (IDs 1, 2)
+        if dept_id not in [1, 2]:
             continue
 
         student = db.query(Student).filter(Student.reg_no == reg_no).first()

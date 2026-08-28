@@ -154,23 +154,24 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
       {/* Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-lg border border-brand-500/30">
 
-        <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
-          <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
-              <Layers className="w-3.5 h-3.5 text-amber-400" />
-              <span>DEPARTMENT ANALYTICS • INSTITUTIONAL EDITION (ALL 11 DEPARTMENTS)</span>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-6">
+          <div className="space-y-4">
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black">
+              <Layers className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400" />
+              <span>DEPARTMENT ANALYTICS • INSTITUTIONAL EDITION (ALL DEPARTMENTS)</span>
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight">
-              Department & Academic <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Year Dashboard</span>
-            </h1>
-
-            <p className="text-xs md:text-sm text-gray-300 font-bold tracking-wide">
-              Filter students by Department, Academic Year, Name & Performance side-by-side
-            </p>
+            <div className="space-y-1.5">
+              <h1 className="text-3xl md:text-4xl font-black tracking-tight">
+                Department & Academic <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Year Dashboard</span>
+              </h1>
+              <p className="text-xs md:text-sm text-gray-300 font-bold tracking-wide">
+                Filter students by Department, Academic Year, Name & Performance side-by-side
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex shrink-0">
             <button
               onClick={handleRefreshAllStats}
               disabled={isRefreshing}

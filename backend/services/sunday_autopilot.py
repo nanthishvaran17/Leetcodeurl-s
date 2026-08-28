@@ -579,7 +579,7 @@ class UniversalWeeklyContestAutopilot:
                 "health_status": self.health_status,
                 "current_contest": {
                     "session_id": latest_session.id if latest_session else None,
-                    "contest_name": latest_session.contest_name if latest_session else "Weekly Contest 516",
+                    "contest_name": latest_session.contest_name if latest_session else "Weekly Contest",
                     "session_date": latest_session.session_date if latest_session else "23.08.2026",
                     "status": latest_session.status if latest_session else "FINALIZED",
                     "total_students": latest_session.total_students if latest_session else 1450,
@@ -653,10 +653,11 @@ class UniversalWeeklyContestAutopilot:
 
 
 def meta_num(contest_name: Optional[str]) -> int:
-    if not contest_name: return 516
+    from backend.services.contest_discovery import calculate_contest_number, get_most_recent_sunday_date
+    if not contest_name: return calculate_contest_number(get_most_recent_sunday_date())
     import re
     m = re.search(r"(\d{3,4})", contest_name)
-    return int(m.group(1)) if m else 516
+    return int(m.group(1)) if m else calculate_contest_number(get_most_recent_sunday_date())
 
 
 # Global Canonical Singletons
@@ -736,10 +737,11 @@ class SundayAutopilotCoordinator:
 
 
 def meta_num(contest_name: Optional[str]) -> int:
-    if not contest_name: return 516
+    from backend.services.contest_discovery import calculate_contest_number, get_most_recent_sunday_date
+    if not contest_name: return calculate_contest_number(get_most_recent_sunday_date())
     import re
     m = re.search(r"(\d{3,4})", contest_name)
-    return int(m.group(1)) if m else 516
+    return int(m.group(1)) if m else calculate_contest_number(get_most_recent_sunday_date())
 
 
 # Global Canonical Exports (Supporting both new and backward-compatible consumers)

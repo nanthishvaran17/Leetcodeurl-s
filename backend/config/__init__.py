@@ -1,4 +1,5 @@
 import os
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List, Optional
 
@@ -7,17 +8,7 @@ class Settings(BaseSettings):
     # Auth & Security Configuration
     ENVIRONMENT: str = os.environ.get("ENVIRONMENT", "production")
     
-    # Strictly require PostgreSQL in production
-    DATABASE_URL: Optional[str] = os.environ.get("DATABASE_URL")
-    if ENVIRONMENT == "production":
-        if not DATABASE_URL or "sqlite" in DATABASE_URL.lower():
-            raise ValueError(
-                "CRITICAL: Production deployment detected but DATABASE_URL is missing or pointing to local SQLite. "
-                "You MUST provide a PostgreSQL connection string (e.g., from Render or Supabase) in production."
-            )
-    else:
-        # Fallback for local development only
-        DATABASE_URL = DATABASE_URL or "sqlite:///./data/leetcode_tracker.db"
+    DATABASE_URL: Optional[str] = None
 
     PRODUCTION_DOMAIN: str = os.environ.get("PRODUCTION_DOMAIN", "api.nandhaengg.org")
     SECRET_KEY: str = os.environ.get("SECRET_KEY", "super-secret-key-change-this-in-production-2026")
@@ -83,6 +74,19 @@ class Settings(BaseSettings):
     COLLEGE_LOGO_URL: str = "/logo.png"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+    @model_validator(mode="after")
+    def validate_database_url(self) -> "Settings":
+        if self.ENVIRONMENT == "production":
+            if not self.DATABASE_URL or "sqlite" in self.DATABASE_URL.lower():
+                raise ValueError(
+                    "CRITICAL: Production deployment detected but DATABASE_URL is missing or pointing to local SQLite. "
+                    "You MUST provide a PostgreSQL connection string (e.g., from Render or Supabase) in production."
+                )
+        else:
+            if not self.DATABASE_URL:
+                self.DATABASE_URL = "sqlite:///./data/leetcode_tracker.db"
+        return self
 
 settings = Settings()
 
