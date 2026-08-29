@@ -1408,7 +1408,14 @@ def delete_weekly_session(
     WeeklyContestErrorLog, OfficialWeeklySnapshot, EmailDispatchLog.
     LIVE sessions cannot be deleted to protect active contest integrity.
     """
-    from backend.models import EmailDispatchLog
+    from backend.models import (
+        EmailDispatchLog,
+        ContestVirtualEvidence,
+        ContestPostPracticeEvidence,
+        OfficialPublicParticipant,
+        PublicContestSyncAudit,
+        PreviousWeekParticipationRecord
+    )
     from backend.logger import logger
 
     session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
@@ -1429,7 +1436,13 @@ def delete_weekly_session(
     deleted_errors = db.query(WeeklyContestErrorLog).filter(WeeklyContestErrorLog.session_id == session_id).delete()
     deleted_snapshots = db.query(OfficialWeeklySnapshot).filter(OfficialWeeklySnapshot.session_id == session_id).delete()
     deleted_emails = db.query(EmailDispatchLog).filter(EmailDispatchLog.session_id == session_id).delete()
-
+    
+    # Missing cascade tables that lack ORM cascades
+    db.query(ContestVirtualEvidence).filter(ContestVirtualEvidence.session_id == session_id).delete()
+    db.query(ContestPostPracticeEvidence).filter(ContestPostPracticeEvidence.session_id == session_id).delete()
+    db.query(OfficialPublicParticipant).filter(OfficialPublicParticipant.session_id == session_id).delete()
+    db.query(PublicContestSyncAudit).filter(PublicContestSyncAudit.session_id == session_id).delete()
+    db.query(PreviousWeekParticipationRecord).filter(PreviousWeekParticipationRecord.session_id == session_id).delete()
     db.delete(session)
     db.commit()
 

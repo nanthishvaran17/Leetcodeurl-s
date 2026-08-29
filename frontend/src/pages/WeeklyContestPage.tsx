@@ -543,12 +543,23 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         setDeletingSessionId(sessionId);
         try {
           await api.delete(`/contests/sessions/${sessionId}`);
-          setSessionsList(prev => prev.filter(s => s.sessionId !== sessionId));
-          if (selectedSessionId === sessionId) {
-            const remaining = sessionsList.filter(s => s.sessionId !== sessionId);
-            if (remaining.length > 0) handleSelectSession(remaining[0].sessionId);
-            else { setSelectedSessionId(null); setMatrixRows([]); setErrorLogs([]); setComparison(null); }
-          }
+          
+          setSessionsList(prev => {
+            const updated = prev.filter(s => Number(s.sessionId) !== Number(sessionId));
+            
+            if (Number(selectedSessionId) === Number(sessionId)) {
+              if (updated.length > 0) {
+                // Use setTimeout to allow state update to complete before selecting new session
+                setTimeout(() => handleSelectSession(updated[0].sessionId), 0);
+              } else { 
+                setSelectedSessionId(null); 
+                setMatrixRows([]); 
+                setErrorLogs([]); 
+                setComparison(null); 
+              }
+            }
+            return updated;
+          });
           setNotification({
             isOpen: true,
             type: 'success',
