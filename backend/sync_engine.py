@@ -62,6 +62,22 @@ class SyncProgressTracker:
         if len(self.recent_logs) > 50:
             self.recent_logs.pop(0)
 
+        # Broadcast progress real-time
+        try:
+            from backend.websocket_manager import manager
+            manager.broadcast_sync({
+                "type": "sync_progress",
+                "job_id": self.run_id,
+                "total": self.total,
+                "processed": self.completed,
+                "successful": self.success,
+                "failed": self.failed,
+                "pending": self.pending,
+                "progress_percent": self.progress_percentage
+            })
+        except Exception:
+            pass
+
         # Write real-time progress to Firestore every 5 completions
         if self.completed % 5 == 0 or self.completed == self.total:
             self._write_firestore_progress(status="running")
@@ -119,6 +135,14 @@ class SyncProgressTracker:
         self.is_running = False
         self.end_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self._write_firestore_progress(status="completed")
+        try:
+            from backend.websocket_manager import manager
+            manager.broadcast_sync({
+                "type": "SYNC_COMPLETED",
+                "job_id": self.run_id
+            })
+        except Exception:
+            pass
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -515,43 +539,86 @@ async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 5, per_
                 except asyncio.QueueEmpty:
                     break
 
-                # Fetch fresh DB session for worker execution
-                w_db = SessionLocal()
-                try:
-                    st = w_db.query(Student).filter(Student.id == student_id).first()
-                    if not st:
-                        queue.task_done()
-                        continue
+                max_retries = 3
+                base_delay = 2.0
+                success = False
 
-                    url_or_username = st.leetcode_url or st.username
-                    num = sync_tracker.completed + 1
-                    logger.info(f"[INFO] Fetching: {num}/{total_count} - Reg: {st.reg_no} | Username: {st.username or url_or_username}")
+                for attempt in range(1, max_retries + 1):
+                    w_db = SessionLocal()
+                    try:
+                        st = w_db.query(Student).filter(Student.id == student_id).first()
+                        if not st:
+                            break
 
-                    stats = await fetch_leetcode_profile(url_or_username, force_refresh=True)
-                    is_ok = stats.get("status") in ["success", "OK"]
-                    is_mismatch = stats.get("status") == "MISMATCH"
+                        url_or_username = st.leetcode_url or st.username
+                        
+                        logger.info(f"[INFO] Fetching Reg: {st.reg_no} | Username: {st.username or url_or_username} (Attempt {attempt}/{max_retries})")
 
-                    # Update student DB with Old Data Fallback rule
-                    sync_single_student_db(st.id, stats, w_db)
+                        stats = await fetch_leetcode_profile(url_or_username, force_refresh=True)
+                        is_ok = stats.get("status") in ["success", "OK"]
+                        is_mismatch = stats.get("status") == "MISMATCH"
 
-                    if is_ok:
-                        log_msg = f"[INFO] Success - {st.username or st.reg_no} (Solved: {stats.get('total_solved')}, Rating: {stats.get('contest_rating')}, Time: {stats.get('fetch_duration')}s)"
-                        logger.info(log_msg)
-                    else:
-                        err_detail = stats.get("error") or stats.get("error_message") or "Unknown error"
-                        log_msg = f"[WARN] Failed - {st.username or st.reg_no} ({err_detail})"
-                        logger.warning(log_msg)
+                        # Update student DB with Old Data Fallback rule
+                        updated_st = sync_single_student_db(st.id, stats, w_db)
 
-                    sync_tracker.record_completed(is_ok, log_msg, is_mismatch=is_mismatch)
+                        if is_ok:
+                            success = True
+                            log_msg = f"[INFO] Success - {st.username or st.reg_no} (Solved: {stats.get('total_solved')}, Time: {stats.get('fetch_duration')}s)"
+                            logger.info(log_msg)
+                            sync_tracker.record_completed(True, log_msg, is_mismatch=False)
+                            
+                            try:
+                                from backend.websocket_manager import manager
+                                stats_obj = updated_st.stats
+                                asyncio.create_task(manager.broadcast({
+                                    "type": "STUDENT_UPDATED",
+                                    "student_id": updated_st.id,
+                                    "name": updated_st.name,
+                                    "sync_status": stats_obj.sync_status if stats_obj else "pending",
+                                    "total_solved": stats_obj.total_solved,
+                                }))
+                            except Exception:
+                                pass
+                            
+                            break # Exit retry loop on success
+                        else:
+                            err_detail = stats.get("error") or stats.get("error_message") or "Unknown error"
+                            
+                            try:
+                                from backend.websocket_manager import manager
+                                asyncio.create_task(manager.broadcast({
+                                    "type": "STUDENT_UPDATED",
+                                    "student_id": st.id,
+                                    "name": st.name,
+                                    "sync_status": "retrying" if attempt < max_retries else "failed",
+                                }))
+                            except Exception:
+                                pass
+                                
+                            if attempt < max_retries:
+                                delay = base_delay * (2 ** (attempt - 1))
+                                log_msg = f"[WARN] Failed - {st.username or st.reg_no} ({err_detail}). Retrying in {delay}s..."
+                                logger.warning(log_msg)
+                                await asyncio.sleep(delay)
+                            else:
+                                log_msg = f"[ERROR] Permanently Failed - {st.username or st.reg_no} after {max_retries} attempts ({err_detail})"
+                                logger.error(log_msg)
+                                sync_tracker.record_completed(False, log_msg, is_mismatch=is_mismatch)
 
-                except Exception as ex:
-                    log_msg = f"[ERROR] Worker error for student {student_id}: {ex}"
-                    logger.error(log_msg)
-                    sync_tracker.record_completed(False, log_msg)
-                finally:
-                    w_db.close()
-                    queue.task_done()
-                    await asyncio.sleep(per_worker_delay)
+                    except Exception as ex:
+                        if attempt < max_retries:
+                            delay = base_delay * (2 ** (attempt - 1))
+                            logger.error(f"[ERROR] Worker error for student {student_id}: {ex}. Retrying in {delay}s...")
+                            await asyncio.sleep(delay)
+                        else:
+                            log_msg = f"[ERROR] Worker permanently failed for student {student_id}: {ex}"
+                            logger.error(log_msg)
+                            sync_tracker.record_completed(False, log_msg)
+                    finally:
+                        w_db.close()
+                
+                queue.task_done()
+                await asyncio.sleep(per_worker_delay)
 
         workers = [asyncio.create_task(worker(i)) for i in range(max_workers)]
         await asyncio.gather(*workers)

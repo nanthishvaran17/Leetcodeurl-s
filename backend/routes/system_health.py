@@ -202,27 +202,36 @@ def get_system_health(db: Session = Depends(get_db)):
         "action": None if leetcode_ok else "Retry health check or inspect upstream LeetCode connectivity"
     }
 
-    # 4. APScheduler Check
+    # 4. Cloud Background Worker Check
     scheduler_ok = False
     scheduler_err = None
     try:
-        from backend.scheduler import scheduler
-        scheduler_ok = scheduler.running if scheduler else False
-        if not scheduler_ok:
-            scheduler_err = "APScheduler background cron engine is stopped or uninitialized"
+        from backend.models import AdminSettingsModel
+        hb = db.query(AdminSettingsModel).filter(AdminSettingsModel.key == "worker_heartbeat").first()
+        if hb:
+            last_hb_utc = datetime.datetime.fromisoformat(hb.value.replace('Z', '+00:00'))
+            if last_hb_utc.tzinfo is None:
+                last_hb_utc = last_hb_utc.replace(tzinfo=datetime.timezone.utc)
+            
+            if (now_utc - last_hb_utc).total_seconds() < 120:
+                scheduler_ok = True
+            else:
+                scheduler_err = f"Worker heartbeat is stale. Last seen: {hb.value}"
+        else:
+            scheduler_err = "Worker heartbeat not found in database."
     except Exception as se:
         scheduler_ok = False
         has_warnings = True
         scheduler_err = sanitize_error_message(str(se))
 
     components["scheduler"] = {
-        "name": "APScheduler Cron Engine",
+        "name": "Cloud Background Worker",
         "status": "RUNNING" if scheduler_ok else "STOPPED",
         "error": not scheduler_ok,
-        "error_code": None if scheduler_ok else "SCHEDULER_NOT_RUNNING",
+        "error_code": None if scheduler_ok else "WORKER_NOT_RUNNING",
         "message": scheduler_err,
         "last_checked": now_str,
-        "action": None if scheduler_ok else "Start background scheduler daemon"
+        "action": None if scheduler_ok else "Restart cloud worker process"
     }
 
     # 5. Live Sync Engine Check
@@ -409,10 +418,16 @@ def get_admin_control_center_data(db: Session = Depends(get_db)):
 
     scheduler_running = False
     try:
-        from backend.scheduler import scheduler
-        scheduler_running = scheduler.running if scheduler else False
+        from backend.models import AdminSettingsModel
+        hb = db.query(AdminSettingsModel).filter(AdminSettingsModel.key == "worker_heartbeat").first()
+        if hb:
+            last_hb_utc = datetime.datetime.fromisoformat(hb.value.replace('Z', '+00:00'))
+            if last_hb_utc.tzinfo is None:
+                last_hb_utc = last_hb_utc.replace(tzinfo=datetime.timezone.utc)
+            if (now_utc - last_hb_utc).total_seconds() < 120:
+                scheduler_running = True
     except Exception:
-        scheduler_running = True
+        pass
 
     system_health_matrix = {
         "frontend": {"name": "Frontend", "status": "ONLINE", "type": "Firebase CDN", "badge": "🟢 ONLINE"},
@@ -739,12 +754,23 @@ def get_comprehensive_admin_system_health(db: Session = Depends(get_db)):
         freshness_color = "rose"
         stale_reason = f"Data age ({data_age_minutes}m) exceeds expected refresh interval (15m). Run Sync Now recommended."
 
-    # 4. Scheduler (Sunday Automation)
+    # 4. Cloud Background Worker (Sunday Automation)
     scheduler_active = False
     try:
-        from backend.scheduler import scheduler, get_scheduler_health
-        scheduler_active = bool(scheduler and scheduler.running)
-        sched_health = get_scheduler_health()
+        from backend.models import AdminSettingsModel
+        hb = db.query(AdminSettingsModel).filter(AdminSettingsModel.key == "worker_heartbeat").first()
+        if hb:
+            last_hb_utc = datetime.datetime.fromisoformat(hb.value.replace('Z', '+00:00'))
+            if last_hb_utc.tzinfo is None:
+                last_hb_utc = last_hb_utc.replace(tzinfo=datetime.timezone.utc)
+            if (now_utc - last_hb_utc).total_seconds() < 120:
+                scheduler_active = True
+        
+        try:
+            from backend.scheduler import get_scheduler_health
+            sched_health = get_scheduler_health()
+        except:
+            sched_health = {}
     except Exception:
         sched_health = {}
 

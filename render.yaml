@@ -1,13 +1,17 @@
 services:
+  # ── 1. WEB SERVICE (API + WebSocket) ─────────────────────────────────────
   - type: web
     name: leetcode-tracker-api
     env: python
     region: singapore
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
+    startCommand: "uvicorn backend.main:app --host 0.0.0.0 --port $PORT --workers 1"
+    healthCheckPath: /health
     envVars:
       - key: ENVIRONMENT
         value: production
+      - key: RUN_SCHEDULER_IN_WEB
+        value: "false"
       - key: DATABASE_URL
         fromDatabase:
           name: leetcode-tracker-db
@@ -22,6 +26,38 @@ services:
         value: Asia/Kolkata
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: LEETCODE_SYNC_CONCURRENCY
+        value: "5"
+
+  # ── 2. CLOUD BACKGROUND WORKER (24/7 Sync + Scheduler) ───────────────────
+  # This is a SEPARATE process. It runs even when the web server restarts/sleeps.
+  # It owns ALL scheduled jobs: weekly syncs, Sunday automation, heartbeats.
+  - type: worker
+    name: leetcode-tracker-worker
+    env: python
+    region: singapore
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python -m backend.worker"
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: leetcode-tracker-db
+          property: connectionString
+      - key: SECRET_KEY
+        fromService:
+          name: leetcode-tracker-api
+          type: web
+          envVarKey: SECRET_KEY
+      - key: TIMEZONE
+        value: Asia/Kolkata
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: LEETCODE_SYNC_CONCURRENCY
+        value: "5"
+      - key: PYTHONUNBUFFERED
+        value: "1"
 
 databases:
   - name: leetcode-tracker-db

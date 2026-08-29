@@ -128,7 +128,8 @@ async def _deferred_startup_tasks():
 
     # ── STEP 3: SCHEDULER START + MISSED JOB RECOVERY ─────────────────────
     is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")
-    if not is_vercel and SCHEDULER_AVAILABLE:
+    run_scheduler_in_web = os.environ.get("RUN_SCHEDULER_IN_WEB") == "true"
+    if not is_vercel and SCHEDULER_AVAILABLE and run_scheduler_in_web:
         try:
             logger.info("[STARTUP] ── Step 3: Scheduler Initialization...")
             start_scheduler()
@@ -137,6 +138,7 @@ async def _deferred_startup_tasks():
                 _cfg = get_or_create_default_schedule(_sched_db)
                 register_apscheduler_job(_cfg)
             logger.info("[STARTUP] ── Step 3: Scheduler started. Checking for missed jobs...")
+
 
             # ── MISSED JOB RECOVERY ──────────────────────────────────────
             # If server was down over a Sunday window, detect and recover safely.
