@@ -678,13 +678,12 @@ def get_departments(db: Session = Depends(get_db), current_user: User = Depends(
         if d.code and "TEST" in d.code.upper():
             continue
         count = db.query(Student).filter(Student.department_id == d.id, Student.is_active == True).count()
-        if count > 0:
-            result.append({
-                "id": d.id,
-                "name": d.name,
-                "code": d.code,
-                "student_count": count,
-            })
+        result.append({
+            "id": d.id,
+            "name": d.name,
+            "code": d.code,
+            "student_count": count,
+        })
     result.sort(key=lambda x: x["student_count"], reverse=True)
     return result
 

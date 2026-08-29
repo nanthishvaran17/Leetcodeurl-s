@@ -41,6 +41,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  const [rosterLoading, setRosterLoading] = useState<boolean>(false);
  const [selectedAssignedStudents, setSelectedAssignedStudents] = useState<number[]>([]);
  const [unassignSearchQuery, setUnassignSearchQuery] = useState<string>('');
+ const [studentToUnassign, setStudentToUnassign] = useState<{ student: any; staffId: number; source: 'tab' | 'modal' } | null>(null);
 
  // Modals & Confirmation States (Zero Native Alerts/Confirms)
  const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
@@ -183,18 +184,34 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  }
  };
 
- const handleUnassignStudentFromStaff = async (studentId: number) => {
+ const handleUnassignStudentFromStaff = (student: any) => {
  if (!viewRosterModal.staff) return;
- try {
- await api.post('/faculty-assignments/unassign', {
- faculty_id: viewRosterModal.staff.id,
- student_ids: [studentId]
+ setStudentToUnassign({
+  student: student,
+  staffId: viewRosterModal.staff.id,
+  source: 'modal'
  });
- notify.success('Student Unassigned', 'Student removed from staff portfolio.');
- handleOpenStaffRoster(viewRosterModal.staff);
- fetchAllocationData();
+ };
+
+ const confirmUnassignStudent = async () => {
+ if (!studentToUnassign) return;
+ try {
+  await api.post('/faculty-assignments/unassign', {
+  faculty_id: studentToUnassign.staffId,
+  student_ids: [studentToUnassign.student.id]
+  });
+  notify.success('Student Unassigned', `${studentToUnassign.student.name} removed from staff portfolio.`);
+  
+  if (studentToUnassign.source === 'modal' && viewRosterModal.staff) {
+  handleOpenStaffRoster(viewRosterModal.staff);
+  } else if (studentToUnassign.source === 'tab' && unassignStaffId) {
+  handleLoadUnassignRoster(Number(unassignStaffId));
+  }
+  
+  setStudentToUnassign(null);
+  fetchAllocationData();
  } catch (err: any) {
- notify.error('Unassign Failed', err.response?.data?.detail || 'Could not unassign student.');
+  notify.error('Unassign Failed', err.response?.data?.detail || 'Could not unassign student.');
  }
  };
 
@@ -909,16 +926,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
             </td>
             <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
              <button
-              onClick={async () => {
-               try {
-                await api.post('/faculty-assignments/unassign', { faculty_id: Number(unassignStaffId), student_ids: [s.id] });
-                notify.success('Unassigned', `${s.name} moved back to queue.`);
-                handleLoadUnassignRoster(Number(unassignStaffId));
-                fetchAllocationData();
-               } catch (err: any) {
-                notify.error('Failed', err.response?.data?.detail || 'Could not unassign.');
-               }
-              }}
+              onClick={() => setStudentToUnassign({ student: s, staffId: Number(unassignStaffId), source: 'tab' })}
               className="p-1.5 rounded-lg bg-rose-100 dark:bg-rose-900/30 text-rose-600 hover:bg-rose-200 transition-colors cursor-pointer"
               title="Unassign this student"
              >
@@ -1031,7 +1039,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  </td>
  <td className="p-3 text-center">
  <button
- onClick={() => handleUnassignStudentFromStaff(s.id)}
+ onClick={() => setStudentToUnassign({ student: s, staffId: Number(viewRosterModal.staff?.id), source: 'modal' })}
  className="p-1.5 rounded-lg bg-rose-100 dark:bg-rose-900/30 text-rose-600 hover:bg-rose-200 transition-colors"
  title="Unassign Student"
  >
@@ -1275,6 +1283,44 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  targetStaff={staffList.find(s => s.id === Number(targetStaffId)) || null}
  selectedCount={selectedStudents.length}
  />
+
+ {/* ─── 6. UNASSIGN STUDENT WARNING MODAL ─── */}
+ {studentToUnassign && (
+ <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+  <div className="bg-white dark:bg-navy-900 w-full max-w-md p-6 rounded-3xl border border-rose-200 dark:border-rose-900/50 shadow-2xl space-y-5 text-center relative">
+   <div className="w-16 h-16 bg-rose-100 dark:bg-rose-900/30 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-2">
+    <AlertTriangle className="w-8 h-8" />
+   </div>
+   
+   <div>
+    <h3 className="font-black text-lg text-slate-900 dark:text-white mb-2">
+     Remove Student?
+    </h3>
+    <p className="text-sm text-slate-600 dark:text-navy-300">
+     Are you sure you want to unassign <strong>{studentToUnassign.student.name} ({studentToUnassign.student.reg_no})</strong>?
+    </p>
+    <p className="text-xs text-rose-500 font-medium mt-2">
+     This student will be moved back to the unassigned queue.
+    </p>
+   </div>
+
+   <div className="flex items-center justify-center space-x-3 pt-4 border-t border-slate-100 dark:border-navy-800">
+    <button
+     onClick={() => setStudentToUnassign(null)}
+     className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 font-bold text-sm transition-all cursor-pointer"
+    >
+     Cancel
+    </button>
+    <button
+     onClick={confirmUnassignStudent}
+     className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-md transition-all cursor-pointer"
+    >
+     Yes, Remove
+    </button>
+   </div>
+  </div>
+ </div>
+ )}
 
  </div>
  );
