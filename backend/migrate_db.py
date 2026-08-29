@@ -145,6 +145,7 @@ def run_db_migrations():
                     try:
                         pg_conn.execute(sql_text(migration_sql))
                     except Exception as _col_err:
+                        pg_conn.rollback()
                         print(f"[PG Migration] Note: {_col_err}")
                 print("[PG Migration] PostgreSQL column migrations applied successfully.")
 
@@ -160,6 +161,7 @@ def run_db_migrations():
                         pg_conn.execute(sql_text(idx_sql))
                         print(f"[PG Migration] Index applied: {idx_sql.split('ON ')[1].split(' ')[0]}")
                     except Exception as _idx_err:
+                        pg_conn.rollback()
                         print(f"[PG Migration] Index note: {_idx_err}")
         except Exception as pg_err:
             print(f"[PG Migration] Warning: {pg_err}")

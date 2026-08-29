@@ -36,10 +36,10 @@ class Settings(BaseSettings):
     MAX_RETRIES: int = 3
     CACHE_DURATION: int = 30  # minutes
     SYNC_FRESHNESS_HOURS: float = float(os.environ.get("SYNC_FRESHNESS_HOURS", "6.0"))
-    CONCURRENCY_WORKERS: int = int(os.environ.get("CONCURRENCY_WORKERS", "15"))
+    CONCURRENCY_WORKERS: int = int(os.environ.get("CONCURRENCY_WORKERS", "8"))
     
     # Production LeetCode Hardening
-    LEETCODE_MAX_CONCURRENCY: int = int(os.environ.get("LEETCODE_MAX_CONCURRENCY", "15"))
+    LEETCODE_MAX_CONCURRENCY: int = int(os.environ.get("LEETCODE_MAX_CONCURRENCY", "8"))
     LEETCODE_CONNECT_TIMEOUT: float = float(os.environ.get("LEETCODE_CONNECT_TIMEOUT", "5.0"))
     LEETCODE_READ_TIMEOUT: float = float(os.environ.get("LEETCODE_READ_TIMEOUT", "10.0"))
     LEETCODE_MAX_RETRIES: int = int(os.environ.get("LEETCODE_MAX_RETRIES", "3"))

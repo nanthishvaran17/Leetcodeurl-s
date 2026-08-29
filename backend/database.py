@@ -37,8 +37,8 @@ engine_kwargs = {}
 if "postgresql" in db_url or "postgres" in db_url:
     engine_kwargs.update({
         # Render free tier allows ~25 connections max; keep headroom for other processes
-        "pool_size": 5,
-        "max_overflow": 5,          # max 10 total active connections
+        "pool_size": 10,
+        "max_overflow": 10,         # max 20 total active connections
         "pool_timeout": 30,         # wait up to 30s to checkout a connection
         "pool_pre_ping": True,      # verify liveness before returning from pool
         "pool_recycle": 300,        # recycle after 5min (Render drops idle connections ~60s)
