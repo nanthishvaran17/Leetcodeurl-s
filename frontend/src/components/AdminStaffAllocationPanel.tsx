@@ -420,36 +420,6 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
  return (
     <div className="max-w-7xl mx-auto space-y-8 pb-12">
-      {/* ─── INSTITUTION HEADER BANNER (Email-style) ─── */}
-      <div className="w-full rounded-3xl overflow-hidden shadow-2xl mb-8">
-        {/* Dark Header */}
-        <div className="bg-[#0f1e3a] flex flex-col items-center justify-center py-10 px-6 text-center space-y-4">
-          <img
-            src="/nec_25_logo.png"
-            alt="NEC 25 Years of Excellence"
-            className="w-28 h-28 object-contain drop-shadow-2xl"
-          />
-          <div className="space-y-1">
-            <h1 className="text-xl sm:text-2xl font-black text-white uppercase tracking-widest leading-snug">
-              Nandha Engineering College
-            </h1>
-            <p className="text-sm font-semibold text-slate-300 tracking-wide">(Autonomous)</p>
-            <p className="text-xs font-medium text-sky-400 tracking-widest uppercase mt-2">
-              LeetCode Tracker System — Admin Control Center
-            </p>
-          </div>
-        </div>
-        {/* Gradient accent bar */}
-        <div className="h-1.5 w-full bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-500" />
-        {/* Light sub-banner */}
-        <div className="bg-slate-50 dark:bg-navy-800 flex items-center justify-center py-2.5 px-6 gap-3 flex-wrap">
-          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Academic Year 2024–25</span>
-          <span className="text-slate-300 dark:text-navy-600 text-sm">•</span>
-          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Erode, Tamil Nadu</span>
-          <span className="text-slate-300 dark:text-navy-600 text-sm">•</span>
-          <span className="text-[11px] font-bold text-sky-600 dark:text-sky-400 uppercase tracking-widest">NAAC Accredited</span>
-        </div>
-      </div>
 
 
  {/* ─── 1. STAFF WORKLOAD MATRIX PANEL ─── */}
@@ -530,111 +500,117 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  const percent = Math.min(100, Math.round((count / maxCap) * 100));
  const isFull = count >= maxCap;
 
- return (
- <div
- key={st.id}
- className={`p-5 rounded-2xl border transition-all ${
- !st.is_active
- ? 'bg-slate-50 dark:bg-navy-950/40 border-slate-200 opacity-60'
- : isFull
- ? 'bg-rose-50/20 dark:bg-rose-950/10 border-rose-500/30'
- : 'bg-slate-50/50 dark:bg-navy-800/50 border-slate-200 dark:border-navy-700'
- }`}
- >
- <div className="flex items-center justify-between">
- <div>
- <h4 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
- <span>{st.username}</span>
- {!st.is_active ? (
- <span className="px-2 py-0.5 rounded text-[10px] font-black bg-rose-500/20 text-rose-500">
- ● DISABLED
- </span>
- ) : isFull ? (
- <span className="px-2 py-0.5 rounded text-[10px] font-black bg-rose-500/20 text-rose-600">
- ● CAPACITY FULL
- </span>
- ) : (
- <span className="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-500/20 text-emerald-600">
- ● AVAILABLE
- </span>
- )}
- </h4>
- <div className="flex items-center space-x-2 mt-0.5">
- <p className="text-xs text-slate-400">{st.email}</p>
- {st.department && (
- <span className="px-2 py-0.5 rounded bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-400 text-[9px] font-bold border border-sky-100 dark:border-sky-500/20">
- {st.department}
- </span>
- )}
- </div>
- </div>
+  return (
+   <div
+     key={st.id}
+     className={`relative rounded-3xl border overflow-hidden transition-all shadow-md hover:shadow-xl ${
+       !st.is_active
+         ? 'bg-slate-100/80 dark:bg-navy-950/60 border-slate-200 opacity-70'
+         : isFull
+         ? 'bg-gradient-to-br from-rose-50 to-white dark:from-rose-950/20 dark:to-navy-900 border-rose-300 dark:border-rose-800/50'
+         : 'bg-gradient-to-br from-white to-slate-50 dark:from-navy-800 dark:to-navy-900 border-slate-200 dark:border-navy-700 hover:border-sky-400/50'
+     }`}
+   >
+     {/* Top accent bar */}
+     <div className={`h-1.5 w-full ${
+       !st.is_active ? 'bg-slate-400' : isFull
+         ? 'bg-gradient-to-r from-rose-500 to-orange-500'
+         : 'bg-gradient-to-r from-sky-500 to-indigo-500'
+     }`} />
 
- <div className="flex items-center space-x-1.5">
- {/* View Assigned Students Modal Button */}
- <button
- onClick={() => handleOpenStaffRoster(st)}
- className="p-2 rounded-xl bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 hover:bg-sky-200 dark:hover:bg-sky-800/40 text-xs transition-all cursor-pointer"
- title="View Assigned Students & Mentoring Progress"
- >
- <Eye className="w-4 h-4" />
- </button>
+     <div className="p-5">
+       {/* Avatar + Name */}
+       <div className="flex items-start justify-between">
+         <div className="flex items-center space-x-3">
+           <div className={`relative w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black text-white shadow-lg shrink-0 ${
+             !st.is_active ? 'bg-slate-400'
+             : isFull ? 'bg-gradient-to-br from-rose-500 to-orange-500'
+             : 'bg-gradient-to-br from-sky-500 to-indigo-600'
+           }`}>
+             {st.username?.charAt(0)?.toUpperCase() || '?'}
+             {st.is_active && (
+               <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-navy-800 bg-emerald-500" />
+             )}
+           </div>
+           <div className="min-w-0">
+             <h4 className="font-black text-sm text-slate-900 dark:text-white leading-tight truncate">{st.username}</h4>
+             <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate mt-0.5">{st.email}</p>
+           </div>
+         </div>
 
- {/* Enable/Disable Power Button */}
- <button
- onClick={() => triggerToggleStatusModal(st)}
- className={`p-2 rounded-xl text-xs transition-all cursor-pointer ${
- st.is_active
- ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 hover:bg-amber-200'
- : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 hover:bg-emerald-200'
- }`}
- title={st.is_active ? 'Disable Staff Account' : 'Enable Staff Account'}
- >
- <Power className="w-4 h-4" />
- </button>
+         <div className="flex flex-col items-end space-y-1.5">
+           <span className={`px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide ${
+             !st.is_active ? 'bg-slate-200 text-slate-500'
+             : isFull ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400'
+             : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+           }`}>
+             {!st.is_active ? '⊘ DISABLED' : isFull ? '⚠ FULL' : '● AVAILABLE'}
+           </span>
+           <div className="flex items-center space-x-1">
+             <button onClick={() => handleOpenStaffRoster(st)}
+               className="p-1.5 rounded-xl bg-sky-100 dark:bg-sky-900/30 text-sky-600 hover:bg-sky-200 transition-all cursor-pointer" title="View Roster">
+               <Eye className="w-3.5 h-3.5" />
+             </button>
+             <button onClick={() => triggerToggleStatusModal(st)}
+               className={`p-1.5 rounded-xl transition-all cursor-pointer ${
+                 st.is_active ? 'bg-amber-100 text-amber-600 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'
+               }`} title={st.is_active ? 'Disable' : 'Enable'}>
+               <Power className="w-3.5 h-3.5" />
+             </button>
+             <button onClick={() => triggerDeleteStaffModal(st)}
+               className="p-1.5 rounded-xl bg-rose-100 dark:bg-rose-900/30 text-rose-600 hover:bg-rose-200 transition-all cursor-pointer" title="Delete">
+               <Trash2 className="w-3.5 h-3.5" />
+             </button>
+           </div>
+         </div>
+       </div>
 
- {/* Delete Staff Button */}
- <button
- onClick={() => triggerDeleteStaffModal(st)}
- className="p-2 rounded-xl bg-rose-100 dark:bg-rose-900/30 text-rose-600 hover:bg-rose-200 dark:hover:bg-rose-800/40 text-xs transition-all cursor-pointer"
- title="Delete Staff Member & Unassign Students"
- >
- <Trash2 className="w-4 h-4" />
- </button>
- </div>
- </div>
+       {/* Dept Tag */}
+       {st.department && (
+         <div className="mt-3">
+           <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold border border-indigo-100 dark:border-indigo-800/40">
+             {st.department}
+           </span>
+         </div>
+       )}
 
- {/* Progress Bar & Available Slots */}
- <div className="mt-4 space-y-1.5">
- <div className="flex justify-between text-xs font-bold text-slate-500">
- <span>Student Allocation</span>
- <span className={isFull ? 'text-rose-500 font-black' : 'text-slate-800 dark:text-white'}>
- {count} / {maxCap}
- </span>
- </div>
- <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-navy-700 overflow-hidden">
- <div
- className={`h-full rounded-full transition-all duration-500 ${
- isFull ? 'bg-rose-500' : count >= 20 ? 'bg-amber-500' : 'bg-emerald-500'
- }`}
- style={{ width: `${percent}%` }}
- />
- </div>
- <div className="flex justify-between items-center text-[11px] text-slate-400 pt-0.5">
- <button
- onClick={() => handleOpenStaffRoster(st)}
- className="text-sky-700 dark:text-sky-400 font-bold hover:underline cursor-pointer"
- >
- Inspect Progress →
- </button>
- <span>{isFull ? 'Cap Reached (30 max)' : `${availableSlots} slots available`}</span>
- </div>
- </div>
- </div>
- );
- })
- )}
- </div>
- </div>
+       {/* Progress Bar */}
+       <div className="mt-4 space-y-1.5">
+         <div className="flex justify-between text-xs font-bold">
+           <span className="text-slate-500 dark:text-slate-400">Student Allocation</span>
+           <span className={isFull ? 'text-rose-500' : count >= 20 ? 'text-amber-500' : 'text-emerald-600'}>
+             {count} / {maxCap}
+           </span>
+         </div>
+         <div className="w-full h-2.5 rounded-full bg-slate-200 dark:bg-navy-700 overflow-hidden">
+           <div
+             className={`h-full rounded-full transition-all duration-700 ${
+               isFull ? 'bg-gradient-to-r from-rose-500 to-orange-500'
+               : count >= 20 ? 'bg-gradient-to-r from-amber-400 to-orange-400'
+               : 'bg-gradient-to-r from-sky-500 to-indigo-500'
+             }`}
+             style={{ width: `${percent}%` }}
+           />
+         </div>
+         <div className="flex justify-between items-center text-[11px]">
+           <button onClick={() => handleOpenStaffRoster(st)}
+             className="text-sky-600 dark:text-sky-400 font-bold hover:underline cursor-pointer">
+             Inspect Progress →
+           </button>
+           <span className={`font-semibold ${
+             isFull ? 'text-rose-500' : availableSlots <= 5 ? 'text-amber-500' : 'text-slate-400'
+           }`}>
+             {isFull ? 'Cap Reached' : `${availableSlots} slots free`}
+           </span>
+         </div>
+       </div>
+     </div>
+   </div>
+  );
+  })
+  )}
+  </div>
+  </div>
 
  {/* ─── 2. UNASSIGNED STUDENTS QUEUE PANEL ─── */}
  <div className="bg-white dark:bg-navy-900 p-6 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-xl space-y-6">

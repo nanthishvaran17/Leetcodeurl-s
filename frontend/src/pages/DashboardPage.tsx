@@ -241,7 +241,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     setGeneratingReport(true);
     notify.info('Generating PDF Report', 'Compiling institutional performance metrics and charts...', { category: 'REPORTS' });
     try {
-      const res = await api.get('/reports/21/pdf', { responseType: 'blob' });
+      // Use the latest session ID from the dashboard summary, fall back to fetching latest session
+      const sessionId = summary?.latest_session_id || summary?.current_session_id || 'latest';
+      const res = await api.get(`/reports/${sessionId}/pdf`, { responseType: 'blob' });
       const blobUrl = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
       const link = document.createElement('a');
       link.href = blobUrl;
@@ -258,13 +260,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         notify.error('Authentication Required', 'Please sign in again.', { category: 'AUTH' });
       } else if (statusCode === 403) {
         notify.error('Access Denied', 'You do not have permission to generate this institutional report.', { category: 'SECURITY' });
+      } else if (statusCode === 404) {
+        notify.error('No Contest Data', 'No weekly contest session found to generate a report. Please run a contest first.', { category: 'REPORTS' });
       } else {
-        notify.error('Report Error', 'Failed to generate PDF report.', { category: 'REPORTS' });
+        notify.error('Report Error', 'Failed to generate PDF report. Please try again later.', { category: 'REPORTS' });
       }
     } finally {
       setGeneratingReport(false);
     }
   };
+
 
   const handleExportExcel = async () => {
     notify.info('Preparing Excel Export', 'Gathering Weekly Contest statistics...', { category: 'REPORTS' });
