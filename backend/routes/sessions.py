@@ -22,6 +22,11 @@ from backend.services.authorization_service import apply_role_based_student_filt
 @router.get("/dashboard-summary", response_model=DashboardSummary)
 def get_dashboard_summary(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     from sqlalchemy import func
+    
+    cache_key = f"dashboard_summary_{current_user.id}"
+    cached = cache.get(cache_key)
+    if cached:
+        return cached
 
     # 1. Base query with Role-Based Scoping
     base_student_query = db.query(Student.id).filter((Student.is_active == True) | (Student.is_active.is_(None)))
