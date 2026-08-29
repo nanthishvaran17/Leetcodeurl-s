@@ -9,6 +9,7 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { AllocationConfirmationModal } from './admin/AllocationConfirmationModal';
+import { CustomDropdown, DropdownOption } from './CustomDropdown';
 
 export const AdminStaffAllocationPanel: React.FC = () => {
  const { user } = useAuth();
@@ -388,8 +389,48 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
  const isFilterActive = selectedDept !== 'ALL' || selectedYear !== 'ALL' || searchQuery.trim() !== '' || staffSearchQuery.trim() !== '' || staffWorkloadFilter !== 'ALL';
 
+ const deptOptions: DropdownOption[] = [
+   { value: 'ALL', label: 'All Departments' },
+   ...departments.map((d: any) => ({
+     value: String(d.id),
+     label: d.name,
+     badge: d.code,
+     badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400'
+   }))
+ ];
+
+ const yearOptions: DropdownOption[] = [
+   { value: 'ALL', label: 'All Year Levels' },
+   { value: 'I', label: 'Year I' },
+   { value: 'II', label: 'Year II' },
+   { value: 'III', label: 'Year III' },
+   { value: 'IV', label: 'Year IV' }
+ ];
+
+ const staffOptions: DropdownOption[] = [
+   { value: '', label: 'Select Target Staff...' },
+   ...staffList.filter(s => s.is_active && (s.assigned_count || 0) < 30).map((st: any) => ({
+     value: String(st.id),
+     label: st.username,
+     sublabel: `${st.assigned_count || 0} / 30 slots filled`,
+     badge: (st.assigned_count || 0) >= 30 ? 'FULL' : 'AVAILABLE',
+     badgeColor: (st.assigned_count || 0) >= 30 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'
+   }))
+ ];
+
  return (
- <div className="space-y-8" style={{ fontFamily:"'Times New Roman', Times, serif" }}>
+    <div className="max-w-7xl mx-auto space-y-8 pb-12">
+      <div className="flex flex-col items-center justify-center space-y-4 mb-8 text-center animate-fade-in">
+        <img src="/nec_25_logo.png" alt="NEC 25 Years" className="w-24 h-24 object-contain drop-shadow-xl" />
+        <div>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider">
+            Nandha Engineering College (Autonomous)
+          </h1>
+          <h2 className="text-sm font-bold text-sky-600 dark:text-sky-400 mt-1">
+            LeetCode Tracker System &bull; Admin Control Center
+          </h2>
+        </div>
+      </div>
 
  {/* ─── 1. STAFF WORKLOAD MATRIX PANEL ─── */}
  <div className="bg-white dark:bg-navy-900 p-6 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-xl space-y-6">
@@ -600,86 +641,74 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  </div>
  </div>
 
- {/* Filters Bar: Department Filter, Year Level Filter & Search Bar */}
- <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-800/60 border border-slate-200 dark:border-navy-700 flex flex-wrap items-center justify-between gap-3">
- 
- <div className="flex items-center space-x-3 flex-wrap gap-2 flex-1">
- <div className="relative min-w-[200px] flex-1">
- <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
- <input
- type="text"
- value={searchQuery}
- onChange={(e) => setSearchQuery(e.target.value)}
- placeholder="Search reg no, name, username..."
- className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 dark:border-navy-600 bg-white dark:bg-navy-900 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-sky-500"
- />
- </div>
+        {/* Filters Bar: Department Filter, Year Level Filter & Search Bar */}
+        <div className="p-5 rounded-3xl bg-slate-50/50 dark:bg-navy-800/40 border border-slate-200/60 dark:border-navy-700 flex flex-col md:flex-row items-center justify-between gap-4 backdrop-blur-sm shadow-sm">
+          
+          <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4 w-full md:w-auto flex-1">
+            <div className="relative w-full md:min-w-[250px] lg:min-w-[300px]">
+              <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search reg no, name, username..."
+                className="w-full pl-10 pr-4 h-11 rounded-2xl border border-slate-200 dark:border-navy-600 bg-white dark:bg-navy-900 text-sm font-medium text-slate-800 dark:text-slate-200 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 shadow-sm transition-all"
+              />
+            </div>
 
- <div className="flex items-center space-x-1.5 bg-white dark:bg-navy-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-600">
- <Building2 className="w-3.5 h-3.5 text-sky-600" />
- <select
- value={selectedDept}
- onChange={(e) => setSelectedDept(e.target.value)}
- className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-200 outline-none cursor-pointer"
- >
- <option value="ALL">All Departments</option>
- {departments.map((d: any) => (
- <option key={d.id} value={d.id}>{d.code || d.name}</option>
- ))}
- </select>
- </div>
+            <div className="w-full md:w-[220px]">
+              <CustomDropdown
+                label="Department Filter"
+                options={deptOptions}
+                value={String(selectedDept)}
+                onChange={setSelectedDept}
+                icon={Building2}
+              />
+            </div>
 
- <div className="flex items-center space-x-1.5 bg-white dark:bg-navy-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-600">
- <Filter className="w-3.5 h-3.5 text-sky-600" />
- <select
- value={selectedYear}
- onChange={(e) => setSelectedYear(e.target.value)}
- className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-200 outline-none cursor-pointer"
- >
- <option value="ALL">All Year Levels</option>
- <option value="I">Year I</option>
- <option value="II">Year II</option>
- <option value="III">Year III</option>
- <option value="IV">Year IV</option>
- </select>
- </div>
+            <div className="w-full md:w-[200px]">
+              <CustomDropdown
+                label="Academic Year"
+                options={yearOptions}
+                value={selectedYear}
+                onChange={setSelectedYear}
+                icon={Filter}
+              />
+            </div>
 
- {isFilterActive && (
- <button
- onClick={clearFilters}
- className="p-2 rounded-xl bg-slate-200 dark:bg-navy-700 hover:bg-slate-300 dark:hover:bg-navy-600 text-slate-600 dark:text-slate-300 text-xs flex items-center space-x-1 transition-all cursor-pointer"
- title="Clear all active filters"
- >
- <X className="w-3.5 h-3.5" />
- <span className="text-[11px] font-bold">Clear</span>
- </button>
- )}
- </div>
+            {isFilterActive && (
+              <button
+                onClick={clearFilters}
+                className="p-2.5 rounded-xl bg-slate-200/70 dark:bg-navy-700 hover:bg-slate-300 dark:hover:bg-navy-600 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-all cursor-pointer shadow-sm mt-4 md:mt-0"
+                title="Clear all active filters"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
 
- <div className="flex items-center space-x-2">
- <select
- value={targetStaffId}
- onChange={(e) => setTargetStaffId(e.target.value ? Number(e.target.value) : '')}
- className="px-3 py-2 rounded-xl border border-slate-200 dark:border-navy-600 bg-white dark:bg-navy-900 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none cursor-pointer"
- >
- <option value="">Select Target Staff...</option>
- {staffList.filter(s => s.is_active && (s.assigned_count || 0) < 30).map((st: any) => (
- <option key={st.id} value={st.id}>
- {st.username} ({st.assigned_count || 0}/30)
- </option>
- ))}
- </select>
+          <div className="flex flex-col md:flex-row items-center space-y-3 md:space-y-0 md:space-x-3 w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0 border-slate-200 dark:border-navy-700">
+            <div className="w-full md:w-[240px]">
+              <CustomDropdown
+                label="Assign To Staff"
+                options={staffOptions}
+                value={targetStaffId ? String(targetStaffId) : ''}
+                onChange={(val) => setTargetStaffId(val ? Number(val) : '')}
+                icon={UserPlus}
+                align="right"
+              />
+            </div>
 
- <button
- onClick={handleBulkAssign}
- disabled={submitting || selectedStudents.length === 0 || !targetStaffId}
- className="px-4 py-2 rounded-xl bg-sky-700 hover:bg-sky-800 disabled:opacity-50 text-white text-xs font-bold flex items-center space-x-1 shadow-md transition-all cursor-pointer"
- >
- <span>Assign ({selectedStudents.length})</span>
- <ArrowRight className="w-3.5 h-3.5" />
- </button>
- </div>
- </div>
+            <button
+              onClick={handleBulkAssign}
+              disabled={submitting || selectedStudents.length === 0 || !targetStaffId}
+              className="w-full md:w-auto px-6 h-11 rounded-2xl bg-sky-600 hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold flex items-center justify-center space-x-2 shadow-md hover:shadow-lg transition-all cursor-pointer mt-4 md:mt-0"
+            >
+              <span>Assign ({selectedStudents.length})</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
 
  {/* Unassigned Students Table */}
  <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-700">
