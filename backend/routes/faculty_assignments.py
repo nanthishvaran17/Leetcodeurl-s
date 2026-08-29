@@ -247,26 +247,14 @@ def delete_staff_member(
             detail="Access restricted: HOD can only delete staff members in their own department."
         )
 
-    # Check actual database allocation
-    assigned_count = db.query(FacultyStudentAssignment).filter(
-        FacultyStudentAssignment.faculty_id == faculty_id,
-        FacultyStudentAssignment.is_active == True
-    ).count()
-
-    if assigned_count > 0:
-        raise HTTPException(
-            status_code=400,
-            detail=f"This staff member has {assigned_count} assigned students. Reassign students before deletion."
-        )
-
-    # Clean up any inactive assignments for referential integrity
-    db.query(FacultyStudentAssignment).filter(
+    # Safely return assigned students to the queue by removing the assignment mapping
+    deleted_assignments = db.query(FacultyStudentAssignment).filter(
         FacultyStudentAssignment.faculty_id == faculty_id
     ).delete(synchronize_session=False)
 
-    # Delete the faculty user record
+    # Soft-delete the faculty user record to preserve historical mentor notes and audits
     faculty_name = faculty.username
-    db.delete(faculty)
+    faculty.is_active = False
     db.commit()
 
     return {

@@ -872,40 +872,20 @@ def delete_staff_user(
     if staff_user.id == current_user.id:
         raise HTTPException(status_code=400, detail="You cannot delete your own logged-in account.")
 
-    # Check actual database allocation
-    assigned_count = db.query(FacultyStudentAssignment).filter(
-        FacultyStudentAssignment.faculty_id == staff_id,
-        FacultyStudentAssignment.is_active == True
-    ).count()
-
-    if assigned_count > 0:
-        raise HTTPException(
-            status_code=400,
-            detail=f"This staff member has {assigned_count} assigned students. Reassign students before deletion."
-        )
-
-    # Clean up student assignment history safely to satisfy FK constraints if needed
-    # Only old inactive assignments would exist here since active is 0
+    # 1. Safely return assigned students to the queue by removing the assignment mapping
     db.query(FacultyStudentAssignment).filter(
-        (FacultyStudentAssignment.faculty_id == staff_id) | (FacultyStudentAssignment.assigned_by_id == staff_id)
+        FacultyStudentAssignment.faculty_id == staff_id
     ).delete(synchronize_session=False)
 
-    db.query(StudentAssignmentHistory).filter(
-        (StudentAssignmentHistory.new_faculty_id == staff_id) | 
-        (StudentAssignmentHistory.previous_faculty_id == staff_id) | 
-        (StudentAssignmentHistory.assigned_by_id == staff_id)
-    ).delete(synchronize_session=False)
-
-    # 2. Clean up staff action logs, interventions, notes, alerts, followups, sessions, otps
-    db.query(FacultyIntervention).filter(FacultyIntervention.faculty_id == staff_id).delete(synchronize_session=False)
-    db.query(MentorNote).filter(MentorNote.faculty_id == staff_id).delete(synchronize_session=False)
-    db.query(StaffFollowUp).filter(StaffFollowUp.staff_id == staff_id).delete(synchronize_session=False)
-    db.query(StaffAlert).filter(StaffAlert.staff_id == staff_id).delete(synchronize_session=False)
+    # 2. Soft-delete the staff account to preserve historical mentor notes, interventions, and audit data
+    username = staff_user.username
+    staff_user.is_active = False
+    
+    # We optionally delete active sessions or OTPs to forcibly log them out immediately,
+    # but we DO NOT delete MentorNotes or Interventions.
     db.query(AdminSession).filter(AdminSession.user_id == staff_id).delete(synchronize_session=False)
     db.query(PasswordResetOTP).filter(PasswordResetOTP.user_id == staff_id).delete(synchronize_session=False)
-
-    username = staff_user.username
-    db.delete(staff_user)
+    
     db.commit()
 
     log_admin_action(
