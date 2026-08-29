@@ -3,7 +3,7 @@ import {
   Trophy, Calendar, RefreshCw, AlertTriangle, Download, FileSpreadsheet,
   FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Zap, Filter, Trash2, Mail, Send, Sparkles, X, Edit3, UserCheck, UserX, Eye, Users, TrendingUp, Award, ChevronDown, ChevronUp,
   Building2, GraduationCap, RotateCcw, Search, Radio, Activity, Shield, Pause, Play, FastForward,
-  Gauge, Terminal, Cpu, Database, FlaskConical, Check
+  Gauge, Terminal, Cpu, Database, FlaskConical, Check, ExternalLink
 } from 'lucide-react';
 import api from '../services/api';
 import { StatusNotificationModal, NotificationState } from '../components/StatusNotificationModal';
@@ -2660,7 +2660,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   </div>
                   <button
                     onClick={() => {
-                      setNotification({ type: 'success', message: `Reminder emails queued for ${missingHandlesCount} students missing handles.` });
+                      setNotification({ isOpen: true, title: 'Success', type: 'success', message: `Reminder emails queued for ${missingHandlesCount} students missing handles.` });
                     }}
                     className="flex items-center space-x-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-black rounded-xl transition-all shadow-md cursor-pointer active:scale-95 whitespace-nowrap"
                   >
@@ -2702,7 +2702,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => {
-                        setNotification({ type: 'success', message: `${selectedRowIds.size} students marked as verified successfully.` });
+                        setNotification({ isOpen: true, title: 'Success', type: 'success', message: `${selectedRowIds.size} students marked as verified successfully.` });
                         setSelectedRowIds(new Set());
                       }}
                       className="flex items-center space-x-1.5 px-4 py-2 bg-white dark:bg-navy-800 border border-brand-200 dark:border-brand-700 hover:bg-brand-100 dark:hover:bg-brand-800/50 text-brand-700 dark:text-brand-300 text-xs font-black rounded-xl transition-all cursor-pointer shadow-sm"
@@ -2712,7 +2712,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     </button>
                     <button
                       onClick={() => {
-                        setNotification({ type: 'success', message: `Reminder emails queued for ${selectedRowIds.size} students.` });
+                        setNotification({ isOpen: true, title: 'Success', type: 'success', message: `Reminder emails queued for ${selectedRowIds.size} students.` });
                         setSelectedRowIds(new Set());
                       }}
                       className="flex items-center space-x-1.5 px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-sm"
