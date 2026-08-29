@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey, Text, JSON, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey, Text, JSON, UniqueConstraint, Index
 from sqlalchemy.orm import relationship, backref
 from backend.database import Base
 
@@ -204,6 +204,9 @@ class WeeklySessionSnapshot(Base):
 
 class WeeklyPublicResult(Base):
     __tablename__ = "weekly_public_results"
+    __table_args__ = (
+        Index("ix_weekly_public_results_session_student", "session_id", "student_id"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     session_id = Column(Integer, ForeignKey("weekly_sessions.id"), nullable=False, index=True)
@@ -244,6 +247,9 @@ class WeeklyPublicResult(Base):
 
 class WeeklyVirtualResult(Base):
     __tablename__ = "weekly_virtual_results"
+    __table_args__ = (
+        Index("ix_weekly_virtual_results_session_student", "session_id", "student_id"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     session_id = Column(Integer, ForeignKey("weekly_sessions.id"), nullable=False, index=True)
@@ -330,7 +336,10 @@ class OfficialWeeklySnapshot(Base):
 
 class WeeklyStudentProgress(Base):
     __tablename__ = "weekly_student_progress"
-    
+    __table_args__ = (
+        Index("ix_weekly_student_progress_student_week", "student_id", "week_number"),
+    )
+
     id = Column(Integer, primary_key=True, index=True)
     week_number = Column(Integer, nullable=True, default=34)
     academic_year = Column(String(20), default="2026-27")

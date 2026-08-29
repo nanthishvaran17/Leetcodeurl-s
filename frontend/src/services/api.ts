@@ -30,11 +30,29 @@ const api = axios.create({
 const inFlightRequests = new Map<string, Promise<any>>();
 const activeControllers = new Map<string, AbortController>();
 const responseCache = new Map<string, { timestamp: number; data: any }>();
-const CACHE_TTL_MS = 60000; // Increased to 60 seconds
+const CACHE_TTL_MS = 120_000; // 2 minutes — fast-enough for live staff use, eliminates redundant fetches
 
-export const getCachedData = (key: string) => {
+// Per-URL TTL overrides (milliseconds). Heavier endpoints get longer cache.
+const URL_TTL_OVERRIDES: Record<string, number> = {
+  '/students/leaderboard-fast': 120_000,   // 2 min
+  '/public/leaderboard': 120_000,           // 2 min
+  '/analytics/department-comparison': 300_000, // 5 min
+  '/analytics/data-quality': 300_000,       // 5 min
+  '/sessions/dashboard-summary': 60_000,   // 1 min (synced more often)
+  '/public/stats': 300_000,                // 5 min
+};
+
+const getEffectiveTtl = (url: string): number => {
+  for (const [pattern, ttl] of Object.entries(URL_TTL_OVERRIDES)) {
+    if (url.includes(pattern)) return ttl;
+  }
+  return CACHE_TTL_MS;
+};
+
+export const getCachedData = (key: string, url?: string) => {
   const cached = responseCache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+  const ttl = url ? getEffectiveTtl(url) : CACHE_TTL_MS;
+  if (cached && Date.now() - cached.timestamp < ttl) {
     return cached.data;
   }
   return null;
@@ -137,8 +155,8 @@ api.get = async function (url: string, config?: any) {
   
   // If we have any cache, return it IMMEDIATELY
   if (cached) {
-    // If it's stale (older than TTL), fetch fresh data in background silently
-    if (Date.now() - cached.timestamp > CACHE_TTL_MS) {
+    // If it's stale (older than this URL's TTL), fetch fresh data in background silently
+    if (Date.now() - cached.timestamp > getEffectiveTtl(url)) {
       if (!inFlightRequests.has(key)) {
         const req = originalGet.call(api, url, config)
           .then(res => {

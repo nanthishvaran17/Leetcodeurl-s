@@ -2,6 +2,7 @@ import os
 import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Response, Depends, WebSocket, WebSocketDisconnect
+from fastapi.responses import ORJSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -228,6 +229,7 @@ app = FastAPI(
     title="College LeetCode Weekly Tracker API",
     description="Backend API for LeetCode weekly tracking, analytics, leaderboards, Excel/PDF reporting and notifications.",
     version="2.0.0",
+    default_response_class=ORJSONResponse,
     lifespan=lifespan
 )
 

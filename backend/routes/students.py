@@ -155,8 +155,12 @@ def get_leaderboard_fast(
             vir_map[vr.student_id] = vr
 
     if c_num:
+        from sqlalchemy import or_
         for hr in db.query(LeetCodeContestRatingHistory).filter(
-            LeetCodeContestRatingHistory.contest_name.ilike(f"%{c_num}%"),
+            or_(
+                LeetCodeContestRatingHistory.contest_name == f"Weekly Contest {c_num}",
+                LeetCodeContestRatingHistory.contest_name == f"Biweekly Contest {c_num}"
+            ),
             LeetCodeContestRatingHistory.student_id.in_(student_ids)
         ).all():
             hist_map[hr.student_id] = hr
@@ -249,8 +253,8 @@ def get_leaderboard_fast(
             "has_virtual": vir is not None and vir.participation_status in ("VIRTUAL_ATTENDED", "VIRTUAL"),
         })
 
-    import json
-    json_bytes = json.dumps(results, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+    import orjson
+    json_bytes = orjson.dumps(results)
     cache.set(cache_key, json_bytes, ttl_seconds=600, tags=["students", "leaderboard"])
     from starlette.responses import Response
     return Response(content=json_bytes, media_type="application/json")
