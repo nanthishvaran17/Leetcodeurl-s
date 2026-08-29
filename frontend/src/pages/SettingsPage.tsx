@@ -502,12 +502,7 @@ export const SettingsPage: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase">
               Admin System Control Center
             </h1>
-            <p className="text-xs sm:text-sm font-semibold text-gray-300">
-              Institutional Configuration • Automation • Integrity • Recovery • Nandha Engineering College
-            </p>
-            <p className="text-[11px] font-mono text-amber-200 mt-1">
-              Last configuration update: {settings.LAST_UPDATED_AT ? settings.LAST_UPDATED_AT.substring(0, 19).replace('T', ' ') : '2026-08-16 15:00:00'} IST
-            </p>
+
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
