@@ -1934,51 +1934,6 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           {/* Consolidated Action Toolbar */}
           <div className="flex items-center flex-wrap gap-2">
             <button
-              onClick={() => setShowPreviewModal(true)}
-              className="flex items-center space-x-1.5 px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
-              title="Preview Filtered Table"
-            >
-              <Eye className="w-3.5 h-3.5" />
-              <span>Preview</span>
-            </button>
-
-            <button
-              onClick={() => downloadReportFile('excel')}
-              className="flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
-              title="Download Filtered Excel Workbook"
-            >
-              <FileSpreadsheet className="w-3.5 h-3.5" />
-              <span>Excel</span>
-            </button>
-
-            <button
-              onClick={() => downloadReportFile('pdf')}
-              className="flex items-center space-x-1.5 px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
-              title="Download Filtered PDF"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>PDF</span>
-            </button>
-
-            <button
-              onClick={() => downloadReportFile('word')}
-              className="flex items-center space-x-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
-              title="Download Filtered Word Document"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Word</span>
-            </button>
-
-            <button
-              onClick={() => downloadReportFile('zip')}
-              className="flex items-center space-x-1.5 px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
-              title="Download Complete ZIP Package"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>ZIP</span>
-            </button>
-
-            <button
               onClick={() => setShowEmailModal(true)}
               className="flex items-center space-x-1.5 px-3.5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
               title="Send Filtered Report Email"
@@ -1999,6 +1954,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </button>
               {showExportMenu && (
                 <div className="absolute z-50 right-0 mt-2 w-48 bg-white dark:bg-navy-900 rounded-xl shadow-lg border border-gray-200 dark:border-navy-700 overflow-hidden">
+                  <button onClick={() => { setShowPreviewModal(true); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 flex items-center space-x-2 border-b border-gray-100 dark:border-navy-800">
+                    <Eye className="w-4 h-4 text-purple-500" />
+                    <span>Live Preview</span>
+                  </button>
                   <button onClick={() => { downloadReportFile('excel'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 flex items-center space-x-2">
                     <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
                     <span>Export as Excel</span>
