@@ -378,35 +378,38 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     || lcValidation.status === 'validating';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in font-sans pb-12">
 
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-lg border border-brand-500/30">
+      <div className="relative overflow-hidden rounded-3xl bg-surface-elevated text-text-primary p-6 md:p-8 shadow-sm border border-border">
+        {/* Decorative gradient overlay */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
+
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[11px] font-black tracking-wider uppercase">
-              <UserPlus className="w-3.5 h-3.5 text-amber-400" />
-              <span>STUDENT REPOSITORY • {students.length} ENROLLED STUDENTS</span>
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-black tracking-wider uppercase">
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>STUDENT DIRECTORY • {students.length} ENROLLED</span>
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-display font-extrabold tracking-tight text-white mt-1">
-              Student Master <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Management Registry</span>
+            <h1 className="text-3xl md:text-4xl font-display font-black tracking-tight mt-1">
+              Student Master <span className="text-primary">Directory</span>
             </h1>
 
-            <p className="text-sm text-gray-300 font-bold tracking-wide leading-relaxed">
-              Manage student profiles across all departments (CSE, IT, ECE, EEE, MECH, CIVIL, AIML, AIDS, Cyber Security &amp; IoT), LeetCode profile links, and live sync status
+            <p className="text-sm text-text-secondary font-medium tracking-wide leading-relaxed">
+              Manage student profiles, LeetCode connectivity, and live synchronization across all institutional departments.
             </p>
           </div>
 
-          <div className="flex items-center space-x-2.5 flex-wrap gap-2">
+          <div className="flex items-center space-x-3 flex-wrap gap-2">
             {/* View Mode Toggle */}
-            <div className="flex items-center space-x-1 p-1 bg-slate-800/60 rounded-xl border border-slate-700/50">
+            <div className="flex items-center space-x-1 p-1 bg-secondary rounded-xl border border-border">
               <button
                 onClick={() => setViewMode('table')}
                 className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   viewMode === 'table'
-                    ? 'bg-slate-700 text-brand-300 shadow-sm'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-surface text-primary shadow-sm'
+                    : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
                 <List className="w-3.5 h-3.5" />
@@ -416,26 +419,26 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                 onClick={() => setViewMode('cards')}
                 className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   viewMode === 'cards'
-                    ? 'bg-slate-700 text-brand-300 shadow-sm'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-surface text-primary shadow-sm'
+                    : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
-                <span>3D Cards</span>
+                <span>Cards</span>
               </button>
             </div>
 
             <button
               onClick={onOpenImport}
-              className="px-4 py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/50 text-slate-300 font-bold text-xs flex items-center space-x-2 shadow-sm transition-colors cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-secondary hover:bg-border border border-border text-text-primary font-bold text-xs flex items-center space-x-2 shadow-sm transition-colors cursor-pointer"
             >
-              <UploadCloud className="w-4 h-4 text-emerald-400" />
-              <span>Bulk Excel Import</span>
+              <UploadCloud className="w-4 h-4 text-primary" />
+              <span>Bulk Import</span>
             </button>
 
             <button
               onClick={handleOpenAddModal}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-bold text-xs shadow-lg shadow-brand-600/30 flex items-center space-x-2 transition-all cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs shadow-md shadow-primary/20 flex items-center space-x-2 transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Add Single Student</span>

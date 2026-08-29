@@ -1400,7 +1400,7 @@ async def trigger_session_finalize(
 def delete_weekly_session(
     session_id: int, 
     db: Session = Depends(get_db),
-    current_user = Depends(require_security_access(resource_name="Delete Contest Session", required_roles=["admin", "super admin"]))
+    current_user = Depends(require_security_access(resource_name="Delete Contest Session", required_roles=["admin", "super admin", "system admin", "admin (system admin)"]))
 ):
     """
     Permanently deletes a weekly session and all its associated data.

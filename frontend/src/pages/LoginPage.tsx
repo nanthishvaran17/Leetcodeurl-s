@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import '../styles/login.css';
 import {
   Lock, Mail, User, Eye, EyeOff, CheckCircle2, AlertCircle,
@@ -18,6 +19,12 @@ interface LoginPageProps {
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
   const { login } = useAuth();
+  
+  const pageVariants: Variants = {
+    initial: { opacity: 0, x: -15, filter: 'blur(4px)' },
+    animate: { opacity: 1, x: 0, filter: 'blur(0px)', transition: { duration: 0.3, ease: 'easeOut' } },
+    exit: { opacity: 0, x: 15, filter: 'blur(4px)', transition: { duration: 0.2, ease: 'easeIn' } }
+  };
 
   // Auth Mode: 'password' | 'otp'
   const [authMode, setAuthMode] = useState<'password' | 'otp'>('password');
@@ -298,11 +305,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
       setError('Please enter a valid registered institutional email.');
       return;
     }
-    if (!cleanDob) {
+    const dobParts = cleanDob.split('/');
+    if (dobParts.length !== 3 || dobParts[2].length !== 4) {
       triggerShake();
-      setError('Please enter your registered Date of Birth.');
+      setError('Please enter a valid Date of Birth (DD/MM/YYYY).');
       return;
     }
+    const backendDob = `${dobParts[2]}-${dobParts[1]}-${dobParts[0]}`;
 
     setLoading(true);
     setAuthStatusText('Verifying identity & dispatching OTP...');
@@ -310,7 +319,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
       await api.post('/auth/forgot-password/request', {
         institutional_id: cleanInstId,
         email: cleanEmail,
-        date_of_birth: cleanDob
+        date_of_birth: backendDob
       });
       setSuccessMsg(`Identity verified! Reset code sent to ${maskEmail(cleanEmail)}.`);
       setForgotStep('verify_otp');
@@ -465,22 +474,39 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
             </p>
           </div>
 
-          {error && (
-            <div className="error-banner">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              <span>{error}</span>
-            </div>
-          )}
-          
-          {successMsg && (
-            <div className="error-banner" style={{ backgroundColor: 'rgba(62,122,92,0.1)', borderColor: 'rgba(62,122,92,0.3)', color: 'var(--verify-green)' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              <span>{successMsg}</span>
-            </div>
-          )}
+          <AnimatePresence mode="wait">
+            {error && (
+              <motion.div 
+                key="error"
+                initial={{ opacity: 0, height: 0, marginBottom: 0 }} 
+                animate={{ opacity: 1, height: 'auto', marginBottom: 16 }} 
+                exit={{ opacity: 0, height: 0, marginBottom: 0 }} 
+                className="error-banner"
+                style={{ overflow: 'hidden' }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span>{error}</span>
+              </motion.div>
+            )}
+            
+            {successMsg && (
+              <motion.div 
+                key="success"
+                initial={{ opacity: 0, height: 0, marginBottom: 0 }} 
+                animate={{ opacity: 1, height: 'auto', marginBottom: 16 }} 
+                exit={{ opacity: 0, height: 0, marginBottom: 0 }} 
+                className="error-banner" 
+                style={{ backgroundColor: 'rgba(62,122,92,0.1)', borderColor: 'rgba(62,122,92,0.3)', color: 'var(--verify-green)', overflow: 'hidden' }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                <span>{successMsg}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
+          <AnimatePresence mode="wait">
           {currentView === 'login' && (
-            <>
+            <motion.div key="login" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="view-wrapper">
               <div className="tabs">
                 <div className="tab-highlight" style={{ transform: authMode === 'otp' ? 'translateX(100%)' : 'translateX(0)' }}></div>
                 <button type="button" className={authMode === 'password' ? 'active' : ''} onClick={() => { setAuthMode('password'); setError(''); }}>Password</button>
@@ -584,11 +610,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
               </button>
 
               <div className="footer-links"><button type="button" onClick={() => { setCurrentView('help'); setError(''); }}>Need help accessing your account?</button></div>
-            </>
+            </motion.div>
           )}
 
           {currentView === 'forgot_password' && (
-            <>
+            <motion.div key="forgot" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="view-wrapper">
               {/* Step Indicator */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '20px' }}>
                 {(['dob', 'verify_otp', 'reset_password', 'success'] as const).map((step, i) => {
@@ -604,7 +630,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                         color: done || active ? '#fff' : 'var(--text-muted)',
                         border: `1.5px solid ${done ? 'var(--verify-green)' : active ? 'var(--brass-bright)' : 'var(--field-border)'}`,
                         transition: 'all 0.25s'
-                      }}>
+                      }}
+                      className={active ? 'step-indicator-active' : ''}
+                      >
                         {done ? '✓' : i + 1}
                       </div>
                       {i < 3 && <div style={{ flex: 1, height: 2, background: done ? 'var(--verify-green)' : 'var(--field-border)', margin: '0 4px', transition: 'all 0.3s' }} />}
@@ -643,14 +671,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                     />
                   </div>
                   <div className="field">
-                    <label>Date of Birth</label>
+                    <label>Date of Birth (DD/MM/YYYY)</label>
                     <input
-                      type="date"
+                      type="text"
                       value={forgotDob}
-                      onChange={(e) => setForgotDob(e.target.value)}
+                      onChange={(e) => {
+                        let val = e.target.value.replace(/\D/g, '');
+                        if (val.length >= 3 && val.length <= 4) val = val.slice(0, 2) + '/' + val.slice(2);
+                        else if (val.length >= 5) val = val.slice(0, 2) + '/' + val.slice(2, 4) + '/' + val.slice(4, 8);
+                        setForgotDob(val);
+                      }}
+                      placeholder="DD/MM/YYYY"
+                      maxLength={10}
                       required
                       disabled={loading}
-                      style={{ fontFamily: 'Inter' }}
+                      style={{ fontFamily: 'Inter', textAlign: 'center', letterSpacing: '2px' }}
                     />
                   </div>
                   <div className="row-between" style={{ marginBottom: '4px' }}>
@@ -790,11 +825,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                   </button>
                 </div>
               )}
-            </>
+            </motion.div>
           )}
 
           {currentView === 'help' && (
-            <>
+            <motion.div key="help" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="view-wrapper">
               <div className="help-list">
                 <div className="help-list-item">
                   <div className="help-list-title">OTP Delivery Questions</div>
@@ -812,8 +847,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
               <button type="button" className="google-btn" style={{ marginTop: '24px' }} onClick={() => setCurrentView('login')}>
                 Return to Sign In
               </button>
-            </>
+            </motion.div>
           )}
+          </AnimatePresence>
 
           <div className="stamp">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>

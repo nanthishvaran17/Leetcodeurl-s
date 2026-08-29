@@ -86,14 +86,21 @@ export const StaffManagement: React.FC = () => {
     institutional_id: '',
     username: '',
     email: '',
+    phone_number: '',
     password: '',
+    confirm_password: '',
     role: 'Faculty',
     department_id: '1',
     academic_year: '',
     mentoring_role: '',
     date_of_birth: '',
-    require_password_change: false
+    require_password_change: true,
+    reporting_manager: '',
+    account_status: 'Active',
+    consent_checked: false
   });
+  const [idProofFile, setIdProofFile] = useState<File | null>(null);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const [passwordStrengthError, setPasswordStrengthError] = useState('');
 
@@ -235,35 +242,109 @@ export const StaffManagement: React.FC = () => {
       institutional_id: '',
       username: '',
       email: '',
+      phone_number: '',
       password: '',
+      confirm_password: '',
       role: 'Faculty',
       department_id: String(departments[0]?.id || 1),
       academic_year: '',
       mentoring_role: '',
       date_of_birth: '',
-      require_password_change: false
+      require_password_change: true,
+      reporting_manager: '',
+      account_status: 'Active',
+      consent_checked: false
     });
+    setIdProofFile(null);
+    setFormErrors({});
     setDobDisplay('');
     setCreationSuccess(null);
     setPasswordStrengthError('');
+  };
+
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+
+  const handleCloseModal = () => {
+    const isFormDirty = formData.username || formData.email || formData.phone_number || formData.institutional_id;
+    if (isFormDirty) {
+      setShowCancelConfirm(true);
+      return;
+    }
+    setShowModal(false);
+    resetForm();
   };
 
   const [showConfirmCreate, setShowConfirmCreate] = useState(false);
 
   const handleCreateStaff = (e?: React.FormEvent | React.MouseEvent) => {
     if (e && e.preventDefault) e.preventDefault();
-    if (!formData.username || !formData.username.trim()) {
-      notify.error('Please enter a username.', '', { category: 'ADMIN' });
+    const errors: Record<string, string> = {};
+
+    // Username validation
+    if (!formData.username.trim()) {
+      errors.username = 'Username is required.';
+    } else if (!/^[a-zA-Z0-9_.]+$/.test(formData.username)) {
+      errors.username = 'Only letters, numbers, underscores, and dots are allowed.';
+    } else if (staffList.some(s => s.username === formData.username.trim())) {
+      errors.username = 'Username is already taken.';
+    }
+
+    // Email validation
+    if (!formData.email.trim()) {
+      errors.email = 'Official Email is required.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      errors.email = 'Please enter a valid email address.';
+    }
+
+    // Phone validation
+    if (!formData.phone_number.trim()) {
+      errors.phone_number = 'Phone Number is required.';
+    } else if (!/^\+?[0-9\s-]{10,15}$/.test(formData.phone_number.trim())) {
+      errors.phone_number = 'Invalid phone number format.';
+    }
+
+    // Institutional ID validation
+    if (formData.institutional_id && staffList.some(s => s.institutional_id === formData.institutional_id.trim())) {
+      errors.institutional_id = 'Institutional ID is already in use.';
+    }
+
+    // Department & Academic Year validation for non-Admins
+    if (formData.role !== 'Admin' && formData.role !== 'Super Admin') {
+      if (!formData.department_id || formData.department_id === '0') {
+        errors.department_id = 'Department is required for this role.';
+      }
+      if (!formData.academic_year) {
+        errors.academic_year = 'Academic Year Cohort is required.';
+      }
+    }
+
+    // Date of Birth validation
+    if (!formData.date_of_birth) {
+      errors.date_of_birth = 'Date of Birth is required.';
+    }
+
+    // Password Validation (if manually provided)
+    if (formData.password) {
+      const pwd = formData.password;
+      if (pwd.length < 8 || !/[A-Z]/.test(pwd) || !/[0-9]/.test(pwd) || !/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) {
+        errors.password = 'Min 8 chars, 1 uppercase, 1 number, 1 special char.';
+      } else if (formData.password !== formData.confirm_password) {
+        errors.confirm_password = 'Passwords do not match.';
+      }
+    }
+
+    // Consent
+    if (!formData.consent_checked) {
+      errors.consent_checked = 'Consent acknowledgment is required.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      notify.error('Please fix the errors in the form before submitting.', '', { category: 'ADMIN' });
       return;
     }
-    if (!formData.email || !formData.email.trim()) {
-      notify.error('Please enter an official email.', '', { category: 'ADMIN' });
-      return;
-    }
-    if (!formData.email.includes('@')) {
-      notify.error('Please enter a valid official email address.', '', { category: 'ADMIN' });
-      return;
-    }
+
+    setFormErrors({});
     setShowConfirmCreate(true);
   };
 
@@ -280,13 +361,15 @@ export const StaffManagement: React.FC = () => {
         institutional_id: formData.institutional_id?.trim() || undefined,
         username: formData.username.trim(),
         email: formData.email.trim().toLowerCase(),
-        password: formData.password?.trim() || 'Staff@123456!',
+        phone_number: formData.phone_number.trim(),
+        password: formData.password?.trim() || undefined,
         role: formData.role || 'Faculty',
         department_id: deptIdToSend,
         academic_year: formData.academic_year || undefined,
         mentoring_role: formData.mentoring_role || undefined,
         date_of_birth: formData.date_of_birth || undefined,
-        require_password_change: formData.require_password_change ?? false
+        is_active: formData.account_status === 'Active',
+        require_password_change: formData.require_password_change ?? true
       };
 
       const res = await api.post('/admin/staff', payload);
@@ -591,8 +674,9 @@ export const StaffManagement: React.FC = () => {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in overflow-y-auto">
-          <div className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl border border-gray-200 dark:border-navy-700 my-8">
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-md animate-fade-in overflow-y-auto">
+          <div className="min-h-full flex items-center justify-center p-4 py-8">
+          <div className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl border border-gray-200 dark:border-navy-700">
             <div className="p-6 border-b border-gray-100 dark:border-navy-800 flex justify-between items-center bg-gray-50/50 dark:bg-navy-800/50">
               <h3 className="text-xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3">
                 <Shield className="w-6 h-6 text-brand-500" />
@@ -600,7 +684,7 @@ export const StaffManagement: React.FC = () => {
               </h3>
               <button
                 type="button"
-                onClick={() => { setShowModal(false); resetForm(); }}
+                onClick={handleCloseModal}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer p-1"
               >
                 <UserX className="w-5 h-5" />
@@ -637,59 +721,80 @@ export const StaffManagement: React.FC = () => {
                   />
 
                   {['Staff', 'Faculty', 'HOD'].includes(formData.role) ? (
-                    <CustomDropdown
-                      id="staff-dept-select"
-                      label="Department *"
-                      labelClassName="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center justify-between h-5 mb-1.5"
-                      options={[
-                        {
-                          value: '0',
-                          label: 'All Departments',
-                          badge: 'ALL',
-                          badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-                          icon: Building2
-                        },
-                        ...(departments.length > 0 ? departments : DEFAULT_DEPARTMENTS).map(d => ({
-                          value: String(d.id),
-                          label: d.name,
-                          badge: d.code || 'DEPT',
-                          badgeColor: d.code === 'CSE(CS)'
-                            ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
-                            : 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
-                          icon: Building2
-                        }))
-                      ]}
-                      value={formData.department_id}
-                      onChange={(val) => handleDeptChange(val)}
-                      icon={Building2}
-                      align="left"
-                    />
+                    <div className="space-y-1.5">
+                      <CustomDropdown
+                        id="staff-dept-select"
+                        label="Department *"
+                        labelClassName="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center justify-between h-5 mb-1.5"
+                        options={[
+                          {
+                            value: '0',
+                            label: 'All Departments',
+                            badge: 'ALL',
+                            badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+                            icon: Building2
+                          },
+                          ...(departments.length > 0 ? departments : DEFAULT_DEPARTMENTS).map(d => ({
+                            value: String(d.id),
+                            label: d.name,
+                            badge: d.code || 'DEPT',
+                            badgeColor: d.code === 'CSE(CS)'
+                              ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
+                              : 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
+                            icon: Building2
+                          }))
+                        ]}
+                        value={formData.department_id}
+                        onChange={(val) => {
+                          handleDeptChange(val);
+                          setFormErrors(prev => ({ ...prev, department_id: '' }));
+                        }}
+                        icon={Building2}
+                        align="left"
+                      />
+                      {formErrors.department_id && <p className="text-[10px] text-rose-500 font-medium animate-fade-in">{formErrors.department_id}</p>}
+                    </div>
                   ) : (
                     <div className="space-y-1.5">
                       <div className="h-5 mb-1.5 text-xs font-bold text-gray-400 dark:text-gray-500">Department Scope</div>
-                      <div className="w-full h-11 px-4 flex items-center rounded-2xl border border-dashed border-gray-300 dark:border-navy-700 text-xs font-semibold text-gray-400 bg-gray-50/50 dark:bg-navy-950/40">
-                        Institution-wide System Access
+                      <div className="w-full h-11 px-4 flex items-center justify-between rounded-2xl border border-dashed border-gray-300 dark:border-navy-700 text-xs font-semibold text-gray-400 bg-gray-50/50 dark:bg-navy-950/40 cursor-not-allowed">
+                        <span>Institution-wide System Access</span>
+                        <div className="p-1 rounded bg-gray-200/50 dark:bg-navy-800 text-gray-500"><Shield className="w-3.5 h-3.5" /></div>
                       </div>
                     </div>
                   )}
 
-                  {['Staff', 'Faculty', 'HOD'].includes(formData.role) && (
-                    <CustomDropdown
-                      id="staff-year-select"
-                      label="Academic Year Cohort"
-                      labelClassName="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center justify-between h-5 mb-1.5"
-                      options={[
-                        { value: '', label: 'All Academic Years ', badge: 'ALL', icon: GraduationCap },
-                        { value: 'I Year', label: '1st Year (Batch 2030)', badge: 'I Year', icon: GraduationCap },
-                        { value: 'II Year', label: '2nd Year (Batch 2029)', badge: 'II Year', icon: GraduationCap },
-                        { value: 'III Year', label: '3rd Year (Batch 2028)', badge: 'III Year', icon: GraduationCap },
-                        { value: 'IV Year', label: 'Final Year (Batch 2027)', badge: 'IV Year', icon: GraduationCap }
-                      ]}
-                      value={formData.academic_year}
-                      onChange={(val) => setFormData({ ...formData, academic_year: val })}
-                      icon={GraduationCap}
-                      align="left"
-                    />
+                  {['Staff', 'Faculty', 'HOD'].includes(formData.role) ? (
+                    <div className="space-y-1.5">
+                      <CustomDropdown
+                        id="staff-year-select"
+                        label="Academic Year Cohort *"
+                        labelClassName="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center justify-between h-5 mb-1.5"
+                        options={[
+                          { value: '', label: 'Select Academic Year', badge: 'REQ', icon: GraduationCap },
+                          { value: 'I Year', label: '1st Year (Batch 2030)', badge: 'I Year', icon: GraduationCap },
+                          { value: 'II Year', label: '2nd Year (Batch 2029)', badge: 'II Year', icon: GraduationCap },
+                          { value: 'III Year', label: '3rd Year (Batch 2028)', badge: 'III Year', icon: GraduationCap },
+                          { value: 'IV Year', label: 'Final Year (Batch 2027)', badge: 'IV Year', icon: GraduationCap }
+                        ]}
+                        value={formData.academic_year}
+                        onChange={(val) => {
+                          setFormData({ ...formData, academic_year: val });
+                          setFormErrors(prev => ({ ...prev, academic_year: '' }));
+                        }}
+                        icon={GraduationCap}
+                        align="left"
+                      />
+                      {formErrors.academic_year && <p className="text-[10px] text-rose-500 font-medium animate-fade-in">{formErrors.academic_year}</p>}
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <div className="h-5 mb-1.5 text-xs font-bold text-gray-400 dark:text-gray-500">Academic Year Cohort</div>
+                      <div className="w-full h-11 px-4 flex items-center justify-between rounded-2xl border border-dashed border-gray-300 dark:border-navy-700 text-xs font-semibold text-gray-400 bg-gray-50/50 dark:bg-navy-950/40 cursor-not-allowed">
+                        <span>All Academic Years</span>
+                        <div className="p-1 rounded bg-gray-200/50 dark:bg-navy-800 text-gray-500"><Shield className="w-3.5 h-3.5" /></div>
+                      </div>
+                    </div>
                   )}
 
                   {['Staff', 'Faculty'].includes(formData.role) && (
@@ -702,7 +807,9 @@ export const StaffManagement: React.FC = () => {
                         { value: 'Faculty Mentor', label: 'Faculty Mentor', badge: 'MENTOR', icon: Award },
                         { value: 'Class Mentor', label: 'Class Mentor', badge: 'CLASS', icon: Award },
                         { value: 'Department Staff', label: 'Department Staff', badge: 'DEPT', icon: Award },
-                        { value: 'Contest Coordinator', label: 'Contest Coordinator', badge: 'CONTEST', icon: Award }
+                        { value: 'Contest Coordinator', label: 'Contest Coordinator', badge: 'CONTEST', icon: Award },
+                        { value: 'Academic Coordinator', label: 'Academic Coordinator', badge: 'ACAD', icon: Award },
+                        { value: 'Placement Coordinator', label: 'Placement Coordinator', badge: 'PLACE', icon: Award }
                       ]}
                       value={formData.mentoring_role}
                       onChange={(val) => setFormData({ ...formData, mentoring_role: val })}
@@ -732,7 +839,10 @@ export const StaffManagement: React.FC = () => {
                       </label>
                       <button
                         type="button"
-                        onClick={() => setFormData({ ...formData, institutional_id: autoGenerateInstId(formData.department_id, formData.role) })}
+                        onClick={() => {
+                          setFormData({ ...formData, institutional_id: autoGenerateInstId(formData.department_id, formData.role) });
+                          setFormErrors(prev => ({ ...prev, institutional_id: '' }));
+                        }}
                         className="inline-flex items-center space-x-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 px-2 py-0.5 rounded-md transition-all cursor-pointer"
                       >
                         <Sparkles className="w-3 h-3" />
@@ -743,10 +853,17 @@ export const StaffManagement: React.FC = () => {
                       type="text"
                       placeholder="e.g. NEC-CSECS-FAC-001 or custom"
                       value={formData.institutional_id}
-                      onChange={(e) => setFormData({ ...formData, institutional_id: e.target.value })}
-                      className="w-full h-11 px-3.5 rounded-2xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-mono font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm transition-all"
+                      onChange={(e) => {
+                        setFormData({ ...formData, institutional_id: e.target.value });
+                        setFormErrors(prev => ({ ...prev, institutional_id: '' }));
+                      }}
+                      className={`w-full h-11 px-3.5 rounded-2xl border ${formErrors.institutional_id ? 'border-rose-500 bg-white dark:bg-navy-950' : 'border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950'} text-xs font-mono font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm transition-all`}
                     />
-                    <p className="text-[10px] text-gray-400">Flexible custom ID or auto-generated by Department.</p>
+                    {formErrors.institutional_id ? (
+                      <p className="text-[10px] text-rose-500 font-medium animate-fade-in">{formErrors.institutional_id}</p>
+                    ) : (
+                      <p className="text-[10px] text-gray-400">Flexible custom ID or auto-generated by Department.</p>
+                    )}
                   </div>
 
                   {/* Username */}
@@ -762,10 +879,17 @@ export const StaffManagement: React.FC = () => {
                       placeholder="e.g. jdoe_staff"
                       required
                       value={formData.username}
-                      onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                      className="w-full h-11 px-3.5 rounded-2xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm transition-all"
+                      onChange={(e) => {
+                        setFormData({ ...formData, username: e.target.value });
+                        setFormErrors(prev => ({ ...prev, username: '' }));
+                      }}
+                      className={`w-full h-11 px-3.5 rounded-2xl border ${formErrors.username ? 'border-rose-500 bg-white dark:bg-navy-950' : 'border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950'} text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm transition-all`}
                     />
-                    <p className="text-[10px] text-gray-400">Used for portal authentication and mentions.</p>
+                    {formErrors.username ? (
+                      <p className="text-[10px] text-rose-500 font-medium animate-fade-in">{formErrors.username}</p>
+                    ) : (
+                      <p className="text-[10px] text-gray-400">Used for portal authentication and mentions.</p>
+                    )}
                   </div>
 
                   {/* Email */}
@@ -778,13 +902,46 @@ export const StaffManagement: React.FC = () => {
                     </div>
                     <input
                       type="email"
-                      placeholder="faculty@nandha.edu.in"
+                      placeholder="name@nandhaengg.org or personal"
                       required
                       value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full h-11 px-3.5 rounded-2xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm transition-all"
+                      onChange={(e) => {
+                        setFormData({ ...formData, email: e.target.value });
+                        setFormErrors(prev => ({ ...prev, email: '' }));
+                      }}
+                      className={`w-full h-11 px-3.5 rounded-2xl border ${formErrors.email ? 'border-rose-500 bg-white dark:bg-navy-950' : 'border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950'} text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm transition-all`}
                     />
-                    <p className="text-[10px] text-gray-400">Official institutional domain email for OTPs.</p>
+                    {formErrors.email ? (
+                      <p className="text-[10px] text-rose-500 font-medium animate-fade-in">{formErrors.email}</p>
+                    ) : (
+                      <p className="text-[10px] text-gray-400">Institutional or personal email for comms.</p>
+                    )}
+                  </div>
+
+                  {/* Phone Number */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between h-5 mb-1.5">
+                      <label className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center space-x-1.5">
+                        <Mail className="w-3.5 h-3.5 text-indigo-500" />
+                        <span>Phone Number <span className="text-rose-500">*</span></span>
+                      </label>
+                    </div>
+                    <input
+                      type="tel"
+                      placeholder="+91 9876543210"
+                      required
+                      value={formData.phone_number}
+                      onChange={(e) => {
+                        setFormData({ ...formData, phone_number: e.target.value });
+                        setFormErrors(prev => ({ ...prev, phone_number: '' }));
+                      }}
+                      className={`w-full h-11 px-3.5 rounded-2xl border ${formErrors.phone_number ? 'border-rose-500 bg-white dark:bg-navy-950' : 'border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950'} text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm transition-all`}
+                    />
+                    {formErrors.phone_number ? (
+                      <p className="text-[10px] text-rose-500 font-medium animate-fade-in">{formErrors.phone_number}</p>
+                    ) : (
+                      <p className="text-[10px] text-gray-400">Required for 2FA or urgent contact.</p>
+                    )}
                   </div>
 
                   {/* Date of Birth: Direct Text Input */}
@@ -818,11 +975,38 @@ export const StaffManagement: React.FC = () => {
                         placeholder="DD/MM/YYYY (e.g. 15/08/1990)"
                         maxLength={10}
                         value={dobDisplay}
-                        onChange={(e) => handleDobInput(e.target.value)}
-                        className="w-full h-11 px-3.5 rounded-2xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-mono font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm transition-all"
+                        onChange={(e) => {
+                          handleDobInput(e.target.value);
+                          setFormErrors(prev => ({ ...prev, date_of_birth: '' }));
+                        }}
+                        className={`w-full h-11 px-3.5 rounded-2xl border ${formErrors.date_of_birth ? 'border-rose-500 bg-white dark:bg-navy-950' : 'border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950'} text-xs font-mono font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm transition-all`}
                       />
                     </div>
-                    <p className="text-[10px] text-gray-400">Type date directly in DD/MM/YYYY format.</p>
+                    {formErrors.date_of_birth ? (
+                      <p className="text-[10px] text-rose-500 font-medium animate-fade-in">{formErrors.date_of_birth}</p>
+                    ) : (
+                      <p className="text-[10px] text-gray-400">Type date directly in DD/MM/YYYY format.</p>
+                    )}
+                  </div>
+
+                  {/* ID Proof */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between h-5 mb-1.5">
+                      <label className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center space-x-1.5">
+                        <CheckCircle className="w-3.5 h-3.5 text-blue-500" />
+                        <span>Staff ID / Employee Proof</span>
+                      </label>
+                    </div>
+                    <div className="w-full h-11 px-3.5 flex items-center rounded-2xl border border-dashed border-gray-300 dark:border-navy-700 bg-gray-50/50 dark:bg-navy-950/40 text-xs font-bold text-gray-900 dark:text-white transition-all overflow-hidden relative cursor-pointer hover:bg-gray-100 dark:hover:bg-navy-900">
+                       <input 
+                         type="file" 
+                         accept=".pdf,.jpg,.png" 
+                         onChange={(e) => setIdProofFile(e.target.files?.[0] || null)}
+                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                       />
+                       <span className="text-gray-500 truncate">{idProofFile ? idProofFile.name : 'Choose File (PDF/Image)'}</span>
+                    </div>
+                    <p className="text-[10px] text-gray-400">Optional for institutional verification.</p>
                   </div>
                 </div>
               </div>
@@ -837,55 +1021,128 @@ export const StaffManagement: React.FC = () => {
                     </h4>
                   </div>
                   <span className="text-[10px] text-amber-600 dark:text-amber-400 font-mono font-bold bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
-                    Default: Staff@123456!
+                    Auto-Generate Default
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-end">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
                   {/* Password Input */}
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center space-x-1">
                       <Key className="w-3.5 h-3.5 text-amber-500" />
-                      <span>Initial Password</span>
+                      <span>Custom Password (Optional)</span>
                     </label>
                     <input
-                      type="text"
-                      placeholder="Staff@123456!"
+                      type="password"
+                      placeholder="Leave blank to auto-generate"
                       value={formData.password}
                       onChange={(e) => {
                         const pwd = e.target.value;
                         setFormData({ ...formData, password: pwd });
-                        if (pwd && (pwd.length < 12 || !/[A-Z]/.test(pwd) || !/[a-z]/.test(pwd) || !/[0-9]/.test(pwd) || !/[!@#$%^&*(),.?":{}|<>]/.test(pwd))) {
-                          setPasswordStrengthError('Min 12 chars (A-Z, a-z, 0-9, symbol)');
-                        } else {
-                          setPasswordStrengthError('');
-                        }
+                        setFormErrors(prev => ({ ...prev, password: '' }));
                       }}
-                      className="w-full h-11 px-3.5 rounded-2xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-mono font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none shadow-sm transition-all"
+                      className={`w-full h-11 px-3.5 rounded-2xl border ${formErrors.password ? 'border-rose-500 bg-white dark:bg-navy-950' : 'border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950'} text-xs font-mono font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none shadow-sm transition-all`}
                     />
-                    {passwordStrengthError && <p className="text-[10px] text-rose-500 font-medium">{passwordStrengthError}</p>}
+                    {formErrors.password ? (
+                      <p className="text-[10px] text-rose-500 font-medium animate-fade-in">{formErrors.password}</p>
+                    ) : (
+                      <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">A temporary password will be generated and sent to the registered official email if left blank.</p>
+                    )}
+                  </div>
+
+                  {/* Confirm Password Input */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center space-x-1">
+                      <Key className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Confirm Custom Password</span>
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="Confirm your password"
+                      value={formData.confirm_password}
+                      disabled={!formData.password}
+                      onChange={(e) => {
+                        setFormData({ ...formData, confirm_password: e.target.value });
+                        setFormErrors(prev => ({ ...prev, confirm_password: '' }));
+                      }}
+                      className={`w-full h-11 px-3.5 rounded-2xl border ${formErrors.confirm_password ? 'border-rose-500 bg-white dark:bg-navy-950' : 'border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950'} text-xs font-mono font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none shadow-sm transition-all disabled:opacity-50 disabled:bg-gray-100 disabled:cursor-not-allowed`}
+                    />
+                    {formErrors.confirm_password && <p className="text-[10px] text-rose-500 font-medium animate-fade-in">{formErrors.confirm_password}</p>}
                   </div>
 
                   {/* Require change on first login */}
-                  <label className="flex items-center gap-2.5 p-3 h-11 bg-white dark:bg-navy-950 border border-gray-200 dark:border-navy-800 rounded-2xl cursor-pointer hover:bg-gray-50 dark:hover:bg-navy-900 transition-colors shadow-sm">
+                  <label className="flex items-center gap-2.5 p-3 h-11 bg-gray-50 dark:bg-navy-900 border border-gray-200 dark:border-navy-800 rounded-2xl cursor-not-allowed opacity-80 shadow-sm md:col-span-2">
                     <input
                       type="checkbox"
-                      checked={formData.require_password_change}
-                      onChange={(e) => setFormData({ ...formData, require_password_change: e.target.checked })}
-                      className="w-4 h-4 text-amber-600 rounded border-gray-300 focus:ring-amber-500 cursor-pointer"
+                      checked={true}
+                      disabled
+                      className="w-4 h-4 text-amber-600 rounded border-gray-300 cursor-not-allowed"
                     />
                     <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
-                      Force reset on 1st login
+                      Force reset on 1st login (Mandatory)
                     </span>
                   </label>
                 </div>
+              </div>
+
+              {/* SECTION 4: ADMINISTRATION */}
+              <div className="p-4 rounded-2xl bg-gray-50/80 dark:bg-navy-900/40 border border-gray-200/50 dark:border-navy-700/50 shadow-sm space-y-4">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <CustomDropdown
+                      id="reporting-manager-select"
+                      label="Reporting Manager / HOD"
+                      labelClassName="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center justify-between h-5 mb-1.5"
+                      options={[
+                        { value: '', label: 'None / Super Admin', badge: 'ROOT' },
+                        ...staffList.filter(s => ['HOD', 'Admin', 'Super Admin'].includes(s.role)).map(s => ({
+                           value: String(s.id),
+                           label: s.username,
+                           badge: s.role
+                        }))
+                      ]}
+                      value={formData.reporting_manager}
+                      onChange={(val) => setFormData({ ...formData, reporting_manager: val })}
+                      align="left"
+                    />
+                    <CustomDropdown
+                      id="account-status-select"
+                      label="Account Status"
+                      labelClassName="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center justify-between h-5 mb-1.5"
+                      options={[
+                        { value: 'Active', label: 'Active', badge: 'ON', badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
+                        { value: 'Inactive', label: 'Inactive', badge: 'OFF', badgeColor: 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20' },
+                        { value: 'Suspended', label: 'Suspended', badge: 'BAN', badgeColor: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20' }
+                      ]}
+                      value={formData.account_status}
+                      onChange={(val) => setFormData({ ...formData, account_status: val })}
+                      align="left"
+                    />
+                 </div>
+                 <label className="flex items-start gap-2.5 p-3 rounded-2xl cursor-pointer hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-navy-700">
+                    <input
+                      type="checkbox"
+                      checked={formData.consent_checked}
+                      onChange={(e) => {
+                        setFormData({ ...formData, consent_checked: e.target.checked });
+                        setFormErrors(prev => ({ ...prev, consent_checked: '' }));
+                      }}
+                      className="w-4 h-4 mt-0.5 text-brand-600 rounded border-gray-300 focus:ring-brand-500 cursor-pointer"
+                    />
+                    <div className="space-y-0.5">
+                      <span className={`text-xs font-bold block ${formErrors.consent_checked ? 'text-rose-500' : 'text-gray-700 dark:text-gray-300'}`}>
+                        Consent & Terms Acknowledgment <span className="text-rose-500">*</span>
+                      </span>
+                      <p className="text-[10px] text-gray-500">I confirm this staff member has consented to data collection as per institution policy.</p>
+                      {formErrors.consent_checked && <p className="text-[10px] text-rose-500 font-medium animate-fade-in">{formErrors.consent_checked}</p>}
+                    </div>
+                  </label>
               </div>
 
               {/* MODAL FOOTER */}
               <div className="pt-2 flex items-center justify-end space-x-3 border-t border-gray-100 dark:border-navy-800">
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  onClick={handleCloseModal}
                   className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-800 transition-all cursor-pointer"
                 >
                   Cancel
@@ -910,6 +1167,38 @@ export const StaffManagement: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Cancel Confirmation Dialog */}
+      {showCancelConfirm && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
+          <div className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-gray-200 dark:border-navy-700 p-6 text-center space-y-5">
+            <div className="w-14 h-14 bg-rose-100 dark:bg-rose-500/20 text-rose-500 rounded-2xl flex items-center justify-center mx-auto">
+              <UserX className="w-7 h-7" />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-gray-900 dark:text-white mb-1">Discard Changes?</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">You have unsaved changes in this form. Are you sure you want to discard them? This cannot be undone.</p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowCancelConfirm(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-navy-800 transition-all cursor-pointer"
+              >
+                Keep Editing
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowCancelConfirm(false); setShowModal(false); resetForm(); }}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition-all cursor-pointer shadow-lg shadow-rose-500/30"
+              >
+                Yes, Discard
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1093,7 +1382,7 @@ export const StaffManagement: React.FC = () => {
                   type="email"
                   value={editFormData.email}
                   onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
-                  placeholder="name@nandhaengg.org"
+                  placeholder="name@nandhaengg.org or personal"
                   className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl text-xs font-medium text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500"
                   required
                 />

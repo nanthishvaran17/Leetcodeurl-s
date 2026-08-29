@@ -551,6 +551,8 @@ async def run_full_pipeline(
         if progress_callback and hasattr(progress_callback, "start"):
             progress_callback.start(effective_job_id, total_students)
 
+        from backend.config import settings
+
         timeout_cfg = httpx.Timeout(
             connect=settings.LEETCODE_CONNECT_TIMEOUT, 
             read=settings.LEETCODE_READ_TIMEOUT, 
@@ -559,7 +561,6 @@ async def run_full_pipeline(
         )
         limits_cfg = httpx.Limits(max_keepalive_connections=settings.LEETCODE_MAX_CONCURRENCY, max_connections=settings.LEETCODE_MAX_CONCURRENCY * 2)
 
-        from backend.config import settings
         sem = asyncio.Semaphore(settings.LEETCODE_MAX_CONCURRENCY)
         lock = asyncio.Lock()
 

@@ -304,7 +304,7 @@ def get_faculty_actions_list(
         assigned_ids = db.query(FacultyStudentAssignment.student_id).filter(
             FacultyStudentAssignment.faculty_id == faculty_id,
             FacultyStudentAssignment.is_active == True
-        ).subquery()
+        ).scalar_subquery()
         query = query.filter(FacultyActionQueueItem.student_id.in_(assigned_ids))
 
     if priority and priority.upper() != "ALL":
@@ -438,7 +438,7 @@ def get_faculty_kpis(db: Session, department_id: Optional[int] = None, faculty_i
         assigned_ids = db.query(FacultyStudentAssignment.student_id).filter(
             FacultyStudentAssignment.faculty_id == faculty_id,
             FacultyStudentAssignment.is_active == True
-        ).subquery()
+        ).scalar_subquery()
         query = query.filter(FacultyActionQueueItem.student_id.in_(assigned_ids))
 
     total_actions = query.count()

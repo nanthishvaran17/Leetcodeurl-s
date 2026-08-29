@@ -560,6 +560,8 @@ class CreateStaffRequest(BaseModel):
     academic_year: Optional[str] = None
     mentoring_role: Optional[str] = None
     date_of_birth: Optional[str] = None
+    phone_number: Optional[str] = None
+    is_active: bool = True
     require_password_change: bool = False
 
 class UpdateStaffRequest(BaseModel):
