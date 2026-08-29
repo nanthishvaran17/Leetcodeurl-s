@@ -445,6 +445,7 @@ else:
     REPORTS_DIR = os.path.join(os.path.dirname(__file__), "reports")
 
 try:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     os.makedirs(REPORTS_DIR, exist_ok=True)
     os.makedirs(os.path.join(BASE_DIR, "static"), exist_ok=True)
     

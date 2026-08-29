@@ -153,7 +153,6 @@ def run_db_migrations():
                     "CREATE INDEX IF NOT EXISTS ix_weekly_public_results_session_student ON weekly_public_results (session_id, student_id)",
                     "CREATE INDEX IF NOT EXISTS ix_weekly_virtual_results_session_student ON weekly_virtual_results (session_id, student_id)",
                     "CREATE INDEX IF NOT EXISTS ix_weekly_student_progress_student_week ON weekly_student_progress (student_id, week_number)",
-                    "CREATE INDEX IF NOT EXISTS ix_lc_contest_rating_history_student_name ON leetcode_contest_rating_history (student_id, contest_name)",
                     "CREATE INDEX IF NOT EXISTS ix_students_active_dept ON students (is_active, department_id)",
                 ]
                 for idx_sql in perf_indexes:
