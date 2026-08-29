@@ -33,6 +33,15 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  const [staffSearchQuery, setStaffSearchQuery] = useState<string>('');
  const [staffWorkloadFilter, setStaffWorkloadFilter] = useState<string>('ALL'); // ALL, FULL, PARTIAL, EMPTY, DISABLED
 
+ // Tab state: 'assign' | 'unassign'
+ const [activeTab, setActiveTab] = useState<'assign' | 'unassign'>('assign');
+ // For unassign tab: selected staff to view roster
+ const [unassignStaffId, setUnassignStaffId] = useState<number | ''>('');
+ const [assignedRoster, setAssignedRoster] = useState<any[]>([]);
+ const [rosterLoading, setRosterLoading] = useState<boolean>(false);
+ const [selectedAssignedStudents, setSelectedAssignedStudents] = useState<number[]>([]);
+ const [unassignSearchQuery, setUnassignSearchQuery] = useState<string>('');
+
  // Modals & Confirmation States (Zero Native Alerts/Confirms)
  const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
  const [newUsername, setNewUsername] = useState<string>('');
@@ -106,7 +115,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  if (selectedYear !== 'ALL') params.year_level = selectedYear;
 
  const [staffRes, unassignedRes] = await Promise.all([
- api.get('/admin/staff-list', { params: selectedDept !== 'ALL' ? { dept_id: Number(selectedDept) } : {} }),
+ api.get('/admin/staff-list'),
  api.get('/admin/unassigned-students', { params })
  ]);
  setStaffList(staffRes.data || []);
@@ -141,12 +150,9 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  });
  }, [unassigned, searchQuery, selectedDept, selectedYear]);
 
- // Client-side filtering for Staff List
+ // Client-side filtering for Staff List (NOT affected by student dept filter)
  const filteredStaffList = useMemo(() => {
  return staffList.filter((st: any) => {
- if (selectedDept !== 'ALL' && String(st.department_id) !== String(selectedDept)) {
- return false;
- }
  if (staffSearchQuery.trim()) {
  const q = staffSearchQuery.toLowerCase();
  const matchName = (st.username || '').toLowerCase().includes(q);
@@ -161,7 +167,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
  return true;
  });
- }, [staffList, selectedDept, staffSearchQuery, staffWorkloadFilter]);
+ }, [staffList, staffSearchQuery, staffWorkloadFilter]);
 
  const activeStaffCount = useMemo(() => staffList.filter(s => s.is_active).length, [staffList]);
 
@@ -191,6 +197,57 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  notify.error('Unassign Failed', err.response?.data?.detail || 'Could not unassign student.');
  }
  };
+
+ // ─── Unassign Tab: Load roster for selected staff ──────────────────────────
+ const handleLoadUnassignRoster = async (staffId: number) => {
+ setUnassignStaffId(staffId);
+ setSelectedAssignedStudents([]);
+ setRosterLoading(true);
+ try {
+  const res = await api.get(`/faculty-assignments/faculty/${staffId}`);
+  setAssignedRoster(res.data?.students || []);
+ } catch (err: any) {
+  notify.error('Failed to Load', err.response?.data?.detail || 'Could not load assigned students.');
+  setAssignedRoster([]);
+ } finally {
+  setRosterLoading(false);
+ }
+ };
+
+ const handleBulkUnassign = async () => {
+ if (!unassignStaffId || selectedAssignedStudents.length === 0) {
+  notify.warning('Selection Required', 'Select at least one student to unassign.');
+  return;
+ }
+ try {
+  await api.post('/faculty-assignments/unassign', {
+  faculty_id: Number(unassignStaffId),
+  student_ids: selectedAssignedStudents
+  });
+  notify.success('Students Unassigned', `${selectedAssignedStudents.length} students moved back to unassigned queue.`);
+  setSelectedAssignedStudents([]);
+  handleLoadUnassignRoster(Number(unassignStaffId));
+  fetchAllocationData();
+ } catch (err: any) {
+  notify.error('Unassign Failed', err.response?.data?.detail || 'Failed to unassign students.');
+ }
+ };
+
+ const toggleAssignedStudent = (id: number) => {
+ setSelectedAssignedStudents(prev =>
+  prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+ );
+ };
+
+ const filteredRoster = useMemo(() => {
+ if (!unassignSearchQuery.trim()) return assignedRoster;
+ const q = unassignSearchQuery.toLowerCase();
+ return assignedRoster.filter(s =>
+  (s.name || '').toLowerCase().includes(q) ||
+  (s.reg_no || '').toLowerCase().includes(q) ||
+  (s.username || '').toLowerCase().includes(q)
+ );
+ }, [assignedRoster, unassignSearchQuery]);
 
  // ─── 1. Create Staff Handler ──────────────────────────────────────────────
  const handleCreateStaff = async (e: React.FormEvent) => {
@@ -435,7 +492,6 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  </p>
  </div>
  </div>
- </div>
 
  {/* Staff Roster Search & Filter Controls */}
  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-800/60 border border-slate-200 dark:border-navy-700 flex flex-wrap items-center justify-between gap-3">
@@ -594,171 +650,294 @@ export const AdminStaffAllocationPanel: React.FC = () => {
   </div>
   </div>
 
- {/* ─── 2. UNASSIGNED STUDENTS QUEUE PANEL ─── */}
- <div className="bg-white dark:bg-navy-900 p-6 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-xl space-y-6">
- <div className="flex items-center justify-between flex-wrap gap-4">
- <div>
- <h3 className="text-base font-black text-slate-800 dark:text-slate-100 flex items-center space-x-2">
- <AlertTriangle className="w-5 h-5 text-amber-500" />
- <span>Unassigned Student Allocation Queue ({filteredUnassigned.length}{unassigned.length !== filteredUnassigned.length ? ` of ${unassigned.length}` : ''})</span>
- </h3>
- <p className="text-xs text-slate-500 dark:text-navy-400">
- Students awaiting mentor assignment. Select students to assign in bulk or use Smart Auto-Assign.
- </p>
+
+ {/* ─── 2. ASSIGN / UNASSIGN TAB PANEL ─── */}
+ <div className="bg-white dark:bg-navy-900 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-xl overflow-hidden">
+
+  {/* Tab Header */}
+  <div className="flex items-stretch border-b border-slate-200 dark:border-navy-700">
+   <button
+    onClick={() => setActiveTab('assign')}
+    className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 text-sm font-black transition-all ${
+     activeTab === 'assign'
+      ? 'bg-sky-600 text-white'
+      : 'bg-slate-50 dark:bg-navy-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-700'
+    }`}
+   >
+    <CheckCircle2 className="w-4 h-4" />
+    <span>Assign Students</span>
+    {unassigned.length > 0 && (
+     <span className={`ml-1 px-2 py-0.5 rounded-full text-[10px] font-black ${
+      activeTab === 'assign' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-700'
+     }`}>
+      {unassigned.length} pending
+     </span>
+    )}
+   </button>
+   <button
+    onClick={() => setActiveTab('unassign')}
+    className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 text-sm font-black transition-all ${
+     activeTab === 'unassign'
+      ? 'bg-rose-600 text-white'
+      : 'bg-slate-50 dark:bg-navy-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-700'
+    }`}
+   >
+    <UserMinus className="w-4 h-4" />
+    <span>Unassign Students</span>
+   </button>
+  </div>
+
+  {/* ── ASSIGN TAB ── */}
+  {activeTab === 'assign' && (
+   <div className="p-6 space-y-6">
+    {/* Header row */}
+    <div className="flex items-center justify-between flex-wrap gap-3">
+     <div>
+      <h3 className="text-sm font-black text-slate-800 dark:text-slate-100">
+       Unassigned Queue
+       <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">
+        {filteredUnassigned.length}{unassigned.length !== filteredUnassigned.length ? ` of ${unassigned.length}` : ''}
+       </span>
+      </h3>
+      <p className="text-xs text-slate-500 dark:text-navy-400 mt-0.5">Select students below and assign to a staff mentor</p>
+     </div>
+     <button
+      onClick={triggerSmartAutoAssignModal}
+      disabled={submitting || filteredUnassigned.length === 0}
+      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white text-xs font-bold flex items-center gap-2 shadow-md transition-all cursor-pointer"
+     >
+      <Sparkles className="w-4 h-4" />
+      <span>Smart Auto Assign</span>
+     </button>
+    </div>
+
+    {/* Filters */}
+    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-800/60 border border-slate-200 dark:border-navy-700 flex flex-col md:flex-row items-center gap-3">
+     <div className="relative flex-1 min-w-[200px]">
+      <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+      <input
+       type="text"
+       value={searchQuery}
+       onChange={(e) => setSearchQuery(e.target.value)}
+       placeholder="Search reg no, name, username..."
+       className="w-full pl-10 pr-4 h-10 rounded-xl border border-slate-200 dark:border-navy-600 bg-white dark:bg-navy-900 text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-sky-500 transition-all"
+      />
+     </div>
+     <div className="w-full md:w-[200px]">
+      <CustomDropdown label="Department Filter" options={deptOptions} value={String(selectedDept)} onChange={setSelectedDept} icon={Building2} />
+     </div>
+     <div className="w-full md:w-[180px]">
+      <CustomDropdown label="Academic Year" options={yearOptions} value={selectedYear} onChange={setSelectedYear} icon={Filter} />
+     </div>
+     {isFilterActive && (
+      <button onClick={clearFilters} className="p-2.5 rounded-xl bg-slate-200 dark:bg-navy-700 hover:bg-slate-300 text-slate-600 dark:text-slate-300 transition-all cursor-pointer" title="Clear filters">
+       <X className="w-4 h-4" />
+      </button>
+     )}
+     {/* Assign controls */}
+     <div className="w-full md:w-[220px]">
+      <CustomDropdown label="Assign To Staff" options={staffOptions} value={targetStaffId ? String(targetStaffId) : ''} onChange={(val) => setTargetStaffId(val ? Number(val) : '')} icon={UserPlus} align="right" />
+     </div>
+     <button
+      onClick={handleBulkAssign}
+      disabled={submitting || selectedStudents.length === 0 || !targetStaffId}
+      className="w-full md:w-auto px-5 h-10 rounded-xl bg-sky-600 hover:bg-sky-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-black flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer whitespace-nowrap"
+     >
+      <span>Assign ({selectedStudents.length})</span>
+      <ArrowRight className="w-4 h-4" />
+     </button>
+    </div>
+
+    {/* Table */}
+    <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-700">
+     <table className="w-full text-left text-xs border-collapse">
+      <thead>
+       <tr className="bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-navy-300 font-bold border-b border-slate-200 dark:border-navy-700">
+        <th className="p-3 text-center">
+         <input type="checkbox" checked={selectedStudents.length === filteredUnassigned.length && filteredUnassigned.length > 0} onChange={toggleSelectAll} className="rounded border-slate-300 text-sky-600 cursor-pointer" />
+        </th>
+        <th className="p-3">Register No</th>
+        <th className="p-3">Student Name</th>
+        <th className="p-3">Department</th>
+        <th className="p-3">Year / Class</th>
+        <th className="p-3">LeetCode Handle</th>
+        <th className="p-3 text-right">Total Solved</th>
+       </tr>
+      </thead>
+      <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
+       {loading ? (
+        <tr><td colSpan={7} className="p-6 text-center text-slate-500 animate-pulse">Loading unassigned students...</td></tr>
+       ) : filteredUnassigned.length === 0 ? (
+        <tr><td colSpan={7} className="p-8 text-center">
+         <div className="flex flex-col items-center gap-2">
+          <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">All students are currently assigned to primary mentors! 🎉</p>
+         </div>
+        </td></tr>
+       ) : (
+        filteredUnassigned.map((st: any) => {
+         const isSelected = selectedStudents.includes(st.id);
+         return (
+          <tr key={st.id} onClick={() => toggleSelectStudent(st.id)}
+           className={`cursor-pointer transition-colors ${isSelected ? 'bg-sky-50 dark:bg-sky-950/40' : 'hover:bg-slate-50 dark:hover:bg-navy-800/50'}`}
+          >
+           <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
+            <input type="checkbox" checked={isSelected} onChange={() => toggleSelectStudent(st.id)} className="rounded border-slate-300 text-sky-600 cursor-pointer" />
+           </td>
+           <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{st.reg_no}</td>
+           <td className="p-3 font-extrabold text-slate-900 dark:text-white">{st.name}</td>
+           <td className="p-3 font-bold text-sky-700 dark:text-sky-400">{st.department || 'CSE'}</td>
+           <td className="p-3 text-slate-600 dark:text-navy-300">{st.year_level || '—'}</td>
+           <td className="p-3 text-slate-500 dark:text-navy-400">{st.username || '—'}</td>
+           <td className="p-3 text-right font-bold text-slate-800 dark:text-slate-200">{st.total_solved || 0}</td>
+          </tr>
+         );
+        })
+       )}
+      </tbody>
+     </table>
+    </div>
+   </div>
+  )}
+
+  {/* ── UNASSIGN TAB ── */}
+  {activeTab === 'unassign' && (
+   <div className="p-6 space-y-6">
+    {/* Staff picker */}
+    <div className="flex items-center gap-4 flex-wrap">
+     <div className="flex-1 min-w-[260px]">
+      <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Select Staff Member to Manage</label>
+      <select
+       value={unassignStaffId}
+       onChange={(e) => {
+        const id = Number(e.target.value);
+        if (id) handleLoadUnassignRoster(id);
+        else { setUnassignStaffId(''); setAssignedRoster([]); }
+       }}
+       className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-navy-600 bg-white dark:bg-navy-900 text-sm font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-rose-500 cursor-pointer transition-all"
+      >
+       <option value="">— Pick a Staff Member —</option>
+       {staffList.filter(s => s.is_active).map((st: any) => (
+        <option key={st.id} value={st.id}>
+         {st.username} ({st.assigned_count || 0}/30 students) — {st.department}
+        </option>
+       ))}
+      </select>
+     </div>
+
+     {unassignStaffId && (
+      <>
+       <div className="relative flex-1 min-w-[200px]">
+        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+        <input
+         type="text"
+         value={unassignSearchQuery}
+         onChange={(e) => setUnassignSearchQuery(e.target.value)}
+         placeholder="Search assigned student..."
+         className="w-full pl-10 pr-4 h-11 rounded-xl border border-slate-200 dark:border-navy-600 bg-white dark:bg-navy-900 text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-rose-500 transition-all"
+        />
+       </div>
+       <button
+        onClick={handleBulkUnassign}
+        disabled={selectedAssignedStudents.length === 0}
+        className="h-11 px-6 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-black flex items-center gap-2 shadow-md transition-all cursor-pointer whitespace-nowrap"
+       >
+        <UserMinus className="w-4 h-4" />
+        <span>Unassign ({selectedAssignedStudents.length})</span>
+       </button>
+      </>
+     )}
+    </div>
+
+    {/* Roster Table */}
+    {!unassignStaffId ? (
+     <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-400">
+      <Users className="w-10 h-10 opacity-30" />
+      <p className="text-sm font-bold">Select a staff member above to view their assigned students</p>
+     </div>
+    ) : rosterLoading ? (
+     <div className="flex items-center justify-center py-12 gap-3">
+      <RefreshCw className="w-6 h-6 text-rose-500 animate-spin" />
+      <p className="text-sm font-bold text-slate-500">Loading assigned students...</p>
+     </div>
+    ) : (
+     <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-700">
+      <table className="w-full text-left text-xs border-collapse">
+       <thead>
+        <tr className="bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 font-bold border-b border-rose-100 dark:border-rose-900/50">
+         <th className="p-3 text-center">
+          <input type="checkbox"
+           checked={selectedAssignedStudents.length === filteredRoster.length && filteredRoster.length > 0}
+           onChange={() => {
+            if (selectedAssignedStudents.length === filteredRoster.length) setSelectedAssignedStudents([]);
+            else setSelectedAssignedStudents(filteredRoster.map((s: any) => s.id));
+           }}
+           className="rounded border-rose-300 text-rose-600 cursor-pointer"
+          />
+         </th>
+         <th className="p-3">Register No</th>
+         <th className="p-3">Student Name</th>
+         <th className="p-3">Year</th>
+         <th className="p-3">LeetCode Handle</th>
+         <th className="p-3 text-right">Problems Solved</th>
+         <th className="p-3 text-center">Quick Unassign</th>
+        </tr>
+       </thead>
+       <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
+        {filteredRoster.length === 0 ? (
+         <tr><td colSpan={7} className="p-8 text-center text-slate-400 italic">No students found for this staff member.</td></tr>
+        ) : (
+         filteredRoster.map((s: any) => {
+          const isSel = selectedAssignedStudents.includes(s.id);
+          return (
+           <tr key={s.id} onClick={() => toggleAssignedStudent(s.id)}
+            className={`cursor-pointer transition-colors ${isSel ? 'bg-rose-50 dark:bg-rose-950/30' : 'hover:bg-slate-50 dark:hover:bg-navy-800/50'}`}
+           >
+            <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
+             <input type="checkbox" checked={isSel} onChange={() => toggleAssignedStudent(s.id)} className="rounded border-rose-300 text-rose-600 cursor-pointer" />
+            </td>
+            <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{s.reg_no}</td>
+            <td className="p-3 font-extrabold text-slate-900 dark:text-white">{s.name}</td>
+            <td className="p-3 text-slate-600 dark:text-navy-300">{s.year_level || '—'}</td>
+            <td className="p-3 text-sky-700 dark:text-sky-400">{s.username || '—'}</td>
+            <td className="p-3 text-right">
+             <span className={`px-2 py-1 rounded-lg font-black text-[11px] ${
+              s.total_solved >= 100 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' :
+              s.total_solved >= 30 ? 'bg-sky-100 text-sky-800' :
+              'bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-300'
+             }`}>{s.total_solved || 0}</span>
+            </td>
+            <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
+             <button
+              onClick={async () => {
+               try {
+                await api.post('/faculty-assignments/unassign', { faculty_id: Number(unassignStaffId), student_ids: [s.id] });
+                notify.success('Unassigned', `${s.name} moved back to queue.`);
+                handleLoadUnassignRoster(Number(unassignStaffId));
+                fetchAllocationData();
+               } catch (err: any) {
+                notify.error('Failed', err.response?.data?.detail || 'Could not unassign.');
+               }
+              }}
+              className="p-1.5 rounded-lg bg-rose-100 dark:bg-rose-900/30 text-rose-600 hover:bg-rose-200 transition-colors cursor-pointer"
+              title="Unassign this student"
+             >
+              <UserMinus className="w-3.5 h-3.5" />
+             </button>
+            </td>
+           </tr>
+          );
+         })
+        )}
+       </tbody>
+      </table>
+     </div>
+    )}
+   </div>
+  )}
+
  </div>
 
- <div className="flex items-center space-x-3 flex-wrap gap-2">
- <button
- onClick={triggerSmartAutoAssignModal}
- disabled={submitting || filteredUnassigned.length === 0}
- className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold flex items-center space-x-2 shadow-md transition-all cursor-pointer transform hover:scale-[1.01]"
- >
- <CheckCircle2 className="w-4 h-4" />
- <span>Smart Auto Assign</span>
- </button>
- </div>
- </div>
-
-        {/* Filters Bar: Department Filter, Year Level Filter & Search Bar */}
-        <div className="p-5 rounded-3xl bg-slate-50/50 dark:bg-navy-800/40 border border-slate-200/60 dark:border-navy-700 flex flex-col md:flex-row items-center justify-between gap-4 backdrop-blur-sm shadow-sm">
-          
-          <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4 w-full md:w-auto flex-1">
-            <div className="relative w-full md:min-w-[250px] lg:min-w-[300px]">
-              <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search reg no, name, username..."
-                className="w-full pl-10 pr-4 h-11 rounded-2xl border border-slate-200 dark:border-navy-600 bg-white dark:bg-navy-900 text-sm font-medium text-slate-800 dark:text-slate-200 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 shadow-sm transition-all"
-              />
-            </div>
-
-            <div className="w-full md:w-[220px]">
-              <CustomDropdown
-                label="Department Filter"
-                options={deptOptions}
-                value={String(selectedDept)}
-                onChange={setSelectedDept}
-                icon={Building2}
-              />
-            </div>
-
-            <div className="w-full md:w-[200px]">
-              <CustomDropdown
-                label="Academic Year"
-                options={yearOptions}
-                value={selectedYear}
-                onChange={setSelectedYear}
-                icon={Filter}
-              />
-            </div>
-
-            {isFilterActive && (
-              <button
-                onClick={clearFilters}
-                className="p-2.5 rounded-xl bg-slate-200/70 dark:bg-navy-700 hover:bg-slate-300 dark:hover:bg-navy-600 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-all cursor-pointer shadow-sm mt-4 md:mt-0"
-                title="Clear all active filters"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            )}
-          </div>
-
-          <div className="flex flex-col md:flex-row items-center space-y-3 md:space-y-0 md:space-x-3 w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0 border-slate-200 dark:border-navy-700">
-            <div className="w-full md:w-[240px]">
-              <CustomDropdown
-                label="Assign To Staff"
-                options={staffOptions}
-                value={targetStaffId ? String(targetStaffId) : ''}
-                onChange={(val) => setTargetStaffId(val ? Number(val) : '')}
-                icon={UserPlus}
-                align="right"
-              />
-            </div>
-
-            <button
-              onClick={handleBulkAssign}
-              disabled={submitting || selectedStudents.length === 0 || !targetStaffId}
-              className="w-full md:w-auto px-6 h-11 rounded-2xl bg-sky-600 hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold flex items-center justify-center space-x-2 shadow-md hover:shadow-lg transition-all cursor-pointer mt-4 md:mt-0"
-            >
-              <span>Assign ({selectedStudents.length})</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
- {/* Unassigned Students Table */}
- <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-700">
- <table className="w-full text-left text-xs border-collapse">
- <thead>
- <tr className="bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-navy-300 font-bold border-b border-slate-200 dark:border-navy-700">
- <th className="p-3 text-center">
- <input
- type="checkbox"
- checked={selectedStudents.length === filteredUnassigned.length && filteredUnassigned.length > 0}
- onChange={toggleSelectAll}
- className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
- />
- </th>
- <th className="p-3">Register No</th>
- <th className="p-3">Student Name</th>
- <th className="p-3">Department</th>
- <th className="p-3">Year / Class</th>
- <th className="p-3">LeetCode Handle</th>
- <th className="p-3 text-right">Total Solved</th>
- </tr>
- </thead>
- <tbody className="divide-y divide-slate-200 dark:divide-navy-800">
- {loading ? (
- <tr>
- <td colSpan={7} className="p-4 text-center text-slate-500 animate-pulse">
- Loading unassigned students...
- </td>
- </tr>
- ) : filteredUnassigned.length === 0 ? (
- <tr>
- <td colSpan={7} className="p-6 text-center text-slate-400 italic">
- All students are currently assigned to primary mentors! 🎉
- </td>
- </tr>
- ) : (
- filteredUnassigned.map((st: any) => {
- const isSelected = selectedStudents.includes(st.id);
- return (
- <tr
- key={st.id}
- onClick={() => toggleSelectStudent(st.id)}
- className={`cursor-pointer transition-colors ${
- isSelected
- ? 'bg-sky-50/70 dark:bg-sky-950/40'
- : 'hover:bg-slate-50 dark:hover:bg-navy-800/50'
- }`}
- >
- <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
- <input
- type="checkbox"
- checked={isSelected}
- onChange={() => toggleSelectStudent(st.id)}
- className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
- />
- </td>
- <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{st.reg_no}</td>
- <td className="p-3 font-extrabold text-slate-900 dark:text-white">{st.name}</td>
- <td className="p-3 font-bold text-sky-700 dark:text-sky-400">{st.department || 'CSE'}</td>
- <td className="p-3 text-slate-600 dark:text-navy-300">{st.year_level || 'III'}</td>
- <td className="p-3 text-slate-500 dark:text-navy-400">{st.username || '—'}</td>
- <td className="p-3 text-right font-bold text-slate-800 dark:text-slate-200">
- {st.total_solved || 0}
- </td>
- </tr>
- );
- })
- )}
- </tbody>
- </table>
- </div>
- </div>
 
  {/* ─── 3. VIEW STAFF ASSIGNED ROSTER & COMPLETION MODAL ─── */}
  {viewRosterModal.isOpen && (
