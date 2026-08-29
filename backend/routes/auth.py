@@ -139,6 +139,10 @@ def validate_csrf_origin(request: Request):
     # Verify if the origin matches any of the allowed origins exactly
     is_allowed = any(allowed == clean_origin for allowed in allowed_origins)
 
+    # Automatically allow ANY *.vercel.app domain (especially for preview deployments)
+    if not is_allowed and "://" in clean_origin and clean_origin.endswith(".vercel.app"):
+        is_allowed = True
+
     if not is_allowed:
         logger.warning(f"[CSRF CHECK] Blocked request from unverified origin: {origin}")
         raise HTTPException(
