@@ -447,7 +447,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <div className="flex flex-col space-y-1 text-center sm:text-left">
               <span className="text-sm font-extrabold text-gray-900 dark:text-white">Active Participation</span>
               <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                Out of {totalStudents.toLocaleString()} total enrolled students across all departments, {activeStudents.toLocaleString()} have actively verified LeetCode profiles.
+                Out of {totalStudents.toLocaleString()} total {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') ? 'assigned students' : 'enrolled students across all departments'}, {activeStudents.toLocaleString()} have actively verified LeetCode profiles.
               </span>
             </div>
           </div>
@@ -462,7 +462,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <span className="text-base text-gray-900 dark:text-white">{notStartedStudents.toLocaleString()}</span>
             </div>
             <div className="col-span-2 flex flex-col p-3 rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-gray-800 text-center">
-              <span className="text-gray-500">Total Enrolled</span>
+              <span className="text-gray-500">{['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') ? 'Total Assigned' : 'Total Enrolled'}</span>
               <span className="text-base text-gray-900 dark:text-white">{totalStudents.toLocaleString()}</span>
             </div>
           </div>

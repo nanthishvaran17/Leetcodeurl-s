@@ -626,9 +626,23 @@ export const GrowthIntelligencePage: React.FC = () => {
 
                         {/* Growth Delta */}
                         <td className="py-4 px-4">
-                          <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-black text-sm shadow-sm">
-                            <span>+{imp.delta_solved}</span>
-                          </span>
+                          {imp.delta_solved === imp.total_solved ? (
+                            <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-slate-50 dark:bg-navy-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-navy-700 font-black text-sm shadow-sm" title="Initial Baseline">
+                              <span>—</span>
+                            </span>
+                          ) : imp.delta_solved > 0 ? (
+                            <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-black text-sm shadow-sm">
+                              <span>+{imp.delta_solved}</span>
+                            </span>
+                          ) : imp.delta_solved < 0 ? (
+                            <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 font-black text-sm shadow-sm">
+                              <span>{imp.delta_solved}</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-slate-50 dark:bg-navy-900 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-navy-800 font-black text-sm shadow-sm">
+                              <span>—</span>
+                            </span>
+                          )}
                         </td>
 
                         {/* Difficulty Breakdown */}
@@ -765,7 +779,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                                           tickFormatter={(val) => new Date(val).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                                           tick={{ fontSize: 10, fill: '#64748b' }}
                                         />
-                                        <YAxis domain={['dataMin - 2', 'dataMax + 2']} tick={{ fontSize: 10, fill: '#64748b' }} />
+                                        <YAxis domain={['dataMin', 'dataMax']} tick={{ fontSize: 10, fill: '#64748b' }} />
                                         <Tooltip
                                           contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', fontSize: '11px', color: '#fff' }}
                                           labelFormatter={(val) => new Date(val).toLocaleString()}
@@ -817,9 +831,23 @@ export const GrowthIntelligencePage: React.FC = () => {
                                             <td className="py-2.5 px-3.5 font-bold text-rose-600 dark:text-rose-400">{snap.hard_solved}</td>
                                             <td className="py-2.5 px-3.5 font-bold text-gray-700 dark:text-gray-300">{snap.contest_rating ?? '—'}</td>
                                             <td className="py-2.5 px-3.5">
-                                              <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-black text-[11px]">
-                                                +{snap.delta_total}
-                                              </span>
+                                              {snap.delta_total === snap.total_solved ? (
+                                                <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-400 font-black text-[11px]" title="Initial Baseline Snapshot">
+                                                  — Baseline
+                                                </span>
+                                              ) : snap.delta_total > 0 ? (
+                                                <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-black text-[11px]">
+                                                  +{snap.delta_total}
+                                                </span>
+                                              ) : snap.delta_total < 0 ? (
+                                                <span className="px-2 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-black text-[11px]">
+                                                  {snap.delta_total}
+                                                </span>
+                                              ) : (
+                                                <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-400 font-black text-[11px]">
+                                                  +0
+                                                </span>
+                                              )}
                                             </td>
                                             <td className="py-2.5 px-3.5 text-[10px] font-sans font-bold text-gray-400">{snap.source || 'leetcode_sync'}</td>
                                           </tr>

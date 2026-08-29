@@ -351,21 +351,21 @@ def run_live_data_integrity_audit(
             "rule": "Duplicate Result Detection",
             "status": "PASS" if len(duplicate_results) == 0 else "FAIL",
             "passed": len(duplicate_results) == 0,
-            "evidence": f"0 duplicate records in database ({len(all_results)} checked)",
+            "evidence": f"{len(duplicate_results)} duplicate records in database ({len(all_results)} checked)",
             "offending_records": duplicate_results[:5]
         },
         {
             "rule": "Sentinel Value Detection (-1, fake 0, 9999 locked off)",
             "status": "PASS" if len(sentinel_violations) == 0 else "FAIL",
             "passed": len(sentinel_violations) == 0,
-            "evidence": "Zero sentinel placeholder values detected in production dataset",
+            "evidence": f"{len(sentinel_violations)} sentinel placeholder values detected in production dataset",
             "offending_records": sentinel_violations[:5]
         },
         {
             "rule": "Mock Data Locked Off (Authentic Only)",
             "status": "PASS" if len(mock_violations) == 0 else "FAIL",
             "passed": len(mock_violations) == 0,
-            "evidence": "Zero synthetic student records in active student roster",
+            "evidence": f"{len(mock_violations)} synthetic student records in active student roster",
             "offending_records": mock_violations[:5]
         },
         {
@@ -693,27 +693,33 @@ def get_operations_center_overview(db: Session = Depends(get_db)):
     def _build_dynamic_timeline(db_session):
         try:
             schedule = get_schedule_status(db_session)
-            if schedule and schedule.get("schedule") and schedule["schedule"].get("is_enabled"):
+            is_enabled = schedule and schedule.get("schedule") and schedule["schedule"].get("is_enabled")
+            status_str = "SCHEDULED" if is_enabled else "DISABLED"
+            
+            h = 9
+            m = 30
+            if is_enabled:
                 h = schedule["schedule"].get("hour", 9)
                 m = schedule["schedule"].get("minute", 30)
-                # Dispatch is at H:M
-                dispatch_time = datetime(2000, 1, 1, h, m)
-                return [
-                    {"time": (dispatch_time - timedelta(minutes=90)).strftime("%I:%M %p"), "step": "Pre-Session Database Snapshot", "status": "ARMED"},
-                    {"time": (dispatch_time - timedelta(minutes=85)).strftime("%I:%M %p"), "step": "Contest Metadata & Roster Discovery", "status": "ARMED"},
-                    {"time": (dispatch_time - timedelta(minutes=75)).strftime("%I:%M %p"), "step": "Fast GraphQL Multi-Thread Sync", "status": "ARMED"},
-                    {"time": (dispatch_time - timedelta(minutes=60)).strftime("%I:%M %p"), "step": "Canonical Dataset Normalization", "status": "ARMED"},
-                    {"time": (dispatch_time - timedelta(minutes=45)).strftime("%I:%M %p"), "step": "Sentinel Integrity & Parity Audit", "status": "ARMED"},
-                    {"time": (dispatch_time - timedelta(minutes=30)).strftime("%I:%M %p"), "step": "Multi-Format Export (Excel, Word, PDF)", "status": "ARMED"},
-                    {"time": (dispatch_time - timedelta(minutes=15)).strftime("%I:%M %p"), "step": "Report File Validation & Checksum", "status": "ARMED"},
-                    {"time": dispatch_time.strftime("%I:%M %p"), "step": "Official Email Package Dispatch", "status": "ARMED"}
-                ]
+
+            # Dispatch is at H:M
+            dispatch_time = datetime(2000, 1, 1, h, m)
+            return [
+                {"time": (dispatch_time - timedelta(minutes=90)).strftime("%I:%M %p"), "step": "Pre-Session Database Snapshot", "status": status_str},
+                {"time": (dispatch_time - timedelta(minutes=85)).strftime("%I:%M %p"), "step": "Contest Metadata & Roster Discovery", "status": status_str},
+                {"time": (dispatch_time - timedelta(minutes=75)).strftime("%I:%M %p"), "step": "Fast GraphQL Multi-Thread Sync", "status": status_str},
+                {"time": (dispatch_time - timedelta(minutes=60)).strftime("%I:%M %p"), "step": "Canonical Dataset Normalization", "status": status_str},
+                {"time": (dispatch_time - timedelta(minutes=45)).strftime("%I:%M %p"), "step": "Sentinel Integrity & Parity Audit", "status": status_str},
+                {"time": (dispatch_time - timedelta(minutes=30)).strftime("%I:%M %p"), "step": "Multi-Format Export (Excel, Word, PDF)", "status": status_str},
+                {"time": (dispatch_time - timedelta(minutes=15)).strftime("%I:%M %p"), "step": "Report File Validation & Checksum", "status": status_str},
+                {"time": dispatch_time.strftime("%I:%M %p"), "step": "Official Email Package Dispatch", "status": status_str}
+            ]
         except Exception:
             pass
         
         return [
-            {"time": "08:00 AM", "step": "Pre-Session Database Snapshot", "status": "PENDING"},
-            {"time": "09:30 AM", "step": "Official Email Package Dispatch", "status": "PENDING"}
+            {"time": "08:00 AM", "step": "Pre-Session Database Snapshot", "status": "NOT READY"},
+            {"time": "09:30 AM", "step": "Official Email Package Dispatch", "status": "NOT READY"}
         ]
 
     # 1. Core Counts
@@ -798,6 +804,32 @@ def get_operations_center_overview(db: Session = Depends(get_db)):
 
     elapsed_ms = round((time.time() - start_t) * 1000, 2)
 
+    duplicate_conflicts = 0
+    question_conflicts = 0
+    
+    seen_student_ids = set()
+    for r in sess_results:
+        if r.student_id in seen_student_ids:
+            duplicate_conflicts += 1
+        seen_student_ids.add(r.student_id)
+        if r.participation_status == "PUBLIC_ATTENDED":
+            q_sum = (r.q1 or 0) + (r.q2 or 0) + (r.q3 or 0) + (r.q4 or 0)
+            if q_sum != (r.total_contest_solved or 0):
+                question_conflicts += 1
+
+    missing_profiles = data_errs
+
+    data_integrity_matrix = [
+        {"category": "SOURCE INTEGRITY", "status": "VERIFIED" if missing_profiles == 0 else "WARNING", "records": f"{total_students} checked", "conflicts": missing_profiles},
+        {"category": "STUDENT IDENTITY", "status": "VERIFIED", "records": f"{total_students} mapped", "conflicts": 0},
+        {"category": "CONTEST IDENTITY", "status": "VERIFIED", "records": f"{len(completed_sessions)} sessions", "conflicts": 0},
+        {"category": "PARTICIPATION INTEGRITY", "status": "VERIFIED" if pending_cnt == 0 else "WARNING", "records": f"{len(sess_results)} records", "conflicts": pending_cnt},
+        {"category": "DUPLICATE DETECTION", "status": "VERIFIED" if duplicate_conflicts == 0 else "FAILED", "records": f"{duplicate_conflicts} duplicates", "conflicts": duplicate_conflicts},
+        {"category": "QUESTION DATA MATRIX", "status": "VERIFIED" if question_conflicts == 0 else "FAILED", "records": "Mutually exclusive", "conflicts": question_conflicts},
+        {"category": "REPORT PARITY MONITOR", "status": "VERIFIED", "records": "100% matched", "conflicts": 0},
+        {"category": "CROSS-CONTEST CONSISTENCY", "status": "VERIFIED", "records": "Clean isolation", "conflicts": 0}
+    ]
+        
     overview_res = {
         "status": "SUCCESS",
         "responseTimeMs": elapsed_ms,
@@ -821,16 +853,16 @@ def get_operations_center_overview(db: Session = Depends(get_db)):
             "lastSnapshot": latest_backup["filename"] if latest_backup else "sqlite_backup_preflight.db"
         },
         "livePulse": {
-            "backendApi": {"name": "FastAPI Core Engine", "status": "Healthy", "latency": "8ms", "pulse": "active"},
-            "database": {"name": "SQLite Production Database", "status": "Healthy", "latency": "3ms", "pulse": "active"},
-            "contestEngine": {"name": "GraphQL Contest Scraper", "status": "Healthy", "latency": "210ms", "pulse": "active"},
-            "reportEngine": {"name": "Multi-Format Report Builder", "status": "Healthy", "latency": "45ms", "pulse": "active"},
-            "emailEngine": {"name": "Brevo & SMTP Delivery", "status": "Healthy", "latency": "120ms", "pulse": "active"},
-            "backupSystem": {"name": "SHA-256 Snapshot Manager", "status": "Healthy", "latency": "15ms", "pulse": "active"},
-            "scheduler": {"name": "Sunday Automation Cron", "status": "Healthy", "latency": "2ms", "pulse": "active"},
-            "dataIntegrity": {"name": "Sentinel Integrity Guard", "status": "Healthy", "latency": "5ms", "pulse": "active"},
-            "authentication": {"name": "Dual-Token Security Layer", "status": "Healthy", "latency": "12ms", "pulse": "active"},
-            "aiAssistant": {"name": "NEC Operations Copilot", "status": "Healthy", "latency": "80ms", "pulse": "active"}
+            "backendApi": {"name": "FastAPI Core Engine", "status": "Healthy", "pulse": "active"},
+            "database": {"name": "SQLite Production Database", "status": "Healthy", "pulse": "active"},
+            "contestEngine": {"name": "GraphQL Contest Scraper", "status": "Healthy", "pulse": "active"},
+            "reportEngine": {"name": "Multi-Format Report Builder", "status": "Healthy", "pulse": "active"},
+            "emailEngine": {"name": "Brevo & SMTP Delivery", "status": "Healthy", "pulse": "active"},
+            "backupSystem": {"name": "SHA-256 Snapshot Manager", "status": "Healthy", "pulse": "active"},
+            "scheduler": {"name": "Sunday Automation Cron", "status": "Healthy", "pulse": "active"},
+            "dataIntegrity": {"name": "Sentinel Integrity Guard", "status": "Healthy", "pulse": "active"},
+            "authentication": {"name": "Dual-Token Security Layer", "status": "Healthy", "pulse": "active"},
+            "aiAssistant": {"name": "NEC Operations Copilot", "status": "Healthy", "pulse": "active"}
         },
         "dataFreshness": {
             "contestData": {"status": "FRESH", "timeAgo": "Just now", "indicator": "emerald"},
@@ -848,16 +880,7 @@ def get_operations_center_overview(db: Session = Depends(get_db)):
         "sundayAutomation": {
             "timeline": _build_dynamic_timeline(db)
         },
-        "dataIntegrityMatrix": [
-            {"category": "SOURCE INTEGRITY", "status": "VERIFIED", "records": f"{total_students} checked", "conflicts": 0},
-            {"category": "STUDENT IDENTITY", "status": "VERIFIED", "records": f"{total_students} mapped", "conflicts": 0},
-            {"category": "CONTEST IDENTITY", "status": "VERIFIED", "records": f"{len(completed_sessions)} sessions", "conflicts": 0},
-            {"category": "PARTICIPATION INTEGRITY", "status": "VERIFIED", "records": f"{len(sess_results)} records", "conflicts": 0},
-            {"category": "DUPLICATE DETECTION", "status": "VERIFIED", "records": "0 duplicates", "conflicts": 0},
-            {"category": "QUESTION DATA MATRIX", "status": "VERIFIED", "records": "Mutually exclusive", "conflicts": 0},
-            {"category": "REPORT PARITY MONITOR", "status": "VERIFIED", "records": "100% matched", "conflicts": 0},
-            {"category": "CROSS-CONTEST CONSISTENCY", "status": "VERIFIED", "records": "Clean isolation", "conflicts": 0}
-        ],
+        "dataIntegrityMatrix": data_integrity_matrix,
         "reportParity": {
             "overallParity": "100%",
             "sources": [
@@ -890,19 +913,19 @@ async def probe_all_services_live(
     probes = {}
     
     # 1. Frontend & Backend & Auth & Sync & Report & Scheduler & Backup & Data Integrity (Fast local checks)
-    probes["frontend"] = {"name": "React Client Application", "status": "HEALTHY", "latencyMs": 4, "lastChecked": now_ist, "error": None}
-    probes["backendApi"] = {"name": "FastAPI Core Engine", "status": "HEALTHY", "latencyMs": 2, "lastChecked": now_ist, "error": None}
-    probes["authentication"] = {"name": "Dual-Token Security Layer", "status": "HEALTHY", "latencyMs": 3, "lastChecked": now_ist, "error": None}
-    probes["syncEngine"] = {"name": "Live Async Sync Engine", "status": "HEALTHY", "latencyMs": 5, "lastChecked": now_ist, "error": None}
-    probes["reportEngine"] = {"name": "Multi-Format Report Builder", "status": "HEALTHY", "latencyMs": 12, "lastChecked": now_ist, "error": None}
-    probes["scheduler"] = {"name": "Sunday Automation Cron", "status": "HEALTHY", "latencyMs": 1, "lastChecked": now_ist, "error": None}
-    probes["dataIntegrity"] = {"name": "Sentinel Integrity Guard", "status": "HEALTHY", "latencyMs": 8, "lastChecked": now_ist, "error": None}
+    probes["frontend"] = {"name": "React Client Application", "status": "HEALTHY", "lastChecked": now_ist, "error": None}
+    probes["backendApi"] = {"name": "FastAPI Core Engine", "status": "HEALTHY", "lastChecked": now_ist, "error": None}
+    probes["authentication"] = {"name": "Dual-Token Security Layer", "status": "HEALTHY", "lastChecked": now_ist, "error": None}
+    probes["syncEngine"] = {"name": "Live Async Sync Engine", "status": "HEALTHY", "lastChecked": now_ist, "error": None}
+    probes["reportEngine"] = {"name": "Multi-Format Report Builder", "status": "HEALTHY", "lastChecked": now_ist, "error": None}
+    probes["scheduler"] = {"name": "Sunday Automation Cron", "status": "HEALTHY", "lastChecked": now_ist, "error": None}
+    probes["dataIntegrity"] = {"name": "Sentinel Integrity Guard", "status": "HEALTHY", "lastChecked": now_ist, "error": None}
 
     bks = list_backups_detail()
-    probes["backupSystem"] = {"name": "SHA-256 Snapshot Manager", "status": "HEALTHY", "latencyMs": 6, "lastChecked": now_ist, "snapshotCount": len(bks), "error": None}
+    probes["backupSystem"] = {"name": "SHA-256 Snapshot Manager", "status": "HEALTHY", "lastChecked": now_ist, "snapshotCount": len(bks), "error": None}
 
     smtp_row = db.query(AdminSettingsModel).filter(AdminSettingsModel.key == "SMTP_HOST").first()
-    probes["emailEngine"] = {"name": "Brevo & SMTP Delivery", "status": "HEALTHY", "latencyMs": 15, "lastChecked": now_ist, "host": smtp_row.value if smtp_row else "smtp.gmail.com", "error": None}
+    probes["emailEngine"] = {"name": "Brevo & SMTP Delivery", "status": "HEALTHY", "lastChecked": now_ist, "host": smtp_row.value if smtp_row else "smtp.gmail.com", "error": None}
 
     # Parallel Probe Execution for potentially slow operations (DB & Contest Engine)
     async def probe_db():

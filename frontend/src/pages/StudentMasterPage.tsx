@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Plus, UploadCloud, RefreshCw, UserPlus, List, LayoutGrid, CheckCircle, XCircle, Loader2, AlertTriangle, WifiOff } from 'lucide-react';
+import { Search, Plus, UploadCloud, RefreshCw, UserPlus, List, LayoutGrid, CheckCircle, XCircle, Loader2, AlertTriangle, WifiOff, ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '../services/api';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { StudentFlipCard } from '../components/StudentFlipCard';
@@ -311,7 +311,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       setShowAddModal(false);
       setRegNo(''); setName(''); setLeetcodeUrl('');
       setLcValidation({ status: 'idle' });
-      fetchStudents();
+      fetchStudents(debouncedSearch, serverPage, serverPageSize);
     } catch (err: any) {
       notify.error('Failed to Add Student', err.response?.data?.detail || "Failed to add student.", { category: 'STUDENT REPOSITORY' });
     } finally {
@@ -332,7 +332,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     try {
       await api.delete(`/students/${student.id}`);
       notify.success('Student Record Deleted', `Student "${student.name}" deleted successfully.`, { category: 'STUDENT REPOSITORY' });
-      fetchStudents();
+      fetchStudents(debouncedSearch, serverPage, serverPageSize);
     } catch (err: any) {
       notify.error('Delete Failed', err.response?.data?.detail || "Failed to delete student record.", { category: 'STUDENT REPOSITORY' });
     }
@@ -351,7 +351,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     try {
       const res = await api.post('/students/bulk-delete', { student_ids: studentIds });
       notify.success('Bulk Delete Successful', `Successfully deleted ${res.data.count || studentIds.length} student records.`, { category: 'STUDENT REPOSITORY' });
-      fetchStudents();
+      fetchStudents(debouncedSearch, serverPage, serverPageSize);
     } catch (err: any) {
       notify.error('Bulk Delete Failed', err.response?.data?.detail || "Failed to bulk delete student records.", { category: 'STUDENT REPOSITORY' });
     }
@@ -361,7 +361,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     try {
       const res = await api.post(`/students/${studentId}/refresh`);
       notify.success('Profile Synced', res.data?.message || 'Student profile synced successfully!', { category: 'SYNC ENGINE' });
-      fetchStudents();
+      fetchStudents(debouncedSearch, serverPage, serverPageSize);
     } catch (err: any) {
       notify.error('Sync Failed', err.response?.data?.detail || err.message || 'Unable to fetch LeetCode profile statistics.', { category: 'SYNC ENGINE' });
     }
@@ -381,35 +381,33 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     <div className="space-y-6 animate-fade-in font-sans pb-12">
 
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-surface-elevated text-text-primary p-6 md:p-8 shadow-sm border border-border">
-        {/* Decorative gradient overlay */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
-
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-lg border border-brand-500/30">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-black tracking-wider uppercase">
-              <UserPlus className="w-3.5 h-3.5" />
+          <div className="space-y-4 max-w-2xl">
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black uppercase tracking-wider">
+              <UserPlus className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400" />
               <span>STUDENT DIRECTORY • {students.length} ENROLLED</span>
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-display font-black tracking-tight mt-1">
-              Student Master <span className="text-primary">Directory</span>
-            </h1>
-
-            <p className="text-sm text-text-secondary font-medium tracking-wide leading-relaxed">
-              Manage student profiles, LeetCode connectivity, and live synchronization across all institutional departments.
-            </p>
+            <div className="space-y-1.5">
+              <h1 className="text-3xl md:text-4xl font-display font-black tracking-tight">
+                Student Master <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Directory</span>
+              </h1>
+              <p className="text-xs md:text-sm text-gray-300 font-bold tracking-wide leading-relaxed">
+                Manage student profiles, LeetCode connectivity, and live synchronization across all institutional departments.
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center space-x-3 flex-wrap gap-2">
             {/* View Mode Toggle */}
-            <div className="flex items-center space-x-1 p-1 bg-secondary rounded-xl border border-border">
+            <div className="flex items-center space-x-1 p-1 bg-white/5 rounded-lg border border-white/10 shadow-inner">
               <button
                 onClick={() => setViewMode('table')}
-                className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer ${
                   viewMode === 'table'
-                    ? 'bg-surface text-primary shadow-sm'
-                    : 'text-text-secondary hover:text-text-primary'
+                    ? 'bg-white text-navy-950 shadow-sm'
+                    : 'text-gray-400 hover:text-white'
                 }`}
               >
                 <List className="w-3.5 h-3.5" />
@@ -417,10 +415,10 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
               </button>
               <button
                 onClick={() => setViewMode('cards')}
-                className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer ${
                   viewMode === 'cards'
-                    ? 'bg-surface text-primary shadow-sm'
-                    : 'text-text-secondary hover:text-text-primary'
+                    ? 'bg-white text-navy-950 shadow-sm'
+                    : 'text-gray-400 hover:text-white'
                 }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
@@ -430,18 +428,18 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
             <button
               onClick={onOpenImport}
-              className="px-4 py-2.5 rounded-xl bg-secondary hover:bg-border border border-border text-text-primary font-bold text-xs flex items-center space-x-2 shadow-sm transition-colors cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-white font-bold text-[11px] uppercase tracking-wider flex items-center space-x-1.5 shadow-sm transition-all cursor-pointer"
             >
-              <UploadCloud className="w-4 h-4 text-primary" />
+              <UploadCloud className="w-3.5 h-3.5 text-brand-300" />
               <span>Bulk Import</span>
             </button>
 
             <button
               onClick={handleOpenAddModal}
-              className="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs shadow-md shadow-primary/20 flex items-center space-x-2 transition-colors cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-400 text-white font-bold text-[11px] uppercase tracking-wider shadow-md shadow-brand-500/20 flex items-center space-x-1.5 transition-all cursor-pointer border border-brand-400/50"
             >
-              <Plus className="w-4 h-4" />
-              <span>Add Single Student</span>
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add Student</span>
             </button>
           </div>
         </div>
@@ -449,13 +447,13 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
       {/* Search Bar */}
       <div className="relative">
-        <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3.5" />
+        <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by student name, register number or LeetCode username..."
-          className="w-full pl-10 pr-24 py-3 rounded-xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-900 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none shadow-sm"
+          className="w-full pl-11 pr-24 py-3 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 text-sm font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 focus:outline-none shadow-sm transition-all"
         />
         {search && (
           <button
@@ -484,15 +482,61 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
           }}
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-          {students.map((st) => (
-            <StudentFlipCard
-              key={st.id}
-              student={st}
-              onSelectStudent={onSelectStudent}
-              onDeleteStudent={handleDeleteStudent}
-            />
-          ))}
+        <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            {students.map((st) => (
+              <StudentFlipCard
+                key={st.id}
+                student={st}
+                onSelectStudent={onSelectStudent}
+                onDeleteStudent={handleDeleteStudent}
+              />
+            ))}
+          </div>
+          
+          {serverTotalCount > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-white/50 dark:bg-navy-900/50 border border-slate-200 dark:border-navy-700">
+              <div className="text-sm font-semibold text-slate-500 dark:text-navy-300">
+                Showing <span className="text-slate-900 dark:text-white font-bold">{Math.min((serverPage - 1) * serverPageSize + 1, serverTotalCount)}</span> to <span className="text-slate-900 dark:text-white font-bold">{Math.min(serverPage * serverPageSize, serverTotalCount)}</span> of <span className="text-slate-900 dark:text-white font-bold">{serverTotalCount}</span> students
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <select
+                  value={serverPageSize}
+                  onChange={(e) => {
+                    setServerPageSize(Number(e.target.value));
+                    setServerPage(1);
+                  }}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-800 text-sm font-semibold text-slate-700 dark:text-slate-200 outline-none"
+                >
+                  <option value={20}>20 per page</option>
+                  <option value={50}>50 per page</option>
+                  <option value={100}>100 per page</option>
+                  <option value={200}>200 per page</option>
+                </select>
+
+                <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-800 rounded-lg p-1 border border-slate-200 dark:border-navy-700">
+                  <button
+                    onClick={() => setServerPage(p => Math.max(1, p - 1))}
+                    disabled={serverPage === 1}
+                    className="p-1.5 rounded-md hover:bg-white dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <div className="px-2 text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[3rem] text-center">
+                    {serverPage} / {Math.max(1, Math.ceil(serverTotalCount / serverPageSize))}
+                  </div>
+                  <button
+                    onClick={() => setServerPage(p => Math.min(Math.ceil(serverTotalCount / serverPageSize), p + 1))}
+                    disabled={serverPage >= Math.ceil(serverTotalCount / serverPageSize)}
+                    className="p-1.5 rounded-md hover:bg-white dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

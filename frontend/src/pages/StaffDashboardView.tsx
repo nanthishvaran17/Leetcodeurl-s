@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
   Users, AlertTriangle, RefreshCw, BarChart3, CheckCircle2, Search,
   ShieldCheck, Award, TrendingUp, TrendingDown, Minus, Eye, Bell,
-  FileText, Clock, AlertCircle, ArrowRight, Download, Zap, Sparkles
+  FileText, Clock, AlertCircle, ArrowRight, Download, Zap, Sparkles,
+  ChevronDown, Check, Filter
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api, { clearApiCache } from '../services/api';
@@ -23,6 +24,7 @@ export const StaffDashboardView: React.FC = () => {
   const [search, setSearch] = useState<string>('');
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'ACTIVE' | 'COMPLETED' | 'ATTENTION' | 'AT_RISK'>('ALL');
+  const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
 
   useEffect(() => {
     fetchMentoringData();
@@ -104,8 +106,8 @@ export const StaffDashboardView: React.FC = () => {
     // Status Category Filter
     if (filterStatus === 'ACTIVE' && solved <= 0) return false;
     if (filterStatus === 'COMPLETED' && solved < 100) return false;
-    if (filterStatus === 'ATTENTION' && (solved >= 100 || (solved >= 30 && s.username))) return false;
-    if (filterStatus === 'AT_RISK' && solved > 0 && s.username) return false;
+    if (filterStatus === 'ATTENTION' && (solved >= 30 || solved === 0)) return false;
+    if (filterStatus === 'AT_RISK' && (solved > 0 && s.username)) return false;
 
     // Text Search Filter
     const q = search.toLowerCase().trim();
@@ -433,30 +435,67 @@ export const StaffDashboardView: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
-            {/* Active Filter Pill */}
-            {filterStatus !== 'ALL' && (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-brand-500/10 border border-brand-500/30 text-brand-600 dark:text-brand-400 text-xs font-bold animate-fade-in">
-                <span>Filter: <strong>{filterStatus}</strong> ({filteredStudents.length})</span>
-                <button
-                  type="button"
-                  onClick={() => setFilterStatus('ALL')}
-                  className="p-0.5 hover:bg-brand-500/20 rounded-md text-brand-600 dark:text-brand-400 transition-colors cursor-pointer"
-                  title="Clear filter"
-                >
-                  <Minus className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
+
+            {/* Premium Status Filter Dropdown — WeeklyContestPage style */}
+            {(() => {
+              type FilterVal = 'ALL' | 'ACTIVE' | 'COMPLETED' | 'ATTENTION' | 'AT_RISK';
+              const filterOpts: { value: FilterVal; label: string; code: string; color: string }[] = [
+                { value: 'ALL',       label: 'All Students',    code: 'ALL',    color: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300' },
+                { value: 'ACTIVE',    label: 'Active Solvers',  code: 'ACTIVE', color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300' },
+                { value: 'COMPLETED', label: 'Target Achieved', code: 'DONE',   color: 'text-blue-600 bg-blue-50 dark:bg-blue-950 dark:text-blue-300' },
+                { value: 'ATTENTION', label: 'Needs Attention', code: 'ATTN',   color: 'text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
+                { value: 'AT_RISK',   label: 'At Risk',         code: 'RISK',   color: 'text-red-600 bg-red-50 dark:bg-red-950 dark:text-red-300' },
+              ];
+              const sel = filterOpts.find(o => o.value === filterStatus) || filterOpts[0];
+              return (
+                <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsFilterOpen(false); }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsFilterOpen(p => !p)}
+                    className={`w-full flex items-center gap-2.5 bg-gray-50 dark:bg-navy-950 px-3.5 py-2.5 rounded-2xl border shadow-sm text-left transition-all hover:border-indigo-300 dark:hover:border-indigo-600 focus:outline-none ${isFilterOpen ? 'border-indigo-400 ring-2 ring-indigo-400/20 dark:border-indigo-500' : 'border-gray-200 dark:border-gray-800'}`}
+                  >
+                    <ShieldCheck className="w-4 h-4 text-indigo-500 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Student Filter</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${sel.color}`}>{sel.code}</span>
+                        <span className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{sel.label}</span>
+                      </div>
+                    </div>
+                    <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${isFilterOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {isFilterOpen && (
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden max-h-72 overflow-y-auto">
+                      {filterOpts.map(opt => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => { setFilterStatus(opt.value); setIsFilterOpen(false); }}
+                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-navy-800 ${filterStatus === opt.value ? 'bg-indigo-50 dark:bg-indigo-950/60' : ''}`}
+                        >
+                          <ShieldCheck className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                          <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${opt.color}`}>{opt.code}</span>
+                          <span className={`text-xs truncate flex-1 ${filterStatus === opt.value ? 'text-indigo-700 dark:text-indigo-300 font-black' : 'font-semibold text-gray-700 dark:text-gray-300'}`}>{opt.label}</span>
+                          {filterStatus === opt.value && <Check className="w-3.5 h-3.5 text-indigo-500 shrink-0" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Search inside assigned set strictly */}
-            <div className="relative w-full sm:w-72">
+            <div className="relative w-full sm:w-64">
               <Search className="w-4 h-4 absolute left-3.5 top-3 text-gray-400" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search assigned students..."
-                className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs focus:ring-2 focus:ring-brand-500"
+                className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-medium text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
               />
             </div>
           </div>

@@ -35,7 +35,8 @@ import {
   ArrowUpDown,
   Send,
   Link2,
-  Trash2
+  Trash2,
+  ChevronDown
 } from 'lucide-react';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
@@ -98,6 +99,111 @@ const DEFAULT_SAVED_VIEWS: SavedView[] = [
   { id: 'cs_iii_sync',    name: 'Cyber Security - III Year',   dept: 'CSE(CS)',  year: 'III', issue: 'SYNC_FAILED',     search: '' },
   { id: 'iot_all_issues', name: 'IoT - All Attention Items',   dept: 'CSE(IOT)', year: 'all', issue: 'ISSUES',          search: '' }
 ];
+
+// ─── Custom Dropdown Select ──────────────────────────────────────────────────
+const CustomSelect: React.FC<{
+  value: string;
+  onChange: (v: string) => void;
+  options: { label: string; value: string; icon?: React.ReactNode; badge?: string; badgeColor?: string }[];
+  placeholder: string;
+  icon?: React.ReactNode;
+}> = ({ value, onChange, options, placeholder, icon }) => {
+  const [open, setOpen] = useState(false);
+  const selected = options.find(o => o.value === value);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    if (open) {
+      document.addEventListener('mousedown', handleClick);
+    }
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [open]);
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button
+        onClick={() => setOpen(!open)}
+        className={`flex items-center justify-between gap-3 min-w-[200px] w-full px-4 py-2.5 rounded-xl border transition-all cursor-pointer font-bold text-sm ${
+          open 
+            ? 'border-brand-500 bg-white dark:bg-navy-900 ring-4 ring-brand-500/10 shadow-sm' 
+            : (value && value !== 'all')
+              ? 'border-brand-500/30 bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-300' 
+              : 'border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-200 hover:border-slate-300'
+        }`}
+      >
+        <div className="flex items-center gap-2">
+          <span className={(value && value !== 'all') ? 'text-brand-500' : 'text-slate-400'}>{icon || selected?.icon}</span>
+          <div className="flex items-center gap-2">
+            {selected?.badge && (
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase ${selected.badgeColor || 'bg-slate-100 text-slate-500'}`}>
+                {selected.badge}
+              </span>
+            )}
+            <span>{selected ? selected.label : placeholder}</span>
+          </div>
+        </div>
+        <ChevronDown size={14} className={`transition-transform duration-300 ${open ? 'rotate-180 text-brand-500' : 'text-slate-400'}`} />
+      </button>
+
+      {open && (
+        <div className="absolute z-50 top-[110%] left-0 w-full min-w-[280px] p-1.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-xl animate-fade-in-up">
+          <button
+            onClick={() => { onChange('all'); setOpen(false); }}
+            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
+              !value || value === 'all'
+                ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20' 
+                : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-navy-800'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <span className="opacity-70">{icon}</span>
+              <span>{placeholder}</span>
+            </div>
+            {(!value || value === 'all') && <Check size={16} strokeWidth={3} />}
+          </button>
+          
+          <div className="h-px bg-slate-100 dark:bg-navy-800 my-1.5 mx-2" />
+
+          <div className="max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
+            {options.map((opt) => {
+              const isSelected = value === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => { onChange(opt.value); setOpen(false); }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer mb-1 last:mb-0 ${
+                    isSelected 
+                      ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20' 
+                      : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-navy-800'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className={isSelected ? 'text-white opacity-90' : 'text-slate-400'}>{opt.icon}</span>
+                    {opt.badge && (
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase ${
+                        isSelected ? 'bg-white/20 text-white' : opt.badgeColor || 'bg-slate-100 text-slate-500'
+                      }`}>
+                        {opt.badge}
+                      </span>
+                    )}
+                    <span>{opt.label}</span>
+                  </div>
+                  {isSelected && <Check size={16} strokeWidth={3} />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const StudentDataIssuesPage: React.FC = () => {
   const { notify, confirmAction } = useNotification();
@@ -587,15 +693,21 @@ export const StudentDataIssuesPage: React.FC = () => {
               <Building2 className="w-3.5 h-3.5 text-indigo-600 dark:text-brand-400" />
               <span>Department Filter</span>
             </label>
-            <select
+            <CustomSelect
               value={selectedDept}
-              onChange={(e) => setSelectedDept(e.target.value)}
-              className="w-full px-3.5 py-2 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl text-xs text-gray-900 dark:text-white font-bold cursor-pointer focus:ring-2 focus:ring-brand-500"
-            >
-              <option value="all">All Departments (Cyber Security &amp; IoT)</option>
-              <option value="CSE(CS)">CSE (Cyber Security)</option>
-              <option value="CSE(IOT)">CSE (Internet of Things)</option>
-            </select>
+              onChange={setSelectedDept}
+              placeholder="All Departments"
+              icon={<Building2 size={16} />}
+              options={[
+                { label: 'Computer Science and Engineering', value: 'CSE', badge: 'CSE', badgeColor: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
+                { label: 'Computer Science and Engineering (Cyber Security)', value: 'CSE(CS)', badge: 'CSE(CS)', badgeColor: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' },
+                { label: 'Computer Science and Engineering (IoT)', value: 'CSE(IOT)', badge: 'CSE(IOT)', badgeColor: 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400' },
+                { label: 'Information Technology', value: 'IT', badge: 'IT', badgeColor: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' },
+                { label: 'Artificial Intelligence and Data Science', value: 'AIDS', badge: 'AIDS', badgeColor: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' },
+                { label: 'Electronics and Communication Engineering', value: 'ECE', badge: 'ECE', badgeColor: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' },
+                { label: 'Electrical and Electronics Engineering', value: 'EEE', badge: 'EEE', badgeColor: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' },
+              ]}
+            />
           </div>
 
           {/* Academic Year Selector */}
@@ -604,17 +716,18 @@ export const StudentDataIssuesPage: React.FC = () => {
               <GraduationCap className="w-3.5 h-3.5 text-indigo-600 dark:text-brand-400" />
               <span>Academic Year</span>
             </label>
-            <select
+            <CustomSelect
               value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              className="w-full px-3.5 py-2 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl text-xs text-gray-900 dark:text-white font-bold cursor-pointer focus:ring-2 focus:ring-brand-500"
-            >
-              <option value="all">All Academic Years</option>
-              <option value="I">I Year (1st Year)</option>
-              <option value="II">II Year (2nd Year)</option>
-              <option value="III">III Year (3rd Year)</option>
-              <option value="IV">IV Year (Final Year)</option>
-            </select>
+              onChange={setSelectedYear}
+              placeholder="All Academic Years"
+              icon={<GraduationCap size={16} />}
+              options={[
+                { label: 'I Year (1st Year)', value: 'I', badge: 'I', badgeColor: 'bg-slate-100 text-slate-600' },
+                { label: 'II Year (2nd Year)', value: 'II', badge: 'II', badgeColor: 'bg-slate-200 text-slate-700' },
+                { label: 'III Year (3rd Year)', value: 'III', badge: 'III', badgeColor: 'bg-slate-300 text-slate-800' },
+                { label: 'IV Year (Final Year)', value: 'IV', badge: 'IV', badgeColor: 'bg-slate-400 text-slate-900' },
+              ]}
+            />
           </div>
 
           {/* Issue Category Selector */}
@@ -623,23 +736,24 @@ export const StudentDataIssuesPage: React.FC = () => {
               <Sliders className="w-3.5 h-3.5 text-amber-500" />
               <span>Issue Category</span>
             </label>
-            <select
+            <CustomSelect
               value={selectedIssue}
-              onChange={(e) => setSelectedIssue(e.target.value)}
-              className="w-full px-3.5 py-2 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl text-xs text-gray-900 dark:text-white font-bold cursor-pointer focus:ring-2 focus:ring-brand-500"
-            >
-              <option value="all">All Categories ({summary?.total_students ?? 0})</option>
-              <option value="CRITICAL">Critical Issues ({summary?.critical_issues ?? 0})</option>
-              <option value="SYNC_FAILED">Sync Failed ({summary?.sync_failed ?? 0})</option>
-              <option value="NOT_STARTED">Not Started — 0 Solved ({summary?.not_started ?? 0})</option>
-              <option value="NEVER_SYNCED">Never Synced ({summary?.never_synced ?? 0})</option>
-              <option value="MISSING_USERNAME">Missing Username ({summary?.missing_username ?? 0})</option>
-              <option value="INVALID_USERNAME">Profile Not Found ({summary?.invalid_username ?? 0})</option>
-              <option value="INVALID_URL">Invalid URL ({summary?.invalid_url ?? 0})</option>
-              <option value="STALE_DATA">Stale Data &gt;7 Days ({summary?.stale_data ?? 0})</option>
-              <option value="DATA_MISMATCH">Data Mismatch ({summary?.data_mismatch ?? 0})</option>
-              <option value="HEALTHY">Healthy Records ({summary?.healthy ?? 0})</option>
-            </select>
+              onChange={setSelectedIssue}
+              placeholder={`All Categories (${summary?.total_students ?? 0})`}
+              icon={<Sliders size={16} />}
+              options={[
+                { label: `Critical Issues (${summary?.critical_issues ?? 0})`, value: 'CRITICAL', badge: 'ERR', badgeColor: 'bg-rose-100 text-rose-600' },
+                { label: `Sync Failed (${summary?.sync_failed ?? 0})`, value: 'SYNC_FAILED', badge: 'FAIL', badgeColor: 'bg-red-100 text-red-600' },
+                { label: `Not Started — 0 Solved (${summary?.not_started ?? 0})`, value: 'NOT_STARTED', badge: 'NEW', badgeColor: 'bg-orange-100 text-orange-600' },
+                { label: `Never Synced (${summary?.never_synced ?? 0})`, value: 'NEVER_SYNCED', badge: 'NONE', badgeColor: 'bg-amber-100 text-amber-600' },
+                { label: `Missing Username (${summary?.missing_username ?? 0})`, value: 'MISSING_USERNAME', badge: 'MISS', badgeColor: 'bg-yellow-100 text-yellow-600' },
+                { label: `Profile Not Found (${summary?.invalid_username ?? 0})`, value: 'INVALID_USERNAME', badge: '404', badgeColor: 'bg-pink-100 text-pink-600' },
+                { label: `Invalid URL (${summary?.invalid_url ?? 0})`, value: 'INVALID_URL', badge: 'URL', badgeColor: 'bg-fuchsia-100 text-fuchsia-600' },
+                { label: `Stale Data >7 Days (${summary?.stale_data ?? 0})`, value: 'STALE_DATA', badge: 'OLD', badgeColor: 'bg-purple-100 text-purple-600' },
+                { label: `Data Mismatch (${summary?.data_mismatch ?? 0})`, value: 'DATA_MISMATCH', badge: 'DIFF', badgeColor: 'bg-indigo-100 text-indigo-600' },
+                { label: `Healthy Records (${summary?.healthy ?? 0})`, value: 'HEALTHY', badge: 'OK', badgeColor: 'bg-emerald-100 text-emerald-600' },
+              ]}
+            />
           </div>
 
           {/* Search Input */}

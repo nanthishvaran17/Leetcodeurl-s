@@ -628,7 +628,7 @@ def build_otp_email_template(otp: str) -> Tuple[str, str, str]:
           <!-- Header Branding -->
           <tr>
             <td style="padding: 36px 36px 24px 36px; text-align: left;">
-              <img src="https://leetcodeurl-s-3mig.onrender.com/static/assets/nec_25_logo.png" alt="25 Years of Excellence" style="width: 60px; height: auto; margin-bottom: 16px; display: block;">
+              <img src="{settings.FRONTEND_ORIGIN}/nec_25_logo.png" alt="25 Years of Excellence" style="width: 60px; height: auto; margin-bottom: 16px; display: block;">
               <div style="font-size: 18px; font-weight: 800; color: #0f172a; letter-spacing: -0.3px; line-height: 1.2;">
                 NANDHA ENGINEERING COLLEGE
               </div>
@@ -1189,7 +1189,7 @@ def build_institutional_email_body(
     <html>
     <body style="font-family: Arial, sans-serif; color: #1e293b; line-height: 1.6; max-width: 650px; margin: 0 auto; padding: 20px;">
         <div style="background-color: #0f172a; color: #ffffff; padding: 20px; text-align: center; border-radius: 12px 12px 0 0;">
-            <img src="https://leetcodeurl-s-3mig.onrender.com/static/assets/nec_25_logo.png" alt="25 Years of Excellence" style="width: 80px; height: auto; margin-bottom: 12px; display: inline-block;">
+            <img src="{settings.FRONTEND_ORIGIN}/nec_25_logo.png" alt="25 Years of Excellence" style="width: 80px; height: auto; margin-bottom: 12px; display: inline-block;">
             <h2 style="margin: 0;">NANDHA ENGINEERING COLLEGE</h2>
             <p style="margin: 5px 0 0 0; font-size: 13px; color: #38bdf8;">AUTONOMOUS • LeetCode Weekly Performance Report</p>
         </div>

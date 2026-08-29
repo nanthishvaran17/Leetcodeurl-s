@@ -141,7 +141,6 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const [notification, setNotification] = useState<NotificationState | null>(null);
 
   // New Feature States
-  const [isPrintView, setIsPrintView] = useState<boolean>(false);
   const [showExportMenu, setShowExportMenu] = useState<boolean>(false);
   const [autoRefresh, setAutoRefresh] = useState<boolean>(false);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
@@ -544,22 +543,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         try {
           await api.delete(`/contests/sessions/${sessionId}`);
           
-          setSessionsList(prev => {
-            const updated = prev.filter(s => Number(s.sessionId) !== Number(sessionId));
-            
-            if (Number(selectedSessionId) === Number(sessionId)) {
-              if (updated.length > 0) {
-                // Use setTimeout to allow state update to complete before selecting new session
-                setTimeout(() => handleSelectSession(updated[0].sessionId), 0);
-              } else { 
-                setSelectedSessionId(null); 
-                setMatrixRows([]); 
-                setErrorLogs([]); 
-                setComparison(null); 
-              }
-            }
-            return updated;
-          });
+          // Re-fetch fresh data from the server instead of doing unsafe local state mutations
+          // This prevents stale session IDs from causing 404 errors during export/sync.
+          await fetchInitialContestData();
           setNotification({
             isOpen: true,
             type: 'success',
@@ -1109,7 +1095,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-6">
           {/* Left Context Info */}
-          <div className="space-y-3 max-w-2xl">
+          <div className="space-y-3 flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2.5">
               {isLive ? (
                 <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center space-x-1.5 shadow-md bg-rose-600 text-white animate-pulse">
@@ -1907,7 +1893,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       {activeTab === 'matrix' && (
         <>
           {/* ── 2. UNIFIED COHESIVE FILTER & ACTION COMMAND BAR ── */}
-          <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-xl space-y-4">
+          <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-xl space-y-4 no-print">
         {/* Row 1: Search Input + Full Consolidated Action Toolbar */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           {/* Real-time Search Input */}
@@ -1933,56 +1919,60 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
           {/* Consolidated Action Toolbar */}
           <div className="flex items-center flex-wrap gap-2">
-            <button
-              onClick={() => setShowEmailModal(true)}
-              className="flex items-center space-x-1.5 px-3.5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
-              title="Send Filtered Report Email"
-            >
-              <Mail className="w-3.5 h-3.5" />
-              <span>Email</span>
-            </button>
             
-            {/* New Export Dropdown */}
+            {/* Unified Actions & Export Dropdown */}
             <div className="relative">
               <button
                 onClick={() => setShowExportMenu(!showExportMenu)}
-                className="flex items-center space-x-1.5 px-3.5 py-2 bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 text-xs font-black rounded-xl shadow-md transition-all cursor-pointer hover:bg-slate-200 dark:hover:bg-navy-800"
+                disabled={!selectedSessionId || isSyncing}
+                className="flex items-center space-x-1.5 px-3.5 py-2 bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 text-xs font-black rounded-xl shadow-md transition-all cursor-pointer hover:bg-slate-200 dark:hover:bg-navy-800 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>Export</span>
-                <ChevronDown className="w-3 h-3 ml-1" />
+                <span>Actions & Export</span>
+                <ChevronDown className={`w-3 h-3 ml-1 transition-transform ${showExportMenu ? 'rotate-180' : ''}`} />
               </button>
+              
               {showExportMenu && (
-                <div className="absolute z-50 right-0 mt-2 w-48 bg-white dark:bg-navy-900 rounded-xl shadow-lg border border-gray-200 dark:border-navy-700 overflow-hidden">
-                  <button onClick={() => { setShowPreviewModal(true); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 flex items-center space-x-2 border-b border-gray-100 dark:border-navy-800">
-                    <Eye className="w-4 h-4 text-purple-500" />
-                    <span>Live Preview</span>
-                  </button>
-                  <button onClick={() => { downloadReportFile('excel'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 flex items-center space-x-2">
-                    <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
-                    <span>Export as Excel</span>
-                  </button>
-                  <button onClick={() => { downloadReportFile('csv'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 flex items-center space-x-2 border-t border-gray-100 dark:border-navy-800">
-                    <FileText className="w-4 h-4 text-blue-500" />
-                    <span>Export as CSV</span>
-                  </button>
+                <div className="absolute z-50 right-0 mt-2 w-56 bg-white dark:bg-navy-900 rounded-xl shadow-lg border border-gray-200 dark:border-navy-700 overflow-hidden">
+                  <div className="py-1">
+                    <button onClick={() => { setShowPreviewModal(true); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 flex items-center space-x-2">
+                      <Eye className="w-4 h-4 text-purple-500" />
+                      <span>Live Preview</span>
+                    </button>
+                    <button onClick={() => { setShowEmailModal(true); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 flex items-center space-x-2 border-b border-gray-100 dark:border-navy-800">
+                      <Mail className="w-4 h-4 text-indigo-500" />
+                      <span>Send Email Report</span>
+                    </button>
+                    
+                    <button onClick={() => { downloadReportFile('excel'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 flex items-center space-x-2 mt-1">
+                      <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
+                      <span>Export as Excel</span>
+                    </button>
+                    <button onClick={() => { downloadReportFile('csv'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 flex items-center space-x-2">
+                      <FileText className="w-4 h-4 text-blue-500" />
+                      <span>Export as CSV</span>
+                    </button>
+                    <button onClick={() => { downloadReportFile('pdf'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 flex items-center space-x-2">
+                      <FileText className="w-4 h-4 text-rose-500" />
+                      <span>Export as PDF</span>
+                    </button>
+                    <button onClick={() => { downloadReportFile('word'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 flex items-center space-x-2">
+                      <FileText className="w-4 h-4 text-blue-600" />
+                      <span>Export as Word</span>
+                    </button>
+                    <button onClick={() => { downloadReportFile('zip'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 flex items-center space-x-2 border-b border-gray-100 dark:border-navy-800">
+                      <Download className="w-4 h-4 text-slate-500" />
+                      <span>Download ZIP</span>
+                    </button>
+
+                    <button onClick={() => { window.print(); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 flex items-center space-x-2 mt-1">
+                      <FileText className="w-4 h-4 text-slate-700 dark:text-slate-400" />
+                      <span>Print View</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
-
-            {/* Print View Toggle */}
-            <button
-              onClick={() => setIsPrintView(!isPrintView)}
-              className={`flex items-center space-x-1.5 px-3.5 py-2 text-xs font-black rounded-xl shadow-md transition-all cursor-pointer ${
-                isPrintView 
-                  ? 'bg-brand-500 text-white ring-2 ring-brand-500/50' 
-                  : 'bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-800'
-              }`}
-              title="Print View"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Print View</span>
-            </button>
 
             <button
               onClick={handleFetchSelectedContest}

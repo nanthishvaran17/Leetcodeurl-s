@@ -11,7 +11,7 @@ def generate_professional_template(title: str, content: str, action_button: Opti
     Generates a standardized professional HTML email wrapper with institutional branding.
     Optimized for Gmail, Outlook, Desktop, Mobile, and Tablet.
     """
-    logo_url = f"{settings.FRONTEND_ORIGIN}/logo.png"
+    logo_url = f"{settings.FRONTEND_ORIGIN}/nec_25_logo.png"
 
     button_html = ""
     if action_button:

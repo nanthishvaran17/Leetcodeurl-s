@@ -571,6 +571,8 @@ class UpdateStaffRequest(BaseModel):
     role: Optional[str] = None
     department_id: Optional[int] = None
     section_id: Optional[int] = None
+    phone_number: Optional[str] = None
+    mentoring_role: Optional[str] = None
     is_active: Optional[bool] = None
 
 class BulkAssignRequest(BaseModel):
@@ -790,6 +792,10 @@ def update_staff_user(
             changes_made['role'] = matched_role
             staff_user.role = matched_role
 
+    if payload.phone_number is not None:
+        staff_user.phone_number = payload.phone_number
+        changes_made["phone_number"] = payload.phone_number
+
     if payload.department_id is not None and staff_user.department_id != payload.department_id:
         from backend.models import Department
         dept = db.query(Department).filter(Department.id == payload.department_id).first()
@@ -798,6 +804,10 @@ def update_staff_user(
 
     if payload.section_id is not None and staff_user.section_id != payload.section_id:
         staff_user.section_id = payload.section_id
+
+    if payload.mentoring_role is not None:
+        staff_user.mentoring_role = payload.mentoring_role
+        changes_made["mentoring_role"] = payload.mentoring_role
 
     if payload.is_active is not None and staff_user.is_active != payload.is_active:
         changes_made['status'] = "Active" if payload.is_active else "Inactive"

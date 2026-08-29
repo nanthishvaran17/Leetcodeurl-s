@@ -267,6 +267,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     const devicePlatform = typeof window !== 'undefined' ? (window.navigator.platform || 'Browser') : 'Device';
     const requesterTag = isFiltered ? `Filtered (${targetList.length} Students)` : `Admin (${devicePlatform})`;
 
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    const isFaculty = user?.role === 'faculty' || user?.role === 'staff mentor' || user?.role === 'staff' || user?.role === 'hod';
+
     setSyncProgress({
       total: initialTotal,
       processed: 0,
@@ -277,9 +281,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     });
 
     try {
-      if (isFiltered && targetList.length > 0) {
+      if ((isFiltered || isFaculty) && targetList.length > 0) {
         const studentIds = targetList.map(s => s.id).filter((id): id is number => typeof id === 'number');
-        await triggerTargetedSync(studentIds, requesterTag);
+        const tag = isFaculty && !isFiltered ? `Faculty (${targetList.length} Students)` : requesterTag;
+        await triggerTargetedSync(studentIds, tag);
       } else {
         await triggerFullSync(requesterTag);
       }

@@ -763,18 +763,16 @@
 
 /* ─── Official Certificate Print Media Rules ─────────────────────────── */
 @media print {
-  @page {
-    size: A4 landscape;
-    margin: 0;
-  }
-  body * {
+  /* Only apply aggressive hiding if we are explicitly printing a certificate */
+  body.printing-certificate * {
     visibility: hidden;
   }
-  .print-certificate-target,
-  .print-certificate-target * {
+  body.printing-certificate .print-certificate-target,
+  body.printing-certificate .print-certificate-target * {
     visibility: visible !important;
   }
-  .print-certificate-target {
+  
+  body.printing-certificate .print-certificate-target {
     position: fixed !important;
     left: 0 !important;
     top: 0 !important;
@@ -788,5 +786,14 @@
     background: #FCFCFA !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  /* General Print Cleanup for Dashboards */
+  body:not(.printing-certificate) {
+    background: white !important;
+  }
+  
+  body:not(.printing-certificate) .no-print {
+    display: none !important;
   }
 }

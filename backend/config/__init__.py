@@ -71,7 +71,7 @@ class Settings(BaseSettings):
     # College Branding
     COLLEGE_NAME: str = "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)"
     COLLEGE_ADDRESS: str = "ERODE - 638 052, TAMIL NADU"
-    COLLEGE_LOGO_URL: str = "/logo.png"
+    COLLEGE_LOGO_URL: str = "/nec_25_logo.png"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

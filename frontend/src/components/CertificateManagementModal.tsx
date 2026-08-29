@@ -504,44 +504,48 @@ export const CertificateManagementModal: React.FC<{
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 15 }}
         transition={{ duration: 0.25, ease: "easeOut" }}
-        className="modal-container-responsive max-w-[1600px] w-[96vw] h-[92vh] bg-slate-950 border border-slate-800 rounded-3xl shadow-lg flex flex-col overflow-hidden text-slate-100"
+        className="modal-container-responsive max-w-[1600px] w-[96vw] h-[92vh] bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-3xl shadow-lg flex flex-col overflow-hidden text-gray-900 dark:text-gray-900 dark:text-white"
         onClick={(e) => e.stopPropagation()}
       >
 
         {/* ── TOP INSTITUTIONAL HEADER & SYSTEM STATUS ───────────────────────── */}
-        <div className="px-6 py-4 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950/80 border-b border-slate-800 flex items-center justify-between flex-wrap gap-4 shrink-0">
-          <div className="flex items-center space-x-3.5">
-            <div className="p-3 rounded-2xl bg-amber-500/15 text-amber-400 border border-amber-500/30 shadow-lg shadow-amber-500/10">
-              <Award className="w-6 h-6" />
+        <div className="px-6 py-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 border-b border-brand-500/30 flex items-center justify-between flex-wrap gap-4 shrink-0 shadow-lg">
+          <div className="flex items-center space-x-4">
+            <div className="p-3.5 rounded-2xl bg-brand-500/10 text-brand-400 border border-brand-500/30 shadow-lg backdrop-blur-sm">
+              <Award className="w-7 h-7 drop-shadow-md" />
             </div>
-            <div>
-              <div className="flex items-center space-x-2.5">
-                <h2 className="text-lg font-black text-white tracking-tight">
-                  INSTITUTIONAL CREDENTIAL ISSUANCE HUB
+            <div className="space-y-2">
+              <div className="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] font-black uppercase tracking-wider">
+                <Sparkles className="w-3 h-3 text-amber-400" />
+                <span>Nandha Engineering College (Autonomous)</span>
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                <h2 className="text-xl md:text-2xl font-black text-white tracking-tight uppercase">
+                  INSTITUTIONAL <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">CREDENTIAL ISSUANCE HUB</span>
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center space-x-1">
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center space-x-1.5 shadow-sm">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
                   <span>● CREDENTIAL SYSTEM OPERATIONAL</span>
                 </span>
               </div>
-              <p className="text-xs text-slate-400 font-semibold flex items-center space-x-2 mt-0.5">
-                <span>Nandha Engineering College (Autonomous)</span>
-                <span>•</span>
-                <span className="text-amber-400 font-bold">Create • Sign • Issue • Verify • Audit</span>
+              
+              <p className="text-[11px] md:text-xs text-gray-300 font-bold tracking-wide uppercase">
+                Create • Sign • Issue • Verify • Audit
               </p>
             </div>
           </div>
 
           {/* Right Navigation & Actions */}
           <div className="flex items-center space-x-3">
-            <div className="flex bg-slate-900/90 p-1 rounded-2xl border border-slate-800 text-xs font-bold shadow-inner">
+            <div className="flex bg-white/90 dark:bg-navy-900/90 p-1 rounded-2xl border border-gray-200 dark:border-navy-700 text-xs font-bold shadow-inner">
               <button
                 type="button"
                 onClick={() => setActiveMainTab('studio')}
                 className={`px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 ${
                   activeMainTab === 'studio'
                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow-md'
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-white'
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5" />
@@ -553,7 +557,7 @@ export const CertificateManagementModal: React.FC<{
                 className={`px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 ${
                   activeMainTab === 'signatures'
                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow-md'
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-white'
                 }`}
               >
                 <Upload className="w-3.5 h-3.5" />
@@ -565,7 +569,7 @@ export const CertificateManagementModal: React.FC<{
                 className={`px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 ${
                   activeMainTab === 'registry'
                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow-md'
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-white'
                 }`}
               >
                 <FileCheck2 className="w-3.5 h-3.5" />
@@ -584,27 +588,27 @@ export const CertificateManagementModal: React.FC<{
         </div>
 
         {/* ── METRICS RIBBON (GROUND TRUTH NUMBERS) ─────────────────────────── */}
-        <div className="px-6 py-2.5 bg-slate-900/90 border-b border-slate-800/80 flex items-center justify-between text-xs font-bold overflow-x-auto no-scrollbar shrink-0">
+        <div className="px-6 py-2.5 bg-white/90 dark:bg-navy-900/90 border-b border-gray-200/80 dark:border-navy-700/80 flex items-center justify-between text-xs font-bold overflow-x-auto no-scrollbar shrink-0">
           <div className="flex items-center space-x-6 whitespace-nowrap">
             <div className="flex items-center space-x-2">
-              <span className="text-slate-400 text-[11px]">TOTAL ISSUED:</span>
-              <span className="text-white font-mono font-black">{metrics.total}</span>
+              <span className="text-gray-500 dark:text-gray-400 text-[11px]">TOTAL ISSUED:</span>
+              <span className="text-gray-900 dark:text-white font-mono font-black">{metrics.total}</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-slate-400 text-[11px]">VERIFIED ACTIVE:</span>
+              <span className="text-gray-500 dark:text-gray-400 text-[11px]">VERIFIED ACTIVE:</span>
               <span className="text-emerald-400 font-mono font-black">{metrics.valid}</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-slate-400 text-[11px]">REVOKED:</span>
+              <span className="text-gray-500 dark:text-gray-400 text-[11px]">REVOKED:</span>
               <span className="text-rose-400 font-mono font-black">{metrics.revoked}</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-slate-400 text-[11px]">AWAITING ISSUANCE:</span>
+              <span className="text-gray-500 dark:text-gray-400 text-[11px]">AWAITING ISSUANCE:</span>
               <span className="text-amber-400 font-mono font-black">{metrics.pending}</span>
             </div>
           </div>
 
-          <div className="flex items-center space-x-3 text-[11px] text-slate-400">
+          <div className="flex items-center space-x-3 text-[11px] text-gray-500 dark:text-gray-400">
             <span className="flex items-center space-x-1 text-emerald-400">
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Secure Institutional Issuance & Audit</span>
@@ -620,7 +624,7 @@ export const CertificateManagementModal: React.FC<{
             <div className="flex-1 flex flex-col min-h-0">
 
               {/* 5-Step Workflow Stepper Bar */}
-              <div className="px-6 py-3 bg-slate-950 border-b border-slate-800 flex items-center justify-between overflow-x-auto no-scrollbar shrink-0">
+              <div className="px-6 py-3 bg-gray-50 dark:bg-navy-950 border-b border-gray-200 dark:border-navy-700 flex items-center justify-between overflow-x-auto no-scrollbar shrink-0">
                 <div className="flex items-center space-x-2 sm:space-x-4">
                   {[
                     { step: 1, label: 'RECIPIENT', desc: 'Select Student' },
@@ -640,7 +644,7 @@ export const CertificateManagementModal: React.FC<{
                             ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
                             : isCompleted
                             ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
-                            : 'text-slate-500 hover:text-slate-400 border border-transparent'
+                            : 'text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:text-gray-400 border border-transparent'
                         }`}
                       >
                         <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
@@ -648,21 +652,21 @@ export const CertificateManagementModal: React.FC<{
                             ? 'bg-amber-400 text-slate-950'
                             : isCompleted
                             ? 'bg-emerald-500 text-slate-950'
-                            : 'bg-slate-800 text-slate-400'
+                            : 'bg-gray-100 dark:bg-navy-800 text-gray-500 dark:text-gray-400'
                         }`}>
                           {isCompleted ? '✓' : s.step}
                         </span>
                         <div className="text-left">
                           <span className="block text-[11px] font-black tracking-tight">{s.label}</span>
-                          <span className="block text-[9px] text-slate-400 -mt-0.5">{s.desc}</span>
+                          <span className="block text-[9px] text-gray-500 dark:text-gray-400 -mt-0.5">{s.desc}</span>
                         </div>
                       </button>
                     );
                   })}
                 </div>
 
-                <div className="hidden lg:flex items-center space-x-2 text-xs font-bold text-slate-400">
-                  <span className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-emerald-400 font-mono">
+                <div className="hidden lg:flex items-center space-x-2 text-xs font-bold text-gray-500 dark:text-gray-400">
+                  <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 text-emerald-400 font-mono">
                     RATIO: A4 LANDSCAPE (297mm × 210mm)
                   </span>
                 </div>
@@ -681,26 +685,26 @@ export const CertificateManagementModal: React.FC<{
                       animate={{ opacity: 1, x: 0 }}
                       className="space-y-4"
                     >
-                      <div className="p-5 rounded-3xl bg-slate-900/90 border border-slate-800 space-y-3.5 shadow-xl">
+                      <div className="p-5 rounded-3xl bg-white/90 dark:bg-navy-900/90 border border-gray-200 dark:border-navy-700 space-y-3.5 shadow-xl">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center space-x-1.5">
                             <UserCheck className="w-4 h-4" />
                             <span>Select Student Recipient</span>
                           </span>
-                          <span className="text-[10px] text-slate-400 font-bold">
+                          <span className="text-[10px] text-gray-500 dark:text-gray-400 font-bold">
                             {students.length} Verified Students
                           </span>
                         </div>
 
                         {/* Search Input */}
                         <div className="relative">
-                          <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                          <Search className="w-4 h-4 absolute left-3 top-3 text-gray-500 dark:text-gray-400" />
                           <input
                             type="text"
                             placeholder="Search by Name, Register No, or LeetCode username..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-9 pr-3 py-2.5 bg-slate-950 border border-slate-700 rounded-2xl text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-500 font-bold shadow-inner"
+                            className="w-full pl-9 pr-3 py-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-navy-600 rounded-2xl text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-amber-500 font-bold shadow-inner"
                           />
                         </div>
 
@@ -713,16 +717,16 @@ export const CertificateManagementModal: React.FC<{
                               className={`p-3 rounded-2xl text-xs cursor-pointer transition-all ${
                                 selectedStudent?.id === st.id
                                   ? 'bg-amber-500/20 text-white border border-amber-500/40 font-bold shadow-md'
-                                  : 'bg-slate-950/60 hover:bg-slate-800/80 text-slate-300 border border-slate-800/60'
+                                  : 'bg-gray-50 dark:bg-navy-950/60 hover:bg-gray-100 dark:bg-navy-800/80 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-navy-700/60'
                               }`}
                             >
                               <div className="flex items-center justify-between">
-                                <span className="font-extrabold text-white text-sm">{st.name}</span>
+                                <span className="font-extrabold text-gray-900 dark:text-white text-sm">{st.name}</span>
                                 <span className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
                                   {st.reg_no}
                                 </span>
                               </div>
-                              <div className="text-[11px] text-slate-400 mt-1.5 flex items-center justify-between">
+                              <div className="text-[11px] text-gray-500 dark:text-gray-400 mt-1.5 flex items-center justify-between">
                                 <span>{resolveDeptFullName(st.department?.code)}</span>
                                 <div className="flex items-center space-x-2">
                                   {st.stats?.total_solved !== undefined && (
@@ -744,9 +748,9 @@ export const CertificateManagementModal: React.FC<{
 
                       {/* Selected Student Identity Card Preview */}
                       {selectedStudent && (
-                        <div className="p-5 rounded-3xl bg-gradient-to-br from-slate-900 to-indigo-950/60 border border-slate-800 space-y-3 shadow-xl">
-                          <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
-                            <span className="text-[11px] font-black text-slate-400 uppercase">Selected Identity Card</span>
+                        <div className="p-5 rounded-3xl bg-gradient-to-br from-slate-900 to-indigo-950/60 border border-gray-200 dark:border-navy-700 space-y-3 shadow-xl">
+                          <div className="flex items-center justify-between border-b border-gray-200/80 dark:border-navy-700/80 pb-2.5">
+                            <span className="text-[11px] font-black text-gray-500 dark:text-gray-400 uppercase">Selected Identity Card</span>
                             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                               ✓ Verified Record
                             </span>
@@ -757,21 +761,21 @@ export const CertificateManagementModal: React.FC<{
                               {selectedStudent.name.slice(0, 2).toUpperCase()}
                             </div>
                             <div>
-                              <h4 className="text-base font-black text-white">{selectedStudent.name}</h4>
+                              <h4 className="text-base font-black text-gray-900 dark:text-white">{selectedStudent.name}</h4>
                               <p className="text-xs font-mono text-amber-400 font-bold">{selectedStudent.reg_no}</p>
-                              <p className="text-[11px] text-slate-400">{currentDeptTitle}</p>
+                              <p className="text-[11px] text-gray-500 dark:text-gray-400">{currentDeptTitle}</p>
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80 text-xs">
-                            <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
-                              <span className="text-[10px] text-slate-400 block font-bold">Solved Problems</span>
+                          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-200/80 dark:border-navy-700/80 text-xs">
+                            <div className="p-2.5 rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700">
+                              <span className="text-[10px] text-gray-500 dark:text-gray-400 block font-bold">Solved Problems</span>
                               <span className="font-mono font-black text-emerald-400 text-sm">
                                 {selectedStudent.stats?.total_solved ?? 0}
                               </span>
                             </div>
-                            <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
-                              <span className="text-[10px] text-slate-400 block font-bold">Contest Rating</span>
+                            <div className="p-2.5 rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700">
+                              <span className="text-[10px] text-gray-500 dark:text-gray-400 block font-bold">Contest Rating</span>
                               <span className="font-mono font-black text-amber-400 text-sm">
                                 {selectedStudent.stats?.contest_rating ? selectedStudent.stats.contest_rating.toFixed(1) : '1500.0'}
                               </span>
@@ -797,7 +801,7 @@ export const CertificateManagementModal: React.FC<{
                       animate={{ opacity: 1, x: 0 }}
                       className="space-y-4"
                     >
-                      <div className="p-5 rounded-3xl bg-slate-900/90 border border-slate-800 space-y-4 shadow-xl">
+                      <div className="p-5 rounded-3xl bg-white/90 dark:bg-navy-900/90 border border-gray-200 dark:border-navy-700 space-y-4 shadow-xl">
                         <span className="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center space-x-1.5">
                           <Sliders className="w-4 h-4" />
                           <span>Select Credential Recognition Type</span>
@@ -810,26 +814,26 @@ export const CertificateManagementModal: React.FC<{
                               onClick={() => setSelectedCertType(type.id)}
                               className={`p-3 rounded-2xl border text-xs cursor-pointer transition-all ${
                                 selectedCertType === type.id
-                                  ? 'bg-amber-500/20 border-amber-500/40 text-white shadow-md'
-                                  : 'bg-slate-950/60 border-slate-800/80 text-slate-300 hover:bg-slate-800/60'
+                                  ? 'bg-amber-500/20 border-amber-500/40 text-gray-900 dark:text-white shadow-md'
+                                  : 'bg-gray-50 dark:bg-navy-950/60 border-gray-200/80 dark:border-navy-700/80 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-navy-800/60'
                               }`}
                             >
                               <div className="flex items-center justify-between">
-                                <span className="font-extrabold text-sm text-white">{type.title}</span>
+                                <span className="font-extrabold text-sm text-gray-900 dark:text-white">{type.title}</span>
                                 {selectedCertType === type.id && (
                                   <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30">
                                     ACTIVE
                                   </span>
                                 )}
                               </div>
-                              <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">{type.desc}</p>
+                              <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">{type.desc}</p>
                             </div>
                           ))}
                         </div>
 
                         {/* Issue Date Override */}
-                        <div className="space-y-1.5 pt-2 border-t border-slate-800">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase">
+                        <div className="space-y-1.5 pt-2 border-t border-gray-200 dark:border-navy-700">
+                          <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">
                             Issue Date Display (Optional Override)
                           </label>
                           <input
@@ -837,14 +841,14 @@ export const CertificateManagementModal: React.FC<{
                             placeholder="e.g. Aug 15, 2026 (Defaults to today's date)"
                             value={customDate}
                             onChange={(e) => setCustomDate(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white font-mono placeholder-slate-500 focus:ring-2 focus:ring-amber-500"
+                            className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-navy-600 rounded-xl text-xs text-gray-900 dark:text-white font-mono placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-amber-500"
                           />
                         </div>
 
                         <div className="flex items-center space-x-2 pt-2">
                           <button
                             onClick={() => setCurrentStep(1)}
-                            className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs cursor-pointer"
+                            className="px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-navy-800 hover:bg-gray-200 dark:bg-navy-700 text-gray-700 dark:text-gray-300 font-bold text-xs cursor-pointer"
                           >
                             Back
                           </button>
@@ -867,16 +871,16 @@ export const CertificateManagementModal: React.FC<{
                       animate={{ opacity: 1, x: 0 }}
                       className="space-y-4"
                     >
-                      <div className="p-5 rounded-3xl bg-slate-900/90 border border-slate-800 space-y-4 shadow-xl">
+                      <div className="p-5 rounded-3xl bg-white/90 dark:bg-navy-900/90 border border-gray-200 dark:border-navy-700 space-y-4 shadow-xl">
                         <span className="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center space-x-1.5">
                           <ShieldCheck className="w-4 h-4" />
                           <span>Institutional Dual Signature Authority</span>
                         </span>
 
                         {/* Principal Signature Card */}
-                        <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+                        <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-black text-white">1. PRINCIPAL SIGNATURE</span>
+                            <span className="text-xs font-black text-gray-900 dark:text-white">1. PRINCIPAL SIGNATURE</span>
                             {principalSig?.image_preview ? (
                               <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                                 ✓ CONFIGURED ({principalSig.version})
@@ -888,18 +892,18 @@ export const CertificateManagementModal: React.FC<{
                             )}
                           </div>
                           {principalSig?.image_preview ? (
-                            <div className="h-16 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-center p-2">
+                            <div className="h-16 rounded-xl bg-white/60 dark:bg-navy-900/60 border border-gray-200 dark:border-navy-700 flex items-center justify-center p-2">
                               <img src={principalSig.image_preview} alt="Principal Signature" className="max-h-12 max-w-[180px] object-contain" />
                             </div>
                           ) : (
-                            <p className="text-[11px] text-slate-500 italic">No principal signature image uploaded yet.</p>
+                            <p className="text-[11px] text-gray-400 dark:text-gray-500 italic">No principal signature image uploaded yet.</p>
                           )}
                         </div>
 
                         {/* HOD Signature Card */}
-                        <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+                        <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-black text-white">2. HOD SIGNATURE ({selectedStudent?.department?.code?.includes('IOT') ? 'IoT' : 'Cyber Security'})</span>
+                            <span className="text-xs font-black text-gray-900 dark:text-white">2. HOD SIGNATURE ({selectedStudent?.department?.code?.includes('IOT') ? 'IoT' : 'Cyber Security'})</span>
                             {currentHodSig?.image_preview ? (
                               <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                                 ✓ CONFIGURED ({currentHodSig.version})
@@ -911,18 +915,18 @@ export const CertificateManagementModal: React.FC<{
                             )}
                           </div>
                           {currentHodSig?.image_preview ? (
-                            <div className="h-16 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-center p-2">
+                            <div className="h-16 rounded-xl bg-white/60 dark:bg-navy-900/60 border border-gray-200 dark:border-navy-700 flex items-center justify-center p-2">
                               <img src={currentHodSig.image_preview} alt="HOD Signature" className="max-h-12 max-w-[180px] object-contain" />
                             </div>
                           ) : (
-                            <p className="text-[11px] text-slate-500 italic">No HOD signature image uploaded for this department.</p>
+                            <p className="text-[11px] text-gray-400 dark:text-gray-500 italic">No HOD signature image uploaded for this department.</p>
                           )}
                         </div>
 
                         <div className="flex items-center space-x-2 pt-2">
                           <button
                             onClick={() => setCurrentStep(2)}
-                            className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs cursor-pointer"
+                            className="px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-navy-800 hover:bg-gray-200 dark:bg-navy-700 text-gray-700 dark:text-gray-300 font-bold text-xs cursor-pointer"
                           >
                             Back
                           </button>
@@ -945,7 +949,7 @@ export const CertificateManagementModal: React.FC<{
                       animate={{ opacity: 1, x: 0 }}
                       className="space-y-4"
                     >
-                      <div className="p-5 rounded-3xl bg-slate-900/90 border border-slate-800 space-y-4 shadow-xl">
+                      <div className="p-5 rounded-3xl bg-white/90 dark:bg-navy-900/90 border border-gray-200 dark:border-navy-700 space-y-4 shadow-xl">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center space-x-1.5">
                             <Shield className="w-4 h-4" />
@@ -974,29 +978,29 @@ export const CertificateManagementModal: React.FC<{
                         )}
 
                         {/* Checklist */}
-                        <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
+                        <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 space-y-2 text-xs">
                           <div className="flex items-center justify-between">
-                            <span className="text-slate-300">Student Record Exists</span>
+                            <span className="text-gray-700 dark:text-gray-300">Student Record Exists</span>
                             <span className="text-emerald-400 font-bold">✓ Verified</span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-slate-300">LeetCode Performance Data</span>
+                            <span className="text-gray-700 dark:text-gray-300">LeetCode Performance Data</span>
                             <span className="text-emerald-400 font-bold">✓ Verified ({selectedStudent?.stats?.total_solved ?? 0} Solved)</span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-slate-300">Principal Signature Configured</span>
+                            <span className="text-gray-700 dark:text-gray-300">Principal Signature Configured</span>
                             <span className={principalSig?.image_preview ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
                               {principalSig?.image_preview ? '✓ Configured' : '⚠ Missing'}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-slate-300">HOD Signature Configured</span>
+                            <span className="text-gray-700 dark:text-gray-300">HOD Signature Configured</span>
                             <span className={currentHodSig?.image_preview ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
                               {currentHodSig?.image_preview ? '✓ Configured' : '⚠ Missing'}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-slate-300">QR Verification Endpoint</span>
+                            <span className="text-gray-700 dark:text-gray-300">QR Verification Endpoint</span>
                             <span className="text-emerald-400 font-bold">✓ Active (Public Verification Ledger)</span>
                           </div>
                         </div>
@@ -1021,8 +1025,8 @@ export const CertificateManagementModal: React.FC<{
                       animate={{ opacity: 1, x: 0 }}
                       className="space-y-4"
                     >
-                      <div className="p-5 rounded-3xl bg-slate-900/90 border border-slate-800 space-y-4 shadow-xl">
-                        <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                      <div className="p-5 rounded-3xl bg-white/90 dark:bg-navy-900/90 border border-gray-200 dark:border-navy-700 space-y-4 shadow-xl">
+                        <div className="flex items-center justify-between border-b border-gray-200 dark:border-navy-700 pb-2.5">
                           <span className="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center space-x-1.5">
                             <CheckCircle2 className="w-4 h-4" />
                             <span>Document Center & Verification</span>
@@ -1052,7 +1056,7 @@ export const CertificateManagementModal: React.FC<{
 
                           <button
                             onClick={handlePrint}
-                            className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-extrabold text-xs rounded-2xl flex items-center justify-center space-x-2 border border-slate-700 cursor-pointer transition-all"
+                            className="w-full py-3 bg-gray-100 dark:bg-navy-800 hover:bg-gray-200 dark:bg-navy-700 text-gray-800 dark:text-gray-200 font-extrabold text-xs rounded-2xl flex items-center justify-center space-x-2 border border-gray-300 dark:border-navy-600 cursor-pointer transition-all"
                           >
                             <Printer className="w-4 h-4 text-amber-400" />
                             <span>Print A4 Landscape</span>
@@ -1062,7 +1066,7 @@ export const CertificateManagementModal: React.FC<{
                             href={generatedCert?.verification_url || `/verify-certificate/${cleanReg || activeVerificationId}`}
                             target="_blank"
                             rel="noreferrer"
-                            className="w-full py-3 bg-slate-950 hover:bg-slate-900 text-amber-400 font-extrabold text-xs rounded-2xl flex items-center justify-center space-x-2 border border-amber-500/30 transition-all"
+                            className="w-full py-3 bg-gray-50 dark:bg-navy-950 hover:bg-white dark:bg-navy-900 text-amber-400 font-extrabold text-xs rounded-2xl flex items-center justify-center space-x-2 border border-amber-500/30 transition-all"
                           >
                             <ExternalLink className="w-4 h-4" />
                             <span>Verify Public QR Code Ledger</span>
@@ -1070,13 +1074,13 @@ export const CertificateManagementModal: React.FC<{
                         </div>
 
                         {/* Security Badge */}
-                        <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800 text-[11px] text-slate-400 space-y-1">
+                        <div className="p-3 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 text-[11px] text-gray-500 dark:text-gray-400 space-y-1">
                           <div className="flex items-center space-x-1.5 text-emerald-400 font-bold">
                             <ShieldCheck className="w-3.5 h-3.5" />
                             <span>Institutional Credential Protected</span>
                           </div>
-                          <p className="text-[10px] text-slate-500">
-                            Digitally sealed with Certificate ID: <span className="font-mono text-slate-300">{activeVerificationId}</span>
+                          <p className="text-[10px] text-gray-400 dark:text-gray-500">
+                            Digitally sealed with Certificate ID: <span className="font-mono text-gray-700 dark:text-gray-300">{activeVerificationId}</span>
                           </p>
                         </div>
                       </div>
@@ -1084,25 +1088,25 @@ export const CertificateManagementModal: React.FC<{
                   )}
 
                   {/* Security Panel */}
-                  <div className="p-4 rounded-3xl bg-slate-900/60 border border-slate-800/80 space-y-2 text-xs">
-                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center space-x-1.5">
+                  <div className="p-4 rounded-3xl bg-white/60 dark:bg-navy-900/60 border border-gray-200/80 dark:border-navy-700/80 space-y-2 text-xs">
+                    <span className="text-[10px] font-black uppercase text-gray-500 dark:text-gray-400 tracking-wider flex items-center space-x-1.5">
                       <Lock className="w-3.5 h-3.5 text-indigo-400" />
                       <span>Institutional Security Credentials</span>
                     </span>
                     <div className="grid grid-cols-2 gap-2 text-[10.5px]">
-                      <div className="flex items-center space-x-1.5 text-slate-300">
+                      <div className="flex items-center space-x-1.5 text-gray-700 dark:text-gray-300">
                         <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                         <span>Identity Verified</span>
                       </div>
-                      <div className="flex items-center space-x-1.5 text-slate-300">
+                      <div className="flex items-center space-x-1.5 text-gray-700 dark:text-gray-300">
                         <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                         <span>Dual Signatures</span>
                       </div>
-                      <div className="flex items-center space-x-1.5 text-slate-300">
+                      <div className="flex items-center space-x-1.5 text-gray-700 dark:text-gray-300">
                         <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                         <span>QR Public Ledger</span>
                       </div>
-                      <div className="flex items-center space-x-1.5 text-slate-300">
+                      <div className="flex items-center space-x-1.5 text-gray-700 dark:text-gray-300">
                         <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                         <span>Audit Trail Active</span>
                       </div>
@@ -1114,7 +1118,7 @@ export const CertificateManagementModal: React.FC<{
                 {/* ── RIGHT COLUMN: HIGH-FIDELITY A4 LANDSCAPE LIVE PREVIEW (7 COLS) ─ */}
                 <div className="lg:col-span-7 space-y-3 flex flex-col justify-center">
                   <div className="flex items-center justify-between text-xs px-1">
-                    <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px] flex items-center space-x-1.5">
+                    <span className="font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-[10px] flex items-center space-x-1.5">
                       <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                       <span>Live Official Certificate Preview Canvas</span>
                     </span>
@@ -1209,7 +1213,7 @@ export const CertificateManagementModal: React.FC<{
                             [Authorized Signatory]
                           </div>
                         )}
-                        <div className="w-32 border-b border-slate-800 mx-auto"></div>
+                        <div className="w-32 border-b border-gray-200 dark:border-navy-700 mx-auto"></div>
                         <p className="text-[9px] font-black leading-tight mt-1">PRINCIPAL</p>
                         <p className="text-[8px] text-slate-600">Nandha Engineering College</p>
                       </div>
@@ -1222,7 +1226,7 @@ export const CertificateManagementModal: React.FC<{
                         <p className="text-[8px] font-bold text-slate-700 leading-tight">
                           Verification ID: <strong className="font-mono text-[#0B192C]">{activeVerificationId}</strong>
                         </p>
-                        <p className="text-[7px] text-slate-500">Scan QR for official verification</p>
+                        <p className="text-[7px] text-gray-400 dark:text-gray-500">Scan QR for official verification</p>
                       </div>
 
                       {/* Right: HOD */}
@@ -1234,7 +1238,7 @@ export const CertificateManagementModal: React.FC<{
                             [Authorized Signatory]
                           </div>
                         )}
-                        <div className="w-32 border-b border-slate-800 mx-auto"></div>
+                        <div className="w-32 border-b border-gray-200 dark:border-navy-700 mx-auto"></div>
                         <p className="text-[9px] font-black leading-tight mt-1">HOD / COORDINATOR</p>
                         <p className="text-[7px] text-slate-600 truncate max-w-[160px] mx-auto" title={currentDeptTitle}>{currentDeptTitle}</p>
                       </div>
@@ -1251,13 +1255,13 @@ export const CertificateManagementModal: React.FC<{
           {/* TAB 2: SIGNATURES MANAGEMENT */}
           {activeMainTab === 'signatures' && (
             <div className="flex-1 p-6 overflow-y-auto space-y-6">
-              <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 flex items-center justify-between flex-wrap gap-4">
+              <div className="p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 flex items-center justify-between flex-wrap gap-4">
                 <div>
-                  <h3 className="text-base font-black text-white flex items-center space-x-2">
+                  <h3 className="text-base font-black text-gray-900 dark:text-white flex items-center space-x-2">
                     <Upload className="w-4 h-4 text-amber-400" />
                     <span>Authorized Dual Signatures Management</span>
                   </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                     Upload official transparent PNG signatures. Signatures are automatically embedded above baseline lines in generated PDFs and certificates.
                   </p>
                 </div>
@@ -1270,11 +1274,11 @@ export const CertificateManagementModal: React.FC<{
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 {/* ── CARD 1: PRINCIPAL SIGNATURE ── */}
-                <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 space-y-4 shadow-xl">
+                  <div className="flex items-center justify-between border-b border-gray-200 dark:border-navy-700 pb-3">
                     <div>
                       <h4 className="text-sm font-black text-amber-400">CARD 1: PRINCIPAL SIGNATURE</h4>
-                      <p className="text-[11px] text-slate-400">Applies across all institutional certificates</p>
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400">Applies across all institutional certificates</p>
                     </div>
                     {principalSig?.image_preview ? (
                       <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
@@ -1287,29 +1291,29 @@ export const CertificateManagementModal: React.FC<{
                     )}
                   </div>
 
-                  <div className="h-28 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col items-center justify-center p-3 relative overflow-hidden">
+                  <div className="h-28 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 flex flex-col items-center justify-center p-3 relative overflow-hidden">
                     {principalSig?.image_preview ? (
                       <div className="text-center space-y-1">
                         <img src={principalSig.image_preview} alt="Principal Signature" className="max-h-16 max-w-[200px] object-contain mx-auto" />
-                        <span className="text-[9px] font-mono text-slate-500 block">Uploaded: {principalSig.uploaded_at || 'Active'}</span>
+                        <span className="text-[9px] font-mono text-gray-400 dark:text-gray-500 block">Uploaded: {principalSig.uploaded_at || 'Active'}</span>
                       </div>
                     ) : (
                       <div className="text-center space-y-1">
                         <AlertTriangle className="w-6 h-6 text-slate-600 mx-auto" />
-                        <span className="text-xs text-slate-500 font-medium">No signature image uploaded</span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">No signature image uploaded</span>
                       </div>
                     )}
                   </div>
 
                   <div className="space-y-3 pt-1">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase">
+                    <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">
                       {principalSig?.image_preview ? 'Replace Principal Signature' : 'Upload Principal Signature'}
                     </label>
                     <input
                       type="file"
                       accept="image/png,image/jpeg,image/webp"
                       onChange={(e) => { setUploadType('PRINCIPAL'); handleFileChange(e); }}
-                      className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-300 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-black file:bg-amber-500 file:text-slate-950 cursor-pointer"
+                      className="w-full p-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-navy-600 rounded-xl text-xs text-gray-700 dark:text-gray-300 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-black file:bg-amber-500 file:text-slate-950 cursor-pointer"
                     />
 
                     <div className="flex items-center space-x-2">
@@ -1349,19 +1353,19 @@ export const CertificateManagementModal: React.FC<{
                 </div>
 
                 {/* ── CARD 2: HOD SIGNATURES ── */}
-                <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 space-y-4 shadow-xl">
+                  <div className="flex items-center justify-between border-b border-gray-200 dark:border-navy-700 pb-3">
                     <div>
                       <h4 className="text-sm font-black text-emerald-400">CARD 2: HOD / COORDINATOR SIGNATURE</h4>
-                      <p className="text-[11px] text-slate-400">Dynamic Department Signature Mapping</p>
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400">Dynamic Department Signature Mapping</p>
                     </div>
                   </div>
 
-                  <div className="flex bg-slate-950 p-1 rounded-2xl border border-slate-800 text-xs font-bold">
+                  <div className="flex bg-gray-50 dark:bg-navy-950 p-1 rounded-2xl border border-gray-200 dark:border-navy-700 text-xs font-bold">
                     <button
                       onClick={() => setUploadType('HOD_CSE_CS')}
                       className={`flex-1 py-2 rounded-xl transition-all cursor-pointer text-center ${
-                        uploadType === 'HOD_CSE_CS' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                        uploadType === 'HOD_CSE_CS' ? 'bg-emerald-600 text-white shadow' : 'text-gray-500 dark:text-gray-400 hover:text-white'
                       }`}
                     >
                       Cyber Security {csHodSig ? `(${csHodSig.version})` : '⚠'}
@@ -1369,7 +1373,7 @@ export const CertificateManagementModal: React.FC<{
                     <button
                       onClick={() => setUploadType('HOD_CSE_IOT')}
                       className={`flex-1 py-2 rounded-xl transition-all cursor-pointer text-center ${
-                        uploadType === 'HOD_CSE_IOT' ? 'bg-sky-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                        uploadType === 'HOD_CSE_IOT' ? 'bg-sky-600 text-white shadow' : 'text-gray-500 dark:text-gray-400 hover:text-white'
                       }`}
                     >
                       IoT {iotHodSig ? `(${iotHodSig.version})` : '⚠'}
@@ -1381,31 +1385,31 @@ export const CertificateManagementModal: React.FC<{
                     const deptLabel = uploadType === 'HOD_CSE_IOT' ? 'IoT' : 'Cyber Security';
                     return (
                       <div className="space-y-3">
-                        <div className="h-28 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col items-center justify-center p-3 relative overflow-hidden">
+                        <div className="h-28 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 flex flex-col items-center justify-center p-3 relative overflow-hidden">
                           {activeHod?.image_preview ? (
                             <div className="text-center space-y-1">
                               <img src={activeHod.image_preview} alt="HOD Signature" className="max-h-16 max-w-[200px] object-contain mx-auto" />
-                              <span className="text-[9px] font-mono text-slate-500 block">
+                              <span className="text-[9px] font-mono text-gray-400 dark:text-gray-500 block">
                                 {deptLabel} • {activeHod.version} • Uploaded: {activeHod.uploaded_at || 'Active'}
                               </span>
                             </div>
                           ) : (
                             <div className="text-center space-y-1">
                               <AlertTriangle className="w-6 h-6 text-slate-600 mx-auto" />
-                              <span className="text-xs text-slate-500 font-medium">No signature uploaded for {deptLabel}</span>
+                              <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">No signature uploaded for {deptLabel}</span>
                             </div>
                           )}
                         </div>
 
                         <div className="space-y-3 pt-1">
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase">
+                          <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">
                             Upload / Replace {deptLabel} Signature
                           </label>
                           <input
                             type="file"
                             accept="image/png,image/jpeg,image/webp"
                             onChange={handleFileChange}
-                            className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-300 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-black file:bg-emerald-500 file:text-slate-950 cursor-pointer"
+                            className="w-full p-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-navy-600 rounded-xl text-xs text-gray-700 dark:text-gray-300 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-black file:bg-emerald-500 file:text-slate-950 cursor-pointer"
                           />
 
                           <div className="flex items-center space-x-2">
@@ -1454,20 +1458,20 @@ export const CertificateManagementModal: React.FC<{
           {/* TAB 3: ISSUED REGISTRY & AUDIT */}
           {activeMainTab === 'registry' && (
             <div className="flex-1 p-6 overflow-y-auto space-y-4">
-              <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
+              <div className="p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 space-y-4">
                 <div className="flex items-center justify-between flex-wrap gap-3">
                   <div>
-                    <h3 className="text-base font-black text-white flex items-center space-x-2">
+                    <h3 className="text-base font-black text-gray-900 dark:text-white flex items-center space-x-2">
                       <FileCheck2 className="w-4 h-4 text-amber-400" />
                       <span>Official Institutional Credential Registry & Verification Audit</span>
                     </h3>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       Authoritative ledger of issued certificates, verification IDs, forensic audit reports, and revocation statuses.
                     </p>
                   </div>
                   <button
                     onClick={fetchHistory}
-                    className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 text-xs font-bold flex items-center space-x-1.5 cursor-pointer shadow-sm"
+                    className="px-3.5 py-1.5 rounded-xl bg-gray-100 dark:bg-navy-800 hover:bg-gray-200 dark:bg-navy-700 text-amber-400 border border-gray-300 dark:border-navy-600 text-xs font-bold flex items-center space-x-1.5 cursor-pointer shadow-sm"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isLoadingHistory ? 'animate-spin' : ''}`} />
                     <span>Refresh Ledger</span>
@@ -1477,20 +1481,20 @@ export const CertificateManagementModal: React.FC<{
                 {/* Search & Filters */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="relative">
-                    <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400" />
+                    <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-gray-500 dark:text-gray-400" />
                     <input
                       type="text"
                       placeholder="Search by ID, student name, or reg no..."
                       value={registrySearch}
                       onChange={(e) => setRegistrySearch(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 font-bold"
+                      className="w-full pl-9 pr-3 py-2 bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-navy-600 rounded-xl text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 font-bold"
                     />
                   </div>
 
                   <select
                     value={registryDeptFilter}
                     onChange={(e) => setRegistryDeptFilter(e.target.value)}
-                    className="px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white font-bold cursor-pointer"
+                    className="px-3 py-2 bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-navy-600 rounded-xl text-xs text-gray-900 dark:text-white font-bold cursor-pointer"
                   >
                     <option value="all">All Departments</option>
                     <option value="CSE(CS)">Cyber Security</option>
@@ -1500,7 +1504,7 @@ export const CertificateManagementModal: React.FC<{
                   <select
                     value={registryStatusFilter}
                     onChange={(e) => setRegistryStatusFilter(e.target.value)}
-                    className="px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white font-bold cursor-pointer"
+                    className="px-3 py-2 bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-navy-600 rounded-xl text-xs text-gray-900 dark:text-white font-bold cursor-pointer"
                   >
                     <option value="all">All Statuses ({history.length})</option>
                     <option value="VALID">Valid ({metrics.valid})</option>
@@ -1510,16 +1514,16 @@ export const CertificateManagementModal: React.FC<{
               </div>
 
               {/* Registry Table */}
-              <div className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-900 shadow-xl">
+              <div className="overflow-x-auto rounded-3xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-900 shadow-xl">
                 {filteredHistory.length === 0 ? (
-                  <div className="p-12 text-center text-xs text-slate-400 font-medium space-y-2">
-                    <p className="text-base font-bold text-slate-300">No matching credentials found in the registry.</p>
+                  <div className="p-12 text-center text-xs text-gray-500 dark:text-gray-400 font-medium space-y-2">
+                    <p className="text-base font-bold text-gray-700 dark:text-gray-300">No matching credentials found in the registry.</p>
                     <p>Issue a new certificate from the "Issuance Studio" tab to record it in the ledger.</p>
                   </div>
                 ) : (
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="bg-slate-950 text-slate-400 uppercase tracking-wider font-bold text-[10px] border-b border-slate-800">
+                      <tr className="bg-gray-50 dark:bg-navy-950 text-gray-500 dark:text-gray-400 uppercase tracking-wider font-bold text-[10px] border-b border-gray-200 dark:border-navy-700">
                         <th className="py-3.5 px-4">Certificate ID</th>
                         <th className="py-3.5 px-4">Student Name</th>
                         <th className="py-3.5 px-4">Register No</th>
@@ -1529,16 +1533,16 @@ export const CertificateManagementModal: React.FC<{
                         <th className="py-3.5 px-4 text-center">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60 font-medium text-slate-300">
+                    <tbody className="divide-y divide-slate-800/60 font-medium text-gray-700 dark:text-gray-300">
                       {filteredHistory.map((rec) => (
-                        <tr key={rec.id} className="hover:bg-slate-800/40 transition-colors">
+                        <tr key={rec.id} className="hover:bg-gray-100 dark:bg-navy-800/40 transition-colors">
                           <td className="py-3.5 px-4 font-mono font-bold text-amber-400">
                             {rec.verification_id}
                           </td>
-                          <td className="py-3.5 px-4 font-extrabold text-white">
+                          <td className="py-3.5 px-4 font-extrabold text-gray-900 dark:text-white">
                             {rec.student_name}
                           </td>
-                          <td className="py-3.5 px-4 font-mono text-slate-400 font-bold">
+                          <td className="py-3.5 px-4 font-mono text-gray-500 dark:text-gray-400 font-bold">
                             {rec.register_no}
                           </td>
                           <td className="py-3.5 px-4">
@@ -1546,7 +1550,7 @@ export const CertificateManagementModal: React.FC<{
                               {rec.department || 'CSE'}
                             </span>
                           </td>
-                          <td className="py-3.5 px-4 font-mono text-slate-400">
+                          <td className="py-3.5 px-4 font-mono text-gray-500 dark:text-gray-400">
                             {rec.issue_date}
                           </td>
                           <td className="py-3.5 px-4 text-center">
@@ -1562,7 +1566,7 @@ export const CertificateManagementModal: React.FC<{
                             <div className="flex items-center justify-center space-x-2">
                               <button
                                 onClick={() => handleDownloadPdf(rec.verification_id)}
-                                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 cursor-pointer shadow-sm"
+                                className="p-2 rounded-xl bg-gray-100 dark:bg-navy-800 hover:bg-gray-200 dark:bg-navy-700 text-emerald-400 border border-gray-300 dark:border-navy-600 cursor-pointer shadow-sm"
                                 title="Download Official Certificate PDF"
                               >
                                 <Download className="w-3.5 h-3.5" />
@@ -1570,7 +1574,7 @@ export const CertificateManagementModal: React.FC<{
 
                               <button
                                 onClick={() => handleDownloadForensicPdf(`CERT-${rec.register_no}-FORENSIC`)}
-                                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-400 border border-slate-700 cursor-pointer shadow-sm"
+                                className="p-2 rounded-xl bg-gray-100 dark:bg-navy-800 hover:bg-gray-200 dark:bg-navy-700 text-indigo-400 border border-gray-300 dark:border-navy-600 cursor-pointer shadow-sm"
                                 title="Download Forensic Audit Report PDF"
                               >
                                 <FileText className="w-3.5 h-3.5" />
@@ -1580,7 +1584,7 @@ export const CertificateManagementModal: React.FC<{
                                 href={rec.verification_url || `/verify-certificate/${rec.verification_id}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-400 border border-slate-700 cursor-pointer shadow-sm"
+                                className="p-2 rounded-xl bg-gray-100 dark:bg-navy-800 hover:bg-gray-200 dark:bg-navy-700 text-sky-400 border border-gray-300 dark:border-navy-600 cursor-pointer shadow-sm"
                                 title="Verify Public QR Page"
                               >
                                 <ExternalLink className="w-3.5 h-3.5" />
@@ -1618,53 +1622,53 @@ export const CertificateManagementModal: React.FC<{
               initial={{ opacity: 0, scale: 0.92, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.92, y: 15 }}
-              className="max-w-md w-full p-6 rounded-3xl bg-slate-900 border border-slate-700 shadow-lg space-y-4 text-slate-100"
+              className="max-w-md w-full p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-300 dark:border-navy-600 shadow-lg space-y-4 text-gray-900 dark:text-gray-900 dark:text-white"
             >
-              <div className="flex items-center space-x-3 border-b border-slate-800 pb-3">
+              <div className="flex items-center space-x-3 border-b border-gray-200 dark:border-navy-700 pb-3">
                 <div className="p-2.5 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
                   <Award className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-white">Review & Issue Credential</h3>
-                  <p className="text-xs text-slate-400">Institutional Authority Confirmation</p>
+                  <h3 className="text-base font-black text-gray-900 dark:text-white">Review & Issue Credential</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Institutional Authority Confirmation</p>
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2.5 text-xs">
+              <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 space-y-2.5 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-400 font-bold">Recipient:</span>
-                  <span className="font-extrabold text-white">{selectedStudent.name}</span>
+                  <span className="text-gray-500 dark:text-gray-400 font-bold">Recipient:</span>
+                  <span className="font-extrabold text-gray-900 dark:text-white">{selectedStudent.name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400 font-bold">Register No:</span>
+                  <span className="text-gray-500 dark:text-gray-400 font-bold">Register No:</span>
                   <span className="font-mono font-bold text-amber-400">{selectedStudent.reg_no}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400 font-bold">Department:</span>
-                  <span className="font-bold text-slate-200">{currentDeptTitle}</span>
+                  <span className="text-gray-500 dark:text-gray-400 font-bold">Department:</span>
+                  <span className="font-bold text-gray-800 dark:text-gray-200">{currentDeptTitle}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400 font-bold">Recognition:</span>
+                  <span className="text-gray-500 dark:text-gray-400 font-bold">Recognition:</span>
                   <span className="font-bold text-emerald-400">{currentTypeMeta.title}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400 font-bold">Certificate ID:</span>
-                  <span className="font-mono text-slate-300">{canonicalCertId}</span>
+                  <span className="text-gray-500 dark:text-gray-400 font-bold">Certificate ID:</span>
+                  <span className="font-mono text-gray-700 dark:text-gray-300">{canonicalCertId}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400 font-bold">Principal Signature:</span>
+                  <span className="text-gray-500 dark:text-gray-400 font-bold">Principal Signature:</span>
                   <span className={principalSig?.image_preview ? 'text-emerald-400 font-bold' : 'text-amber-400'}>
                     {principalSig?.image_preview ? '✓ Configured' : '⚠ Missing'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400 font-bold">HOD Signature:</span>
+                  <span className="text-gray-500 dark:text-gray-400 font-bold">HOD Signature:</span>
                   <span className={currentHodSig?.image_preview ? 'text-emerald-400 font-bold' : 'text-amber-400'}>
                     {currentHodSig?.image_preview ? '✓ Configured' : '⚠ Missing'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400 font-bold">QR Verification:</span>
+                  <span className="text-gray-500 dark:text-gray-400 font-bold">QR Verification:</span>
                   <span className="text-emerald-400 font-bold">✓ Ready & Sealed</span>
                 </div>
               </div>
@@ -1672,7 +1676,7 @@ export const CertificateManagementModal: React.FC<{
               <div className="flex items-center space-x-3 pt-2">
                 <button
                   onClick={() => setShowConfirmIssueModal(false)}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs cursor-pointer"
+                  className="flex-1 py-2.5 rounded-xl bg-gray-100 dark:bg-navy-800 hover:bg-gray-200 dark:bg-navy-700 text-gray-700 dark:text-gray-300 font-bold text-xs cursor-pointer"
                 >
                   Cancel
                 </button>

@@ -380,7 +380,7 @@ def calculate_student_performance_status(s: Student) -> Dict[str, Any]:
             last_verified = last_verified.replace(tzinfo=datetime.timezone.utc)
         days_inactive = (now - last_verified).days
 
-    if days_inactive >= 8 or (total == 0 and days_inactive >= 5):
+    if days_inactive >= 8 or total == 0 or not s.username:
         status_label = "At Risk"
         status_code = "AT_RISK"
         badge_color = "red"
@@ -457,7 +457,6 @@ def get_my_mentoring_summary(
         perf = calculate_student_performance_status(s)
         if perf["status_code"] == "AT_RISK":
             at_risk_count += 1
-            needing_attention_count += 1
         elif perf["status_code"] == "NEEDS_IMPROVEMENT":
             needing_attention_count += 1
         elif perf["status_code"] == "EXCELLENT":

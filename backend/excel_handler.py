@@ -1300,7 +1300,7 @@ def create_batch_performance_matrix_sheet(ws, db: Session, dept_id: Optional[int
     # Embed Official Emblem Logo Image into Excel Top Left
     logo_path = os.path.join(os.path.dirname(__file__), "assets", "nandha_emblem.png")
     if not os.path.exists(logo_path):
-        logo_path = os.path.join(os.path.dirname(__file__), "..", "frontend", "public", "logo.png")
+        logo_path = os.path.join(os.path.dirname(__file__), "..", "frontend", "public", "nec_25_logo.png")
     if os.path.exists(logo_path):
         try:
             from openpyxl.drawing.image import Image as OpenPyXLImage

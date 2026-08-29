@@ -35,9 +35,16 @@ from backend.logger import logger
 # ─────────────────────────────────────────────────────────────────────────────
 
 class ContestStatus(str, Enum):
+    # New Standard Enums
+    PUBLIC_LIVE           = "PUBLIC_LIVE"
+    VIRTUAL_PRACTICE      = "VIRTUAL_PRACTICE"
+    NOT_ATTENDED          = "NOT_ATTENDED"
+    PENDING_VERIFICATION  = "PENDING_VERIFICATION"
+    NO_LEETCODE_HANDLE    = "NO_LEETCODE_HANDLE"
+
+    # Legacy Backward Compatibility Enums
     PUBLIC_ATTENDED   = "PUBLIC_ATTENDED"
     VIRTUAL_ATTENDED  = "VIRTUAL_ATTENDED"
-    NOT_ATTENDED      = "NOT_ATTENDED"
     FETCH_FAILED      = "FETCH_FAILED"
     PENDING_USERNAME  = "PENDING_USERNAME"
     INVALID_USERNAME  = "INVALID_USERNAME"
@@ -55,6 +62,9 @@ class ReasonCode(str, Enum):
     AMBIGUOUS_TYPE          = "AMBIGUOUS_TYPE"
     AMBIGUOUS_PARTICIPATION = "AMBIGUOUS_PARTICIPATION"
     RATE_LIMITED            = "RATE_LIMITED"
+    # New semantic reason codes
+    VALID_LIVE_SUBMISSION   = "VALID_LIVE_SUBMISSION"
+    EXPLICIT_VIRTUAL        = "EXPLICIT_VIRTUAL"
 
 
 class FetchStatus(str, Enum):
@@ -82,6 +92,7 @@ class ContestStatusRow:
     status:        ContestStatus
     reason_code:   ReasonCode
     fetch_status:  FetchStatus
+    reason_text:   Optional[str] = None
     error_message: Optional[str] = None
 
     # 4. Performance Metrics (Populated if Attended)
@@ -178,7 +189,7 @@ class ContestClassifier:
         """
         # Step 0: Normalize inputs
         raw_username = (leetcode_username or "").strip()
-        canonical_contest_id = normalize_contest_id(contest_id)
+        canonical_id = normalize_contest_id(contest_id)
 
         # Step 1: Username validation
         if not raw_username or len(raw_username) < 2:
@@ -186,10 +197,11 @@ class ContestClassifier:
                 student_id=student_id,
                 student_name=student_name,
                 verified_leetcode_username=None,
-                contest_id=canonical_contest_id,
+                contest_id=canonical_id,
                 contest_name=contest_name,
-                status=ContestStatus.PENDING_USERNAME,
+                status=ContestStatus.NO_LEETCODE_HANDLE,
                 reason_code=ReasonCode.NO_USERNAME,
+                reason_text="Student does not have a mapped LeetCode account.",
                 fetch_status=FetchStatus.OK,
             )
 
@@ -198,10 +210,11 @@ class ContestClassifier:
                 student_id=student_id,
                 student_name=student_name,
                 verified_leetcode_username=raw_username,
-                contest_id=canonical_contest_id,
+                contest_id=canonical_id,
                 contest_name=contest_name,
-                status=ContestStatus.FETCH_FAILED,
+                status=ContestStatus.PENDING_VERIFICATION,
                 reason_code=ReasonCode.FETCH_ERROR,
+                reason_text="Contest participation could not yet be verified due to API error.",
                 fetch_status=FetchStatus.FAILED,
                 error_message="API client not initialized",
             )
@@ -211,14 +224,19 @@ class ContestClassifier:
             profile_data = self.api.validate_profile(raw_username)
         except Exception as e:
             logger.warning(f"Profile validation failed for {raw_username}: {e}")
+            # Do not swallow programming bugs
+            if not isinstance(e, (httpx.RequestError, httpx.HTTPStatusError)):
+                logger.exception(f"Unexpected programming error during profile validation: {e}")
+                raise
             return ContestStatusRow(
                 student_id=student_id,
                 student_name=student_name,
                 verified_leetcode_username=raw_username,
-                contest_id=canonical_contest_id,
+                contest_id=canonical_id,
                 contest_name=contest_name,
-                status=ContestStatus.FETCH_FAILED,
+                status=ContestStatus.PENDING_VERIFICATION,
                 reason_code=ReasonCode.FETCH_ERROR,
+                reason_text="Contest participation could not yet be verified due to API error.",
                 fetch_status=FetchStatus.FAILED,
                 error_message=str(e),
             )
@@ -228,28 +246,34 @@ class ContestClassifier:
                 student_id=student_id,
                 student_name=student_name,
                 verified_leetcode_username=raw_username,
-                contest_id=canonical_contest_id,
+                contest_id=canonical_id,
                 contest_name=contest_name,
                 status=ContestStatus.INVALID_USERNAME,
                 reason_code=ReasonCode.INVALID_PROFILE,
+                reason_text="The provided LeetCode username could not be found.",
                 fetch_status=FetchStatus.OK,
             )
 
-        verified_username = profile_data.get("username", raw_username)
+        canonical_username = profile_data.get("username", raw_username)
 
         # Step 2: Fetch Contest Data
         try:
-            contest_data = self.api.fetch_contest_result(verified_username, canonical_contest_id)
+            contest_data = self.api.fetch_contest_result(canonical_username, canonical_id)
         except Exception as e:
-            logger.warning(f"Contest fetch failed for {verified_username}/{canonical_contest_id}: {e}")
+            logger.warning(f"Contest fetch failed for {canonical_username}/{canonical_id}: {e}")
+            # Do not swallow programming bugs
+            if not isinstance(e, (httpx.RequestError, httpx.HTTPStatusError)):
+                logger.exception(f"Unexpected programming error during contest fetch: {e}")
+                raise
             return ContestStatusRow(
                 student_id=student_id,
                 student_name=student_name,
-                verified_leetcode_username=verified_username,
-                contest_id=canonical_contest_id,
+                verified_leetcode_username=canonical_username,
+                contest_id=canonical_id,
                 contest_name=contest_name,
-                status=ContestStatus.FETCH_FAILED,
+                status=ContestStatus.PENDING_VERIFICATION,
                 reason_code=ReasonCode.FETCH_ERROR,
+                reason_text="Contest participation could not yet be verified due to API error.",
                 fetch_status=FetchStatus.FAILED,
                 error_message=str(e),
             )
@@ -259,52 +283,54 @@ class ContestClassifier:
             return ContestStatusRow(
                 student_id=student_id,
                 student_name=student_name,
-                verified_leetcode_username=verified_username,
-                contest_id=canonical_contest_id,
+                verified_leetcode_username=canonical_username,
+                contest_id=canonical_id,
                 contest_name=contest_name,
                 status=ContestStatus.NOT_ATTENDED,
                 reason_code=ReasonCode.NO_PARTICIPATION,
+                reason_text="No verified participation was found for the official contest window.",
                 fetch_status=FetchStatus.OK,
             )
 
         # Step 3: Identity & Contest Slug Verification
         returned_username = contest_data.get("username", "").lower()
-        if returned_username and returned_username != verified_username.lower():
+        if returned_username and returned_username != canonical_username.lower():
             return ContestStatusRow(
                 student_id=student_id,
                 student_name=student_name,
-                verified_leetcode_username=verified_username,
-                contest_id=canonical_contest_id,
+                verified_leetcode_username=canonical_username,
+                contest_id=canonical_id,
                 contest_name=contest_name,
                 status=ContestStatus.UNKNOWN,
                 reason_code=ReasonCode.IDENTITY_MISMATCH,
+                reason_text="Identity mismatch between provided and API record.",
                 fetch_status=FetchStatus.PARTIAL,
-                error_message=f"Username mismatch: {returned_username} != {verified_username}",
+                error_message=f"Username mismatch: {returned_username} != {canonical_username}",
             )
 
         returned_contest_id = contest_data.get("contest_id")
-        if returned_contest_id and normalize_contest_id(returned_contest_id) != canonical_contest_id:
+        if returned_contest_id and normalize_contest_id(returned_contest_id) != canonical_id:
             return ContestStatusRow(
                 student_id=student_id,
                 student_name=student_name,
-                verified_leetcode_username=verified_username,
-                contest_id=canonical_contest_id,
+                verified_leetcode_username=canonical_username,
+                contest_id=canonical_id,
                 contest_name=contest_name,
                 status=ContestStatus.UNKNOWN,
                 reason_code=ReasonCode.IDENTITY_MISMATCH,
+                reason_text="Contest ID mismatch found in API data.",
                 fetch_status=FetchStatus.PARTIAL,
-                error_message=f"Contest ID mismatch: {returned_contest_id} != {canonical_contest_id}",
+                error_message=f"Contest ID mismatch: {returned_contest_id} != {canonical_id}",
             )
 
         # Step 4 & 5: Presence & Type Evaluation (Strict Non-Assumption)
         attended = bool(contest_data.get("attended", False))
-        problems_solved = contest_data.get("problems_solved")
-        score = contest_data.get("score") if contest_data.get("score") is not None else problems_solved
+        solved = contest_data.get("problems_solved")
+        score = contest_data.get("score") if contest_data.get("score") is not None else solved
         rank = contest_data.get("rank")
         rating_after = contest_data.get("rating_after")
         source_ts = contest_data.get("source_timestamp")
 
-        # Q1-Q4 flags are strictly set ONLY if explicitly verified in submission evidence, never guessed
         q1 = bool(contest_data.get("q1_solved", False))
         q2 = bool(contest_data.get("q2_solved", False))
         q3 = bool(contest_data.get("q3_solved", False))
@@ -314,15 +340,15 @@ class ContestClassifier:
             return ContestStatusRow(
                 student_id=student_id,
                 student_name=student_name,
-                verified_leetcode_username=verified_username,
-                contest_id=canonical_contest_id,
+                verified_leetcode_username=canonical_username,
+                contest_id=canonical_id,
                 contest_name=contest_name,
                 status=ContestStatus.PUBLIC_ATTENDED,
                 reason_code=ReasonCode.PUBLIC,
                 fetch_status=FetchStatus.OK,
                 score=score,
                 rank=rank,
-                problems_solved=problems_solved,
+                problems_solved=solved,
                 q1_solved=q1,
                 q2_solved=q2,
                 q3_solved=q3,
@@ -335,15 +361,15 @@ class ContestClassifier:
             return ContestStatusRow(
                 student_id=student_id,
                 student_name=student_name,
-                verified_leetcode_username=verified_username,
-                contest_id=canonical_contest_id,
+                verified_leetcode_username=canonical_username,
+                contest_id=canonical_id,
                 contest_name=contest_name,
                 status=ContestStatus.VIRTUAL_ATTENDED,
                 reason_code=ReasonCode.VIRTUAL,
                 fetch_status=FetchStatus.OK,
                 score=score,
                 rank=rank,
-                problems_solved=problems_solved,
+                problems_solved=solved,
                 q1_solved=q1,
                 q2_solved=q2,
                 q3_solved=q3,
@@ -464,11 +490,14 @@ async def _gql(
                 await asyncio.sleep(backoff ** attempt)
                 continue
             return {"status": "timeout", "data": None}
-        except Exception as exc:
+        except httpx.RequestError as exc:
             if attempt < retries:
                 await asyncio.sleep(backoff ** attempt)
                 continue
             return {"status": "error", "data": None, "detail": str(exc)}
+        except Exception as exc:
+            logger.exception(f"Unexpected programming error in _gql: {exc}")
+            raise
 
     return {"status": "error", "data": None, "detail": "Max retries exceeded"}
 
@@ -548,8 +577,9 @@ async def get_contest_status(
             verified_leetcode_username=None,
             contest_id=canonical_id,
             contest_name=contest_name,
-            status=ContestStatus.PENDING_USERNAME,
+            status=ContestStatus.NO_LEETCODE_HANDLE,
             reason_code=ReasonCode.NO_USERNAME,
+            reason_text="Student does not have a mapped LeetCode account.",
             fetch_status=FetchStatus.OK,
         )
 
@@ -584,8 +614,9 @@ async def get_contest_status(
             verified_leetcode_username=raw_username,
             contest_id=canonical_id,
             contest_name=contest_name,
-            status=ContestStatus.FETCH_FAILED,
+            status=ContestStatus.PENDING_VERIFICATION,
             reason_code=ReasonCode.FETCH_ERROR,
+            reason_text="Contest participation could not yet be verified due to API error.",
             fetch_status=FetchStatus.FAILED,
             error_message=f"Profile fetch failed: {val_status}",
         )
@@ -599,8 +630,9 @@ async def get_contest_status(
             verified_leetcode_username=canonical_username,
             contest_id=canonical_id,
             contest_name=contest_name,
-            status=ContestStatus.FETCH_FAILED,
+            status=ContestStatus.PENDING_VERIFICATION,
             reason_code=ReasonCode.FETCH_ERROR,
+            reason_text="Contest participation could not yet be verified due to timeout.",
             fetch_status=FetchStatus.FAILED,
             error_message=f"Contest fetch failed: {fetch_st}",
         )
@@ -614,6 +646,7 @@ async def get_contest_status(
             contest_name=contest_name,
             status=ContestStatus.NOT_ATTENDED,
             reason_code=ReasonCode.NO_PARTICIPATION,
+            reason_text="No verified participation was found for the official contest window.",
             fetch_status=FetchStatus.OK,
         )
 
@@ -637,8 +670,9 @@ async def get_contest_status(
             verified_leetcode_username=canonical_username,
             contest_id=canonical_id,
             contest_name=contest_name,
-            status=ContestStatus.PUBLIC_ATTENDED,
-            reason_code=ReasonCode.PUBLIC,
+            status=ContestStatus.PUBLIC_LIVE,
+            reason_code=ReasonCode.VALID_LIVE_SUBMISSION,
+            reason_text="Valid contest submission inside the official contest window.",
             fetch_status=FetchStatus.OK,
             score=score,
             rank=rank,
@@ -651,26 +685,51 @@ async def get_contest_status(
             source_timestamp=source_ts,
         )
     else:
-        # attended == False -> Confirmed virtual participation
-        return ContestStatusRow(
-            student_id=student_id,
-            student_name=student_name,
-            verified_leetcode_username=canonical_username,
-            contest_id=canonical_id,
-            contest_name=contest_name,
-            status=ContestStatus.VIRTUAL_ATTENDED,
-            reason_code=ReasonCode.VIRTUAL,
-            fetch_status=FetchStatus.OK,
-            score=score,
-            rank=rank,
-            problems_solved=solved,
-            q1_solved=q1,
-            q2_solved=q2,
-            q3_solved=q3,
-            q4_solved=q4,
-            rating_after=rating_after,
-            source_timestamp=source_ts,
-        )
+        # Check for explicit virtual evidence from source
+        is_virtual_evidence = bool(entry.get("is_virtual", False))
+        
+        if is_virtual_evidence:
+            return ContestStatusRow(
+                student_id=student_id,
+                student_name=student_name,
+                verified_leetcode_username=canonical_username,
+                contest_id=canonical_id,
+                contest_name=contest_name,
+                status=ContestStatus.VIRTUAL_PRACTICE,
+                reason_code=ReasonCode.EXPLICIT_VIRTUAL,
+                reason_text="Source explicitly marked virtual participation.",
+                fetch_status=FetchStatus.OK,
+                score=score,
+                rank=rank,
+                problems_solved=solved,
+                q1_solved=q1,
+                q2_solved=q2,
+                q3_solved=q3,
+                q4_solved=q4,
+                rating_after=rating_after,
+                source_timestamp=source_ts,
+            )
+        else:
+            return ContestStatusRow(
+                student_id=student_id,
+                student_name=student_name,
+                verified_leetcode_username=canonical_username,
+                contest_id=canonical_id,
+                contest_name=contest_name,
+                status=ContestStatus.NOT_ATTENDED,
+                reason_code=ReasonCode.NO_PARTICIPATION,
+                reason_text="No verified participation was found for the official contest window.",
+                fetch_status=FetchStatus.OK,
+                score=score,
+                rank=rank,
+                problems_solved=solved,
+                q1_solved=q1,
+                q2_solved=q2,
+                q3_solved=q3,
+                q4_solved=q4,
+                rating_after=rating_after,
+                source_timestamp=source_ts,
+            )
 
 
 @dataclass

@@ -144,10 +144,13 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefreshedAt, setLastRefreshedAt] = useState<string>('');
   const [notification, setNotification] = useState<NotificationState | null>(null);
+  const [assignedStudentCount, setAssignedStudentCount] = useState<number | null>(null);
 
   // Manual Dispatch Form State
   const [selectedReportType, setSelectedReportType] = useState<string>('WEEKLY_CONTEST');
+  const [isReportTypeOpen, setIsReportTypeOpen] = useState(false);
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
+  const [isSessionOpen, setIsSessionOpen] = useState(false);
   const [selectedRecipientEmails, setSelectedRecipientEmails] = useState<Set<string>>(new Set());
   const [customMessage, setCustomMessage] = useState<string>('');
 
@@ -187,8 +190,17 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
   // Log Table Filter & Search States
   const [logFilterStatus, setLogFilterStatus] = useState<string>('ALL');
+  const [isLogFilterStatusOpen, setIsLogFilterStatusOpen] = useState(false);
   const [logFilterDispatchType, setLogFilterDispatchType] = useState<string>('ALL');
+  const [isLogFilterTypeOpen, setIsLogFilterTypeOpen] = useState(false);
   const [logSearchQuery, setLogSearchQuery] = useState<string>('');
+
+  // Dropdown States for Modals
+  const [isScheduleDayOpen, setIsScheduleDayOpen] = useState(false);
+  const [isScheduleHourOpen, setIsScheduleHourOpen] = useState(false);
+  const [isScheduleMinuteOpen, setIsScheduleMinuteOpen] = useState(false);
+  const [isNewRoleOpen, setIsNewRoleOpen] = useState(false);
+  const [isNewDeptOpen, setIsNewDeptOpen] = useState(false);
 
   useEffect(() => {
     if (defaultSection) setActiveSection(defaultSection);
@@ -215,30 +227,35 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
       let recs: EmailRecipient[] = Array.isArray(rRes.data) ? rRes.data : (rRes.data?.recipients || []);
       
-      // If caller is Staff, ensure staff's own email is placed at top and pre-selected
-      if (isStaff && user?.email) {
-        const userEmailLower = user.email.toLowerCase().trim();
-        const existingIdx = recs.findIndex((r: any) => (r.email || '').toLowerCase().trim() === userEmailLower);
-        if (existingIdx >= 0) {
-          // Promote to top
-          const selfRec = recs[existingIdx];
-          recs = [selfRec, ...recs.filter((_, idx) => idx !== existingIdx)];
-          setSelectedRecipientEmails(new Set([selfRec.email]));
-        } else {
-          const selfRec: EmailRecipient = {
-            id: 999999,
-            name: user.name || user.username || 'My Mentoring Email',
-            email: user.email,
-            role: 'STAFF',
-            department: typeof user.department === 'string' ? user.department : ((user.department as any)?.code || 'CSE'),
-            is_active: true,
-            receive_weekly_reports: true,
-            receive_hod_reports: false,
-            receive_error_reports: false,
-            created_at: new Date().toISOString()
-          };
-          recs = [selfRec, ...recs];
-          setSelectedRecipientEmails(new Set([selfRec.email]));
+      if (isStaff) {
+        api.get('/students', { params: { paginated: true, limit: 1 } })
+          .then(res => setAssignedStudentCount(res.data?.total))
+          .catch(() => setAssignedStudentCount(null));
+        
+        // If caller is Staff, ensure staff can ONLY see and send to their own email
+        if (user?.email) {
+          const userEmailLower = user.email.toLowerCase().trim();
+          const existingIdx = recs.findIndex((r: any) => (r.email || '').toLowerCase().trim() === userEmailLower);
+          if (existingIdx >= 0) {
+            const selfRec = recs[existingIdx];
+            recs = [selfRec]; // Drop all other recipients for staff
+            setSelectedRecipientEmails(new Set([selfRec.email]));
+          } else {
+            const selfRec: EmailRecipient = {
+              id: 999999,
+              name: user.name || user.username || 'My Mentoring Email',
+              email: user.email,
+              role: 'STAFF',
+              department: typeof user.department === 'string' ? user.department : ((user.department as any)?.code || 'CSE'),
+              is_active: true,
+              receive_weekly_reports: true,
+              receive_hod_reports: false,
+              receive_error_reports: false,
+              created_at: new Date().toISOString()
+            };
+            recs = [selfRec]; // Drop all other recipients for staff
+            setSelectedRecipientEmails(new Set([selfRec.email]));
+          }
         }
       } else {
         const activeEmails = new Set<string>(recs.filter((r: any) => r.is_active).map((r: any) => r.email));
@@ -646,7 +663,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
     try {
       const endpoint = isFullReport ? '/email/send-manual' : '/email/test';
       const payload = isFullReport
-        ? { recipient_emails: [testRecipient.trim()], is_safe_test: true }
+        ? { recipient_emails: [testRecipient.trim()], is_safe_test: true, session_id: selectedSessionId }
         : { recipient: testRecipient.trim() };
 
       const res = await api.post(endpoint, payload);
@@ -703,73 +720,77 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
   return (
     <div className="space-y-8 pb-12 animate-fade-in">
       
-      {/* 1. DASHBOARD HEADER & PROVIDER STATUS BAR */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-lg border border-brand-500/30">
-
-        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-black">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              <span>Brevo Official API • HTTPS Port 443</span>
+      {/* 1. PROVIDER STATUS BAR (Admins Only) */}
+      {!isStaff && (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 dark:text-emerald-400">
+              <CheckCircle2 className="w-5 h-5" />
             </div>
-
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">
-              {isStaff ? 'My Staff ' : 'Email '}<span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Operations Center</span>
-            </h1>
-
-            <p className="text-xs sm:text-sm text-gray-300 font-bold leading-relaxed">
-              {isStaff
-                ? "Dispatch and manage weekly LeetCode mentoring performance reports for your assigned students directly to your authenticated email."
-                : "Monitor, control, and verify institutional report delivery across manual and automated email workflows."}
-            </p>
+            <div>
+              <h2 className="text-sm font-black text-gray-900 dark:text-white flex items-center gap-2">
+                Brevo Official API <span className="text-gray-300 dark:text-gray-600">•</span> HTTPS Port 443
+              </h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                Active Provider: {providerInfo?.active_provider || 'brevo'}
+              </p>
+            </div>
           </div>
 
-          {/* Provider Telemetry Card */}
-          <div className="w-full lg:w-auto bg-white/10 dark:bg-navy-900/60 backdrop-blur-md p-4 rounded-2xl border border-white/10 text-xs space-y-2">
-            <div className="flex items-center justify-between gap-4 pb-2 border-b border-white/10">
-              <span className="font-extrabold text-gray-300 uppercase tracking-wider text-[10px]">API Provider</span>
-              <span className="font-black text-emerald-400 flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Brevo v3 (Port 443)
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] text-gray-300">
-              <div>Timeout: <strong className="text-white">90s</strong></div>
-              <div>Retry: <strong className="text-emerald-400">3 Exponential</strong></div>
-              <div className="col-span-2 pt-1 text-[10.5px] text-gray-400">
-                Last Success: <strong className="text-gray-200">{metrics.lastSuccessTime ? formatTimestampIST(metrics.lastSuccessTime) : 'None'}</strong>
+          <div className="flex items-center gap-6">
+            <div className="hidden md:flex items-center gap-6 text-xs">
+              <div className="flex flex-col">
+                <span className="text-gray-400 font-medium uppercase tracking-wider text-[10px]">Timeout</span>
+                <span className="font-bold text-gray-700 dark:text-gray-200">90s</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-gray-400 font-medium uppercase tracking-wider text-[10px]">Retry Policy</span>
+                <span className="font-bold text-gray-700 dark:text-gray-200">3 Exponential</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-gray-400 font-medium uppercase tracking-wider text-[10px]">Last Success</span>
+                <span className="font-bold text-gray-700 dark:text-gray-200">{metrics.lastSuccessTime ? formatTimestampIST(metrics.lastSuccessTime) : 'None'}</span>
               </div>
             </div>
-            <div className="pt-2 flex items-center justify-between text-[10px] text-gray-400">
-              <span>Refreshed: {lastRefreshedAt || 'Just now'}</span>
+            
+            <div className="h-8 w-px bg-gray-200 dark:bg-gray-800 hidden sm:block" />
+            
+            <div className="flex items-center gap-3">
+              <div className="text-right hidden sm:block">
+                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Refreshed</div>
+                <div className="text-xs font-bold text-gray-700 dark:text-gray-300">{lastRefreshedAt || 'Just now'}</div>
+              </div>
               <button
-                onClick={() => fetchAllData(true)}
+                onClick={() => fetchAllData(false)}
                 disabled={refreshing}
-                className="flex items-center gap-1 text-brand-300 hover:text-white transition-colors cursor-pointer"
+                className="p-2 rounded-xl bg-gray-50 dark:bg-navy-800 text-gray-500 hover:text-brand-500 dark:hover:text-brand-400 border border-gray-200 dark:border-navy-700 transition-colors disabled:opacity-50 cursor-pointer"
+                title="Refresh Telemetry"
               >
-                <RefreshCw className={`w-3 h-3 ${refreshing ? 'animate-spin' : ''}`} />
-                Refresh
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
               </button>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Staff Mentoring Safe Delivery Banner */}
       {isStaff && (
-        <div className="p-5 rounded-3xl bg-gradient-to-r from-indigo-950/60 via-slate-900/60 to-brand-950/60 border border-indigo-500/30 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg">
-          <div className="flex items-center space-x-3.5">
-            <div className="p-3 rounded-2xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-              <Mail className="w-6 h-6" />
+        <div className="p-5 sm:p-6 rounded-3xl bg-slate-900 dark:bg-navy-900 border border-slate-700/50 dark:border-navy-700 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 shadow-xl relative overflow-hidden group">
+          
+          <div className="flex items-center space-x-4 relative z-10">
+            <div className="p-3.5 rounded-2xl bg-slate-800/80 dark:bg-navy-800/80 text-emerald-400 border border-slate-700 dark:border-navy-700 shadow-inner">
+              <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h4 className="text-sm font-black tracking-tight text-white">Staff Mentoring Safe Delivery Desk</h4>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  🟢 Authenticated Recipient
+              <div className="flex items-center gap-2 mb-1.5">
+                <h4 className="text-base font-black tracking-tight text-white drop-shadow-sm">Staff Mentoring Safe Delivery Desk</h4>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 backdrop-blur-sm flex items-center gap-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Authenticated Recipient
                 </span>
               </div>
-              <p className="text-xs text-gray-300 font-medium mt-0.5">
-                All manual and scheduled reports are formatted with strictly your <strong>30 assigned students</strong> and pre-routed to your primary staff email: <strong className="text-indigo-300 font-mono">{user?.email || 'nanthishvaran17@gmail.com'}</strong>
+              <p className="text-xs sm:text-sm text-slate-300 dark:text-slate-400 font-medium leading-relaxed max-w-3xl">
+                All manual and scheduled reports are formatted with strictly your <strong className="text-emerald-300 font-bold bg-emerald-950/50 px-1.5 py-0.5 rounded">{assignedStudentCount !== null ? assignedStudentCount : '...'} assigned students</strong> and pre-routed to your primary staff email: <strong className="text-white font-mono font-bold tracking-tight bg-slate-800/80 px-1.5 py-0.5 rounded border border-slate-700/50">{user?.email || 'nanthishvaran17@gmail.com'}</strong>
               </p>
             </div>
           </div>
@@ -1027,36 +1048,82 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column: Report Selection & Attachments */}
             <div className="space-y-5 lg:col-span-1">
-              <div>
+              <div className="relative z-30">
                 <label className="block text-xs font-black uppercase text-gray-500 dark:text-gray-400 mb-2">
                   Select Institutional Report
                 </label>
-                <select
-                  value={selectedReportType}
-                  onChange={(e) => setSelectedReportType(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-2xl text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500"
-                >
-                  <option value="WEEKLY_CONTEST">Weekly Contest Executive Report (Excel + PDF + Word)</option>
-                  <option value="EXECUTIVE_SUMMARY">Executive Performance Summary</option>
-                  <option value="DEPARTMENT_MATRIX">Department Contest Performance Matrix</option>
-                </select>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => { setIsReportTypeOpen(!isReportTypeOpen); setIsSessionOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${isReportTypeOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-sm' : 'border-gray-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
+                  >
+                    <FileText className="w-4 h-4 text-brand-500 shrink-0" />
+                    <span className="text-xs font-bold text-gray-900 dark:text-white truncate flex-1">
+                      {{
+                        'WEEKLY_CONTEST': 'Weekly Contest Executive Report (Excel + PDF + Word)',
+                        'EXECUTIVE_SUMMARY': 'Executive Performance Summary',
+                        'DEPARTMENT_MATRIX': 'Department Contest Performance Matrix'
+                      }[selectedReportType] || selectedReportType}
+                    </span>
+                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0 ${isReportTypeOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {isReportTypeOpen && (
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-2 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
+                      {[
+                        { value: 'WEEKLY_CONTEST', label: 'Weekly Contest Executive Report (Excel + PDF + Word)', color: 'text-brand-500' },
+                        { value: 'EXECUTIVE_SUMMARY', label: 'Executive Performance Summary', color: 'text-indigo-500' },
+                        { value: 'DEPARTMENT_MATRIX', label: 'Department Contest Performance Matrix', color: 'text-purple-500' }
+                      ].map(opt => (
+                        <button key={opt.value} type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => { setSelectedReportType(opt.value); setIsReportTypeOpen(false); }}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors ${selectedReportType === opt.value ? 'bg-brand-50 dark:bg-brand-900/40' : 'hover:bg-gray-50 dark:hover:bg-navy-800'}`}
+                        >
+                          <FileText className={`w-4 h-4 shrink-0 ${opt.color}`} />
+                          <span className={`text-xs truncate flex-1 ${selectedReportType === opt.value ? 'font-black text-brand-700 dark:text-brand-300' : 'font-bold text-gray-700 dark:text-gray-300'}`}>{opt.label}</span>
+                          {selectedReportType === opt.value && <Check className="w-4 h-4 text-brand-500 shrink-0" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div>
+              <div className="relative z-20">
                 <label className="block text-xs font-black uppercase text-gray-500 dark:text-gray-400 mb-2">
                   Target Weekly Contest Session
                 </label>
-                <select
-                  value={selectedSessionId || ''}
-                  onChange={(e) => setSelectedSessionId(Number(e.target.value))}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-2xl text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500"
-                >
-                  {sessions.map(s => (
-                    <option key={s.sessionId} value={s.sessionId}>
-                      Session #{s.sessionId} — {s.contestName} ({s.sessionDate})
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => { setIsSessionOpen(!isSessionOpen); setIsReportTypeOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${isSessionOpen ? 'border-blue-500 ring-2 ring-blue-500/20 shadow-sm' : 'border-gray-200 dark:border-navy-700 hover:border-blue-400 dark:hover:border-blue-500'}`}
+                  >
+                    <Calendar className="w-4 h-4 text-blue-500 shrink-0" />
+                    <span className="text-xs font-bold text-gray-900 dark:text-white truncate flex-1">
+                      {sessions.find(s => s.sessionId === selectedSessionId) 
+                        ? `${sessions.find(s => s.sessionId === selectedSessionId)?.sessionDate} — ${sessions.find(s => s.sessionId === selectedSessionId)?.contestName} (FINALIZED)`
+                        : 'Select a session'}
+                    </span>
+                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0 ${isSessionOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {isSessionOpen && (
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-2 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
+                      {sessions.map(s => (
+                        <button key={s.sessionId} type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => { setSelectedSessionId(s.sessionId); setIsSessionOpen(false); }}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors ${selectedSessionId === s.sessionId ? 'bg-blue-500 text-white' : 'hover:bg-gray-50 dark:hover:bg-navy-800'}`}
+                        >
+                          <span className={`text-xs truncate flex-1 ${selectedSessionId === s.sessionId ? 'font-bold' : 'font-semibold text-gray-700 dark:text-gray-300'}`}>
+                            {s.sessionDate} — {s.contestName} (FINALIZED)
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Dynamic Attachment Cards */}
@@ -1453,28 +1520,81 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-gray-400" />
-              <select
-                value={logFilterStatus}
-                onChange={(e) => setLogFilterStatus(e.target.value)}
-                className="px-3 py-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-2xl text-xs font-bold text-gray-900 dark:text-white"
-              >
-                <option value="ALL">All Statuses</option>
-                <option value="SENT">Delivered</option>
-                <option value="FAILED">Failed</option>
-                <option value="QUEUED">Queued</option>
-                <option value="RETRYING">Retrying</option>
-              </select>
+              <div className="relative z-20">
+                <button
+                  type="button"
+                  onClick={() => { setIsLogFilterStatusOpen(!isLogFilterStatusOpen); setIsLogFilterTypeOpen(false); }}
+                  className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${isLogFilterStatusOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-sm' : 'border-gray-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
+                >
+                  <span className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                    {{
+                      'ALL': 'All Statuses',
+                      'SENT': 'Delivered',
+                      'FAILED': 'Failed',
+                      'QUEUED': 'Queued',
+                      'RETRYING': 'Retrying'
+                    }[logFilterStatus] || logFilterStatus}
+                  </span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0 ${isLogFilterStatusOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {isLogFilterStatusOpen && (
+                  <div className="absolute z-[200] top-full left-0 mt-2 w-48 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
+                    {[
+                      { value: 'ALL', label: 'All Statuses' },
+                      { value: 'SENT', label: 'Delivered' },
+                      { value: 'FAILED', label: 'Failed' },
+                      { value: 'QUEUED', label: 'Queued' },
+                      { value: 'RETRYING', label: 'Retrying' }
+                    ].map(opt => (
+                      <button key={opt.value} type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => { setLogFilterStatus(opt.value); setIsLogFilterStatusOpen(false); }}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-colors ${logFilterStatus === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-gray-50 dark:hover:bg-navy-800 text-gray-700 dark:text-gray-300 font-bold'}`}
+                      >
+                        <span className="text-xs truncate">{opt.label}</span>
+                        {logFilterStatus === opt.value && <Check className="w-4 h-4 text-brand-500 shrink-0" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-              <select
-                value={logFilterDispatchType}
-                onChange={(e) => setLogFilterDispatchType(e.target.value)}
-                className="px-3 py-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-2xl text-xs font-bold text-gray-900 dark:text-white"
-              >
-                <option value="ALL">All Types</option>
-                <option value="MANUAL">Manual</option>
-                <option value="AUTOMATED">Automated</option>
-                <option value="TEST">Test</option>
-              </select>
+              <div className="relative z-20">
+                <button
+                  type="button"
+                  onClick={() => { setIsLogFilterTypeOpen(!isLogFilterTypeOpen); setIsLogFilterStatusOpen(false); }}
+                  className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${isLogFilterTypeOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-sm' : 'border-gray-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
+                >
+                  <span className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                    {{
+                      'ALL': 'All Types',
+                      'MANUAL': 'Manual',
+                      'AUTOMATED': 'Automated',
+                      'TEST': 'Test'
+                    }[logFilterDispatchType] || logFilterDispatchType}
+                  </span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0 ${isLogFilterTypeOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {isLogFilterTypeOpen && (
+                  <div className="absolute z-[200] top-full left-0 mt-2 w-48 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
+                    {[
+                      { value: 'ALL', label: 'All Types' },
+                      { value: 'MANUAL', label: 'Manual' },
+                      { value: 'AUTOMATED', label: 'Automated' },
+                      { value: 'TEST', label: 'Test' }
+                    ].map(opt => (
+                      <button key={opt.value} type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => { setLogFilterDispatchType(opt.value); setIsLogFilterTypeOpen(false); }}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-colors ${logFilterDispatchType === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-gray-50 dark:hover:bg-navy-800 text-gray-700 dark:text-gray-300 font-bold'}`}
+                      >
+                        <span className="text-xs truncate">{opt.label}</span>
+                        {logFilterDispatchType === opt.value && <Check className="w-4 h-4 text-brand-500 shrink-0" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -1751,43 +1871,119 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
               <div>
                 <label className="block font-black uppercase text-gray-500 mb-1">Trigger Day</label>
-                <select
-                  value={scheduleDay}
-                  onChange={(e) => setScheduleDay(e.target.value)}
-                  className="w-full p-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl font-bold"
-                >
-                  <option value="sunday">Sunday (Official Weekly Window)</option>
-                  <option value="monday">Monday</option>
-                  <option value="saturday">Saturday</option>
-                </select>
+                <div className="relative z-40">
+                  <button
+                    type="button"
+                    onClick={() => { setIsScheduleDayOpen(!isScheduleDayOpen); setIsScheduleHourOpen(false); setIsScheduleMinuteOpen(false); }}
+                    className={`flex items-center justify-between w-full p-2.5 bg-white dark:bg-navy-950 border rounded-xl text-left transition-all focus:outline-none ${isScheduleDayOpen ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-gray-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
+                  >
+                    <span className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                      {{
+                        'sunday': 'Sunday (Official Weekly Window)',
+                        'monday': 'Monday',
+                        'saturday': 'Saturday'
+                      }[scheduleDay] || scheduleDay}
+                    </span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0 ${isScheduleDayOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {isScheduleDayOpen && (
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
+                      {[
+                        { value: 'sunday', label: 'Sunday (Official Weekly Window)' },
+                        { value: 'monday', label: 'Monday' },
+                        { value: 'saturday', label: 'Saturday' }
+                      ].map(opt => (
+                        <button key={opt.value} type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => { setScheduleDay(opt.value); setIsScheduleDayOpen(false); }}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${scheduleDay === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-gray-50 dark:hover:bg-navy-800 text-gray-700 dark:text-gray-300 font-bold'}`}
+                        >
+                          <span className="text-xs truncate">{opt.label}</span>
+                          {scheduleDay === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-black uppercase text-gray-500 mb-1">Hour (IST)</label>
-                  <select
-                    value={scheduleHour}
-                    onChange={(e) => setScheduleHour(Number(e.target.value))}
-                    className="w-full p-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl font-bold"
-                  >
-                    <option value={8}>08:00 AM IST</option>
-                    <option value={9}>09:00 AM IST</option>
-                    <option value={10}>10:00 AM IST</option>
-                  </select>
+                  <div className="relative z-30">
+                    <button
+                      type="button"
+                      onClick={() => { setIsScheduleHourOpen(!isScheduleHourOpen); setIsScheduleDayOpen(false); setIsScheduleMinuteOpen(false); }}
+                      className={`flex items-center justify-between w-full p-2.5 bg-white dark:bg-navy-950 border rounded-xl text-left transition-all focus:outline-none ${isScheduleHourOpen ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-gray-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
+                    >
+                      <span className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                        {{
+                          8: '08:00 AM IST',
+                          9: '09:00 AM IST',
+                          10: '10:00 AM IST'
+                        }[scheduleHour] || scheduleHour}
+                      </span>
+                      <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0 ${isScheduleHourOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isScheduleHourOpen && (
+                      <div className="absolute z-[200] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
+                        {[
+                          { value: 8, label: '08:00 AM IST' },
+                          { value: 9, label: '09:00 AM IST' },
+                          { value: 10, label: '10:00 AM IST' }
+                        ].map(opt => (
+                          <button key={opt.value} type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => { setScheduleHour(opt.value); setIsScheduleHourOpen(false); }}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${scheduleHour === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-gray-50 dark:hover:bg-navy-800 text-gray-700 dark:text-gray-300 font-bold'}`}
+                          >
+                            <span className="text-xs truncate">{opt.label}</span>
+                            {scheduleHour === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
                   <label className="block font-black uppercase text-gray-500 mb-1">Minute (IST)</label>
-                  <select
-                    value={scheduleMinute}
-                    onChange={(e) => setScheduleMinute(Number(e.target.value))}
-                    className="w-full p-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl font-bold"
-                  >
-                    <option value={0}>:00 AM</option>
-                    <option value={15}>:15 AM</option>
-                    <option value={30}>:30 AM</option>
-                    <option value={45}>:45 AM</option>
-                  </select>
+                  <div className="relative z-30">
+                    <button
+                      type="button"
+                      onClick={() => { setIsScheduleMinuteOpen(!isScheduleMinuteOpen); setIsScheduleHourOpen(false); setIsScheduleDayOpen(false); }}
+                      className={`flex items-center justify-between w-full p-2.5 bg-white dark:bg-navy-950 border rounded-xl text-left transition-all focus:outline-none ${isScheduleMinuteOpen ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-gray-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
+                    >
+                      <span className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                        {{
+                          0: ':00 AM',
+                          15: ':15 AM',
+                          30: ':30 AM',
+                          45: ':45 AM'
+                        }[scheduleMinute] || scheduleMinute}
+                      </span>
+                      <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0 ${isScheduleMinuteOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isScheduleMinuteOpen && (
+                      <div className="absolute z-[200] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
+                        {[
+                          { value: 0, label: ':00 AM' },
+                          { value: 15, label: ':15 AM' },
+                          { value: 30, label: ':30 AM' },
+                          { value: 45, label: ':45 AM' }
+                        ].map(opt => (
+                          <button key={opt.value} type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => { setScheduleMinute(opt.value); setIsScheduleMinuteOpen(false); }}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${scheduleMinute === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-gray-50 dark:hover:bg-navy-800 text-gray-700 dark:text-gray-300 font-bold'}`}
+                          >
+                            <span className="text-xs truncate">{opt.label}</span>
+                            {scheduleMinute === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1856,29 +2052,80 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-black uppercase text-gray-500 mb-1">Role</label>
-                  <select
-                    value={newRole}
-                    onChange={(e) => setNewRole(e.target.value)}
-                    className="w-full p-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl font-bold"
-                  >
-                    <option value="HOD">HOD</option>
-                    <option value="MANAGEMENT">MANAGEMENT</option>
-                    <option value="DEPARTMENT_COORDINATOR">COORDINATOR</option>
-                    <option value="ADMIN">ADMIN</option>
-                  </select>
+                  <div className="relative z-40">
+                    <button
+                      type="button"
+                      onClick={() => { setIsNewRoleOpen(!isNewRoleOpen); setIsNewDeptOpen(false); }}
+                      className={`flex items-center justify-between w-full p-2.5 bg-white dark:bg-navy-950 border rounded-xl text-left transition-all focus:outline-none ${isNewRoleOpen ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-gray-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
+                    >
+                      <span className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                        {{
+                          'HOD': 'HOD',
+                          'MANAGEMENT': 'MANAGEMENT',
+                          'DEPARTMENT_COORDINATOR': 'COORDINATOR',
+                          'ADMIN': 'ADMIN'
+                        }[newRole] || newRole}
+                      </span>
+                      <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0 ${isNewRoleOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isNewRoleOpen && (
+                      <div className="absolute z-[200] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
+                        {[
+                          { value: 'HOD', label: 'HOD' },
+                          { value: 'MANAGEMENT', label: 'MANAGEMENT' },
+                          { value: 'DEPARTMENT_COORDINATOR', label: 'COORDINATOR' },
+                          { value: 'ADMIN', label: 'ADMIN' }
+                        ].map(opt => (
+                          <button key={opt.value} type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => { setNewRole(opt.value); setIsNewRoleOpen(false); }}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${newRole === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-gray-50 dark:hover:bg-navy-800 text-gray-700 dark:text-gray-300 font-bold'}`}
+                          >
+                            <span className="text-xs truncate">{opt.label}</span>
+                            {newRole === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
                   <label className="block font-black uppercase text-gray-500 mb-1">Department</label>
-                  <select
-                    value={newDept}
-                    onChange={(e) => setNewDept(e.target.value)}
-                    className="w-full p-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl font-bold"
-                  >
-                    <option value="ALL">ALL (College-wide)</option>
-                    <option value="CSE(CS)">CSE(CS)</option>
-                    <option value="CSE(IoT)">CSE(IoT)</option>
-                  </select>
+                  <div className="relative z-30">
+                    <button
+                      type="button"
+                      onClick={() => { setIsNewDeptOpen(!isNewDeptOpen); setIsNewRoleOpen(false); }}
+                      className={`flex items-center justify-between w-full p-2.5 bg-white dark:bg-navy-950 border rounded-xl text-left transition-all focus:outline-none ${isNewDeptOpen ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-gray-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
+                    >
+                      <span className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                        {{
+                          'ALL': 'ALL (College-wide)',
+                          'CSE(CS)': 'CSE(CS)',
+                          'CSE(IoT)': 'CSE(IoT)'
+                        }[newDept] || newDept}
+                      </span>
+                      <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0 ${isNewDeptOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isNewDeptOpen && (
+                      <div className="absolute z-[200] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
+                        {[
+                          { value: 'ALL', label: 'ALL (College-wide)' },
+                          { value: 'CSE(CS)', label: 'CSE(CS)' },
+                          { value: 'CSE(IoT)', label: 'CSE(IoT)' }
+                        ].map(opt => (
+                          <button key={opt.value} type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => { setNewDept(opt.value); setIsNewDeptOpen(false); }}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${newDept === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-gray-50 dark:hover:bg-navy-800 text-gray-700 dark:text-gray-300 font-bold'}`}
+                          >
+                            <span className="text-xs truncate">{opt.label}</span>
+                            {newDept === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

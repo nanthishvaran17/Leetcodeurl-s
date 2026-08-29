@@ -8,6 +8,7 @@ from backend.models import WeeklySession, WeeklySessionSnapshot, Student, LeetCo
 from backend.schemas import WeeklySessionOut, DashboardSummary
 from backend.session_tracker import get_or_create_current_session, trigger_start_snapshot, trigger_end_snapshot
 from backend.config import settings
+from backend.cache import cache
 
 router = APIRouter(prefix="/api/sessions", tags=["Sessions"])
 
@@ -15,34 +16,32 @@ router = APIRouter(prefix="/api/sessions", tags=["Sessions"])
 def get_current_session_info(db: Session = Depends(get_db)):
     return get_or_create_current_session(db)
 
-from backend.cache import cache
+from backend.routes.auth import get_current_user
+from backend.services.authorization_service import apply_role_based_student_filter
 
 @router.get("/dashboard-summary", response_model=DashboardSummary)
-def get_dashboard_summary(db: Session = Depends(get_db)):
-    cache_key = "sessions:dashboard_summary"
-    cached = cache.get(cache_key)
-    if cached is not None:
-        return cached
-
+def get_dashboard_summary(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     from sqlalchemy import func
+
+    # 1. Base query with Role-Based Scoping
+    base_student_query = db.query(Student.id).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+    base_student_query = apply_role_based_student_filter(base_student_query, current_user, db)
     
-    # 1. Total counts (Institutional Scope)
-    total_students = db.query(func.count(Student.id)).filter((Student.is_active == True) | (Student.is_active.is_(None))).scalar() or 0
+    total_students = base_student_query.count()
+    
     total_departments = db.query(func.count(Department.id)).scalar() or 0
     total_sections = db.query(func.count(Section.id)).scalar() or 0
 
     current_session = get_or_create_current_session(db)
 
     # 2. Strict Mathematical Sync State Invariants (Mutually Exclusive)
-    # verified: sync_status = success AND total_solved > 0
     verified = db.query(func.count(Student.id)).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
-        .filter((Student.is_active == True) | (Student.is_active.is_(None)))\
+        .filter(Student.id.in_(base_student_query))\
         .filter(LeetCodeProfileStats.sync_status.in_(['success', 'OK', 'verified']))\
         .filter(LeetCodeProfileStats.total_solved > 0).scalar() or 0
 
-    # no_username: student.username is null/empty OR sync_status = 'pending_username' or MISSING LINK
     no_username = db.query(func.count(Student.id)).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
-        .filter((Student.is_active == True) | (Student.is_active.is_(None)))\
+        .filter(Student.id.in_(base_student_query))\
         .filter(
             (Student.username == None) | 
             (Student.username == "") | 
@@ -50,13 +49,11 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
             (LeetCodeProfileStats.status == "MISSING LINK")
         ).scalar() or 0
 
-    # failed: sync_status in failed/TIMEOUT/IDENTITY_MISMATCH/INVALID_USERNAME (but has a username)
     failed = db.query(func.count(Student.id)).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
-        .filter((Student.is_active == True) | (Student.is_active.is_(None)))\
+        .filter(Student.id.in_(base_student_query))\
         .filter(Student.username != None, Student.username != "")\
         .filter(LeetCodeProfileStats.sync_status.in_(['failed', 'mismatch', 'TIMEOUT', 'IDENTITY_MISMATCH', 'INVALID_USERNAME'])).scalar() or 0
 
-    # pending: everything else
     pending = total_students - (verified + no_username + failed)
     if pending < 0: pending = 0
 
@@ -66,7 +63,7 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         func.max(LeetCodeProfileStats.contest_rating).label("highest_rating"),
         func.count(LeetCodeProfileStats.id).filter(LeetCodeProfileStats.total_solved > 0).label("active_students")
     ).select_from(Student).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
-     .filter((Student.is_active == True) | (Student.is_active.is_(None))).first()
+     .filter(Student.id.in_(base_student_query)).first()
 
     total_problems = int(agg_result.total_problems) if agg_result and agg_result.total_problems else 0
     highest_rating = float(agg_result.highest_rating) if agg_result and agg_result.highest_rating else 0.0
@@ -74,7 +71,7 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
     
     # 4. Top ranker
     top_college_ranker = None
-    top_student = db.query(Student.name).join(LeetCodeProfileStats).filter((Student.is_active == True) | (Student.is_active.is_(None))).order_by(LeetCodeProfileStats.total_solved.desc().nullslast()).first()
+    top_student = db.query(Student.name).join(LeetCodeProfileStats).filter(Student.id.in_(base_student_query)).order_by(LeetCodeProfileStats.total_solved.desc().nullslast()).first()
     if top_student:
         top_college_ranker = top_student[0]
 

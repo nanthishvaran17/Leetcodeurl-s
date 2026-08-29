@@ -73,16 +73,23 @@ const CustomSelect: React.FC<{
 }> = ({ value, onChange, options, placeholder, icon }) => {
   const [open, setOpen] = useState(false);
   const selected = options.find(o => o.value === value);
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
   // Close on outside click
   useEffect(() => {
-    const handleClick = () => setOpen(false);
-    if (open) document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
+    const handleClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    if (open) {
+      document.addEventListener('mousedown', handleClick);
+    }
+    return () => document.removeEventListener('mousedown', handleClick);
   }, [open]);
 
   return (
-    <div className="relative" onClick={(e) => e.stopPropagation()}>
+    <div className="relative" ref={containerRef}>
       <button
         onClick={() => setOpen(!open)}
         className={`flex items-center justify-between gap-3 min-w-[200px] px-4 py-2.5 rounded-xl border transition-all cursor-pointer font-bold text-sm ${
@@ -709,7 +716,7 @@ export const FacultyActionCenter: React.FC = () => {
       )}
 
       {/* ── Filters ── */}
-      <div className="flex flex-wrap gap-3 items-center p-4 rounded-3xl bg-white/70 dark:bg-navy-800/70 border border-slate-200 dark:border-navy-700 backdrop-blur-md shadow-sm">
+      <div className="relative z-20 flex flex-wrap gap-3 items-center p-4 rounded-3xl bg-white/70 dark:bg-navy-800/70 border border-slate-200 dark:border-navy-700 backdrop-blur-md shadow-sm">
         <div className="flex items-center gap-2 flex-1 min-w-[250px] bg-white dark:bg-navy-900 rounded-xl px-4 py-3 border border-slate-200 dark:border-navy-700 focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-500/10 shadow-sm transition-all group">
           <Search size={16} className="text-slate-400 group-focus-within:text-brand-500 transition-colors flex-shrink-0" />
           <input

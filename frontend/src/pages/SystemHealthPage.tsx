@@ -664,7 +664,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               </div>
               <div className="flex items-center justify-between mt-2 pt-1 border-t border-gray-200/40 dark:border-gray-800/40 text-[10px]">
                 <span className={`${svc.status === 'HEALTHY' || svc.status === 'Healthy' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600'} font-bold`}>● {svc.status}</span>
-                <span className="text-gray-400 font-mono">{svc.latencyMs ? `${svc.latencyMs}ms` : (svc.latency || '2ms')}</span>
+                <span className="text-gray-400 font-mono">{svc.latencyMs ? `${svc.latencyMs}ms` : (svc.latency ? `${svc.latency}` : 'Latency Unavailable')}</span>
               </div>
             </div>
           ))}

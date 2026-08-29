@@ -199,8 +199,8 @@ def build_contest_performance_report(db: Session, config: ReportConfig) -> Dict[
                 status = ContestStatus.INVALID_USERNAME.value
             elif fetch_st in ("FETCH_FAILED", "FETCH_ERROR", "TIMEOUT", "NETWORK_ERROR", "SERVER_ERROR"):
                 status = ContestStatus.FETCH_FAILED.value
-            elif part_st in ("PUBLIC", "PUBLIC_ATTENDED", "OFFICIAL", "ATTENDED"):
-                status = ContestStatus.PUBLIC_ATTENDED.value
+            elif part_st in ("PUBLIC", "PUBLIC_ATTENDED", "OFFICIAL", "ATTENDED", "PUBLIC_LIVE"):
+                status = ContestStatus.PUBLIC_LIVE.value
                 q1_val = 1 if (p_res.q1 and p_res.q1 >= 1) else 0
                 q2_val = 1 if (p_res.q2 and p_res.q2 >= 1) else 0
                 q3_val = 1 if (p_res.q3 and p_res.q3 >= 1) else 0
@@ -208,8 +208,8 @@ def build_contest_performance_report(db: Session, config: ReportConfig) -> Dict[
                 solved_val = q1_val + q2_val + q3_val + q4_val
                 rank_val = p_res.contest_rank
                 rating_val = p_res.contest_rating
-            elif part_st in ("VIRTUAL", "VIRTUAL_ATTENDED"):
-                status = ContestStatus.VIRTUAL_ATTENDED.value
+            elif part_st in ("VIRTUAL", "VIRTUAL_ATTENDED", "VIRTUAL_PRACTICE"):
+                status = ContestStatus.VIRTUAL_PRACTICE.value
                 q1_val = 1 if (p_res.q1 and p_res.q1 >= 1) else 0
                 q2_val = 1 if (p_res.q2 and p_res.q2 >= 1) else 0
                 q3_val = 1 if (p_res.q3 and p_res.q3 >= 1) else 0
@@ -224,7 +224,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig) -> Dict[
             else:
                 status = ContestStatus.UNKNOWN.value
         elif v_res is not None:
-            status = ContestStatus.VIRTUAL_ATTENDED.value
+            status = ContestStatus.VIRTUAL_PRACTICE.value
             q1_val = 1 if (v_res.q1 and v_res.q1 >= 1) else 0
             q2_val = 1 if (v_res.q2 and v_res.q2 >= 1) else 0
             q3_val = 1 if (v_res.q3 and v_res.q3 >= 1) else 0
@@ -233,7 +233,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig) -> Dict[
         elif part_res is not None:
             p_type = str(part_res.participation_type or "").upper()
             if p_type in ("OFFICIAL", "PUBLIC"):
-                status = ContestStatus.PUBLIC_ATTENDED.value
+                status = ContestStatus.PUBLIC_LIVE.value
                 rank_val = part_res.contest_rank
                 rating_val = part_res.contest_rating_after
                 q1_val = getattr(part_res, "q1", None)
@@ -245,7 +245,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig) -> Dict[
                 else:
                     solved_val = part_res.problems_solved or 0
             elif p_type in ("VIRTUAL",):
-                status = ContestStatus.VIRTUAL_ATTENDED.value
+                status = ContestStatus.VIRTUAL_PRACTICE.value
                 rank_val = part_res.contest_rank
                 rating_val = part_res.contest_rating_after
                 q1_val = getattr(part_res, "q1", None)
@@ -262,7 +262,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig) -> Dict[
             status = ContestStatus.NOT_ATTENDED.value
 
         # Consistency Rule: NOT_ATTENDED students MUST have Q1-Q4 = None and contest_solved = None
-        if status not in (ContestStatus.PUBLIC_ATTENDED.value, ContestStatus.VIRTUAL_ATTENDED.value):
+        if status not in (ContestStatus.PUBLIC_LIVE.value, ContestStatus.VIRTUAL_PRACTICE.value, ContestStatus.PUBLIC_ATTENDED.value, ContestStatus.VIRTUAL_ATTENDED.value):
             q1_val = None
             q2_val = None
             q3_val = None
@@ -294,8 +294,8 @@ def build_contest_performance_report(db: Session, config: ReportConfig) -> Dict[
     # 6. Reconcile Summary & Solve Distribution
     total_students = len(student_rows)
 
-    public_attended = sum(1 for r in student_rows if r["status"] == ContestStatus.PUBLIC_ATTENDED.value)
-    virtual_attended = sum(1 for r in student_rows if r["status"] == ContestStatus.VIRTUAL_ATTENDED.value)
+    public_attended = sum(1 for r in student_rows if r["status"] in (ContestStatus.PUBLIC_LIVE.value, ContestStatus.PUBLIC_ATTENDED.value))
+    virtual_attended = sum(1 for r in student_rows if r["status"] in (ContestStatus.VIRTUAL_PRACTICE.value, ContestStatus.VIRTUAL_ATTENDED.value))
     not_attended = sum(1 for r in student_rows if r["status"] == ContestStatus.NOT_ATTENDED.value)
     pending_username = sum(1 for r in student_rows if r["status"] == ContestStatus.PENDING_USERNAME.value)
     fetch_failed = sum(1 for r in student_rows if r["status"] == ContestStatus.FETCH_FAILED.value)
@@ -307,7 +307,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig) -> Dict[
     # Solve Distribution among participating students
     participants_list = [
         r for r in student_rows
-        if r["status"] in (ContestStatus.PUBLIC_ATTENDED.value, ContestStatus.VIRTUAL_ATTENDED.value)
+        if r["status"] in (ContestStatus.PUBLIC_LIVE.value, ContestStatus.VIRTUAL_PRACTICE.value, ContestStatus.PUBLIC_ATTENDED.value, ContestStatus.VIRTUAL_ATTENDED.value)
     ]
 
     solved_4 = sum(1 for r in participants_list if r["contest_solved"] == 4)
@@ -351,7 +351,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig) -> Dict[
 
     # 8. Sort student rows: participants first (by solved DESC, name ASC), then non-participants (name ASC)
     def row_sort_key(r: Dict[str, Any]):
-        is_part = 0 if r["status"] in (ContestStatus.PUBLIC_ATTENDED.value, ContestStatus.VIRTUAL_ATTENDED.value) else 1
+        is_part = 0 if r["status"] in (ContestStatus.PUBLIC_LIVE.value, ContestStatus.VIRTUAL_PRACTICE.value, ContestStatus.PUBLIC_ATTENDED.value, ContestStatus.VIRTUAL_ATTENDED.value) else 1
         s_count = -(r["contest_solved"] if r["contest_solved"] is not None else -1)
         return (is_part, s_count, (r["name"] or ""))
 
@@ -458,7 +458,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig) -> Dict[
         },
         "allStudents": sorted_rows,
         "rows": sorted_rows,
-        "topStudents": [r for r in sorted_rows if r["status"] in (ContestStatus.PUBLIC_ATTENDED.value, ContestStatus.VIRTUAL_ATTENDED.value)][:50]
+        "topStudents": [r for r in sorted_rows if r["status"] in (ContestStatus.PUBLIC_LIVE.value, ContestStatus.VIRTUAL_PRACTICE.value, ContestStatus.PUBLIC_ATTENDED.value, ContestStatus.VIRTUAL_ATTENDED.value)][:50]
     }
 
     # Persist in ReportHistory for auditability and fast exports
