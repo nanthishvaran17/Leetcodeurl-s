@@ -1000,8 +1000,9 @@ async def forgot_password_request(req: ForgotPasswordRequest, request: Request, 
 
     user = db.query(User).filter(
         User.email.ilike(email_clean),
-        User.institutional_id.ilike(inst_id_clean),
         User.date_of_birth == dob_clean
+    ).filter(
+        (User.institutional_id.ilike(inst_id_clean)) | (User.username.ilike(inst_id_clean))
     ).first()
 
     if not user:
@@ -1064,7 +1065,6 @@ def forgot_password_verify(req: ForgotPasswordVerifyRequest, db: Session = Depen
     from backend.models import PasswordResetOTP
     otp_rec = db.query(PasswordResetOTP).filter(
         PasswordResetOTP.email.ilike(email_clean),
-        PasswordResetOTP.institutional_id.ilike(inst_id_clean),
         PasswordResetOTP.is_used == False,
         PasswordResetOTP.is_locked == False
     ).order_by(PasswordResetOTP.created_at.desc()).first()
@@ -1112,8 +1112,7 @@ def forgot_password_reset(req: ResetPasswordSubmitRequest, background_tasks: Bac
     from backend.models import PasswordResetOTP
     otp_rec = db.query(PasswordResetOTP).filter(
         PasswordResetOTP.email.ilike(email_clean),
-        PasswordResetOTP.institutional_id.ilike(inst_id_clean),
-        PasswordResetOTP.is_used == True, # It must be used (verified in previous step)
+        PasswordResetOTP.is_used == True,  # Must be verified in previous step
         PasswordResetOTP.created_at > datetime.datetime.utcnow() - datetime.timedelta(minutes=15)
     ).order_by(PasswordResetOTP.created_at.desc()).first()
 
@@ -1122,9 +1121,9 @@ def forgot_password_reset(req: ResetPasswordSubmitRequest, background_tasks: Bac
 
     # Check password strength
     pwd = req.new_password
-    import re
-    if len(pwd) < 6 or len(pwd) > 8:
-        raise HTTPException(status_code=400, detail="Password must be between 6 and 8 characters.")
+    if len(pwd) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters.")
+
 
     user = db.query(User).filter(User.id == otp_rec.user_id).first()
     if user:

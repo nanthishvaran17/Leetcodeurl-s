@@ -289,16 +289,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
 
     if (!cleanInstId) {
       triggerShake();
-      setError('Please enter your Institutional ID.');
+      setError('Please enter your Institutional ID (Username).');
       return;
     }
-
     if (!cleanEmail || !cleanEmail.includes('@')) {
       triggerShake();
       setError('Please enter a valid registered institutional email.');
       return;
     }
-
     if (!cleanDob) {
       triggerShake();
       setError('Please enter your registered Date of Birth.');
@@ -313,13 +311,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         email: cleanEmail,
         date_of_birth: cleanDob
       });
-
       setSuccessMsg(`Identity verified! Reset code sent to ${maskEmail(cleanEmail)}.`);
       setForgotStep('verify_otp');
-      setOtpDigits(['', '', '', '', '', '']);
+      setForgotResetToken('');
     } catch (err: any) {
       triggerShake();
-      setError(err.response?.data?.detail || 'Identity verification failed. Please verify your details and try again.');
+      setError(err.response?.data?.detail || 'Identity verification failed. Please check your Institutional ID, Email and Date of Birth.');
     } finally {
       setLoading(false);
       setAuthStatusText('');
@@ -331,10 +328,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     setError('');
     setSuccessMsg('');
 
-    const fullOtp = otpDigits.join('');
-    if (fullOtp.length !== 6) {
+    const rawOtp = forgotResetToken.trim();
+    if (rawOtp.length !== 6) {
       triggerShake();
-      setError('Please enter the 6-digit verification code.');
+      setError('Please enter the 6-digit verification code sent to your email.');
       return;
     }
 
@@ -344,13 +341,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
       await api.post('/auth/forgot-password/verify', {
         institutional_id: forgotInstId.trim(),
         email: forgotEmail.trim().toLowerCase(),
-        otp: fullOtp
+        otp: rawOtp
       });
       setForgotStep('reset_password');
       setSuccessMsg('Reset code verified. Please set your new password.');
     } catch (err: any) {
       triggerShake();
-      setError(err.response?.data?.detail || 'Invalid or expired verification code.');
+      setError(err.response?.data?.detail || 'Invalid or expired verification code. Please try again.');
     } finally {
       setLoading(false);
       setAuthStatusText('');
@@ -362,14 +359,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     setError('');
     setSuccessMsg('');
 
-    if (newPassword.length < 6 || newPassword.length > 8) {
+    if (newPassword.length < 6) {
       triggerShake();
-      setError('Password must be between 6 and 8 characters.');
+      setError('Password must be at least 6 characters.');
       return;
     }
     if (newPassword !== confirmPassword) {
       triggerShake();
-      setError('Passwords do not match.');
+      setError('Passwords do not match. Please re-enter.');
       return;
     }
 
@@ -379,14 +376,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
       await api.post('/auth/forgot-password/reset', {
         institutional_id: forgotInstId.trim(),
         email: forgotEmail.trim().toLowerCase(),
-        otp: otpDigits.join(''),
+        otp: forgotResetToken.trim(),
         new_password: newPassword
       });
       setForgotStep('success');
       setSuccessMsg('Your password has been successfully updated!');
     } catch (err: any) {
       triggerShake();
-      setError(err.response?.data?.detail || 'Failed to reset password.');
+      setError(err.response?.data?.detail || 'Failed to reset password. Please start over.');
     } finally {
       setLoading(false);
       setAuthStatusText('');
@@ -591,73 +588,204 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
 
           {currentView === 'forgot_password' && (
             <>
+              {/* Step Indicator */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '20px' }}>
+                {(['dob', 'verify_otp', 'reset_password', 'success'] as const).map((step, i) => {
+                  const stepIdx = ['dob', 'verify_otp', 'reset_password', 'success'].indexOf(forgotStep);
+                  const done = i < stepIdx;
+                  const active = step === forgotStep;
+                  return (
+                    <div key={step} style={{ display: 'flex', alignItems: 'center', flex: i < 3 ? 1 : 'none' }}>
+                      <div style={{
+                        width: 26, height: 26, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '11px', fontWeight: 700, flexShrink: 0,
+                        background: done ? 'var(--verify-green)' : active ? 'var(--brass-bright)' : 'var(--field-bg)',
+                        color: done || active ? '#fff' : 'var(--text-muted)',
+                        border: `1.5px solid ${done ? 'var(--verify-green)' : active ? 'var(--brass-bright)' : 'var(--field-border)'}`,
+                        transition: 'all 0.25s'
+                      }}>
+                        {done ? '✓' : i + 1}
+                      </div>
+                      {i < 3 && <div style={{ flex: 1, height: 2, background: done ? 'var(--verify-green)' : 'var(--field-border)', margin: '0 4px', transition: 'all 0.3s' }} />}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* STEP 1: Identity Verification */}
               {forgotStep === 'dob' && (
                 <form onSubmit={handleForgotVerifyDob}>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px', lineHeight: 1.5 }}>
+                    Enter your <strong>Username / Institutional ID</strong>, registered email, and date of birth to receive a reset code.
+                  </p>
                   <div className="field">
-                    <label>Institutional ID</label>
-                    <input type="text" value={forgotInstId} onChange={(e) => setForgotInstId(e.target.value)} placeholder="Register Number or Staff ID" required disabled={loading} />
+                    <label>Username / Institutional ID</label>
+                    <input
+                      type="text"
+                      value={forgotInstId}
+                      onChange={(e) => setForgotInstId(e.target.value)}
+                      placeholder="e.g. admin or staff123"
+                      required
+                      disabled={loading}
+                      autoFocus
+                    />
                   </div>
                   <div className="field">
                     <label>Registered Email</label>
-                    <input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="email@nandha.edu.in" required disabled={loading} />
+                    <input
+                      type="email"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      placeholder="email@nandha.edu.in"
+                      required
+                      disabled={loading}
+                    />
                   </div>
                   <div className="field">
                     <label>Date of Birth</label>
-                    <input type="date" value={forgotDob} onChange={(e) => setForgotDob(e.target.value)} required disabled={loading} style={{ fontFamily: 'Inter' }} />
+                    <input
+                      type="date"
+                      value={forgotDob}
+                      onChange={(e) => setForgotDob(e.target.value)}
+                      required
+                      disabled={loading}
+                      style={{ fontFamily: 'Inter' }}
+                    />
                   </div>
-                  <div className="row-between">
-                    <span></span>
-                    <button type="button" onClick={() => { setCurrentView('login'); setAuthMode('password'); setError(''); }} className="forgot">Back to Sign In</button>
+                  <div className="row-between" style={{ marginBottom: '4px' }}>
+                    <span />
+                    <button type="button" onClick={() => { setCurrentView('login'); setAuthMode('password'); setError(''); setSuccessMsg(''); }} className="forgot">
+                      Back to Sign In
+                    </button>
                   </div>
                   <button className="submit-btn" type="submit" disabled={loading}>
-                    {loading ? 'Verifying...' : 'Request Reset OTP'}
+                    {loading ? 'Verifying...' : 'Send OTP to Email →'}
                   </button>
                 </form>
               )}
 
-              {(forgotStep === 'send_otp' || forgotStep === 'verify_otp') && (
+              {/* STEP 2: Enter OTP */}
+              {forgotStep === 'verify_otp' && (
                 <form onSubmit={handleForgotVerifyOtp}>
-                  <div className="field">
-                    <label>6-Digit Reset Code sent to {forgotEmail}</label>
-                    <input type="text" value={forgotResetToken} onChange={(e) => setForgotResetToken(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="000000" pattern="\d{6}" required disabled={loading} />
+                  <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                    <div style={{ fontSize: '28px', marginBottom: '6px' }}>📧</div>
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                      A 6-digit code was sent to<br />
+                      <strong style={{ color: 'var(--text-primary)' }}>{forgotEmail}</strong>.<br />
+                      Enter it below within 10 minutes.
+                    </p>
                   </div>
-                  <div className="row-between">
-                    <span></span>
-                    <button type="button" onClick={() => { setForgotStep('dob'); setForgotResetToken(''); setError(''); }} className="forgot">Use different details</button>
+                  <div className="field">
+                    <label>6-Digit Reset Code</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="\d{6}"
+                      maxLength={6}
+                      value={forgotResetToken}
+                      onChange={(e) => setForgotResetToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="000000"
+                      required
+                      disabled={loading}
+                      autoFocus
+                      style={{ textAlign: 'center', fontSize: '22px', fontWeight: 700, letterSpacing: '6px' }}
+                    />
+                  </div>
+                  <div className="row-between" style={{ marginBottom: '8px' }}>
+                    <button type="button" onClick={() => { setForgotStep('dob'); setForgotResetToken(''); setError(''); setSuccessMsg(''); }} className="forgot">
+                      ← Change details
+                    </button>
+                    <button type="button" onClick={handleForgotVerifyDob} disabled={loading} className="forgot" style={{ color: 'var(--brass-bright)' }}>
+                      Resend Code
+                    </button>
                   </div>
                   <button className="submit-btn" type="submit" disabled={loading || forgotResetToken.length !== 6}>
-                    {loading ? 'Verifying...' : 'Validate Code'}
+                    {loading ? 'Verifying...' : 'Verify Code →'}
                   </button>
                 </form>
               )}
 
+              {/* STEP 3: Set New Password */}
               {forgotStep === 'reset_password' && (
                 <form onSubmit={handleForgotResetPassword}>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px', lineHeight: 1.5 }}>
+                    Code verified ✓ — Choose a new secure password for your account.
+                  </p>
                   <div className="field">
                     <label>New Password</label>
                     <div className="input-wrap">
-                      <input type={showPassword ? "text" : "password"} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="At least 12 characters" required disabled={loading} />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Minimum 6 characters"
+                        required
+                        disabled={loading}
+                        autoFocus
+                      />
                       <button type="button" className="toggle-visibility" onClick={() => setShowPassword(!showPassword)}>
-                        {showPassword ? <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><line x1="3" y1="3" x2="21" y2="21"/></svg> : <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+                        {showPassword
+                          ? <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><line x1="3" y1="3" x2="21" y2="21"/></svg>
+                          : <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        }
                       </button>
                     </div>
+                    {newPassword.length > 0 && (
+                      <div style={{ marginTop: '6px', display: 'flex', gap: '4px' }}>
+                        {[1,2,3,4].map(i => (
+                          <div key={i} style={{
+                            flex: 1, height: 3, borderRadius: 2,
+                            background: newPassword.length >= i * 3
+                              ? (newPassword.length >= 10 ? '#22c55e' : newPassword.length >= 6 ? '#f59e0b' : '#ef4444')
+                              : 'var(--field-border)',
+                            transition: 'all 0.2s'
+                          }} />
+                        ))}
+                        <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginLeft: '4px', whiteSpace: 'nowrap' }}>
+                          {newPassword.length < 6 ? 'Weak' : newPassword.length < 10 ? 'Fair' : 'Strong'}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="field">
                     <label>Confirm New Password</label>
-                    <input type={showPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repeat password" required disabled={loading} />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Repeat password"
+                      required
+                      disabled={loading}
+                    />
+                    {confirmPassword.length > 0 && (
+                      <p style={{ fontSize: '11px', marginTop: '4px', color: newPassword === confirmPassword ? 'var(--verify-green)' : '#ef4444' }}>
+                        {newPassword === confirmPassword ? '✓ Passwords match' : '✗ Does not match'}
+                      </p>
+                    )}
                   </div>
-                  <button className="submit-btn" type="submit" disabled={loading}>
+                  <button className="submit-btn" type="submit" disabled={loading || newPassword !== confirmPassword || newPassword.length < 6}>
                     {loading ? 'Updating...' : 'Save Password & Sign In'}
                   </button>
                 </form>
               )}
 
+              {/* STEP 4: Success */}
               {forgotStep === 'success' && (
-                <div style={{ textAlign: 'center', marginTop: '20px' }}>
-                  <svg style={{ color: 'var(--verify-green)', width: '48px', height: '48px', margin: '0 auto 16px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                  <p style={{ fontSize: '13px', color: 'var(--text-primary)', marginBottom: '24px' }}>Your credentials have been securely updated.</p>
-                  <button type="button" className="submit-btn" onClick={() => { setCurrentView('login'); setAuthMode('password'); setError(''); setSuccessMsg(''); }}>
-                    Return to Sign In
+                <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '12px' }}>🎉</div>
+                  <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                    Password Updated!
+                  </h3>
+                  <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '28px', lineHeight: 1.6 }}>
+                    A confirmation email has been sent to <strong>{forgotEmail}</strong>.<br />
+                    Your new credentials are active immediately.
+                  </p>
+                  <button
+                    type="button"
+                    className="submit-btn"
+                    onClick={() => { setCurrentView('login'); setAuthMode('password'); setError(''); setSuccessMsg(''); setForgotInstId(''); setForgotEmail(''); setForgotDob(''); setForgotResetToken(''); setNewPassword(''); setConfirmPassword(''); }}
+                  >
+                    Sign In Now →
                   </button>
                 </div>
               )}
