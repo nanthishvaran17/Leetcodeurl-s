@@ -434,24 +434,6 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  Enforced Capacity Cap: 30 Students Max per Staff Member
  </p>
  </div>
-
- <div className="flex items-center space-x-3">
- <button
- onClick={() => setShowCreateModal(true)}
- className="px-4 py-2 rounded-xl bg-sky-700 hover:bg-sky-800 text-white text-xs font-bold flex items-center space-x-2 shadow-md transition-all cursor-pointer transform hover:scale-[1.01]"
- >
- <UserPlus className="w-4 h-4" />
- <span>Create Staff Member</span>
- </button>
-
- <button
- onClick={triggerAutoRebalanceModal}
- disabled={submitting}
- className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center space-x-2 border border-slate-200 dark:border-navy-700 transition-all cursor-pointer"
- >
- <Sliders className="w-4 h-4 text-sky-600" />
- <span>Auto Rebalance</span>
- </button>
  </div>
  </div>
 
