@@ -442,7 +442,10 @@ else:
 
 try:
     os.makedirs(REPORTS_DIR, exist_ok=True)
+    os.makedirs(os.path.join(BASE_DIR, "static"), exist_ok=True)
+    
     app.mount("/static/reports", StaticFiles(directory=REPORTS_DIR), name="reports")
+    app.mount("/static/assets", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="assets")
 except Exception as e:
     logger.warning(f"Could not mount static reports directory: {e}")
 
