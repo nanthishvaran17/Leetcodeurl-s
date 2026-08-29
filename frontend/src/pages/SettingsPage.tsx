@@ -10,7 +10,7 @@ import api from '../services/api';
 import { SecurityActivitySection } from '../components/SecurityActivitySection';
 import { useNotification } from '../context/NotificationContext';
 import { StaffManagement } from '../components/admin/StaffManagement';
-import { StudentAllocationCenter } from '../components/admin/StudentAllocationCenter';
+import { AdminStaffAllocationPanel } from '../components/AdminStaffAllocationPanel';
 
 export const SettingsPage: React.FC = () => {
   const { notify, confirmAction } = useNotification();
@@ -663,7 +663,7 @@ export const SettingsPage: React.FC = () => {
         {/* SECTION: STUDENT ALLOCATION */}
         {activeSectionFilter === 'allocation' && (
           <div className="glass-card p-5 rounded-2xl border border-gray-200 dark:border-navy-700 animate-fade-in">
-            <StudentAllocationCenter />
+            <AdminStaffAllocationPanel />
           </div>
         )}
 
