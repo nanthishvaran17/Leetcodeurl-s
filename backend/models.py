@@ -2089,3 +2089,21 @@ class GlobalSyncLock(Base):
     locked_by_job_id = Column(String(100), nullable=True)
     locked_at = Column(DateTime, nullable=True)
     expires_at = Column(DateTime, nullable=True)
+
+
+class ScheduledJobExecution(Base):
+    __tablename__ = "scheduled_job_executions"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    job_id = Column(String(100), index=True, nullable=False)
+    job_type = Column(String(50), nullable=True)
+    scheduled_at = Column(DateTime, nullable=True)
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+    status = Column(String(20), default="PENDING") # PENDING, RUNNING, COMPLETED, MISSED, ERROR
+    attempt = Column(Integer, default=1)
+    last_error = Column(Text, nullable=True)
+    next_run = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)

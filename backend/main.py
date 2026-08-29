@@ -125,15 +125,88 @@ async def _deferred_startup_tasks():
     except Exception as _init_err:
         logger.warning(f"[STARTUP] Firestore pending init note: {_init_err}")
 
+    # ── STEP 3: SCHEDULER START + MISSED JOB RECOVERY ─────────────────────
     is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")
     if not is_vercel and SCHEDULER_AVAILABLE:
         try:
-            logger.info("[STARTUP] Starting background scheduler...")
+            logger.info("[STARTUP] ── Step 3: Scheduler Initialization...")
             start_scheduler()
             from backend.services.schedule_service import get_or_create_default_schedule, register_apscheduler_job
             with SessionLocal() as _sched_db:
                 _cfg = get_or_create_default_schedule(_sched_db)
                 register_apscheduler_job(_cfg)
+            logger.info("[STARTUP] ── Step 3: Scheduler started. Checking for missed jobs...")
+
+            # ── MISSED JOB RECOVERY ──────────────────────────────────────
+            # If server was down over a Sunday window, detect and recover safely.
+            try:
+                import datetime as _dt
+                from backend.time_utils import IST
+                from backend.database import SessionLocal as _SL
+                from backend.models import WeeklySession, ScheduledJobExecution
+
+                now_ist = _dt.datetime.now(IST)
+                # Only attempt recovery if current time is Sunday AFTER 08:00 IST
+                if now_ist.weekday() == 6 and now_ist.hour >= 8:
+                    with _SL() as _recovery_db:
+                        today_str = now_ist.strftime("%Y-%m-%d")
+                        existing_session = _recovery_db.query(WeeklySession).filter(
+                            WeeklySession.session_date == today_str
+                        ).first()
+
+                        if not existing_session or existing_session.status in ("SCHEDULED", "DISCOVERED"):
+                            logger.warning(
+                                f"[STARTUP] ⚠️  MISSED SCHEDULE DETECTED — Sunday {today_str} "
+                                f"at {now_ist.strftime('%H:%M IST')}. Triggering safe recovery..."
+                            )
+                            # Record recovery attempt
+                            recovery_record = ScheduledJobExecution(
+                                job_id="startup_missed_job_recovery",
+                                job_type="RECOVERY",
+                                scheduled_at=now_ist.replace(hour=8, minute=0, second=0, microsecond=0),
+                                started_at=now_ist,
+                                status="RUNNING"
+                            )
+                            _recovery_db.add(recovery_record)
+                            _recovery_db.commit()
+
+                            # Fire appropriate recovery phase based on current time
+                            from backend.services.sunday_autopilot import sunday_autopilot
+                            if now_ist.hour < 9 or (now_ist.hour == 9 and now_ist.minute < 30):
+                                logger.info("[STARTUP RECOVERY] Running Phase 1 (Pre-Flight) + Phase 2 (Baseline)...")
+                                sunday_autopilot.phase_1_preflight_0755(_recovery_db)
+                            elif now_ist.hour == 9 and now_ist.minute >= 30:
+                                logger.info("[STARTUP RECOVERY] Running Phase 4 (Finalization)...")
+                                asyncio.create_task(
+                                    sunday_autopilot.phase_4_finalization_0930(_recovery_db)
+                                )
+                            else:
+                                logger.info("[STARTUP RECOVERY] Contest window passed. Attempting finalization.")
+                                asyncio.create_task(
+                                    sunday_autopilot.phase_4_finalization_0930(_recovery_db)
+                                )
+
+                            recovery_record.status = "COMPLETED"
+                            recovery_record.completed_at = _dt.datetime.utcnow()
+                            _recovery_db.commit()
+                            logger.info("[STARTUP] ✅ Missed job recovery completed.")
+                        else:
+                            logger.info(f"[STARTUP] No missed jobs detected. Session {today_str} status: {existing_session.status}")
+            except Exception as _recovery_err:
+                logger.warning(f"[STARTUP] Missed job recovery note: {_recovery_err}")
+
+            # ── STEP 4: CONTEST DISCOVERY ─────────────────────────────────
+            try:
+                logger.info("[STARTUP] ── Step 4: Contest Discovery...")
+                from backend.services.contest_discovery import discover_contest_metadata
+                meta = discover_contest_metadata()
+                logger.info(
+                    f"[STARTUP] ✅ Contest Discovery: {meta.get('contest_name')} "
+                    f"({meta.get('status')}) on {meta.get('raw_date')}"
+                )
+            except Exception as _disc_err:
+                logger.warning(f"[STARTUP] Contest discovery note: {_disc_err}")
+
         except Exception as e:
             logger.warning(f"[STARTUP] Scheduler initialization note: {e}")
 

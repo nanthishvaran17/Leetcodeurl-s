@@ -2,6 +2,11 @@ import asyncio
 import datetime
 from zoneinfo import ZoneInfo
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR, EVENT_JOB_MISSED
+from backend.database import engine
+from backend.models import ScheduledJobExecution
+
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 
@@ -39,8 +44,78 @@ from backend.services.weekly_session_manager import (
 from backend.services.sunday_autopilot import sunday_autopilot
 
 tz = IST
-scheduler = AsyncIOScheduler(timezone=IST)
 
+from backend.services.live_sync_service import _acquire_global_lock, _release_global_lock
+import functools
+
+def with_global_lock(job_name: str, timeout_minutes: int = 15):
+    def decorator(func):
+        @functools.wraps(func)
+        async def wrapper(*args, **kwargs):
+            db = SessionLocal()
+            try:
+                if not _acquire_global_lock(db, job_name, timeout_minutes=timeout_minutes):
+                    logger.warning(f'[SCHEDULER] Job {job_name} skipped. GlobalSyncLock acquired by another worker.')
+                    return
+                logger.info(f'[SCHEDULER] Acquired GlobalSyncLock for {job_name}')
+            finally:
+                db.close()
+            
+            try:
+                if asyncio.iscoroutinefunction(func):
+                    return await func(*args, **kwargs)
+                else:
+                    return func(*args, **kwargs)
+            finally:
+                db2 = SessionLocal()
+                try:
+                    _release_global_lock(db2, job_name)
+                    logger.info(f'[SCHEDULER] Released GlobalSyncLock for {job_name}')
+                finally:
+                    db2.close()
+        return wrapper
+    return decorator
+
+jobstores = {
+    'default': SQLAlchemyJobStore(engine=engine, tablename='apscheduler_jobs')
+}
+scheduler = AsyncIOScheduler(jobstores=jobstores, timezone=IST)
+
+def apscheduler_listener(event):
+    db = SessionLocal()
+    try:
+        if event.code == EVENT_JOB_EXECUTED:
+            status = 'COMPLETED'
+        elif event.code == EVENT_JOB_ERROR:
+            status = 'ERROR'
+        elif event.code == EVENT_JOB_MISSED:
+            status = 'MISSED'
+        else:
+            status = 'UNKNOWN'
+        
+        job = scheduler.get_job(event.job_id)
+        next_run = job.next_run_time if job else None
+
+        record = ScheduledJobExecution(
+            job_id=event.job_id,
+            job_type=str(type(event)),
+            scheduled_at=event.scheduled_run_time if hasattr(event, 'scheduled_run_time') else None,
+            completed_at=datetime.datetime.utcnow(),
+            status=status,
+            last_error=str(event.exception) if hasattr(event, 'exception') and event.exception else None,
+            next_run=next_run
+        )
+        db.add(record)
+        db.commit()
+    except Exception as e:
+        logger.error(f'[SCHEDULER LISTENER ERROR] {e}')
+    finally:
+        db.close()
+
+scheduler.add_listener(apscheduler_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR | EVENT_JOB_MISSED)
+
+
+@with_global_lock('sunday_0755_init_job', timeout_minutes=15)
 async def sunday_0755_init_job():
     """
     Scheduled for Sunday 07:55 AM IST: Pre-contest session initialization,
@@ -56,6 +131,7 @@ async def sunday_0755_init_job():
     finally:
         db.close()
 
+@with_global_lock('sunday_start_job', timeout_minutes=15)
 async def sunday_start_job():
     """
     Scheduled for Sunday 8:00 AM IST: Baseline snapshot and live student synchronization.
@@ -70,6 +146,7 @@ async def sunday_start_job():
     finally:
         db.close()
 
+@with_global_lock('sunday_live_monitoring_job', timeout_minutes=2)
 async def sunday_live_monitoring_job():
     """
     Scheduled every 1 minute during Sunday 08:00–09:30 AM IST: Live student solves tracking.
@@ -84,6 +161,7 @@ async def sunday_live_monitoring_job():
         finally:
             db.close()
 
+@with_global_lock('sunday_end_job', timeout_minutes=15)
 async def sunday_end_job():
     """
     Scheduled for Sunday 9:30 AM IST: Final snapshot, 5-state reconciliation, and immutability lock.
@@ -98,6 +176,7 @@ async def sunday_end_job():
     finally:
         db.close()
 
+@with_global_lock('sunday_0935_report_job', timeout_minutes=15)
 async def sunday_0935_report_job():
     """
     Scheduled for Sunday 9:35 AM IST: Multi-Format Report Generation (Master Excel, PDF, Word, Depts).
@@ -112,6 +191,7 @@ async def sunday_0935_report_job():
     finally:
         db.close()
 
+@with_global_lock('sunday_0940_email_job', timeout_minutes=15)
 async def sunday_0940_email_job():
     """
     Scheduled for Sunday 9:40 AM IST: Idempotent Email Dispatch to HODs & Management.
@@ -126,6 +206,7 @@ async def sunday_0940_email_job():
     finally:
         db.close()
 
+@with_global_lock('sunday_2200_virtual_contest_job', timeout_minutes=120)
 async def sunday_2200_virtual_contest_job():
     """
     Scheduled for Sunday 10:00 PM IST: End-of-Day Virtual contest fetch, combined report generation & final email.
@@ -191,7 +272,7 @@ def start_scheduler():
         CronTrigger(day_of_week='sun', hour=7, minute=55, timezone=tz),
         id='sunday_0755_init',
         replace_existing=True,
-        max_instances=1, coalesce=True, misfire_grace_time=60
+        max_instances=1, coalesce=True, misfire_grace_time=3600
     )
 
     # 2. Sunday 08:00 AM IST — Baseline Snapshot & LIVE Mode Start
@@ -200,7 +281,7 @@ def start_scheduler():
         CronTrigger(day_of_week='sun', hour=8, minute=0, timezone=tz),
         id='sunday_start_snapshot',
         replace_existing=True,
-        max_instances=1, coalesce=True, misfire_grace_time=60
+        max_instances=1, coalesce=True, misfire_grace_time=3600
     )
 
     # 3. Sunday 08:00–09:30 AM IST (Every 1 min) — Live Solves & Telemetry Monitoring
@@ -209,7 +290,7 @@ def start_scheduler():
         IntervalTrigger(minutes=1, timezone=tz),
         id='sunday_live_telemetry_loop',
         replace_existing=True,
-        max_instances=1, coalesce=True, misfire_grace_time=30
+        max_instances=1, coalesce=True, misfire_grace_time=120
     )
 
     # 4. Sunday 09:30 AM IST — Final Snapshot, 5-State Reconciliation & Data Lock
@@ -218,7 +299,7 @@ def start_scheduler():
         CronTrigger(day_of_week='sun', hour=9, minute=30, timezone=tz),
         id='sunday_end_snapshot',
         replace_existing=True,
-        max_instances=1, coalesce=True, misfire_grace_time=60
+        max_instances=1, coalesce=True, misfire_grace_time=3600
     )
 
     # 5. Sunday 09:35 AM IST — Multi-Format Report Generation (Excel, PDF, Word, Depts)
