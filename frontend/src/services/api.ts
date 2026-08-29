@@ -98,8 +98,11 @@ api.interceptors.response.use(
     const isTimeout = error.code === 'ECONNABORTED' || (error.message && error.message.includes('timeout'));
     const isGatewayError = error.response && [502, 503, 504].includes(error.response.status);
     const isNetworkError = !error.response && Boolean(error.request);
+    
+    // Do NOT retry intentionally canceled/aborted requests
+    const isCanceled = axios.isCancel(error) || error.name === 'CanceledError' || error.code === 'ERR_CANCELED';
 
-    if (isTimeout || isGatewayError || isNetworkError) {
+    if (!isCanceled && (isTimeout || isGatewayError || isNetworkError)) {
       config._retryCount = (config._retryCount || 0) + 1;
       const delayMs = config._retryCount * 2000;
       console.warn(`[API_COLD_START_RETRY] Retrying request to ${config.url} (Attempt ${config._retryCount}/2) in ${delayMs}ms...`);

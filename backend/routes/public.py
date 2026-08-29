@@ -44,3 +44,17 @@ def verify_certificate(cert_code: str, db: Session = Depends(get_db)):
     """
     from backend.routes.certificates import verify_certificate_public
     return verify_certificate_public(verification_id=cert_code, db=db)
+
+@router.get("/stats")
+def get_public_stats(db: Session = Depends(get_db)):
+    """
+    Lightweight endpoint to fetch total and verified student counts for public displays
+    without downloading the entire roster.
+    """
+    total = db.query(Student).count()
+    verified = db.query(Student).filter(Student.leetcode_username != None).count()
+    return {
+        "total": total,
+        "verified": verified
+    }
+

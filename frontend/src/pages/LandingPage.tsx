@@ -222,11 +222,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           triggered_by: statusData.triggered_by || statusData.last_triggered_by
         });
 
-        // Re-fetch student roster every 2 seconds during polling so cards update LIVE on screen
-        if (pollCount % 2 === 0) {
-          fetchFilteredStudents();
-        }
-
+        // Removed aggressive roster polling during sync to prevent network flooding.
+        // We will fetch it exactly once when the sync completes (handled below).
         if (!statusData.is_running || (currentProcessed >= totalCount && totalCount > 0)) {
           if (pollTimerRef.current) clearInterval(pollTimerRef.current);
           pollTimerRef.current = null;
