@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Trophy, Calendar, RefreshCw, AlertTriangle, Download, FileSpreadsheet,
   FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Zap, Filter, Trash2, Mail, Send, Sparkles, X, Edit3, UserCheck, UserX, Eye, Users, TrendingUp, Award, ChevronDown, ChevronUp,
@@ -12,6 +12,7 @@ import { Post930SolversView } from './Post930SolversView';
 import { StudentEditOverlay } from '../components/StudentEditOverlay';
 import { PreviousWeekContestPanel } from '../components/PreviousWeekContestPanel';
 import { useAuth } from '../context/AuthContext';
+import { useContestWebSocket, ContestWSEvent } from '../hooks/useContestWebSocket';
 
 // Animated Count-Up component for headline stat numbers
 const AnimatedNumber: React.FC<{ value: number; suffix?: string; duration?: number }> = ({ value, suffix = '', duration = 600 }) => {
@@ -152,36 +153,70 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   }, [selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, debouncedSearchTerm]);
 
   // Optimized Live Telemetry Polling Effect (only when tab is visible and session is LIVE)
+  const pollTelemetry = useCallback(async () => {
+    if (!selectedSessionId || (typeof document !== 'undefined' && document.visibilityState === 'hidden')) return;
+    if (currentSession?.status === 'FINALIZED') return;
+    
+    try {
+      const res = await api.get(`/contests/sessions/${selectedSessionId}/live-status`);
+      if (res.data) {
+        setLiveTelemetry(res.data);
+        if (res.data.countdownSec !== undefined) setCountdownSec(res.data.countdownSec);
+        if (res.data.timeRemainingSec !== undefined) setTimeRemainingSec(res.data.timeRemainingSec);
+        if (res.data.nextUpdateSec !== undefined) setNextUpdateTicker(res.data.nextUpdateSec);
+
+        if (res.data.status && currentSession?.status !== res.data.status) {
+          setCurrentSession((prev: any) => prev ? { ...prev, status: res.data.status } : prev);
+        }
+      }
+    } catch (_err) {
+      // Silent retry
+    }
+  }, [selectedSessionId, currentSession?.status]);
+
   useEffect(() => {
     let isMounted = true;
-    const pollTelemetry = async () => {
-      if (!selectedSessionId || typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
-      if (currentSession?.status === 'FINALIZED') return;
-
-      try {
-        const res = await api.get(`/contests/sessions/${selectedSessionId}/live-status`);
-        if (isMounted && res.data) {
-          setLiveTelemetry(res.data);
-          if (res.data.countdownSec !== undefined) setCountdownSec(res.data.countdownSec);
-          if (res.data.timeRemainingSec !== undefined) setTimeRemainingSec(res.data.timeRemainingSec);
-          if (res.data.nextUpdateSec !== undefined) setNextUpdateTicker(res.data.nextUpdateSec);
-
-          if (res.data.status && currentSession?.status !== res.data.status) {
-            setCurrentSession((prev: any) => prev ? { ...prev, status: res.data.status } : prev);
-          }
-        }
-      } catch (_err) {
-        // Silent retry
-      }
-    };
-
+    let interval: NodeJS.Timeout | null = null;
+    
+    // Only start polling if we are mounted, and do an initial fetch
     pollTelemetry();
-    const interval = setInterval(pollTelemetry, 15000);
+    
+    interval = setInterval(() => {
+      if (isMounted) pollTelemetry();
+    }, 15000);
+    
     return () => {
       isMounted = false;
-      clearInterval(interval);
+      if (interval) clearInterval(interval);
     };
-  }, [selectedSessionId, currentSession?.status]);
+  }, [pollTelemetry]);
+
+  // WebSocket Live Rendering
+  const handleWebSocketResult = useCallback((event: ContestWSEvent) => {
+    setMatrixRows(prev => {
+      const idx = prev.findIndex(r => r.student_id === event.studentId);
+      if (idx === -1) return prev; // Do not insert new rows dynamically to avoid jumping if not already loaded
+
+      const updated = [...prev];
+      updated[idx] = {
+        ...updated[idx],
+        q1_score: event.q1 ?? updated[idx].q1_score,
+        q2_score: event.q2 ?? updated[idx].q2_score,
+        q3_score: event.q3 ?? updated[idx].q3_score,
+        q4_score: event.q4 ?? updated[idx].q4_score,
+        total_solved: event.solvedCount ?? updated[idx].total_solved,
+        official_rank: event.officialRank ?? updated[idx].official_rank,
+        participation_status: event.participationStatus ?? updated[idx].participation_status,
+        last_updated: event.timestamp ?? new Date().toISOString()
+      };
+      return updated;
+    });
+  }, []);
+
+  useContestWebSocket({
+    sessionId: selectedSessionId,
+    onResultUpdate: handleWebSocketResult
+  });
 
   // 1-second Countdown & Time Remaining Ticker
   useEffect(() => {
