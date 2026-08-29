@@ -50,11 +50,32 @@ def get_public_stats(db: Session = Depends(get_db)):
     """
     Lightweight endpoint to fetch total and verified student counts for public displays
     without downloading the entire roster.
+    Canonical LeetCode field: Student.username (Column String(100), index=True, nullable=True).
+    There is NO Student.leetcode_username field on the model.
     """
+    from sqlalchemy import func
+    from backend.models import Department
+
     total = db.query(Student).count()
-    verified = db.query(Student).filter(Student.leetcode_username != None).count()
+    active = db.query(Student).filter(Student.is_active == True).count()
+    inactive = db.query(Student).filter(Student.is_active == False).count()
+
+    # Count students with a non-null, non-empty LeetCode username (canonical field: Student.username)
+    with_handle = db.query(Student).filter(
+        Student.username != None,
+        Student.username != ''
+    ).count()
+    without_handle = total - with_handle
+
+    dept_count = db.query(func.count(Department.id.distinct())).scalar()
+
     return {
         "total": total,
-        "verified": verified
+        "active": active,
+        "inactive": inactive,
+        "verified": with_handle,           # backward-compat alias
+        "with_leetcode_handle": with_handle,
+        "without_leetcode_handle": without_handle,
+        "department_count": dept_count,
     }
 
