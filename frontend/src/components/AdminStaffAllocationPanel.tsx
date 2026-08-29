@@ -420,17 +420,37 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
  return (
     <div className="max-w-7xl mx-auto space-y-8 pb-12">
-      <div className="flex flex-col items-center justify-center space-y-4 mb-8 text-center animate-fade-in">
-        <img src="/nec_25_logo.png" alt="NEC 25 Years" className="w-24 h-24 object-contain drop-shadow-xl" />
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider">
-            Nandha Engineering College (Autonomous)
-          </h1>
-          <h2 className="text-sm font-bold text-sky-600 dark:text-sky-400 mt-1">
-            LeetCode Tracker System &bull; Admin Control Center
-          </h2>
+      {/* ─── INSTITUTION HEADER BANNER (Email-style) ─── */}
+      <div className="w-full rounded-3xl overflow-hidden shadow-2xl mb-8">
+        {/* Dark Header */}
+        <div className="bg-[#0f1e3a] flex flex-col items-center justify-center py-10 px-6 text-center space-y-4">
+          <img
+            src="/nec_25_logo.png"
+            alt="NEC 25 Years of Excellence"
+            className="w-28 h-28 object-contain drop-shadow-2xl"
+          />
+          <div className="space-y-1">
+            <h1 className="text-xl sm:text-2xl font-black text-white uppercase tracking-widest leading-snug">
+              Nandha Engineering College
+            </h1>
+            <p className="text-sm font-semibold text-slate-300 tracking-wide">(Autonomous)</p>
+            <p className="text-xs font-medium text-sky-400 tracking-widest uppercase mt-2">
+              LeetCode Tracker System — Admin Control Center
+            </p>
+          </div>
+        </div>
+        {/* Gradient accent bar */}
+        <div className="h-1.5 w-full bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-500" />
+        {/* Light sub-banner */}
+        <div className="bg-slate-50 dark:bg-navy-800 flex items-center justify-center py-2.5 px-6 gap-3 flex-wrap">
+          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Academic Year 2024–25</span>
+          <span className="text-slate-300 dark:text-navy-600 text-sm">•</span>
+          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Erode, Tamil Nadu</span>
+          <span className="text-slate-300 dark:text-navy-600 text-sm">•</span>
+          <span className="text-[11px] font-bold text-sky-600 dark:text-sky-400 uppercase tracking-widest">NAAC Accredited</span>
         </div>
       </div>
+
 
  {/* ─── 1. STAFF WORKLOAD MATRIX PANEL ─── */}
  <div className="bg-white dark:bg-navy-900 p-6 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-xl space-y-6">
