@@ -176,7 +176,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
   useEffect(() => {
     let isMounted = true;
-    let interval: NodeJS.Timeout | null = null;
+    let interval: ReturnType<typeof setInterval> | null = null;
     
     // Only start polling if we are mounted, and do an initial fetch
     pollTelemetry();
