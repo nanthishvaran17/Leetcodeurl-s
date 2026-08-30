@@ -139,6 +139,9 @@ def run_db_migrations():
             "ALTER TABLE official_weekly_snapshots ADD COLUMN IF NOT EXISTS session_data_hash VARCHAR(128)",
             "ALTER TABLE official_weekly_snapshots ADD COLUMN IF NOT EXISTS reconciliation_summary TEXT",
             "ALTER TABLE official_weekly_snapshots ADD COLUMN IF NOT EXISTS snapshot_version INTEGER DEFAULT 1",
+            
+            # ── Session Recovery ─────────────────────────────────────────────
+            "UPDATE weekly_sessions SET status = 'SCHEDULED' WHERE status = 'FINALIZED' AND id NOT IN (SELECT session_id FROM official_weekly_snapshots)",
         ]
 
         for migration_sql in pg_migrations:

@@ -1195,6 +1195,9 @@ def sync_single_historical_session(db: Session, session_id: int):
         },
         "rows": matrix_rows
     }
+    import json
+    import hashlib
+    dataset_hash = hashlib.sha256(json.dumps(snapshot_data, sort_keys=True).encode("utf-8")).hexdigest()
 
     # Commit all public results and session metrics immediately
     db.commit()
