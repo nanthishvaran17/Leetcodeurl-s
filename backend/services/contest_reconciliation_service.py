@@ -456,13 +456,16 @@ class UniversalContestReconciliationEngine:
 
             # Priority 2: Check for LIVE_ATTENDED (Level 4 Evidence)
             is_live = False
-            if p_res and p_res.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED") and (p_res.total_contest_solved > 0 or p_res.contest_rank):
+            if p_res and p_res.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL_ATTENDED") and (p_res.total_contest_solved > 0 or p_res.contest_rank):
                 is_live = True
 
             # Priority 3: Check for AUTHORITATIVE VIRTUAL (Level 5 Evidence)
             is_authoritative_virtual = False
             if v_res and v_res.participation_status in ("VIRTUAL", "VIRTUAL_ATTENDED") and (v_res.total_contest_solved > 0):
                 is_authoritative_virtual = True
+            elif p_res and p_res.participation_status in ("VIRTUAL", "VIRTUAL_ATTENDED", "YELLOW") and (p_res.total_contest_solved > 0):
+                is_authoritative_virtual = True
+                v_res = p_res  # Use public GraphQL result as authoritative virtual evidence
 
             if is_live and p_res:
                 q1_val = 1 if (p_res.q1 and p_res.q1 >= 1) else 0

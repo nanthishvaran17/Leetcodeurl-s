@@ -229,6 +229,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSessionId, currentSession?.status, autoRefresh, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter]);
 
+  // ── Post-9:30 AM Activity Fix: Automatic Final Fetch ──
+  useEffect(() => {
+    if (selectedSessionId && currentSession?.status === 'FINALIZED') {
+      // Automatically pull the authoritative finalized dataset once when transitioning to FINALIZED
+      fetchSessionDetails(selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSessionId, currentSession?.status]);
+
   // WebSocket Live Rendering — Batched O(1) state updates
   const handleWebSocketBatch = useCallback((events: ContestWSEvent[]) => {
     setMatrixRows(prev => {
@@ -1009,9 +1018,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     <div className="space-y-6 animate-fade-in pb-12">
 
       {/* ── 1. SLEEK INSTITUTIONAL HERO HEADER ── */}
-      <div className={`relative overflow-hidden rounded-3xl text-white p-6 sm:p-8 shadow-lg border transition-all duration-300 ${isLive
-        ? 'bg-gradient-to-r from-rose-950 via-slate-900 to-indigo-950 border-rose-500/40 shadow-rose-500/10'
-        : 'bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 border-brand-500/30'
+      <div className={`relative overflow-hidden rounded-3xl text-white p-6 sm:p-8 shadow-2xl border transition-all duration-500 ${isLive
+        ? 'bg-gradient-to-br from-rose-900 via-slate-900 to-indigo-900 border-rose-500/60 shadow-rose-900/40 before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/5 before:to-transparent before:-translate-x-full before:animate-[shimmer_2s_infinite]'
+        : 'bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 border-brand-500/30 shadow-indigo-900/10'
         }`}>
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-6">

@@ -196,8 +196,8 @@ class PreviousWeekAnalyzer:
             # Step 2: Exact Username Matching for PUBLIC
             students = db.query(Student).filter(Student.is_active == True).all()
             leaderboard_map = {
-                entry.get("normalized_username", entry.get("username", "").strip().lower()): entry
-                for entry in leaderboard_entries if entry.get("username")
+                entry.get("normalized_username", entry.get("user_slug") or entry.get("username", "").strip().lower()): entry
+                for entry in leaderboard_entries if entry.get("user_slug") or entry.get("username")
             }
 
             # Determine next version number

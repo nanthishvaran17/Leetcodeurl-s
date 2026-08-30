@@ -486,8 +486,6 @@ async def fetch_leetcode_profile(
             if res_contest.status_code == 200:
                 await circuit_breaker.record_success()
                 c_data = res_contest.json()
-            elif res_contest.status_code == 429 or res_contest.status_code >= 500:
-                await circuit_breaker.record_failure()
                 contest_info = c_data.get("data", {}).get("userContestRanking")
                 if isinstance(contest_info, dict):
                     c_rating = contest_info.get("rating")
@@ -497,10 +495,14 @@ async def fetch_leetcode_profile(
                 
                 # Fetch recent contest history and separate OFFICIAL vs VIRTUAL
                 contest_history = c_data.get("data", {}).get("userContestRankingHistory") or []
-                if isinstance(contest_history, list):
-                    for item in contest_history:
-                        if not isinstance(item, dict):
-                            continue
+            elif res_contest.status_code == 429 or res_contest.status_code >= 500:
+                await circuit_breaker.record_failure()
+                contest_history = []
+            
+            if isinstance(contest_history, list):
+                for item in contest_history:
+                    if not isinstance(item, dict):
+                        continue
                         c_title = item.get("contest", {}).get("title") or "Weekly Contest"
                         c_start = item.get("contest", {}).get("startTime")
                         c_solved = item.get("problemsSolved", 0)
@@ -508,7 +510,7 @@ async def fetch_leetcode_profile(
                         c_rank = item.get("ranking")
                         c_rating = item.get("rating")
                         is_attended = item.get("attended", False)
-
+    
                         # Determine participation type strictly:
                         # OFFICIAL: attended == True with official rank/rating entry
                         # VIRTUAL: attended == False but problemsSolved > 0 or virtual contest score
@@ -518,7 +520,7 @@ async def fetch_leetcode_profile(
                             part_type = "VIRTUAL"
                         else:
                             part_type = "UNKNOWN"
-
+    
                         if part_type != "UNKNOWN":
                             contest_participations.append({
                                 "contest_name": c_title,
@@ -545,7 +547,7 @@ async def fetch_leetcode_profile(
                         if latest.get("ranking") and latest.get("attended"):
                             contest_global_ranking = latest.get("ranking")
                         if latest.get("rating") and latest.get("attended"):
-                            contest_rating = round(float(latest.get("rating")), 1)
+                                contest_rating = round(float(latest.get("rating")), 1)
         except Exception as e:
             logger.info(f"Contest stats skipped for '{username}': {e}")
 

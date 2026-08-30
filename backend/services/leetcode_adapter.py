@@ -434,7 +434,7 @@ class ProductionLeetCodeAdapter(LeetCodeAdapter):
 
                     entries: List[RankingEntry] = []
                     for idx, entry in enumerate(raw_entries):
-                        uname = entry.get("username")
+                        uname = entry.get("user_slug") or entry.get("username")
                         if not uname:
                             continue
                         sub_count = 0

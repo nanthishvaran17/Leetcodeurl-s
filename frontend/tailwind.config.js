@@ -40,6 +40,14 @@ export default {
         display: ['Manrope', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'monospace'],
       },
+      keyframes: {
+        shimmer: {
+          '100%': { transform: 'translateX(100%)' },
+        }
+      },
+      animation: {
+        'shimmer': 'shimmer 2s infinite',
+      }
     },
   },
   plugins: [],

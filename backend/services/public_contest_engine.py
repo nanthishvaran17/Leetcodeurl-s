@@ -162,23 +162,7 @@ class PublicContestEngine:
         Fetch the COMPLETE official leaderboard.
         Fail closed: if ANY page fails, return success=False.
         """
-        # MOCK FOR SIMULATED ENVIRONMENT 2026
-        if "516" in slug:
-            mock_entries = [
-                {"username": u.lower(), "score": 12, "problems_solved": 2, "rank": i + 1, "finish_time": 1724553000 + i * 60, "data_region": "US"}
-                for i, u in enumerate(['Spidy_42', 'sakthi0407', 'DeepaksriramK', 'Magudapathi26', 'KIRUTHIKAA_05', 'Sharmila__27', 'Poomitha_23', 'Jananii_26', 'manis_ha_25', 'Sowmiya_7383'])
-            ]
-            return True, mock_entries, {
-                "pages_requested": 1,
-                "pages_successfully_fetched": 1,
-                "total_reported": 10,
-                "total_fetched": 10,
-                "unique_usernames": 10,
-                "duplicate_count": 0,
-                "retry_count": 0,
-                "validation_status": "VERIFIED",
-                "failure_reason": None
-            }
+        # Removed hardcoded mock array for Weekly Contest 516
         all_entries: List[Dict[str, Any]] = []
         metadata = {
             "pages_requested": 0,
@@ -226,7 +210,8 @@ class PublicContestEngine:
                     break
 
                 for idx, entry in enumerate(raw_entries):
-                    raw_uname = entry.get("username")
+                    # Use user_slug for canonical matching (survives username changes)
+                    raw_uname = entry.get("user_slug") or entry.get("username")
                     if not raw_uname:
                         continue
 
@@ -245,7 +230,8 @@ class PublicContestEngine:
                         problems_solved = len(sub_dict)
 
                     all_entries.append({
-                        "username": raw_uname,
+                        "username": entry.get("username"),
+                        "user_slug": entry.get("user_slug"),
                         "normalized_username": norm_uname,
                         "rank": entry.get("rank"),
                         "score": entry.get("score", 0),
@@ -571,6 +557,16 @@ class PublicContestEngine:
 
         pub_map = {p.student_id: p for p in participations}
 
+        # Query WeeklyPublicResult fallback
+        from backend.models import WeeklyPublicResult
+        weekly_results = db.query(WeeklyPublicResult).filter(
+            WeeklyPublicResult.session_id == session_id,
+            WeeklyPublicResult.student_id.in_(student_ids),
+            WeeklyPublicResult.total_contest_solved > 0
+        ).all()
+        
+        fallback_map = {w.student_id: w for w in weekly_results}
+
         public_list = []
         unfound_list = []
         missing_user_count = 0
@@ -605,6 +601,21 @@ class PublicContestEngine:
                     "status": "PUBLIC_PARTICIPANT"
                 })
                 public_list.append(st_dict)
+            elif st.id in fallback_map:
+                # Merge the fallback data
+                w = fallback_map[st.id]
+                st_dict.update({
+                    "contest_rank": w.contest_rank or "-",
+                    "problems_solved": w.total_contest_solved,
+                    "score": w.contest_score,
+                    "finish_time": 0,
+                    "contest_slug": "weekly-contest",
+                    "contest_title": "Weekly Contest",
+                    "dataset_version": "graphql_fallback",
+                    "verification_status": "VERIFIED_VIA_GRAPHQL",
+                    "status": "PUBLIC_PARTICIPANT"
+                })
+                public_list.append(st_dict)
             else:
                 st_dict.update({
                     "verification_status": "MISSING_LEETCODE_USERNAME" if not has_username else "NOT_FOUND_IN_PUBLIC_LEADERBOARD",
@@ -626,7 +637,7 @@ class PublicContestEngine:
             "page": page,
             "page_size": page_size,
             "public_participants": paginated_public,
-            "unfound_students": unfound_list[:50],
+            "unfound_students": unfound_list,
             "summary": {
                 "total_institutional_students": total_students_count,
                 "public_participants_count": public_count,
