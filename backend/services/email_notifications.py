@@ -336,18 +336,39 @@ def notify_faculty_allocation(faculty_email: str, faculty_name: str, students: L
         content = f"""
         <p>Dear {faculty_name},</p>
         <p>A new student has been assigned to your mentoring portfolio.</p>
-        <table class="data-table">
-            <tr><td>Name</td><td>{s.get('name')}</td></tr>
-            <tr><td>Register Number</td><td>{s.get('reg_no')}</td></tr>
-            <tr><td>Department</td><td>{s.get('department')}</td></tr>
-        </table>
         """
     else:
         content = f"""
         <p>Dear {faculty_name},</p>
         <p><strong>{len(students)} students</strong> have been newly assigned to your mentoring portfolio.</p>
-        <p>Please log in to the faculty portal to review your updated student list.</p>
         """
+
+    # Always add the table with Student Name, Register Number, Academic Year
+    table_rows = ""
+    for s in students:
+        table_rows += f"""
+            <tr>
+                <td>{s.get('name', 'N/A')}</td>
+                <td>{s.get('reg_no', 'N/A')}</td>
+                <td>{s.get('year_level', 'N/A')}</td>
+            </tr>
+        """
+    
+    content += f"""
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="text-align: left; padding: 8px; border-bottom: 2px solid #ddd;">Student Name</th>
+                    <th style="text-align: left; padding: 8px; border-bottom: 2px solid #ddd;">Register Number</th>
+                    <th style="text-align: left; padding: 8px; border-bottom: 2px solid #ddd;">Academic Year</th>
+                </tr>
+            </thead>
+            <tbody>
+                {table_rows}
+            </tbody>
+        </table>
+        <p>Please log in to the faculty portal to review your updated student list.</p>
+    """
         
     portal_url = f"{settings.FRONTEND_ORIGIN}/faculty"
     action_button = f'<a href="{portal_url}" class="btn">View Portfolio</a>'

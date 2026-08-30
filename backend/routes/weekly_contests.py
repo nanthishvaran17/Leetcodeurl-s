@@ -148,8 +148,21 @@ def get_session_live_telemetry(
     telemetry["wsConnectionCount"] = len(ws_manager.active_connections)
 
     # Verification status string for command bar
-    total_students = session.total_students if session else 302
-    public_results = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session_id).all()
+    from backend.services.authorization_service import get_authorized_student_ids
+    authorized_ids = get_authorized_student_ids(db, current_user)
+    
+    if authorized_ids is not None:
+        total_students = len(authorized_ids)
+        public_results_query = db.query(WeeklyPublicResult).filter(
+            WeeklyPublicResult.session_id == session_id,
+            WeeklyPublicResult.student_id.in_(authorized_ids)
+        )
+    else:
+        total_students = session.total_students if session else 302
+        public_results_query = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session_id)
+        
+    public_results = public_results_query.all()
+    
     verified_count = sum(1 for r in public_results if r.participation_status in (
         "PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "NOT_ATTENDED",
         "PUBLIC_NOT_ATTENDED", "VIRTUAL", "VIRTUAL_ATTENDED"

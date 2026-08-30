@@ -134,7 +134,8 @@ class FacultyAssignmentService:
                 students_allocated_data.append({
                     "name": st_obj.name,
                     "reg_no": st_obj.reg_no,
-                    "department": st_obj.department.name if st_obj.department else "N/A"
+                    "department": st_obj.department.name if st_obj.department else "N/A",
+                    "year_level": st_obj.year_level or "N/A"
                 })
 
                 existing_assignment = db.query(FacultyStudentAssignment).filter(
