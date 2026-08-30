@@ -7,10 +7,10 @@ from backend.config import settings
 logger = logging.getLogger(__name__)
 
 def generate_professional_template(title: str, content: str, action_button: Optional[str] = None, fallback_url: Optional[str] = None) -> str:
-    \"\"\"
+    """
     Generates a standardized professional HTML email wrapper with institutional branding.
     Optimized for Gmail, Outlook, Desktop, Mobile, and Tablet.
-    \"\"\"
+    """
     logo_url = "https://raw.githubusercontent.com/nanthishvaran17/Leetcodeurl-s/main/frontend/public/nec_25_logo.png"
 
     button_html = ""
