@@ -163,7 +163,7 @@ class TestContestPerformanceReport(unittest.TestCase):
 
         # 6. Row check: 0-solve Virtual participant must have Q1-Q4 = 0 and contest_solved = 0
         s6_row = next(r for r in report["allStudents"] if r["reg_no"] == "732224CC006")
-        self.assertEqual(s6_row["status"], "VIRTUAL_ATTENDED")
+        self.assertEqual(s6_row["status"], "VIRTUAL_PRACTICE")
         self.assertEqual(s6_row["q1"], 0)
         self.assertEqual(s6_row["q2"], 0)
         self.assertEqual(s6_row["q3"], 0)
@@ -172,7 +172,7 @@ class TestContestPerformanceReport(unittest.TestCase):
 
         # 7. Row check: 3-solve participant must have Q1=1, Q2=1, Q3=1, Q4=0 and contest_solved = 3
         s2_row = next(r for r in report["allStudents"] if r["reg_no"] == "732224CC002")
-        self.assertEqual(s2_row["status"], "PUBLIC_ATTENDED")
+        self.assertEqual(s2_row["status"], "PUBLIC_LIVE")
         self.assertEqual(s2_row["q1"], 1)
         self.assertEqual(s2_row["q2"], 1)
         self.assertEqual(s2_row["q3"], 1)

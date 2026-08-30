@@ -1027,7 +1027,7 @@ async def forgot_password_request(req: ForgotPasswordRequest, request: Request, 
 
     # Generate a real OTP
     plain_otp = f"{secrets.randbelow(1000000):06d}"
-    otp_hash = pwd_context.hash(plain_otp)
+    otp_hash = get_password_hash(plain_otp)
     
     otp_rec = PasswordResetOTP(
         user_id=user.id,
@@ -1079,7 +1079,7 @@ def forgot_password_verify(req: ForgotPasswordVerifyRequest, db: Session = Depen
     if otp_rec.expires_at < datetime.datetime.utcnow():
         raise HTTPException(status_code=400, detail="OTP has expired. Please request a new one.")
 
-    if not pwd_context.verify(raw_otp, otp_rec.otp_hash):
+    if not verify_password(raw_otp, str(otp_rec.otp_hash)):
         otp_rec.attempts += 1
         if otp_rec.attempts >= otp_rec.max_attempts:
             otp_rec.is_locked = True
@@ -1120,7 +1120,7 @@ def forgot_password_reset(req: ResetPasswordSubmitRequest, background_tasks: Bac
         PasswordResetOTP.created_at > datetime.datetime.utcnow() - datetime.timedelta(minutes=15)
     ).order_by(PasswordResetOTP.created_at.desc()).first()
 
-    if not otp_rec or not pwd_context.verify(raw_otp, otp_rec.otp_hash):
+    if not otp_rec or not verify_password(raw_otp, str(otp_rec.otp_hash)):
         raise HTTPException(status_code=401, detail="Invalid or expired session. Please start over.")
 
     # Check password strength
@@ -1131,7 +1131,7 @@ def forgot_password_reset(req: ResetPasswordSubmitRequest, background_tasks: Bac
 
     user = db.query(User).filter(User.id == otp_rec.user_id).first()
     if user:
-        if pwd_context.verify(pwd, str(user.hashed_password or "")):
+        if verify_password(pwd, str(user.hashed_password or "")):
             raise HTTPException(status_code=400, detail="New password cannot be the same as the old password.")
 
         user.hashed_password = get_password_hash(pwd)

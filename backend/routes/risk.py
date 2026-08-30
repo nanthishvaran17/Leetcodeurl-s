@@ -1,3 +1,4 @@
+from sqlalchemy.orm import joinedload
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -51,15 +52,23 @@ def get_at_risk_students(
     """
     Returns list of students filtered by risk level with recommended staff intervention actions.
     """
-    query = db.query(Student).filter(Student.is_active == True)
+    query = db.query(Student).options(joinedload(Student.department), joinedload(Student.stats)).filter(Student.is_active == True)
 
     if dept_id:
         query = query.filter(Student.department_id == dept_id)
     if year_level and year_level.strip().upper() not in ['ALL', 'ALL YEARS', '']:
         query = query.filter(func.upper(Student.year_level) == year_level.strip().upper())
 
-    students = query.all()
+    students = query.limit(limit).all()
     results = []
+
+    # Optimize: Pre-fetch mentor notes to avoid N+1
+    student_ids = [s.id for s in students]
+    all_notes = db.query(MentorNote).filter(MentorNote.student_id.in_(student_ids)).order_by(MentorNote.created_at.desc()).all()
+    from collections import defaultdict
+    notes_by_student = defaultdict(list)
+    for n in all_notes:
+        notes_by_student[n.student_id].append(n)
 
     for st in students:
         profile = calculate_student_risk_profile(db, st)
@@ -68,7 +77,7 @@ def get_at_risk_students(
         if risk_level and st_level != risk_level:
             continue
 
-        notes = db.query(MentorNote).filter(MentorNote.student_id == st.id).order_by(MentorNote.created_at.desc()).all()
+        notes = notes_by_student.get(st.id, [])
         notes_out = [
             {
                 "id": n.id,

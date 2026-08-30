@@ -128,7 +128,7 @@ async def _deferred_startup_tasks():
 
     # ── STEP 3: SCHEDULER START + MISSED JOB RECOVERY ─────────────────────
     is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")
-    run_scheduler_in_web = os.environ.get("RUN_SCHEDULER_IN_WEB") == "true"
+    run_scheduler_in_web = os.environ.get("RUN_SCHEDULER_IN_WEB", "true").lower() == "true"
     if not is_vercel and SCHEDULER_AVAILABLE and run_scheduler_in_web:
         try:
             logger.info("[STARTUP] ── Step 3: Scheduler Initialization...")
@@ -318,13 +318,15 @@ if getattr(settings, "CORS_ALLOWED_ORIGINS", None):
         o_clean = o.strip()
         if o_clean and o_clean not in origins:
             origins.append(o_clean)
-try:
-    from brotli_asgi import BrotliMiddleware
-    app.add_middleware(BrotliMiddleware, minimum_size=500)
-except ImportError:
-    pass
-
-app.add_middleware(GZipMiddleware, minimum_size=500)
+# Render.com (via Cloudflare) automatically applies GZip/Brotli compression at the proxy edge.
+# We do not want to burn FastAPI CPU cycles double-compressing or interfering with the proxy.
+if not os.getenv('RENDER'):
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
+    try:
+        from brotli_asgi import BrotliMiddleware
+        app.add_middleware(BrotliMiddleware, minimum_size=1000)
+    except ImportError:
+        pass
 
 app.add_middleware(
     CORSMiddleware,

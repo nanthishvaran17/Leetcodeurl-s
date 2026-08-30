@@ -1,3 +1,4 @@
+import pytest
 """
 tests/test_meta_webhook_production_setup.py — Meta WhatsApp Cloud API Production Setup Verification
 
@@ -35,6 +36,7 @@ def compute_meta_signature(raw_payload: bytes, secret: str) -> str:
     return f"sha256={mac.hexdigest()}"
 
 
+@pytest.mark.integration
 def test_meta_webhook_production_setup():
     print("=" * 80)
     print("META WHATSAPP CLOUD API — PRODUCTION WEBHOOK SETUP VALIDATION")

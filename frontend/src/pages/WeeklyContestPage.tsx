@@ -105,6 +105,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const [totalRows, setTotalRows] = useState<number>(0);
   const [sessionMetrics, setSessionMetrics] = useState<any>(null);
   const [departmentStats, setDepartmentStats] = useState<any>(null);
+  const [yearStats, setYearStats] = useState<any>(null);
   const [errorLogs, setErrorLogs] = useState<any[]>([]);
   const [comparison, setComparison] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'previous_week' | 'matrix'>('previous_week');
@@ -267,7 +268,13 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
   useContestWebSocket({
     sessionId: selectedSessionId,
-    onBatchUpdate: handleWebSocketBatch
+    onBatchUpdate: handleWebSocketBatch,
+    onSyncCompleted: (event) => {
+      // Silently refresh the dashboard metrics after sync completes
+      if (selectedSessionId) {
+        fetchSessionDetails(selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, true);
+      }
+    }
   });
 
   // 1-second Countdown & Time Remaining Ticker
@@ -482,6 +489,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       setTotalRows(matRes.data?.total || 0);
       setSessionMetrics(matRes.data?.metrics || null);
       setDepartmentStats(matRes.data?.departmentStats || null);
+      setYearStats(matRes.data?.yearStats || null);
       setErrorLogs(errRes.data || []);
       setComparison(compRes.data || null);
     } catch (err: any) {
@@ -850,23 +858,24 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
   // ── Memoized Dynamic Statistics Calculation (Hook MUST run before any early return) ──
   const stats = useMemo(() => {
-    const totalRows = sessionMetrics?.totalStudents ?? sessionMetrics?.verifiedEligibleRoster ?? matrixRows.length;
-    const attendedRows = sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? matrixRows.filter(r => r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'ATTENDED' || r.status === 'PUBLIC' || r.participation_status === 'PUBLIC').length;
-    const notAttendedRows = sessionMetrics?.notAttended ?? sessionMetrics?.notParticipated ?? matrixRows.filter(r => r.participation_status === 'PUBLIC_NOT_ATTENDED' || r.participation_status === 'NOT_ATTENDED' || r.status === 'NOT_ATTENDED' || r.status === 'NOT ATTENDED').length;
-    const virtualRows = sessionMetrics?.virtualAttended ?? sessionMetrics?.virtualParticipants ?? matrixRows.filter(r => r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL').length;
+    // BUG 6 FIX: Never use pagination to calculate global metrics. Always rely on the SSOT backend sessionMetrics.
+    const totalRows = sessionMetrics?.totalStudents ?? 0;
+    const attendedRows = sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? 0;
+    const notAttendedRows = sessionMetrics?.notAttended ?? sessionMetrics?.notParticipated ?? 0;
+    const virtualRows = sessionMetrics?.virtualAttended ?? sessionMetrics?.virtualParticipants ?? 0;
     const isVirtualAvailable = sessionMetrics?.virtualDataStatus === 'AVAILABLE' || virtualRows > 0;
-    const errorRows = sessionMetrics?.dataErrors ?? sessionMetrics?.failedVerification ?? matrixRows.filter(r => r.participation_status === 'DATA_ERROR' || r.participation_status === 'SOURCE_ERROR' || r.participation_status === 'CONFLICT' || r.status === 'USERNAME_NOT_FOUND' || r.participation_status === 'USERNAME_NOT_FOUND' || r.status === 'FETCH_ERROR').length;
+    const errorRows = sessionMetrics?.dataErrors ?? sessionMetrics?.failedVerification ?? 0;
 
     // Active cohort total solve breakdown (4/4, 3/4, 2/4, 1/4 Solved)
-    const q4Solved = sessionMetrics?.q4Count ?? matrixRows.filter(r => (r.participation_status === 'PUBLIC' || r.status === 'PUBLIC' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) >= 4 || Number(r.total_contest_solved) >= 4)).length;
-    const q3Solved = sessionMetrics?.q3Count ?? matrixRows.filter(r => (r.participation_status === 'PUBLIC' || r.status === 'PUBLIC' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) === 3 || Number(r.total_contest_solved) === 3)).length;
-    const q2Solved = sessionMetrics?.q2Count ?? matrixRows.filter(r => (r.participation_status === 'PUBLIC' || r.status === 'PUBLIC' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) === 2 || Number(r.total_contest_solved) === 2)).length;
-    const q1Solved = sessionMetrics?.q1Count ?? matrixRows.filter(r => (r.participation_status === 'PUBLIC' || r.status === 'PUBLIC' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) === 1 || Number(r.total_contest_solved) === 1)).length;
+    const q4Solved = sessionMetrics?.q4Count ?? 0;
+    const q3Solved = sessionMetrics?.q3Count ?? 0;
+    const q2Solved = sessionMetrics?.q2Count ?? 0;
+    const q1Solved = sessionMetrics?.q1Count ?? 0;
 
-    const virtual4Solved = matrixRows.filter(r => (r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) === 4 || Number(r.total_contest_solved) === 4)).length;
-    const virtual3Solved = matrixRows.filter(r => (r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) === 3 || Number(r.total_contest_solved) === 3)).length;
-    const virtual2Solved = matrixRows.filter(r => (r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) === 2 || Number(r.total_contest_solved) === 2)).length;
-    const virtual1Solved = matrixRows.filter(r => (r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) === 1 || Number(r.total_contest_solved) === 1)).length;
+    const virtual4Solved = sessionMetrics?.virtual4Solved ?? 0;
+    const virtual3Solved = sessionMetrics?.virtual3Solved ?? 0;
+    const virtual2Solved = sessionMetrics?.virtual2Solved ?? 0;
+    const virtual1Solved = sessionMetrics?.virtual1Solved ?? 0;
 
     const publicPct = totalRows > 0 ? ((attendedRows / totalRows) * 100).toFixed(1) : '0.0';
     const virtualPct = totalRows > 0 ? ((virtualRows / totalRows) * 100).toFixed(1) : '0.0';
@@ -874,21 +883,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     // EXACT MANDATORY FORMULA: ((PUBLIC + VIRTUAL) / TOTAL) * 100
     const totalParticipationPct = totalRows > 0 ? (((attendedRows + virtualRows) / totalRows) * 100).toFixed(1) : '0.0';
 
-    const topPerformers = matrixRows
-      .filter(r => {
-        const isAttended = r.participation_status === 'PUBLIC' || r.participation_status === 'PUBLIC_ATTENDED' || r.status === 'PUBLIC' || r.participation_status === 'VIRTUAL' || r.participation_status === 'VIRTUAL_ATTENDED';
-        const solved = Number(r.total_solved ?? r.total_contest_solved ?? ((r.q1 || 0) + (r.q2 || 0) + (r.q3 || 0) + (r.q4 || 0))) || 0;
-        return isAttended && solved > 0;
-      })
-      .sort((a, b) => {
-        const solvedA = Number(a.total_solved ?? a.total_contest_solved ?? ((a.q1 || 0) + (a.q2 || 0) + (a.q3 || 0) + (a.q4 || 0))) || 0;
-        const solvedB = Number(b.total_solved ?? b.total_contest_solved ?? ((b.q1 || 0) + (b.q2 || 0) + (b.q3 || 0) + (b.q4 || 0))) || 0;
-        if (solvedB !== solvedA) return solvedB - solvedA;
-        const rankA = Number(a.rank ?? a.contest_rank) || 999999;
-        const rankB = Number(b.rank ?? b.contest_rank) || 999999;
-        return rankA - rankB;
-      })
-      .slice(0, 3);
+    const topPerformers = sessionMetrics?.topPerformers ?? [];
 
     return {
       totalRows,
@@ -2547,7 +2542,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   }`}
               >
                 <AlertTriangle className="w-3.5 h-3.5" />
-                <span>Data Quality Error Board ({matrixRows.filter(r => !r.username || r.participation_status === 'DATA_ERROR' || r.status === 'USERNAME_NOT_FOUND').length} Issues)</span>
+                <span>Data Quality Error Board ({stats.errorRows} Issues)</span>
               </button>
 
               <button
@@ -2569,7 +2564,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
           {/* Missing Handles Alert Banner */}
           {(() => {
-            const missingHandlesCount = filteredMatrixRows.filter(r => !r.username || r.status === 'USERNAME_NOT_FOUND').length;
+            const missingHandlesCount = sessionMetrics?.usernameNotFound ?? sessionMetrics?.unlinkedProfiles ?? filteredMatrixRows.filter(r => !r.username || r.status === 'USERNAME_NOT_FOUND').length;
             if (missingHandlesCount > 0) {
               return (
                 <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-4 flex items-center justify-between flex-wrap gap-4 shadow-sm animate-fade-in">
@@ -2949,7 +2944,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </div>
 
               <div className="overflow-x-auto -mx-1 px-1">
-                <table className="w-full text-left text-xs border-collapse">
+                <table className="w-full min-w-[700px] text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-gray-200 dark:border-gray-800 text-[11px] font-black text-gray-400 uppercase tracking-wider">
                       <th className="py-2.5 px-3">Segment / Category</th>
@@ -2964,12 +2959,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800/60 font-bold">
                     {/* Department breakdown rows */}
                     {['CSE(CS)', 'CSE(IOT)'].map((deptCode) => {
-                      const subset = matrixRows.filter(r => (r.dept === deptCode || r.dept === (deptCode === 'CSE(CS)' ? 'Cyber Security' : 'IoT') || r.department === deptCode));
-                      const tot = subset.length;
-                      const pub = subset.filter(r => r.participation_status === 'PUBLIC' || r.status === 'PUBLIC').length;
-                      const virt = subset.filter(r => r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL').length;
-                      const notAtt = subset.filter(r => r.participation_status === 'NOT_ATTENDED' || r.status === 'NOT_ATTENDED').length;
-                      const errs = subset.filter(r => r.participation_status === 'DATA_ERROR' || r.status === 'USERNAME_NOT_FOUND' || r.status === 'FETCH_ERROR').length;
+                      const dStats = departmentStats?.[deptCode] || { total: 0, public: 0, virtual: 0, not_attended: 0, errors: 0 };
+                      const tot = dStats.total || 0;
+                      const pub = dStats.public || 0;
+                      const virt = dStats.virtual || 0;
+                      const notAtt = dStats.not_attended || 0;
+                      const errs = dStats.errors || 0;
                       const pct = tot > 0 ? (((pub + virt) / tot) * 100).toFixed(1) : '0.0';
 
                       return (
@@ -2992,12 +2987,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
                     {/* Academic Year breakdown rows */}
                     {['II', 'III', 'IV'].map((yr) => {
-                      const subset = matrixRows.filter(r => r.year === yr || r.year_level === yr);
-                      const tot = subset.length;
-                      const pub = subset.filter(r => r.participation_status === 'PUBLIC' || r.status === 'PUBLIC').length;
-                      const virt = subset.filter(r => r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL').length;
-                      const notAtt = subset.filter(r => r.participation_status === 'NOT_ATTENDED' || r.status === 'NOT_ATTENDED').length;
-                      const errs = subset.filter(r => r.participation_status === 'DATA_ERROR' || r.status === 'USERNAME_NOT_FOUND' || r.status === 'FETCH_ERROR').length;
+                      const yStats = yearStats?.[yr] || { total: 0, public: 0, virtual: 0, not_attended: 0, errors: 0 };
+                      const tot = yStats.total || 0;
+                      const pub = yStats.public || 0;
+                      const virt = yStats.virtual || 0;
+                      const notAtt = yStats.not_attended || 0;
+                      const errs = yStats.errors || 0;
                       const pct = tot > 0 ? (((pub + virt) / tot) * 100).toFixed(1) : '0.0';
 
                       return (
@@ -3030,7 +3025,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <div>
                   <h3 className="text-sm font-black uppercase text-amber-600 dark:text-amber-400 flex items-center space-x-2">
                     <AlertTriangle className="w-4 h-4" />
-                    <span>Itemized Data Quality Errors ({matrixRows.filter(r => !r.username || r.participation_status === 'DATA_ERROR' || r.status === 'USERNAME_NOT_FOUND').length} Students)</span>
+                    <span>Itemized Data Quality Errors ({stats.errorRows} Students)</span>
                   </h3>
                   <p className="text-xs text-gray-500 font-bold mt-0.5">
                     Root Cause: Missing or invalid LeetCode username handles. API failure is NEVER falsely marked as Not Attended.
@@ -3042,8 +3037,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 </span>
               </div>
 
-              <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm">
-                <table className="w-full text-left text-xs">
+              <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-x-auto overflow-y-hidden shadow-sm">
+                <table className="w-full min-w-[700px] text-left text-xs">
                   <thead className="bg-navy-950 text-white font-black uppercase">
                     <tr>
                       <th className="px-4 py-3 text-center">#</th>
@@ -3139,10 +3134,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   Roster: {filteredMatrixRows.length}
                 </span>
                 <span className="px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50 font-black text-[11px]">
-                  Public: {filteredMatrixRows.filter(r => r.participation_status === 'PUBLIC' || r.status === 'PUBLIC' || r.participation_status === 'PUBLIC_ATTENDED').length}
+                  Public: {stats.attendedRows}
                 </span>
                 <span className="px-2.5 py-1 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50 font-black text-[11px]">
-                  Not Attended: {filteredMatrixRows.filter(r => r.participation_status === 'NOT_ATTENDED' || r.status === 'NOT_ATTENDED' || r.participation_status === 'PUBLIC_NOT_ATTENDED').length}
+                  Not Attended: {stats.notAttendedRows}
                 </span>
               </div>
 

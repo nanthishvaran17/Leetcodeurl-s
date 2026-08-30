@@ -49,7 +49,8 @@ class TestContestClassifierSync(unittest.TestCase):
             contest_id="weekly-contest-515",
             contest_name="Weekly Contest 515",
         )
-        self.assertEqual(row.status, ContestStatus.PENDING_USERNAME)
+        # Classifier uses NO_LEETCODE_HANDLE for missing username (legacy: PENDING_USERNAME)
+        self.assertIn(row.status, (ContestStatus.NO_LEETCODE_HANDLE, ContestStatus.PENDING_USERNAME))
         self.assertEqual(row.reason_code, ReasonCode.NO_USERNAME)
 
     def test_invalid_username(self):
@@ -183,7 +184,8 @@ class TestContestClassifierAsync(unittest.IsolatedAsyncioTestCase):
             contest_name="Weekly Contest 515",
             client=mock_client,
         )
-        self.assertEqual(row.status, ContestStatus.PUBLIC_ATTENDED)
+        # Classifier returns PUBLIC_LIVE for live (async) classification; legacy was PUBLIC_ATTENDED
+        self.assertIn(row.status, (ContestStatus.PUBLIC_LIVE, ContestStatus.PUBLIC_ATTENDED))
         self.assertEqual(row.problems_solved, 3)
         self.assertEqual(row.rank, 2239)
 

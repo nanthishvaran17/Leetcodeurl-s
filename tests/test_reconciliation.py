@@ -95,11 +95,13 @@ class TestReconciliation(unittest.TestCase):
         self.assertEqual(total, 300, f"Status sum mismatch: {total} != 300")
 
         # Verify exact counts match roster generation partitions
+        # Note: ContestStatus.NO_LEETCODE_HANDLE is the canonical status for null usernames
+        # (previously PENDING_USERNAME, renamed in the classifier to be semantically precise)
         self.assertEqual(status_counts.get(ContestStatus.PUBLIC_ATTENDED.value, 0), 45)
         self.assertEqual(status_counts.get(ContestStatus.VIRTUAL_ATTENDED.value, 0), 32)
         self.assertEqual(status_counts.get(ContestStatus.NOT_ATTENDED.value, 0), 198)
         self.assertEqual(status_counts.get(ContestStatus.FETCH_FAILED.value, 0), 12)
-        self.assertEqual(status_counts.get(ContestStatus.PENDING_USERNAME.value, 0), 8)
+        self.assertEqual(status_counts.get(ContestStatus.NO_LEETCODE_HANDLE.value, 0), 8)
         self.assertEqual(status_counts.get(ContestStatus.INVALID_USERNAME.value, 0), 3)
         self.assertEqual(status_counts.get(ContestStatus.UNKNOWN.value, 0), 2)
 

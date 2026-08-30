@@ -2,7 +2,7 @@ import pytest
 import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from backend.models import Base, Student, LeetCodeProfileStats, SyncJob
+from backend.models import Base, Student, LeetCodeProfileStats, SyncJob, GlobalSyncLock
 from backend.routes.sync import get_current_sync_status
 from backend.services.live_sync_service import sync_tracker, start_full_sync_job
 
@@ -98,6 +98,24 @@ def test_scenario_b_reconnect_to_running_job_without_duplicate(db_session):
     sync_tracker.students_processed = 5
     sync_tracker.successful = 5
     sync_tracker.progress_percentage = 50.0
+
+    # Simulate the global DB lock being held by this job (required for single-flight detection)
+    lock = db_session.query(GlobalSyncLock).filter(GlobalSyncLock.id == 1).first()
+    if not lock:
+        lock = GlobalSyncLock(
+            id=1,
+            is_locked=True,
+            locked_by_job_id=job_id,
+            locked_at=now_utc,
+            expires_at=now_utc + datetime.timedelta(hours=2)
+        )
+        db_session.add(lock)
+    else:
+        lock.is_locked = True
+        lock.locked_by_job_id = job_id
+        lock.locked_at = now_utc
+        lock.expires_at = now_utc + datetime.timedelta(hours=2)
+    db_session.commit()
 
     # User reloads page (calls GET /sync/status)
     status_response = get_current_sync_status(db_session)

@@ -175,6 +175,13 @@ def _build_canonical_contest_dataset_internal(
         v_res = virtual_res_map.get(s_id)
 
         dept_raw = (student.department.code if student.department else None) or (p_res.dept if p_res else None) or "CSE"
+        reg_upper = (reg_no or "").upper()
+        
+        if "CC" in reg_upper:
+            dept_raw = "CSE(CS)"
+        elif "CI" in reg_upper or "CIR" in reg_upper:
+            dept_raw = "CSE(IOT)"
+
         dept_code = str(dept_raw).strip().upper()
         if dept_code in ("CSE(IOT)", "IOT", "CSE_IOT"):
             dept_code = "CSE(IOT)"
@@ -202,6 +209,12 @@ def _build_canonical_contest_dataset_internal(
             dept_code = dept_raw
 
         year_level = student.year_level or (p_res.year if p_res else None) or "III"
+        if reg_upper.startswith("732225") or "25CC" in reg_upper or "25CI" in reg_upper:
+            year_level = "II"
+        elif reg_upper.startswith("732224") or "24CC" in reg_upper or "24CI" in reg_upper or "24CIR" in reg_upper:
+            year_level = "III"
+        elif reg_upper.startswith("23") or reg_upper.startswith("732223") or "23CC" in reg_upper or "23CI" in reg_upper:
+            year_level = "IV"
         username = student.username or ""
         profile_url = student.leetcode_url or (f"https://leetcode.com/u/{username}" if username else "")
 
@@ -244,11 +257,26 @@ def _build_canonical_contest_dataset_internal(
             q2_val = 1 if (p_res.q2 and p_res.q2 >= 1) else 0
             q3_val = 1 if (p_res.q3 and p_res.q3 >= 1) else 0
             q4_val = 1 if (p_res.q4 and p_res.q4 >= 1) else 0
+            score_val = p_res.contest_score
+
+            # If Qs are 0 but score is populated, infer based on 3/4/5/6 distribution
+            if (q1_val + q2_val + q3_val + q4_val) == 0 and score_val:
+                sv = int(float(score_val))
+                if sv >= 18:
+                    q1_val = 1; q2_val = 1; q3_val = 1; q4_val = 1
+                elif sv == 12:
+                    q1_val = 1; q2_val = 1; q3_val = 1
+                elif sv == 7:
+                    q1_val = 1; q2_val = 1
+                elif sv == 3:
+                    q1_val = 1
+
             actual_sum = q1_val + q2_val + q3_val + q4_val
             solved_val = actual_sum
+            
+            if not score_val:
+                score_val = (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
 
-            # Independent score calculation
-            score_val = p_res.contest_score or (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
             rank_val = p_res.contest_rank
             rating_val = p_res.contest_rating
         elif canon_status == "VIRTUAL":
@@ -257,9 +285,26 @@ def _build_canonical_contest_dataset_internal(
             q2_val = 1 if (source_res.q2 and source_res.q2 >= 1) else 0
             q3_val = 1 if (source_res.q3 and source_res.q3 >= 1) else 0
             q4_val = 1 if (source_res.q4 and source_res.q4 >= 1) else 0
+            score_val = getattr(source_res, "contest_score", None)
+
+            # If Qs are 0 but score is populated, infer based on 3/4/5/6 distribution
+            if (q1_val + q2_val + q3_val + q4_val) == 0 and score_val:
+                sv = int(float(score_val))
+                if sv >= 18:
+                    q1_val = 1; q2_val = 1; q3_val = 1; q4_val = 1
+                elif sv == 12:
+                    q1_val = 1; q2_val = 1; q3_val = 1
+                elif sv == 7:
+                    q1_val = 1; q2_val = 1
+                elif sv == 3:
+                    q1_val = 1
+
             actual_sum = q1_val + q2_val + q3_val + q4_val
             solved_val = source_res.total_contest_solved if (source_res.total_contest_solved is not None and source_res.total_contest_solved > 0) else actual_sum
-            score_val = getattr(source_res, "contest_score", None) or (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
+            
+            if not score_val:
+                score_val = (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
+            
             rank_val = None
             rating_val = None
         else:
@@ -471,6 +516,21 @@ def _build_canonical_contest_dataset_internal(
         total_scope_solved = q1_scope_solved + q2_scope_solved + q3_scope_solved + q4_scope_solved
         avg_scope_solved = round(total_scope_solved / max(1, scope_public + scope_virtual), 2) if (scope_public + scope_virtual) > 0 else 0.0
 
+        scope_virtual4 = sum(1 for r in filtered_rows if (r.get("total_solved") or 0) >= 4 and r.get("status") == "VIRTUAL")
+        scope_virtual3 = sum(1 for r in filtered_rows if (r.get("total_solved") or 0) == 3 and r.get("status") == "VIRTUAL")
+        scope_virtual2 = sum(1 for r in filtered_rows if (r.get("total_solved") or 0) == 2 and r.get("status") == "VIRTUAL")
+        scope_virtual1 = sum(1 for r in filtered_rows if (r.get("total_solved") or 0) == 1 and r.get("status") == "VIRTUAL")
+
+        top_performers_scope = [
+            r for r in filtered_rows
+            if r.get("status") in ("PUBLIC", "VIRTUAL") and (r.get("total_solved") or 0) > 0
+        ]
+        top_performers_scope.sort(key=lambda x: (
+            -(x.get("total_solved") or 0),
+            (int(x.get("rank")) if x.get("rank") not in (None, "—", "") else (int(x.get("contest_rank")) if x.get("contest_rank") not in (None, "—", "") else 999999))
+        ))
+        top_performers = top_performers_scope[:3]
+
         is_provisional = session_obj.status in ("LIVE", "SCHEDULED", "FINALIZING", "ACTIVE")
 
         metrics = {
@@ -506,6 +566,11 @@ def _build_canonical_contest_dataset_internal(
                 "totalSolved": total_scope_solved,
                 "avgSolved": avg_scope_solved
             },
+            "virtual4Solved": scope_virtual4,
+            "virtual3Solved": scope_virtual3,
+            "virtual2Solved": scope_virtual2,
+            "virtual1Solved": scope_virtual1,
+            "topPerformers": top_performers,
             "reconciliationPassed": reconciliation_passed
         }
     else:
@@ -537,6 +602,21 @@ def _build_canonical_contest_dataset_internal(
         q4_total_solved = sum(1 for r in canonical_rows if r.get("q4") == 1)
         total_questions_solved = q1_total_solved + q2_total_solved + q3_total_solved + q4_total_solved
         avg_questions_solved = round(total_questions_solved / max(1, public_cnt + virtual_cnt), 2) if (public_cnt + virtual_cnt) > 0 else 0.0
+
+        virtual4_all = sum(1 for r in canonical_rows if (r.get("total_solved") or 0) >= 4 and r.get("status") == "VIRTUAL")
+        virtual3_all = sum(1 for r in canonical_rows if (r.get("total_solved") or 0) == 3 and r.get("status") == "VIRTUAL")
+        virtual2_all = sum(1 for r in canonical_rows if (r.get("total_solved") or 0) == 2 and r.get("status") == "VIRTUAL")
+        virtual1_all = sum(1 for r in canonical_rows if (r.get("total_solved") or 0) == 1 and r.get("status") == "VIRTUAL")
+
+        top_performers_all = [
+            r for r in canonical_rows
+            if r.get("status") in ("PUBLIC", "VIRTUAL") and (r.get("total_solved") or 0) > 0
+        ]
+        top_performers_all.sort(key=lambda x: (
+            -(x.get("total_solved") or 0),
+            (int(x.get("rank")) if x.get("rank") not in (None, "—", "") else (int(x.get("contest_rank")) if x.get("contest_rank") not in (None, "—", "") else 999999))
+        ))
+        top_performers_global = top_performers_all[:3]
 
         is_provisional = session_obj.status in ("LIVE", "SCHEDULED", "FINALIZING", "ACTIVE")
 
@@ -573,6 +653,11 @@ def _build_canonical_contest_dataset_internal(
                 "totalSolved": total_questions_solved,
                 "avgSolved": avg_questions_solved
             },
+            "virtual4Solved": virtual4_all,
+            "virtual3Solved": virtual3_all,
+            "virtual2Solved": virtual2_all,
+            "virtual1Solved": virtual1_all,
+            "topPerformers": top_performers_global,
             "reconciliationPassed": reconciliation_passed
         }
 

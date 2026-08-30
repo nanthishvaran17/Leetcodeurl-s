@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session, joinedload
-from typing import List, Optional
+from typing import List, Optional, Union
 from sqlalchemy import func, desc, nullslast
 
 from backend.database import get_db
 from backend.models import Student, WeeklyStudentProgress, Department, Section, LeetCodeProfileStats
-from backend.schemas import StudentOut
+from backend.schemas import StudentOut, LeaderboardPaginatedOut
 from backend.cache import cache
 from backend.security import get_current_user_optional
 from backend.services.authorization_service import apply_role_based_student_filter
@@ -13,115 +13,165 @@ from fastapi import Request
 
 router = APIRouter(prefix="/api/leaderboard", tags=["Leaderboard"])
 
-@router.get("", response_model=List[StudentOut])
-def get_leaderboard(
+@router.get("", response_model=Union[List[StudentOut], LeaderboardPaginatedOut])
+async def get_leaderboard(
     request: Request,
     dept_id: Optional[int] = Query(None),
     year_level: Optional[str] = Query(None),
     section_id: Optional[int] = Query(None),
-    sort_by: str = Query("solved", enum=["solved", "progress", "rating", "streak"]),
+    search: Optional[str] = Query(None),
+    sort_by: str = Query("solved", enum=["solved", "progress", "rating", "streak", "easy", "medium", "hard"]),
     limit: int = Query(100, ge=1, le=500),
-    db: Session = Depends(get_db)
+    page: Optional[int] = Query(None, ge=1),
+    paginated: Optional[bool] = False,
+    request_db: Session = Depends(get_db)
 ):
-    current_user = get_current_user_optional(request, db)
+    current_user = get_current_user_optional(request, request_db)
     user_scope = f"{current_user.id}:{current_user.role}" if current_user else "public"
     
-    cache_key = f"leaderboard:{user_scope}:{dept_id}:{year_level}:{section_id}:{sort_by}:{limit}"
-    cached_res = cache.get(cache_key)
-    if cached_res is not None:
-        return cached_res
+    cache_key = f"leaderboard:{user_scope}:{dept_id}:{year_level}:{section_id}:{search}:{sort_by}:{page}:{limit}:{paginated}"
+    def _compute():
+        from backend.database import SessionLocal
+        with SessionLocal() as db:
+            query = db.query(Student).join(Student.stats).options(
+                joinedload(Student.department),
+                joinedload(Student.section),
+                joinedload(Student.stats),
+                joinedload(Student.lc_profile),
+                joinedload(Student.lc_problem_stats),
+                joinedload(Student.lc_contest_standing),
+                joinedload(Student.lc_activity)
+            ).filter(
+                (Student.is_active == True) | (Student.is_active.is_(None)),
+                LeetCodeProfileStats.sync_status.in_(["success", "OK", "verified"]),
+                LeetCodeProfileStats.total_solved.isnot(None)
+            )
 
-    query = db.query(Student).join(Student.stats).options(
-        joinedload(Student.department),
-        joinedload(Student.section),
-        joinedload(Student.stats),
-        joinedload(Student.lc_profile),
-        joinedload(Student.lc_problem_stats),
-        joinedload(Student.lc_contest_standing),
-        joinedload(Student.lc_activity)
-    ).filter(
-        (Student.is_active == True) | (Student.is_active.is_(None)),
-        LeetCodeProfileStats.sync_status.in_(["success", "OK", "verified"]),
-        LeetCodeProfileStats.total_solved.isnot(None)
-    )
+            if current_user:
+                query = apply_role_based_student_filter(query, current_user, db)
 
-    if current_user:
-        query = apply_role_based_student_filter(query, current_user, db)
+            if dept_id:
+                query = query.filter(Student.department_id == dept_id)
+            if year_level and year_level.strip().upper() not in ['ALL', 'ALL YEARS', '']:
+                clean_yr = year_level.strip().upper().replace('YEAR', '').strip()
+                query = query.filter(func.upper(Student.year_level) == clean_yr)
+            if section_id:
+                query = query.filter(Student.section_id == section_id)
 
-    if dept_id:
-        query = query.filter(Student.department_id == dept_id)
-    if year_level and year_level.strip().upper() not in ['ALL', 'ALL YEARS', '']:
-        clean_yr = year_level.strip().upper().replace('YEAR', '').strip()
-        query = query.filter(func.upper(Student.year_level) == clean_yr)
-    if section_id:
-        query = query.filter(Student.section_id == section_id)
+            if search:
+                s = f"%{search.strip()}%"
+                query = query.filter(
+                    (Student.name.ilike(s)) |
+                    (Student.reg_no.ilike(s)) |
+                    (Student.username.ilike(s))
+                )
 
-    # Database-level sorting for solved and rating
-    if sort_by == "solved":
-        query = query.order_by(nullslast(desc(LeetCodeProfileStats.total_solved)), Student.name.asc())
-    elif sort_by == "rating":
-        query = query.order_by(nullslast(desc(LeetCodeProfileStats.contest_rating)), Student.name.asc())
-    elif sort_by == "streak":
-        query = query.order_by(nullslast(desc(LeetCodeProfileStats.max_streak)), Student.name.asc())
+            # Database-level sorting for solved and rating
+            if sort_by == "solved":
+                query = query.order_by(nullslast(desc(LeetCodeProfileStats.total_solved)), Student.name.asc())
+            elif sort_by == "easy":
+                query = query.order_by(nullslast(desc(LeetCodeProfileStats.easy_solved)), Student.name.asc())
+            elif sort_by == "medium":
+                query = query.order_by(nullslast(desc(LeetCodeProfileStats.medium_solved)), Student.name.asc())
+            elif sort_by == "hard":
+                query = query.order_by(nullslast(desc(LeetCodeProfileStats.hard_solved)), Student.name.asc())
+            elif sort_by == "rating":
+                query = query.order_by(nullslast(desc(LeetCodeProfileStats.contest_rating)), Student.name.asc())
+            elif sort_by == "streak":
+                query = query.order_by(nullslast(desc(LeetCodeProfileStats.max_streak)), Student.name.asc())
+            elif sort_by == "progress":
+                subq = db.query(
+                    WeeklyStudentProgress.student_id,
+                    func.max(WeeklyStudentProgress.id).label('max_id')
+                ).group_by(WeeklyStudentProgress.student_id).subquery()
+                query = query.outerjoin(
+                    subq, Student.id == subq.c.student_id
+                ).outerjoin(
+                    WeeklyStudentProgress, WeeklyStudentProgress.id == subq.c.max_id
+                ).order_by(
+                    nullslast(desc(WeeklyStudentProgress.weekly_progress)), Student.name.asc()
+                )
 
-    students = query.all()
-    if not students:
-        return []
+            total_count = None
+            if paginated:
+                total_count = query.count()
 
-    # Batch fetch all student progress in 1 single query
-    student_ids = [st.id for st in students]
-    progs = db.query(WeeklyStudentProgress).filter(
-        WeeklyStudentProgress.student_id.in_(student_ids)
-    ).all()
+            if isinstance(page, int) and page >= 1:
+                offset = (page - 1) * limit
+                students = query.offset(offset).limit(limit).all()
+            else:
+                students = query.limit(limit).all()
 
-    prog_map = {}
-    for p in progs:
-        if p.student_id not in prog_map or p.id > prog_map[p.student_id].id:
-            prog_map[p.student_id] = p
+            if not students:
+                if paginated:
+                    return LeaderboardPaginatedOut(total=total_count or 0, items=[], page=page or 1, limit=limit, total_pages=0)
+                return []
 
-    results = []
-    for st in students:
-        st_out = StudentOut.model_validate(st)
-        if st.lc_profile:
-            st_out.canonical_username = st.lc_profile.canonical_username
-            st_out.profile_url = st.lc_profile.profile_url
-            st_out.real_name = st.lc_profile.real_name
-            st_out.avatar_url = st.lc_profile.avatar_url
-            st_out.sync_state = st.lc_profile.sync_state
-        else:
-            st_out.canonical_username = st.username
-            st_out.profile_url = f"https://leetcode.com/u/{st.username}/" if st.username else None
-            st_out.sync_state = "SYNCED"
+            # Batch fetch all student progress in 1 single query
+            student_ids = [st.id for st in students]
+            progs = db.query(WeeklyStudentProgress).filter(
+                WeeklyStudentProgress.student_id.in_(student_ids)
+            ).all()
 
-        if st.lc_activity and st.lc_activity.current_streak is not None:
-            st_out.streak_count = st.lc_activity.current_streak or 0
-            st_out.longest_streak = st.lc_activity.longest_streak or 0
-            st_out.total_active_days = st.lc_activity.total_active_days or 0
-        elif st.stats and st.stats.max_streak is not None:
-            st_out.streak_count = st.stats.max_streak
-            st_out.longest_streak = st.stats.max_streak
-            st_out.total_active_days = st.stats.active_days or 0
+            prog_map = {}
+            for p in progs:
+                if p.student_id not in prog_map or p.id > prog_map[p.student_id].id:
+                    prog_map[p.student_id] = p
 
-        latest_prog = prog_map.get(st.id)
-        if latest_prog:
-            st_out.college_rank = latest_prog.college_rank
-            st_out.dept_rank = latest_prog.dept_rank
-            st_out.year_rank = latest_prog.year_rank
-            st_out.section_rank = latest_prog.section_rank
-            st_out.weekly_progress = latest_prog.weekly_progress
-            if (st_out.streak_count is None or st_out.streak_count == 0) and latest_prog.streak_count:
-                st_out.streak_count = latest_prog.streak_count
-            st_out.consistency_score = latest_prog.consistency_score
-            st_out.badge_list = latest_prog.badge_list or []
-        results.append(st_out)
+            results = []
+            for st in students:
+                st_out = StudentOut.model_validate(st)
+                if st.lc_profile:
+                    st_out.canonical_username = st.lc_profile.canonical_username
+                    st_out.profile_url = st.lc_profile.profile_url
+                    st_out.real_name = st.lc_profile.real_name
+                    st_out.avatar_url = st.lc_profile.avatar_url
+                    st_out.sync_state = st.lc_profile.sync_state
+                else:
+                    st_out.canonical_username = st.username
+                    st_out.profile_url = f"https://leetcode.com/u/{st.username}/" if st.username else None
+                    st_out.sync_state = "SYNCED"
 
-    # In-memory secondary sort only if sorting by progress (which lives on progress records)
-    if sort_by == "progress":
-        results.sort(key=lambda x: (x.weekly_progress or 0), reverse=True)
+                if st.lc_activity and st.lc_activity.current_streak is not None:
+                    st_out.streak_count = st.lc_activity.current_streak or 0
+                    st_out.longest_streak = st.lc_activity.longest_streak or 0
+                    st_out.total_active_days = st.lc_activity.total_active_days or 0
+                elif st.stats and st.stats.max_streak is not None:
+                    st_out.streak_count = st.stats.max_streak
+                    st_out.longest_streak = st.stats.max_streak
+                    st_out.total_active_days = st.stats.active_days or 0
 
-    final_results = results[:limit]
-    cache.set(cache_key, final_results, ttl_seconds=30, tags=["leaderboard"])
-    return final_results
+                latest_prog = prog_map.get(st.id)
+                if latest_prog:
+                    st_out.college_rank = latest_prog.college_rank
+                    st_out.dept_rank = latest_prog.dept_rank
+                    st_out.year_rank = latest_prog.year_rank
+                    st_out.section_rank = latest_prog.section_rank
+                    st_out.weekly_progress = latest_prog.weekly_progress
+                    if (st_out.streak_count is None or st_out.streak_count == 0) and latest_prog.streak_count:
+                        st_out.streak_count = latest_prog.streak_count
+                    st_out.consistency_score = latest_prog.consistency_score
+                    st_out.badge_list = latest_prog.badge_list or []
+                results.append(st_out)
+
+            final_results = results
+
+            if paginated:
+                import math
+                total_pages = math.ceil((total_count or 0) / limit) if limit > 0 else 0
+                resp = LeaderboardPaginatedOut(
+                    total=total_count or 0,
+                    items=final_results,
+                    page=page or 1,
+                    limit=limit,
+                    total_pages=total_pages
+                )
+                return resp
+
+            return final_results
+
+
+    return await cache.async_get_or_compute(cache_key, _compute, ttl_seconds=60, stale_ttl_seconds=300)
 
 @router.get("/top-performers")
 def get_top_performers(db: Session = Depends(get_db)):

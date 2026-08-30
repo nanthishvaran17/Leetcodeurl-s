@@ -54,7 +54,9 @@ async def _sync_single_student_canonical(
     run_optional_phases: bool = False,
     sync_mode: str = "FULL_ADMIN_SYNC",
     pre_fetched_a: Optional[Dict[str, Any]] = None,
-    pre_fetched_b: Optional[Dict[str, Any]] = None
+    pre_fetched_b: Optional[Dict[str, Any]] = None,
+    db_session: Optional[Session] = None,
+    defer_commit: bool = False
 ):
     import sqlalchemy.exc
     import random
@@ -62,7 +64,7 @@ async def _sync_single_student_canonical(
     for attempt in range(1, max_retries + 1):
         try:
             return await _sync_single_student_canonical_impl(
-                student, client, sem, lock, job_id, progress_callback, run_optional_phases, sync_mode, pre_fetched_a, pre_fetched_b
+                student, client, sem, lock, job_id, progress_callback, run_optional_phases, sync_mode, pre_fetched_a, pre_fetched_b, db_session, defer_commit
             )
         except (sqlalchemy.exc.OperationalError, sqlalchemy.exc.PendingRollbackError) as db_err:
             logger.warning(
@@ -86,7 +88,9 @@ async def _sync_single_student_canonical_impl(
     run_optional_phases: bool = False,
     sync_mode: str = "FULL_ADMIN_SYNC",
     pre_fetched_a: Optional[Dict[str, Any]] = None,
-    pre_fetched_b: Optional[Dict[str, Any]] = None
+    pre_fetched_b: Optional[Dict[str, Any]] = None,
+    db_session: Optional[Session] = None,
+    defer_commit: bool = False
 ):
     async with sem:
         now_dt = datetime.datetime.utcnow()
@@ -161,11 +165,12 @@ async def _sync_single_student_canonical_impl(
                         error_msg = phase_a_res.get("detail", "Fetch failed during Phase A")
 
         # ── PHASE 2: DATABASE — Short-lived session, NO network calls inside ────
-        db_student = SessionLocal()
+        db_student = db_session if db_session else SessionLocal()
         try:
             st = db_student.query(Student).filter(Student.id == student.id).first()
             if not st:
-                db_student.close()
+                if not db_session:
+                    db_student.close()
                 return
 
             # Preserve c_username from already-extracted value
@@ -407,7 +412,8 @@ async def _sync_single_student_canonical_impl(
 
                 sync_status_str = "success"
 
-            db_student.commit()
+            if not defer_commit:
+                db_student.commit()
 
             # Record completion in LiveSyncTracker and broadcast progress event immediately
             async with lock:
@@ -456,7 +462,9 @@ async def _sync_single_student_canonical_impl(
                     },
                     "timestamp": datetime.datetime.utcnow().isoformat()
                 }
-                await broadcast_sync_event(payload)
+                if not defer_commit:
+                    await broadcast_sync_event(payload)
+                return payload
 
         except sqlalchemy.exc.OperationalError:
             db_student.rollback()
@@ -507,9 +515,12 @@ async def _sync_single_student_canonical_impl(
                     },
                     "timestamp": datetime.datetime.utcnow().isoformat()
                 }
-                await broadcast_sync_event(payload)
+                if not defer_commit:
+                    await broadcast_sync_event(payload)
+                return payload
         finally:
-            db_student.close()
+            if not db_session:
+                db_student.close()
 
 
 import os
@@ -619,13 +630,15 @@ async def run_full_pipeline(
                         if not isinstance(res_a, Exception): batched_a = res_a
                         if not isinstance(res_b, Exception): batched_b = res_b
 
-                for s in chunk:
-                    uname, _, _ = extract_leetcode_username(s.username or s.leetcode_url)
-                    pre_a = batched_a.get(uname) if uname else None
-                    pre_b = batched_b.get(uname) if uname else None
-                    
-                    tasks.append(
-                        _sync_single_student_canonical(
+                db_chunk = SessionLocal()
+                try:
+                    chunk_payloads = []
+                    for s in chunk:
+                        uname, _, _ = extract_leetcode_username(s.username or s.leetcode_url)
+                        pre_a = batched_a.get(uname) if uname else None
+                        pre_b = batched_b.get(uname) if uname else None
+                        
+                        payload = await _sync_single_student_canonical(
                             student=s,
                             client=client,
                             sem=sem,
@@ -635,11 +648,25 @@ async def run_full_pipeline(
                             run_optional_phases=run_optional_phases,
                             sync_mode=sync_mode,
                             pre_fetched_a=pre_a,
-                            pre_fetched_b=pre_b
+                            pre_fetched_b=pre_b,
+                            db_session=db_chunk,
+                            defer_commit=True
                         )
-                    )
-            
-            await asyncio.gather(*tasks, return_exceptions=True)
+                        if payload:
+                            chunk_payloads.append(payload)
+                    
+                    db_chunk.commit()
+                    
+                    if chunk_payloads:
+                        last_payload = chunk_payloads[-1]
+                        last_payload["chunk_size"] = len(chunk_payloads)
+                        from backend.services.live_sync_service import broadcast_sync_event
+                        await broadcast_sync_event(last_payload)
+                except Exception as e:
+                    db_chunk.rollback()
+                    logger.error(f"[CANONICAL_PIPELINE] Chunk commit failed: {e}")
+                finally:
+                    db_chunk.close()
 
         # Recalculate institutional multi-level rankings
         logger.info("[CANONICAL_PIPELINE] Recalculating college/department/year rankings post-sync...")

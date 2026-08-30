@@ -91,4 +91,74 @@ class FastCache:
         self._store.pop(key, None)
         self._expiry.pop(key, None)
 
+    async def async_get_or_compute(
+        self,
+        key: str,
+        compute_func,
+        ttl_seconds: int = 60,
+        stale_ttl_seconds: int = 300,
+        tags: Optional[List[str]] = None
+    ) -> Any:
+        """
+        Async Cache Stampede protection (single-flight locking).
+        Does NOT block the event loop. Uses asyncio.Event per key.
+        Implements Stale-While-Revalidate if stale_ttl_seconds > ttl_seconds.
+        """
+        import asyncio
+        import time
+        from backend.logger import logger
+
+        if not hasattr(self, '_async_events'):
+            self._async_events = {}
+
+        with self._lock:
+            if key in self._store:
+                expiry = self._expiry.get(key, 0)
+                now = time.time()
+                if now <= expiry:
+                    return self._store[key]
+                elif now <= expiry + (stale_ttl_seconds - ttl_seconds):
+                    # Stale but within SWR window. Return stale data, trigger background refresh if not already computing
+                    if key not in self._async_events:
+                        logger.info(f"SWR background refresh triggered for {key}")
+                        event = asyncio.Event()
+                        self._async_events[key] = event
+                        asyncio.create_task(self._compute_and_set(key, compute_func, ttl_seconds, tags, event))
+                    return self._store[key]
+
+            # Cache miss or outside SWR window. Must wait.
+            if key in self._async_events:
+                event = self._async_events[key]
+                is_computing = False
+            else:
+                event = asyncio.Event()
+                self._async_events[key] = event
+                is_computing = True
+
+        if not is_computing:
+            # Wait for the other task to finish computing
+            await event.wait()
+            # Now read from cache
+            with self._lock:
+                return self._store.get(key)
+        else:
+            # We are the designated compute request
+            return await self._compute_and_set(key, compute_func, ttl_seconds, tags, event)
+
+    async def _compute_and_set(self, key: str, compute_func, ttl_seconds: int, tags: Optional[List[str]], event) -> Any:
+        import asyncio
+        from backend.logger import logger
+        try:
+            value = await asyncio.to_thread(compute_func)
+            self.set(key, value, ttl_seconds, tags)
+            return value
+        except Exception as e:
+            logger.error(f"Error computing cache for {key}: {e}")
+            raise
+        finally:
+            with self._lock:
+                event.set()
+                if hasattr(self, '_async_events') and key in self._async_events:
+                    del self._async_events[key]
+
 cache = FastCache()

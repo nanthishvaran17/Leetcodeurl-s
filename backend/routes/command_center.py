@@ -673,11 +673,20 @@ def get_departments(db: Session = Depends(get_db), current_user: User = Depends(
     else:
         depts = db.query(Department).all()
 
+    # Optimize: Pre-fetch all active student counts per department using GROUP BY
+    dept_counts_query = db.query(
+        Student.department_id, func.count(Student.id)
+    ).filter(Student.is_active == True).group_by(Student.department_id).all()
+    
+    dept_counts = {dept_id: count for dept_id, count in dept_counts_query}
+
     result = []
     for d in depts:
         if d.code and "TEST" in d.code.upper():
             continue
-        count = db.query(Student).filter(Student.department_id == d.id, Student.is_active == True).count()
+        
+        count = dept_counts.get(d.id, 0)
+        
         result.append({
             "id": d.id,
             "name": d.name,

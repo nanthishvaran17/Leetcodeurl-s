@@ -108,7 +108,8 @@ def _write_college_header(ws, report_title: str, dept_text: str, cols: int, meta
 def normalize_row_data(r: dict) -> dict:
     """Ensures deterministic binary Q1-Q4 (0 or 1) and exact solved calculation."""
     status_str = str(r.get("status") or r.get("participation_status") or "NOT_ATTENDED").upper()
-    is_att = status_str in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL")
+    is_att = status_str in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL", "VIRTUAL_PRACTICE", "PUBLIC_LIVE")
+    is_virt = bool(r.get("is_virtual")) or status_str in ("VIRTUAL", "VIRTUAL_PRACTICE")
 
     q1 = 1 if _to_int(r.get("q1")) == 1 else 0
     q2 = 1 if _to_int(r.get("q2")) == 1 else 0
@@ -137,12 +138,14 @@ def normalize_row_data(r: dict) -> dict:
         "dept": dept,
         "year": year,
         "username": r.get("username") or "—",
-        "status": "OFFICIAL_ATTENDED" if is_att else "PUBLIC_NOT_ATTENDED",
+        "status": status_str,
         "is_att": is_att,
+        "is_virtual": is_virt,
         "q1": q1,
         "q2": q2,
         "q3": q3,
         "q4": q4,
+        "total_solved": solved,
         "solved": solved,
         "solved_str": f"{solved}/4",
         "score": score,
@@ -230,7 +233,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     # SHEET 1: EXECUTIVE SUMMARY
     # ──────────────────────────────────────────────────────────────────────────
     ws1 = wb.create_sheet(title="Executive Summary")
-    _write_college_header(ws1, "WEEKLY CONTEST 516 — EXECUTIVE SUMMARY", dept_header_text, 10, metadata_block)
+    _write_college_header(ws1, f"{contest_name.upper()} — EXECUTIVE SUMMARY", dept_header_text, 10, metadata_block)
 
     r_kpi = 7
     kpis = [
@@ -317,7 +320,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     # SHEET 3: CONTEST ATTENDANCE
     # ──────────────────────────────────────────────────────────────────────────
     ws3 = wb.create_sheet(title="Contest Attendance")
-    _write_college_header(ws3, "WEEKLY CONTEST 516 — ATTENDANCE & VIRTUAL DETECTION AUDIT", dept_header_text, 10, metadata_block)
+    _write_college_header(ws3, f"{contest_name.upper()} — ATTENDANCE & VIRTUAL DETECTION AUDIT", dept_header_text, 10, metadata_block)
     r3_hdr = 7
     s3_headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Username", "Attendance Status", "Live", "Virtual", "Evidence Summary"]
     for c_i, h in enumerate(s3_headers, 1):
@@ -328,18 +331,18 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         _apply_thin_border(cell)
     for idx, r in enumerate(alpha_sorted, 1):
         row_num = r3_hdr + idx
-        is_virt = bool(r.get("is_virtual")) or r.get("status") == "VIRTUAL"
+        is_virt = bool(r.get("is_virtual")) or r.get("status") in ("VIRTUAL", "VIRTUAL_PRACTICE")
         is_live = r["is_att"] and not is_virt
         live_str = "YES" if is_live else "NO"
         virt_str = "YES" if is_virt else "NO"
-        ev_label = "VERIFIED_LIVE_CONTEST_EVIDENCE" if is_live else ("VERIFIED_VIRTUAL_PRACTICE_EVIDENCE" if is_virt else "NO_CONTEST_516_EVIDENCE")
+        ev_label = "VERIFIED_LIVE_CONTEST_EVIDENCE" if is_live else ("VERIFIED_VIRTUAL_PRACTICE_EVIDENCE" if is_virt else f"NO_{contest_name.upper().replace(' ', '_')}_EVIDENCE")
         
         for c_i, v in enumerate([idx, r["reg_no"], r["name"], r["dept"], r["year"], r["username"], r["status"], live_str, virt_str, ev_label], 1):
             cell = ws3.cell(row=row_num, column=c_i, value=v)
             cell.font = FONT_REGULAR
             cell.alignment = ALIGN_LEFT if c_i in (3, 6, 10) else ALIGN_CENTER
             if c_i == 7:
-                cell.fill = GREEN_FILL if is_live else (BLUE_FILL if is_virt else ROSE_FILL)
+                cell.fill = GREEN_FILL if is_live else (LIGHT_BLUE_FILL if is_virt else ROSE_FILL)
                 cell.font = FONT_BOLD
             _apply_thin_border(cell)
 
@@ -347,7 +350,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     # SHEET 4: CONTEST PERFORMANCE MATRIX (BINARY Q1-Q4)
     # ──────────────────────────────────────────────────────────────────────────
     ws4 = wb.create_sheet(title="Contest Performance Matrix")
-    _write_college_header(ws4, "WEEKLY CONTEST 516 — BINARY QUESTION MATRIX (0 OR 1)", dept_header_text, 12, metadata_block)
+    _write_college_header(ws4, f"{contest_name.upper()} — BINARY QUESTION MATRIX (0 OR 1)", dept_header_text, 12, metadata_block)
     r4_hdr = 7
     s4_headers = ["S.No", "Register No", "Student Name", "Dept", "Year", "Status", "Q1", "Q2", "Q3", "Q4", "Solved", "Score"]
     for c_i, h in enumerate(s4_headers, 1):
@@ -393,33 +396,33 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
                 _apply_thin_border(cell)
 
     all_top_solvers = sorted(attended_rows, key=lambda x: (-x["solved"], -x["score"], x["dept"], x["name"]))
-    render_tier_sheet("Top Performers", "WEEKLY CONTEST 516 — TOP PERFORMERS LEADERBOARD (4/4 -> 3/4 -> 2/4 -> 1/4)", all_top_solvers, show_rank=True)
+    render_tier_sheet("Top Performers", f"{contest_name.upper()} — TOP PERFORMERS LEADERBOARD (4/4 -> 3/4 -> 2/4 -> 1/4)", all_top_solvers, show_rank=True)
 
     # ──────────────────────────────────────────────────────────────────────────
     # SHEET 6: 4-4 PERFECT SOLVERS
     # ──────────────────────────────────────────────────────────────────────────
-    render_tier_sheet("4-4 Perfect Solvers", f"WEEKLY CONTEST 516 — 4/4 PERFECT SOLVERS ({len(p_4)} STUDENTS)", p_4, show_rank=True)
+    render_tier_sheet("4-4 Perfect Solvers", f"{contest_name.upper()} — 4/4 PERFECT SOLVERS ({len(p_4)} STUDENTS)", p_4, show_rank=True)
 
     # ──────────────────────────────────────────────────────────────────────────
     # SHEET 7: 3-4 SOLVERS
     # ──────────────────────────────────────────────────────────────────────────
-    render_tier_sheet("3-4 Solvers", f"WEEKLY CONTEST 516 — 3/4 SOLVERS ({len(p_3)} STUDENTS)", p_3, show_rank=True)
+    render_tier_sheet("3-4 Solvers", f"{contest_name.upper()} — 3/4 SOLVERS ({len(p_3)} STUDENTS)", p_3, show_rank=True)
 
     # ──────────────────────────────────────────────────────────────────────────
     # SHEET 8: 2-4 SOLVERS
     # ──────────────────────────────────────────────────────────────────────────
-    render_tier_sheet("2-4 Solvers", f"WEEKLY CONTEST 516 — 2/4 SOLVERS ({len(p_2)} STUDENTS)", p_2, show_rank=True)
+    render_tier_sheet("2-4 Solvers", f"{contest_name.upper()} — 2/4 SOLVERS ({len(p_2)} STUDENTS)", p_2, show_rank=True)
 
     # ──────────────────────────────────────────────────────────────────────────
     # SHEET 9: 1-4 SOLVERS
     # ──────────────────────────────────────────────────────────────────────────
-    render_tier_sheet("1-4 Solvers", f"WEEKLY CONTEST 516 — 1/4 SOLVERS ({len(p_1)} STUDENTS)", p_1, show_rank=True)
+    render_tier_sheet("1-4 Solvers", f"{contest_name.upper()} — 1/4 SOLVERS ({len(p_1)} STUDENTS)", p_1, show_rank=True)
 
     # ──────────────────────────────────────────────────────────────────────────
     # SHEET 10: DEPARTMENT SUMMARY
     # ──────────────────────────────────────────────────────────────────────────
     ws10 = wb.create_sheet(title="Department Summary")
-    _write_college_header(ws10, "WEEKLY CONTEST 516 — DEPARTMENTS BREAKDOWN", dept_header_text, 11, metadata_block)
+    _write_college_header(ws10, f"{contest_name.upper()} — DEPARTMENTS BREAKDOWN", dept_header_text, 11, metadata_block)
     r10_hdr = 7
     s10_headers = ["S.No", "Department Name", "Total Students", "Verified Attended", "Not Attended", "Attendance %", "Q1", "Q2", "Q3", "Q4", "Total Solves"]
     for c_i, h in enumerate(s10_headers, 1):
@@ -481,7 +484,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     # SHEET 11: DEPARTMENT TOP PERFORMERS
     # ──────────────────────────────────────────────────────────────────────────
     ws11 = wb.create_sheet(title="Department Top Performers")
-    _write_college_header(ws11, "WEEKLY CONTEST 516 — DEPARTMENT TOP PERFORMERS", dept_header_text, 10, metadata_block)
+    _write_college_header(ws11, f"{contest_name.upper()} — DEPARTMENT TOP PERFORMERS", dept_header_text, 10, metadata_block)
     r11_cur = 7
     for d_name in (depts_present if len(depts_present) > 1 or len(rows) > 100 else OFFICIAL_DEPTS):
         d_att_list = [r for r in dept_map.get(d_name, []) if r["is_att"]]
@@ -528,7 +531,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     # SHEET 12: YEAR SUMMARY
     # ──────────────────────────────────────────────────────────────────────────
     ws12 = wb.create_sheet(title="Year Summary")
-    _write_college_header(ws12, "WEEKLY CONTEST 516 — ACADEMIC YEAR BATCH SUMMARY", dept_header_text, 7, metadata_block)
+    _write_college_header(ws12, f"{contest_name.upper()} — ACADEMIC YEAR BATCH SUMMARY", dept_header_text, 7, metadata_block)
     r12_hdr = 7
     s12_headers = ["S.No", "Academic Year Batch", "Total Students", "Verified Attended", "Not Attended", "Attendance %", "Total Solves"]
     for c_i, h in enumerate(s12_headers, 1):
@@ -556,7 +559,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     # SHEET 13: VERIFICATION AUDIT
     # ──────────────────────────────────────────────────────────────────────────
     ws13 = wb.create_sheet(title="Verification Audit")
-    _write_college_header(ws13, "WEEKLY CONTEST 516 — DATA AUDIT & IMMUTABILITY RECORD", dept_header_text, 6, metadata_block)
+    _write_college_header(ws13, f"{contest_name.upper()} — DATA AUDIT & IMMUTABILITY RECORD", dept_header_text, 6, metadata_block)
 
     serialized_dataset = json.dumps([
         {"reg_no": r["reg_no"], "q1": r["q1"], "q2": r["q2"], "q3": r["q3"], "q4": r["q4"], "solved": r["solved"], "score": r["score"]}
@@ -579,8 +582,8 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         ("Verified Virtual Attendees", f"{virt_attended:,}"),
         ("Verified Non-Attendees", f"{tot_not_attended:,}"),
         ("Data Quality Errors / Unlinked", f"{data_errors:,}"),
-        ("Contest 516 Problem Set", "Q1: Check ASCII Palindromic | Q2: Disappeared in Array II | Q3: Prime Factors | Q4: Sum Game"),
-        ("Virtual Audit Engine", "Contest516ReconciliationService (Problem-Attributed Forensic Scanner)"),
+        (f"{contest_name} Problem Set", "Q1: Check ASCII Palindromic | Q2: Disappeared in Array II | Q3: Prime Factors | Q4: Sum Game"),
+        ("Virtual Audit Engine", f"{contest_name.replace(' ', '')}ReconciliationService (Problem-Attributed Forensic Scanner)"),
         ("Virtual Detection Audit", f"{virt_attended} verified virtual solvers found across {tot_students} scanned profiles"),
         ("Binary Constraint Validation", "PASS (Every Q1..Q4 is strictly 0 or 1)"),
         ("Mathematical Verification", "PASS (Solved == Q1 + Q2 + Q3 + Q4 for all records)"),

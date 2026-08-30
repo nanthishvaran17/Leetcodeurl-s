@@ -7,16 +7,39 @@ import asyncio
 class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
+        self._message_queue = []
+        self._batch_task: Optional[asyncio.Task] = None
+        self._batch_interval = 0.5  # 500ms
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.append(websocket)
         logger.info(f"WebSocket client connected. Total clients: {len(self.active_connections)}")
+        
+        # Start background batch flush if not running
+        if self._batch_task is None or self._batch_task.done():
+            self._batch_task = asyncio.create_task(self._flush_loop())
 
     def disconnect(self, websocket: WebSocket):
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
             logger.info(f"WebSocket client disconnected. Remaining clients: {len(self.active_connections)}")
+
+    async def _flush_loop(self):
+        """Background loop that flushes queued messages in batches."""
+        while True:
+            await asyncio.sleep(self._batch_interval)
+            if not self.active_connections:
+                continue
+            if not self._message_queue:
+                continue
+                
+            # Take all currently queued messages
+            batch = self._message_queue[:]
+            self._message_queue.clear()
+            
+            if batch:
+                await self.broadcast({"type": "BATCH_UPDATES", "events": batch})
 
     async def broadcast(self, message: dict):
         payload = json.dumps(message)
@@ -68,7 +91,7 @@ class ConnectionManager:
         year_level: Optional[str] = None,
         dataset_version: int = 1
     ):
-        """Targeted broadcast when a student's question solve state updates."""
+        """Targeted broadcast when a student's question solve state updates. Uses batching."""
         payload = {
             "type": "CONTEST_RESULT_UPDATED",
             "studentId": student_id,
@@ -91,7 +114,7 @@ class ConnectionManager:
             "datasetVersion": dataset_version,
             "updatedAt": asyncio.get_event_loop().time() if asyncio.get_event_loop() else 0
         }
-        await self.broadcast(payload)
+        self._message_queue.append(payload)
 
     async def broadcast_contest_summary(
         self,
@@ -100,7 +123,7 @@ class ConnectionManager:
         metrics: Dict[str, Any],
         dataset_version: int = 1
     ):
-        """Targeted broadcast when contest aggregates update."""
+        """Targeted broadcast when contest aggregates update. Queued for batching."""
         payload = {
             "type": "CONTEST_SUMMARY_UPDATED",
             "sessionId": session_id,
@@ -108,7 +131,7 @@ class ConnectionManager:
             "metrics": metrics,
             "datasetVersion": dataset_version
         }
-        await self.broadcast(payload)
+        self._message_queue.append(payload)
 
 
 manager = ConnectionManager()

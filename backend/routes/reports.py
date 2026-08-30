@@ -368,7 +368,9 @@ def get_contest_filename_base(contest_name: str, session_date: str = None, dept:
 def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: str = "ALL", attendance: str = "ALL"):
     # First check ReportHistory
     report = db.query(ReportHistory).filter(ReportHistory.report_id == report_id).first()
-    if report:
+    # If filters are applied, we must NOT use the raw cached report directly, 
+    # we need to build the canonical dataset and apply the slicing filters below.
+    if report and dept == "ALL" and year == "ALL" and attendance == "ALL":
         dataset = report.dataset
         contest_name = dataset.get("contestName") or dataset.get("title") or "Weekly Contest"
         session_date = dataset.get("sessionDate") or dataset.get("session_date")

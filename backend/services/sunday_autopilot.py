@@ -149,11 +149,10 @@ class UniversalWeeklyContestAutopilot:
                         err = WeeklyContestErrorLog(
                             session_id=session.id,
                             student_id=ms.id,
-                            reg_no=ms.register_no,
-                            name=ms.name,
+                            reg_no=ms.reg_no,
+                            student_name=ms.name,
                             error_type="MISSING_USERNAME",
-                            error_message="Student has no registered LeetCode username.",
-                            severity="HIGH"
+                            error_message="Student has no registered LeetCode username."
                         )
                         db.add(err)
 

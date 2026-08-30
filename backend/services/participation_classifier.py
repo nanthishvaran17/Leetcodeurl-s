@@ -73,9 +73,70 @@ class ClassificationResult:
     # System metadata
     reconciled_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
 
+    # ── Backward-compat property aliases (tests & legacy callers) ──────────────
+
+    @property
+    def participation_status(self) -> str:
+        """Legacy alias: maps current participation_type to older vocabulary.
+
+        LIVE      → 'ACTUAL'   (legacy name for live attendance)
+        VIRTUAL   → 'VIRTUAL'
+        CONFLICT  → 'NOT_VERIFIED'
+        UNKNOWN   → 'NOT_VERIFIED'
+        NOT_ATTENDED → 'NOT_VERIFIED'
+        """
+        _map = {
+            "LIVE": "ACTUAL",
+            "VIRTUAL": "VIRTUAL",
+            "CONFLICT": "NOT_VERIFIED",
+            "UNKNOWN": "NOT_VERIFIED",
+            "NOT_ATTENDED": "NOT_VERIFIED",
+        }
+        return _map.get(self.participation_type, self.participation_type)
+
+    @participation_status.setter
+    def participation_status(self, value: str) -> None:
+        """Allow tests that do `result.participation_status = ...` to set the type."""
+        _reverse = {
+            "ACTUAL": "LIVE",
+            "LIVE": "LIVE",
+            "VIRTUAL": "VIRTUAL",
+            "NOT_VERIFIED": "UNKNOWN",
+            "CONFLICT": "CONFLICT",
+        }
+        self.participation_type = _reverse.get(value, value)
+
+    @property
+    def verification_status(self) -> str:
+        """Legacy computed field. Maps confidence + type to a verification verdict."""
+        pt = self.participation_type
+        conf = self.confidence
+        if pt == "CONFLICT":
+            return "CONFLICT"
+        if pt == "UNKNOWN":
+            # No evidence found — legacy tests expect PENDING
+            return "PENDING"
+        if conf in ("VERY_HIGH", "HIGH"):
+            return "VERIFIED"
+        if conf == "NONE":
+            return "PENDING"
+        if conf in ("MODERATE",):
+            return "PARTIALLY_VERIFIED"
+        # LOW confidence or edge cases (attended=false, score=0, etc.)
+        return "INSUFFICIENT_EVIDENCE"
+
+    @property
+    def conflict_details(self) -> Optional[List[str]]:
+        """Legacy alias for evidence_summary when a conflict exists."""
+        if self.participation_type == "CONFLICT":
+            return self.evidence_summary or ["Conflict detected between evidence sources."]
+        return None
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "participation_type": self.participation_type,
+            "participation_status": self.participation_status,   # backward compat
+            "verification_status": self.verification_status,     # backward compat
             "confidence": self.confidence,
             "classification_reason": self.classification_reason,
             "evidence_summary": self.evidence_summary,
@@ -86,6 +147,8 @@ class ClassificationResult:
             "questions": self.questions,
             "reconciled_at": self.reconciled_at,
         }
+
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────

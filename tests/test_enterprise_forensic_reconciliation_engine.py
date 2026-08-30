@@ -247,6 +247,8 @@ def test_s_live_plus_virtual_evidence():
 
 
 # ─── TEST T: 1,450 roster reconciliation -> PASS ──────────────────────────────
+import pytest
+@pytest.mark.scale
 def test_t_1450_roster_reconciliation_pass():
     from backend.database import SessionLocal
     db = SessionLocal()

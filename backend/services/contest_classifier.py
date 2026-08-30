@@ -224,8 +224,24 @@ class ContestClassifier:
             profile_data = self.api.validate_profile(raw_username)
         except Exception as e:
             logger.warning(f"Profile validation failed for {raw_username}: {e}")
-            # Do not swallow programming bugs
-            if not isinstance(e, (httpx.RequestError, httpx.HTTPStatusError)):
+            # Network-level and API-decode failures are expected — return FETCH_FAILED, not a crash.
+            # Programming errors (AttributeError, TypeError, etc.) should still propagate.
+            import json as _json
+            _msg = str(e)
+            _is_transient = (
+                isinstance(e, (TimeoutError, OSError, ConnectionError,
+                               httpx.RequestError, httpx.HTTPStatusError,
+                               _json.JSONDecodeError))
+                or (isinstance(e, ValueError) and (
+                    "Expecting value" in _msg
+                    or "json" in _msg.lower()
+                    or "decode" in _msg.lower()
+                ))
+                or _msg.startswith("HTTP ")
+                or "timeout" in _msg.lower()
+                or "connection" in _msg.lower()
+            )
+            if not _is_transient:
                 logger.exception(f"Unexpected programming error during profile validation: {e}")
                 raise
             return ContestStatusRow(
@@ -234,12 +250,13 @@ class ContestClassifier:
                 verified_leetcode_username=raw_username,
                 contest_id=canonical_id,
                 contest_name=contest_name,
-                status=ContestStatus.PENDING_VERIFICATION,
+                status=ContestStatus.FETCH_FAILED,
                 reason_code=ReasonCode.FETCH_ERROR,
                 reason_text="Contest participation could not yet be verified due to API error.",
                 fetch_status=FetchStatus.FAILED,
                 error_message=str(e),
             )
+
 
         if profile_data is None:
             return ContestStatusRow(
@@ -261,8 +278,15 @@ class ContestClassifier:
             contest_data = self.api.fetch_contest_result(canonical_username, canonical_id)
         except Exception as e:
             logger.warning(f"Contest fetch failed for {canonical_username}/{canonical_id}: {e}")
-            # Do not swallow programming bugs
-            if not isinstance(e, (httpx.RequestError, httpx.HTTPStatusError)):
+            _msg = str(e)
+            _is_transient = (
+                isinstance(e, (TimeoutError, OSError, ConnectionError,
+                               httpx.RequestError, httpx.HTTPStatusError))
+                or _msg.startswith("HTTP ")
+                or "timeout" in _msg.lower()
+                or "connection" in _msg.lower()
+            )
+            if not _is_transient:
                 logger.exception(f"Unexpected programming error during contest fetch: {e}")
                 raise
             return ContestStatusRow(
@@ -271,7 +295,7 @@ class ContestClassifier:
                 verified_leetcode_username=canonical_username,
                 contest_id=canonical_id,
                 contest_name=contest_name,
-                status=ContestStatus.PENDING_VERIFICATION,
+                status=ContestStatus.FETCH_FAILED,
                 reason_code=ReasonCode.FETCH_ERROR,
                 reason_text="Contest participation could not yet be verified due to API error.",
                 fetch_status=FetchStatus.FAILED,

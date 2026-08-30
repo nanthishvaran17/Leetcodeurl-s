@@ -104,11 +104,15 @@ def calculate_contest_status(contest_date: datetime.date, current_dt: datetime.d
     else:
         return "FINALIZED"
 
+from functools import lru_cache
+
+@lru_cache(maxsize=10)
 def discover_contest_metadata(target_date: datetime.date = None) -> Dict[str, Any]:
     """
     Dynamic LeetCode Weekly Contest Discovery Engine.
     Discovers contest ID, title, date, start time, end time, and dynamic problem list.
     Now uses live API fetching with fallback and discovery failure flagging.
+    Uses lru_cache to prevent massive latency spikes on API failure/rate limits.
     """
     if target_date is None:
         target_date = get_most_recent_sunday_date()

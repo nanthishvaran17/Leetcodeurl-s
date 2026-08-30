@@ -160,8 +160,9 @@ def validate_excel_import(db: Session, file_bytes: bytes) -> Dict[str, Any]:
         "invalid_rows": invalid_rows
     }
 
-def commit_excel_import(db: Session, valid_rows: List[dict]) -> int:
+def commit_excel_import(db: Session, valid_rows: List[dict]) -> Tuple[int, List[int]]:
     count = 0
+    student_ids = []
     for row in valid_rows:
         reg_no = row.get("reg_no")
         name = row.get("name")
@@ -195,6 +196,7 @@ def commit_excel_import(db: Session, valid_rows: List[dict]) -> int:
             stats = LeetCodeProfileStats(student_id=student.id, status="NOT STARTED")
             db.add(stats)
             count += 1
+            student_ids.append(student.id)
         else:
             student.name = name
             if dept_id: student.department_id = dept_id
@@ -205,8 +207,9 @@ def commit_excel_import(db: Session, valid_rows: List[dict]) -> int:
             if username: student.username = username
             student.is_active = True
             count += 1
+            student_ids.append(student.id)
     db.commit()
-    return count
+    return count, student_ids
 
 def create_nandha_official_department_sheet(ws, dept: Department, db: Session):
     ws.sheet_view.showGridLines = True

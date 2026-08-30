@@ -31,22 +31,30 @@ interface UseContestWebSocketProps {
   onResultUpdate?: (event: ContestWSEvent) => void;
   onSummaryUpdate?: (event: ContestWSEvent) => void;
   onBatchUpdate?: (events: ContestWSEvent[]) => void;
+  onSyncCompleted?: (event: ContestWSEvent) => void;
 }
 
-export function useContestWebSocket({ sessionId, onResultUpdate, onSummaryUpdate, onBatchUpdate }: UseContestWebSocketProps) {
+export function useContestWebSocket({ sessionId, onResultUpdate, onSummaryUpdate, onBatchUpdate, onSyncCompleted }: UseContestWebSocketProps) {
   const onResultRef = useRef(onResultUpdate);
   const onSummaryRef = useRef(onSummaryUpdate);
   const onBatchRef = useRef(onBatchUpdate);
+  const onSyncCompletedRef = useRef(onSyncCompleted);
 
   useEffect(() => { onResultRef.current = onResultUpdate; }, [onResultUpdate]);
   useEffect(() => { onSummaryRef.current = onSummaryUpdate; }, [onSummaryUpdate]);
   useEffect(() => { onBatchRef.current = onBatchUpdate; }, [onBatchUpdate]);
+  useEffect(() => { onSyncCompletedRef.current = onSyncCompleted; }, [onSyncCompleted]);
 
   const [lastEvent, setLastEvent] = useState<ContestWSEvent | null>(null);
   const [eventCount, setEventCount] = useState(0);
 
   const handleMessage = useCallback((data: ContestWSEvent) => {
     if (!data?.type) return;
+
+    if (data.type === 'SYNC_COMPLETED') {
+      if (onSyncCompletedRef.current) onSyncCompletedRef.current(data);
+      return;
+    }
 
     if (data.type === 'BATCH_UPDATES' && data.events) {
       // Filter events by session ID if required

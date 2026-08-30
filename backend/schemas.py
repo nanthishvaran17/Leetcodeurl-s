@@ -209,6 +209,13 @@ class StudentPaginatedOut(BaseModel):
     page: int
     limit: int
     total_pages: int
+
+class LeaderboardPaginatedOut(BaseModel):
+    total: int
+    items: List[StudentOut]
+    page: int
+    limit: int
+    total_pages: int
     longest_streak: Optional[int] = 0
     total_active_days: Optional[int] = 0
     consistency_score: Optional[float] = 0.0

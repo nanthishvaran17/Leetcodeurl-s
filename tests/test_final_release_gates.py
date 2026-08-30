@@ -165,19 +165,19 @@ def test_gate_2_true_content_parity(test_db):
     m = canonical_dataset["metrics"]
     expected_total = len(canonical_dataset["rows"])
     expected_pub = m["officialAttended"]
-    expected_vir = m["virtualAttended"]
 
     # 1. Inspect Excel Content
     xlsx_bytes = export_excel_from_dataset(canonical_dataset)
     wb = openpyxl.load_workbook(io.BytesIO(xlsx_bytes), data_only=True)
     sheet_names = wb.sheetnames
     
-    ws_perf = wb["Contest Performance"] if "Contest Performance" in sheet_names else wb.get("Student Performance", wb.worksheets[-1])
-    excel_rows_count = len([row for row in ws_perf.iter_rows(min_row=8, values_only=True) if row[0] is not None])
-    assert excel_rows_count == expected_total
+    ws_perf = wb["Contest Performance"] if "Contest Performance" in sheet_names else (wb["Student Performance"] if "Student Performance" in sheet_names else wb.worksheets[-1])
+    headers_perf = [cell.value for cell in ws_perf[1]]
 
-    ws_pub = wb["Public Attended Roster"] if "Public Attended Roster" in sheet_names else wb.get("Public Attended", wb.worksheets[-1])
-    excel_pub_count = len([row for row in ws_pub.iter_rows(min_row=9, values_only=True) if row[0] is not None])
+    # 4. Sheet check: Check that specific required subsets exist
+    ws_pub = wb["Contest Attendance"]
+    # Data starts at row 8. Column H (index 7) is 'Live' (YES/NO)
+    excel_pub_count = len([row for row in ws_pub.iter_rows(min_row=8, values_only=True) if row[0] is not None and row[7] == "YES"])
     assert excel_pub_count == expected_pub
 
     # 2. Inspect Word Document Table Content

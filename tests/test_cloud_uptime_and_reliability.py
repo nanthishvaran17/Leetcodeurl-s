@@ -1,3 +1,4 @@
+import pytest
 """
 test_cloud_uptime_and_reliability.py — Cloud Uptime, Crash Recovery & Autopilot Hardening Test Suite.
 Verifies Liveness, Readiness, Deep Health, Worker Heartbeats, Checkpoint Recovery, and SQLite WAL Resilience.
@@ -28,6 +29,7 @@ class TestCloudUptimeAndReliability(unittest.TestCase):
     def tearDown(self):
         self.db.close()
 
+    @pytest.mark.scale
     def test_01_liveness_readiness_and_deep_health_probes(self):
         """Test Liveness, Readiness, and Deep Health Telemetry."""
         telemetry = get_deep_health_telemetry(self.db)
@@ -57,6 +59,7 @@ class TestCloudUptimeAndReliability(unittest.TestCase):
         self.assertEqual(shb["next_scheduled_job"], "sunday_0755_init")
         print("  + [RELIABILITY 3 PASSED]: Scheduler Heartbeat [Asia/Kolkata] verified.")
 
+    @pytest.mark.scale
     def test_04_crash_recovery_and_checkpoint_durability(self):
         """Test Server Restart / Crash Recovery without duplicating records or corrupting state."""
         # Test startup recovery execution

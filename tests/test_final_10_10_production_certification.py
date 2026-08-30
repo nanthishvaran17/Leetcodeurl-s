@@ -1,3 +1,4 @@
+import pytest
 """
 test_final_10_10_production_certification.py
 Final 10/10 Production Hardening & Verification Suite for Nandha Engineering College.
@@ -33,6 +34,7 @@ class TestFinalProductionCertification(unittest.TestCase):
     def tearDown(self):
         self.db.close()
 
+    @pytest.mark.scale
     def test_01_final_data_integrity_scan(self):
         """Gate 1: Total students = 1,450 (1,395 II/III Year + 55 IV Year), 0 duplicate reg nos, 0 orphan records."""
         total_students = self.db.query(Student).count()
@@ -47,6 +49,7 @@ class TestFinalProductionCertification(unittest.TestCase):
         self.assertEqual(orphans, 0, "Orphan stats profiles must be 0.")
         print(f"  + [GATE 1 PASSED]: Data Integrity 100% ({total_students} students, 0 duplicates, 0 orphans).")
 
+    @pytest.mark.scale
     def test_02_department_cohort_verification(self):
         """Gate 2: 12 departments, II Year CSE(CS) = 61, II Year CSE(IOT) = 59, IV Year CSE(CS) = 28, IV Year CSE(IOT) = 27."""
         cse_cs = self.db.query(Department).filter(Department.code == "CSE(CS)").first()
@@ -93,6 +96,7 @@ class TestFinalProductionCertification(unittest.TestCase):
             self.assertGreaterEqual(solved_counts[i], solved_counts[i+1], "Ranking must be strictly non-increasing by solved problems.")
         print("  + [GATE 4 PASSED]: Deterministic multi-level ranking algorithm verified.")
 
+    @pytest.mark.scale
     def test_05_backup_restore_and_checksum_verification(self):
         """Gate 9: Create backup, verify SHA-256 checksum, and restore into isolated test database."""
         backup_dir = os.path.join("data", "backups", "test_cert")

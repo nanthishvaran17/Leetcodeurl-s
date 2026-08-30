@@ -492,10 +492,10 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
     for r_idx, s in enumerate(sorted_top, 1):
         top_table_data.append([
             Paragraph(str(r_idx), td_bold),
-            Paragraph(s.get("reg_no") or "—", td_style),
-            Paragraph(f"<b>{s.get('name') or '—'}</b>", td_left),
-            Paragraph(s.get("department_short") or "—", td_style),
-            Paragraph(s.get("year_level") or "—", td_style),
+            Paragraph(s.get("reg_no") or "-", td_style),
+            Paragraph(f"<b>{s.get('name') or '-'}</b>", td_left),
+            Paragraph(s.get("dept") or s.get("department_short") or "-", td_style),
+            Paragraph(s.get("year") or s.get("year_level") or "-", td_style),
             Paragraph(f"<font color='#059669'><b>{_to_int(s.get('total_solved'))}</b></font>", td_bold),
             Paragraph(f"{_to_float(s.get('contest_rating')):.1f}" if _to_float(s.get('contest_rating')) > 0 else "—", td_style)
         ])
@@ -571,17 +571,17 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
         story.append(t_roster)
     else:
         for idx, s in enumerate(attended_rows, 1):
-            q1 = "✓" if s.get("q1_solved") or _to_int(s.get("contest_problems_solved")) >= 1 else "—"
-            q2 = "✓" if s.get("q2_solved") or _to_int(s.get("contest_problems_solved")) >= 2 else "—"
-            q3 = "✓" if s.get("q3_solved") or _to_int(s.get("contest_problems_solved")) >= 3 else "—"
-            q4 = "✓" if s.get("q4_solved") or _to_int(s.get("contest_problems_solved")) == 4 else "—"
+            q1 = "1" if s.get("q1") or _to_int(s.get("total_contest_solved") or s.get("total_solved")) >= 1 else "0"
+            q2 = "1" if s.get("q2") or _to_int(s.get("total_contest_solved") or s.get("total_solved")) >= 2 else "0"
+            q3 = "1" if s.get("q3") or _to_int(s.get("total_contest_solved") or s.get("total_solved")) >= 3 else "0"
+            q4 = "1" if s.get("q4") or _to_int(s.get("total_contest_solved") or s.get("total_solved")) == 4 else "0"
 
             roster_table_data.append([
                 Paragraph(str(idx), td_style),
                 Paragraph(s.get("reg_no") or "—", td_style),
                 Paragraph(s.get("name") or "—", td_left),
-                Paragraph(s.get("department_short") or "—", td_style),
-                Paragraph(s.get("year_level") or "—", td_style),
+                Paragraph(s.get("dept") or s.get("department_short") or "—", td_style),
+                Paragraph(s.get("year") or s.get("year_level") or "—", td_style),
                 Paragraph(f"<font color='#059669'>{q1}</font>", td_bold),
                 Paragraph(f"<font color='#059669'>{q2}</font>", td_bold),
                 Paragraph(f"<font color='#059669'>{q3}</font>", td_bold),

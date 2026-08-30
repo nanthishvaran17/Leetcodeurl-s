@@ -273,7 +273,7 @@ def get_batch_matrix_analytics(db: Session = Depends(get_db)):
 
     result = []
     for b in batches:
-        students = db.query(Student).filter(
+        students = db.query(Student).options(joinedload(Student.stats)).filter(
             Student.year_level == b["year_level"],
             (Student.is_active == True) | (Student.is_active.is_(None))
         ).all()

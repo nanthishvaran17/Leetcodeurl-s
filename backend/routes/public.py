@@ -12,6 +12,9 @@ router = APIRouter(prefix="/api/public", tags=["Public Endpoints"])
 def get_public_leaderboard(
     request: Request,
     limit: int = 3000,
+    page: int = 1,
+    paginated: bool = False,
+    search: Optional[str] = None,
     sort_by: Optional[str] = "solved_desc",
     dept_id: Optional[int] = None,
     year_level: Optional[str] = None,
@@ -26,13 +29,14 @@ def get_public_leaderboard(
         dept_id=dept_id,
         year_level=year_level,
         section_id=None,
-        search=None,
+        search=search,
         session_id=None,
         sort_by=sort_by or "solved_desc",
         min_solved=None,
         max_solved=None,
         verified_only=False,
-        page=1,
+        paginated=paginated,
+        page=page,
         limit=limit,
         db=db
     )

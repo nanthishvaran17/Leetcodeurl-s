@@ -1,11 +1,8 @@
 import asyncio
 import logging
+import datetime
 from typing import Dict, Any, List, Optional
-import httpx
-from sqlalchemy.orm import Session
-from backend.database import SessionLocal
-from backend.models import WeeklySession, Student, WeeklyPublicResult
-from backend.leetcode_fetcher import fetch_recent_submissions
+import pytz
 
 logger = logging.getLogger(__name__)
 
@@ -14,40 +11,55 @@ class LiveContestPoller:
         self.contest_questions: Dict[str, Dict[str, Any]] = {}
         self.contest_fetched: bool = False
         self.sorted_question_slugs: List[str] = []
-    
+        self.contest_start_time: Optional[int] = None  # unix epoch
+        self.contest_duration: Optional[int] = 5400    # seconds (90 min)
+
     async def fetch_contest_questions(self, contest_name: str) -> bool:
         """
-        Fetches the questions for the given contest name (e.g., 'Weekly Contest 517').
-        Uses the Global Ranking API which is public during the contest.
+        Since LeetCode APIs (GraphQL/REST) don't expose live contest questions reliably,
+        we dynamically determine the contest start time and allow the sync engine
+        to discover the question slugs from student submissions in real-time.
         """
-        if self.contest_fetched and self.contest_questions:
+        if self.contest_fetched:
             return True
-            
-        slug = contest_name.lower().replace(" ", "-")
-        url = f"https://leetcode.com/contest/api/ranking/{slug}/?pagination=1&region=global"
+
+        # Calculate contest start time based on the contest name
+        # Weekly contests are Sunday 08:00 AM IST
+        # We can just get today's Sunday 08:00 AM IST
+        ist = pytz.timezone('Asia/Kolkata')
+        now = datetime.datetime.now(ist)
         
-        try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                resp = await client.get(url)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    questions = data.get("questions", [])
-                    if questions:
-                        self.contest_questions = {}
-                        self.sorted_question_slugs = []
-                        for q in questions:
-                            tslug = q.get("title_slug")
-                            self.contest_questions[tslug] = {
-                                "id": q.get("id"),
-                                "credit": q.get("credit")
-                            }
-                            self.sorted_question_slugs.append(tslug)
-                        self.contest_fetched = True
-                        logger.info(f"[LIVE_POLLER] Fetched {len(self.contest_questions)} questions for {slug}.")
-                        return True
-        except Exception as e:
-            logger.error(f"[LIVE_POLLER] Error fetching contest questions for {slug}: {e}")
-            
-        return False
+        # Find the most recent Sunday
+        days_since_sunday = (now.weekday() - 6) % 7
+        recent_sunday = now - datetime.timedelta(days=days_since_sunday)
+        
+        # Set to 08:00 AM IST
+        contest_start_dt = recent_sunday.replace(hour=8, minute=0, second=0, microsecond=0)
+        self.contest_start_time = int(contest_start_dt.timestamp())
+        self.contest_duration = 5400
+        
+        self.contest_fetched = True
+        logger.info(f"[LIVE_POLLER] Bypass API. Contest start time calculated as {contest_start_dt} IST.")
+        return True
+
+    def register_discovered_question(self, slug: str):
+        if slug not in self.sorted_question_slugs:
+            self.sorted_question_slugs.append(slug)
+            # Assign credit based on order of discovery (typically 3, 4, 5, 6)
+            credit = 3 + len(self.sorted_question_slugs) - 1
+            if credit > 6: credit = 6
+            self.contest_questions[slug] = {
+                "id": None,
+                "credit": credit,
+                "title": slug,
+            }
+            logger.info(f"[LIVE_POLLER] Discovered new contest question: {slug}")
+
+    def reset(self):
+        self.contest_questions = {}
+        self.contest_fetched = False
+        self.sorted_question_slugs = []
+        self.contest_start_time = None
+        self.contest_duration = 5400
 
 live_contest_poller = LiveContestPoller()
