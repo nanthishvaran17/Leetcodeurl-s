@@ -211,7 +211,11 @@ export const AdminStaffAllocationPanel: React.FC = () => {
   setStudentToUnassign(null);
   fetchAllocationData();
  } catch (err: any) {
-  notify.error('Unassign Failed', err.response?.data?.detail || 'Could not unassign student.');
+  console.error("Unassign error details:", err.response);
+  const errMsg = err.response?.data?.detail 
+    ? (typeof err.response.data.detail === 'string' ? err.response.data.detail : JSON.stringify(err.response.data.detail))
+    : (err.message || 'Could not unassign student.');
+  notify.error('Unassign Failed', errMsg);
  }
  };
 
@@ -246,7 +250,11 @@ export const AdminStaffAllocationPanel: React.FC = () => {
   handleLoadUnassignRoster(Number(unassignStaffId));
   fetchAllocationData();
  } catch (err: any) {
-  notify.error('Unassign Failed', err.response?.data?.detail || 'Failed to unassign students.');
+  console.error("Bulk Unassign error details:", err.response);
+  const errMsg = err.response?.data?.detail 
+    ? (typeof err.response.data.detail === 'string' ? err.response.data.detail : JSON.stringify(err.response.data.detail))
+    : (err.message || 'Failed to unassign students.');
+  notify.error('Unassign Failed', errMsg);
  }
  };
 
