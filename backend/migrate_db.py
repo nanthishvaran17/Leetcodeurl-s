@@ -98,6 +98,8 @@ def run_db_migrations():
             "ALTER TABLE weekly_public_results ADD COLUMN IF NOT EXISTS data_fetch_status VARCHAR(50) DEFAULT 'DATA_UNAVAILABLE'",
             "ALTER TABLE weekly_public_results ADD COLUMN IF NOT EXISTS confidence VARCHAR(50) DEFAULT 'UNVERIFIED'",
             "ALTER TABLE weekly_public_results ADD COLUMN IF NOT EXISTS verification_evidence TEXT",
+            "ALTER TABLE weekly_public_results ALTER COLUMN verification_evidence TYPE TEXT",
+            "ALTER TABLE weekly_public_results ALTER COLUMN error_reason TYPE TEXT",
             "ALTER TABLE weekly_public_results ADD COLUMN IF NOT EXISTS retry_count INTEGER DEFAULT 0",
             "ALTER TABLE weekly_public_results ADD COLUMN IF NOT EXISTS last_fetched_at TIMESTAMP",
             # ── weekly_virtual_results ───────────────────────────────────────

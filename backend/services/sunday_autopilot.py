@@ -661,7 +661,7 @@ def meta_num(contest_name: Optional[str]) -> int:
 
 # Global Canonical Singletons
 weekly_contest_autopilot = UniversalWeeklyContestAutopilot()
-sunday_autopilot = weekly_contest_autopilot
+sunday_autopilot = SundayAutopilotCoordinator
 
 
 class SundayAutopilotCoordinator:
@@ -745,6 +745,6 @@ def meta_num(contest_name: Optional[str]) -> int:
 
 # Global Canonical Exports (Supporting both new and backward-compatible consumers)
 weekly_contest_autopilot = UniversalWeeklyContestAutopilot()
-sunday_autopilot = weekly_contest_autopilot
+sunday_autopilot = SundayAutopilotCoordinator
 
 

@@ -243,8 +243,8 @@ class WeeklyPublicResult(Base):
     fetch_status = Column(String(30), default="PENDING") # SUCCESS, PARTIAL_SUCCESS, FETCH_ERROR, PENDING
     data_fetch_status = Column(String(30), default="DATA_UNAVAILABLE") # SUCCESS, FETCH_FAILED, USERNAME_NOT_FOUND, DATA_UNAVAILABLE
     confidence = Column(String(30), default="UNVERIFIED") # VERIFIED, PARTIAL, UNVERIFIED, FAILED
-    error_reason = Column(String(100), nullable=True)
-    verification_evidence = Column(String(500), nullable=True) # JSON evidence payload
+    error_reason = Column(Text, nullable=True)
+    verification_evidence = Column(Text, nullable=True) # JSON evidence payload
     retry_count = Column(Integer, default=0)
     last_fetched_at = Column(DateTime, nullable=True)
 
