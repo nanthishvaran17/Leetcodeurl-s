@@ -52,7 +52,9 @@ async def _sync_single_student_canonical(
     job_id: str,
     progress_callback: Optional[Any],
     run_optional_phases: bool = False,
-    sync_mode: str = "FULL_ADMIN_SYNC"
+    sync_mode: str = "FULL_ADMIN_SYNC",
+    pre_fetched_a: Optional[Dict[str, Any]] = None,
+    pre_fetched_b: Optional[Dict[str, Any]] = None
 ):
     import sqlalchemy.exc
     import random
@@ -60,7 +62,7 @@ async def _sync_single_student_canonical(
     for attempt in range(1, max_retries + 1):
         try:
             return await _sync_single_student_canonical_impl(
-                student, client, sem, lock, job_id, progress_callback, run_optional_phases, sync_mode
+                student, client, sem, lock, job_id, progress_callback, run_optional_phases, sync_mode, pre_fetched_a, pre_fetched_b
             )
         except (sqlalchemy.exc.OperationalError, sqlalchemy.exc.PendingRollbackError) as db_err:
             logger.warning(
@@ -82,7 +84,9 @@ async def _sync_single_student_canonical_impl(
     job_id: str,
     progress_callback: Optional[Any],
     run_optional_phases: bool = False,
-    sync_mode: str = "FULL_ADMIN_SYNC"
+    sync_mode: str = "FULL_ADMIN_SYNC",
+    pre_fetched_a: Optional[Dict[str, Any]] = None,
+    pre_fetched_b: Optional[Dict[str, Any]] = None
 ):
     async with sem:
         now_dt = datetime.datetime.utcnow()
@@ -99,40 +103,62 @@ async def _sync_single_student_canonical_impl(
         phase_b_res: Optional[Dict[str, Any]] = None
 
         if u_status == "OK" and c_username:
-            # All LeetCode HTTP requests run BEFORE any DB session is opened
-            # LIVE mode ONLY needs contest telemetry. Skip heavy Profile/Calendar fetches.
-            if sync_mode == "LIVE_MONITOR":
-                phase_b_res = await fetch_contest_data(c_username, client)
-                status_code = "SUCCESS"
-            else:
-                # Decoupled independent parallel execution
-                phase_a_res, phase_b_res = await asyncio.gather(
-                    fetch_profile_and_stats(c_username, client),
-                    fetch_contest_data(c_username, client),
-                    return_exceptions=True
-                )
+            if pre_fetched_a is not None or pre_fetched_b is not None:
+                phase_a_res = pre_fetched_a
+                phase_b_res = pre_fetched_b
                 
-                # Handle exceptions inside gather (though they shouldn't happen with our safe _gql_post)
-                if isinstance(phase_a_res, Exception):
-                    phase_a_res = {"status": "error", "detail": str(phase_a_res)}
-                if isinstance(phase_b_res, Exception):
-                    phase_b_res = {"status": "error", "detail": str(phase_b_res)}
-
-                phase_a_status = phase_a_res.get("status")
-
-                if phase_a_status == "not_found":
-                    status_code = "PROFILE_NOT_FOUND"
-                elif phase_a_status == "identity_mismatch":
-                    status_code = "IDENTITY_MISMATCH"
-                    error_msg = phase_a_res.get("detail")
-                elif phase_a_status == "timeout":
-                    status_code = "TIMEOUT"
-                    error_msg = "LeetCode upstream timeout"
-                elif phase_a_status == "ok" and phase_a_res.get("data"):
+                if sync_mode == "LIVE_MONITOR":
                     status_code = "SUCCESS"
                 else:
-                    status_code = "FETCH_FAILED"
-                    error_msg = phase_a_res.get("detail", "Fetch failed during Phase A")
+                    if phase_a_res:
+                        phase_a_status = phase_a_res.get("status")
+                        if phase_a_status == "not_found":
+                            status_code = "PROFILE_NOT_FOUND"
+                        elif phase_a_status == "identity_mismatch":
+                            status_code = "IDENTITY_MISMATCH"
+                            error_msg = phase_a_res.get("detail")
+                        elif phase_a_status == "timeout":
+                            status_code = "TIMEOUT"
+                            error_msg = "LeetCode upstream timeout"
+                        elif phase_a_status == "ok" and phase_a_res.get("data"):
+                            status_code = "SUCCESS"
+                        else:
+                            status_code = "FETCH_FAILED"
+                            error_msg = phase_a_res.get("detail", "Fetch failed during Phase A")
+                    else:
+                        status_code = "FETCH_FAILED"
+                        error_msg = "No batched data available"
+            else:
+                # Fallback to single fetch if not pre_fetched
+                if sync_mode == "LIVE_MONITOR":
+                    phase_b_res = await fetch_contest_data(c_username, client)
+                    status_code = "SUCCESS"
+                else:
+                    phase_a_res, phase_b_res = await asyncio.gather(
+                        fetch_profile_and_stats(c_username, client),
+                        fetch_contest_data(c_username, client),
+                        return_exceptions=True
+                    )
+                    if isinstance(phase_a_res, Exception):
+                        phase_a_res = {"status": "error", "detail": str(phase_a_res)}
+                    if isinstance(phase_b_res, Exception):
+                        phase_b_res = {"status": "error", "detail": str(phase_b_res)}
+    
+                    phase_a_status = phase_a_res.get("status")
+    
+                    if phase_a_status == "not_found":
+                        status_code = "PROFILE_NOT_FOUND"
+                    elif phase_a_status == "identity_mismatch":
+                        status_code = "IDENTITY_MISMATCH"
+                        error_msg = phase_a_res.get("detail")
+                    elif phase_a_status == "timeout":
+                        status_code = "TIMEOUT"
+                        error_msg = "LeetCode upstream timeout"
+                    elif phase_a_status == "ok" and phase_a_res.get("data"):
+                        status_code = "SUCCESS"
+                    else:
+                        status_code = "FETCH_FAILED"
+                        error_msg = phase_a_res.get("detail", "Fetch failed during Phase A")
 
         # ── PHASE 2: DATABASE — Short-lived session, NO network calls inside ────
         db_student = SessionLocal()
@@ -565,19 +591,54 @@ async def run_full_pipeline(
         lock = asyncio.Lock()
 
         async with httpx.AsyncClient(timeout=timeout_cfg, limits=limits_cfg, follow_redirects=True, http2=False) as client:
-            tasks = [
-                _sync_single_student_canonical(
-                    student=s,
-                    client=client,
-                    sem=sem,
-                    lock=lock,
-                    job_id=effective_job_id,
-                    progress_callback=progress_callback,
-                    run_optional_phases=run_optional_phases,
-                    sync_mode=sync_mode
-                )
-                for s in students
-            ]
+            from backend.leetcode_fetcher import fetch_profile_and_stats_batched, fetch_contest_data_batched
+            chunk_size = 40
+            tasks = []
+            
+            for i in range(0, len(students), chunk_size):
+                chunk = students[i:i + chunk_size]
+                
+                valid_usernames = []
+                for s in chunk:
+                     uname, _, u_status = extract_leetcode_username(s.username or s.leetcode_url)
+                     if u_status == "OK" and uname:
+                         valid_usernames.append(uname)
+                
+                batched_a = {}
+                batched_b = {}
+                
+                if valid_usernames:
+                    if sync_mode == "LIVE_MONITOR":
+                        batched_b = await fetch_contest_data_batched(valid_usernames, client)
+                    else:
+                        res_a, res_b = await asyncio.gather(
+                            fetch_profile_and_stats_batched(valid_usernames, client),
+                            fetch_contest_data_batched(valid_usernames, client),
+                            return_exceptions=True
+                        )
+                        if not isinstance(res_a, Exception): batched_a = res_a
+                        if not isinstance(res_b, Exception): batched_b = res_b
+
+                for s in chunk:
+                    uname, _, _ = extract_leetcode_username(s.username or s.leetcode_url)
+                    pre_a = batched_a.get(uname) if uname else None
+                    pre_b = batched_b.get(uname) if uname else None
+                    
+                    tasks.append(
+                        _sync_single_student_canonical(
+                            student=s,
+                            client=client,
+                            sem=sem,
+                            lock=lock,
+                            job_id=effective_job_id,
+                            progress_callback=progress_callback,
+                            run_optional_phases=run_optional_phases,
+                            sync_mode=sync_mode,
+                            pre_fetched_a=pre_a,
+                            pre_fetched_b=pre_b
+                        )
+                    )
+            
             await asyncio.gather(*tasks, return_exceptions=True)
 
         # Recalculate institutional multi-level rankings

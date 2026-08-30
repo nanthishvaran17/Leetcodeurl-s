@@ -1349,3 +1349,200 @@ async def fetch_verified_student_contest_record(
 
     return base_record
 
+
+
+async def fetch_profile_and_stats_batched(
+    usernames: List[str],
+    client: Any,
+    retries: int = 3,
+    backoff_base: float = 1.5,
+) -> Dict[str, Dict[str, Any]]:
+    if not usernames:
+        return {}
+    
+    PROFILE_FIELDS = '''
+        username
+        profile { ranking userAvatar realName aboutMe school company countryName reputation }
+        userCalendar { streak totalActiveDays submissionCalendar }
+        submitStats: submitStatsGlobal { acSubmissionNum { difficulty count } }
+        badges { id displayName icon creationDate }
+        languageProblemCount { languageName problemsSolved }
+    '''
+    
+    query_body = "query {\n"
+    for i, user in enumerate(usernames):
+        query_body += f'  u{i}: matchedUser(username: "{user}") {{ {PROFILE_FIELDS} }}\n'
+    query_body += "}"
+    
+    result = await _gql_post(
+        client, query_body, {},
+        "userPublicProfileBatched", f"Batch[{len(usernames)}]", retries, backoff_base
+    )
+    
+    if result["status"] != "ok":
+        return {u: {"status": result["status"], "detail": result.get("detail"), "data": None} for u in usernames}
+        
+    data = result["data"]
+    results_map = {}
+    
+    for i, req_user in enumerate(usernames):
+        matched = data.get(f"u{i}")
+        if not matched:
+            results_map[req_user] = {"status": "not_found", "data": None}
+            continue
+            
+        canonical = matched.get("username", "")
+        if canonical.lower() != req_user.lower():
+            results_map[req_user] = {"status": "identity_mismatch", "data": None,
+                    "detail": f"returned '{canonical}' != requested '{req_user}'"}
+            continue
+            
+        profile = matched.get("profile") or {}
+        submit_stats = (
+            matched.get("submitStats", {}).get("acSubmissionNum") or []
+        )
+        solved_map = {item["difficulty"]: item["count"] for item in submit_stats if isinstance(item, dict)}
+        
+        badges_raw = matched.get("badges") or []
+        badges = []
+        for b in badges_raw:
+            if isinstance(b, dict):
+                badges.append({
+                    "badge_id":     str(b.get("id", "")),
+                    "display_name": b.get("displayName"),
+                    "icon_url":     b.get("icon"),
+                    "awarded_at":   b.get("creationDate"),
+                })
+                
+        languages_raw = matched.get("languageProblemCount") or []
+        languages = [
+            {"language_name": lp["languageName"], "problems_solved": lp["problemsSolved"]}
+            for lp in languages_raw if isinstance(lp, dict)
+        ]
+        
+        import json
+        user_cal = matched.get("userCalendar") or {}
+        cal_streak = user_cal.get("streak")
+        cal_active_days = user_cal.get("totalActiveDays")
+        cal_sub_raw = user_cal.get("submissionCalendar")
+        cal_json_str = cal_sub_raw if isinstance(cal_sub_raw, str) else (json.dumps(cal_sub_raw) if cal_sub_raw else "{}")
+        
+        results_map[req_user] = {
+            "status": "ok",
+            "data": {
+                "canonical_username":      canonical,
+                "profile_url":            f"https://leetcode.com/u/{canonical}/",
+                "real_name":              profile.get("realName"),
+                "avatar_url":             profile.get("userAvatar"),
+                "about_me":               profile.get("aboutMe"),
+                "school":                 profile.get("school"),
+                "company":                profile.get("company"),
+                "country":                profile.get("countryName"),
+                "reputation":             profile.get("reputation"),
+                "profile_global_ranking": profile.get("ranking"),
+                "total_solved":           solved_map.get("All"),
+                "easy_solved":            solved_map.get("Easy"),
+                "medium_solved":          solved_map.get("Medium"),
+                "hard_solved":            solved_map.get("Hard"),
+                "badges":                 badges,
+                "languages":              languages,
+                "streak":                 cal_streak,
+                "max_streak":             cal_streak,
+                "total_active_days":      cal_active_days,
+                "submission_calendar_json": cal_json_str,
+            }
+        }
+    return results_map
+
+async def fetch_contest_data_batched(
+    usernames: List[str],
+    client: Any,
+    retries: int = 3,
+    backoff_base: float = 1.5,
+) -> Dict[str, Dict[str, Any]]:
+    if not usernames:
+        return {}
+        
+    CONTEST_RANKING_FIELDS = '''
+        attendedContestsCount rating globalRanking totalParticipants topPercentage
+    '''
+    CONTEST_HISTORY_FIELDS = '''
+        attended trendDirection problemsSolved totalProblems finishTimeInSeconds rating ranking
+        contest { title startTime }
+    '''
+    
+    query_body = "query {\n"
+    for i, user in enumerate(usernames):
+        query_body += f'  u{i}_ranking: userContestRanking(username: "{user}") {{ {CONTEST_RANKING_FIELDS} }}\n'
+        query_body += f'  u{i}_history: userContestRankingHistory(username: "{user}") {{ {CONTEST_HISTORY_FIELDS} }}\n'
+    query_body += "}"
+    
+    result = await _gql_post(
+        client, query_body, {},
+        "userContestRankingInfoBatched", f"Batch[{len(usernames)}]", retries, backoff_base
+    )
+    
+    if result["status"] != "ok":
+        return {u: {"status": result["status"], "detail": result.get("detail"), "data": None} for u in usernames}
+        
+    data = result["data"]
+    results_map = {}
+    
+    for i, req_user in enumerate(usernames):
+        ranking_info = data.get(f"u{i}_ranking") or {}
+        history_raw  = data.get(f"u{i}_history") or []
+        
+        if data.get(f"u{i}_ranking") is None and data.get(f"u{i}_history") is None:
+             results_map[req_user] = {"status": "not_found", "data": None}
+             continue
+             
+        history = []
+        most_recent_name = None
+        most_recent_type = None
+
+        for item in reversed(history_raw):
+            if not isinstance(item, dict):
+                continue
+            c_info   = item.get("contest") or {}
+            c_title  = c_info.get("title") or ""
+            c_start  = c_info.get("startTime")
+            attended = bool(item.get("attended", False))
+
+            c_type = (
+                "weekly"   if c_title.startswith("Weekly Contest") else
+                "biweekly" if c_title.startswith("Biweekly Contest") else "other"
+            )
+
+            entry = {
+                "contest_name":        c_title,
+                "contest_type":        c_type,
+                "contest_start_time":  datetime.datetime.utcfromtimestamp(c_start) if c_start else None,
+                "attended":            attended,
+                "problems_solved":     item.get("problemsSolved", 0),
+                "total_problems":      item.get("totalProblems", 4),
+                "finish_time_seconds": item.get("finishTimeInSeconds"),
+                "contest_rank":        item.get("ranking") if attended else None,
+                "rating_after":        item.get("rating"),
+            }
+            history.append(entry)
+
+            if most_recent_name is None and attended:
+                most_recent_name = c_title
+                most_recent_type = c_type
+
+        c_rating = ranking_info.get("rating")
+        results_map[req_user] = {
+            "status": "ok",
+            "data": {
+                "contest_rating":           round(float(c_rating), 1) if c_rating else None,
+                "contest_global_ranking":   ranking_info.get("globalRanking"),
+                "attended_count":           ranking_info.get("attendedContestsCount"),
+                "top_percentage":           ranking_info.get("topPercentage"),
+                "most_recent_contest_name": most_recent_name,
+                "most_recent_contest_type": most_recent_type,
+                "history":                  history,
+            }
+        }
+        
+    return results_map
+
