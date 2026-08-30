@@ -311,11 +311,13 @@ async def get_students(
                 query = query.filter(LeetCodeProfileStats.sync_status.in_(["success", "OK", "verified"]))
 
             if search:
-                s = f"%{search.strip()}%"
+                s_exact = search.strip()
+                s_prefix = f"{s_exact}%"
+                s_any = f"%{s_exact}%"
                 query = query.filter(
-                    (Student.name.ilike(s)) |
-                    (Student.reg_no.ilike(s)) |
-                    (Student.username.ilike(s))
+                    (Student.reg_no.ilike(s_prefix)) |
+                    (Student.name.ilike(s_any)) |
+                    (Student.username.ilike(s_any))
                 )
 
             # Server-side sorting
@@ -334,7 +336,8 @@ async def get_students(
 
             total_count = None
             if paginated:
-                total_count = query.count()
+                # Use with_entities to strip out heavy joinedloads and do a fast lightweight count
+                total_count = query.with_entities(func.count(Student.id)).scalar()
 
             # Pagination if page and limit provided
             if isinstance(page, int) and isinstance(limit, int) and page >= 1 and limit >= 1:

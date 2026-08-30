@@ -163,6 +163,14 @@ def validate_excel_import(db: Session, file_bytes: bytes) -> Dict[str, Any]:
 def commit_excel_import(db: Session, valid_rows: List[dict]) -> Tuple[int, List[int]]:
     count = 0
     student_ids = []
+    
+    # Bulk fetch existing students
+    reg_nos = [row.get("reg_no") for row in valid_rows if row.get("reg_no") and row.get("name")]
+    existing_students = db.query(Student).filter(Student.reg_no.in_(reg_nos)).all()
+    existing_map = {s.reg_no: s for s in existing_students}
+    
+    new_students = []
+    
     for row in valid_rows:
         reg_no = row.get("reg_no")
         name = row.get("name")
@@ -176,9 +184,9 @@ def commit_excel_import(db: Session, valid_rows: List[dict]) -> Tuple[int, List[
         if not reg_no or not name:
             continue
 
-        student = db.query(Student).filter(Student.reg_no == reg_no).first()
+        student = existing_map.get(reg_no)
         if not student:
-            student = Student(
+            new_student = Student(
                 reg_no=reg_no,
                 name=name,
                 department_id=dept_id,
@@ -189,14 +197,8 @@ def commit_excel_import(db: Session, valid_rows: List[dict]) -> Tuple[int, List[
                 username=username,
                 is_active=True
             )
-            db.add(student)
-            db.commit()
-            db.refresh(student)
-
-            stats = LeetCodeProfileStats(student_id=student.id, status="NOT STARTED")
-            db.add(stats)
+            new_students.append(new_student)
             count += 1
-            student_ids.append(student.id)
         else:
             student.name = name
             if dept_id: student.department_id = dept_id
@@ -208,6 +210,17 @@ def commit_excel_import(db: Session, valid_rows: List[dict]) -> Tuple[int, List[
             student.is_active = True
             count += 1
             student_ids.append(student.id)
+            
+    if new_students:
+        db.add_all(new_students)
+        db.flush()
+        
+        new_stats = []
+        for s in new_students:
+            new_stats.append(LeetCodeProfileStats(student_id=s.id, status="NOT STARTED"))
+            student_ids.append(s.id)
+        db.add_all(new_stats)
+        
     db.commit()
     return count, student_ids
 
