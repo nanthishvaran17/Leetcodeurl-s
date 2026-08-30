@@ -757,10 +757,11 @@ def get_session_matrix(
         )
         metrics = canonical_data["metrics"]
         
-        # Get SQL paginated rows
+        # Get SQL paginated rows — current_user is forwarded to enforce RBAC scope
         paginated_data = get_paginated_matrix_rows(
             session_id=session_id, db=db, page=page, limit=limit,
-            dept=dept, year=year, attendance=attendance, search=search, sort_by=sort_by
+            dept=dept, year=year, attendance=attendance, search=search, sort_by=sort_by,
+            current_user=current_user
         )
         
         return {
@@ -1032,19 +1033,35 @@ def get_contest_leaderboard(
     dept: Optional[str] = Query(None),
     year: Optional[str] = Query(None),
     limit: int = Query(25, ge=1, le=100),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Weekly Contest Leaderboard", required_roles=["admin", "super admin", "faculty", "staff", "hod"]))
 ):
     """
     Multi-tier leaderboard for the Live Command Center.
     Tier: overall (top N students) | dept (by department) | year (by academic year).
     Returns ranked entries with rank delta and solve breakdown.
+    Strictly scoped to the authenticated user's authorized student set.
     """
-    results = db.query(WeeklyPublicResult).filter(
+    from backend.services.authorization_service import get_authorized_student_ids
+
+    # Resolve the authorized student scope for this user
+    authorized_ids = get_authorized_student_ids(db, current_user)
+
+    results_query = db.query(WeeklyPublicResult).filter(
         WeeklyPublicResult.session_id == session_id,
         WeeklyPublicResult.participation_status.in_([
             "PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL", "VIRTUAL_ATTENDED"
         ])
-    ).order_by(
+    )
+
+    # Apply scope: None = admin (global), list = restricted set
+    if authorized_ids is not None:
+        if not authorized_ids:
+            # Staff with zero assignments — return empty leaderboard (fail-closed)
+            return {"tier": (tier or "overall").lower(), "entries": [], "total": 0}
+        results_query = results_query.filter(WeeklyPublicResult.student_id.in_(authorized_ids))
+
+    results = results_query.order_by(
         WeeklyPublicResult.total_contest_solved.desc(),
         WeeklyPublicResult.contest_score.desc(),
         WeeklyPublicResult.contest_rank.asc()
@@ -1108,6 +1125,7 @@ def get_contest_leaderboard(
     return {"tier": tier_lower, "entries": [], "total": 0}
 
 
+
 # ─────────────────────────────────────────────────────────────────────────────
 # LIVE COMMAND CENTER: DEPARTMENT ANALYTICS
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1115,27 +1133,38 @@ def get_contest_leaderboard(
 @router.get("/sessions/{session_id}/dept-analytics")
 def get_contest_dept_analytics(
     session_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Per-department analytics for the Live Contest Command Center.
     Returns participation stats, solve distribution, and top performer per department.
     Data is pulled live from WeeklyPublicResult for the given session.
+    Scoped to the authenticated user's authorized student set.
     """
+    from backend.services.authorization_service import get_authorized_student_ids
     session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    all_results = db.query(WeeklyPublicResult).filter(
+    # Resolve authorized scope
+    authorized_ids = get_authorized_student_ids(db, current_user)
+
+    results_query = db.query(WeeklyPublicResult).filter(
         WeeklyPublicResult.session_id == session_id
-    ).all()
+    )
+    if authorized_ids is not None:
+        if not authorized_ids:
+            return {"sessionId": session_id, "departments": [], "totalDepts": 0}
+        results_query = results_query.filter(WeeklyPublicResult.student_id.in_(authorized_ids))
+
+    all_results = results_query.all()
 
     from collections import defaultdict
     dept_map: Dict[str, list] = defaultdict(list)
     for r in all_results:
         dept_map[r.dept or "Unknown"].append(r)
 
-    total_students_in_session = session.total_students or len(all_results)
     analytics = []
     for dept_code, rows in sorted(dept_map.items()):
         total = len(rows)
@@ -1198,21 +1227,47 @@ def get_contest_dept_analytics(
 @router.get("/sessions/{session_id}/question-analytics")
 def get_contest_question_analytics(
     session_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user_optional)
 ):
     """
     Per-question analytics for the Live Contest Command Center.
     Returns solve counts, solve rate, first solver, fastest solver, and distribution.
+    Scoped to the authenticated user's authorized student set.
+    totalStudents denominator uses the authorized scope, not the global college count.
     """
+    from backend.services.authorization_service import get_authorized_student_ids
     session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    total_students = session.total_students or 302
+    # Resolve authorized scope
+    authorized_ids = get_authorized_student_ids(db, current_user)
 
-    all_results = db.query(WeeklyPublicResult).filter(
+    results_query = db.query(WeeklyPublicResult).filter(
         WeeklyPublicResult.session_id == session_id
-    ).all()
+    )
+    if authorized_ids is not None:
+        if not authorized_ids:
+            return {
+                "sessionId": session_id,
+                "totalAttended": 0,
+                "totalStudents": 0,
+                "questions": [],
+                "easiest": None,
+                "hardest": None,
+            }
+        results_query = results_query.filter(WeeklyPublicResult.student_id.in_(authorized_ids))
+
+    all_results = results_query.all()
+
+    # Use authorized scope count as the denominator — not the global college count
+    # For admin (authorized_ids is None): use session.total_students (institutional stat)
+    # For staff/HOD (authorized_ids is a list): use len(authorized_ids) (their cohort size)
+    if authorized_ids is not None:
+        total_students = len(authorized_ids)
+    else:
+        total_students = session.total_students or len(all_results) or 1
 
     attended = [r for r in all_results if r.participation_status in (
         "PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL", "VIRTUAL_ATTENDED"
@@ -1255,7 +1310,7 @@ def get_contest_question_analytics(
             "totalSolved": total_solved,
             "solvePercent": solve_pct,
             "notSolvedByAttended": len(non_solvers_attended),
-            "notAttempted": total_students - total_attended,
+            "notAttempted": max(0, total_students - total_attended),
             "firstSolver": first_solver,
             "deptDistribution": dept_dist,
             "yearDistribution": year_dist,

@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, case, and_, or_, desc, asc, nullslast
 from typing import Optional, Dict, Any, List
 
-from backend.models import Student, WeeklyPublicResult, WeeklyVirtualResult, Department
+from backend.models import Student, WeeklyPublicResult, WeeklyVirtualResult, Department, User
 from backend.services.canonical_contest_engine import normalize_participation_status
 
 def get_paginated_matrix_rows(
@@ -14,7 +14,8 @@ def get_paginated_matrix_rows(
     year: Optional[str] = None,
     attendance: Optional[str] = None,
     search: Optional[str] = None,
-    sort_by: Optional[str] = None
+    sort_by: Optional[str] = None,
+    current_user: Optional[User] = None
 ) -> Dict[str, Any]:
     
     query = db.query(Student, WeeklyPublicResult, WeeklyVirtualResult).outerjoin(
@@ -28,6 +29,17 @@ def get_paginated_matrix_rows(
     ).filter(
         (Student.is_active == True) | (Student.is_active.is_(None))
     )
+
+    # ── AUTHORITATIVE RBAC SCOPE GATE ────────────────────────────────────────
+    # Must be applied BEFORE total_count and all other filters.
+    # Admin/Principal → unmodified (global scope)
+    # HOD → department scope
+    # Staff/Faculty → assigned students only (fail-closed: 0 if no assignments)
+    # This reuses the centralized authorization_service — no duplicate logic.
+    if current_user is not None:
+        from backend.services.authorization_service import apply_role_based_student_filter
+        query = apply_role_based_student_filter(query, current_user, db)
+    # ─────────────────────────────────────────────────────────────────────────
 
     # 1. Complex CASE for department
     dept_expr = case(
