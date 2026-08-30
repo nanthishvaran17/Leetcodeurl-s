@@ -11,7 +11,7 @@ def generate_professional_template(title: str, content: str, action_button: Opti
     Generates a standardized professional HTML email wrapper with institutional branding.
     Optimized for Gmail, Outlook, Desktop, Mobile, and Tablet.
     """
-    logo_url = "https://raw.githubusercontent.com/nanthishvaran17/Leetcodeurl-s/main/frontend/public/nec_25_logo.png"
+    logo_url = "https://raw.githubusercontent.com/nanthishvaran17/Leetcodeurl-s/main/frontend/public/nandha_emblem.png"
 
     button_html = ""
     if action_button:
@@ -67,7 +67,7 @@ def generate_professional_template(title: str, content: str, action_button: Opti
             border-bottom: 4px solid #3b82f6;
         }}
         .header-logo {{
-            width: 80px;
+            width: 100px;
             height: auto;
             margin-bottom: 15px;
             display: inline-block;
@@ -164,7 +164,7 @@ def generate_professional_template(title: str, content: str, action_button: Opti
                 <table role="presentation" class="container" align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
                     <tr>
                         <td class="header">
-                            <img src="{logo_url}" alt="Nandha Engineering College Logo" class="header-logo" width="80" />
+                            <img src="{logo_url}" alt="NEC 25 Years of Excellence" class="header-logo" width="100" />
                             <h1>{settings.COLLEGE_NAME}</h1>
                             <div class="sub-header">LeetCode Tracker System</div>
                         </td>
