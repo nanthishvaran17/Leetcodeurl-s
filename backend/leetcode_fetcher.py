@@ -3,7 +3,7 @@ import time
 import datetime
 import asyncio
 import httpx
-from typing import Dict, Any, Tuple, Optional
+from typing import Dict, Any, Tuple, Optional, List
 from backend.config import settings
 from backend.logger import logger
 
