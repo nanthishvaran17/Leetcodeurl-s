@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Globe, Trophy, Shield, Users, TrendingUp, Search, 
-  Star, Award, Zap, ChevronRight, BarChart3, Filter,
+  Star, Award, Zap, ChevronLeft, ChevronRight, BarChart3, Filter,
   GraduationCap, ExternalLink
 } from 'lucide-react';
 import api from '../services/api';
+import { useQuery, keepPreviousData, useQueryClient } from '@tanstack/react-query';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { getCachedStudents, saveCachedStudents } from '../data/canonicalRoster';
 
@@ -13,63 +14,53 @@ interface PublicLeaderboardPageProps {
 }
 
 export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ onSelectStudent }) => {
-  const [students, setStudents] = useState<StudentData[]>(() => getCachedStudents());
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(50);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterYear, setFilterYear] = useState('ALL');
   const [filterDept, setFilterDept] = useState('ALL');
   const [sortBy, setSortBy] = useState<'rank' | 'easy' | 'medium' | 'hard'>('rank');
 
-  useEffect(() => {
-    fetchPublicData();
-  }, []);
-
-  const fetchPublicData = async () => {
-    try {
-      const res = await api.get('/public/leaderboard?limit=3000&sort_by=solved_desc');
-      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-        setStudents(res.data);
-        saveCachedStudents(res.data);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  const fetchLeaderboard = async (p: number) => {
+    const params = new URLSearchParams({
+      limit: limit.toString(),
+      page: p.toString(),
+      paginated: 'true',
+      sort_by: sortBy === 'rank' ? 'solved_desc' : `${sortBy}_desc`,
+    });
+    if (searchQuery.trim()) params.append('search', searchQuery.trim());
+    if (filterYear !== 'ALL') params.append('year_level', filterYear);
+    if (filterDept !== 'ALL') params.append('dept_id', filterDept);
+    const res = await api.get(`/public/leaderboard?${params.toString()}`);
+    return res.data;
   };
 
+  const { data, isLoading: loading, isError } = useQuery({
+    queryKey: ['leaderboard', page, limit, searchQuery, filterYear, filterDept, sortBy],
+    queryFn: () => fetchLeaderboard(page),
+    placeholderData: keepPreviousData,
+  });
+
+  useEffect(() => {
+    if (data && data.total_pages && page < data.total_pages) {
+      queryClient.prefetchQuery({
+        queryKey: ['leaderboard', page + 1, limit, searchQuery, filterYear, filterDept, sortBy],
+        queryFn: () => fetchLeaderboard(page + 1),
+      });
+    }
+  }, [data, page, limit, searchQuery, filterYear, filterDept, sortBy, queryClient]);
+
+  const students = data?.items || [];
+  const total = data?.total || 0;
+  const totalPages = data?.total_pages || 1;
   // Overall top 3 rankers sorted by total solved for podium display
   const top3 = [...students]
     .sort((a, b) => (b.stats?.total_solved || 0) - (a.stats?.total_solved || 0))
     .slice(0, 3);
 
   // Derived filtered list
-  const filtered = students
-    .filter(s => {
-      if (filterYear !== 'ALL' && (s.year_level || '').toUpperCase() !== filterYear.toUpperCase()) return false;
-      if (filterDept !== 'ALL') {
-        const dStr = (s.department?.code || s.department?.name || (typeof s.department === 'string' ? s.department : '')).toUpperCase();
-        if (!dStr.includes(filterDept.toUpperCase())) return false;
-      }
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        return (
-          (s.name || '').toLowerCase().includes(q) ||
-          (s.username || '').toLowerCase().includes(q) ||
-          (s.reg_no || '').toLowerCase().includes(q)
-        );
-      }
-      return true;
-    })
-    .sort((a, b) => {
-      if (sortBy === 'easy') return (b.stats?.easy_solved || 0) - (a.stats?.easy_solved || 0);
-      if (sortBy === 'medium') return (b.stats?.medium_solved || 0) - (a.stats?.medium_solved || 0);
-      if (sortBy === 'hard') return (b.stats?.hard_solved || 0) - (a.stats?.hard_solved || 0);
-      const rA = a.college_rank || 999;
-      const rB = b.college_rank || 999;
-      if (rA !== rB) return rA - rB;
-      return (b.stats?.total_solved || 0) - (a.stats?.total_solved || 0);
-    });
+  const filtered = students;
 
   const totalSolved = students.reduce((acc, s) => acc + (s.stats?.total_solved || 0), 0);
   const avgSolved = students.length ? Math.round(totalSolved / students.length) : 0;
@@ -213,7 +204,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
             className="px-4 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-900 text-gray-900 dark:text-white border-gray-200 dark:border-navy-700 focus:ring-2 focus:ring-brand-500 outline-none"
           >
             <option value="ALL">All Years</option>
-            {uniqueYears.map(y => (
+            {uniqueYears.map((y: any) => (
               <option key={y} value={y}>{y} Year</option>
             ))}
           </select>
@@ -262,6 +253,50 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
         </div>
       ) : (
         <LeaderboardTable students={filtered} onSelectStudent={onSelectStudent} />
+      )}
+
+      {/* ─── SERVER PAGINATION ─── */}
+      {total > 0 && !loading && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-3xl glass-card border border-gray-200 dark:border-navy-700 shadow-xl">
+          <div className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+            Showing <span className="text-gray-900 dark:text-white font-black">{Math.min((page - 1) * limit + 1, total)}</span> to <span className="text-gray-900 dark:text-white font-black">{Math.min(page * limit, total)}</span> of <span className="text-gray-900 dark:text-white font-black">{total}</span> students
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <select
+              value={limit}
+              onChange={(e) => {
+                setLimit(Number(e.target.value));
+                setPage(1);
+              }}
+              className="px-3 py-2 rounded-xl text-xs font-bold bg-white dark:bg-navy-900 text-gray-900 dark:text-white border border-gray-200 dark:border-navy-700 outline-none focus:ring-2 focus:ring-brand-500"
+            >
+              <option value={50}>50 per page</option>
+              <option value={100}>100 per page</option>
+              <option value={200}>200 per page</option>
+            </select>
+
+            <div className="flex items-center gap-1 bg-gray-100 dark:bg-navy-900 p-1.5 rounded-xl border border-gray-200 dark:border-navy-700">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="p-2 rounded-lg hover:bg-white dark:hover:bg-navy-800 text-gray-600 dark:text-gray-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <div className="px-3 text-sm font-black text-gray-700 dark:text-gray-200 min-w-[3rem] text-center">
+                {page} / {totalPages}
+              </div>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+                className="p-2 rounded-lg hover:bg-white dark:hover:bg-navy-800 text-gray-600 dark:text-gray-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

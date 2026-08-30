@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
- Users, UserPlus, RefreshCw, CheckCircle2, AlertTriangle,
+ Users, UserPlus, RefreshCw, CheckCircle2, AlertTriangle, User,
  Search, Sliders, ArrowRight, Power, Filter, X, Building2,
  Trash2, UserCheck, ShieldAlert, Sparkles, Check, AlertOctagon,
  Eye, BookOpen, Trophy, Award, UserMinus
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNotification } from '../context/NotificationContext';
 import { AllocationConfirmationModal } from './admin/AllocationConfirmationModal';
 import { CustomDropdown, DropdownOption } from './CustomDropdown';
@@ -15,8 +16,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  const { user } = useAuth();
  const { notify } = useNotification();
 
- const [staffList, setStaffList] = useState<any[]>([]);
- const [unassigned, setUnassigned] = useState<any[]>([]);
+ const queryClient = useQueryClient();
  const [departments, setDepartments] = useState<any[]>([]);
  const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
  const [targetStaffId, setTargetStaffId] = useState<number | ''>('');
@@ -79,58 +79,49 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  data: null
  });
 
- useEffect(() => {
- fetchInitialData();
- }, []);
 
- const fetchInitialData = async () => {
- setLoading(true);
- try {
- const [staffRes, unassignedRes, deptRes] = await Promise.all([
- api.get('/admin/staff-list'),
- api.get('/admin/unassigned-students'),
- api.get('/departments')
- ]);
- setStaffList(staffRes.data || []);
- setUnassigned(unassignedRes.data?.students || []);
- const depts = deptRes.data || [];
- setDepartments(depts);
+ const { data: staffList = [], isLoading: isLoadingStaff } = useQuery({
+   queryKey: ['staffList'],
+   queryFn: async () => {
+     const res = await api.get('/admin/staff-list');
+     return res.data || [];
+   }
+ });
 
- if (user?.department_id) {
- setNewDeptId(user.department_id);
- } else if (depts.length > 0) {
- setNewDeptId(depts[0].id);
- }
- } catch (err) {
- console.error('Error loading allocation data:', err);
- } finally {
- setLoading(false);
- }
- };
+ const { data: unassigned = [], isLoading: isLoadingUnassigned } = useQuery({
+   queryKey: ['unassignedStudents', selectedDept, selectedYear],
+   queryFn: async () => {
+     const params: any = {};
+     if (selectedDept !== 'ALL') params.dept_id = Number(selectedDept);
+     if (selectedYear !== 'ALL') params.year_level = selectedYear;
+     const res = await api.get('/admin/unassigned-students', { params });
+     return res.data?.students || [];
+   }
+ });
 
- const fetchAllocationData = async () => {
- setLoading(true);
- try {
- const params: any = {};
- if (selectedDept !== 'ALL') params.dept_id = Number(selectedDept);
- if (selectedYear !== 'ALL') params.year_level = selectedYear;
-
- const [staffRes, unassignedRes] = await Promise.all([
- api.get('/admin/staff-list'),
- api.get('/admin/unassigned-students', { params })
- ]);
- setStaffList(staffRes.data || []);
- setUnassigned(unassignedRes.data?.students || []);
- } catch (err) {
- console.error('Error loading filtered allocation data:', err);
- } finally {
- setLoading(false);
- }
- };
+ const { data: deptsData = [] } = useQuery({
+   queryKey: ['departments'],
+   queryFn: async () => {
+     const res = await api.get('/departments');
+     return res.data || [];
+   },
+   staleTime: 30 * 60 * 1000
+ });
 
  useEffect(() => {
- fetchAllocationData();
- }, [selectedDept, selectedYear]);
+   if (deptsData.length > 0) {
+     setDepartments(deptsData);
+     if (!newDeptId) {
+       if (user?.department_id) setNewDeptId(user.department_id);
+       else setNewDeptId(deptsData[0].id);
+     }
+   }
+ }, [deptsData, user]);
+
+ useEffect(() => {
+   setLoading(isLoadingStaff || isLoadingUnassigned);
+ }, [isLoadingStaff, isLoadingUnassigned]);
+
 
  // Client-side filtering for Unassigned Queue
  const filteredUnassigned = useMemo(() => {
@@ -209,7 +200,8 @@ export const AdminStaffAllocationPanel: React.FC = () => {
   }
   
   setStudentToUnassign(null);
-  fetchAllocationData();
+  queryClient.invalidateQueries({ queryKey: ['staffList'] });
+    queryClient.invalidateQueries({ queryKey: ['unassignedStudents'] });
  } catch (err: any) {
   console.error("Unassign error details:", err.response);
   const errMsg = err.response?.data?.detail 
@@ -248,7 +240,8 @@ export const AdminStaffAllocationPanel: React.FC = () => {
   notify.success('Students Unassigned', `${selectedAssignedStudents.length} students moved back to unassigned queue.`);
   setSelectedAssignedStudents([]);
   handleLoadUnassignRoster(Number(unassignStaffId));
-  fetchAllocationData();
+  queryClient.invalidateQueries({ queryKey: ['staffList'] });
+    queryClient.invalidateQueries({ queryKey: ['unassignedStudents'] });
  } catch (err: any) {
   console.error("Bulk Unassign error details:", err.response);
   const errMsg = err.response?.data?.detail 
@@ -291,7 +284,8 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  setNewUsername('');
  setNewEmail('');
  setShowCreateModal(false);
- fetchAllocationData();
+ queryClient.invalidateQueries({ queryKey: ['staffList'] });
+    queryClient.invalidateQueries({ queryKey: ['unassignedStudents'] });
  } catch (err: any) {
  notify.error('Creation Failed', err.response?.data?.detail || 'Failed to create staff account.');
  } finally {
@@ -317,7 +311,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
     setConfirmModal(prev => ({ ...prev, processing: true }));
     try {
       const res = await api.delete(`/faculty-assignments/staff/${st.id}`);
-      setStaffList(prev => prev.filter(staff => staff.id !== st.id));
+      // setStaffList(prev => prev.filter(staff => staff.id !== st.id));
       notify.success('Staff Deleted', res.data?.message || `Staff '${st.username}' deleted.`);
       setConfirmModal({ isOpen: false, type: null, title: '', description: '' });
     } catch (err: any) {
@@ -347,7 +341,8 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  const res = await api.post(`/admin/staff/${st.id}/toggle-status`);
  notify.success('Status Updated', res.data?.message || `Status updated for '${st.username}'.`);
  setConfirmModal({ isOpen: false, type: null, title: '', description: '' });
- fetchAllocationData();
+ queryClient.invalidateQueries({ queryKey: ['staffList'] });
+    queryClient.invalidateQueries({ queryKey: ['unassignedStudents'] });
  } catch (err: any) {
  notify.error('Update Failed', err.response?.data?.detail || 'Failed to toggle status.');
  setConfirmModal(prev => ({ ...prev, processing: false }));
@@ -387,7 +382,8 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  }
  }));
  notify.success('Auto-Assignment Completed', `Allocated ${allocatedCount} students across active staff.`);
- fetchAllocationData();
+ queryClient.invalidateQueries({ queryKey: ['staffList'] });
+    queryClient.invalidateQueries({ queryKey: ['unassignedStudents'] });
  } catch (err: any) {
  notify.error('Auto-Assign Failed', err.response?.data?.detail || 'Failed auto assignment.');
  setConfirmModal(prev => ({ ...prev, processing: false }));
@@ -410,7 +406,8 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  const res = await api.post('/admin/auto-rebalance');
  notify.success('Rebalance Complete', res.data?.message || 'Workload rebalancing complete.');
  setConfirmModal({ isOpen: false, type: null, title: '', description: '' });
- fetchAllocationData();
+ queryClient.invalidateQueries({ queryKey: ['staffList'] });
+    queryClient.invalidateQueries({ queryKey: ['unassignedStudents'] });
  } catch (err: any) {
  notify.error('Rebalance Failed', err.response?.data?.detail || 'Failed auto rebalancing.');
  setConfirmModal(prev => ({ ...prev, processing: false }));
@@ -444,7 +441,8 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  notify.success('Students Assigned', `Successfully assigned ${selectedStudents.length} students.`);
  setSelectedStudents([]);
  setTargetStaffId('');
- fetchAllocationData();
+ queryClient.invalidateQueries({ queryKey: ['staffList'] });
+    queryClient.invalidateQueries({ queryKey: ['unassignedStudents'] });
  };
 
  const toggleSelectStudent = (id: number) => {
@@ -831,23 +829,23 @@ export const AdminStaffAllocationPanel: React.FC = () => {
     {/* Staff picker */}
     <div className="flex items-center gap-4 flex-wrap">
      <div className="flex-1 min-w-[260px]">
-      <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Select Staff Member to Manage</label>
-      <select
-       value={unassignStaffId}
-       onChange={(e) => {
-        const id = Number(e.target.value);
+      <CustomDropdown
+       label="Select Staff Member to Manage"
+       options={[
+        { value: '', label: '— Pick a Staff Member —' },
+        ...staffList.filter(s => s.is_active).map((st: any) => ({
+         value: String(st.id),
+         label: `${st.username} (${st.assigned_count || 0}/30 students) — ${st.department}`
+        }))
+       ]}
+       value={String(unassignStaffId || '')}
+       onChange={(val) => {
+        const id = Number(val);
         if (id) handleLoadUnassignRoster(id);
         else { setUnassignStaffId(''); setAssignedRoster([]); }
        }}
-       className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-navy-600 bg-white dark:bg-navy-900 text-sm font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-rose-500 cursor-pointer transition-all"
-      >
-       <option value="">— Pick a Staff Member —</option>
-       {staffList.filter(s => s.is_active).map((st: any) => (
-        <option key={st.id} value={st.id}>
-         {st.username} ({st.assigned_count || 0}/30 students) — {st.department}
-        </option>
-       ))}
-      </select>
+       icon={User}
+      />
      </div>
 
      {unassignStaffId && (

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Plus, UploadCloud, RefreshCw, UserPlus, List, LayoutGrid, CheckCircle, XCircle, Loader2, AlertTriangle, WifiOff, ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '../services/api';
+import { useQuery, keepPreviousData, useQueryClient } from '@tanstack/react-query';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { StudentFlipCard } from '../components/StudentFlipCard';
 import { collection, getDocs } from 'firebase/firestore';
@@ -146,7 +147,8 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   onOpenImport
 }) => {
   const { notify, confirmAction } = useNotification();
-  const [students, setStudents] = useState<StudentData[]>(CANONICAL_ROSTER);
+  const queryClient = useQueryClient();
+  const [studentsFallback, setStudentsFallback] = useState<StudentData[]>(() => CANONICAL_ROSTER);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
@@ -178,34 +180,48 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   const [serverPageSize, setServerPageSize] = useState(50);
   const [serverTotalCount, setServerTotalCount] = useState(0);
 
+  const fetchStudentsQuery = async (query = '', page = 1, limit = 50) => {
+    const res = await api.get(`/students?search=${encodeURIComponent(query)}&paginated=true&page=${page}&limit=${limit}`);
+    return res.data;
+  };
+
+  const { data: studentsData } = useQuery({
+    queryKey: ['students', serverPage, serverPageSize, debouncedSearch],
+    queryFn: () => fetchStudentsQuery(debouncedSearch, serverPage, serverPageSize),
+    placeholderData: keepPreviousData,
+  });
+
   useEffect(() => {
-    fetchStudents(debouncedSearch, serverPage, serverPageSize);
-    fetchDepartments();
-  }, [debouncedSearch, serverPage, serverPageSize]);
-
-  const fetchStudents = async (query = '', page = 1, limit = 50) => {
-    try {
-      const res = await api.get(`/students?search=${encodeURIComponent(query)}&paginated=true&page=${page}&limit=${limit}`);
-      if (res.data && res.data.items) {
-        setStudents(res.data.items);
-        setServerTotalCount(res.data.total);
-      } else if (res.data && Array.isArray(res.data)) {
-        setStudents(res.data);
-      }
-    } catch (err) {
-      console.warn("REST API request delayed or offline", err);
+    if (studentsData && studentsData.total && serverPage * serverPageSize < studentsData.total) {
+      queryClient.prefetchQuery({
+        queryKey: ['students', serverPage + 1, serverPageSize, debouncedSearch],
+        queryFn: () => fetchStudentsQuery(debouncedSearch, serverPage + 1, serverPageSize),
+      });
     }
-  };
+  }, [studentsData, serverPage, serverPageSize, debouncedSearch, queryClient]);
 
-  const fetchDepartments = async () => {
-    try {
+  const students = studentsData?.items || (Array.isArray(studentsData) ? studentsData : studentsFallback);
+  useEffect(() => {
+    if (studentsData?.total !== undefined) {
+      setServerTotalCount(studentsData.total);
+    }
+  }, [studentsData?.total]);
+
+  const { data: deptsData } = useQuery({
+    queryKey: ['departments'],
+    queryFn: async () => {
       const res = await api.get('/departments');
-      setDepartments(res.data);
-      if (res.data.length > 0) setDeptId(res.data[0].id);
-    } catch (err) {
-      console.error(err);
+      return res.data;
+    },
+    staleTime: 30 * 60 * 1000,
+  });
+
+  useEffect(() => {
+    if (deptsData && deptsData.length > 0) {
+      setDepartments(deptsData);
+      if (!deptId) setDeptId(deptsData[0].id);
     }
-  };
+  }, [deptsData]);
 
   // ── LeetCode URL validation (debounced, 900ms) ─────────────────────────────
   const validateLcUrl = useCallback(async (url: string) => {
@@ -311,7 +327,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       setShowAddModal(false);
       setRegNo(''); setName(''); setLeetcodeUrl('');
       setLcValidation({ status: 'idle' });
-      fetchStudents(debouncedSearch, serverPage, serverPageSize);
+      queryClient.invalidateQueries({ queryKey: ['students'] });
     } catch (err: any) {
       notify.error('Failed to Add Student', err.response?.data?.detail || "Failed to add student.", { category: 'STUDENT REPOSITORY' });
     } finally {
@@ -332,7 +348,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     try {
       await api.delete(`/students/${student.id}`);
       notify.success('Student Record Deleted', `Student "${student.name}" deleted successfully.`, { category: 'STUDENT REPOSITORY' });
-      fetchStudents(debouncedSearch, serverPage, serverPageSize);
+      queryClient.invalidateQueries({ queryKey: ['students'] });
     } catch (err: any) {
       notify.error('Delete Failed', err.response?.data?.detail || "Failed to delete student record.", { category: 'STUDENT REPOSITORY' });
     }
@@ -351,7 +367,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     try {
       const res = await api.post('/students/bulk-delete', { student_ids: studentIds });
       notify.success('Bulk Delete Successful', `Successfully deleted ${res.data.count || studentIds.length} student records.`, { category: 'STUDENT REPOSITORY' });
-      fetchStudents(debouncedSearch, serverPage, serverPageSize);
+      queryClient.invalidateQueries({ queryKey: ['students'] });
     } catch (err: any) {
       notify.error('Bulk Delete Failed', err.response?.data?.detail || "Failed to bulk delete student records.", { category: 'STUDENT REPOSITORY' });
     }
@@ -361,7 +377,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     try {
       const res = await api.post(`/students/${studentId}/refresh`);
       notify.success('Profile Synced', res.data?.message || 'Student profile synced successfully!', { category: 'SYNC ENGINE' });
-      fetchStudents(debouncedSearch, serverPage, serverPageSize);
+      queryClient.invalidateQueries({ queryKey: ['students'] });
     } catch (err: any) {
       notify.error('Sync Failed', err.response?.data?.detail || err.message || 'Unable to fetch LeetCode profile statistics.', { category: 'SYNC ENGINE' });
     }
