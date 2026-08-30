@@ -218,12 +218,17 @@ def unassign_students(
     current_user: User = Depends(require_role("Admin", "Super Admin", "super admin", "HOD", "hod", dept_scoped=True))
 ):
     """Removes student assignments from a faculty member."""
-    return faculty_assignment_service.unassign_students(
-        db=db,
-        faculty_id=payload.faculty_id,
-        student_ids=payload.student_ids,
-        background_tasks=background_tasks
-    )
+    try:
+        return faculty_assignment_service.unassign_students(
+            db=db,
+            faculty_id=payload.faculty_id,
+            student_ids=payload.student_ids,
+            background_tasks=background_tasks
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Unassign Error: {str(e)}")
 
 
 @router.delete("/staff/{faculty_id}")
