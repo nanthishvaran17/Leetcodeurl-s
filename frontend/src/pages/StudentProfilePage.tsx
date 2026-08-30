@@ -434,7 +434,6 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         onClose={() => setShowEditOverlay(false)}
         onSaveSuccess={(updated) => {
           setDetail(updated);
-          fetchStudentDetail();
         }}
       />
     </div>

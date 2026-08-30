@@ -102,7 +102,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const [selectedYearFilter, setSelectedYearFilter] = useState<string>('ALL');
   const [selectedAttendanceFilter, setSelectedAttendanceFilter] = useState<string>('ALL');
   const [matrixRows, setMatrixRows] = useState<any[]>([]);
+  const [totalRows, setTotalRows] = useState<number>(0);
   const [sessionMetrics, setSessionMetrics] = useState<any>(null);
+  const [departmentStats, setDepartmentStats] = useState<any>(null);
   const [errorLogs, setErrorLogs] = useState<any[]>([]);
   const [comparison, setComparison] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'previous_week' | 'matrix'>('previous_week');
@@ -206,7 +208,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pollTelemetry, autoRefresh, currentSession?.status, sessionsList, selectedSessionId]);
 
-  // ── Live Matrix Rows Auto-Poll: refresh contest results every 60s when LIVE ──
+  // ── Live Matrix Rows Auto-Poll: refresh contest results every 5s when LIVE ──
   useEffect(() => {
     if (!selectedSessionId) return;
     const isSessionLive = currentSession?.status === 'LIVE';
@@ -217,7 +219,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       if (!isMounted || (typeof document !== 'undefined' && document.visibilityState === 'hidden')) return;
       // Silent refresh — keep existing rows, just update values
       fetchSessionDetails(selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, true);
-    }, autoRefresh ? 30000 : 60000); // 60s when LIVE, 30s if user toggled autoRefresh
+    }, isSessionLive ? 10000 : 30000); // 10s when LIVE, 30s if user toggled autoRefresh for non-live
 
     return () => {
       isMounted = false;
@@ -226,40 +228,46 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSessionId, currentSession?.status, autoRefresh, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter]);
 
-  // WebSocket Live Rendering — match by student_id, reg_no, or username as fallbacks
-  const handleWebSocketResult = useCallback((event: ContestWSEvent) => {
+  // WebSocket Live Rendering — Batched O(1) state updates
+  const handleWebSocketBatch = useCallback((events: ContestWSEvent[]) => {
     setMatrixRows(prev => {
-      // Primary: match by student_id; Fallback: reg_no or username
-      let idx = event.studentId != null ? prev.findIndex(r => r.student_id === event.studentId) : -1;
-      if (idx === -1 && event.regNo) idx = prev.findIndex(r => r.reg_no === event.regNo);
-      if (idx === -1 && event.studentName) idx = prev.findIndex(r => r.username === event.contestId || r.name === event.studentName);
-      if (idx === -1) return prev; // Still not found — do not insert dynamically
-
+      let changed = false;
       const updated = [...prev];
-      updated[idx] = {
-        ...updated[idx],
-        q1: event.q1 ?? updated[idx].q1,
-        q2: event.q2 ?? updated[idx].q2,
-        q3: event.q3 ?? updated[idx].q3,
-        q4: event.q4 ?? updated[idx].q4,
-        q1_score: event.q1 ?? updated[idx].q1_score,
-        q2_score: event.q2 ?? updated[idx].q2_score,
-        q3_score: event.q3 ?? updated[idx].q3_score,
-        q4_score: event.q4 ?? updated[idx].q4_score,
-        total_solved: event.solvedCount ?? updated[idx].total_solved,
-        total_contest_solved: event.solvedCount ?? updated[idx].total_contest_solved,
-        rank: event.officialRank ?? updated[idx].rank,
-        official_rank: event.officialRank ?? updated[idx].official_rank,
-        participation_status: event.participationStatus ?? updated[idx].participation_status,
-        last_updated: event.timestamp ?? new Date().toISOString()
-      };
-      return updated;
+
+      for (const event of events) {
+        // Primary: match by student_id or id; Fallback: reg_no or username
+        let idx = event.studentId != null ? updated.findIndex(r => (r.student_id || r.id) === event.studentId) : -1;
+        if (idx === -1 && event.regNo) idx = updated.findIndex(r => r.reg_no === event.regNo);
+        if (idx === -1 && event.studentName) idx = updated.findIndex(r => r.username === event.contestId || r.name === event.studentName);
+        if (idx === -1) continue; // Still not found — do not insert dynamically
+
+        changed = true;
+        updated[idx] = {
+          ...updated[idx],
+          q1: event.q1 ?? updated[idx].q1,
+          q2: event.q2 ?? updated[idx].q2,
+          q3: event.q3 ?? updated[idx].q3,
+          q4: event.q4 ?? updated[idx].q4,
+          q1_score: event.q1 ?? updated[idx].q1_score,
+          q2_score: event.q2 ?? updated[idx].q2_score,
+          q3_score: event.q3 ?? updated[idx].q3_score,
+          q4_score: event.q4 ?? updated[idx].q4_score,
+          total_solved: event.solvedCount ?? updated[idx].total_solved,
+          total_contest_solved: event.solvedCount ?? updated[idx].total_contest_solved,
+          rank: event.officialRank ?? updated[idx].rank,
+          official_rank: event.officialRank ?? updated[idx].official_rank,
+          participation_status: event.participationStatus ?? updated[idx].participation_status,
+          last_updated: event.timestamp ?? new Date().toISOString()
+        };
+      }
+
+      return changed ? updated : prev;
     });
   }, []);
 
   useContestWebSocket({
     sessionId: selectedSessionId,
-    onResultUpdate: handleWebSocketResult
+    onBatchUpdate: handleWebSocketBatch
   });
 
   // 1-second Countdown & Time Remaining Ticker
@@ -417,6 +425,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
   const abortControllerRef = React.useRef<AbortController | null>(null);
 
+
   const fetchSessionDetails = async (sessionId: number, dept: string = 'ALL', year: string = 'ALL', attendance: string = 'ALL', silent: boolean = false) => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -434,56 +443,49 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     }
 
     try {
-      let matrixUrl = `/contests/sessions/${requestedSessionId}/matrix?dept=${dept}&year=${year}&attendance=${attendance}`;
-      const [matRes, errRes, compRes] = await Promise.all([
-        api.get(matrixUrl, { signal: controller.signal }),
-        api.get(`/contests/sessions/${requestedSessionId}/data-quality`, { signal: controller.signal }),
-        api.get(`/contests/sessions/${requestedSessionId}/comparison?dept=${dept}&year=${year}&attendance=${attendance}`, { signal: controller.signal })
-      ]);
+      const searchParam = debouncedSearchTerm ? `&search=${encodeURIComponent(debouncedSearchTerm)}` : '';
+      const sortParam = sortConfig ? `&sort_by=${sortConfig.key}` : '';
+      let matrixUrl = `/contests/sessions/${requestedSessionId}/matrix?dept=${dept}&year=${year}&attendance=${attendance}&paginated=true&page=${currentPage}&limit=${pageSize}${searchParam}${sortParam}`;
+      
+      const { queryClient } = await import('../lib/react-query');
+      
+      const matRes = await api.get(matrixUrl, { signal: controller.signal });
+      
+      const compResData = await queryClient.fetchQuery({
+        queryKey: ['contest-comparison', requestedSessionId, dept, year, attendance],
+        queryFn: async () => {
+          const res = await api.get(`/contests/sessions/${requestedSessionId}/comparison?dept=${dept}&year=${year}&attendance=${attendance}`);
+          return res.data;
+        },
+        staleTime: 10 * 60 * 1000
+      });
+
+      const errResData = await queryClient.fetchQuery({
+        queryKey: ['contest-data-quality', requestedSessionId],
+        queryFn: async () => {
+          const res = await api.get(`/contests/sessions/${requestedSessionId}/data-quality`);
+          return res.data;
+        },
+        staleTime: 10 * 60 * 1000
+      });
+      
+      const errRes = { data: errResData };
+      const compRes = { data: compResData };
 
       const responseSessionId = matRes.data?.sessionId ?? matRes.data?.session_id;
       const responseContestNumber = matRes.data?.contestNumber ?? matRes.data?.contest_number;
 
-      // 1. Request Race Protection
-      if (reqId !== latestReqIdRef.current) {
-        console.warn("[IGNORED SUPERSEEDED REQUEST]", { requestedSessionId, reqId, latestReqId: latestReqIdRef.current });
-        return;
-      }
+      if (reqId !== latestReqIdRef.current) return;
+      if (selectedSessionIdRef.current !== requestedSessionId) return;
 
-      // 2. Validate response session_id matches requested session_id
-      if (responseSessionId != null && Number(responseSessionId) !== Number(requestedSessionId)) {
-        console.error("[BLOCKED STALE CONTEST RESPONSE]", { requestedSessionId, responseSessionId, responseContestNumber });
-        return;
-      }
-
-      // 3. Verify currently selected session in ref has not changed
-      if (selectedSessionIdRef.current !== requestedSessionId) {
-        console.warn("[IGNORED OUTDATED CONTEST RESPONSE]", { selectedRef: selectedSessionIdRef.current, requestedSessionId });
-        return;
-      }
-
-      console.log("[MATRIX RESPONSE]", {
-        requestedSessionId,
-        responseSessionId,
-        responseContestNumber,
-        rows: matRes.data?.rows?.length
-      });
-
-      console.log("[STATE COMMIT]", {
-        sessionId: requestedSessionId,
-        contestNumber: responseContestNumber,
-        rows: matRes.data?.rows?.length
-      });
-
-      setMatrixRows(matRes.data?.rows || []);
+      setMatrixRows(matRes.data?.items || []);
+      setTotalRows(matRes.data?.total || 0);
       setSessionMetrics(matRes.data?.metrics || null);
+      setDepartmentStats(matRes.data?.departmentStats || null);
       setErrorLogs(errRes.data || []);
       setComparison(compRes.data || null);
     } catch (err: any) {
-      if (err.name === 'CanceledError' || err.name === 'AbortError') {
-        console.log(`[CONTEST FETCH ABORTED] Request for session ${sessionId} cancelled.`);
-        return;
-      }
+      if (err.name === 'CanceledError' || err.name === 'AbortError') return;
       if (reqId === latestReqIdRef.current && selectedSessionIdRef.current === sessionId) {
         console.error("Contest matrix fetch failed", err);
       }
@@ -848,27 +850,18 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
   // ── Memoized Dynamic Statistics Calculation (Hook MUST run before any early return) ──
   const stats = useMemo(() => {
-    const isFiltered = selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL';
-    const totalRows = isFiltered ? matrixRows.length : (sessionMetrics?.totalStudents ?? matrixRows.length);
-    const attendedRows = isFiltered
-      ? matrixRows.filter(r => r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'ATTENDED' || r.status === 'PUBLIC' || r.participation_status === 'PUBLIC').length
-      : (sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? matrixRows.filter(r => r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'ATTENDED' || r.status === 'PUBLIC' || r.participation_status === 'PUBLIC').length);
-    const notAttendedRows = isFiltered
-      ? matrixRows.filter(r => r.participation_status === 'PUBLIC_NOT_ATTENDED' || r.participation_status === 'NOT_ATTENDED' || r.status === 'NOT_ATTENDED' || r.status === 'NOT ATTENDED').length
-      : (sessionMetrics?.notAttended ?? sessionMetrics?.notParticipated ?? matrixRows.filter(r => r.participation_status === 'PUBLIC_NOT_ATTENDED' || r.participation_status === 'NOT_ATTENDED' || r.status === 'NOT_ATTENDED' || r.status === 'NOT ATTENDED').length);
-    const virtualRows = isFiltered
-      ? matrixRows.filter(r => r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL').length
-      : (sessionMetrics?.virtualAttended ?? sessionMetrics?.virtualParticipants ?? matrixRows.filter(r => r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL').length);
+    const totalRows = sessionMetrics?.totalStudents ?? sessionMetrics?.verifiedEligibleRoster ?? matrixRows.length;
+    const attendedRows = sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? matrixRows.filter(r => r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'ATTENDED' || r.status === 'PUBLIC' || r.participation_status === 'PUBLIC').length;
+    const notAttendedRows = sessionMetrics?.notAttended ?? sessionMetrics?.notParticipated ?? matrixRows.filter(r => r.participation_status === 'PUBLIC_NOT_ATTENDED' || r.participation_status === 'NOT_ATTENDED' || r.status === 'NOT_ATTENDED' || r.status === 'NOT ATTENDED').length;
+    const virtualRows = sessionMetrics?.virtualAttended ?? sessionMetrics?.virtualParticipants ?? matrixRows.filter(r => r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL').length;
     const isVirtualAvailable = sessionMetrics?.virtualDataStatus === 'AVAILABLE' || virtualRows > 0;
-    const errorRows = isFiltered
-      ? matrixRows.filter(r => r.participation_status === 'DATA_ERROR' || r.participation_status === 'SOURCE_ERROR' || r.participation_status === 'CONFLICT' || r.status === 'USERNAME_NOT_FOUND' || r.participation_status === 'USERNAME_NOT_FOUND' || r.status === 'FETCH_ERROR').length
-      : (sessionMetrics?.dataErrors ?? sessionMetrics?.failedVerification ?? matrixRows.filter(r => r.participation_status === 'DATA_ERROR' || r.participation_status === 'SOURCE_ERROR' || r.participation_status === 'CONFLICT' || r.status === 'USERNAME_NOT_FOUND' || r.participation_status === 'USERNAME_NOT_FOUND' || r.status === 'FETCH_ERROR').length);
+    const errorRows = sessionMetrics?.dataErrors ?? sessionMetrics?.failedVerification ?? matrixRows.filter(r => r.participation_status === 'DATA_ERROR' || r.participation_status === 'SOURCE_ERROR' || r.participation_status === 'CONFLICT' || r.status === 'USERNAME_NOT_FOUND' || r.participation_status === 'USERNAME_NOT_FOUND' || r.status === 'FETCH_ERROR').length;
 
     // Active cohort total solve breakdown (4/4, 3/4, 2/4, 1/4 Solved)
-    const q4Solved = matrixRows.filter(r => (r.participation_status === 'PUBLIC' || r.status === 'PUBLIC' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) >= 4 || Number(r.total_contest_solved) >= 4)).length;
-    const q3Solved = matrixRows.filter(r => (r.participation_status === 'PUBLIC' || r.status === 'PUBLIC' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) === 3 || Number(r.total_contest_solved) === 3)).length;
-    const q2Solved = matrixRows.filter(r => (r.participation_status === 'PUBLIC' || r.status === 'PUBLIC' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) === 2 || Number(r.total_contest_solved) === 2)).length;
-    const q1Solved = matrixRows.filter(r => (r.participation_status === 'PUBLIC' || r.status === 'PUBLIC' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) === 1 || Number(r.total_contest_solved) === 1)).length;
+    const q4Solved = sessionMetrics?.q4Count ?? matrixRows.filter(r => (r.participation_status === 'PUBLIC' || r.status === 'PUBLIC' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) >= 4 || Number(r.total_contest_solved) >= 4)).length;
+    const q3Solved = sessionMetrics?.q3Count ?? matrixRows.filter(r => (r.participation_status === 'PUBLIC' || r.status === 'PUBLIC' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) === 3 || Number(r.total_contest_solved) === 3)).length;
+    const q2Solved = sessionMetrics?.q2Count ?? matrixRows.filter(r => (r.participation_status === 'PUBLIC' || r.status === 'PUBLIC' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) === 2 || Number(r.total_contest_solved) === 2)).length;
+    const q1Solved = sessionMetrics?.q1Count ?? matrixRows.filter(r => (r.participation_status === 'PUBLIC' || r.status === 'PUBLIC' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) === 1 || Number(r.total_contest_solved) === 1)).length;
 
     const virtual4Solved = matrixRows.filter(r => (r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) === 4 || Number(r.total_contest_solved) === 4)).length;
     const virtual3Solved = matrixRows.filter(r => (r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL' || r.participation_status === 'VIRTUAL_ATTENDED') && (Number(r.total_solved) === 3 || Number(r.total_contest_solved) === 3)).length;
@@ -938,103 +931,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   }, [matrixRows]);
 
   // Memoized Debounced Filtered Rows for Detailed View
-  const filteredMatrixRows = useMemo(() => {
-    let rows = indexedMatrixRows;
-
-    // Hard restrict to CS and IOT as requested by the user
-    if (selectedDeptFilter === 'ALL') {
-      rows = rows.filter(r => {
-        const d = r._deptKey;
-        return d.includes('CS') || d.includes('CYBER') || d.includes('IOT') || d.includes('INTERNET');
-      });
-    } else {
-      const targetDept = selectedDeptFilter.toUpperCase();
-      rows = rows.filter(r => {
-        const d = r._deptKey;
-        if (targetDept === 'CSE(CS)') return d.includes('CS') || d.includes('CYBER');
-        if (targetDept === 'CSE(IOT)') return d.includes('IOT') || d.includes('INTERNET');
-        return d === targetDept || d.includes(targetDept);
-      });
-    }
-
-    if (selectedYearFilter !== 'ALL') {
-      const targetYear = selectedYearFilter.toUpperCase();
-      rows = rows.filter(r => {
-        const y = r._yearKey;
-        if (targetYear === 'II') return y === 'II' || y === '2' || y.includes('II YEAR');
-        if (targetYear === 'III') return y === 'III' || y === '3' || y.includes('III YEAR');
-        if (targetYear === 'IV') return y === 'IV' || y === '4' || y.includes('IV YEAR');
-        return y === targetYear;
-      });
-    }
-
-    if (selectedAttendanceFilter !== 'ALL') {
-      const targetAtt = selectedAttendanceFilter.toUpperCase();
-      rows = rows.filter(r => {
-        const st = r._statusKey;
-        if (targetAtt === 'PUBLIC' || targetAtt === 'PUBLIC_ATTENDED') {
-          return st.includes('PUBLIC') && !st.includes('NOT');
-        }
-        if (targetAtt === 'VIRTUAL' || targetAtt === 'VIRTUAL_ATTENDED') {
-          return st.includes('VIRTUAL');
-        }
-        if (targetAtt === 'NOT_ATTENDED' || targetAtt === 'PUBLIC_NOT_ATTENDED') {
-          return st.includes('NOT_ATTENDED') || st.includes('NOT ATTENDED') || st === 'ABSENT' || st === 'NOT PARTICIPATED';
-        }
-        if (targetAtt === 'DATA_ERROR' || targetAtt === 'ERROR') {
-          return st.includes('ERROR') || r.fetch_status === 'ERROR' || Boolean(r.error_reason);
-        }
-        return true;
-      });
-    }
-
-    if (debouncedSearchTerm && debouncedSearchTerm.trim()) {
-      const term = debouncedSearchTerm.trim().toLowerCase();
-      rows = rows.filter(r => r._searchKey.includes(term));
-    }
-
-    if (sortConfig) {
-      rows.sort((a, b) => {
-        let valA: any = null;
-        let valB: any = null;
-
-        switch (sortConfig.key) {
-          case 'q1':
-            valA = a.q1 === 1 || a.q1 === '1' ? 1 : 0;
-            valB = b.q1 === 1 || b.q1 === '1' ? 1 : 0;
-            break;
-          case 'q2':
-            valA = a.q2 === 1 || a.q2 === '1' ? 1 : 0;
-            valB = b.q2 === 1 || b.q2 === '1' ? 1 : 0;
-            break;
-          case 'q3':
-            valA = a.q3 === 1 || a.q3 === '1' ? 1 : 0;
-            valB = b.q3 === 1 || b.q3 === '1' ? 1 : 0;
-            break;
-          case 'q4':
-            valA = a.q4 === 1 || a.q4 === '1' ? 1 : 0;
-            valB = b.q4 === 1 || b.q4 === '1' ? 1 : 0;
-            break;
-          case 'solved':
-            valA = Number(a.total_solved ?? a.total_contest_solved ?? ((a.q1 || 0) + (a.q2 || 0) + (a.q3 || 0) + (a.q4 || 0))) || 0;
-            valB = Number(b.total_solved ?? b.total_contest_solved ?? ((b.q1 || 0) + (b.q2 || 0) + (b.q3 || 0) + (b.q4 || 0))) || 0;
-            break;
-          case 'rank':
-            valA = Number(a.rank ?? a.contest_rank) || 999999;
-            valB = Number(b.rank ?? b.contest_rank) || 999999;
-            break;
-          default:
-            return 0;
-        }
-
-        if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
-      });
-    }
-
-    return rows;
-  }, [indexedMatrixRows, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, debouncedSearchTerm, sortConfig]);
+  const filteredMatrixRows = matrixRows;
 
   // Handle Sort Click
   const handleSort = (key: string) => {
@@ -1046,10 +943,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   };
 
   // Memoized Paginated Slices for 60fps High-Performance Rendering
-  const paginatedMatrixRows = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    return filteredMatrixRows.slice(startIndex, startIndex + pageSize);
-  }, [filteredMatrixRows, currentPage, pageSize]);
+  const paginatedMatrixRows = matrixRows;
 
   const totalPages = useMemo(() => {
     return Math.max(1, Math.ceil(filteredMatrixRows.length / (pageSize || 50)));
@@ -1308,7 +1202,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs font-black">
               <Clock className="w-3.5 h-3.5 text-amber-400" />
-              <span>🟡 NEXT UPCOMING WEEKLY CONTEST</span>
+              <span> NEXT UPCOMING WEEKLY CONTEST</span>
             </div>
             <span className="text-xs font-mono font-bold text-gray-300">
               Official Window: 08:00 AM – 09:30 AM IST (Asia/Kolkata)
@@ -1918,7 +1812,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
       {/* ── PREVIOUS WEEK CONTEST ANALYZER TAB ── */}
       {activeTab === 'previous_week' && (
-        <PreviousWeekContestPanel onStudentClick={onSelectStudent} />
+        <PreviousWeekContestPanel sessionId={selectedSessionId} onStudentClick={onSelectStudent} />
       )}
 
       {/* ── SESSION ANALYTICS & ROSTER MATRIX TAB ── */}
@@ -2243,10 +2137,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         
         {/* Department-wise Summary Section */}
         {(() => {
-          const csTotal = indexedMatrixRows.filter(r => r.dept === 'CSE(CS)' || r.dept === 'Cyber Security').length;
-          const csAttended = indexedMatrixRows.filter(r => (r.dept === 'CSE(CS)' || r.dept === 'Cyber Security') && (r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'ATTENDED' || r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL')).length;
-          const iotTotal = indexedMatrixRows.filter(r => r.dept === 'CSE(IOT)' || r.dept === 'IoT').length;
-          const iotAttended = indexedMatrixRows.filter(r => (r.dept === 'CSE(IOT)' || r.dept === 'IoT') && (r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'ATTENDED' || r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL')).length;
+          const csTotal = departmentStats?.['CSE(CS)']?.total || 0;
+          const csAttended = (departmentStats?.['CSE(CS)']?.public || 0) + (departmentStats?.['CSE(CS)']?.virtual || 0);
+          const iotTotal = departmentStats?.['CSE(IOT)']?.total || 0;
+          const iotAttended = (departmentStats?.['CSE(IOT)']?.public || 0) + (departmentStats?.['CSE(IOT)']?.virtual || 0);
           
           return (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -2633,7 +2527,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
                   }`}
               >
-                📋 Student Matrix Roster ({filteredMatrixRows.length})
+                Student Matrix Roster ({filteredMatrixRows.length})
               </button>
               <button
                 onClick={() => setSubTab('dept_year')}
@@ -2642,7 +2536,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
                   }`}
               >
-                📊 Dept & Year Breakdown
+                Dept & Year Breakdown
               </button>
 
               <button
@@ -2653,7 +2547,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   }`}
               >
                 <AlertTriangle className="w-3.5 h-3.5" />
-                <span>⚠️ Data Quality Error Board ({matrixRows.filter(r => !r.username || r.participation_status === 'DATA_ERROR' || r.status === 'USERNAME_NOT_FOUND').length} Issues)</span>
+                <span>Data Quality Error Board ({matrixRows.filter(r => !r.username || r.participation_status === 'DATA_ERROR' || r.status === 'USERNAME_NOT_FOUND').length} Issues)</span>
               </button>
 
               <button
@@ -2664,7 +2558,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   }`}
               >
                 <Clock className="w-3.5 h-3.5 text-amber-400" />
-                <span>🟠 Post-9:30 AM Activity</span>
+                <span>Post-9:30 AM Activity</span>
               </button>
             </div>
 
@@ -2712,10 +2606,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800 flex flex-wrap items-center justify-between gap-2 bg-gray-50 dark:bg-navy-950 text-[10px] font-bold">
                 <div className="flex items-center gap-3 flex-wrap">
                   <span className="font-extrabold uppercase text-gray-400">Legend:</span>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-extrabold">PUBLIC 🟢</span>
-                  <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 font-extrabold">VIRTUAL 🟣</span>
-                  <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-extrabold">NOT ATTENDED ⚪</span>
-                  <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-extrabold">DATA ERROR ⚠️</span>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-extrabold">PUBLIC </span>
+                  <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 font-extrabold">VIRTUAL </span>
+                  <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-extrabold">NOT ATTENDED </span>
+                  <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-extrabold">DATA ERROR</span>
                 </div>
                 <span className="text-gray-400 font-medium">Q cells: <b className="text-emerald-600">1</b> = solved | <b className="text-rose-500">0</b> = not solved | <b>—</b> = not attended</span>
               </div>
@@ -2836,17 +2730,17 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                         const isError = r.participation_status === 'DATA_ERROR' || r.participation_status === 'SOURCE_ERROR' || r.participation_status === 'CONFLICT' || r.status === 'USERNAME_NOT_FOUND' || r.status === 'FETCH_ERROR';
 
                         const statusBadge = isPublicAttended
-                          ? { cls: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 ring-1 ring-emerald-400/30', label: 'PUBLIC 🟢' }
+                          ? { cls: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 ring-1 ring-emerald-400/30', label: 'PUBLIC ' }
                           : isVirtualAttended
-                            ? { cls: 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 ring-1 ring-purple-400/40', label: 'VIRTUAL 🟣' }
+                            ? { cls: 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 ring-1 ring-purple-400/40', label: 'VIRTUAL ' }
                             : isNotAttended
                               ? { cls: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300', label: 'NOT ATTENDED' }
                               : isNotVerifiedFinal
                                 ? { cls: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-400/30', label: 'NOT VERIFIED (FINAL)' }
                                 : isNotVerified
-                                  ? { cls: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-400/30', label: 'NOT VERIFIED 🟡' }
+                                  ? { cls: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-400/30', label: 'NOT VERIFIED ' }
                                   : isError
-                                    ? { cls: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300', label: 'DATA ERROR ⚠️' }
+                                    ? { cls: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300', label: 'DATA ERROR' }
                                     : { cls: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300', label: 'PENDING' };
 
                         const renderQ = (val: any) => {
@@ -2958,7 +2852,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </div>
 
               {/* ── HIGH-SPEED VIRTUALIZED PAGINATION BAR ── */}
-              {filteredMatrixRows.length > 0 && (
+              {totalRows > 0 && (
                 <div className="px-5 py-3.5 bg-gray-50 dark:bg-navy-950 border-t border-gray-100 dark:border-gray-800 flex flex-wrap items-center justify-between gap-3 text-xs">
                   {/* Showing count */}
                   <div className="text-gray-500 dark:text-gray-400 font-bold">
@@ -2967,8 +2861,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     ) : (
                       <>
                         Showing <span className="text-gray-900 dark:text-white font-black">{filteredMatrixRows.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}</span> to{' '}
-                        <span className="text-gray-900 dark:text-white font-black">{Math.min(currentPage * pageSize, filteredMatrixRows.length)}</span> of{' '}
-                        <span className="text-brand-600 dark:text-brand-400 font-black">{filteredMatrixRows.length}</span> students
+                        <span className="text-gray-900 dark:text-white font-black">{Math.min(currentPage * pageSize, totalRows)}</span> of{' '}
+                        <span className="text-brand-600 dark:text-brand-400 font-black">{totalRows}</span> students
                       </>
                     )}
                   </div>
@@ -3139,7 +3033,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     <span>Itemized Data Quality Errors ({matrixRows.filter(r => !r.username || r.participation_status === 'DATA_ERROR' || r.status === 'USERNAME_NOT_FOUND').length} Students)</span>
                   </h3>
                   <p className="text-xs text-gray-500 font-bold mt-0.5">
-                    Root Cause: Unlinked LeetCode username handles in Master Roster. API failure is NEVER falsely marked as Not Attended.
+                    Root Cause: Missing or invalid LeetCode username handles. API failure is NEVER falsely marked as Not Attended.
                   </p>
                 </div>
 
@@ -3173,7 +3067,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                           <td className="px-4 py-2.5 text-center text-gray-500">{errStudent.year}</td>
                           <td className="px-4 py-2.5 text-gray-500">
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
-                              Missing LeetCode Username Handle
+                              {errStudent.username ? 'Invalid LeetCode Handle / API Error' : 'Missing LeetCode Username Handle'}
                             </span>
                           </td>
                           <td className="px-4 py-2.5 text-center">
@@ -3310,7 +3204,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                                     ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
                                     : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
                                 }`}>
-                                {isPublicAttended ? 'PUBLIC' : isVirtualAttended ? 'VIRTUAL' : r.status === 'USERNAME_NOT_FOUND' ? 'UNLINKED' : 'NOT ATTENDED'}
+                                {isPublicAttended ? 'PUBLIC' : isVirtualAttended ? 'VIRTUAL' : r.status === 'USERNAME_NOT_FOUND' ? (r.username ? 'INVALID HANDLE' : 'UNLINKED') : 'NOT ATTENDED'}
                               </span>
                             </td>
                             <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q1 === 1 || r.q1 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-gray-300 font-normal">—</span>}</td>
@@ -3562,8 +3456,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         isOpen={Boolean(editingStudent)}
         student={editingStudent}
         onClose={() => setEditingStudent(null)}
-        onSaveSuccess={() => {
-          fetchInitialContestData();
+        onSaveSuccess={(updated) => {
+          setMatrixRows(prev => prev.map(row => 
+            row.student_id === updated.id 
+              ? { ...row, student_name: updated.name, section: updated.section, department: updated.department, is_active: updated.is_active } 
+              : row
+          ));
           setEditingStudent(null);
         }}
       />

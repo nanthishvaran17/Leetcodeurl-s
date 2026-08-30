@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { createPortal } from 'react-dom';
 import { ExternalLink, Trophy, RefreshCw, Wifi, Trash2, AlertCircle, Eye, Edit3, ShieldAlert, X, Clock, Flame, Award, CheckCircle2, TrendingUp, Sparkles, BookOpen, Star } from 'lucide-react';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
@@ -143,6 +144,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   onServerPageChange
 }) => {
   const { notify, confirmAction } = useNotification();
+  const queryClient = useQueryClient();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [viewingStudent, setViewingStudent] = useState<StudentData | null>(null);
   const [editingStudent, setEditingStudent] = useState<StudentData | null>(null);
@@ -803,8 +805,18 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
         student={editingStudent}
         onClose={() => setEditingStudent(null)}
         onSaveSuccess={(updated) => {
-          if (editingStudent && onRefreshStudent) {
-            onRefreshStudent(editingStudent.id);
+          // Instead of forcing a full LeetCode profile sync (onRefreshStudent) which takes 2-3s,
+          // the backend automatically queues a background sync. We just update the local cache immediately.
+          queryClient.setQueriesData({ queryKey: ['students'] }, (oldData: any) => {
+            if (!oldData || !oldData.items) return oldData;
+            return {
+              ...oldData,
+              items: oldData.items.map((s: any) => s.id === updated.id ? { ...s, ...updated } : s)
+            };
+          });
+          
+          if (onUpdateStudent) {
+            onUpdateStudent(updated);
           }
           setEditingStudent(null);
         }}

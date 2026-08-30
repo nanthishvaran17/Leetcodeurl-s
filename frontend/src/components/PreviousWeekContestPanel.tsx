@@ -2,10 +2,111 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Trophy, RefreshCw, AlertTriangle, CheckCircle2, Search,
   Award, Sparkles, UserX, Clock, Building2, ShieldCheck, HelpCircle,
-  Radio, Wifi, WifiOff, Check, Minus, Play
+  Radio, Wifi, WifiOff, Check, Minus, Play, ChevronDown
 } from 'lucide-react';
 import api from '../services/api';
 import { useContestWebSocket } from '../hooks/useContestWebSocket';
+
+const CustomSelect: React.FC<{
+  value: string;
+  onChange: (v: string) => void;
+  options: { label: string; value: string; icon?: React.ReactNode; badge?: string; badgeColor?: string }[];
+  placeholder: string;
+  icon?: React.ReactNode;
+}> = ({ value, onChange, options, placeholder, icon }) => {
+  const [open, setOpen] = React.useState(false);
+  const selected = options.find(o => o.value === value);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    if (open) document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [open]);
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button
+        onClick={() => setOpen(!open)}
+        className={`flex items-center justify-between gap-3 min-w-[200px] w-full px-4 py-2.5 rounded-xl border transition-all cursor-pointer font-bold text-sm ${
+          open 
+            ? 'border-brand-500 bg-white dark:bg-navy-900 ring-4 ring-brand-500/10 shadow-sm' 
+            : (value && value !== 'ALL')
+              ? 'border-brand-500/30 bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-300' 
+              : 'border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-200 hover:border-slate-300'
+        }`}
+      >
+        <div className="flex items-center gap-2">
+          <span className={(value && value !== 'ALL') ? 'text-brand-500' : 'text-slate-400'}>{icon || selected?.icon}</span>
+          <div className="flex items-center gap-2">
+            {selected?.badge && (
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase ${selected.badgeColor || 'bg-slate-100 text-slate-500'}`}>
+                {selected.badge}
+              </span>
+            )}
+            <span>{selected ? selected.label : placeholder}</span>
+          </div>
+        </div>
+        <ChevronDown size={14} className={`transition-transform duration-300 ${open ? 'rotate-180 text-brand-500' : 'text-slate-400'}`} />
+      </button>
+
+      {open && (
+        <div className="absolute z-50 top-[110%] left-0 w-full min-w-[280px] p-1.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-xl animate-fade-in-up">
+          <button
+            onClick={() => { onChange('ALL'); setOpen(false); }}
+            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
+              !value || value === 'ALL'
+                ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20' 
+                : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-navy-800'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <span className="opacity-70">{icon}</span>
+              <span>{placeholder}</span>
+            </div>
+            {(!value || value === 'ALL') && <Check size={16} strokeWidth={3} />}
+          </button>
+          
+          <div className="h-px bg-slate-100 dark:bg-navy-800 my-1.5 mx-2" />
+
+          <div className="max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
+            {options.map((opt) => {
+              const isSelected = value === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => { onChange(opt.value); setOpen(false); }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer mb-1 last:mb-0 ${
+                    isSelected
+                      ? 'bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-300'
+                      : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-navy-800'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className={isSelected ? 'text-brand-500' : 'text-slate-400'}>{opt.icon || icon}</span>
+                    <div className="flex items-center gap-2">
+                      {opt.badge && (
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase ${opt.badgeColor || 'bg-slate-100 text-slate-500'}`}>
+                          {opt.badge}
+                        </span>
+                      )}
+                      <span>{opt.label}</span>
+                    </div>
+                  </div>
+                  {isSelected && <Check size={16} strokeWidth={2} className="text-brand-600 dark:text-brand-400" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 interface PreviousWeekSummary {
   session_id: number;
@@ -55,15 +156,16 @@ interface ParticipationRecord {
 
 interface PreviousWeekContestPanelProps {
   onStudentClick?: (student: any) => void;
+  sessionId?: number | null;
 }
 
-export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> = ({ onStudentClick }) => {
+export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> = ({ onStudentClick, sessionId }) => {
   const [summary, setSummary] = useState<PreviousWeekSummary | null>(null);
   const [records, setRecords] = useState<ParticipationRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [syncing, setSyncing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>('PUBLIC');
+  const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedDeptFilter, setSelectedDeptFilter] = useState<string>('ALL');
 
@@ -71,26 +173,43 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   const [wsConnected, setWsConnected] = useState<boolean>(false);
   const [lastLiveUpdate, setLastLiveUpdate] = useState<string>(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }));
 
-  // Hook up live websocket updates
+  // Hook up live websocket updates in a batched way
   useContestWebSocket({
-    sessionId: summary?.session_id || null,
-    onResultUpdate: (event: any) => {
-      if (!event || !event.studentId) return;
-      setRecords(prev => prev.map(rec => {
-        if (rec.student_id !== event.studentId) return rec;
+    sessionId: sessionId || null,
+    onBatchUpdate: (events: any[]) => {
+      setRecords(prev => {
+        let changed = false;
+        const updated = [...prev];
         
-        // Also update summary totals artificially if possible, but at minimum we update the records so the table stays fresh!
-        return {
-          ...rec,
-          participation_type: event.participationStatus || rec.participation_type,
-          q1: event.q1 ?? rec.q1,
-          q2: event.q2 ?? rec.q2,
-          q3: event.q3 ?? rec.q3,
-          q4: event.q4 ?? rec.q4,
-          problems_solved: event.solvedCount ?? rec.problems_solved,
-          official_rank: event.officialRank ?? rec.official_rank,
-        };
-      }));
+        for (const event of events) {
+          if (!event || !event.studentId) continue;
+          
+          const idx = updated.findIndex(rec => rec.student_id === event.studentId);
+          if (idx === -1) continue;
+          
+          changed = true;
+          const newPType = event.participationStatus;
+          updated[idx] = {
+            ...updated[idx],
+            participation_type: newPType ? (
+              (newPType === 'PUBLIC_ATTENDED' || newPType === 'PUBLIC') ? 'PUBLIC'
+              : (newPType === 'VIRTUAL_ATTENDED' || newPType === 'VIRTUAL') ? 'VIRTUAL'
+              : (newPType === 'NOT_ATTENDED' || newPType === 'PUBLIC_NOT_ATTENDED') ? 'NOT_PARTICIPATED'
+              : (newPType === 'PENDING') ? 'NOT_VERIFIED'
+              : (newPType === 'UNKNOWN' || newPType === 'USERNAME_NOT_FOUND' || newPType === 'DATA_ERROR' || newPType === 'SOURCE_ERROR') ? 'MISSING_LEETCODE_USERNAME'
+              : newPType
+            ) : updated[idx].participation_type,
+            q1: event.q1 ?? updated[idx].q1,
+            q2: event.q2 ?? updated[idx].q2,
+            q3: event.q3 ?? updated[idx].q3,
+            q4: event.q4 ?? updated[idx].q4,
+            problems_solved: event.solvedCount ?? updated[idx].problems_solved,
+            official_rank: event.officialRank ?? updated[idx].official_rank,
+          };
+        }
+        
+        return changed ? updated : prev;
+      });
     }
   });
 
@@ -98,6 +217,8 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   const socketRef = useRef<WebSocket | null>(null);
 
   const fetchPreviousWeekData = async (forceSync: boolean = false) => {
+    if (!sessionId) return;
+    
     try {
       if (forceSync) {
         setSyncing(true);
@@ -106,16 +227,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       }
       setError(null);
 
-      let latestSessionId = summary?.session_id;
-
-      if (!latestSessionId) {
-        const sessionsRes = await api.get('/contests/sessions');
-        const sessions = sessionsRes.data;
-        if (!sessions || sessions.length === 0) {
-          throw new Error("No contest sessions found.");
-        }
-        latestSessionId = sessions[0].sessionId;
-      }
+      const latestSessionId = sessionId;
 
       if (forceSync && latestSessionId) {
         await api.post(`/contests/sessions/${latestSessionId}/sync`);
@@ -162,7 +274,12 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           reg_no: row.reg_no,
           department_name: row.dept,
           year_level: row.year,
-          participation_type: row.participation_status === 'PUBLIC_ATTENDED' ? 'PUBLIC' : row.participation_status,
+          participation_type: (row.participation_status === 'PUBLIC_ATTENDED' || row.participation_status === 'PUBLIC') ? 'PUBLIC' 
+            : (row.participation_status === 'VIRTUAL_ATTENDED' || row.participation_status === 'VIRTUAL') ? 'VIRTUAL'
+            : (row.participation_status === 'NOT_ATTENDED' || row.participation_status === 'PUBLIC_NOT_ATTENDED') ? 'NOT_PARTICIPATED'
+            : (row.participation_status === 'PENDING') ? 'NOT_VERIFIED'
+            : (row.participation_status === 'UNKNOWN' || row.participation_status === 'USERNAME_NOT_FOUND' || row.participation_status === 'DATA_ERROR' || row.participation_status === 'SOURCE_ERROR') ? 'MISSING_LEETCODE_USERNAME'
+            : row.participation_status,
           official_rank: row.rank !== '' && row.rank !== null ? row.rank : null,
           official_score: row.score !== '' && row.score !== null ? row.score : null,
           q1: (row.q1 === 1 || row.q1 === '1') ? 1 : 0,
@@ -236,7 +353,14 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                   problems_solved: data.solvedCount !== undefined ? data.solvedCount : (data.problems_solved !== undefined ? data.problems_solved : updated[idx].problems_solved),
                   official_rank: data.officialRank !== undefined ? data.officialRank : updated[idx].official_rank,
                   finish_time: data.finishTime || updated[idx].finish_time,
-                  participation_type: data.participationStatus || data.participation_type || updated[idx].participation_type,
+                  participation_type: (data.participationStatus || data.participation_type) ? (
+                    ((data.participationStatus || data.participation_type) === 'PUBLIC_ATTENDED' || (data.participationStatus || data.participation_type) === 'PUBLIC') ? 'PUBLIC'
+                    : ((data.participationStatus || data.participation_type) === 'VIRTUAL_ATTENDED' || (data.participationStatus || data.participation_type) === 'VIRTUAL') ? 'VIRTUAL'
+                    : ((data.participationStatus || data.participation_type) === 'NOT_ATTENDED' || (data.participationStatus || data.participation_type) === 'PUBLIC_NOT_ATTENDED') ? 'NOT_PARTICIPATED'
+                    : ((data.participationStatus || data.participation_type) === 'PENDING') ? 'NOT_VERIFIED'
+                    : ((data.participationStatus || data.participation_type) === 'UNKNOWN' || (data.participationStatus || data.participation_type) === 'USERNAME_NOT_FOUND' || (data.participationStatus || data.participation_type) === 'DATA_ERROR' || (data.participationStatus || data.participation_type) === 'SOURCE_ERROR') ? 'MISSING_LEETCODE_USERNAME'
+                    : (data.participationStatus || data.participation_type)
+                  ) : updated[idx].participation_type,
                   verification_status: 'VERIFIED'
                 };
                 return updated;
@@ -275,8 +399,18 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     }
   };
 
+  // Refresh when sessionId prop changes
   useEffect(() => {
-    fetchPreviousWeekData();
+    if (sessionId) {
+      fetchPreviousWeekData();
+    } else {
+      setRecords([]);
+      setSummary(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId]);
+
+  useEffect(() => {
     connectWebSocket();
 
     const pingInterval = setInterval(() => {
@@ -534,18 +668,23 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           </div>
 
           {/* Department Filter */}
-          <select
-            value={selectedDeptFilter}
-            onChange={(e) => setSelectedDeptFilter(e.target.value)}
-            className="px-3 py-2 text-xs rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value="ALL">All Departments</option>
-            {uniqueDepartments.map((dept) => (
-              <option key={dept} value={dept}>
-                {dept}
-              </option>
-            ))}
-          </select>
+          <div className="z-10 relative">
+            <CustomSelect
+              value={selectedDeptFilter}
+              onChange={(v) => setSelectedDeptFilter(v)}
+              placeholder="All Departments"
+              icon={<Building2 size={16} />}
+              options={[
+                { label: 'Computer Science and Engineering', value: 'CSE', badge: 'CSE', badgeColor: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
+                { label: 'Computer Science and Engineering (Cyber Security)', value: 'CSE(CS)', badge: 'CSE(CS)', badgeColor: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' },
+                { label: 'Computer Science and Engineering (IoT)', value: 'CSE(IOT)', badge: 'CSE(IOT)', badgeColor: 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400' },
+                { label: 'Information Technology', value: 'IT', badge: 'IT', badgeColor: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' },
+                { label: 'Artificial Intelligence and Data Science', value: 'AIDS', badge: 'AIDS', badgeColor: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' },
+                { label: 'Electronics and Communication Engineering', value: 'ECE', badge: 'ECE', badgeColor: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' },
+                { label: 'Electrical and Electronics Engineering', value: 'EEE', badge: 'EEE', badgeColor: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' },
+              ].filter(opt => uniqueDepartments.includes(opt.value))}
+            />
+          </div>
         </div>
 
         <div className="text-xs text-gray-500 dark:text-gray-400 font-bold font-mono">
@@ -683,7 +822,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                       )}
                       {rec.participation_type === 'MISSING_LEETCODE_USERNAME' && (
                         <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-[10px] border border-slate-300 inline-flex items-center gap-1">
-                          <AlertTriangle className="w-3 h-3" /> NO HANDLE
+                          <AlertTriangle className="w-3 h-3" /> {rec.leetcode_username ? 'INVALID HANDLE' : 'NO HANDLE'}
                         </span>
                       )}
                     </td>

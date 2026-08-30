@@ -731,6 +731,11 @@ def get_normalized_contest_data(
 @router.get("/sessions/{session_id}/matrix")
 def get_session_matrix(
     session_id: int, 
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=500),
+    paginated: bool = Query(False),
+    search: Optional[str] = Query(None),
+    sort_by: Optional[str] = Query(None),
     dept: Optional[str] = Query(None), 
     year: Optional[str] = Query(None), 
     attendance: Optional[str] = Query(None),
@@ -739,8 +744,38 @@ def get_session_matrix(
 ):
     """
     Delegates strictly to the single canonical normalized dataset function with institutional RBAC.
+    Supports SQL pagination via paginated=True.
     """
-    return get_normalized_contest_data(session_id, dept=dept, year=year, attendance=attendance, db=db, current_user=current_user)
+    if paginated:
+        from backend.services.sql_pagination import get_paginated_matrix_rows
+        from backend.services.canonical_contest_engine import build_canonical_contest_dataset
+        
+        # Get metrics from the canonical dataset (fast cache)
+        canonical_data = build_canonical_contest_dataset(
+            session_id=session_id, db=db, current_user=current_user,
+            dept=dept, year=year, attendance=attendance
+        )
+        metrics = canonical_data["metrics"]
+        
+        # Get SQL paginated rows
+        paginated_data = get_paginated_matrix_rows(
+            session_id=session_id, db=db, page=page, limit=limit,
+            dept=dept, year=year, attendance=attendance, search=search, sort_by=sort_by
+        )
+        
+        return {
+            "items": paginated_data["items"],
+            "total": paginated_data["total"],
+            "page": paginated_data["page"],
+            "limit": paginated_data["limit"],
+            "metrics": metrics,
+            "departmentStats": canonical_data["departmentStats"],
+            "yearStats": canonical_data["yearStats"],
+            "statusCounts": canonical_data["statusCounts"],
+            "dataQualityIssues": canonical_data["dataQualityIssues"]
+        }
+    else:
+        return get_normalized_contest_data(session_id, dept=dept, year=year, attendance=attendance, db=db, current_user=current_user)
 
 
 @router.get("/sessions/{session_id}/data-quality")
@@ -884,9 +919,20 @@ def get_contest_diagnostics(
     sessions = db.query(WeeklySession).order_by(WeeklySession.id.asc()).all()
     diagnostics = []
 
+    # Optimize: pre-fetch student count and all public results to prevent N+1 queries
+    roster_cnt = db.query(Student).count()
+    all_results = db.query(WeeklyPublicResult).all()
+    
+    # Group results by session_id in memory
+    from collections import defaultdict
+    results_by_session = defaultdict(list)
+    for r in all_results:
+        if r.session_id:
+            results_by_session[r.session_id].append(r)
+
+    import re
     for s in sessions:
-        results = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == s.id).all()
-        roster_cnt = db.query(Student).count()
+        results = results_by_session.get(s.id, [])
         result_cnt = len(results)
 
         pub_attended = sum(1 for r in results if r.participation_status in ("PUBLIC_ATTENDED", "ATTENDED"))
@@ -1268,19 +1314,18 @@ def _run_sync_in_background(session_id: int):
 @router.post("/sessions/{session_id}/sync")
 def sync_single_weekly_contest(
     session_id: int,
-    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Weekly Contest Sync", required_roles=["admin", "super admin", "hod"]))
 ):
     """
     Sync ONLY the selected contest session using authoritative 4-state reconciliation engine.
-    Runs asynchronously in the background so the dashboard remains responsive.
+    Runs synchronously so the dashboard can await completion before fetching updated data.
     """
-    background_tasks.add_task(_run_sync_in_background, session_id)
+    _run_sync_in_background(session_id)
     return {
         "success": True,
         "sessionId": session_id,
-        "message": f"Synchronization for session {session_id} has been queued in the background."
+        "message": f"Synchronization for session {session_id} completed successfully."
     }
 
 @router.post("/sync-all")
@@ -1316,12 +1361,18 @@ async def sync_all_weekly_contests(
 
     student_count = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count()
 
+    # Optimize: Pre-fetch result counts per session
+    counts_query = db.query(
+        WeeklyPublicResult.session_id, func.count(WeeklyPublicResult.id)
+    ).group_by(WeeklyPublicResult.session_id).all()
+    session_counts = {sess_id: cnt for sess_id, cnt in counts_query}
+
     import re
     for s in sessions:
         m = re.search(r'\d+', s.contest_name or "")
         c_num = int(m.group(0)) if m else None
 
-        res_count = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == s.id).count()
+        res_count = session_counts.get(s.id, 0)
         
         if res_count >= student_count:
             action_status = "EXISTING_VALIDATED"
@@ -1690,6 +1741,16 @@ def get_post_930_solvers(
     total_post_submissions = 0
     all_post_timestamps = []
 
+    # Optimize: pre-fetch virtual results
+    student_ids = [s.id for s in students]
+    virtual_res_query = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.student_id.in_(student_ids)).all()
+    
+    from collections import defaultdict
+    v_results_by_student = defaultdict(list)
+    for v in virtual_res_query:
+        if v.student_id:
+            v_results_by_student[v.student_id].append(v)
+
     # Process post-9:30 solves per student with problem-level deduplication
     for s in students:
         official_locked = locked_snapshot_map.get(s.reg_no, 0) or 0
@@ -1700,9 +1761,7 @@ def get_post_930_solvers(
         student_submissions = 0
         
         # Examine virtual results
-        virtual_res = db.query(WeeklyVirtualResult).filter(
-            WeeklyVirtualResult.student_id == s.id
-        ).all()
+        virtual_res = v_results_by_student.get(s.id, [])
 
         for v in virtual_res:
             v_time = v.completed_at

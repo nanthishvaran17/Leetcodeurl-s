@@ -859,7 +859,8 @@ def delete_staff_user(
     from backend.models import (
         FacultyStudentAssignment, StudentAssignmentHistory,
         FacultyActionAuditLog, FacultyIntervention, MentorNote,
-        AdminSession, StaffFollowUp, StaffAlert, PasswordResetOTP
+        AdminSession, StaffFollowUp, StaffAlert, PasswordResetOTP,
+        FacultyActionQueueItem, EmailCampaign
     )
     
     if current_user.role not in ["Super Admin", "Admin"]:
@@ -877,15 +878,38 @@ def delete_staff_user(
         FacultyStudentAssignment.faculty_id == staff_id
     ).delete(synchronize_session=False)
 
-    # 2. Soft-delete the staff account to preserve historical mentor notes, interventions, and audit data
+    # 2. Hard-delete the staff account to fully wipe their footprint as requested by the user
     username = staff_user.username
-    staff_user.is_active = False
     
-    # We optionally delete active sessions or OTPs to forcibly log them out immediately,
-    # but we DO NOT delete MentorNotes or Interventions.
+    # Cascade delete all dependent records manually to prevent IntegrityErrors
     db.query(AdminSession).filter(AdminSession.user_id == staff_id).delete(synchronize_session=False)
     db.query(PasswordResetOTP).filter(PasswordResetOTP.user_id == staff_id).delete(synchronize_session=False)
-    
+    db.query(StudentAssignmentHistory).filter(
+        (StudentAssignmentHistory.previous_faculty_id == staff_id) |
+        (StudentAssignmentHistory.new_faculty_id == staff_id) |
+        (StudentAssignmentHistory.assigned_by_id == staff_id)
+    ).delete(synchronize_session=False)
+    db.query(FacultyActionAuditLog).filter(FacultyActionAuditLog.user_id == staff_id).delete(synchronize_session=False)
+    db.query(FacultyIntervention).filter(FacultyIntervention.faculty_id == staff_id).delete(synchronize_session=False)
+    db.query(MentorNote).filter(MentorNote.faculty_id == staff_id).delete(synchronize_session=False)
+    db.query(StaffFollowUp).filter(StaffFollowUp.staff_id == staff_id).delete(synchronize_session=False)
+    db.query(StaffAlert).filter(StaffAlert.staff_id == staff_id).delete(synchronize_session=False)
+
+    # Nullify references in action queues, email campaigns, and student assignments
+    db.query(FacultyActionQueueItem).filter(FacultyActionQueueItem.faculty_id == staff_id).update({
+        FacultyActionQueueItem.faculty_id: None,
+        FacultyActionQueueItem.assigned_faculty_name: None
+    }, synchronize_session=False)
+    db.query(EmailCampaign).filter(EmailCampaign.sender_id == staff_id).update({
+        EmailCampaign.sender_id: None
+    }, synchronize_session=False)
+    db.query(FacultyStudentAssignment).filter(
+        FacultyStudentAssignment.assigned_by_id == staff_id
+    ).update({
+        FacultyStudentAssignment.assigned_by_id: None
+    }, synchronize_session=False)
+
+    db.delete(staff_user)
     db.commit()
 
     log_admin_action(

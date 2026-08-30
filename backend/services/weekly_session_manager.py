@@ -1402,7 +1402,6 @@ class SundayLiveContestEngine:
 
             from backend.services.live_contest_poller import live_contest_poller
             from backend.leetcode_fetcher import fetch_recent_submissions
-            from backend.services.canonical_contest_engine import _determine_rank
             from backend.websocket_manager import manager
             import httpx
 
@@ -1444,6 +1443,7 @@ class SundayLiveContestEngine:
                     valid_pairs = [(r, u) for r, u in valid_pairs if u]
                     
                     self.processed_count = len(valid_pairs)
+                    logger.info(f"[SUNDAY_LIVE_ENGINE] Valid pairs: {self.processed_count}")
                     
                     # 3. Sweep in batches of 15 to avoid rate limits
                     batch_size = 15
@@ -1465,83 +1465,107 @@ class SundayLiveContestEngine:
                                 submissions = result.get("data", {}).get("submissions", [])
                                 
                                 has_update = False
+
+                                # Calculate contest window bounds for time-gating
+                                contest_start_ts = live_contest_poller.contest_start_time
+                                contest_duration_s = live_contest_poller.contest_duration or 5400  # 90 min default
+                                contest_end_ts = (contest_start_ts + contest_duration_s) if contest_start_ts else None
                                 
-                                for q_idx, q_slug in enumerate(live_contest_poller.sorted_question_slugs):
-                                    q_col = f"q{q_idx + 1}"
-                                    current_val = getattr(public_result, q_col)
+                                for sub in submissions:
+                                    sub_ts = sub.get("submission_timestamp")
+                                    # Time-gate: must be within the contest window
+                                    in_window = True
+                                    if contest_start_ts and sub_ts:
+                                        in_window = contest_start_ts <= int(sub_ts) <= (contest_end_ts or int(sub_ts) + 1)
                                     
-                                    # If already solved, skip
-                                    if current_val and current_val > 0:
-                                        continue
+                                    if in_window:
+                                        q_slug = sub.get("title_slug")
+                                        if not q_slug: continue
                                         
-                                    # Check if the student solved this question recently
-                                    for sub in submissions:
-                                        if sub.get("title_slug") == q_slug and sub.get("status_display") == "Accepted":
-                                            # Found a match!
-                                            setattr(public_result, q_col, 1)
-                                            has_update = True
+                                        # Register it dynamically if we haven't seen it yet
+                                        live_contest_poller.register_discovered_question(q_slug)
+                                        
+                                        # Find its index (0 to 3)
+                                        try:
+                                            q_idx = live_contest_poller.sorted_question_slugs.index(q_slug)
+                                            if q_idx > 3: continue # Max 4 questions
+                                        except ValueError:
+                                            continue
                                             
-                                            # Update total contest solved and contest score
-                                            public_result.total_contest_solved = (public_result.total_contest_solved or 0) + 1
-                                            q_credit = live_contest_poller.contest_questions[q_slug].get("credit", 3)
-                                            public_result.contest_score = (public_result.contest_score or 0) + q_credit
+                                        q_col = f"q{q_idx + 1}"
+                                        current_val = getattr(public_result, q_col)
+                                        
+                                        # If already solved, skip
+                                        if current_val and current_val > 0:
+                                            continue
                                             
-                                            # Ensure participation status is updated
-                                            if public_result.participation_status in ("NOT_ATTENDED", "PENDING", "UNKNOWN", "NOT_VERIFIED"):
-                                                public_result.participation_status = "PUBLIC_ATTENDED"
-                                            
-                                            self.successful_count += 1
-                                            
-                                            # Record Live Event
-                                            detail = f"Solved Problem Q{q_idx + 1} ({sub.get('title', q_slug)})"
-                                            self.record_live_event(
-                                                event_type=f"SOLVE_Q{q_idx + 1}",
-                                                student_name=public_result.name,
-                                                reg_no=public_result.reg_no,
-                                                dept=public_result.dept,
-                                                year=public_result.year,
-                                                detail=detail,
-                                                score=public_result.contest_score,
-                                                rank=public_result.contest_rank,
-                                                rank_change=None
-                                            )
-                                            
-                                            # Persist Event Provenance to DB
-                                            db_event = WeeklyContestLiveEvent(
-                                                session_id=session_id,
-                                                student_id=public_result.student_id,
-                                                reg_no=public_result.reg_no,
-                                                student_name=public_result.name,
-                                                question_id=q_idx + 1,
-                                                title_slug=q_slug,
-                                                submission_id=sub.get("id"),
-                                                event_type="SOLVE",
-                                                old_rank=None,
-                                                new_rank=public_result.contest_rank,
-                                                is_verified=True
-                                            )
-                                            db.add(db_event)
-                                            break
+                                        # Found a new match!
+                                        setattr(public_result, q_col, 1)
+                                        has_update = True
+                                        
+                                        # Update total contest solved and contest score
+                                        public_result.total_contest_solved = (public_result.total_contest_solved or 0) + 1
+                                        q_credit = live_contest_poller.contest_questions.get(q_slug, {}).get("credit", 3)
+                                        public_result.contest_score = (public_result.contest_score or 0) + q_credit
+                                        
+                                        # Ensure participation status is updated
+                                        if public_result.participation_status in ("NOT_ATTENDED", "PENDING", "UNKNOWN", "NOT_VERIFIED"):
+                                            public_result.participation_status = "PUBLIC_ATTENDED"
+                                        
+                                        self.successful_count += 1
+                                        
+                                        # Record Live Event
+                                        detail = f"Solved Problem Q{q_idx + 1} ({sub.get('title', q_slug)})"
+                                        self.record_live_event(
+                                            event_type=f"SOLVE_Q{q_idx + 1}",
+                                            student_name=public_result.name,
+                                            reg_no=public_result.reg_no,
+                                            dept=public_result.dept,
+                                            year=public_result.year,
+                                            detail=detail,
+                                            score=public_result.contest_score,
+                                            rank=public_result.contest_rank,
+                                            rank_change=None
+                                        )
+                                        
+                                        # Persist Event Provenance to DB
+                                        db_event = WeeklyContestLiveEvent(
+                                            session_id=session_id,
+                                            student_id=public_result.student_id,
+                                            reg_no=public_result.reg_no,
+                                            student_name=public_result.name,
+                                            question_id=q_idx + 1,
+                                            title_slug=q_slug,
+                                            submission_id=sub.get("id"),
+                                            event_type="SOLVE",
+                                            old_rank=None,
+                                            new_rank=public_result.contest_rank,
+                                            is_verified=True
+                                        )
+                                        db.add(db_event)
 
                                 if has_update:
                                     db.commit()
                                     db.refresh(public_result)
                                     
-                                    # 4. Re-calculate rank if needed and broadcast event
-                                    payload = {
-                                        "student_id": public_result.student_id,
-                                        "username": username_val,
-                                        "q1": public_result.q1,
-                                        "q2": public_result.q2,
-                                        "q3": public_result.q3,
-                                        "q4": public_result.q4,
-                                        "total_solved": public_result.total_contest_solved,
-                                        "score": public_result.contest_score,
-                                        "participation_status": public_result.participation_status
-                                    }
-                                    
-                                    # Use a separate background task for WS broadcast to not block
-                                    asyncio.create_task(manager.broadcast_contest_result(session_id, payload))
+                                    # 4. Broadcast live WebSocket event with correct signature
+                                    asyncio.create_task(manager.broadcast_contest_result(
+                                        student_id=public_result.student_id,
+                                        student_name=public_result.name or "",
+                                        reg_no=public_result.reg_no or "",
+                                        username=username_val or "",
+                                        contest_id=session.contest_name or "",
+                                        session_id=session_id,
+                                        q1=public_result.q1 or 0,
+                                        q2=public_result.q2 or 0,
+                                        q3=public_result.q3 or 0,
+                                        q4=public_result.q4 or 0,
+                                        solved_count=public_result.total_contest_solved or 0,
+                                        official_rank=public_result.contest_rank,
+                                        participation_status=public_result.participation_status or "PUBLIC_ATTENDED",
+                                        department_name=public_result.dept,
+                                        year_level=public_result.year
+                                    ))
 
                             if self.is_paused:
                                 break
