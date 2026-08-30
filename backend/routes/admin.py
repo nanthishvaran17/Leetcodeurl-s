@@ -651,7 +651,7 @@ def create_staff_user(
     from backend.routes.auth import get_password_hash
 
     # Strictly enforce RBAC: Only Super Admin and Admin can create staff
-    if current_user.role not in ["Super Admin", "Admin"]:
+    if current_user.role.lower() not in ["super admin", "admin"]:
         raise HTTPException(status_code=403, detail="Only Admins can create staff accounts.")
 
     # Flexible institutional_id: accept any custom format or auto-generate if missing
@@ -749,7 +749,7 @@ def update_staff_user(
         raise HTTPException(status_code=404, detail="Staff member not found.")
 
     # Privilege escalation protection
-    if payload.role and payload.role.strip() in ["Super Admin", "Admin"] and current_user.role not in ["Super Admin", "super admin"]:
+    if payload.role and payload.role.strip().lower() in ["super admin", "admin"] and current_user.role.lower() not in ["super admin"]:
         raise HTTPException(status_code=403, detail="Only Super Admins can promote users to Admin roles.")
 
     changes_made = {}
@@ -863,7 +863,7 @@ def delete_staff_user(
         FacultyActionQueueItem, EmailCampaign
     )
     
-    if current_user.role not in ["Super Admin", "Admin"]:
+    if current_user.role.lower() not in ["super admin", "admin"]:
         raise HTTPException(status_code=403, detail="Only Admins can delete staff accounts.")
 
     staff_user = db.query(User).filter(User.id == staff_id).first()
