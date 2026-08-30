@@ -181,42 +181,74 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     }
   }, [selectedSessionId, currentSession?.status]);
 
+  // ── Live Telemetry Auto-Poll: always runs every 30s when session is LIVE ──
   useEffect(() => {
     let isMounted = true;
     let interval: ReturnType<typeof setInterval> | null = null;
-    
-    // Only start polling if we are mounted, and do an initial fetch
+
+    // Initial fetch on mount / session change
     pollTelemetry();
-    
-    if (autoRefresh) {
+
+    const activeObj = sessionsList.find(s => Number(s.sessionId) === Number(selectedSessionId)) || currentSession;
+    const isSessionLive = currentSession?.status === 'LIVE' || activeObj?.status === 'LIVE';
+
+    if (isSessionLive || autoRefresh) {
+      // Always poll every 30s when LIVE; also poll if user manually enabled autoRefresh
       interval = setInterval(() => {
         if (isMounted) pollTelemetry();
-      }, 30000); // 30 seconds as requested
-    } else {
-      // Default live polling behavior (e.g. 15s) when autoRefresh is not explicitly managed, but user requested 30s auto-refresh
-      // Actually, if autoRefresh is OFF, user said "only refresh on manual click". So no interval.
+      }, 30000);
     }
-    
+
     return () => {
       isMounted = false;
       if (interval) clearInterval(interval);
     };
-  }, [pollTelemetry, autoRefresh]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pollTelemetry, autoRefresh, currentSession?.status, sessionsList, selectedSessionId]);
 
-  // WebSocket Live Rendering
+  // ── Live Matrix Rows Auto-Poll: refresh contest results every 60s when LIVE ──
+  useEffect(() => {
+    if (!selectedSessionId) return;
+    const isSessionLive = currentSession?.status === 'LIVE';
+    if (!isSessionLive && !autoRefresh) return;
+
+    let isMounted = true;
+    const interval = setInterval(() => {
+      if (!isMounted || (typeof document !== 'undefined' && document.visibilityState === 'hidden')) return;
+      // Silent refresh — keep existing rows, just update values
+      fetchSessionDetails(selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, true);
+    }, autoRefresh ? 30000 : 60000); // 60s when LIVE, 30s if user toggled autoRefresh
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSessionId, currentSession?.status, autoRefresh, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter]);
+
+  // WebSocket Live Rendering — match by student_id, reg_no, or username as fallbacks
   const handleWebSocketResult = useCallback((event: ContestWSEvent) => {
     setMatrixRows(prev => {
-      const idx = prev.findIndex(r => r.student_id === event.studentId);
-      if (idx === -1) return prev; // Do not insert new rows dynamically to avoid jumping if not already loaded
+      // Primary: match by student_id; Fallback: reg_no or username
+      let idx = event.studentId != null ? prev.findIndex(r => r.student_id === event.studentId) : -1;
+      if (idx === -1 && event.regNo) idx = prev.findIndex(r => r.reg_no === event.regNo);
+      if (idx === -1 && event.studentName) idx = prev.findIndex(r => r.username === event.contestId || r.name === event.studentName);
+      if (idx === -1) return prev; // Still not found — do not insert dynamically
 
       const updated = [...prev];
       updated[idx] = {
         ...updated[idx],
+        q1: event.q1 ?? updated[idx].q1,
+        q2: event.q2 ?? updated[idx].q2,
+        q3: event.q3 ?? updated[idx].q3,
+        q4: event.q4 ?? updated[idx].q4,
         q1_score: event.q1 ?? updated[idx].q1_score,
         q2_score: event.q2 ?? updated[idx].q2_score,
         q3_score: event.q3 ?? updated[idx].q3_score,
         q4_score: event.q4 ?? updated[idx].q4_score,
         total_solved: event.solvedCount ?? updated[idx].total_solved,
+        total_contest_solved: event.solvedCount ?? updated[idx].total_contest_solved,
+        rank: event.officialRank ?? updated[idx].rank,
         official_rank: event.officialRank ?? updated[idx].official_rank,
         participation_status: event.participationStatus ?? updated[idx].participation_status,
         last_updated: event.timestamp ?? new Date().toISOString()

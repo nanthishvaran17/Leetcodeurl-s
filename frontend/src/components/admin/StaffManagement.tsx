@@ -410,9 +410,9 @@ export const StaffManagement: React.FC = () => {
     setIsDeleting(true);
     try {
       await api.delete(`/admin/staff/${deletingStaff.id}`);
+      setStaffList(prev => prev.filter(staff => staff.id !== deletingStaff.id));
       notify.success(`Staff account '${deletingStaff.username}' deleted successfully.`, '', { category: 'ADMIN' });
       setDeletingStaff(null);
-      await fetchStaff();
       window.dispatchEvent(new CustomEvent('nec_staff_updated'));
     } catch (err: any) {
       console.error('Failed to delete staff:', err);

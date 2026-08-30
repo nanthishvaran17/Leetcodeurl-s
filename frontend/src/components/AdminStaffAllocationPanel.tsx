@@ -310,21 +310,21 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  });
  };
 
- const executeDeleteStaff = async () => {
- if (!confirmModal.targetStaff) return;
- const st = confirmModal.targetStaff;
+  const executeDeleteStaff = async () => {
+    if (!confirmModal.targetStaff) return;
+    const st = confirmModal.targetStaff;
 
- setConfirmModal(prev => ({ ...prev, processing: true }));
- try {
- const res = await api.delete(`/faculty-assignments/staff/${st.id}`);
- notify.success('Staff Deleted', res.data?.message || `Staff '${st.username}' deleted.`);
- setConfirmModal({ isOpen: false, type: null, title: '', description: '' });
- fetchAllocationData();
- } catch (err: any) {
- notify.error('Delete Failed', err.response?.data?.detail || 'Failed to delete staff member.');
- setConfirmModal(prev => ({ ...prev, processing: false }));
- }
- };
+    setConfirmModal(prev => ({ ...prev, processing: true }));
+    try {
+      const res = await api.delete(`/faculty-assignments/staff/${st.id}`);
+      setStaffList(prev => prev.filter(staff => staff.id !== st.id));
+      notify.success('Staff Deleted', res.data?.message || `Staff '${st.username}' deleted.`);
+      setConfirmModal({ isOpen: false, type: null, title: '', description: '' });
+    } catch (err: any) {
+      notify.error('Delete Failed', err.response?.data?.detail || 'Failed to delete staff member.');
+      setConfirmModal(prev => ({ ...prev, processing: false }));
+    }
+  };
 
  // ─── 3. Toggle Staff Active Status Handler ───────────────────────────────
  const triggerToggleStatusModal = (st: any) => {

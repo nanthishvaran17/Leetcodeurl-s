@@ -35,6 +35,10 @@ class Section(Base):
 
 class Student(Base):
     __tablename__ = "students"
+    __table_args__ = (
+        Index("ix_students_search", "name", "reg_no", "username"),
+        Index("ix_students_dept_year_active", "department_id", "year_level", "is_active"),
+    )
     
     id = Column(Integer, primary_key=True, index=True)
     reg_no = Column(String(50), unique=True, index=True, nullable=False)
@@ -206,6 +210,8 @@ class WeeklyPublicResult(Base):
     __tablename__ = "weekly_public_results"
     __table_args__ = (
         Index("ix_weekly_public_results_session_student", "session_id", "student_id"),
+        Index("ix_weekly_public_results_session_dept_year", "session_id", "dept", "year"),
+        Index("ix_weekly_public_results_participation", "session_id", "participation_status"),
     )
 
     id = Column(Integer, primary_key=True, index=True)
