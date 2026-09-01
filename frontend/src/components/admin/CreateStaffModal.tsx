@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { User, Shield, CheckCircle, Building2, Key, Check, Loader2, FileCheck, X, Briefcase, ChevronRight, Hash, Mail, Phone, Calendar, Search } from 'lucide-react';
+import { User, Shield, CheckCircle, Building2, Key, Check, Loader2, FileCheck, X, Briefcase, ChevronRight, Hash, Mail, Phone, Calendar, Search, Sparkles } from 'lucide-react';
 import api from '../../services/api';
 import { CustomDropdown, DropdownOption } from '../CustomDropdown';
 import { GlobalModalBackdrop } from '../GlobalModalBackdrop';
