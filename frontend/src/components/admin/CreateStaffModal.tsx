@@ -189,12 +189,12 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
             
             {/* SECTION 1: Role & Academic Scope */}
             <section className="bg-white dark:bg-navy-900/80 rounded-2xl p-5 border border-gray-200 dark:border-navy-800 shadow-sm">
-              <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center uppercase tracking-wider">
+              <h3 className="text-xs font-bold text-brand-700 dark:text-brand-300 mb-4 flex items-center uppercase tracking-wider bg-brand-50 dark:bg-brand-500/10 p-2.5 rounded-xl">
                 <Building2 className="w-4 h-4 mr-2 text-brand-500" /> 1. Role & Academic Scope
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 
-                <div className="space-y-1.5 z-[105]">
+                <div className="space-y-1.5 relative z-[105]">
                   <CustomDropdown
                     label="Staff Role"
                     options={roleOptions}
@@ -204,7 +204,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
                   />
                 </div>
 
-                <div className="space-y-1.5 z-[104]">
+                <div className="space-y-1.5 relative z-[104]">
                   <CustomDropdown
                     label="Department"
                     options={departmentOptions}
@@ -216,7 +216,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
                   {isGlobalRole && <p className="text-[10px] text-gray-500 ml-1">Disabled for Admins</p>}
                 </div>
 
-                <div className="space-y-1.5 z-[103]">
+                <div className="space-y-1.5 relative z-[103]">
                   <CustomDropdown
                     label="Academic Year"
                     options={academicYearOptions}
@@ -245,7 +245,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
 
             {/* SECTION 2: User Identity & Credentials */}
             <section className="bg-white dark:bg-navy-900/80 rounded-2xl p-5 border border-gray-200 dark:border-navy-800 shadow-sm">
-              <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center uppercase tracking-wider">
+              <h3 className="text-xs font-bold text-indigo-700 dark:text-indigo-300 mb-4 flex items-center uppercase tracking-wider bg-indigo-50 dark:bg-indigo-500/10 p-2.5 rounded-xl">
                 <User className="w-4 h-4 mr-2 text-indigo-500" /> 2. User Identity & Credentials
               </h3>
               
@@ -313,28 +313,41 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
                     value={formData.date_of_birth} 
                     onChange={e => setFormData({...formData, date_of_birth: e.target.value})} 
                     className="w-full h-11 px-4 rounded-2xl border border-gray-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 bg-gray-50 dark:bg-navy-800 text-sm font-bold text-gray-900 dark:text-white outline-none transition-all" 
-                    
+                    placeholder="YYYY-MM-DD"
                     autoComplete="off"
                   />
                 </div>
 
                 <div className="space-y-1.5 sm:col-span-2">
                   <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Institutional ID</label>
-                  <input 
-                    type="text" 
-                    value={formData.institutional_id} 
-                    onChange={e => setFormData({...formData, institutional_id: e.target.value})} 
-                    className="w-full h-11 px-4 rounded-2xl border border-gray-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 bg-gray-50 dark:bg-navy-800 text-sm font-bold text-gray-900 dark:text-white outline-none transition-all" 
-                    
-                    autoComplete="off"
-                  />
+                  <div className="flex space-x-2">
+                    <input 
+                      type="text" 
+                      value={formData.institutional_id} 
+                      onChange={e => setFormData({...formData, institutional_id: e.target.value})} 
+                      className="flex-1 h-11 px-4 rounded-2xl border border-gray-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 bg-gray-50 dark:bg-navy-800 text-sm font-bold text-gray-900 dark:text-white outline-none transition-all" 
+                      autoComplete="off"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const randomHex = Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+                        const prefix = formData.department_id ? formData.department_id.toUpperCase().substring(0, 3) : 'GLB';
+                        const rolePrefix = formData.role === 'Administrator' || formData.role === 'Super Admin' ? 'ADM' : 'FAC';
+                        setFormData({...formData, institutional_id: `NEC-${prefix}-${rolePrefix}-${randomHex}`});
+                      }}
+                      className="h-11 px-4 rounded-2xl bg-brand-100 dark:bg-brand-500/20 text-brand-700 dark:text-brand-300 text-xs font-bold hover:bg-brand-200 dark:hover:bg-brand-500/30 transition-all flex items-center shrink-0"
+                    >
+                      <Sparkles className="w-3 h-3 mr-1.5" /> Generate ID
+                    </button>
+                  </div>
                 </div>
               </div>
             </section>
 
             {/* SECTION 3: Staff Verification */}
             <section className="bg-white dark:bg-navy-900/80 rounded-2xl p-5 border border-gray-200 dark:border-navy-800 shadow-sm">
-              <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center uppercase tracking-wider">
+              <h3 className="text-xs font-bold text-emerald-700 dark:text-emerald-300 mb-4 flex items-center uppercase tracking-wider bg-emerald-50 dark:bg-emerald-500/10 p-2.5 rounded-xl">
                 <FileCheck className="w-4 h-4 mr-2 text-emerald-500" /> 3. Staff Verification
               </h3>
               <div className="space-y-1.5">
@@ -356,7 +369,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
 
             {/* SECTION 4: Security & Password */}
             <section className="bg-white dark:bg-navy-900/80 rounded-2xl p-5 border border-gray-200 dark:border-navy-800 shadow-sm">
-              <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center uppercase tracking-wider">
+              <h3 className="text-xs font-bold text-rose-700 dark:text-rose-300 mb-4 flex items-center uppercase tracking-wider bg-rose-50 dark:bg-rose-500/10 p-2.5 rounded-xl">
                 <Key className="w-4 h-4 mr-2 text-rose-500" /> 4. Security & Password
               </h3>
               
@@ -399,13 +412,13 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
 
             {/* SECTION 5: Account Status & Agreement */}
             <section className="bg-brand-50/40 dark:bg-navy-900/80 rounded-2xl p-5 border border-brand-100 dark:border-navy-800 shadow-sm">
-              <h3 className="text-xs font-bold text-brand-900 dark:text-brand-400 mb-4 flex items-center uppercase tracking-wider">
-                <CheckCircle className="w-4 h-4 mr-2 text-brand-500" /> 5. Account Status & Agreement
+              <h3 className="text-xs font-bold text-sky-700 dark:text-sky-300 mb-4 flex items-center uppercase tracking-wider bg-sky-50 dark:bg-sky-500/10 p-2.5 rounded-xl">
+                <CheckCircle className="w-4 h-4 mr-2 text-sky-500" /> 5. Account Status & Agreement
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <div className="space-y-1.5 z-[101]">
+                  <div className="space-y-1.5 relative z-[101]">
                     <CustomDropdown
                       label="Account Status"
                       options={statusOptions}
@@ -414,7 +427,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
                     />
                   </div>
 
-                  <div className="space-y-1.5 z-[100]">
+                  <div className="space-y-1.5 relative z-[100]">
                     <CustomDropdown
                       label="Reporting Manager (Optional)"
                       options={staffOptions}
