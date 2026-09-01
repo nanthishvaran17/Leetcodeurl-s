@@ -58,15 +58,24 @@ def compare_departments(request: Request, db: Session = Depends(get_db)):
 
         weekly_prog_total = 0
         active_count = 0
+        weekly_active_count = 0
         for s in students:
             prog = prog_map.get(s.id)
+            total_solved_val = (s.stats.total_solved or 0) if s.stats else 0
+            # A student is "active" if they have solved at least 1 problem
+            if total_solved_val > 0:
+                active_count += 1
             if prog:
                 weekly_prog_total += prog.weekly_progress
                 if prog.weekly_progress > 0:
-                    active_count += 1
+                    weekly_active_count += 1
 
         avg_progress = round(weekly_prog_total / total_stud, 1)
-        participation = round((active_count / total_stud * 100), 1)
+        # Use weekly participation if available, otherwise use active solvers ratio
+        if weekly_active_count > 0:
+            participation = round((weekly_active_count / total_stud * 100), 1)
+        else:
+            participation = round((active_count / total_stud * 100), 1)
 
         top_stud = max(students, key=lambda x: (x.stats.total_solved or 0) if x.stats else 0, default=None)
 
