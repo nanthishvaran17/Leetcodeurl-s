@@ -1020,12 +1020,18 @@ def sync_single_student(student_id: int, db: Session, force_refresh: bool = True
             loop.create_task(broadcast_sync_event({
                 "type": "STUDENT_UPDATED",
                 "student_id": student.id,
-                "reg_no": student.reg_no,
-                "name": student.name,
-                "username": student.username,
-                "leetcode_url": student.leetcode_url,
-                "total_solved": student.stats.total_solved if student.stats else None,
-                "sync_status": student.stats.sync_status if student.stats else "failed"
+                "version": student.version,
+                "changes": {
+                    "reg_no": student.reg_no,
+                    "name": student.name,
+                    "username": student.username,
+                    "stats": {
+                        "total_solved": student.stats.total_solved if student.stats else None,
+                        "sync_status": student.stats.sync_status if student.stats else "failed",
+                        "status": student.stats.status if student.stats else "pending",
+                        "last_verified_at": student.stats.last_verified_at.isoformat() if student.stats and student.stats.last_verified_at else None
+                    }
+                }
             }))
         except Exception:
             pass

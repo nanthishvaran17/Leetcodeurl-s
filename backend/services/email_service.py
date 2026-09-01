@@ -191,6 +191,7 @@ def connect_and_login_smtp(smtp_host: str, smtp_port: int, smtp_user: str, smtp_
 from sqlalchemy.orm import Session
 
 from backend.config import settings
+from backend.services.email_assets import NEC_25_LOGO_BASE64
 from backend.database import SessionLocal
 from backend.models import (
     WeeklySession,
@@ -628,7 +629,7 @@ def build_otp_email_template(otp: str) -> Tuple[str, str, str]:
           <!-- Header Branding -->
           <tr>
             <td style="padding: 36px 36px 24px 36px; text-align: left;">
-              <img src="https://raw.githubusercontent.com/nanthishvaran17/Leetcodeurl-s/main/frontend/public/nec_25_logo.png" alt="25 Years of Excellence" style="width: 60px; height: auto; margin-bottom: 16px; display: block;">
+              <img src="data:image/jpeg;base64,{NEC_25_LOGO_BASE64}" alt="Nandha Engineering College" width="140" style="display:block; width:140px; max-width:140px; height:auto; margin:0 auto 16px; border:0; outline:none; text-decoration:none;">
               <div style="font-size: 18px; font-weight: 800; color: #0f172a; letter-spacing: -0.3px; line-height: 1.2;">
                 NANDHA ENGINEERING COLLEGE
               </div>
@@ -1188,10 +1189,10 @@ def build_institutional_email_body(
     <!DOCTYPE html>
     <html>
     <body style="font-family: Arial, sans-serif; color: #1e293b; line-height: 1.6; max-width: 650px; margin: 0 auto; padding: 20px;">
-        <div style="background-color: #0f172a; color: #ffffff; padding: 20px; text-align: center; border-radius: 12px 12px 0 0;">
-            <img src="https://raw.githubusercontent.com/nanthishvaran17/Leetcodeurl-s/main/frontend/public/nec_25_logo.png" alt="25 Years of Excellence" style="width: 80px; height: auto; margin-bottom: 12px; display: inline-block;">
-            <h2 style="margin: 0;">NANDHA ENGINEERING COLLEGE</h2>
-            <p style="margin: 5px 0 0 0; font-size: 13px; color: #38bdf8;">AUTONOMOUS • LeetCode Weekly Performance Report</p>
+        <div style="background-color: #0f172a; color: #ffffff; padding: 24px 20px; text-align: center; border-radius: 12px 12px 0 0; border-bottom: 4px solid #3b82f6;">
+            <img src="https://files.catbox.moe/xomd50.png" alt="Nandha Engineering College" width="140" style="display:block; width:140px; max-width:140px; height:auto; margin:0 auto 16px; border:0; outline:none; text-decoration:none;">
+            <h2 style="margin: 0; font-size: 20px; letter-spacing: 0.5px;">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</h2>
+            <p style="margin: 6px 0 0 0; font-size: 13px; color: #38bdf8; font-weight: bold;">LeetCode Weekly Performance Report</p>
         </div>
 
         <div style="border: 1px solid #e2e8f0; border-top: none; padding: 24px; border-radius: 0 0 12px 12px;">
@@ -1487,10 +1488,11 @@ def send_manual_report_email(
     body_html = f"""
     <!DOCTYPE html>
     <html>
-    <body style="font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; line-height: 1.6; max-width: 650px; margin: 0 auto; padding: 20px; background-color: #f8fafc;">
-        <div style="background-color: #0f172a; color: #ffffff; padding: 24px 20px; text-align: center; border-radius: 12px 12px 0 0;">
+    <body style="font-family: Arial, Helvetica, sans-serif; color: #1e293b; line-height: 1.6; max-width: 650px; margin: 0 auto; padding: 20px; background-color: #f8fafc;">
+        <div style="background-color: #0f172a; color: #ffffff; padding: 24px 20px; text-align: center; border-radius: 12px 12px 0 0; border-bottom: 4px solid #3b82f6;">
+            <img src="https://files.catbox.moe/xomd50.png" alt="Nandha Engineering College" width="140" style="display:block; width:140px; max-width:140px; height:auto; margin:0 auto 16px; border:0; outline:none; text-decoration:none;">
             <h2 style="margin: 0; font-size: 20px; letter-spacing: 0.5px;">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</h2>
-            <p style="margin: 6px 0 0 0; font-size: 13px; color: #38bdf8;">LeetCode Weekly Performance Tracker • Official Institutional Report</p>
+            <p style="margin: 6px 0 0 0; font-size: 13px; color: #38bdf8; font-weight: bold;">LeetCode Weekly Performance Tracker &nbsp; Official Institutional Report</p>
         </div>
 
         <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-top: none; padding: 28px; border-radius: 0 0 12px 12px;">

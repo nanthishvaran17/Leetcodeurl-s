@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ExternalLink, Trophy, Flame, Star, Award, CheckCircle2, RotateCw, User, Trash2, ShieldCheck, Clock, AlertCircle, Loader, Crown } from 'lucide-react';
 import { StudentData } from './LeaderboardTable';
+import { useStudentEntity } from '../stores/studentLiveStore';
 
 interface StudentFlipCardProps {
   student: StudentData;
@@ -57,8 +58,10 @@ function formatVerifiedAgo(lastVerifiedAt?: string): string {
   return `${Math.floor(diffHr / 24)}d ago`;
 }
 
-const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student, onSelectStudent, onDeleteStudent }) => {
+const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: initialStudent, onSelectStudent, onDeleteStudent }) => {
   const [isFlipped, setIsFlipped] = useState(false);
+  const liveStudent = (useStudentEntity(initialStudent.id) as any) || initialStudent;
+  const student = liveStudent;
 
   // ── Sync State ──────────────────────────────────────────────────────────────
   const rawTotal = student.stats?.total_solved ?? student.total_solved;

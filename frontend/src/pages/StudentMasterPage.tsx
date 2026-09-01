@@ -1,13 +1,22 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Plus, UploadCloud, RefreshCw, UserPlus, List, LayoutGrid, CheckCircle, XCircle, Loader2, AlertTriangle, WifiOff, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { 
+  Users, Trash2, Edit2, ShieldAlert, BadgeInfo, CheckCircle, 
+  X, Check, AlertCircle, Sparkles, Building2, LayoutList, Calendar,
+  Search, Plus, UploadCloud, RefreshCw, UserPlus, List, LayoutGrid, XCircle, Loader2, AlertTriangle, WifiOff, ChevronLeft, ChevronRight
+} from 'lucide-react';
+import { GlobalFilter } from '../components/GlobalFilter';
 import api from '../services/api';
-import { useQuery, keepPreviousData, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { StudentFlipCard } from '../components/StudentFlipCard';
 import { collection, getDocs } from 'firebase/firestore';
 import { getOrInitDb } from '../services/firebase';
 
-import { CANONICAL_ROSTER } from '../data/canonicalRoster';
+import { useGlobalData } from '../context/GlobalDataContext';
+import { useStudentsQuery } from '../hooks/useStudentsQuery';
+import { studentLiveStore } from '../stores/studentLiveStore';
+import { useDepartmentsQuery } from '../hooks/useDashboardQueries';
+import { useFilters, useFilteredStudents } from '../context/FilterContext';
 
 // ─── Validation state machine ────────────────────────────────────────────────
 type LcValidationState =
@@ -140,17 +149,17 @@ interface StudentMasterPageProps {
 
 import { useNotification } from '../context/NotificationContext';
 
-import { useDebounce } from '../hooks/useDebounce';
-
 export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   onSelectStudent,
   onOpenImport
 }) => {
   const { notify, confirmAction } = useNotification();
   const queryClient = useQueryClient();
-  const [studentsFallback, setStudentsFallback] = useState<StudentData[]>(() => CANONICAL_ROSTER);
-  const [search, setSearch] = useState('');
-  const debouncedSearch = useDebounce(search, 300);
+  const { refreshAllData } = useGlobalData();
+  const { data: globalStudents = [] } = useStudentsQuery();
+  const { data: globalDepts = [] } = useDepartmentsQuery();
+  const filters = useFilters();
+  const filteredStudents = useFilteredStudents();
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -175,53 +184,42 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
   const [departments, setDepartments] = useState<any[]>([]);
   
-  // Server-side pagination state
   const [serverPage, setServerPage] = useState(1);
   const [serverPageSize, setServerPageSize] = useState(50);
-  const [serverTotalCount, setServerTotalCount] = useState(0);
 
-  const fetchStudentsQuery = async (query = '', page = 1, limit = 50) => {
-    const res = await api.get(`/students?search=${encodeURIComponent(query)}&paginated=true&page=${page}&limit=${limit}`);
-    return res.data;
-  };
+  // Derived filtered students locally via global FilterContext
+  // (already handled by useFilteredStudents above)
 
-  const { data: studentsData } = useQuery({
-    queryKey: ['students', serverPage, serverPageSize, debouncedSearch],
-    queryFn: () => fetchStudentsQuery(debouncedSearch, serverPage, serverPageSize),
-    placeholderData: keepPreviousData,
-  });
-
+  const serverTotalCount = filteredStudents.length;
+  
+  // Calculate total pages
+  const totalPages = Math.max(1, Math.ceil(serverTotalCount / serverPageSize));
+  
+  // Enforce valid page bounds when filtering changes total count
   useEffect(() => {
-    if (studentsData && studentsData.total && serverPage * serverPageSize < studentsData.total) {
-      queryClient.prefetchQuery({
-        queryKey: ['students', serverPage + 1, serverPageSize, debouncedSearch],
-        queryFn: () => fetchStudentsQuery(debouncedSearch, serverPage + 1, serverPageSize),
-      });
+    if (serverPage > totalPages) {
+      setServerPage(1);
     }
-  }, [studentsData, serverPage, serverPageSize, debouncedSearch, queryClient]);
+  }, [totalPages, serverPage]);
 
-  const students = studentsData?.items || (Array.isArray(studentsData) ? studentsData : studentsFallback);
+  // Local Pagination
+  const displayedStudents = useMemo(() => {
+    const start = (serverPage - 1) * serverPageSize;
+    return filteredStudents.slice(start, start + serverPageSize);
+  }, [filteredStudents, serverPage, serverPageSize]);
+
+  // Load departments via global data (if not available, fallback to api)
   useEffect(() => {
-    if (studentsData?.total !== undefined) {
-      setServerTotalCount(studentsData.total);
+    if (globalDepts && globalDepts.length > 0) {
+      const mapped = globalDepts.map((d: any) => ({
+        id: d.id || d.department_id,
+        name: d.name || d.department_name,
+        code: d.code || d.department_code
+      }));
+      setDepartments(mapped);
+      if (!deptId) setDeptId(mapped[0].id);
     }
-  }, [studentsData?.total]);
-
-  const { data: deptsData } = useQuery({
-    queryKey: ['departments'],
-    queryFn: async () => {
-      const res = await api.get('/departments');
-      return res.data;
-    },
-    staleTime: 30 * 60 * 1000,
-  });
-
-  useEffect(() => {
-    if (deptsData && deptsData.length > 0) {
-      setDepartments(deptsData);
-      if (!deptId) setDeptId(deptsData[0].id);
-    }
-  }, [deptsData]);
+  }, [globalDepts, deptId]);
 
   // ── LeetCode URL validation (debounced, 900ms) ─────────────────────────────
   const validateLcUrl = useCallback(async (url: string) => {
@@ -402,7 +400,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
           <div className="space-y-4 max-w-2xl">
             <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black uppercase tracking-wider">
               <UserPlus className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400" />
-              <span>STUDENT DIRECTORY • {students.length} ENROLLED</span>
+              <span>STUDENT DIRECTORY • {globalStudents.length} ENROLLED</span>
             </div>
 
             <div className="space-y-1.5">
@@ -461,30 +459,61 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by student name, register number or LeetCode username..."
-          className="w-full pl-11 pr-24 py-3 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 text-sm font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 focus:outline-none shadow-sm transition-all"
-        />
-        {search && (
-          <button
-            onClick={() => setSearch('')}
-            className="absolute right-3 top-2.5 text-xs font-bold px-3 py-1 rounded-xl bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-300 transition-colors"
-          >
-            ✕ Clear Search
-          </button>
-        )}
+      {/* Search Bar - Redesigned */}
+      <div className="bg-white dark:bg-navy-900 rounded-2xl p-4 shadow-sm border border-gray-200 dark:border-navy-700 space-y-4">
+        <div className="relative">
+          <Search className="w-5 h-5 text-slate-400 absolute left-4 top-3.5" />
+          <input
+            type="text"
+            value={filters.searchQuery}
+            onChange={(e) => filters.setSearchQuery(e.target.value)}
+            placeholder="Search name, register no, username..."
+            className="w-full pl-12 pr-12 py-3 rounded-xl border border-slate-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-950 text-sm font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 focus:outline-none transition-all"
+          />
+          {filters.searchQuery && (
+            <button
+              onClick={() => filters.setSearchQuery('')}
+              className="absolute right-3 top-3 p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-navy-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+              title="Clear search"
+            >
+              <XCircle className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+        
+        <div className="flex items-center justify-between px-1 text-xs font-semibold text-gray-500 dark:text-gray-400">
+          {filters.isFilteringActive ? (
+            <span>
+              Showing <span className="text-gray-900 dark:text-white font-bold">{serverTotalCount}</span> of <span className="text-gray-900 dark:text-white font-bold">{globalStudents.length}</span> students
+            </span>
+          ) : (
+            <span>Showing all {globalStudents.length} students</span>
+          )}
+        </div>
       </div>
 
+      {serverTotalCount === 0 && filters.isFilteringActive && (
+        <div className="text-center py-16 px-6 bg-white dark:bg-navy-900 rounded-3xl border border-gray-200 dark:border-navy-700 shadow-sm space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-6 h-6" />
+          </div>
+          <div className="space-y-1">
+            <h4 className="text-base font-black text-gray-900 dark:text-white">No students found</h4>
+            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+              Try searching with: <br/>
+              • Student name<br/>
+              • Register number<br/>
+              • LeetCode username<br/>
+              • Email
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Leaderboard / Student Master Table / Flip Cards */}
-      {viewMode === 'table' ? (
+      {serverTotalCount > 0 && (viewMode === 'table' ? (
         <LeaderboardTable
-          students={students}
+          students={displayedStudents}
           onSelectStudent={onSelectStudent}
           onRefreshStudent={handleSyncSingleStudent}
           onDeleteStudent={handleDeleteStudent}
@@ -500,7 +529,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       ) : (
         <div className="flex flex-col gap-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-            {students.map((st) => (
+            {displayedStudents.map((st) => (
               <StudentFlipCard
                 key={st.id}
                 student={st}
@@ -517,19 +546,21 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
               </div>
               
               <div className="flex items-center gap-2">
-                <select
-                  value={serverPageSize}
-                  onChange={(e) => {
-                    setServerPageSize(Number(e.target.value));
+                <GlobalFilter
+                  value={serverPageSize.toString()}
+                  onChange={(val) => {
+                    setServerPageSize(Number(val));
                     setServerPage(1);
                   }}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-800 text-sm font-semibold text-slate-700 dark:text-slate-200 outline-none"
-                >
-                  <option value={20}>20 per page</option>
-                  <option value={50}>50 per page</option>
-                  <option value={100}>100 per page</option>
-                  <option value={200}>200 per page</option>
-                </select>
+                  dropdownWidth="w-48"
+                  options={[
+                    { value: "20", label: "20 per page" },
+                    { value: "50", label: "50 per page" },
+                    { value: "100", label: "100 per page" },
+                    { value: "200", label: "200 per page" }
+                  ]}
+                  icon={<LayoutList className="w-4 h-4" />}
+                />
 
                 <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-800 rounded-lg p-1 border border-slate-200 dark:border-navy-700">
                   <button
@@ -554,7 +585,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
             </div>
           )}
         </div>
-      )}
+      ))}
 
       {/* Add Student Modal */}
       {showAddModal && (
@@ -594,28 +625,28 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
               <div>
                 <label className="block font-bold text-gray-700 dark:text-gray-300 mb-1">Department</label>
-                <select
-                  value={deptId}
-                  onChange={(e) => setDeptId(Number(e.target.value))}
-                  className="w-full p-2.5 rounded-xl border bg-white dark:bg-navy-900"
-                >
-                  {departments.map((d) => (
-                    <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
-                  ))}
-                </select>
+                <GlobalFilter
+                  value={deptId?.toString() || ""}
+                  onChange={(val) => setDeptId(Number(val))}
+                  dropdownWidth="w-full"
+                  options={departments.map((d: any) => ({ value: String(d.id), label: `${d.name} (${d.code})`, pillText: d.code }))}
+                  icon={<Building2 className="w-5 h-5" />}
+                />
               </div>
 
               <div>
                 <label className="block font-bold text-gray-700 dark:text-gray-300 mb-1">Year Level</label>
-                <select
+                <GlobalFilter
                   value={yearLevel}
-                  onChange={(e) => setYearLevel(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border bg-white dark:bg-navy-900"
-                >
-                  <option value="II">II Year</option>
-                  <option value="III">III Year</option>
-                  <option value="IV">IV Year</option>
-                </select>
+                  onChange={(val) => setYearLevel(val)}
+                  dropdownWidth="w-full"
+                  options={[
+                    { value: "II", label: "II Year" },
+                    { value: "III", label: "III Year" },
+                    { value: "IV", label: "IV Year" }
+                  ]}
+                  icon={<Calendar className="w-5 h-5" />}
+                />
               </div>
 
               {/* ── LeetCode URL with live validation ── */}
@@ -628,7 +659,6 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                     value={leetcodeUrl}
                     onChange={(e) => handleLcUrlChange(e.target.value)}
                     placeholder="e.g. https://leetcode.com/u/ajay_a/"
-                    required
                     className={`w-full p-2.5 pr-9 rounded-xl border bg-white dark:bg-navy-900 transition-colors ${
                       lcValidation.status === 'valid'
                         ? 'border-emerald-400 focus:ring-emerald-400'

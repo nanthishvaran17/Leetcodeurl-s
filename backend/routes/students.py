@@ -12,9 +12,9 @@ from backend.schemas import StudentOut, StudentCreate, StudentUpdate, ContestRes
 from backend.routes.auth import get_current_user
 from backend.security import require_security_access, get_current_user_optional
 from backend.leetcode_client import fetch_leetcode_profile, extract_leetcode_username
-from backend.excel_handler import validate_excel_import, commit_excel_import
 from backend.ranking import update_all_rankings_and_badges
 from backend.logger import logger
+from backend.websocket_manager import connection_manager
 
 router = APIRouter(prefix="/api/students", tags=["Students"])
 
@@ -159,8 +159,13 @@ async def get_leaderboard_fast(
             results = []
             for st in students:
                 s = st.stats
-                is_verified = bool(s and s.sync_status in ("success", "verified") and s.status == "verified" and s.total_solved is not None)
-                is_invalid = bool(s and (s.sync_status == "invalid_username" or s.status == "INVALID_USERNAME"))
+                is_verified = bool(
+                    s and 
+                    (s.sync_status or "").lower() in ("success", "verified", "ok", "stale") and 
+                    (s.status or "").lower() in ("verified", "ok", "success", "stale") and 
+                    s.total_solved is not None
+                )
+                is_invalid = bool(s and (s.sync_status in ("invalid_username", "invalid_profile") or s.status in ("INVALID_USERNAME", "INVALID_PROFILE")))
                 is_pending = bool(not st.username or not str(st.username).strip() or
                                   (s and (s.sync_status == "pending_username" or s.status == "PENDING_USERNAME")))
 
@@ -220,6 +225,7 @@ async def get_leaderboard_fast(
                     "department_id": st.department_id,
                     "department": {"id": st.department.id, "name": st.department.name, "code": st.department.code} if st.department else None,
                     "sync_state": sync_state,
+                    "version": st.version,
                     "profile_url": f"https://leetcode.com/u/{st.username}/" if (is_verified and st.username) else None,
                     "stats": {
                         "total_solved": total_solved,
@@ -230,6 +236,10 @@ async def get_leaderboard_fast(
                         "sync_status": s.sync_status if s else "pending_username",
                         "status": s.status if s else "PENDING_USERNAME",
                         "last_verified_at": s.last_verified_at.isoformat() if (s and s.last_verified_at) else None,
+                        "recent_contest_score": contest_score_display,
+                        "recent_contest_name": target_contest_name,
+                        "contest_global_ranking": s.contest_global_ranking if s else None,
+                        "public_profile_ranking": s.public_profile_ranking if s else None,
                     } if s else None,
                     "streak_count": streak,
                     "college_rank": college_rank,
@@ -772,6 +782,11 @@ def create_student(
     db.add(student)
     db.commit()
     db.refresh(student)
+    connection_manager.broadcast_sync({
+        'type': 'STUDENT_CREATED',
+        'student_id': student.id,
+        'version': getattr(student, 'version', 1)
+    })
 
     # Init stats row — sync_status starts as "pending" until background sync runs
     stats = LeetCodeProfileStats(
@@ -1001,6 +1016,11 @@ def update_student(
     # Commit updated URL/username to DB first before starting fetch (Requirement 17)
     db.commit()
     db.refresh(student)
+    connection_manager.broadcast_sync({
+        'type': 'STUDENT_CREATED',
+        'student_id': student.id,
+        'version': getattr(student, 'version', 1)
+    })
 
     # Trigger background verification+sync immediately after update so the profile
     # is verified without blocking the HTTP response. The background task opens its
@@ -1099,6 +1119,11 @@ def delete_student(
         student.is_active = False
         db.commit()
         logger.info(f"[SOFT_DELETE_STUDENT] Soft-deleted student roster record {reg_no} ({name})")
+        connection_manager.broadcast_sync({
+            'type': 'STUDENT_DELETED',
+            'student_id': student_id,
+            'version': 999
+        })
     else:
         db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id == student_id).delete()
         db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id == student_id).delete()
@@ -1130,51 +1155,27 @@ def delete_student(
     return {"message": f"Successfully deactivated student roster record {reg_no} ({name})", "reg_no": reg_no}
 
 
-@router.post("/import-preview")
-async def import_preview(
+@router.post("/import")
+async def import_students_async(
     file: UploadFile = File(...), 
-    db: Session = Depends(get_db),
-    current_user=Depends(require_security_access(resource_name="Import Preview", required_roles=["admin", "super admin", "hod"]))
-):
-    content = await file.read()
-    report = validate_excel_import(db, content)
-    return report
-
-@router.post("/import-commit")
-def import_commit(
-    valid_rows: List[dict],
     db: Session = Depends(get_db),
     current_user=Depends(require_security_access(resource_name="Import Commit", required_roles=["admin", "super admin", "hod"]))
 ):
-    imported_count, imported_ids = commit_excel_import(db, valid_rows)
-    audit = AuditLog(user_id=current_user.id, user_name=current_user.username, action="EXCEL_IMPORT", details=f"Imported {imported_count} students from Excel.")
-    db.add(audit)
-    db.commit()
-    
-    # Recalculate ranks
-    update_all_rankings_and_badges(db)
-    
-    # Phase B: Trigger background LeetCode verification for newly imported users
-    job_id = None
-    if imported_ids:
-        try:
-            from backend.services.live_sync_service import start_targeted_sync_job
-            sync_res = start_targeted_sync_job(db, student_ids=imported_ids, triggered_by=f"excel_import_{current_user.username}")
-            job_id = sync_res.get("job_id")
-        except Exception as e:
-            logger.error(f"[EXCEL_IMPORT] Failed to trigger background sync: {e}")
-    
-    # Force cache invalidation so all dashboards see the new students immediately
-    from backend.cache import cache
-    cache.invalidate_tag("students")
-    cache.invalidate_tag("settings")
-    cache.clear()
-    
-    return {
-        "message": f"Successfully imported {imported_count} students.", 
-        "count": imported_count,
-        "sync_job_id": job_id
-    }
+    content = await file.read()
+    from backend.services.excel_import_service import start_excel_import_job
+    result = start_excel_import_job(content, file.filename, triggered_by=current_user.username)
+    return result
+
+@router.get("/import-status/{job_id}")
+def get_import_status(
+    job_id: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Import Status", required_roles=["admin", "super admin", "hod"]))
+):
+    from backend.services.excel_import_service import import_tracker
+    if import_tracker.current_job_id == job_id:
+        return import_tracker.to_dict()
+    return {"status": "NOT_FOUND"}
 
 from backend.sync_engine import run_batch_sync, sync_single_student_by_id, sync_tracker
 

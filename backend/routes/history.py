@@ -148,18 +148,19 @@ def _derived_growth(db: Session, students: List[Student], cutoff: datetime.datet
         l_hard = max(cur_hard, latest_snap.hard_solved or 0)
         l_rat = cur_rat if cur_rat else (latest_snap.contest_rating or 1500.0)
 
-        d_tot = max(0, l_tot - b_tot)
         d_easy = max(0, l_easy - b_easy)
         d_med = max(0, l_med - b_med)
         d_hard = max(0, l_hard - b_hard)
         d_rat = round(l_rat - b_rat, 1)
 
         # In case delta is 0 but snapshots indicate interim progress
-        if d_tot == 0 and len(snaps) > 1 and period in ("7d", "30d"):
-            d_tot = sum(max(0, (snaps[i].total_solved or 0) - (snaps[i-1].total_solved or 0)) for i in range(1, len(snaps)))
+        if max(0, l_tot - b_tot) == 0 and len(snaps) > 1 and period in ("7d", "30d"):
             d_easy = sum(max(0, (snaps[i].easy_solved or 0) - (snaps[i-1].easy_solved or 0)) for i in range(1, len(snaps)))
             d_med = sum(max(0, (snaps[i].medium_solved or 0) - (snaps[i-1].medium_solved or 0)) for i in range(1, len(snaps)))
             d_hard = sum(max(0, (snaps[i].hard_solved or 0) - (snaps[i-1].hard_solved or 0)) for i in range(1, len(snaps)))
+
+        # Enforce exact math match so the UI numbers add up perfectly
+        d_tot = d_easy + d_med + d_hard
 
         growth[s_id] = {
             "total": d_tot,

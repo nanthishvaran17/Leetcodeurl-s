@@ -16,6 +16,9 @@ import { StudentData } from './components/LeaderboardTable';
 import api, { logActivity } from './services/api';
 import { getCachedSummary, saveCachedSummary } from './data/canonicalRoster';
 import { useAuth } from './context/AuthContext';
+import { useKeyboardContext } from './context/KeyboardContext';
+import { CommandPalette } from './components/CommandPalette';
+import { useGlobalKeyboardShortcuts } from './hooks/useGlobalKeyboardShortcuts';
 
 // Lazy-loaded heavy page modules for 60%+ smaller initial bundle size & ultra-fast initial load
 const ComparePage = lazy(() => import('./pages/ComparePage').then(m => ({ default: m.ComparePage })));
@@ -70,8 +73,22 @@ export const App: React.FC = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showAlertCenterModal, setShowAlertCenterModal] = useState(false);
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [summaryData, setSummaryData] = useState<any>(() => getCachedSummary());
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useGlobalKeyboardShortcuts(
+    () => setShowCommandPalette(true),
+    () => {
+      // Logic to focus primary search
+      const searchInputs = document.querySelectorAll('input[type="search"], input[placeholder*="Search"]');
+      if (searchInputs.length > 0) {
+        (searchInputs[0] as HTMLInputElement).focus();
+      } else {
+        setShowCommandPalette(true);
+      }
+    }
+  );
 
 
   useEffect(() => {
@@ -80,8 +97,12 @@ export const App: React.FC = () => {
       triggerCloudSync();
     }, 4000);
 
+    const handleRefresh = () => fetchSummary();
+    window.addEventListener('refresh_dashboard_summary', handleRefresh);
+
     return () => {
       clearTimeout(timer);
+      window.removeEventListener('refresh_dashboard_summary', handleRefresh);
     };
   }, [isAuthenticated]);
 
@@ -100,7 +121,7 @@ export const App: React.FC = () => {
 
   const fetchSummary = async () => {
     try {
-      const res = await api.get('/sessions/dashboard-summary');
+      const res = await api.get(`/sessions/dashboard-summary?_t=${Date.now()}`);
       if (res.data) {
         setSummaryData(res.data);
         saveCachedSummary(res.data);
@@ -191,36 +212,28 @@ export const App: React.FC = () => {
   }, [selectedStudent]);
 
   // Global Keyboard Shortcuts & Pro SaaS UX System
+  const { registerEscHandler, pushContext, popContext } = useKeyboardContext();
+
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // 1. Quick Search shortcut: '/' (when not typing in an input) or 'Ctrl+K' / 'Cmd+K'
-      const isInputFocused = ['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName);
-      const isSearchShortcut = (e.key === '/' && !isInputFocused) || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k');
-
-      if (isSearchShortcut) {
-        e.preventDefault();
-        const searchInput = document.querySelector<HTMLInputElement>(
-          'input[type="text"][placeholder*="search" i], input[type="text"][placeholder*="Search" i], input[type="text"][placeholder*="Register" i]'
-        );
-        if (searchInput) {
-          searchInput.focus();
-          searchInput.select();
-        }
-        return;
-      }
-
-      // 2. Global Escape key handler to dismiss active modals & dialogs
-      if (e.key === 'Escape') {
+    let unregister: (() => void) | null = null;
+    let contextPushed = false;
+    
+    if (selectedStudent || showLoginModal || showImportModal || showAlertCenterModal) {
+      pushContext('MODAL');
+      contextPushed = true;
+      unregister = registerEscHandler(() => {
         if (selectedStudent) setSelectedStudent(null);
         if (showLoginModal) setShowLoginModal(false);
         if (showImportModal) setShowImportModal(false);
         if (showAlertCenterModal) setShowAlertCenterModal(false);
-      }
-    };
+      });
+    }
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedStudent, showLoginModal, showImportModal, showAlertCenterModal]);
+    return () => {
+      if (unregister) unregister();
+      if (contextPushed) popContext('MODAL');
+    };
+  }, [selectedStudent, showLoginModal, showImportModal, showAlertCenterModal, pushContext, popContext, registerEscHandler]);
 
   // Determine main dashboard component based on role
   const renderDashboardComponent = () => {
@@ -246,25 +259,34 @@ export const App: React.FC = () => {
   // ─── CENTRALIZED ROLE PERMISSION MATRIX ────────────────────────────────────
   // Single source of truth for all role-based tab access.
   // NEVER duplicate this logic across components.
+  const ALL_ACADEMIC_TABS = ['dashboard','landing','public','profile','students','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','staff-dashboard','student-dashboard'];
+  
   const ROLE_PERMISSIONS: Record<string, string[]> = {
-    // Super admin / admin: full access
-    admin:        ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard'],
-    super_admin:  ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard'],
-    'super admin':['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard'],
-    // HOD: command center + faculty tools; NO admin-only pages
-    hod:          ['dashboard','landing','public','profile','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports'],
-    // FACULTY / STAFF: isolated to faculty portal only — NO HOD/Admin pages
-    faculty:      ['dashboard','landing','public','faculty-action-center','weekly-contest','reports'],
-    staff:        ['dashboard','landing','public','faculty-action-center','weekly-contest','reports'],
-    professor:    ['dashboard','landing','public','faculty-action-center','weekly-contest','reports'],
+    // Super admin / admin: full system access
+    admin:            ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard'],
+    administrator:    ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard'],
+    super_admin:      ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard'],
+    'super admin':    ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard'],
+    // HOD: command center + all academic tools
+    hod:              ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports'],
+    'department hod': ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports'],
+    department_hod:   ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports'],
+    // FACULTY / STAFF MENTOR: full academic & contest tools
+    faculty:          ALL_ACADEMIC_TABS,
+    'faculty mentor': ALL_ACADEMIC_TABS,
+    faculty_mentor:   ALL_ACADEMIC_TABS,
+    staff:            ALL_ACADEMIC_TABS,
+    'staff mentor':   ALL_ACADEMIC_TABS,
+    staff_mentor:     ALL_ACADEMIC_TABS,
+    professor:        ALL_ACADEMIC_TABS,
     // Student: minimal access
-    student:      ['dashboard','landing','public','profile'],
+    student:          ['dashboard','landing','public','profile'],
   };
 
   const isTabAllowed = (tab: string): boolean => {
     if (!isAuthenticated) return ['landing', 'public', 'profile'].includes(tab);
     const roleClean = (user?.role || '').trim().toLowerCase();
-    const allowed = ROLE_PERMISSIONS[roleClean] || ROLE_PERMISSIONS['admin'];
+    const allowed = ROLE_PERMISSIONS[roleClean] || ALL_ACADEMIC_TABS;
     return allowed.includes(tab);
   };
 
@@ -272,19 +294,19 @@ export const App: React.FC = () => {
   const isTabAuthorized = (allowedRoles: string[]): boolean => {
     if (!isAuthenticated) return false;
     const roleClean = (user?.role || '').trim().toLowerCase();
-    if (roleClean === 'admin' || roleClean === 'super admin' || roleClean === 'super_admin') return true;
+    if (['admin', 'administrator', 'super admin', 'super_admin'].includes(roleClean)) return true;
     return allowedRoles.some(r => r.toLowerCase() === roleClean);
   };
 
   const isFacultyRole = (): boolean => {
     const r = (user?.role || '').trim().toLowerCase();
-    return r === 'faculty' || r === 'staff' || r === 'professor';
+    return ['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(r);
   };
 
   const renderAccessDenied = (resourceTitle: string) => (
     <AccessDeniedPage
       restrictedResource={resourceTitle}
-      onGoBack={() => handleTabChange(isFacultyRole() ? 'faculty-action-center' : (isAuthenticated ? 'dashboard' : 'landing'))}
+      onGoBack={() => handleTabChange(isFacultyRole() ? 'dashboard' : (isAuthenticated ? 'dashboard' : 'landing'))}
     />
   );
 
@@ -324,6 +346,13 @@ export const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-navy-950 text-gray-900 dark:text-gray-100 flex flex-col font-sans transition-colors duration-200">
       
+      {/* COMMAND PALETTE */}
+      <CommandPalette 
+        isOpen={showCommandPalette}
+        onClose={() => setShowCommandPalette(false)}
+        onNavigate={(tab) => handleTabChange(tab)}
+      />
+
       {/* Top Navbar */}
       <Navbar
         currentSessionStatus={summaryData?.sync?.is_running ? "RUNNING" : (summaryData?.session?.current_session?.status || "UPCOMING")}
@@ -495,8 +524,7 @@ export const App: React.FC = () => {
           localStorage.removeItem('nec_leetcode_students_cache');
           fetchSummary(); 
           setActiveTab('students');
-          // Force a full page reload so all React Query or cached state wipes clean, making dashboards refresh instantly
-          window.location.reload();
+          // No reload required, LiveEventRouter handles live cache updates
         }}
       />
 

@@ -208,6 +208,12 @@ def get_data_quality_dashboard(request: Request, force_refresh: bool = Query(Fal
             (error_code and sync_st != "success" and status != "VERIFIED")
         ):
             sync_failed_count += 1
+            issues_list.append({
+                "student_id": s.id, "reg_no": s.reg_no, "name": s.name,
+                "dept": dept_code,
+                "issue": f"Sync Failed ({error_code or 'Unknown'})", "status": "NETWORK_ERROR",
+                "action_required": "Retry Sync or Check Profile"
+            })
 
         # 5. Network errors that are transient (sync succeeded but old error_code remains)
         elif st and error_code and error_code in ("NETWORK_ERROR", "TIMEOUT", "RATE_LIMITED") and sync_st == "success":
@@ -228,6 +234,12 @@ def get_data_quality_dashboard(request: Request, force_refresh: bool = Query(Fal
         # 7. Everything else
         else:
             network_error_count += 1
+            issues_list.append({
+                "student_id": s.id, "reg_no": s.reg_no, "name": s.name,
+                "dept": dept_code,
+                "issue": "Network / Sync Error", "status": "NETWORK_ERROR",
+                "action_required": "Retry Sync"
+            })
 
     health_score = round((ok_count / max(1, total) * 100), 1) if total > 0 else 100.0
 

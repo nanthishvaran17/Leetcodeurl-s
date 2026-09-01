@@ -1,66 +1,74 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Globe, Trophy, Shield, Users, TrendingUp, Search, 
-  Star, Award, Zap, ChevronLeft, ChevronRight, BarChart3, Filter,
-  GraduationCap, ExternalLink
+  Star, Award, Zap, ChevronLeft, ChevronRight, BarChart3, Filter, ExternalLink, Calendar, Building2, LayoutList
 } from 'lucide-react';
-import api from '../services/api';
-import { useQuery, keepPreviousData, useQueryClient } from '@tanstack/react-query';
+import { GlobalFilter } from '../components/GlobalFilter';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
-import { getCachedStudents, saveCachedStudents } from '../data/canonicalRoster';
+import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
+import { studentLiveStore, useStudentListIds } from '../stores/studentLiveStore';
+import { useStudentsQuery } from '../hooks/useStudentsQuery';
+import { sortStudents } from '../utils/filterUtils';
+import { useFilters, useFilteredStudents } from '../context/FilterContext';
+import { XCircle } from 'lucide-react';
 
 interface PublicLeaderboardPageProps {
   onSelectStudent?: (student: StudentData) => void;
 }
 
 export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ onSelectStudent }) => {
-  const queryClient = useQueryClient();
+  const { data: initialStudents = [], isLoading: loading } = useStudentsQuery();
+  // NOTE: useLiveLeaderboard() is NOT called here — the global singleton in GlobalWebSocketProvider
+  // already handles all WebSocket events for the whole app.
+
+  // Reconcile live store with RQ canonical data whenever it changes
+  // (Now handled globally in useStudentsQuery)
+
+  // Hook into the live store for reactive re-renders when list changes
+  const allIds = useStudentListIds();
+  const globalStudents = useFilteredStudents();
+  const filters = useFilters();
+
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterYear, setFilterYear] = useState('ALL');
-  const [filterDept, setFilterDept] = useState('ALL');
   const [sortBy, setSortBy] = useState<'rank' | 'easy' | 'medium' | 'hard'>('rank');
 
-  const fetchLeaderboard = async (p: number) => {
-    const params = new URLSearchParams({
-      limit: limit.toString(),
-      page: p.toString(),
-      paginated: 'true',
-      sort_by: sortBy === 'rank' ? 'solved_desc' : `${sortBy}_desc`,
-    });
-    if (searchQuery.trim()) params.append('search', searchQuery.trim());
-    if (filterYear !== 'ALL') params.append('year_level', filterYear);
-    if (filterDept !== 'ALL') params.append('dept_id', filterDept);
-    const res = await api.get(`/public/leaderboard?${params.toString()}`);
-    return res.data;
-  };
+  // Derived sorted list
+  const filteredAndSorted = useMemo(() => {
+    let list = [...globalStudents];
 
-  const { data, isLoading: loading, isError } = useQuery({
-    queryKey: ['leaderboard', page, limit, searchQuery, filterYear, filterDept, sortBy],
-    queryFn: () => fetchLeaderboard(page),
-    placeholderData: keepPreviousData,
-  });
-
-  useEffect(() => {
-    if (data && data.total_pages && page < data.total_pages) {
-      queryClient.prefetchQuery({
-        queryKey: ['leaderboard', page + 1, limit, searchQuery, filterYear, filterDept, sortBy],
-        queryFn: () => fetchLeaderboard(page + 1),
+    if (sortBy === 'rank') {
+      list = sortStudents(list, 'top_solved');
+    } else {
+      list.sort((a, b) => {
+        const getStat = (s: any, diff: string) => Number(s.stats?.[`${diff}_solved`] || 0);
+        const diffValue = getStat(b, sortBy) - getStat(a, sortBy);
+        if (diffValue !== 0) return diffValue;
+        return (a.name || '').localeCompare(b.name || '');
       });
     }
-  }, [data, page, limit, searchQuery, filterYear, filterDept, sortBy, queryClient]);
 
-  const students = data?.items || [];
-  const total = data?.total || 0;
-  const totalPages = data?.total_pages || 1;
-  // Overall top 3 rankers sorted by total solved for podium display
-  const top3 = [...students]
-    .sort((a, b) => (b.stats?.total_solved || 0) - (a.stats?.total_solved || 0))
-    .slice(0, 3);
+    return list;
+  }, [globalStudents, sortBy]);
 
-  // Derived filtered list
-  const filtered = students;
+  const total = filteredAndSorted.length;
+  const top3 = filteredAndSorted.slice(0, 3);
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+
+  // Enforce valid page bounds when filtering changes total count
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(1);
+    }
+  }, [totalPages, page]);
+
+  // Local Pagination
+  const filtered = useMemo(() => {
+    const start = (page - 1) * limit;
+    return filteredAndSorted.slice(start, start + limit);
+  }, [filteredAndSorted, page, limit]);
+
+  const students = globalStudents;
 
   const totalSolved = students.reduce((acc, s) => acc + (s.stats?.total_solved || 0), 0);
   const avgSolved = students.length ? Math.round(totalSolved / students.length) : 0;
@@ -122,7 +130,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
       </div>
 
       {/* ─── TOP 3 PODIUM ─── */}
-      {top3.length >= 3 && !loading && (
+      {top3.length >= 3 && (
         <div className="glass-card p-6 rounded-3xl border border-amber-500/20 bg-gradient-to-b from-amber-500/5 to-transparent shadow-xl">
           <h2 className="text-center font-black text-base text-gray-900 dark:text-white flex items-center justify-center space-x-2 mb-6">
             <Trophy className="w-5 h-5 text-amber-500 fill-amber-500" />
@@ -187,39 +195,48 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
         <div className="flex flex-wrap items-center gap-3">
           {/* Search */}
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="w-4 h-4 absolute left-3.5 top-3 text-gray-400" />
+            <Search className="w-5 h-5 text-slate-400 absolute left-3 top-2.5" />
             <input
               type="text"
               placeholder="Search by name, reg no, or username..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-900 text-gray-900 dark:text-white border-gray-200 dark:border-navy-700 focus:ring-2 focus:ring-brand-500 outline-none"
+              value={filters.searchQuery}
+              onChange={e => filters.setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-10 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-900 text-gray-900 dark:text-white border-gray-200 dark:border-navy-700 focus:ring-2 focus:ring-brand-500 outline-none transition-all"
             />
+            {filters.searchQuery && (
+              <button
+                onClick={() => filters.setSearchQuery('')}
+                className="absolute right-2 top-2 p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-navy-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                title="Clear search"
+              >
+                <XCircle className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* Year Filter */}
-          <select
-            value={filterYear}
-            onChange={e => setFilterYear(e.target.value)}
-            className="px-4 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-900 text-gray-900 dark:text-white border-gray-200 dark:border-navy-700 focus:ring-2 focus:ring-brand-500 outline-none"
-          >
-            <option value="ALL">All Years</option>
-            {uniqueYears.map((y: any) => (
-              <option key={y} value={y}>{y} Year</option>
-            ))}
-          </select>
+          <GlobalFilter
+            value={filters.academicYear}
+            onChange={val => filters.setAcademicYear(val)}
+            icon={<Calendar className="w-5 h-5" />}
+            dropdownWidth="w-56"
+            options={[
+              { value: 'ALL', label: 'All Years' },
+              ...uniqueYears.map((y: any) => ({ value: y, label: `${y} Year` }))
+            ]}
+          />
 
           {/* Dept Filter */}
-          <select
-            value={filterDept}
-            onChange={e => setFilterDept(e.target.value)}
-            className="px-4 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-900 text-gray-900 dark:text-white border-gray-200 dark:border-navy-700 focus:ring-2 focus:ring-brand-500 outline-none"
-          >
-            <option value="ALL">All Departments</option>
-            {uniqueDepts.map(d => (
-              <option key={d} value={d}>{d}</option>
-            ))}
-          </select>
+          <GlobalFilter
+            value={filters.department}
+            onChange={val => filters.setDepartment(val)}
+            icon={<Building2 className="w-5 h-5" />}
+            dropdownWidth="w-72"
+            options={[
+              { value: 'ALL', label: 'All Departments' },
+              ...uniqueDepts.map((d: any) => ({ value: d, label: d }))
+            ]}
+          />
 
           {/* Sort By */}
           <div className="flex items-center space-x-1 bg-gray-100 dark:bg-navy-900 p-1 rounded-2xl border border-gray-200 dark:border-navy-700">
@@ -246,35 +263,30 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
       </div>
 
       {/* ─── FULL LEADERBOARD TABLE ─── */}
-      {loading ? (
-        <div className="glass-card p-16 rounded-3xl border flex items-center justify-center space-x-3">
-          <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm font-bold text-gray-500">Loading public leaderboard...</span>
-        </div>
-      ) : (
-        <LeaderboardTable students={filtered} onSelectStudent={onSelectStudent} />
-      )}
+      <LeaderboardTable students={filtered} onSelectStudent={onSelectStudent} />
 
       {/* ─── SERVER PAGINATION ─── */}
-      {total > 0 && !loading && (
+      {total > 0 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-3xl glass-card border border-gray-200 dark:border-navy-700 shadow-xl">
           <div className="text-sm font-semibold text-gray-500 dark:text-gray-400">
             Showing <span className="text-gray-900 dark:text-white font-black">{Math.min((page - 1) * limit + 1, total)}</span> to <span className="text-gray-900 dark:text-white font-black">{Math.min(page * limit, total)}</span> of <span className="text-gray-900 dark:text-white font-black">{total}</span> students
           </div>
           
           <div className="flex items-center gap-3">
-            <select
-              value={limit}
-              onChange={(e) => {
-                setLimit(Number(e.target.value));
+            <GlobalFilter
+              value={limit.toString()}
+              onChange={val => {
+                setLimit(Number(val));
                 setPage(1);
               }}
-              className="px-3 py-2 rounded-xl text-xs font-bold bg-white dark:bg-navy-900 text-gray-900 dark:text-white border border-gray-200 dark:border-navy-700 outline-none focus:ring-2 focus:ring-brand-500"
-            >
-              <option value={50}>50 per page</option>
-              <option value={100}>100 per page</option>
-              <option value={200}>200 per page</option>
-            </select>
+              icon={<LayoutList className="w-4 h-4" />}
+              dropdownWidth="w-48"
+              options={[
+                { value: "50", label: "50 per page" },
+                { value: "100", label: "100 per page" },
+                { value: "200", label: "200 per page" }
+              ]}
+            />
 
             <div className="flex items-center gap-1 bg-gray-100 dark:bg-navy-900 p-1.5 rounded-xl border border-gray-200 dark:border-navy-700">
               <button

@@ -106,8 +106,8 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
     notify.info('Generating Forensic Report', 'Compiling official contest forensic audit PDF...', { category: 'FORENSIC AUDIT' });
     try {
       const cleanReg = (student.reg_no || '').replace(/[^A-Za-z0-9]+/g, '').toUpperCase();
-      const targetId = `CERT-${cleanReg}-FORENSIC`;
-      const response = await api.get(`/certificates/${encodeURIComponent(targetId)}/download-forensic-pdf`, {
+      const targetId = cleanReg ? `CERT-${cleanReg}-FORENSIC` : `CERT-${student.id}-FORENSIC`;
+      const response = await api.get(`/certificates/${encodeURIComponent(targetId)}/download-forensic-pdf?student_id=${student.id}`, {
         responseType: 'blob'
       });
 

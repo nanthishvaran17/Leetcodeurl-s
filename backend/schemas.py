@@ -238,12 +238,28 @@ class Token(BaseModel):
     user: Dict[str, Any]
 
 class UserCreate(BaseModel):
+    full_name: str
     username: str
     email: str
-    password: str
+    password: Optional[str] = None
     role: str = "Faculty"
+    designation: Optional[str] = None
     department_id: Optional[int] = None
     section_id: Optional[int] = None
+    academic_year: Optional[str] = None
+    reporting_manager_id: Optional[int] = None
+    is_active: bool = True
+    require_password_change: bool = True
+
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[str] = None
+    phone_number: Optional[str] = None
+    designation: Optional[str] = None
+    role: Optional[str] = None
+    department_id: Optional[int] = None
+    reporting_manager_id: Optional[int] = None
+    is_active: Optional[bool] = None
 
 class UserOut(BaseModel):
     id: int

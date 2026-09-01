@@ -10,6 +10,7 @@ import {
   Sliders, User, CheckCircle, XCircle, ExternalLink, Calendar, Info,
   UserPlus, UserMinus, Shuffle, Printer, Share2
 } from 'lucide-react';
+import { GlobalFilter } from '../components/GlobalFilter';
 import {
   getCommandCenterSummary, getCommandCenterStudents, addStudent, updateStudent,
   deleteStudent, getCommandCenterDepartments, askCommandCenterAI,
@@ -118,21 +119,20 @@ const StudentDetailDrawer: React.FC<{
                 <label className="block text-[10px] font-bold uppercase text-slate-400 font-mono mb-1">
                   Reassign Faculty Mentor:
                 </label>
-                <select
-                  defaultValue=""
-                  onChange={e => {
-                    if (e.target.value) {
-                      onReassign(student.id, Number(e.target.value));
-                      e.target.value = "";
+                <GlobalFilter
+                  value={""}
+                  onChange={val => {
+                    if (val) {
+                      onReassign(student.id, Number(val));
                     }
                   }}
-                  className="w-full text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-slate-800 dark:text-slate-100 outline-none focus:border-brand-500"
-                >
-                  <option value="" disabled>Select target faculty member...</option>
-                  {staffList.map(s => (
-                    <option key={s.id} value={s.id}>{s.username} ({s.assigned_count}/20)</option>
-                  ))}
-                </select>
+                  dropdownWidth="w-full"
+                  options={[
+                    { value: "", label: "Select target faculty member..." },
+                    ...staffList.map((s: any) => ({ value: String(s.id), label: `${s.username} (${s.assigned_count}/20)` }))
+                  ]}
+                  icon={<User className="w-4 h-4" />}
+                />
               </div>
             </div>
           </div>
@@ -280,15 +280,13 @@ const StaffAllocationModal: React.FC<{
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <select
-              value={selectedDeptId}
-              onChange={e => setSelectedDeptId(Number(e.target.value))}
-              className="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-800"
-            >
-              {departments.map(d => (
-                <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
-              ))}
-            </select>
+            <GlobalFilter
+              value={selectedDeptId.toString()}
+              onChange={val => setSelectedDeptId(Number(val))}
+              dropdownWidth="w-64"
+              options={departments.map((d: any) => ({ value: String(d.id), label: `${d.name} (${d.code})`, pillText: d.code }))}
+              icon={<Building2 className="w-4 h-4" />}
+            />
             <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100"><X size={18} /></button>
           </div>
         </div>
@@ -371,16 +369,16 @@ const StaffAllocationModal: React.FC<{
                   Manual Student Allocation ({unassignedStudents.length} unassigned)
                 </h4>
                 <div className="flex items-center gap-2">
-                  <select
-                    value={targetFacultyId || ''}
-                    onChange={e => setTargetFacultyId(Number(e.target.value))}
-                    className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-slate-200 dark:border-navy-700"
-                  >
-                    <option value="">Select target faculty...</option>
-                    {workload.map(f => (
-                      <option key={f.faculty_id} value={f.faculty_id}>{f.faculty_name} ({f.assigned_students}/20)</option>
-                    ))}
-                  </select>
+                  <GlobalFilter
+                    value={targetFacultyId?.toString() || ""}
+                    onChange={val => setTargetFacultyId(Number(val))}
+                    dropdownWidth="w-64"
+                    options={[
+                      { value: "", label: "Select target faculty..." },
+                      ...workload.map((f: any) => ({ value: String(f.faculty_id), label: `${f.faculty_name} (${f.assigned_students}/20)` }))
+                    ]}
+                    icon={<User className="w-4 h-4" />}
+                  />
                   <button
                     disabled={!targetFacultyId || selectedUnassigned.length === 0 || actionLoading}
                     onClick={handleBatchAssign}
@@ -505,28 +503,30 @@ const ReportHubModal: React.FC<{
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-100">
             <div>
               <label className="block text-[10px] font-bold text-slate-400 uppercase font-mono mb-1">Select Report Type</label>
-              <select
+              <GlobalFilter
                 value={selectedReportType}
-                onChange={e => setSelectedReportType(e.target.value)}
-                className="w-full text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white"
-              >
-                <option value="EXECUTIVE">📑 Executive Department Coding Health Report</option>
-                <option value="FACULTY_ALLOCATION">👥 Faculty Mentorship & Allocation Audit Report</option>
-                <option value="INACTIVE_AT_RISK">⚠️ Inactive & At-Risk Intervention Report</option>
-              </select>
+                onChange={val => setSelectedReportType(val)}
+                dropdownWidth="w-full"
+                options={[
+                  { value: "EXECUTIVE", label: "📑 Executive Department Coding Health Report" },
+                  { value: "FACULTY_ALLOCATION", label: "👥 Faculty Mentorship & Allocation Audit Report" },
+                  { value: "INACTIVE_AT_RISK", label: "⚠️ Inactive & At-Risk Intervention Report" }
+                ]}
+                icon={<FileText className="w-4 h-4" />}
+              />
             </div>
             <div>
               <label className="block text-[10px] font-bold text-slate-400 uppercase font-mono mb-1">Department Scope</label>
-              <select
-                value={selectedDeptId || ''}
-                onChange={e => setSelectedDeptId(e.target.value ? Number(e.target.value) : undefined)}
-                className="w-full text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white"
-              >
-                <option value="">All Institutional Departments</option>
-                {departments.map(d => (
-                  <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
-                ))}
-              </select>
+              <GlobalFilter
+                value={selectedDeptId?.toString() || ""}
+                onChange={val => setSelectedDeptId(val ? Number(val) : undefined)}
+                dropdownWidth="w-full"
+                options={[
+                  { value: "", label: "All Institutional Departments", pillText: "ALL" },
+                  ...departments.map((d: any) => ({ value: String(d.id), label: `${d.name} (${d.code})`, pillText: d.code }))
+                ]}
+                icon={<Building2 className="w-4 h-4" />}
+              />
             </div>
           </div>
 
@@ -1292,16 +1292,16 @@ export const HODCommandCenter: React.FC = () => {
               Selected {selectedStudentIds.length} students for faculty allocation:
             </div>
             <div className="flex items-center gap-2">
-              <select
-                value={batchTargetFaculty || ''}
-                onChange={e => setBatchTargetFaculty(Number(e.target.value))}
-                className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-brand-200 bg-white"
-              >
-                <option value="">Select Target Staff Mentor...</option>
-                {staffList.map(s => (
-                  <option key={s.id} value={s.id}>{s.username} ({s.assigned_count}/20)</option>
-                ))}
-              </select>
+              <GlobalFilter
+                value={batchTargetFaculty?.toString() || ""}
+                onChange={val => setBatchTargetFaculty(Number(val))}
+                dropdownWidth="w-64"
+                options={[
+                  { value: "", label: "Select Target Staff Mentor..." },
+                  ...staffList.map((s: any) => ({ value: String(s.id), label: `${s.username} (${s.assigned_count}/20)` }))
+                ]}
+                icon={<User className="w-4 h-4" />}
+              />
               <button
                 onClick={handleBatchAssignFromTable}
                 disabled={!batchTargetFaculty}

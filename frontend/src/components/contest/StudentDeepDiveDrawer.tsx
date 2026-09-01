@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, User, ExternalLink, CheckCircle2, XCircle, TrendingUp, TrendingDown, Minus, Shield, Clock, Award } from 'lucide-react';
+import { GlobalModalBackdrop } from '../GlobalModalBackdrop';
 import api from '../../services/api';
 
 interface StudentDeepDiveDrawerProps {
@@ -64,15 +65,9 @@ export const StudentDeepDiveDrawer: React.FC<StudentDeepDiveDrawerProps> = ({ st
     : null;
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
-        onClick={onClose}
-      />
-
+    <GlobalModalBackdrop isOpen={true} onClose={onClose} className="flex justify-end">
       {/* Drawer */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-slate-950 border-l border-white/10 shadow-2xl z-50 overflow-y-auto flex flex-col animate-slide-in-right">
+      <div className="h-full w-full max-w-md bg-slate-950 border-l border-white/10 shadow-2xl z-50 overflow-y-auto flex flex-col animate-slide-in-right relative" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-gradient-to-r from-slate-950 to-navy-950 shrink-0">
           <div className="flex items-center gap-3">
@@ -229,6 +224,6 @@ export const StudentDeepDiveDrawer: React.FC<StudentDeepDiveDrawerProps> = ({ st
           </div>
         </div>
       </div>
-    </>
+    </GlobalModalBackdrop>
   );
 };

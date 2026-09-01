@@ -10,6 +10,7 @@ export interface DropdownOption {
   badgeColor?: string;
   icon?: LucideIcon;
   count?: number;
+  hidePill?: boolean;
 }
 
 interface CustomDropdownProps {
@@ -23,6 +24,8 @@ interface CustomDropdownProps {
   align?: 'left' | 'right' | 'auto';
   className?: string;
   labelClassName?: string;
+  triggerClassName?: string;
+  menuWidthClass?: string;
 }
 
 export const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -35,12 +38,23 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   placeholder = 'Select option...',
   align = 'auto',
   className = '',
-  labelClassName
+  labelClassName,
+  triggerClassName,
+  menuWidthClass
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const selectedOption = options.find((opt) => opt.value === value) || options[0];
+  // Find selected option (ignore empty placeholder options)
+  const selectedOption = options.find((opt) => opt.value === value && opt.value !== '' && !opt.label.toLowerCase().startsWith('select'));
+  
+  // Filter out redundant placeholder options (e.g. value: '' with label 'Select ...') from selectable popover list
+  const selectableOptions = options.filter((opt) => {
+    if (opt.value === '' && (opt.label.toLowerCase().startsWith('select') || opt.label === placeholder)) {
+      return false;
+    }
+    return true;
+  });
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -74,8 +88,10 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
       ? 'left-0 right-auto' 
       : 'left-0 sm:left-0';
 
+  const popoverWidth = menuWidthClass || 'w-full min-w-full';
+
   return (
-    <div className={`space-y-1.5 min-w-0 relative ${isOpen ? 'z-[100]' : 'z-10'} ${className}`} ref={dropdownRef} id={id}>
+    <div className={`space-y-1 min-w-0 relative ${isOpen ? 'z-[100]' : 'z-10'} ${className}`} ref={dropdownRef} id={id}>
       <label className={labelClassName || "block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate flex items-center justify-between"}>
         <span>{label}</span>
         {selectedOption?.count !== undefined && selectedOption.count > 0 && (
@@ -89,7 +105,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full h-11 flex items-center justify-between px-3.5 rounded-2xl border transition-all duration-200 text-left cursor-pointer group shadow-sm ${
+        className={triggerClassName || `w-full h-10 flex items-center justify-between px-3.5 rounded-2xl border transition-all duration-200 text-left cursor-pointer group shadow-sm ${
           isOpen
             ? 'bg-white dark:bg-slate-800 border-brand-500 ring-2 ring-brand-500/20 shadow-md shadow-brand-500/10'
             : 'bg-white dark:bg-slate-800/90 hover:bg-gray-50 dark:hover:bg-slate-800 border-gray-200 dark:border-gray-700/80 hover:border-brand-500/40'
@@ -102,15 +118,17 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
             }`} />
           )}
           <div className="flex items-center space-x-2 min-w-0">
-            {selectedOption?.badge && (
+            {selectedOption?.badge && !selectedOption.hidePill && (
               <span className={`shrink-0 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
                 selectedOption.badgeColor || 'bg-brand-500/15 text-brand-600 dark:text-brand-400 border border-brand-500/30'
               }`}>
                 {selectedOption.badge}
               </span>
             )}
-            <span className="text-xs font-bold text-gray-900 dark:text-gray-100 truncate">
-              {selectedOption ? selectedOption.label : placeholder}
+            <span className={`text-xs truncate ${
+              selectedOption ? 'font-bold text-gray-900 dark:text-gray-100' : 'font-semibold text-gray-400 dark:text-gray-500'
+            }`}>
+              {selectedOption ? selectedOption.label : (placeholder || label || 'Select...')}
             </span>
           </div>
         </div>
@@ -128,13 +146,13 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.98 }}
             transition={{ duration: 0.16, ease: 'easeOut' }}
-            className={`absolute ${alignClass} z-[9999] mt-1.5 w-full min-w-[280px] sm:min-w-[340px] max-h-80 overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 shadow-lg p-1.5 space-y-1 focus:outline-none ring-1 ring-black/10 dark:ring-white/10`}
+            className={`absolute ${alignClass} z-[9999] mt-1.5 ${popoverWidth} max-h-80 overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 shadow-xl p-1.5 space-y-1 focus:outline-none ring-1 ring-black/10 dark:ring-white/10`}
             style={{
               backgroundColor: 'var(--dropdown-bg, #ffffff)',
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.08)'
             }}
           >
-            {options.map((opt) => {
+            {selectableOptions.map((opt) => {
               const isSelected = opt.value === value;
               const OptIcon = opt.icon;
 
@@ -155,7 +173,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
                         isSelected ? 'text-white' : 'text-gray-400 group-hover:text-brand-500'
                       }`} />
                     )}
-                    {opt.badge && (
+                    {opt.badge && !opt.hidePill && (
                       <span className={`shrink-0 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
                         isSelected
                           ? 'bg-white/20 text-white border border-white/30'

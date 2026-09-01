@@ -11,7 +11,7 @@ def generate_professional_template(title: str, content: str, action_button: Opti
     Generates a standardized professional HTML email wrapper with institutional branding.
     Optimized for Gmail, Outlook, Desktop, Mobile, and Tablet.
     """
-    logo_url = "https://raw.githubusercontent.com/nanthishvaran17/Leetcodeurl-s/main/frontend/public/nandha_emblem.png"
+    logo_url = "https://files.catbox.moe/ylpqjc.png"
 
     button_html = ""
     if action_button:
@@ -164,7 +164,7 @@ def generate_professional_template(title: str, content: str, action_button: Opti
                 <table role="presentation" class="container" align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
                     <tr>
                         <td class="header">
-                            <img src="{logo_url}" alt="NEC 25 Years of Excellence" class="header-logo" width="100" />
+                            <img src="{logo_url}" alt="NEC 25 Years of Excellence" class="header-logo" width="140" style="width:140px; max-width:140px; margin-bottom:15px; display:inline-block; border:0; outline:none; text-decoration:none;" />
                             <h1>{settings.COLLEGE_NAME}</h1>
                             <div class="sub-header">LeetCode Tracker System</div>
                         </td>
@@ -195,11 +195,11 @@ def notify_staff_created(staff_email: str, staff_name: str, role: str, departmen
     """Sends a welcome email with credentials to newly created staff."""
     title = "Welcome to the LeetCode Tracker System"
     portal_url = f"{settings.FRONTEND_ORIGIN}/"
-    
+
     content = f"""
     <p style="margin-top: 0;">Dear {staff_name},</p>
     <p>Your institutional account has been successfully created. You can now access the faculty and administrative dashboards.</p>
-    
+
     <table class="data-table" role="presentation" border="0" cellpadding="0" cellspacing="0">
         <tr>
             <td>Name</td>
@@ -222,15 +222,15 @@ def notify_staff_created(staff_email: str, staff_name: str, role: str, departmen
             <td><code style="background:#f1f5f9; padding:4px 8px; border-radius:4px; font-size: 15px; color:#0f172a;">{raw_password}</code></td>
         </tr>
     </table>
-    
+
     <div class="security-notice">
         <strong>⚠️ Security Notice:</strong> Please log in and change your temporary password immediately after your first access.
     </div>
     """
-    
+
     action_button = f'<a href="{portal_url}" class="btn" target="_blank">Access Portal</a>'
     html_body = generate_professional_template(title, content, action_button, fallback_url=portal_url)
-    
+
     logger.info(f"[NOTIFY] Sending staff creation email to {staff_email} via portal_url: {portal_url}")
     send_email(staff_email, "Your Institutional Account is Ready", html_body=html_body)
 
@@ -239,29 +239,39 @@ def notify_staff_updated(staff_email: str, staff_name: str, changes: dict):
     """Sends an email indicating that the staff profile was updated."""
     if not changes:
         return
-        
+
     title = "Your Institutional Profile has been Updated"
-    
     changes_html = "".join([f"<tr><td>{k.replace('_', ' ').title()}</td><td>{v}</td></tr>" for k, v in changes.items()])
-    
+
     content = f"""
     <p>Dear {staff_name},</p>
     <p>Your institutional profile has been recently updated by the administrator. Please review the changes below:</p>
-    
+
     <table class="data-table">
         {changes_html}
     </table>
     """
-    
+
     html_body = generate_professional_template(title, content)
     send_email(staff_email, "Account Profile Updated", html_body=html_body)
 
 
-def notify_password_changed(staff_email: str, staff_name: str):
+def notify_password_changed(staff_email: str, staff_name: str, new_password: Optional[str] = None):
     title = "Password Changed Successfully"
+
+    pass_html = ""
+    if new_password:
+        pass_html = f"""
+        <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 6px; margin: 20px 0;">
+            <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: bold; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Your New / Temporary Password</p>
+            <p style="margin: 0; font-family: 'Courier New', Courier, monospace; font-size: 20px; font-weight: bold; color: #0f172a; letter-spacing: 1px;">{new_password}</p>
+        </div>
+        """
+
     content = f"""
     <p>Dear {staff_name},</p>
-    <p>This is a confirmation that your password was successfully changed.</p>
+    <p>This is a confirmation that your account password was successfully updated.</p>
+    {pass_html}
     <p>If you did not perform this action, please contact the system administrator immediately to secure your account.</p>
     """
     html_body = generate_professional_template(title, content)
@@ -273,13 +283,13 @@ def notify_forgot_password_otp(staff_email: str, otp: str):
     content = f"""
     <p>A password recovery request was initiated for your account.</p>
     <p>Use the following 6-digit One Time Password (OTP) to reset your password:</p>
-    
+
     <div style="text-align: center; margin: 30px 0;">
         <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #1e293b; background: #f1f5f9; padding: 20px; border-radius: 8px; display: inline-block;">
             {otp}
         </div>
     </div>
-    
+
     <p>This OTP is valid for 15 minutes. <strong>Do not share this code with anyone.</strong></p>
     """
     html_body = generate_professional_template(title, content)
@@ -289,12 +299,12 @@ def notify_forgot_password_otp(staff_email: str, otp: str):
 def notify_student_created(student_email: str, student_name: str, reg_no: str, department: str, year: str):
     if not student_email:
         return
-        
+
     title = "Student Registration Successful"
     content = f"""
     <p>Dear {student_name},</p>
     <p>Your student profile has been registered in the LeetCode Tracker System.</p>
-    
+
     <table class="data-table">
         <tr><td>Name</td><td>{student_name}</td></tr>
         <tr><td>Register Number</td><td>{reg_no}</td></tr>
@@ -309,14 +319,14 @@ def notify_student_created(student_email: str, student_name: str, reg_no: str, d
 def notify_student_updated(recipient_email: str, recipient_name: str, student_name: str, reg_no: str, changes: dict):
     if not changes:
         return
-        
+
     title = "Student Record Updated"
     changes_html = "".join([f"<tr><td>{k.replace('_', ' ').title()}</td><td>{v}</td></tr>" for k, v in changes.items()])
-    
+
     content = f"""
     <p>Dear {recipient_name},</p>
     <p>The institutional record for student <strong>{student_name} ({reg_no})</strong> has been updated.</p>
-    
+
     <table class="data-table">
         {changes_html}
     </table>
@@ -328,9 +338,9 @@ def notify_student_updated(recipient_email: str, recipient_name: str, student_na
 def notify_faculty_allocation(faculty_email: str, faculty_name: str, students: List[dict]):
     if not students:
         return
-        
+
     title = "New Student Mentorship Allocation"
-    
+
     if len(students) == 1:
         s = students[0]
         content = f"""
@@ -343,7 +353,6 @@ def notify_faculty_allocation(faculty_email: str, faculty_name: str, students: L
         <p><strong>{len(students)} students</strong> have been newly assigned to your mentoring portfolio.</p>
         """
 
-    # Always add the table with Student Name, Register Number, Academic Year
     table_rows = ""
     for s in students:
         table_rows += f"""
@@ -353,7 +362,7 @@ def notify_faculty_allocation(faculty_email: str, faculty_name: str, students: L
                 <td>{s.get('year_level', 'N/A')}</td>
             </tr>
         """
-    
+
     content += f"""
         <table class="data-table">
             <thead>
@@ -369,10 +378,10 @@ def notify_faculty_allocation(faculty_email: str, faculty_name: str, students: L
         </table>
         <p>Please log in to the faculty portal to review your updated student list.</p>
     """
-        
+
     portal_url = f"{settings.FRONTEND_ORIGIN}/faculty"
     action_button = f'<a href="{portal_url}" class="btn">View Portfolio</a>'
-    
+
     html_body = generate_professional_template(title, content, action_button)
     send_email(faculty_email, "Student Allocation Updated", html_body=html_body)
 
@@ -380,9 +389,9 @@ def notify_faculty_allocation(faculty_email: str, faculty_name: str, students: L
 def notify_faculty_unallocation(faculty_email: str, faculty_name: str, students: List[dict]):
     if not students:
         return
-        
+
     title = "Student Mentorship Removed"
-    
+
     if len(students) == 1:
         s = students[0]
         content = f"""
@@ -399,6 +408,41 @@ def notify_faculty_unallocation(faculty_email: str, faculty_name: str, students:
         <p>Dear {faculty_name},</p>
         <p><strong>{len(students)} students</strong> have been removed from your mentoring portfolio.</p>
         """
-        
+
     html_body = generate_professional_template(title, content)
     send_email(faculty_email, "Student Mentorship Updated", html_body=html_body)
+
+
+def notify_default_password_reset(staff_email: str, staff_name: str, temp_password: str):
+    """Sends a notification to a staff member about their password being reset to a temporary default."""
+    title = "Administrative Password Reset"
+    portal_url = f"{settings.FRONTEND_ORIGIN}/"
+
+    content = f"""
+    <p style="margin-top: 0;">Dear {staff_name},</p>
+    <p>Your institutional account password has been reset by the system administrator.</p>
+
+    <table class="data-table">
+        <tr>
+            <td>Institutional Email</td>
+            <td><strong>{staff_email}</strong></td>
+        </tr>
+        <tr>
+            <td>New Temporary Password</td>
+            <td><code style="background:#f1f5f9; padding:4px 8px; border-radius:4px; font-size: 15px; color:#0f172a;">{temp_password}</code></td>
+        </tr>
+    </table>
+
+    <div class="security-notice">
+        <strong>⚠️ Mandatory Action Required:</strong> You will be forced to change this temporary password immediately upon your next login.
+    </div>
+    """
+
+    button_html = f"""
+    <div style="text-align: center; margin: 32px 0;">
+        <a href="{portal_url}" class="btn">Login to Reset Password</a>
+    </div>
+    """
+
+    html_body = generate_professional_template(title, content, button_html)
+    send_email(staff_email, "Account Password Reset (Action Required)", html_body=html_body)

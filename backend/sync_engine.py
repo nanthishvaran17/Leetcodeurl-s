@@ -314,7 +314,7 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
         student.stats.recent_contest_name = stats_dict.get("recent_contest_name")
         student.stats.recent_contest_score = stats_dict.get("recent_contest_score")
         
-        student.stats.status = "OK"
+        student.stats.status = "verified"
         student.stats.sync_status = "success"
         student.stats.validation_status = "verified"
         student.stats.source = "leetcode_public_profile"
@@ -432,6 +432,11 @@ async def sync_single_student_by_id(student_id: int, timeout: float = 30.0) -> D
                 timeout=timeout
             )
             updated_student = sync_single_student_db(student.id, stats_dict, db)
+            try:
+                from backend.cache import cache
+                cache.clear()
+            except Exception:
+                pass
 
             try:
                 update_all_rankings_and_badges(db)
@@ -449,9 +454,25 @@ async def sync_single_student_by_id(student_id: int, timeout: float = 30.0) -> D
                 await manager.broadcast({
                     "type": "STUDENT_UPDATED",
                     "student_id": updated_student.id,
-                    "name": updated_student.name,
-                    "sync_status": stats_obj.sync_status if stats_obj else "pending",
-                    "total_solved": (stats_obj.total_solved if is_verified else None)
+                    "version": updated_student.version if hasattr(updated_student, 'version') else 0,
+                    "changes": {
+                        "name": updated_student.name,
+                        "reg_no": updated_student.reg_no,
+                        "username": updated_student.username,
+                        "total_solved": stats_obj.total_solved if (stats_obj and is_verified) else None,
+                        "stats": {
+                            "sync_status": stats_obj.sync_status if stats_obj else "pending",
+                            "status": stats_obj.status if stats_obj else "pending",
+                            "total_solved": stats_obj.total_solved if (stats_obj and is_verified) else None,
+                            "easy_solved": stats_obj.easy_solved if (stats_obj and is_verified) else None,
+                            "medium_solved": stats_obj.medium_solved if (stats_obj and is_verified) else None,
+                            "hard_solved": stats_obj.hard_solved if (stats_obj and is_verified) else None,
+                            "contest_rating": stats_obj.contest_rating if (stats_obj and is_verified) else None,
+                            "contest_global_ranking": stats_obj.contest_global_ranking if (stats_obj and is_verified) else None,
+                            "public_profile_ranking": stats_obj.public_profile_ranking if (stats_obj and is_verified) else None,
+                            "last_verified_at": stats_obj.last_verified_at.isoformat() if (stats_obj and is_verified and stats_obj.last_verified_at) else None
+                        }
+                    }
                 })
             except Exception:
                 pass
@@ -573,9 +594,14 @@ async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 5, per_
                                 asyncio.create_task(manager.broadcast({
                                     "type": "STUDENT_UPDATED",
                                     "student_id": updated_st.id,
-                                    "name": updated_st.name,
-                                    "sync_status": stats_obj.sync_status if stats_obj else "pending",
-                                    "total_solved": stats_obj.total_solved,
+                                    "version": updated_st.version if hasattr(updated_st, 'version') else 0,
+                                    "changes": {
+                                        "name": updated_st.name,
+                                        "stats": {
+                                            "sync_status": stats_obj.sync_status if stats_obj else "pending",
+                                            "total_solved": stats_obj.total_solved
+                                        }
+                                    }
                                 }))
                             except Exception:
                                 pass
@@ -589,8 +615,13 @@ async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 5, per_
                                 asyncio.create_task(manager.broadcast({
                                     "type": "STUDENT_UPDATED",
                                     "student_id": st.id,
-                                    "name": st.name,
-                                    "sync_status": "retrying" if attempt < max_retries else "failed",
+                                    "version": st.version if hasattr(st, 'version') else 0,
+                                    "changes": {
+                                        "name": st.name,
+                                        "stats": {
+                                            "sync_status": "retrying" if attempt < max_retries else "failed"
+                                        }
+                                    }
                                 }))
                             except Exception:
                                 pass

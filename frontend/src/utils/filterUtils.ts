@@ -5,6 +5,13 @@ export type NormalizedAcademicYear = 'all' | 'II' | 'III' | 'IV' | string;
 export type PerformanceRangeKey = 'all' | '500_plus' | '251_500' | '101_250' | '1_100' | 'not_started';
 export type SortByKey = 'top_solved' | 'low_solved' | 'name_asc' | 'name_desc' | 'streak' | 'rating' | string;
 
+export const normalizeSearchValue = (value: unknown) =>
+  String(value ?? "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ");
+
+
 /**
  * Normalizes any department reference (object, ID, name, code, string) to a canonical key.
  * Handles all 12+ institutional departments accurately.
@@ -148,23 +155,26 @@ export function matchesAcademicYear(student: StudentData, selectedYear: string):
  * Name & General search matching predicate
  */
 export function matchesNameSearch(student: StudentData, search: string): boolean {
-  const q = search.trim().toLowerCase();
-  if (!q) return true;
+  const query = normalizeSearchValue(search);
+  if (!query) return true;
 
-  const name = String(student.name || '').toLowerCase();
-  const regNo = String(student.reg_no || '').toLowerCase();
-  const username = String(student.username || (student as any).leetcode_username || '').toLowerCase();
   const deptStr = typeof student.department === 'string'
-    ? String(student.department).toLowerCase()
-    : String((student.department?.name || '') + ' ' + (student.department?.code || '')).toLowerCase();
-  const batchStr = String((student as any).batch || '').toLowerCase();
+    ? student.department
+    : (student.department?.name || '') + ' ' + (student.department?.code || '');
 
-  return (
-    name.includes(q) ||
-    regNo.includes(q) ||
-    username.includes(q) ||
-    deptStr.includes(q) ||
-    batchStr.includes(q)
+  const searchableValues = [
+    student.name,
+    student.reg_no,
+    (student as any).roll_no,
+    student.username || (student as any).leetcode_username,
+    student.email,
+    deptStr,
+    student.year_level || (student as any).batch,
+    student.section || (student as any).section
+  ];
+
+  return searchableValues.some((value) =>
+    normalizeSearchValue(value).includes(query)
   );
 }
 

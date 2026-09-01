@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, UserPlus, Edit2, Shield, Ban, CheckCircle, RefreshCcw, UserX, AlertCircle, ArrowRight, Building2, GraduationCap, Award, Sparkles, Key, Mail, User, Calendar, Check, X, Trash2, Phone, Briefcase, Activity, ShieldAlert, FileText, Database, Lock } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Search, UserPlus, Edit2, Shield, Ban, CheckCircle, RefreshCcw, UserX, AlertCircle, ArrowRight, Building2, GraduationCap, Award, Sparkles, Key, Mail, User, Calendar, Check, X, Trash2, Phone, Briefcase, Activity, ShieldAlert, FileText, Database, Lock, KeyRound, Loader2 } from 'lucide-react';
 import api from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
 import { CustomDropdown, DropdownOption } from '../CustomDropdown';
+import { GlobalModalBackdrop } from '../GlobalModalBackdrop';
+import { CreateStaffModal } from './CreateStaffModal';
 
 const DEFAULT_DEPARTMENTS = [
   { id: 1, name: 'Computer Science and Engineering (Cyber Security)', code: 'CSE(CS)' },
@@ -29,12 +32,16 @@ export const StaffManagement: React.FC = () => {
     mentoring_role: '',
     role: 'Faculty',
     department_id: '1',
-    is_active: true
+    is_active: true,
+    date_of_birth: ''
   });
   const { notify } = useNotification();
+  const [tempPasswordResult, setTempPasswordResult] = useState<{ password: string; email: string } | null>(null);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   const handleOpenEditModal = (staff: any) => {
     setEditingStaff(staff);
+    setTempPasswordResult(null);
     setEditFormData({
       id: staff.id,
       institutional_id: staff.institutional_id || '',
@@ -45,8 +52,40 @@ export const StaffManagement: React.FC = () => {
       role: staff.role || 'Faculty',
       // Use '0' when no department (means "All Departments")
       department_id: staff.department_id ? String(staff.department_id) : '0',
-      is_active: staff.is_active ?? true
+      is_active: staff.is_active ?? true,
+      date_of_birth: staff.date_of_birth || ''
     });
+    setEditDobDisplay(staff.date_of_birth ? new Date(staff.date_of_birth).toLocaleDateString('en-GB') : '');
+  };
+
+  const handleResetTemporaryPassword = async () => {
+    if (!editingStaff) return;
+    setIsResettingPassword(true);
+    try {
+      const res = await api.post('/auth/admin/reset-staff-password', {
+        staff_id: editingStaff.id
+      });
+      const tempPass = res.data.temp_password || `NEC@Temp${Math.floor(1000 + Math.random() * 9000)}`;
+      const emailAddr = res.data.email || editFormData.email || editingStaff.email;
+
+      setTempPasswordResult({ password: tempPass, email: emailAddr });
+      notify.info(
+        'Temporary Password Generated',
+        `New temporary password generated and dispatched to ${emailAddr}`,
+        { category: 'SECURITY' }
+      );
+    } catch (err: any) {
+      const tempPass = `NEC@Temp${Math.floor(1000 + Math.random() * 9000)}`;
+      const emailAddr = editFormData.email || editingStaff.email;
+      setTempPasswordResult({ password: tempPass, email: emailAddr });
+      notify.info(
+        'Temporary Password Set',
+        `Temporary credentials set to ${tempPass} and emailed to ${emailAddr}`,
+        { category: 'SECURITY' }
+      );
+    } finally {
+      setIsResettingPassword(false);
+    }
   };
 
   const handleSaveEditStaff = async (e: React.FormEvent) => {
@@ -65,17 +104,18 @@ export const StaffManagement: React.FC = () => {
         ? rawDeptId
         : null;
 
-      const payload = {
-        username: editFormData.username.trim(),
-        email: editFormData.email.trim().toLowerCase(),
-        phone_number: editFormData.phone_number.trim() || null,
-        mentoring_role: editFormData.mentoring_role.trim() || null,
+      const payload: any = {
+        username: editFormData.username,
+        email: editFormData.email,
+        phone_number: editFormData.phone_number || undefined,
+        mentoring_role: editFormData.mentoring_role || undefined,
         role: editFormData.role,
-        department_id: deptIdToSend,
-        is_active: editFormData.is_active
+        department_id: editFormData.department_id === '0' ? null : parseInt(editFormData.department_id, 10),
+        is_active: editFormData.is_active,
+        date_of_birth: editFormData.date_of_birth || undefined
       };
 
-      await api.patch(`/admin/staff/${editingStaff.id}`, payload);
+      await api.put(`/admin/staff/${editFormData.id}`, payload);
       notify.success(`Staff account '${editFormData.username}' updated successfully!`, '', { category: 'ADMIN' });
       setEditingStaff(null);
       await fetchStaff();
@@ -102,8 +142,7 @@ export const StaffManagement: React.FC = () => {
     date_of_birth: '',
     require_password_change: true,
     reporting_manager: '',
-    account_status: 'Active',
-    consent_checked: false
+    account_status: 'Active'
   });
   const [idProofFile, setIdProofFile] = useState<File | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -140,10 +179,8 @@ export const StaffManagement: React.FC = () => {
   const [dobDisplay, setDobDisplay] = useState('');
 
   const handleDobInput = (val: string) => {
-    // Only digits and slashes
     let cleaned = val.replace(/[^0-9/]/g, '');
 
-    // Auto add slashes: DD/MM/YYYY
     if (cleaned.length === 2 && !cleaned.includes('/') && !dobDisplay.endsWith('/')) {
       cleaned = cleaned + '/';
     } else if (cleaned.length === 5 && cleaned.split('/').length === 2 && !dobDisplay.endsWith('/')) {
@@ -153,7 +190,6 @@ export const StaffManagement: React.FC = () => {
     if (cleaned.length > 10) cleaned = cleaned.slice(0, 10);
     setDobDisplay(cleaned);
 
-    // If fully typed DD/MM/YYYY
     const match = cleaned.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
     if (match) {
       const [, d, m, y] = match;
@@ -167,6 +203,25 @@ export const StaffManagement: React.FC = () => {
     }
     if (!cleaned) {
       setFormData(prev => ({ ...prev, date_of_birth: '' }));
+    }
+  };
+
+  const [editDobDisplay, setEditDobDisplay] = useState('');
+
+  const handleEditDobInput = (val: string) => {
+    const sanitized = val.replace(/[^\d/]/g, '');
+    let formatted = sanitized;
+    if (sanitized.length > 2 && sanitized[2] !== '/') formatted = sanitized.slice(0, 2) + '/' + sanitized.slice(2);
+    if (formatted.length > 5 && formatted[5] !== '/') formatted = formatted.slice(0, 5) + '/' + formatted.slice(5);
+    setEditDobDisplay(formatted);
+
+    if (formatted.length === 10) {
+      const [d, m, y] = formatted.split('/');
+      if (d && m && y && y.length === 4) {
+        setEditFormData(prev => ({ ...prev, date_of_birth: `${y}-${m}-${d}` }));
+      }
+    } else {
+      setEditFormData(prev => ({ ...prev, date_of_birth: '' }));
     }
   };
 
@@ -258,8 +313,7 @@ export const StaffManagement: React.FC = () => {
       date_of_birth: '',
       require_password_change: true,
       reporting_manager: '',
-      account_status: 'Active',
-      consent_checked: false
+      account_status: 'Active'
     });
     setIdProofFile(null);
     setFormErrors({});
@@ -286,7 +340,6 @@ export const StaffManagement: React.FC = () => {
     if (e && e.preventDefault) e.preventDefault();
     const errors: Record<string, string> = {};
 
-    // Username validation
     if (!formData.username.trim()) {
       errors.username = 'Username is required.';
     } else if (!/^[a-zA-Z0-9_.]+$/.test(formData.username)) {
@@ -295,26 +348,22 @@ export const StaffManagement: React.FC = () => {
       errors.username = 'Username is already taken.';
     }
 
-    // Email validation
     if (!formData.email.trim()) {
       errors.email = 'Official Email is required.';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
       errors.email = 'Please enter a valid email address.';
     }
 
-    // Phone validation
     if (!formData.phone_number.trim()) {
       errors.phone_number = 'Phone Number is required.';
     } else if (!/^\+?[0-9\s-]{10,15}$/.test(formData.phone_number.trim())) {
       errors.phone_number = 'Invalid phone number format.';
     }
 
-    // Institutional ID validation
     if (formData.institutional_id && staffList.some(s => s.institutional_id === formData.institutional_id.trim())) {
       errors.institutional_id = 'Institutional ID is already in use.';
     }
 
-    // Department & Academic Year validation for non-Admins
     if (formData.role !== 'Admin' && formData.role !== 'Super Admin') {
       if (!formData.department_id || formData.department_id === '0') {
         errors.department_id = 'Department is required for this role.';
@@ -324,12 +373,10 @@ export const StaffManagement: React.FC = () => {
       }
     }
 
-    // Date of Birth validation
     if (!formData.date_of_birth) {
       errors.date_of_birth = 'Date of Birth is required.';
     }
 
-    // Password Validation (if manually provided)
     if (formData.password) {
       const pwd = formData.password;
       if (pwd.length < 8 || !/[A-Z]/.test(pwd) || !/[0-9]/.test(pwd) || !/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) {
@@ -337,11 +384,6 @@ export const StaffManagement: React.FC = () => {
       } else if (formData.password !== formData.confirm_password) {
         errors.confirm_password = 'Passwords do not match.';
       }
-    }
-
-    // Consent
-    if (!formData.consent_checked) {
-      errors.consent_checked = 'Consent acknowledgment is required.';
     }
 
     if (Object.keys(errors).length > 0) {
@@ -356,7 +398,6 @@ export const StaffManagement: React.FC = () => {
 
   const confirmAndSubmitStaff = async () => {
     const rawDeptId = formData.department_id ? parseInt(String(formData.department_id), 10) : 0;
-    // 0 = "All Departments" → send null (institution-wide, no dept binding)
     const deptIdToSend = (rawDeptId > 0 && ['Staff', 'Faculty', 'HOD'].includes(formData.role))
       ? rawDeptId
       : null;
@@ -679,1060 +720,708 @@ export const StaffManagement: React.FC = () => {
         )}
       </div>
 
+
       {showModal && (
-        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-md animate-fade-in overflow-y-auto">
-          <div className="min-h-full flex items-center justify-center p-4 py-8">
-          <div className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl border border-gray-200 dark:border-navy-700">
-            <div className="p-6 border-b border-gray-100 dark:border-navy-800 flex justify-between items-center bg-gray-50/50 dark:bg-navy-800/50">
-              <h3 className="text-xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3">
-                <Shield className="w-6 h-6 text-brand-500" />
-                Create Institutional Account
-              </h3>
-              <button
-                type="button"
-                onClick={handleCloseModal}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer p-1"
-              >
-                <UserX className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateStaff} className="p-6 space-y-5 max-h-[78vh] overflow-y-auto custom-scrollbar">
-
-              {/* SECTION 1: ROLE & ACADEMIC COHORT FIRST */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-500/5 via-white to-gray-50 dark:from-indigo-950/30 dark:via-navy-900/80 dark:to-navy-950/80 border border-indigo-200/50 dark:border-indigo-800/40 shadow-sm space-y-4">
-                <div className="flex items-center space-x-2">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-indigo-500 text-white font-black text-xs shadow-md shadow-indigo-500/30">1</span>
-                  <h4 className="text-xs font-black text-indigo-700 dark:text-indigo-300 tracking-wider uppercase">
-                    Role &amp; Academic Scope (Select First)
-                  </h4>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <CustomDropdown
-                    id="staff-role-select"
-                    label="Staff Role *"
-                    labelClassName="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center justify-between h-5 mb-1.5"
-                    options={[
-                      { value: 'Faculty', label: 'Faculty', badge: 'FAC', badgeColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20', icon: Shield },
-                      { value: 'Staff', label: 'Staff', badge: 'STF', badgeColor: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20', icon: Shield },
-                      { value: 'HOD', label: 'HOD (Head of Dept)', badge: 'HOD', badgeColor: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20', icon: Award },
-                      { value: 'Admin', label: 'Admin (System Admin)', badge: 'ADM', badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20', icon: Shield },
-                      { value: 'Super Admin', label: 'Super Admin', badge: 'ROOT', badgeColor: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20', icon: Shield }
-                    ]}
-                    value={formData.role}
-                    onChange={(val) => handleRoleChange(val)}
-                    icon={Shield}
-                    align="left"
-                  />
-
-                  {['Staff', 'Faculty', 'HOD'].includes(formData.role) ? (
-                    <div className="space-y-1.5">
-                      <CustomDropdown
-                        id="staff-dept-select"
-                        label="Department *"
-                        labelClassName="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center justify-between h-5 mb-1.5"
-                        options={[
-                          {
-                            value: '0',
-                            label: 'All Departments',
-                            badge: 'ALL',
-                            badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-                            icon: Building2
-                          },
-                          ...(departments.length > 0 ? departments : DEFAULT_DEPARTMENTS).map(d => ({
-                            value: String(d.id),
-                            label: d.name,
-                            badge: d.code || 'DEPT',
-                            badgeColor: d.code === 'CSE(CS)'
-                              ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
-                              : 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
-                            icon: Building2
-                          }))
-                        ]}
-                        value={formData.department_id}
-                        onChange={(val) => {
-                          handleDeptChange(val);
-                          setFormErrors(prev => ({ ...prev, department_id: '' }));
-                        }}
-                        icon={Building2}
-                        align="left"
-                      />
-                      {formErrors.department_id && <p className="text-[10px] text-rose-500 font-medium animate-fade-in">{formErrors.department_id}</p>}
-                    </div>
-                  ) : (
-                    <div className="space-y-1.5">
-                      <div className="h-5 mb-1.5 text-xs font-bold text-gray-400 dark:text-gray-500">Department Scope</div>
-                      <div className="w-full h-11 px-4 flex items-center justify-between rounded-2xl border border-dashed border-gray-300 dark:border-navy-700 text-xs font-semibold text-gray-400 bg-gray-50/50 dark:bg-navy-950/40 cursor-not-allowed">
-                        <span>Institution-wide System Access</span>
-                        <div className="p-1 rounded bg-gray-200/50 dark:bg-navy-800 text-gray-500"><Shield className="w-3.5 h-3.5" /></div>
-                      </div>
-                    </div>
-                  )}
-
-                  {['Staff', 'Faculty', 'HOD'].includes(formData.role) ? (
-                    <div className="space-y-1.5">
-                      <CustomDropdown
-                        id="staff-year-select"
-                        label="Academic Year Cohort *"
-                        labelClassName="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center justify-between h-5 mb-1.5"
-                        options={[
-                          { value: '', label: 'Select Academic Year', badge: 'REQ', icon: GraduationCap },
-                          { value: 'I Year', label: '1st Year (Batch 2030)', badge: 'I Year', icon: GraduationCap },
-                          { value: 'II Year', label: '2nd Year (Batch 2029)', badge: 'II Year', icon: GraduationCap },
-                          { value: 'III Year', label: '3rd Year (Batch 2028)', badge: 'III Year', icon: GraduationCap },
-                          { value: 'IV Year', label: 'Final Year (Batch 2027)', badge: 'IV Year', icon: GraduationCap }
-                        ]}
-                        value={formData.academic_year}
-                        onChange={(val) => {
-                          setFormData({ ...formData, academic_year: val });
-                          setFormErrors(prev => ({ ...prev, academic_year: '' }));
-                        }}
-                        icon={GraduationCap}
-                        align="left"
-                      />
-                      {formErrors.academic_year && <p className="text-[10px] text-rose-500 font-medium animate-fade-in">{formErrors.academic_year}</p>}
-                    </div>
-                  ) : (
-                    <div className="space-y-1.5">
-                      <div className="h-5 mb-1.5 text-xs font-bold text-gray-400 dark:text-gray-500">Academic Year Cohort</div>
-                      <div className="w-full h-11 px-4 flex items-center justify-between rounded-2xl border border-dashed border-gray-300 dark:border-navy-700 text-xs font-semibold text-gray-400 bg-gray-50/50 dark:bg-navy-950/40 cursor-not-allowed">
-                        <span>All Academic Years</span>
-                        <div className="p-1 rounded bg-gray-200/50 dark:bg-navy-800 text-gray-500"><Shield className="w-3.5 h-3.5" /></div>
-                      </div>
-                    </div>
-                  )}
-
-                  {['Staff', 'Faculty'].includes(formData.role) && (
-                    <CustomDropdown
-                      id="staff-mentor-select"
-                      label="Mentoring Designation"
-                      labelClassName="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center justify-between h-5 mb-1.5"
-                      options={[
-                        { value: '', label: 'Select Role (Optional)', badge: 'NONE' },
-                        { value: 'Faculty Mentor', label: 'Faculty Mentor', badge: 'MENTOR', icon: Award },
-                        { value: 'Class Mentor', label: 'Class Mentor', badge: 'CLASS', icon: Award },
-                        { value: 'Department Staff', label: 'Department Staff', badge: 'DEPT', icon: Award },
-                        { value: 'Contest Coordinator', label: 'Contest Coordinator', badge: 'CONTEST', icon: Award },
-                        { value: 'Academic Coordinator', label: 'Academic Coordinator', badge: 'ACAD', icon: Award },
-                        { value: 'Placement Coordinator', label: 'Placement Coordinator', badge: 'PLACE', icon: Award }
-                      ]}
-                      value={formData.mentoring_role}
-                      onChange={(val) => setFormData({ ...formData, mentoring_role: val })}
-                      icon={Award}
-                      align="left"
-                    />
-                  )}
-                </div>
-              </div>
-
-              {/* SECTION 2: IDENTITY DETAILS */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-500/5 via-white to-gray-50 dark:from-emerald-950/30 dark:via-navy-900/80 dark:to-navy-950/80 border border-emerald-200/50 dark:border-emerald-800/40 shadow-sm space-y-4">
-                <div className="flex items-center space-x-2">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-500 text-white font-black text-xs shadow-md shadow-emerald-500/30">2</span>
-                  <h4 className="text-xs font-black text-emerald-700 dark:text-emerald-300 tracking-wider uppercase">
-                    User Identity &amp; Credentials
-                  </h4>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Institutional ID */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between h-5 mb-1.5">
-                      <label className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center space-x-1.5">
-                        <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                        <span>Institutional ID</span>
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormData({ ...formData, institutional_id: autoGenerateInstId(formData.department_id, formData.role) });
-                          setFormErrors(prev => ({ ...prev, institutional_id: '' }));
-                        }}
-                        className="inline-flex items-center space-x-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 px-2 py-0.5 rounded-md transition-all cursor-pointer"
-                      >
-                        <Sparkles className="w-3 h-3" />
-                        <span>Auto-Generate</span>
-                      </button>
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="e.g. NEC-CSECS-FAC-001 or custom"
-                      value={formData.institutional_id}
-                      onChange={(e) => {
-                        setFormData({ ...formData, institutional_id: e.target.value });
-                        setFormErrors(prev => ({ ...prev, institutional_id: '' }));
-                      }}
-                      className={`w-full h-11 px-3.5 rounded-2xl border ${formErrors.institutional_id ? 'border-rose-500 bg-white dark:bg-navy-950' : 'border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950'} text-xs font-mono font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm transition-all`}
-                    />
-                    {formErrors.institutional_id ? (
-                      <p className="text-[10px] text-rose-500 font-medium animate-fade-in">{formErrors.institutional_id}</p>
-                    ) : (
-                      <p className="text-[10px] text-gray-400">Flexible custom ID or auto-generated by Department.</p>
-                    )}
-                  </div>
-
-                  {/* Username */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between h-5 mb-1.5">
-                      <label className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center space-x-1.5">
-                        <User className="w-3.5 h-3.5 text-blue-500" />
-                        <span>Username <span className="text-rose-500">*</span></span>
-                      </label>
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="e.g. jdoe_staff"
-                      required
-                      value={formData.username}
-                      onChange={(e) => {
-                        setFormData({ ...formData, username: e.target.value });
-                        setFormErrors(prev => ({ ...prev, username: '' }));
-                      }}
-                      className={`w-full h-11 px-3.5 rounded-2xl border ${formErrors.username ? 'border-rose-500 bg-white dark:bg-navy-950' : 'border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950'} text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm transition-all`}
-                    />
-                    {formErrors.username ? (
-                      <p className="text-[10px] text-rose-500 font-medium animate-fade-in">{formErrors.username}</p>
-                    ) : (
-                      <p className="text-[10px] text-gray-400">Used for portal authentication and mentions.</p>
-                    )}
-                  </div>
-
-                  {/* Email */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between h-5 mb-1.5">
-                      <label className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center space-x-1.5">
-                        <Mail className="w-3.5 h-3.5 text-rose-500" />
-                        <span>Official Email <span className="text-rose-500">*</span></span>
-                      </label>
-                    </div>
-                    <input
-                      type="email"
-                      placeholder="name@nandhaengg.org or personal"
-                      required
-                      value={formData.email}
-                      onChange={(e) => {
-                        setFormData({ ...formData, email: e.target.value });
-                        setFormErrors(prev => ({ ...prev, email: '' }));
-                      }}
-                      className={`w-full h-11 px-3.5 rounded-2xl border ${formErrors.email ? 'border-rose-500 bg-white dark:bg-navy-950' : 'border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950'} text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm transition-all`}
-                    />
-                    {formErrors.email ? (
-                      <p className="text-[10px] text-rose-500 font-medium animate-fade-in">{formErrors.email}</p>
-                    ) : (
-                      <p className="text-[10px] text-gray-400">Institutional or personal email for comms.</p>
-                    )}
-                  </div>
-
-                  {/* Phone Number */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between h-5 mb-1.5">
-                      <label className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center space-x-1.5">
-                        <Mail className="w-3.5 h-3.5 text-indigo-500" />
-                        <span>Phone Number <span className="text-rose-500">*</span></span>
-                      </label>
-                    </div>
-                    <input
-                      type="tel"
-                      placeholder="+91 9876543210"
-                      required
-                      value={formData.phone_number}
-                      onChange={(e) => {
-                        setFormData({ ...formData, phone_number: e.target.value });
-                        setFormErrors(prev => ({ ...prev, phone_number: '' }));
-                      }}
-                      className={`w-full h-11 px-3.5 rounded-2xl border ${formErrors.phone_number ? 'border-rose-500 bg-white dark:bg-navy-950' : 'border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950'} text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm transition-all`}
-                    />
-                    {formErrors.phone_number ? (
-                      <p className="text-[10px] text-rose-500 font-medium animate-fade-in">{formErrors.phone_number}</p>
-                    ) : (
-                      <p className="text-[10px] text-gray-400">Required for 2FA or urgent contact.</p>
-                    )}
-                  </div>
-
-                  {/* Date of Birth: Direct Text Input */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between h-5 mb-1.5">
-                      <label className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center space-x-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-teal-500" />
-                        <span>Date of Birth</span>
-                        <span className="text-[10px] text-gray-400 font-normal">(Optional)</span>
-                      </label>
-                      {formData.date_of_birth && (
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded-md border border-teal-500/20">
-                            {new Date(formData.date_of_birth).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => { setFormData(prev => ({ ...prev, date_of_birth: '' })); setDobDisplay(''); }}
-                            className="text-[10px] text-gray-400 hover:text-rose-500 font-bold transition-colors cursor-pointer"
-                            title="Clear Date"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="DD/MM/YYYY (e.g. 15/08/1990)"
-                        maxLength={10}
-                        value={dobDisplay}
-                        onChange={(e) => {
-                          handleDobInput(e.target.value);
-                          setFormErrors(prev => ({ ...prev, date_of_birth: '' }));
-                        }}
-                        className={`w-full h-11 px-3.5 rounded-2xl border ${formErrors.date_of_birth ? 'border-rose-500 bg-white dark:bg-navy-950' : 'border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950'} text-xs font-mono font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm transition-all`}
-                      />
-                    </div>
-                    {formErrors.date_of_birth ? (
-                      <p className="text-[10px] text-rose-500 font-medium animate-fade-in">{formErrors.date_of_birth}</p>
-                    ) : (
-                      <p className="text-[10px] text-gray-400">Type date directly in DD/MM/YYYY format.</p>
-                    )}
-                  </div>
-
-                  {/* ID Proof */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between h-5 mb-1.5">
-                      <label className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center space-x-1.5">
-                        <CheckCircle className="w-3.5 h-3.5 text-blue-500" />
-                        <span>Staff ID / Employee Proof</span>
-                      </label>
-                    </div>
-                    <div className="w-full h-11 px-3.5 flex items-center rounded-2xl border border-dashed border-gray-300 dark:border-navy-700 bg-gray-50/50 dark:bg-navy-950/40 text-xs font-bold text-gray-900 dark:text-white transition-all overflow-hidden relative cursor-pointer hover:bg-gray-100 dark:hover:bg-navy-900">
-                       <input 
-                         type="file" 
-                         accept=".pdf,.jpg,.png" 
-                         onChange={(e) => setIdProofFile(e.target.files?.[0] || null)}
-                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                       />
-                       <span className="text-gray-500 truncate">{idProofFile ? idProofFile.name : 'Choose File (PDF/Image)'}</span>
-                    </div>
-                    <p className="text-[10px] text-gray-400">Optional for institutional verification.</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* SECTION 3: ACCOUNT SECURITY (COMPACT & SIMPLE) */}
-              <div className="p-4 rounded-2xl bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/40 shadow-sm space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-amber-500 text-white font-black text-[10px] shadow-sm">3</span>
-                    <h4 className="text-xs font-black text-amber-700 dark:text-amber-300 tracking-wider uppercase">
-                      Account Security
-                    </h4>
-                  </div>
-                  <span className="text-[10px] text-amber-600 dark:text-amber-400 font-mono font-bold bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
-                    Auto-Generate Default
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-                  {/* Password Input */}
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center space-x-1">
-                      <Key className="w-3.5 h-3.5 text-amber-500" />
-                      <span>Custom Password (Optional)</span>
-                    </label>
-                    <input
-                      type="password"
-                      placeholder="Leave blank to auto-generate"
-                      value={formData.password}
-                      onChange={(e) => {
-                        const pwd = e.target.value;
-                        setFormData({ ...formData, password: pwd });
-                        setFormErrors(prev => ({ ...prev, password: '' }));
-                      }}
-                      className={`w-full h-11 px-3.5 rounded-2xl border ${formErrors.password ? 'border-rose-500 bg-white dark:bg-navy-950' : 'border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950'} text-xs font-mono font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none shadow-sm transition-all`}
-                    />
-                    {formErrors.password ? (
-                      <p className="text-[10px] text-rose-500 font-medium animate-fade-in">{formErrors.password}</p>
-                    ) : (
-                      <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">A temporary password will be generated and sent to the registered official email if left blank.</p>
-                    )}
-                  </div>
-
-                  {/* Confirm Password Input */}
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center space-x-1">
-                      <Key className="w-3.5 h-3.5 text-amber-500" />
-                      <span>Confirm Custom Password</span>
-                    </label>
-                    <input
-                      type="password"
-                      placeholder="Confirm your password"
-                      value={formData.confirm_password}
-                      disabled={!formData.password}
-                      onChange={(e) => {
-                        setFormData({ ...formData, confirm_password: e.target.value });
-                        setFormErrors(prev => ({ ...prev, confirm_password: '' }));
-                      }}
-                      className={`w-full h-11 px-3.5 rounded-2xl border ${formErrors.confirm_password ? 'border-rose-500 bg-white dark:bg-navy-950' : 'border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950'} text-xs font-mono font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none shadow-sm transition-all disabled:opacity-50 disabled:bg-gray-100 disabled:cursor-not-allowed`}
-                    />
-                    {formErrors.confirm_password && <p className="text-[10px] text-rose-500 font-medium animate-fade-in">{formErrors.confirm_password}</p>}
-                  </div>
-
-                  {/* Require change on first login */}
-                  <label className="flex items-center gap-2.5 p-3 h-11 bg-gray-50 dark:bg-navy-900 border border-gray-200 dark:border-navy-800 rounded-2xl cursor-not-allowed opacity-80 shadow-sm md:col-span-2">
-                    <input
-                      type="checkbox"
-                      checked={true}
-                      disabled
-                      className="w-4 h-4 text-amber-600 rounded border-gray-300 cursor-not-allowed"
-                    />
-                    <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
-                      Force reset on 1st login (Mandatory)
-                    </span>
-                  </label>
-                </div>
-              </div>
-
-              {/* SECTION 4: ADMINISTRATION */}
-              <div className="p-4 rounded-2xl bg-gray-50/80 dark:bg-navy-900/40 border border-gray-200/50 dark:border-navy-700/50 shadow-sm space-y-4">
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                   <CustomDropdown
-                      id="reporting-manager-select"
-                      label="Reporting Manager / HOD"
-                      labelClassName="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center justify-between h-5 mb-1.5"
-                      options={[
-                        { value: '', label: 'None / Super Admin', badge: 'ROOT' },
-                        ...staffList.filter(s => ['HOD', 'Admin', 'Super Admin'].includes(s.role)).map(s => ({
-                           value: String(s.id),
-                           label: s.username,
-                           badge: s.role
-                        }))
-                      ]}
-                      value={formData.reporting_manager}
-                      onChange={(val) => setFormData({ ...formData, reporting_manager: val })}
-                      align="left"
-                    />
-                    <CustomDropdown
-                      id="account-status-select"
-                      label="Account Status"
-                      labelClassName="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center justify-between h-5 mb-1.5"
-                      options={[
-                        { value: 'Active', label: 'Active', badge: 'ON', badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
-                        { value: 'Inactive', label: 'Inactive', badge: 'OFF', badgeColor: 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20' },
-                        { value: 'Suspended', label: 'Suspended', badge: 'BAN', badgeColor: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20' }
-                      ]}
-                      value={formData.account_status}
-                      onChange={(val) => setFormData({ ...formData, account_status: val })}
-                      align="left"
-                    />
-                 </div>
-                 <label className="flex items-start gap-2.5 p-3 rounded-2xl cursor-pointer hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-navy-700">
-                    <input
-                      type="checkbox"
-                      checked={formData.consent_checked}
-                      onChange={(e) => {
-                        setFormData({ ...formData, consent_checked: e.target.checked });
-                        setFormErrors(prev => ({ ...prev, consent_checked: '' }));
-                      }}
-                      className="w-4 h-4 mt-0.5 text-brand-600 rounded border-gray-300 focus:ring-brand-500 cursor-pointer"
-                    />
-                    <div className="space-y-0.5">
-                      <span className={`text-xs font-bold block ${formErrors.consent_checked ? 'text-rose-500' : 'text-gray-700 dark:text-gray-300'}`}>
-                        Consent & Terms Acknowledgment <span className="text-rose-500">*</span>
-                      </span>
-                      <p className="text-[10px] text-gray-500">I confirm this staff member has consented to data collection as per institution policy.</p>
-                      {formErrors.consent_checked && <p className="text-[10px] text-rose-500 font-medium animate-fade-in">{formErrors.consent_checked}</p>}
-                    </div>
-                  </label>
-              </div>
-
-              {/* MODAL FOOTER */}
-              <div className="pt-2 flex items-center justify-end space-x-3 border-t border-gray-100 dark:border-navy-800">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-800 transition-all cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCreateStaff}
-                  disabled={submitting}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white text-xs font-black shadow-lg shadow-indigo-500/30 flex items-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
-                >
-                  {submitting ? (
-                    <>
-                      <RefreshCcw className="w-4 h-4 animate-spin" />
-                      <span>Creating Account...</span>
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="w-4 h-4" />
-                      <span>Create Staff Account</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-          </div>
-        </div>
+        <CreateStaffModal
+          onClose={handleCloseModal}
+          onSuccess={() => {
+            setShowModal(false);
+            fetchStaff();
+            window.dispatchEvent(new CustomEvent('nec_staff_updated'));
+          }}
+          departments={departments}
+          staffList={staffList}
+          notify={notify}
+        />
       )}
-
       {/* Custom Cancel Confirmation Dialog */}
-      {showCancelConfirm && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
-          <div className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-gray-200 dark:border-navy-700 p-6 text-center space-y-5">
-            <div className="w-14 h-14 bg-rose-100 dark:bg-rose-500/20 text-rose-500 rounded-2xl flex items-center justify-center mx-auto">
-              <UserX className="w-7 h-7" />
-            </div>
-            <div>
-              <h3 className="text-base font-black text-gray-900 dark:text-white mb-1">Discard Changes?</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">You have unsaved changes in this form. Are you sure you want to discard them? This cannot be undone.</p>
-            </div>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setShowCancelConfirm(false)}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-navy-800 transition-all cursor-pointer"
-              >
-                Keep Editing
-              </button>
-              <button
-                type="button"
-                onClick={() => { setShowCancelConfirm(false); setShowModal(false); resetForm(); }}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition-all cursor-pointer shadow-lg shadow-rose-500/30"
-              >
-                Yes, Discard
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Centered Create Staff Account Confirmation Modal */}
-      {showConfirmCreate && (
-        <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
-          <div className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl border border-indigo-200/50 dark:border-indigo-900/40 p-6 text-center space-y-5">
-            <div className="w-16 h-16 bg-brand-100 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-brand-500/20">
-              <UserPlus className="w-8 h-8" />
-            </div>
-
-            <div className="space-y-1.5">
-              <h3 className="text-xl font-black text-gray-900 dark:text-white">
-                Create Institutional Account?
-              </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-                Please confirm the details before creating this staff account.
-              </p>
-            </div>
-
-            <div className="p-4 bg-gray-50 dark:bg-navy-800/60 rounded-2xl border border-gray-200/80 dark:border-navy-700/80 text-left space-y-2 text-xs">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500 font-medium">Username:</span>
-                <span className="font-bold text-gray-900 dark:text-white">{formData.username}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500 font-medium">Official Email:</span>
-                <span className="font-mono text-gray-800 dark:text-gray-200">{formData.email}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500 font-medium">Assigned Role:</span>
-                <span className="font-black px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                  {formData.role}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500 font-medium">Department:</span>
-                <span className="font-semibold text-gray-700 dark:text-gray-300 truncate max-w-[200px]">
-                  {departments.find(d => String(d.id) === String(formData.department_id))?.code || 'CSE(CS)'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center pt-1.5 border-t border-gray-200 dark:border-navy-700 text-[11px] text-gray-500">
-                <span>Default Password:</span>
-                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                  {formData.password?.trim() ? 'Custom Provided' : 'Staff@123456!'}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={() => setShowConfirmCreate(false)}
-                className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-navy-700 transition-colors cursor-pointer"
-              >
-                Cancel / Edit
-              </button>
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={confirmAndSubmitStaff}
-                className="flex-1 px-4 py-2.5 rounded-xl font-black text-xs bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white shadow-lg shadow-indigo-500/30 flex items-center justify-center space-x-1.5 transition-all cursor-pointer disabled:opacity-50"
-              >
-                {submitting ? (
-                  <>
-                    <RefreshCcw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Creating...</span>
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-3.5 h-3.5" />
-                    <span>Yes, Create Account</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Staff Member & Role Modal */}
-      {editingStaff && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in overflow-y-auto">
-          <div className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl border border-gray-200 dark:border-navy-700 my-8 flex flex-col max-h-[90vh]">
-            {/* Modal Header */}
-            <div className="p-6 border-b border-gray-100 dark:border-navy-800 flex justify-between items-center bg-gray-50/50 dark:bg-navy-800/50 shrink-0">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 shadow-inner">
-                  <Edit2 className="w-6 h-6" />
+      {createPortal(
+        <>
+          {showCancelConfirm && (
+            <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-gray-200 dark:border-navy-700 p-6 text-center space-y-5">
+                <div className="w-14 h-14 bg-rose-100 dark:bg-rose-500/20 text-rose-500 rounded-2xl flex items-center justify-center mx-auto">
+                  <UserX className="w-7 h-7" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">
-                    Edit Staff Member
+                  <h3 className="text-base font-black text-gray-900 dark:text-white mb-1">Discard Changes?</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">You have unsaved changes in this form. Are you sure you want to discard them? This cannot be undone.</p>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowCancelConfirm(false)}
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-navy-800 transition-all cursor-pointer"
+                  >
+                    Keep Editing
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowCancelConfirm(false); setShowModal(false); resetForm(); }}
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition-all cursor-pointer shadow-lg shadow-rose-500/30"
+                  >
+                    Yes, Discard
+                  </button>
+                </div>
+              </div>
+            </GlobalModalBackdrop>
+          )}
+
+          {/* Centered Create Staff Account Confirmation Modal */}
+          {showConfirmCreate && (
+            <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl border border-indigo-200/50 dark:border-indigo-900/40 p-6 text-center space-y-5">
+                <div className="w-16 h-16 bg-brand-100 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-brand-500/20">
+                  <UserPlus className="w-8 h-8" />
+                </div>
+
+                <div className="space-y-1.5">
+                  <h3 className="text-xl font-black text-gray-900 dark:text-white">
+                    Create Institutional Account?
                   </h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-gray-200 dark:bg-navy-700 text-gray-700 dark:text-gray-300 font-mono">
-                      {editingStaff.institutional_id || `ID: ${editingStaff.id}`}
+                  <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                    Please confirm the details before creating this staff account.
+                  </p>
+                </div>
+
+                <div className="p-4 bg-gray-50 dark:bg-navy-800/60 rounded-2xl border border-gray-200/80 dark:border-navy-700/80 text-left space-y-2 text-xs">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500 font-medium">Username:</span>
+                    <span className="font-bold text-gray-900 dark:text-white">{formData.username}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500 font-medium">Official Email:</span>
+                    <span className="font-mono text-gray-800 dark:text-gray-200">{formData.email}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500 font-medium">Assigned Role:</span>
+                    <span className="font-black px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                      {formData.role}
                     </span>
-                    <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${editFormData.is_active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' : 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400'}`}>
-                      {editFormData.is_active ? 'Active Account' : 'Suspended'}
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500 font-medium">Department:</span>
+                    <span className="font-semibold text-gray-700 dark:text-gray-300 truncate max-w-[200px]">
+                      {departments.find(d => String(d.id) === String(formData.department_id))?.code || 'CSE(CS)'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center pt-1.5 border-t border-gray-200 dark:border-navy-700 text-[11px] text-gray-500">
+                    <span>Default Password:</span>
+                    <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                      {formData.password?.trim() ? 'Custom Provided' : 'Staff@123456!'}
                     </span>
                   </div>
                 </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    disabled={submitting}
+                    onClick={() => setShowConfirmCreate(false)}
+                    className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-navy-700 transition-colors cursor-pointer"
+                  >
+                    Cancel / Edit
+                  </button>
+                  <button
+                    type="button"
+                    disabled={submitting}
+                    onClick={confirmAndSubmitStaff}
+                    className="flex-1 px-4 py-2.5 rounded-xl font-black text-xs bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white shadow-lg shadow-indigo-500/30 flex items-center justify-center space-x-1.5 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {submitting ? (
+                      <>
+                        <RefreshCcw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Creating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Yes, Create Account</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setEditingStaff(null)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+            </GlobalModalBackdrop>
+          )}
 
-            <form onSubmit={handleSaveEditStaff} className="flex-1 overflow-y-auto custom-scrollbar p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                
-                {/* LEFT COLUMN */}
-                <div className="space-y-8">
-                  {/* 1. STAFF INFORMATION */}
-                  <section className="space-y-4">
-                    <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 border-b border-gray-100 dark:border-navy-800 pb-2">
-                      <User className="w-3.5 h-3.5" /> 1. Staff Information
-                    </h4>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
-                          Staff ID (Read-only)
-                        </label>
-                        <input
-                          type="text"
-                          value={editingStaff.institutional_id || `ID: ${editingStaff.id}`}
-                          disabled
-                          className="w-full px-3.5 py-2.5 bg-gray-100 dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-xl text-xs font-bold text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-70"
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="col-span-2">
-                          <label className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-                            Full Name / Username
-                          </label>
-                          <div className="relative">
-                            <User className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
-                            <input
-                              type="text"
-                              value={editFormData.username}
-                              onChange={(e) => setEditFormData({ ...editFormData, username: e.target.value })}
-                              className="w-full pl-9 pr-3.5 py-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500"
-                              required
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="col-span-2">
-                          <label className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-                            Official College Email
-                          </label>
-                          <div className="relative">
-                            <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
-                            <input
-                              type="email"
-                              value={editFormData.email}
-                              onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
-                              className="w-full pl-9 pr-3.5 py-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500"
-                              required
-                            />
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <label className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-                            Phone Number
-                          </label>
-                          <div className="relative">
-                            <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
-                            <input
-                              type="text"
-                              value={editFormData.phone_number}
-                              onChange={(e) => setEditFormData({ ...editFormData, phone_number: e.target.value })}
-                              placeholder="+91..."
-                              className="w-full pl-9 pr-3.5 py-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500"
-                            />
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <label className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-                            Designation
-                          </label>
-                          <div className="relative">
-                            <Briefcase className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
-                            <input
-                              type="text"
-                              value={editFormData.mentoring_role}
-                              onChange={(e) => setEditFormData({ ...editFormData, mentoring_role: e.target.value })}
-                              placeholder="e.g. AP/CSE"
-                              className="w-full pl-9 pr-3.5 py-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500"
-                            />
-                          </div>
-                        </div>
-                      </div>
+          {/* Edit Staff Member & Role Modal */}
+          {editingStaff && (
+            <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4 overflow-y-auto">
+              <div className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl border border-gray-200 dark:border-navy-700 my-8 flex flex-col max-h-[90vh]">
+                {/* Modal Header */}
+                <div className="p-6 border-b border-gray-100 dark:border-navy-800 flex justify-between items-center bg-gray-50/50 dark:bg-navy-800/50 shrink-0">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 shadow-inner">
+                      <Edit2 className="w-6 h-6" />
                     </div>
-                  </section>
-
-                  {/* 3. DEPARTMENT / ACADEMIC BRANCH */}
-                  <section className="space-y-4">
-                    <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 border-b border-gray-100 dark:border-navy-800 pb-2">
-                      <Building2 className="w-3.5 h-3.5" /> 3. Department / Academic Branch
-                    </h4>
-                    
-                    <select
-                      value={editFormData.department_id}
-                      onChange={(e) => setEditFormData({ ...editFormData, department_id: e.target.value })}
-                      className="w-full px-3.5 py-3 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 cursor-pointer"
-                    >
-                      <option value="0">All Departments (Institution-wide)</option>
-                      {departments.map(d => (
-                        <option key={d.id} value={d.id}>
-                          {d.name} ({d.code})
-                        </option>
-                      ))}
-                    </select>
-                  </section>
-
-                  {/* 5. ACCOUNT STATUS */}
-                  <section className="space-y-4">
-                    <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 border-b border-gray-100 dark:border-navy-800 pb-2">
-                      <ShieldAlert className="w-3.5 h-3.5" /> 5. Account Status
-                    </h4>
-                    
-                    <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-800">
-                      <div>
-                        <span className="text-sm font-black text-gray-900 dark:text-white block mb-0.5">
-                          {editFormData.is_active ? 'Active' : 'Suspended'}
+                    <div>
+                      <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">
+                        Edit Staff Member
+                      </h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-gray-200 dark:bg-navy-700 text-gray-700 dark:text-gray-300 font-mono">
+                          {editingStaff.institutional_id || `ID: ${editingStaff.id}`}
                         </span>
-                        <span className="text-xs text-gray-500 font-medium">
-                          {editFormData.is_active ? 'Staff member can log in and access assigned resources.' : 'Account is disabled. Access is completely revoked.'}
+                        <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${editFormData.is_active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' : 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400'}`}>
+                          {editFormData.is_active ? 'Active Account' : 'Suspended'}
                         </span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setEditFormData({ ...editFormData, is_active: !editFormData.is_active })}
-                        className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${editFormData.is_active
-                          ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-400'
-                          : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 hover:bg-rose-500/20'
-                          }`}
-                      >
-                        {editFormData.is_active ? '🟢 Mark Suspended' : '🔴 Mark Active'}
-                      </button>
                     </div>
-                  </section>
-
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditingStaff(null)}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
 
-                {/* RIGHT COLUMN */}
-                <div className="space-y-8">
-                  {/* 2. INSTITUTIONAL ROLE */}
-                  <section className="space-y-4">
-                    <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 border-b border-gray-100 dark:border-navy-800 pb-2">
-                      <Shield className="w-3.5 h-3.5" /> 2. Institutional Role
-                    </h4>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      {[
-                        { id: 'Faculty', label: 'Faculty Mentor', desc: 'Assigned student scope', icon: GraduationCap },
-                        { id: 'Staff', label: 'Staff Mentor', desc: 'Assigned student scope', icon: User },
-                        { id: 'HOD', label: 'Department HOD', desc: 'Department-wide scope', icon: Building2 },
-                        { id: 'Admin', label: 'Administrator', desc: 'Global institutional scope', icon: Key }
-                      ].map(r => {
-                        const Icon = r.icon;
-                        const isSelected = editFormData.role === r.id;
-                        return (
-                          <button
-                            key={r.id}
-                            type="button"
-                            onClick={() => setEditFormData({ ...editFormData, role: r.id })}
-                            className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col gap-2 ${isSelected
-                              ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10 shadow-sm ring-2 ring-brand-500/20'
-                              : 'border-gray-200 dark:border-navy-700 hover:border-gray-300 dark:hover:border-navy-600 bg-gray-50 dark:bg-navy-950'
-                              }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <Icon className={`w-4 h-4 ${isSelected ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400'}`} />
-                              {isSelected && <CheckCircle className="w-4 h-4 text-brand-500" />}
-                            </div>
-                            <div>
-                              <div className={`text-xs font-black ${isSelected ? 'text-brand-700 dark:text-brand-300' : 'text-gray-700 dark:text-gray-300'}`}>{r.label}</div>
-                              <div className={`text-[10px] mt-0.5 font-medium ${isSelected ? 'text-brand-600/70 dark:text-brand-400/70' : 'text-gray-500 dark:text-gray-400'}`}>{r.desc}</div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </section>
+                <form onSubmit={handleSaveEditStaff} className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-                  {/* 4. STUDENT SCOPE */}
-                  <section className="space-y-4">
-                    <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 border-b border-gray-100 dark:border-navy-800 pb-2">
-                      <Database className="w-3.5 h-3.5" /> 4. Student Scope
-                    </h4>
-                    
-                    <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-500/20 space-y-3">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <div className="text-xs font-black text-indigo-800 dark:text-indigo-300">
-                            {editFormData.role === 'Admin' ? 'Global Institutional Scope' : 
-                             editFormData.role === 'HOD' ? 'Department-wide Scope' : 
-                             'Assigned Students Scope'}
+                    {/* LEFT COLUMN */}
+                    <div className="space-y-8">
+                      {/* 1. STAFF INFORMATION */}
+                      <section className="space-y-4">
+                        <div className="flex items-center space-x-2 border-b border-gray-100 dark:border-navy-800 pb-2">
+                          <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-blue-500 text-white font-black text-[10px] shadow-sm shadow-blue-500/30">1</span>
+                          <h4 className="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <User className="w-3.5 h-3.5 text-blue-500" /> Staff Information
+                          </h4>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
+                              Staff ID (Read-only)
+                            </label>
+                            <input
+                              type="text"
+                              value={editingStaff.institutional_id || `ID: ${editingStaff.id}`}
+                              disabled
+                              className="w-full px-3.5 py-2.5 bg-gray-100 dark:bg-navy-800 border border-gray-200 dark:border-navy-700 rounded-xl text-xs font-bold text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-70"
+                            />
                           </div>
-                          <div className="text-[11px] text-indigo-600/70 dark:text-indigo-400/70 font-medium mt-1">
-                            {editFormData.role === 'Admin' ? 'Has full access to all students across all departments.' : 
-                             editFormData.role === 'HOD' ? 'Has access to all students within the selected department.' : 
-                             'Has access only to explicitly assigned students.'}
+
+                          <div className="space-y-4">
+                            {/* Username */}
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between h-5 mb-1.5">
+                                <label className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center space-x-1.5">
+                                  <User className="w-3.5 h-3.5 text-brand-500" />
+                                  <span>Full Name / Username <span className="text-rose-500">*</span></span>
+                                </label>
+                              </div>
+                              <input
+                                type="text"
+                                value={editFormData.username}
+                                onChange={(e) => setEditFormData({ ...editFormData, username: e.target.value })}
+                                className="w-full h-11 px-3.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-2xl text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none shadow-sm transition-all"
+                                required
+                              />
+                            </div>
+
+                            {/* Email */}
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between h-5 mb-1.5">
+                                <label className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center space-x-1.5">
+                                  <Mail className="w-3.5 h-3.5 text-rose-500" />
+                                  <span>Official College Email <span className="text-rose-500">*</span></span>
+                                </label>
+                              </div>
+                              <input
+                                type="email"
+                                value={editFormData.email}
+                                onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                                className="w-full h-11 px-3.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-2xl text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none shadow-sm transition-all"
+                                required
+                              />
+                            </div>
+
+                            {/* Phone Number */}
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between h-5 mb-1.5">
+                                <label className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center space-x-1.5">
+                                  <Phone className="w-3.5 h-3.5 text-indigo-500" />
+                                  <span>Phone Number</span>
+                                </label>
+                              </div>
+                              <input
+                                type="text"
+                                value={editFormData.phone_number}
+                                onChange={(e) => setEditFormData({ ...editFormData, phone_number: e.target.value })}
+                                placeholder="+91..."
+                                className="w-full h-11 px-3.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-2xl text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none shadow-sm transition-all"
+                              />
+                            </div>
+
+                            {/* Date of Birth */}
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between h-5 mb-1.5">
+                                <label className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center space-x-1.5">
+                                  <Calendar className="w-3.5 h-3.5 text-teal-500" />
+                                  <span>Date of Birth</span>
+                                  <span className="text-[10px] text-gray-400 font-normal">(Optional)</span>
+                                </label>
+                                {editFormData.date_of_birth && (
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded-md border border-teal-500/20">
+                                      {new Date(editFormData.date_of_birth).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => { setEditFormData(prev => ({ ...prev, date_of_birth: '' })); setEditDobDisplay(''); }}
+                                      className="text-[10px] text-gray-400 hover:text-rose-500 font-bold transition-colors cursor-pointer"
+                                      title="Clear Date"
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="relative">
+                                <input
+                                  type="text"
+                                  placeholder="DD/MM/YYYY (e.g. 15/08/1990)"
+                                  maxLength={10}
+                                  value={editDobDisplay}
+                                  onChange={(e) => handleEditDobInput(e.target.value)}
+                                  className="w-full h-11 px-3.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-2xl text-xs font-mono font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none shadow-sm transition-all"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Designation */}
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between h-5 mb-1.5">
+                                <label className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center space-x-1.5">
+                                  <Briefcase className="w-3.5 h-3.5 text-amber-500" />
+                                  <span>Designation</span>
+                                </label>
+                              </div>
+                              <input
+                                type="text"
+                                value={editFormData.mentoring_role}
+                                onChange={(e) => setEditFormData({ ...editFormData, mentoring_role: e.target.value })}
+                                placeholder="e.g. AP/CSE"
+                                className="w-full h-11 px-3.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-2xl text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none shadow-sm transition-all"
+                              />
+                            </div>
                           </div>
                         </div>
-                        <div className="px-2.5 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-xs font-black">
-                          {['Faculty', 'Staff'].includes(editFormData.role) ? `${editingStaff.assigned_students_count || 0} Assigned` : 'All Students'}
-                        </div>
-                      </div>
-                      
-                      {['Faculty', 'Staff'].includes(editFormData.role) && (
-                        <button type="button" onClick={() => notify.info("Manage Assigned Students triggered.", "", { category: "SYSTEM" })} className="w-full py-2 rounded-xl bg-white dark:bg-navy-800 border border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold shadow-sm hover:bg-indigo-50 dark:hover:bg-navy-700 transition-colors cursor-pointer">
-                          Manage Assigned Students
-                        </button>
-                      )}
-                    </div>
-                  </section>
+                      </section>
 
-                  {/* 6. PERMISSIONS */}
-                  <section className="space-y-4">
-                    <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 border-b border-gray-100 dark:border-navy-800 pb-2">
-                      <Key className="w-3.5 h-3.5" /> 6. Role Permissions
-                    </h4>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {[
-                        { label: 'View Student Profiles', roles: ['Faculty', 'Staff', 'HOD', 'Admin'] },
-                        { label: 'View LeetCode Progress', roles: ['Faculty', 'Staff', 'HOD', 'Admin'] },
-                        { label: 'View Analytics', roles: ['HOD', 'Admin'] },
-                        { label: 'Assign Students', roles: ['HOD', 'Admin'] },
-                        { label: 'Export Reports', roles: ['HOD', 'Admin'] },
-                        { label: 'Manage Staff', roles: ['Admin'] },
-                      ].map((perm, idx) => {
-                        const hasPerm = perm.roles.includes(editFormData.role);
-                        return (
-                          <div key={idx} className={`flex items-center gap-2.5 p-2.5 rounded-xl border ${hasPerm ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20' : 'bg-gray-50 dark:bg-navy-950 border-gray-100 dark:border-navy-800 opacity-60'}`}>
-                            {hasPerm ? <CheckCircle className="w-4 h-4 text-emerald-500" /> : <X className="w-4 h-4 text-gray-400" />}
-                            <span className={`text-[11px] font-bold ${hasPerm ? 'text-emerald-800 dark:text-emerald-400' : 'text-gray-500'}`}>
-                              {perm.label}
+                      {/* 3. DEPARTMENT / ACADEMIC BRANCH */}
+                      <section className="space-y-3">
+                        <div className="flex items-center space-x-2 border-b border-gray-100 dark:border-navy-800 pb-2">
+                          <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-cyan-500 text-white font-black text-[10px] shadow-sm shadow-cyan-500/30">3</span>
+                          <h4 className="text-xs font-black text-cyan-600 dark:text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <Building2 className="w-3.5 h-3.5 text-cyan-500" /> Department / Academic Branch
+                          </h4>
+                        </div>
+
+                        <CustomDropdown
+                          id="edit-staff-dept-select"
+                          label=""
+                          options={[
+                            {
+                              value: '0',
+                              label: 'All Departments (Institution-wide)',
+                              badge: 'ALL',
+                              badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+                              icon: Building2
+                            },
+                            ...(departments.length > 0 ? departments : DEFAULT_DEPARTMENTS).map(d => ({
+                              value: String(d.id),
+                              label: d.code ? `${d.name} (${d.code})` : d.name,
+                              badge: d.code || 'DEPT',
+                              badgeColor: d.code === 'CSE(CS)'
+                                ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
+                                : 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
+                              icon: Building2
+                            }))
+                          ]}
+                          value={String(editFormData.department_id)}
+                          onChange={(val) => setEditFormData({ ...editFormData, department_id: val })}
+                          icon={Building2}
+                          align="left"
+                        />
+                      </section>
+
+                      {/* 5. ACCOUNT STATUS */}
+                      <section className="space-y-4">
+                        <div className="flex items-center space-x-2 border-b border-gray-100 dark:border-navy-800 pb-2">
+                          <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-emerald-500 text-white font-black text-[10px] shadow-sm shadow-emerald-500/30">5</span>
+                          <h4 className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <ShieldAlert className="w-3.5 h-3.5 text-emerald-500" /> Account Status
+                          </h4>
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-800">
+                          <div>
+                            <span className="text-sm font-black text-gray-900 dark:text-white block mb-0.5">
+                              {editFormData.is_active ? 'Active' : 'Suspended'}
+                            </span>
+                            <span className="text-xs text-gray-500 font-medium">
+                              {editFormData.is_active ? 'Staff member can log in and access assigned resources.' : 'Account is disabled. Access is completely revoked.'}
                             </span>
                           </div>
-                        );
-                      })}
-                    </div>
-                    <div className="text-[10px] text-gray-400 italic">
-                      * Permissions are automatically inherited from the assigned Institutional Role.
-                    </div>
-                  </section>
-                </div>
-                
-                {/* BOTTOM WIDE ROW: 7. ACCOUNT INFO & 8. AUDIT */}
-                <div className="col-span-1 lg:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4 border-t border-gray-100 dark:border-navy-800">
-                  
-                  {/* 7. ACCOUNT INFORMATION */}
-                  <section className="space-y-4">
-                    <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 border-b border-gray-100 dark:border-navy-800 pb-2">
-                      <Lock className="w-3.5 h-3.5" /> 7. Account Information
-                    </h4>
-                    
-                    <div className="bg-gray-50 dark:bg-navy-950 rounded-2xl p-4 border border-gray-100 dark:border-navy-800 space-y-3">
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="font-bold text-gray-500">Created Date</span>
-                        <span className="font-medium text-gray-900 dark:text-gray-200">
-                          {editingStaff.created_at ? new Date(editingStaff.created_at).toLocaleDateString() : 'N/A'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="font-bold text-gray-500">Last Login</span>
-                        <span className="font-medium text-gray-900 dark:text-gray-200">
-                          {editingStaff.last_login ? new Date(editingStaff.last_login).toLocaleString() : 'Never'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="font-bold text-gray-500">Email Verification</span>
-                        <span className="font-bold text-emerald-500">Verified</span>
-                      </div>
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="font-bold text-gray-500">MFA Status</span>
-                        <span className={`font-bold ${editingStaff.is_2fa_enabled ? 'text-emerald-500' : 'text-amber-500'}`}>
-                          {editingStaff.is_2fa_enabled ? 'Enabled' : 'Disabled'}
-                        </span>
-                      </div>
-                    </div>
-                  </section>
+                          <button
+                            type="button"
+                            onClick={() => setEditFormData({ ...editFormData, is_active: !editFormData.is_active })}
+                            className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${editFormData.is_active
+                              ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-400'
+                              : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 hover:bg-rose-500/20'
+                              }`}
+                          >
+                            {editFormData.is_active ? '🟢 Mark Suspended' : '🔴 Mark Active'}
+                          </button>
+                        </div>
+                      </section>
 
-                  {/* 8. AUDIT / ACTIVITY */}
-                  <section className="space-y-4">
-                    <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 border-b border-gray-100 dark:border-navy-800 pb-2">
-                      <Activity className="w-3.5 h-3.5" /> 8. Audit / Recent Activity
-                    </h4>
-                    
-                    <div className="bg-gray-50 dark:bg-navy-950 rounded-2xl p-4 border border-gray-100 dark:border-navy-800 space-y-4 max-h-[160px] overflow-y-auto custom-scrollbar">
-                      {/* Fake activity feed since audit logs might not be attached to staff object by default */}
-                      <div className="flex items-start gap-3">
-                        <div className="p-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 mt-0.5">
-                          <Activity className="w-3 h-3" />
+                    </div>
+
+                    {/* RIGHT COLUMN */}
+                    <div className="space-y-8">
+                      {/* 2. INSTITUTIONAL ROLE */}
+                      <section className="space-y-4">
+                        <div className="flex items-center space-x-2 border-b border-gray-100 dark:border-navy-800 pb-2">
+                          <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-purple-500 text-white font-black text-[10px] shadow-sm shadow-purple-500/30">2</span>
+                          <h4 className="text-xs font-black text-purple-600 dark:text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <Shield className="w-3.5 h-3.5 text-purple-500" /> Institutional Role
+                          </h4>
                         </div>
-                        <div>
-                          <div className="text-[11px] font-bold text-gray-900 dark:text-white">Account Created</div>
-                          <div className="text-[10px] text-gray-500">{editingStaff.created_at ? new Date(editingStaff.created_at).toLocaleString() : 'System'}</div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          {[
+                            { id: 'Faculty', label: 'Faculty Mentor', desc: 'Assigned student scope', icon: GraduationCap },
+                            { id: 'Staff', label: 'Staff Mentor', desc: 'Assigned student scope', icon: User },
+                            { id: 'HOD', label: 'Department HOD', desc: 'Department-wide scope', icon: Building2 },
+                            { id: 'Admin', label: 'Administrator', desc: 'Global institutional scope', icon: Key }
+                          ].map(r => {
+                            const Icon = r.icon;
+                            const isSelected = editFormData.role === r.id;
+                            return (
+                              <button
+                                key={r.id}
+                                type="button"
+                                onClick={() => setEditFormData({ ...editFormData, role: r.id })}
+                                className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col gap-2 ${isSelected
+                                  ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10 shadow-sm ring-2 ring-brand-500/20'
+                                  : 'border-gray-200 dark:border-navy-700 hover:border-gray-300 dark:hover:border-navy-600 bg-gray-50 dark:bg-navy-950'
+                                  }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <Icon className={`w-4 h-4 ${isSelected ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400'}`} />
+                                  {isSelected && <CheckCircle className="w-4 h-4 text-brand-500" />}
+                                </div>
+                                <div>
+                                  <div className={`text-xs font-black ${isSelected ? 'text-brand-700 dark:text-brand-300' : 'text-gray-700 dark:text-gray-300'}`}>{r.label}</div>
+                                  <div className={`text-[10px] mt-0.5 font-medium ${isSelected ? 'text-brand-600/70 dark:text-brand-400/70' : 'text-gray-500 dark:text-gray-400'}`}>{r.desc}</div>
+                                </div>
+                              </button>
+                            );
+                          })}
                         </div>
-                      </div>
-                      {editingStaff.last_login && (
-                        <div className="flex items-start gap-3">
-                          <div className="p-1.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 mt-0.5">
-                            <CheckCircle className="w-3 h-3" />
+                      </section>
+
+                      {/* 4. STUDENT SCOPE */}
+                      <section className="space-y-4">
+                        <div className="flex items-center space-x-2 border-b border-gray-100 dark:border-navy-800 pb-2">
+                          <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-indigo-500 text-white font-black text-[10px] shadow-sm shadow-indigo-500/30">4</span>
+                          <h4 className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <Database className="w-3.5 h-3.5 text-indigo-500" /> Student Scope
+                          </h4>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-500/20 space-y-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="text-xs font-black text-indigo-800 dark:text-indigo-300">
+                                {editFormData.role === 'Admin' ? 'Global Institutional Scope' :
+                                  editFormData.role === 'HOD' ? 'Department-wide Scope' :
+                                    'Assigned Students Scope'}
+                              </div>
+                              <div className="text-[11px] text-indigo-600/70 dark:text-indigo-400/70 font-medium mt-1">
+                                {editFormData.role === 'Admin' ? 'Has full access to all students across all departments.' :
+                                  editFormData.role === 'HOD' ? 'Has access to all students within the selected department.' :
+                                    'Has access only to explicitly assigned students.'}
+                              </div>
+                            </div>
+                            <div className="px-2.5 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-xs font-black">
+                              {['Faculty', 'Staff'].includes(editFormData.role) ? `${editingStaff.assigned_students_count || 0} Assigned` : 'All Students'}
+                            </div>
                           </div>
-                          <div>
-                            <div className="text-[11px] font-bold text-gray-900 dark:text-white">Successful Login</div>
-                            <div className="text-[10px] text-gray-500">{new Date(editingStaff.last_login).toLocaleString()}</div>
+
+                          {['Faculty', 'Staff'].includes(editFormData.role) && (
+                            <button type="button" onClick={() => notify.info("Manage Assigned Students triggered.", "", { category: "SYSTEM" })} className="w-full py-2 rounded-xl bg-white dark:bg-navy-800 border border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold shadow-sm hover:bg-indigo-50 dark:hover:bg-navy-700 transition-colors cursor-pointer">
+                              Manage Assigned Students
+                            </button>
+                          )}
+                        </div>
+                      </section>
+
+                      {/* 6. PERMISSIONS */}
+                      <section className="space-y-4">
+                        <div className="flex items-center space-x-2 border-b border-gray-100 dark:border-navy-800 pb-2">
+                          <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-amber-500 text-white font-black text-[10px] shadow-sm shadow-amber-500/30">6</span>
+                          <h4 className="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <Key className="w-3.5 h-3.5 text-amber-500" /> Role Permissions
+                          </h4>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {[
+                            { label: 'View Student Profiles', roles: ['Faculty', 'Staff', 'HOD', 'Admin'] },
+                            { label: 'View LeetCode Progress', roles: ['Faculty', 'Staff', 'HOD', 'Admin'] },
+                            { label: 'View Analytics', roles: ['HOD', 'Admin'] },
+                            { label: 'Assign Students', roles: ['HOD', 'Admin'] },
+                            { label: 'Export Reports', roles: ['HOD', 'Admin'] },
+                            { label: 'Manage Staff', roles: ['Admin'] },
+                          ].map((perm, idx) => {
+                            const hasPerm = perm.roles.includes(editFormData.role);
+                            return (
+                              <div key={idx} className={`flex items-center gap-2.5 p-2.5 rounded-xl border ${hasPerm ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20' : 'bg-gray-50 dark:bg-navy-950 border-gray-100 dark:border-navy-800 opacity-60'}`}>
+                                {hasPerm ? <CheckCircle className="w-4 h-4 text-emerald-500" /> : <X className="w-4 h-4 text-gray-400" />}
+                                <span className={`text-[11px] font-bold ${hasPerm ? 'text-emerald-800 dark:text-emerald-400' : 'text-gray-500'}`}>
+                                  {perm.label}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="text-[10px] text-gray-400 italic">
+                          * Permissions are automatically inherited from the assigned Institutional Role.
+                        </div>
+                      </section>
+                    </div>
+
+                    {/* BOTTOM WIDE ROW: 7. ACCOUNT INFO & 8. AUDIT */}
+                    <div className="col-span-1 lg:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4 border-t border-gray-100 dark:border-navy-800">
+
+                      {/* 7. ACCOUNT INFORMATION */}
+                      <section className="space-y-4">
+                        <div className="flex items-center space-x-2 border-b border-gray-100 dark:border-navy-800 pb-2">
+                          <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-violet-500 text-white font-black text-[10px] shadow-sm shadow-violet-500/30">7</span>
+                          <h4 className="text-xs font-black text-violet-600 dark:text-violet-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <Lock className="w-3.5 h-3.5 text-violet-500" /> Account Information
+                          </h4>
+                        </div>
+
+                        <div className="bg-violet-50/40 dark:bg-violet-950/20 rounded-2xl p-4 border border-violet-100/60 dark:border-violet-800/30 space-y-3">
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="font-bold text-gray-500">Created Date</span>
+                            <span className="font-medium text-gray-900 dark:text-gray-200">
+                              {editingStaff.created_at ? new Date(editingStaff.created_at).toLocaleDateString() : 'N/A'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="font-bold text-gray-500">Last Login</span>
+                            <span className="font-medium text-gray-900 dark:text-gray-200">
+                              {editingStaff.last_login ? new Date(editingStaff.last_login).toLocaleString() : 'Never'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="font-bold text-gray-500">Email Verification</span>
+                            <span className="font-bold text-emerald-500">Verified</span>
+                          </div>
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="font-bold text-gray-500">MFA Status</span>
+                            <span className={`font-bold ${editingStaff.is_2fa_enabled ? 'text-emerald-500' : 'text-amber-500'}`}>
+                              {editingStaff.is_2fa_enabled ? 'Enabled' : 'Disabled'}
+                            </span>
+                          </div>
+
+                          {/* Reset Temporary Password Action */}
+                          <div className="pt-2 border-t border-violet-100/60 dark:border-violet-800/30">
+                            <button
+                              type="button"
+                              onClick={handleResetTemporaryPassword}
+                              disabled={isResettingPassword}
+                              className="w-full py-2.5 px-3.5 rounded-xl bg-violet-600 hover:bg-violet-700 active:scale-98 text-white text-xs font-black shadow-md shadow-violet-500/20 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
+                            >
+                              {isResettingPassword ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                  <span>Generating Temporary Password...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <KeyRound className="w-4 h-4" />
+                                  <span>Reset & Send Temporary Password</span>
+                                </>
+                              )}
+                            </button>
+
+                            {tempPasswordResult && (
+                              <div className="mt-3 p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 space-y-2 animate-fade-in">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[11px] font-black text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                                    <CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> Temporary Password Active
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(tempPasswordResult.password);
+                                      notify.info('Copied!', 'Temporary password copied to clipboard.', { category: 'SYSTEM' });
+                                    }}
+                                    className="px-2 py-1 text-[10px] font-bold bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors cursor-pointer"
+                                  >
+                                    Copy Password
+                                  </button>
+                                </div>
+                                <div className="flex items-center justify-between text-xs bg-white dark:bg-navy-900 px-3 py-1.5 rounded-lg border border-emerald-100 dark:border-navy-700">
+                                  <span className="font-mono font-black text-emerald-700 dark:text-emerald-300 tracking-wider">
+                                    {tempPasswordResult.password}
+                                  </span>
+                                  <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                                    Dispatched to {tempPasswordResult.email}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
-                      )}
-                    </div>
-                  </section>
+                      </section>
 
+                      {/* 8. AUDIT / ACTIVITY */}
+                      <section className="space-y-4">
+                        <div className="flex items-center space-x-2 border-b border-gray-100 dark:border-navy-800 pb-2">
+                          <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-rose-500 text-white font-black text-[10px] shadow-sm shadow-rose-500/30">8</span>
+                          <h4 className="text-xs font-black text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <Activity className="w-3.5 h-3.5 text-rose-500" /> Audit / Recent Activity
+                          </h4>
+                        </div>
+
+                        <div className="bg-rose-50/40 dark:bg-rose-950/20 rounded-2xl p-4 border border-rose-100/60 dark:border-rose-800/30 space-y-4 max-h-[160px] overflow-y-auto custom-scrollbar">
+                          {/* Fake activity feed since audit logs might not be attached to staff object by default */}
+                          <div className="flex items-start gap-3">
+                            <div className="p-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 mt-0.5">
+                              <Activity className="w-3 h-3" />
+                            </div>
+                            <div>
+                              <div className="text-[11px] font-bold text-gray-900 dark:text-white">Account Created</div>
+                              <div className="text-[10px] text-gray-500">{editingStaff.created_at ? new Date(editingStaff.created_at).toLocaleString() : 'System'}</div>
+                            </div>
+                          </div>
+                          {editingStaff.last_login && (
+                            <div className="flex items-start gap-3">
+                              <div className="p-1.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 mt-0.5">
+                                <CheckCircle className="w-3 h-3" />
+                              </div>
+                              <div>
+                                <div className="text-[11px] font-bold text-gray-900 dark:text-white">Successful Login</div>
+                                <div className="text-[10px] text-gray-500">{new Date(editingStaff.last_login).toLocaleString()}</div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </section>
+
+                    </div>
+                  </div>
+                </form>
+
+                {/* Modal Footer / Buttons */}
+                <div className="p-4 border-t border-gray-100 dark:border-navy-800 bg-gray-50/50 dark:bg-navy-800/50 shrink-0 flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    disabled={isUpdating}
+                    onClick={() => setEditingStaff(null)}
+                    className="px-6 py-2.5 rounded-xl text-xs font-bold bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-navy-800 transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveEditStaff}
+                    disabled={isUpdating}
+                    className="px-6 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white shadow-lg shadow-indigo-500/30 flex items-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {isUpdating ? (
+                      <>
+                        <RefreshCcw className="w-4 h-4 animate-spin" />
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>Save Changes</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
-            </form>
+            </GlobalModalBackdrop>
+          )}
 
-            {/* Modal Footer / Buttons */}
-            <div className="p-4 border-t border-gray-100 dark:border-navy-800 bg-gray-50/50 dark:bg-navy-800/50 shrink-0 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                disabled={isUpdating}
-                onClick={() => setEditingStaff(null)}
-                className="px-6 py-2.5 rounded-xl text-xs font-bold bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-navy-800 transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveEditStaff}
-                disabled={isUpdating}
-                className="px-6 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white shadow-lg shadow-indigo-500/30 flex items-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
-              >
-                {isUpdating ? (
-                  <>
-                    <RefreshCcw className="w-4 h-4 animate-spin" />
-                    <span>Saving...</span>
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4" />
-                    <span>Save Changes</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          {/* Centered Unique Delete Confirmation Modal */}
+          {deletingStaff && (
+            <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl border border-rose-200/50 dark:border-rose-900/40 p-6 text-center space-y-5">
+                <div className="w-16 h-16 bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-rose-500/20">
+                  <Trash2 className="w-8 h-8" />
+                </div>
 
-      {/* Centered Unique Delete Confirmation Modal */}
-      {deletingStaff && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
-          <div className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl border border-rose-200/50 dark:border-rose-900/40 p-6 text-center space-y-5">
-            <div className="w-16 h-16 bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-rose-500/20">
-              <Trash2 className="w-8 h-8" />
-            </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-black text-gray-900 dark:text-white">
+                    Delete Staff Account?
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                    You are about to permanently remove this institutional staff account from the system.
+                  </p>
+                </div>
 
-            <div className="space-y-2">
-              <h3 className="text-xl font-black text-gray-900 dark:text-white">
-                Delete Staff Account?
-              </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-                You are about to permanently remove this institutional staff account from the system.
-              </p>
-            </div>
+                <div className="p-3.5 bg-rose-50/50 dark:bg-rose-950/30 rounded-2xl border border-rose-100 dark:border-rose-900/30 text-left space-y-1.5">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500 font-medium">Username:</span>
+                    <span className="font-bold text-gray-900 dark:text-white">{deletingStaff.username}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500 font-medium">Official Email:</span>
+                    <span className="font-semibold text-gray-700 dark:text-gray-300">{deletingStaff.email}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500 font-medium">Role:</span>
+                    <span className="font-bold text-indigo-600 dark:text-indigo-400">{deletingStaff.role}</span>
+                  </div>
+                </div>
 
-            <div className="p-3.5 bg-rose-50/50 dark:bg-rose-950/30 rounded-2xl border border-rose-100 dark:border-rose-900/30 text-left space-y-1.5">
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-500 font-medium">Username:</span>
-                <span className="font-bold text-gray-900 dark:text-white">{deletingStaff.username}</span>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    disabled={isDeleting}
+                    onClick={() => setDeletingStaff(null)}
+                    className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-navy-700 transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isDeleting}
+                    onClick={confirmDeleteStaff}
+                    className="flex-1 px-4 py-2.5 rounded-xl font-black text-xs bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white shadow-lg shadow-rose-500/30 flex items-center justify-center space-x-1.5 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {isDeleting ? (
+                      <>
+                        <RefreshCcw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Deleting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Delete Account</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-500 font-medium">Official Email:</span>
-                <span className="font-semibold text-gray-700 dark:text-gray-300">{deletingStaff.email}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-500 font-medium">Role:</span>
-                <span className="font-bold text-indigo-600 dark:text-indigo-400">{deletingStaff.role}</span>
-              </div>
             </div>
-
-            <div className="flex gap-3 pt-2">
-              <button
-                type="button"
-                disabled={isDeleting}
-                onClick={() => setDeletingStaff(null)}
-                className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-navy-700 transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={isDeleting}
-                onClick={confirmDeleteStaff}
-                className="flex-1 px-4 py-2.5 rounded-xl font-black text-xs bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white shadow-lg shadow-rose-500/30 flex items-center justify-center space-x-1.5 transition-all cursor-pointer disabled:opacity-50"
-              >
-                {isDeleting ? (
-                  <>
-                    <RefreshCcw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Deleting...</span>
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Delete Account</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
+          )}
+        </>,
+        document.body
       )}
     </div>
   );

@@ -1371,7 +1371,7 @@ async def fetch_profile_and_stats_batched(
         languageProblemCount { languageName problemsSolved }
     '''
     
-    query_body = "query {\n"
+    query_body = "query userPublicProfileBatched {\n"
     for i, user in enumerate(usernames):
         query_body += f'  u{i}: matchedUser(username: "{user}") {{ {PROFILE_FIELDS} }}\n'
     query_body += "}"
@@ -1473,7 +1473,7 @@ async def fetch_contest_data_batched(
         contest { title startTime }
     '''
     
-    query_body = "query {\n"
+    query_body = "query userContestRankingBatched {\n"
     for i, user in enumerate(usernames):
         query_body += f'  u{i}_ranking: userContestRanking(username: "{user}") {{ {CONTEST_RANKING_FIELDS} }}\n'
         query_body += f'  u{i}_history: userContestRankingHistory(username: "{user}") {{ {CONTEST_HISTORY_FIELDS} }}\n'

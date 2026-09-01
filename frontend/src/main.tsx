@@ -1,10 +1,15 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { App } from './App'
+import { ErrorBoundary } from './ErrorBoundary'
 import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider } from './context/AuthContext'
 import { NotificationProvider } from './context/NotificationContext'
 import { NotificationCenter } from './components/NotificationCenter'
+import { GlobalDataProvider } from './context/GlobalDataContext'
+import { FilterProvider } from './context/FilterContext'
+import { GlobalWebSocketProvider } from './context/GlobalWebSocketProvider'
+import { KeyboardShortcutsProvider } from './context/KeyboardContext'
 import './index.css'
 
 import { QueryClientProvider } from '@tanstack/react-query'
@@ -21,13 +26,23 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <NotificationProvider>
-            <App />
-            <NotificationCenter />
-          </NotificationProvider>
+          <GlobalWebSocketProvider>
+            <GlobalDataProvider>
+              <FilterProvider>
+                <NotificationProvider>
+                  <KeyboardShortcutsProvider>
+                    <ErrorBoundary>
+                      <App />
+                      <NotificationCenter />
+                    </ErrorBoundary>
+                  </KeyboardShortcutsProvider>
+                </NotificationProvider>
+              </FilterProvider>
+            </GlobalDataProvider>
+          </GlobalWebSocketProvider>
         </AuthProvider>
       </ThemeProvider>
-      <ReactQueryDevtools initialIsOpen={false} />
+      <ReactQueryDevtools initialIsOpen={false} position="bottom" />
     </QueryClientProvider>
   </React.StrictMode>,
 )

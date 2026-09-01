@@ -9,6 +9,9 @@ import { CANONICAL_ROSTER, getCachedStudents, saveCachedStudents } from '../data
 import { filterAndSortStudents } from '../utils/filterUtils';
 import { useNotification } from '../context/NotificationContext';
 import { CustomDropdown, DropdownOption } from '../components/CustomDropdown';
+import { useGlobalData } from '../context/GlobalDataContext';
+import { useStudentsQuery } from '../hooks/useStudentsQuery';
+import { useDepartmentsQuery } from '../hooks/useDashboardQueries';
 
 interface DepartmentDashboardProps {
   onSelectStudent: (student: StudentData) => void;
@@ -16,64 +19,28 @@ interface DepartmentDashboardProps {
 
 export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSelectStudent }) => {
   const { notify, confirmAction } = useNotification();
-  const [departments, setDepartments] = useState<any[]>([]);
+  const { refreshAllData } = useGlobalData();
+  const { data: students = [] } = useStudentsQuery();
+  const { data: departments = [] } = useDepartmentsQuery();
   const [selectedDept, setSelectedDept] = useState<string>('all');
   const [yearLevel, setYearLevel] = useState<string>('all');
   const [nameSearch, setNameSearch] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('top_solved');
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
-  const [students, setStudents] = useState<StudentData[]>(() => getCachedStudents());
   const [displayCount, setDisplayCount] = useState<number>(32);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [solvedFilter, setSolvedFilter] = useState<string>('all');
-
-  useEffect(() => {
-    fetchDepartments();
-    fetchStudents();
-  }, []);
-
-  const fetchDepartments = async () => {
-    try {
-      const res = await api.get('/departments', { timeout: 3000 });
-      if (res.data && Array.isArray(res.data) && res.data.length >= 1) {
-        setDepartments(res.data);
-      }
-    } catch (err) {
-      console.warn("Failed to fetch departments", err);
-    }
-  };
-
-  const fetchStudents = async () => {
-    try {
-      const res = await api.get('/students/leaderboard-fast', { timeout: 4000 });
-      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-        setStudents(res.data);
-        saveCachedStudents(res.data);
-      } else {
-        const res2 = await api.get('/students', { timeout: 4000 });
-        if (res2.data && Array.isArray(res2.data) && res2.data.length > 0) {
-          setStudents(res2.data);
-          saveCachedStudents(res2.data);
-        } else {
-          setStudents(getCachedStudents());
-        }
-      }
-    } catch (err) {
-      console.warn("fetchStudents fallback to canonical roster:", err);
-      setStudents(getCachedStudents());
-    }
-  };
 
   const handleRefreshAllStats = async () => {
     setIsRefreshing(true);
     notify.info('Syncing Department Roster', 'Synchronizing authoritative LeetCode statistics...', { category: 'DEPARTMENT SYNC' });
     try {
       await api.post('/sync/start?triggered_by=department_dashboard', {}, { timeout: 3000 });
-      await fetchStudents();
+      await refreshAllData();
       notify.success('Sync Completed', 'Department roster statistics updated successfully.', { category: 'DEPARTMENT SYNC' });
     } catch (err) {
       console.warn("API sync fallback to canonical roster", err);
-      await fetchStudents();
+      await refreshAllData();
       notify.success('Sync Completed', 'Roster synchronized with verified statistics (1,450 students).', { category: 'DEPARTMENT SYNC' });
     } finally {
       setIsRefreshing(false);
@@ -143,7 +110,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
     try {
       await api.delete(`/students/${student.id}`);
       notify.success('Student Deleted', `Student "${student.name}" deleted successfully!`, { category: 'DEPARTMENT DASHBOARD' });
-      fetchStudents();
+      refreshAllData();
     } catch (err: any) {
       notify.error('Delete Failed', err.response?.data?.detail || "Failed to delete student record.", { category: 'DEPARTMENT DASHBOARD' });
     }
@@ -369,7 +336,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           <LeaderboardTable
             students={finalStudentList}
             onSelectStudent={onSelectStudent}
-            onRefreshStudent={() => fetchStudents()}
+            onRefreshStudent={() => refreshAllData()}
             onDeleteStudent={handleDeleteStudent}
           />
         ) : (

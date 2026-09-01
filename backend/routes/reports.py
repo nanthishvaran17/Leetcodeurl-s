@@ -224,6 +224,81 @@ def download_csv_report(
         headers={"Content-Disposition": "attachment; filename=LeetCode_Student_Performance_Report.csv"}
     )
 
+
+@router.get("/{session_id}/{format}")
+def download_session_report_by_format(
+    session_id: str,
+    format: str,
+    dept: Optional[str] = Query("ALL"),
+    year: Optional[str] = Query("ALL"),
+    attendance: Optional[str] = Query("ALL"),
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Download Session Report", dept_scoped=True))
+):
+    """
+    Downloads contest performance reports for a specific session_id in the requested format (excel/pdf/word/csv/zip).
+    Handles string or numeric session_id (e.g. '21', '1', 'current', 'latest').
+    """
+    fmt = format.lower().strip()
+    try:
+        from backend.models import WeeklySession
+        import re
+
+        session_obj = None
+        if session_id in ("current", "latest", "active"):
+            session_obj = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+        elif session_id.isdigit():
+            session_obj = db.query(WeeklySession).filter(WeeklySession.id == int(session_id)).first()
+        else:
+            session_obj = db.query(WeeklySession).filter(WeeklySession.session_code == session_id).first()
+
+        if not session_obj:
+            session_obj = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+
+        c_name = session_obj.contest_name if session_obj else "Weekly Contest"
+        c_num_m = re.search(r'\d+', c_name)
+        c_num = c_num_m.group(0) if c_num_m else (session_obj.id if session_obj else "1")
+
+        if fmt in ("excel", "xlsx"):
+            excel_bytes = generate_8_sheet_excel_report(db, current_user=current_user)
+            filename = f"NEC_Weekly_Contest_{c_num}_Official_Report.xlsx"
+            return Response(
+                content=excel_bytes,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+            )
+        elif fmt == "pdf":
+            pdf_bytes = generate_pdf_summary_report(db, current_user=current_user)
+            filename = f"NEC_Weekly_Contest_{c_num}_Summary.pdf"
+            return Response(
+                content=pdf_bytes,
+                media_type="application/pdf",
+                headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+            )
+        elif fmt in ("word", "docx"):
+            from backend.word_generator import generate_word_report
+            word_bytes = generate_word_report(db, current_user=current_user)
+            filename = f"NEC_Weekly_Contest_{c_num}_Summary.docx"
+            return Response(
+                content=word_bytes,
+                media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+            )
+        elif fmt == "csv":
+            return download_csv_report(dept_id=None, year_level=year, db=db, current_user=current_user)
+        else:
+            excel_bytes = generate_8_sheet_excel_report(db, current_user=current_user)
+            filename = f"NEC_Weekly_Contest_{c_num}_Official_Report.xlsx"
+            return Response(
+                content=excel_bytes,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+            )
+    except Exception as e:
+        logger.error(f"[EXPORT ERROR] /{session_id}/{format}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to generate {format.upper()} report: {str(e)}")
+
+
 from backend.models import ReportHistory
 from backend.services.report_models import ReportConfig
 from backend.services.report_engine import build_universal_report
@@ -382,6 +457,10 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
         session_id = None
         if report_id.isdigit():
             session_id = int(report_id)
+        elif report_id.lower() == "latest":
+            ws_match = db.query(WeeklySession).order_by(WeeklySession.session_date.desc()).first()
+            if ws_match:
+                session_id = ws_match.id
         elif report_id.startswith("Session_"):
             try:
                 session_id = int(report_id.replace("Session_", ""))
@@ -474,12 +553,19 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
                     return True
                 rs = str(row_status).upper().strip()
                 fa = str(filter_att).upper().strip()
-                att_statuses = {"PUBLIC", "VIRTUAL", "PUBLIC_ATTENDED", "ATTENDED"}
-                not_att_statuses = {"NOT_ATTENDED", "NO_EVIDENCE", "UNLINKED", "ERROR"}
+                
+                if fa == "DATA_ERROR":
+                    return rs in ("USERNAME_NOT_FOUND", "INVALID_USERNAME", "PENDING_USERNAME", "UNLINKED", "ERROR", "DATA_ERROR")
+                    
                 if fa in ("PUBLIC", "ATTENDED", "PUBLIC_ATTENDED", "VERIFIED"):
-                    return rs in att_statuses
-                if fa in ("NOT_ATTENDED", "NOT ATTENDED", "ABSENT"):
-                    return rs in not_att_statuses
+                    return rs in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED")
+                    
+                if fa in ("VIRTUAL", "VIRTUAL_ATTENDED"):
+                    return rs in ("VIRTUAL", "VIRTUAL_ATTENDED")
+                    
+                if fa in ("NOT_ATTENDED", "NOT ATTENDED", "ABSENT", "PUBLIC_NOT_ATTENDED"):
+                    return rs in ("NOT_ATTENDED", "NO_EVIDENCE")
+                    
                 return True
 
             raw_rows = [

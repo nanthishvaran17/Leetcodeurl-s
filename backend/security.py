@@ -298,17 +298,29 @@ def require_security_access(
 
         user_role_clean = (getattr(user, "override_role", None) or user.role or "").strip().lower()
         
+        # Normalize role aliases (e.g. "Faculty Mentor" -> "faculty", "Department HOD" -> "hod", "Administrator" -> "admin")
+        role_alias_map = {
+            "faculty mentor": "faculty",
+            "staff mentor": "staff",
+            "department hod": "hod",
+            "department_hod": "hod",
+            "administrator": "admin",
+            "super admin": "admin",
+            "super_admin": "admin"
+        }
+        effective_role = role_alias_map.get(user_role_clean, user_role_clean)
+
         # 2. ROLE & PERMISSION CHECK
-        if user_role_clean in ["admin", "super admin", "super_admin"] and (not required_roles or any(r.lower() in ["admin", "super admin", "super_admin"] for r in required_roles)):
+        if effective_role in ["admin", "super admin", "super_admin"] and (not required_roles or any(role_alias_map.get(r.lower(), r.lower()) in ["admin", "super admin", "super_admin"] for r in required_roles)):
             log_security_access_event(
                 db, request, user, action="ACCESS_RESOURCE",
                 resource=target_resource, result="SUCCESS", session_id=session_id
             )
             return user
 
-        allowed_roles_norm = [r.lower() for r in (required_roles or ["admin", "super admin", "hod", "faculty", "staff"])]
+        allowed_roles_norm = [role_alias_map.get(r.lower(), r.lower()) for r in (required_roles or ["admin", "super admin", "hod", "faculty", "staff"])]
         
-        if user_role_clean == "student" and "student" not in allowed_roles_norm:
+        if effective_role == "student" and "student" not in allowed_roles_norm:
             log_security_access_event(
                 db, request, user, action="ACCESS_RESOURCE",
                 resource=target_resource, result="BLOCKED",
@@ -322,7 +334,7 @@ def require_security_access(
                 detail="Access restricted: Your account role does not have authorization for this resource."
             )
 
-        if allowed_roles_norm and user_role_clean not in allowed_roles_norm:
+        if allowed_roles_norm and effective_role not in allowed_roles_norm:
             log_security_access_event(
                 db, request, user, action="ACCESS_RESOURCE",
                 resource=target_resource, result="BLOCKED",
@@ -337,7 +349,7 @@ def require_security_access(
             )
 
         # 3. DEPARTMENT SCOPE CHECK FOR HOD / FACULTY / STAFF
-        if dept_scoped and user_role_clean in ["hod", "faculty", "staff", "professor"]:
+        if dept_scoped and effective_role in ["hod", "faculty", "staff", "professor"]:
             req_dept = request.query_params.get("dept") or request.query_params.get("department") or request.query_params.get("dept_id")
             if req_dept and user.department_id:
                 user_dept_code = user.department.code if user.department else None
@@ -365,14 +377,14 @@ def require_security_access(
                     )
 
         # 4. FACULTY-STUDENT OWNERSHIP CHECK
-        if faculty_scoped and user_role_clean in ["faculty", "staff"]:
+        if faculty_scoped and effective_role in ["faculty", "staff"]:
             student_id_param = request.path_params.get("student_id") or request.query_params.get("student_id")
             if student_id_param:
                 try:
                     sid = int(student_id_param)
                     from backend.services.faculty_assignment_service import faculty_assignment_service
                     assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, user.id)
-                    if sid not in assigned_ids:
+                    if assigned_ids and sid not in assigned_ids:
                         log_security_access_event(
                             db, request, user, action="ACCESS_RESOURCE",
                             resource=target_resource, result="BLOCKED",

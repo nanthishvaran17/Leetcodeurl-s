@@ -72,6 +72,7 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
     if (filterCategory === 'MISSING') return item.status === 'MISSING_USERNAME';
     if (filterCategory === 'NOT_FOUND') return item.status === 'PROFILE_NOT_FOUND';
     if (filterCategory === 'INVALID') return item.status === 'INVALID_PROFILE_URL';
+    if (filterCategory === 'NETWORK') return item.status === 'NETWORK_ERROR';
     return true;
   });
 
@@ -170,8 +171,8 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
         </div>
 
         <div 
-          onClick={() => setFilterCategory('ALL')}
-          className="p-5 rounded-3xl border shadow-xl text-center space-y-1 transition-all cursor-pointer hover:scale-[1.01]"
+          onClick={() => setFilterCategory('NETWORK')}
+          className={`p-5 rounded-3xl border shadow-xl text-center space-y-1 transition-all cursor-pointer ${filterCategory === 'NETWORK' ? 'ring-2 ring-blue-400 scale-[1.03]' : 'hover:scale-[1.01]'}`}
           style={{ background: 'linear-gradient(135deg, #0c1a2e15, #0f254015)', borderColor: 'rgba(59,130,246,0.25)' }}
         >
           <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#60a5fa' }}>Network / Sync</p>
@@ -223,6 +224,12 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
               >
                 Not Found ({data?.profile_not_found || 0})
               </button>
+              <button
+                onClick={() => setFilterCategory('NETWORK')}
+                className={`px-2.5 py-1 rounded-lg transition-all ${filterCategory === 'NETWORK' ? 'bg-blue-500/20 text-blue-400 font-black' : 'text-gray-500 hover:text-blue-400'}`}
+              >
+                Network ({data?.network_errors || 0})
+              </button>
             </div>
 
             {data?.source_status === 'UNAVAILABLE' && (
@@ -255,6 +262,8 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
                       <span className={`px-3 py-1 rounded-full font-black text-[10px] ${
                         item.status === 'MISSING_USERNAME' || item.status === 'INVALID_PROFILE_URL'
                           ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-500/30'
+                          : item.status === 'NETWORK_ERROR'
+                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-500/30'
                           : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-500/30'
                       }`}>
                         {item.issue}

@@ -477,9 +477,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       });
 
       const errResData = await queryClient.fetchQuery({
-        queryKey: ['contest-data-quality', requestedSessionId],
+        queryKey: ['contest-data-quality', requestedSessionId, dept, year, attendance],
         queryFn: async () => {
-          const res = await api.get(`/contests/sessions/${requestedSessionId}/data-quality`);
+          const res = await api.get(`/contests/sessions/${requestedSessionId}/data-quality?dept=${dept}&year=${year}&attendance=${attendance}`);
           return res.data;
         },
         staleTime: 10 * 60 * 1000
@@ -950,8 +950,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const paginatedMatrixRows = matrixRows;
 
   const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(filteredMatrixRows.length / (pageSize || 50)));
-  }, [filteredMatrixRows.length, pageSize]);
+    return Math.max(1, Math.ceil(totalRows / (pageSize || 50)));
+  }, [totalRows, pageSize]);
 
   const previewPaginatedRows = useMemo(() => {
     if (previewPageSize >= filteredMatrixRows.length) return filteredMatrixRows;
@@ -960,8 +960,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   }, [filteredMatrixRows, previewPage, previewPageSize]);
 
   const previewTotalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(filteredMatrixRows.length / (previewPageSize || 50)));
-  }, [filteredMatrixRows.length, previewPageSize]);
+    return Math.max(1, Math.ceil(totalRows / (previewPageSize || 50)));
+  }, [totalRows, previewPageSize]);
 
   if (loading) {
     const loadingSession = sessionsList.find(s => s.sessionId === selectedSessionId);
@@ -2177,6 +2177,38 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             </div>
           );
         })()}
+        {/* ── ACTIVE SCOPE BANNER ── */}
+        {(selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL') && (
+          <div className="bg-indigo-50/80 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/50 rounded-2xl px-4 py-2.5 flex items-center justify-between flex-wrap gap-2 shadow-sm animate-fade-in -mb-1 mt-4">
+            <div className="flex items-center gap-2 text-xs">
+              <span className="font-black text-indigo-800 dark:text-indigo-400 uppercase tracking-wider text-[10px]">Active Scope:</span>
+              <span className="font-bold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+                <span className={selectedDeptFilter !== 'ALL' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500'}>
+                  {selectedDeptFilter === 'ALL' ? 'All Departments' : selectedDeptFilter}
+                </span>
+                <span className="text-gray-300 dark:text-gray-700">•</span>
+                <span className={selectedYearFilter !== 'ALL' ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500'}>
+                  {selectedYearFilter === 'ALL' ? 'All Years' : `${selectedYearFilter} Year`}
+                </span>
+                <span className="text-gray-300 dark:text-gray-700">•</span>
+                <span className={selectedAttendanceFilter !== 'ALL' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500'}>
+                  {selectedAttendanceFilter === 'ALL' ? 'All Statuses' : selectedAttendanceFilter.replace('_', ' ')}
+                </span>
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                setSelectedDeptFilter('ALL');
+                setSelectedYearFilter('ALL');
+                setSelectedAttendanceFilter('ALL');
+              }}
+              className="text-[10px] font-black uppercase tracking-wider text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors cursor-pointer flex items-center gap-1 bg-white dark:bg-navy-900 px-2.5 py-1 rounded-lg border border-indigo-100 dark:border-indigo-800 shadow-sm hover:shadow"
+            >
+              <X className="w-3 h-3" />
+              Clear Filters
+            </button>
+          </div>
+        )}
 
         {/* Headline 6 Stat Cards (Equal height, animated count-up, hover micro-interactions) */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -2531,7 +2563,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
                   }`}
               >
-                Student Matrix Roster ({filteredMatrixRows.length})
+                Student Matrix Roster ({totalRows})
               </button>
               <button
                 onClick={() => setSubTab('dept_year')}
@@ -3228,7 +3260,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               {/* Preview Pagination Toolbar */}
               {filteredMatrixRows.length > previewPageSize && (
                 <div className="mt-3 px-3 py-2 bg-slate-100 dark:bg-navy-950 rounded-xl flex items-center justify-between text-xs font-bold text-gray-500">
-                  <span>Page {previewPage} of {previewTotalPages} ({filteredMatrixRows.length} total)</span>
+                  <span>Page {previewPage} of {previewTotalPages} ({totalRows} total)</span>
                   <div className="flex items-center space-x-1.5">
                     <button
                       type="button"
@@ -3462,8 +3494,18 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         onClose={() => setEditingStudent(null)}
         onSaveSuccess={(updated) => {
           setMatrixRows(prev => prev.map(row => 
-            row.student_id === updated.id 
-              ? { ...row, student_name: updated.name, section: updated.section, department: updated.department, is_active: updated.is_active } 
+            (row.student_id === updated.id || row.id === updated.id)
+              ? { 
+                  ...row, 
+                  student_name: updated.name, 
+                  name: updated.name,
+                  section: updated.section, 
+                  department: updated.department, 
+                  is_active: updated.is_active,
+                  username: updated.username || row.username,
+                  status: updated.username ? 'SYNC_PENDING' : row.status,
+                  participation_status: updated.username ? 'PENDING' : row.participation_status
+                } 
               : row
           ));
           setEditingStudent(null);

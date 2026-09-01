@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { UserCheck, X, Check, AlertCircle, ArrowRight, RefreshCcw, Shield, Users, CheckCircle2 } from 'lucide-react';
+import { GlobalModalBackdrop } from '../GlobalModalBackdrop';
 
 export interface AllocationConfirmationModalProps {
   isOpen: boolean;
@@ -74,14 +75,18 @@ export const AllocationConfirmationModal: React.FC<AllocationConfirmationModalPr
   const roleDisplay = targetStaff.role || 'Staff / Faculty Mentor';
 
   return (
-    <div 
-      className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-slate-950/75 animate-fade-in"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="allocation-modal-title"
-      aria-describedby="allocation-modal-desc"
+    <GlobalModalBackdrop
+      isOpen={isOpen}
+      onClose={onClose}
+      className="flex items-center justify-center p-4"
     >
-      <div className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl border border-slate-200 dark:border-navy-700 transition-all text-left">
+      <div 
+        className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl border border-slate-200 dark:border-navy-700 transition-all text-left"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="allocation-modal-title"
+        aria-describedby="allocation-modal-desc"
+      >
         
         {/* 1. HEADER */}
         <div className="px-6 py-4 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between bg-slate-50 dark:bg-navy-950/60">
@@ -260,6 +265,6 @@ export const AllocationConfirmationModal: React.FC<AllocationConfirmationModalPr
         )}
 
       </div>
-    </div>
+    </GlobalModalBackdrop>
   );
 };

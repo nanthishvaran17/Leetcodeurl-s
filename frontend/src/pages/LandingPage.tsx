@@ -142,6 +142,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       });
       setRefreshing(false);
       fetchFilteredStudents();
+      window.dispatchEvent(new Event('refresh_dashboard_summary'));
     }
   });
 
@@ -206,7 +207,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         consecutiveErrors = 0;
 
         const rawComp = statusData.students_processed ?? statusData.completed ?? statusData.processed ?? 0;
-        const totalCount = statusData.total_students || statusData.total || students.length || 1395;
+        const totalCount = statusData.total_students || statusData.total || students.length || 0;
         const currentProcessed = Math.min(totalCount, Math.max(0, rawComp));
 
         setSyncProgress({
@@ -229,6 +230,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           pollTimerRef.current = null;
           setRefreshing(false);
           await fetchFilteredStudents();
+          window.dispatchEvent(new Event('refresh_dashboard_summary'));
           setSyncProgress({
             total: totalCount,
             processed: totalCount,
@@ -328,13 +330,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   const fetchFilteredStudents = async () => {
     try {
-      const res = await api.get('/students/leaderboard-fast');
+      const ts = Date.now();
+      const res = await api.get(`/students/leaderboard-fast?_t=${ts}`);
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setStudents(res.data);
         saveCachedStudents(res.data);
         return;
       }
-      const res2 = await api.get('/students');
+      const res2 = await api.get(`/students?_t=${ts}`);
       if (res2.data && Array.isArray(res2.data) && res2.data.length > 0) {
         setStudents(res2.data);
         saveCachedStudents(res2.data);
@@ -474,7 +477,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </motion.button>
 
             {(() => {
-              const totalStudents = summaryData?.total_students ?? (students.length > 0 ? students.length : null);
+              const totalStudents = summaryData?.scope?.total_students ?? (students.length > 0 ? students.length : null);
               const processedCount = syncProgress?.processed ?? 0;
               const totalProgress = syncProgress?.total ?? totalStudents;
 
@@ -497,8 +500,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               );
             })()}
             {(() => {
-              const totalStudents = summaryData?.total_students ?? (students.length > 0 ? students.length : 300);
-              const verifiedCount = summaryData?.verified_profiles ?? students.filter(s =>
+              const totalStudents = summaryData?.scope?.total_students ?? (students.length > 0 ? students.length : 300);
+              const verifiedCount = summaryData?.verification?.verified ?? students.filter(s =>
                 s.stats?.sync_status === 'success' || s.stats?.sync_status === 'OK' || s.stats?.sync_status === 'verified' || s.stats?.sync_status === 'stale' || (s.stats?.total_solved !== null && (s.stats?.total_solved ?? 0) > 0)
               ).length;
               const lastVerifiedTs = students
@@ -756,7 +759,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h3 className="font-black text-lg text-gray-900 dark:text-white">
             <div className="flex flex-col">
-              <span>Showing {sortedList.length} of {summaryData?.scope?.total_students ?? 1395} Students</span>
+              <span>Showing {sortedList.length} of {summaryData?.scope?.total_students ?? students.length} Students</span>
               {(selectedDept !== 'all' || yearLevel !== 'all' || solvedFilter !== 'all') && (
                 <span className="text-sm font-semibold text-gray-500 dark:text-gray-400 mt-1">
                   Filtered by: {[

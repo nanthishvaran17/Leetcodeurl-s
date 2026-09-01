@@ -31135,14 +31135,8 @@ export function getCachedStudents(): any[] {
       const cached = localStorage.getItem('nec_leetcode_students_cache');
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          // Filter to active Cyber and IoT
-          const validCodes = ['CSE(CS)', 'CSE(IOT)', 'CYBER', 'IOT'];
-          const filtered = parsed.filter((s: any) => {
-            const dCode = (s.department?.code || s.dept || '').toUpperCase();
-            return validCodes.some(v => dCode.includes(v));
-          });
-          if (filtered.length > 0) return filtered;
+        if (parsed && Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
         }
       }
     }
@@ -31156,12 +31150,7 @@ export function saveCachedStudents(students: any[]): void {
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
       if (Array.isArray(students) && students.length > 0) {
-        const validCodes = ['CSE(CS)', 'CSE(IOT)', 'CYBER', 'IOT'];
-        const filtered = students.filter((s: any) => {
-          const dCode = (s.department?.code || s.dept || '').toUpperCase();
-          return validCodes.some(v => dCode.includes(v));
-        });
-        localStorage.setItem('nec_leetcode_students_cache', JSON.stringify(filtered));
+        localStorage.setItem('nec_leetcode_students_cache', JSON.stringify(students));
       }
     }
   } catch (e) {

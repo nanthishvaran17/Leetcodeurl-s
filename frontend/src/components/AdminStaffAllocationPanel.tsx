@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { studentLiveStore, useStudentListIds, useStudentStoreVersion } from '../../stores/studentLiveStore';
+import { GlobalModalBackdrop } from '../GlobalModalBackdrop';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNotification } from '../context/NotificationContext';
 import { AllocationConfirmationModal } from './admin/AllocationConfirmationModal';
@@ -955,7 +957,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
  {/* ─── 3. VIEW STAFF ASSIGNED ROSTER & COMPLETION MODAL ─── */}
  {viewRosterModal.isOpen && (
- <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+ <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
  <div className="bg-white dark:bg-navy-900 w-full max-w-3xl p-6 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
  
  <div className="flex items-center justify-between border-b border-slate-200 dark:border-navy-800 pb-3">
@@ -1071,12 +1073,12 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  ) : null}
 
  </div>
- </div>
+ </GlobalModalBackdrop>
  )}
 
  {/* ─── 4. REUSABLE PREMIUM CONFIRMATION MODAL ─── */}
  {confirmModal.isOpen && (
- <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+ <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
  <div className="bg-white dark:bg-navy-900 w-full max-w-md p-6 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-2xl space-y-5">
  <div className="flex items-center justify-between border-b border-slate-200 dark:border-navy-800 pb-3">
  <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center space-x-2">
@@ -1191,12 +1193,12 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  )}
 
  </div>
- </div>
+ </GlobalModalBackdrop>
  )}
 
  {/* ─── 5. CREATE STAFF MODAL ─── */}
  {showCreateModal && (
- <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+ <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
  <div className="bg-white dark:bg-navy-900 w-full max-w-md p-6 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
  <div className="flex items-center justify-between border-b border-slate-200 dark:border-navy-800 pb-3">
  <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center space-x-2">
@@ -1278,7 +1280,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  </div>
  </form>
  </div>
- </div>
+ </GlobalModalBackdrop>
  )}
 
  {/* Premium Institutional Allocation Confirmation Modal */}
@@ -1292,7 +1294,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
  {/* ─── 6. UNASSIGN STUDENT WARNING MODAL ─── */}
  {studentToUnassign && (
- <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+ <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
   <div className="bg-white dark:bg-navy-900 w-full max-w-md p-6 rounded-3xl border border-rose-200 dark:border-rose-900/50 shadow-2xl space-y-5 text-center relative">
    <div className="w-16 h-16 bg-rose-100 dark:bg-rose-900/30 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-2">
     <AlertTriangle className="w-8 h-8" />
@@ -1325,7 +1327,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
     </button>
    </div>
   </div>
- </div>
+ </GlobalModalBackdrop>
  )}
 
  </div>

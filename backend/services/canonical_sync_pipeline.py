@@ -412,8 +412,14 @@ async def _sync_single_student_canonical_impl(
 
                 sync_status_str = "success"
 
+            st.version = (st.version or 0) + 1
             if not defer_commit:
                 db_student.commit()
+                try:
+                    from backend.cache import cache
+                    cache.clear()
+                except Exception:
+                    pass
 
             # Record completion in LiveSyncTracker and broadcast progress event immediately
             async with lock:
@@ -450,6 +456,7 @@ async def _sync_single_student_canonical_impl(
                         "reg_no": st.reg_no,
                         "name": st.name,
                         "username": st.username,
+                        "version": st.version,
                         "total_solved": total_solved,
                         "easy_solved": easy_solved,
                         "medium_solved": medium_solved,
@@ -658,9 +665,22 @@ async def run_full_pipeline(
                     db_chunk.commit()
                     
                     if chunk_payloads:
-                        last_payload = chunk_payloads[-1]
+                        last_payload = chunk_payloads[-1].copy()
                         last_payload["chunk_size"] = len(chunk_payloads)
                         from backend.services.live_sync_service import broadcast_sync_event
+                        
+                        # Extract all student updates in this chunk
+                        student_updates = [p.get("student_update") for p in chunk_payloads if p.get("student_update")]
+                        if student_updates:
+                            # We MUST pass the version and timestamp so React Query cache merging works!
+                            batch_payload = {
+                                "type": "STUDENT_BATCH_UPDATED",
+                                "updates": student_updates,
+                                "timestamp": datetime.datetime.utcnow().isoformat() + "Z"
+                            }
+                            await broadcast_sync_event(batch_payload)
+                            
+                        # Broadcast the sync progress for the UI progress bar
                         await broadcast_sync_event(last_payload)
                 except Exception as e:
                     db_chunk.rollback()

@@ -11,10 +11,19 @@ import { PerformanceChart } from '../components/PerformanceChart';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { SyncHistoryModal } from '../components/SyncHistoryModal';
 import { FailedSyncModal } from '../components/FailedSyncModal';
-import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import api, { triggerSingleStudentSync } from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
+import { useGlobalData } from '../context/GlobalDataContext';
+import { 
+  useSummaryQuery, 
+  useDepartmentsQuery, 
+  useDataQualityQuery, 
+  useSystemHealthQuery, 
+  useSyncStatusQuery 
+} from '../hooks/useDashboardQueries';
+import { useStudentsQuery } from '../hooks/useStudentsQuery';
+import { useFilteredStudents, useFilters } from '../context/FilterContext';
 
 interface DashboardPageProps {
   onSelectStudent: (student: StudentData) => void;
@@ -29,18 +38,21 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 }) => {
   const { notify, confirmAction } = useNotification();
   const { user } = useAuth();
-  const [summary, setSummary] = useState<any>(null);
-  const [students, setStudents] = useState<StudentData[]>([]);
-  const [departments, setDepartments] = useState<any[]>([]);
-  const [dataQuality, setDataQuality] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { loading: contextLoading, refreshAllData } = useGlobalData();
+
+  const { data: summary } = useSummaryQuery();
+  const { data: departments = [] } = useDepartmentsQuery();
+  const { data: dataQuality } = useDataQualityQuery();
+  const { data: systemHealth } = useSystemHealthQuery();
+  const { data: syncStatus } = useSyncStatusQuery();
+  const { data: students = [], isLoading: studentsLoading } = useStudentsQuery();
+
+  const loading = contextLoading || studentsLoading;
 
   // Single Student Refresh State
   const [refreshingStudentId, setRefreshingStudentId] = useState<number | null>(null);
 
   // 24/7 Operations & Health Telemetry State
-  const [systemHealth, setSystemHealth] = useState<any>(null);
-  const [syncStatus, setSyncStatus] = useState<any>(null);
   const [relativeTimeStr, setRelativeTimeStr] = useState<string>('Just now');
   
   // Modals state
@@ -52,7 +64,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     notify.info('Single Student Refresh', `Refreshing live LeetCode statistics for ${studentName}...`, { category: 'LIVE SYNC' });
     try {
       await triggerSingleStudentSync(studentId);
-      await fetchDashboardData();
+      await refreshAllData();
       notify.success('Student Statistics Refreshed', `Successfully updated live statistics for ${studentName}.`, { category: 'LIVE SYNC' });
     } catch (err: any) {
       notify.error('Refresh Failed', err.response?.data?.detail || `Failed to refresh statistics for ${studentName}.`, { category: 'LIVE SYNC' });
@@ -64,83 +76,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const [triggering, setTriggering] = useState(false);
   const [syncStarting, setSyncStarting] = useState(false);
   const [generatingReport, setGeneratingReport] = useState(false);
-
-  const { isConnected } = useLiveLeaderboard((data) => {
-    if (data?.type === 'sync_complete') {
-      fetchDashboardData(true);
-    } else if (data?.type === 'sync_progress') {
-      setSummary((prev: any) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          sync: {
-            ...prev.sync,
-            is_running: true,
-            processed: data.processed,
-            total: data.total,
-            percentage: data.total > 0 ? (data.processed / data.total) * 100 : 0
-          }
-        };
-      });
-    } else if (data?.type === 'STUDENT_UPDATED') {
-      setStudents(prev => prev.map(s => {
-        if (s.id === data.student_id) {
-          return {
-            ...s,
-            stats: {
-              ...(s.stats || {}),
-              sync_status: data.sync_status,
-              total_solved: data.total_solved !== undefined ? data.total_solved : s.stats?.total_solved
-            }
-          };
-        }
-        return s;
-      }));
-    }
-  });
-
-  const fetchDashboardData = async (isBackground = false) => {
-    if (!isBackground) setLoading(true);
-
-    try {
-      const [sumRes, deptRes, qualRes, studRes, healthRes, syncRes] = await Promise.allSettled([
-        api.get('/sessions/dashboard-summary'),
-        api.get('/analytics/department-comparison'),
-        api.get('/analytics/data-quality'),
-        api.get('/students/leaderboard-fast'),
-        api.get('/system/health'),
-        api.get('/sync/status')
-      ]);
-
-      if (sumRes.status === 'fulfilled' && sumRes.value.data) {
-        setSummary(sumRes.value.data);
-      }
-      if (deptRes.status === 'fulfilled' && deptRes.value.data && Array.isArray(deptRes.value.data)) {
-        setDepartments(deptRes.value.data);
-      }
-      if (qualRes.status === 'fulfilled' && qualRes.value.data) {
-        setDataQuality(qualRes.value.data);
-      }
-      if (studRes.status === 'fulfilled' && studRes.value.data && Array.isArray(studRes.value.data)) {
-        const sortedData = [...studRes.value.data].sort((a: any, b: any) => (b.weekly_progress || 0) - (a.weekly_progress || 0));
-        setStudents(sortedData);
-      }
-      if (healthRes.status === 'fulfilled' && healthRes.value.data) {
-        setSystemHealth(healthRes.value.data);
-      }
-      if (syncRes.status === 'fulfilled' && syncRes.value.data) {
-        setSyncStatus(syncRes.value.data);
-      }
-    } catch (err) {
-      console.warn("REST API request delayed or offline", err);
-    } finally {
-      if (!isBackground) setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDashboardData(false);
-  }, []);
 
   // Calculate dynamic relative time every 10 seconds without page refresh
   useEffect(() => {
@@ -184,11 +119,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     notify.info('Live Sync Started', 'Background synchronization process initiated for active student roster.', { category: 'SYNC ENGINE' });
     try {
       await api.post('/sync/start?triggered_by=admin_dashboard', {}, { timeout: 3000 });
-      fetchDashboardData();
+      refreshAllData();
       notify.success('Synchronization Initiated', 'Sync worker is processing verified LeetCode profile statistics.', { category: 'SYNC ENGINE' });
     } catch (err: any) {
       console.warn('API sync fallback to local canonical snapshot', err);
-      fetchDashboardData();
+      refreshAllData();
       notify.success('Sync Completed', 'Synchronized in-memory dataset with authoritative institutional snapshot.', { category: 'SYNC ENGINE' });
     } finally {
       setSyncStarting(false);
@@ -208,7 +143,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     try {
       await api.post('/sessions/trigger-start');
       notify.success('Baseline Snapshot Triggered', 'Initial session snapshot saved successfully.', { category: 'SESSION CONTROLS' });
-      fetchDashboardData();
+      refreshAllData();
     } catch (err: any) {
       notify.error('Trigger Failed', err.response?.data?.detail || "Trigger failed", { category: 'SESSION CONTROLS' });
     } finally {
@@ -229,7 +164,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     try {
       await api.post('/sessions/trigger-end');
       notify.success('Final snapshot & rankings evaluated!', 'Weekly progress deltas and rankings calculated successfully.', { category: 'SESSION CONTROLS' });
-      fetchDashboardData();
+      refreshAllData();
     } catch (err: any) {
       notify.error('Trigger Failed', err.response?.data?.detail || "Trigger failed", { category: 'SESSION CONTROLS' });
     } finally {
@@ -274,7 +209,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const handleExportExcel = async () => {
     notify.info('Preparing Excel Export', 'Gathering Weekly Contest statistics...', { category: 'REPORTS' });
     try {
-      const res = await api.get('/reports/21/excel', { responseType: 'blob' });
+      const sessionId = summary?.latest_session_id || summary?.current_session_id || 'latest';
+      const res = await api.get(`/reports/${sessionId}/excel`, { responseType: 'blob' });
       const blobUrl = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement('a');
       link.href = blobUrl;
@@ -297,16 +233,32 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     }
   };
 
-  // Metrics resolution directly from unified backend authoritative summary
-  const totalStudents = summary?.scope?.total_students ?? 0;
-  const verifiedCount = summary?.verification?.verified ?? 0;
-  const pendingCount = summary?.verification?.pending ?? 0;
-  const failedCount = summary?.verification?.failed ?? 0;
-  const noUsernameCount = summary?.verification?.no_username ?? 0;
+  const filteredStudents = useFilteredStudents();
+  const { isFilteringActive } = useFilters();
 
-  const activeStudents = summary?.performance?.active_students ?? 0;
+  // Dynamic Derived Metrics from Active Filter Scope
+  const totalStudents = filteredStudents.length;
+  
+  let activeStudents = 0;
+  let validProfiles = 0;
+  let missingLinks = 0;
+
+  filteredStudents.forEach(st => {
+    const s = st.stats;
+    const hasValidProfile = s && s.sync_status === 'success' && s.status === 'verified' && s.total_solved !== null;
+    if (hasValidProfile) {
+      activeStudents++;
+      validProfiles++;
+    }
+    const isMissingLink = !st.username || !String(st.username).trim() || (s && (s.sync_status === 'pending_username' || s.status === 'PENDING_USERNAME'));
+    if (isMissingLink) {
+      missingLinks++;
+    }
+  });
+
   const notStartedStudents = totalStudents - activeStudents;
   const participationRate = totalStudents > 0 ? ((activeStudents / totalStudents) * 100).toFixed(1) : "0";
+  const healthScorePercentage = totalStudents > 0 ? Math.round(((totalStudents - missingLinks) / totalStudents) * 100) : 100;
 
   const absoluteLastFetchFormatted = systemHealth?.last_successful_fetch_formatted || syncStatus?.last_sync_timestamp || 'N/A';
   
@@ -484,17 +436,17 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <div className="space-y-3">
               <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/30">
                 <span className="text-xs font-bold text-gray-600 dark:text-gray-400">Valid Profiles</span>
-                <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">{dataQuality?.valid_profiles ?? totalStudents}</span>
+                <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">{validProfiles}</span>
               </div>
 
               <div className="flex justify-between items-center p-3 rounded-xl bg-rose-50/50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-800/30">
                 <span className="text-xs font-bold text-gray-600 dark:text-gray-400">Missing Profile URLs</span>
-                <span className="text-sm font-black text-rose-600 dark:text-rose-400">{dataQuality?.missing_links ?? 0}</span>
+                <span className="text-sm font-black text-rose-600 dark:text-rose-400">{missingLinks}</span>
               </div>
 
               <div className="flex justify-between items-center p-3 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/30">
                 <span className="text-xs font-bold text-gray-600 dark:text-gray-400">Profile Health Score</span>
-                <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">{dataQuality?.health_score_percentage ?? 100}%</span>
+                <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">{healthScorePercentage}%</span>
               </div>
             </div>
           </div>
@@ -515,6 +467,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           <h3 className="font-extrabold text-sm text-gray-900 dark:text-white flex items-center space-x-2">
             <Building2 className="w-4 h-4 text-brand-500" />
             <span className="uppercase tracking-wider">Department Performance Matrix</span>
+            <span className="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-navy-800 text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase tracking-wider border border-gray-200 dark:border-navy-700">Institution-Wide</span>
           </h3>
           <button onClick={() => onNavigateTab('departments')} className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">
             View Full Department Report →
@@ -611,14 +564,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
 
         <LeaderboardTable
-          students={students.slice(0, 10)}
+          students={filteredStudents.slice(0, 10) as any}
           onSelectStudent={onSelectStudent}
-          onRefreshStudent={() => fetchDashboardData()}
+          onRefreshStudent={() => refreshAllData()}
         />
         
         <div className="text-center pt-2">
            <span className="text-[11px] font-bold text-gray-400 bg-gray-50 dark:bg-navy-950 px-3 py-1.5 rounded-full border border-gray-100 dark:border-gray-800">
-             Showing Top {Math.min(students.length, 10)} of {totalStudents} students. 
+             Showing Top {Math.min(filteredStudents.length, 10)} of {totalStudents} students. 
              <button onClick={() => onNavigateTab('students')} className="text-brand-500 hover:underline ml-1">View Full Roster</button>
            </span>
         </div>

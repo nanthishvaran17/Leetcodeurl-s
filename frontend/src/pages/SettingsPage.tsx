@@ -196,8 +196,8 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (changedKeys.length === 0) return;
 
     setSaving(true);
@@ -646,7 +646,7 @@ export const SettingsPage: React.FC = () => {
         </div>
       )}
 
-      <form onSubmit={handleSave} className="space-y-6">
+      <div className="space-y-6">
 
         {/* SECTION: STAFF MANAGEMENT */}
         {activeSectionFilter === 'staff' && (
@@ -1408,7 +1408,8 @@ export const SettingsPage: React.FC = () => {
             </div>
 
             <button
-              type="submit"
+              type="button"
+              onClick={handleSave}
               disabled={saving || changedKeys.length === 0}
               className="px-8 py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold text-xs shadow-lg shadow-brand-600/30 flex items-center space-x-2 cursor-pointer"
             >
@@ -1418,7 +1419,7 @@ export const SettingsPage: React.FC = () => {
           </div>
         )}
 
-      </form>
+      </div>
 
       {/* 12. SECTION IX — ADVANCED SYSTEM MAINTENANCE */}
       {activeSectionFilter === 'maintenance' && (

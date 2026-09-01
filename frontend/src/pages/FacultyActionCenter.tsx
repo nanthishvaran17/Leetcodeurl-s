@@ -11,6 +11,7 @@ import {
 } from '../services/intelligenceService';
 import { IDCardGenerator } from '../components/IDCardGenerator';
 import { StudentCodingProfileView } from '../components/StudentCodingProfileView';
+import { GlobalFilter } from '../components/GlobalFilter';
 
 // ─── Priority Config ──────────────────────────────────────────────────────────
 const PRIORITY_CONFIG: Record<string, { tw: string; dot: string; icon: React.ReactNode }> = {
@@ -479,9 +480,13 @@ const UpdateModal: React.FC<{
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Status</label>
-              <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className={inputCls}>
-                {['Pending', 'In Progress', 'Monitoring', 'Completed', 'Resolved'].map(s => <option key={s}>{s}</option>)}
-              </select>
+              <GlobalFilter
+                value={form.status}
+                onChange={val => setForm(f => ({ ...f, status: val }))}
+                dropdownWidth="w-full"
+                options={['Pending', 'In Progress', 'Monitoring', 'Completed', 'Resolved'].map(s => ({ value: s, label: s }))}
+                icon={<Activity className="w-4 h-4" />}
+              />
             </div>
             <div>
               <label className={labelCls}>Assigned Faculty</label>

@@ -582,6 +582,7 @@ def download_certificate_pdf(
 def download_forensic_contest_pdf(
     verification_id: Optional[str] = None,
     identifier: Optional[str] = None,
+    student_id: Optional[int] = Query(None),
     db: Session = Depends(get_db)
 ):
     """
@@ -590,28 +591,39 @@ def download_forensic_contest_pdf(
     """
     from backend.forensic_pdf_generator import generate_forensic_audit_pdf
     raw_id = (verification_id or identifier or "").strip()
-    if not raw_id:
-        raise HTTPException(status_code=400, detail="Identifier cannot be empty.")
+    if not raw_id and not student_id:
+        raise HTTPException(status_code=400, detail="Identifier or student_id cannot be empty.")
 
     student = None
-    if raw_id.isdigit():
+    if student_id:
+        student = db.query(Student).filter(Student.id == student_id).first()
+
+    if not student and raw_id.isdigit():
         student = db.query(Student).filter(Student.id == int(raw_id)).first()
-    if not student:
+
+    if not student and raw_id:
         clean_raw = raw_id.replace("CERT-", "").replace("-FORENSIC", "").replace("-EXCELLENCE", "").strip()
         student = db.query(Student).filter(
             (Student.reg_no.ilike(raw_id)) |
+            (Student.reg_no.ilike(clean_raw)) |
             (Student.reg_no.ilike(f"%{clean_raw}%")) |
-            (Student.username.ilike(raw_id))
+            (Student.username.ilike(raw_id)) |
+            (Student.username.ilike(clean_raw))
         ).first()
 
-    if not student:
+    if not student and raw_id:
         cert = resolve_certificate_record(db, raw_id)
         if cert and cert.student_id:
             student = db.query(Student).filter(Student.id == cert.student_id).first()
 
+    if not student and raw_id:
+        m_id = re.search(r'CERT-(\d+)-FORENSIC', raw_id, re.IGNORECASE)
+        if m_id:
+            student = db.query(Student).filter(Student.id == int(m_id.group(1))).first()
+
     # STRICT: If student is not found, do NOT fallback to Student.first()
     if not student:
-        logger.warning(f"[forensic_download_failed] Student not found for identifier={raw_id}")
+        logger.warning(f"[forensic_download_failed] Student not found for identifier={raw_id}, student_id={student_id}")
         raise HTTPException(status_code=404, detail="Student record not found for the requested forensic report.")
 
     session_obj = db.query(WeeklySession).filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED"])).order_by(WeeklySession.id.desc()).first()

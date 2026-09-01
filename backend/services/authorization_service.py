@@ -22,20 +22,26 @@ def get_authorized_student_ids(db: Session, user: Optional[User]) -> Optional[Li
         
     role_clean = (getattr(user, "override_role", None) or user.role or "").strip().lower()
     
-    # 1. Admin / Super Admin / Principal -> Global Scope
-    if role_clean in ("admin", "super admin", "super_admin", "principal"):
+    # 1. Admin / Super Admin / Principal / Administrator -> Global Scope
+    if role_clean in ("admin", "administrator", "super admin", "super_admin", "principal", "placement coordinator"):
         return None  # None indicates no restriction
         
-    # 2. HOD -> Department Scope
-    if role_clean == "hod":
+    # 2. HOD / Department HOD -> Department Scope
+    if role_clean in ("hod", "department hod", "department_hod"):
         if not user.department_id:
             return []
         students = db.query(Student.id).filter(Student.department_id == user.department_id).all()
         return [s[0] for s in students]
         
-    # 3. Staff / Faculty -> Assigned Scope
-    if role_clean in ("staff", "faculty", "professor"):
-        return faculty_assignment_service.get_faculty_assigned_student_ids(db, user.id)
+    # 3. Staff / Faculty / Mentors -> Assigned Scope (or Dept Fallback)
+    if role_clean in ("staff", "faculty", "professor", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor"):
+        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, user.id)
+        if assigned_ids:
+            return assigned_ids
+        if user.department_id:
+            students = db.query(Student.id).filter(Student.department_id == user.department_id).all()
+            return [s[0] for s in students]
+        return None  # Fallback to all students if no department lock
         
     # 4. Student -> Self Scope
     if role_clean == "student":
@@ -48,10 +54,6 @@ def get_authorized_student_ids(db: Session, user: Optional[User]) -> Optional[Li
                 (Student.username.ilike(user.username.strip()))
             ).first()
         return [student[0]] if student else []
-        
-    # 5. Placement Coordinator -> Placement Scope
-    if role_clean == "placement coordinator":
-        return None
 
     return []
 
@@ -67,20 +69,23 @@ def apply_role_based_student_filter(query, user: Optional[User], db: Session):
 
     role_clean = (getattr(user, "override_role", None) or user.role or "").strip().lower()
     
-    if role_clean in ("admin", "super admin", "super_admin", "principal", "placement coordinator"):
+    if role_clean in ("admin", "administrator", "super admin", "super_admin", "principal", "placement coordinator"):
         # Global Access, return unmodified query
         return query
 
-    if role_clean == "hod":
-        if not user.department_id:
-            return query.filter(Student.id == -1)
+    if role_clean in ("hod", "department hod", "department_hod"):
+        if not user.department_id or user.department_id == 0:
+            return query
         return query.filter(Student.department_id == user.department_id)
 
-    if role_clean in ("staff", "faculty", "professor"):
+    if role_clean in ("staff", "faculty", "professor", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor"):
         assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, user.id)
-        if not assigned_ids:
-            return query.filter(Student.id == -1)
-        return query.filter(Student.id.in_(assigned_ids))
+        if assigned_ids:
+            return query.filter(Student.id.in_(assigned_ids))
+        # Fallback if no specific students assigned yet: view department students or all students
+        if user.department_id and user.department_id != 0:
+            return query.filter(Student.department_id == user.department_id)
+        return query
 
     if role_clean == "student":
         conds = []
@@ -108,20 +113,24 @@ def require_staff_student_access(db: Session, user: Optional[User], student_id: 
         
     role_clean = (getattr(user, "override_role", None) or user.role or "").strip().lower()
     
-    if role_clean in ("admin", "super admin", "super_admin", "principal", "placement coordinator"):
+    if role_clean in ("admin", "administrator", "super admin", "super_admin", "principal", "placement coordinator"):
         return
         
-    if role_clean == "hod":
-        if not user.department_id:
-            raise HTTPException(status_code=403, detail="HOD Department not assigned.")
+    if role_clean in ("hod", "department hod", "department_hod"):
+        if not user.department_id or user.department_id == 0:
+            return
         student = db.query(Student.department_id).filter(Student.id == student_id).first()
         if not student or student[0] != user.department_id:
             raise HTTPException(status_code=403, detail="Student is not in your department.")
         return
         
-    if role_clean in ("staff", "faculty", "professor"):
+    if role_clean in ("staff", "faculty", "professor", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor"):
         assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, user.id)
-        if student_id not in assigned_ids:
+        if assigned_ids and student_id not in assigned_ids:
+            if user.department_id and user.department_id != 0:
+                student = db.query(Student.department_id).filter(Student.id == student_id).first()
+                if student and student[0] == user.department_id:
+                    return
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, 
                 detail="Access restricted: This student is not assigned to your mentorship allocation."

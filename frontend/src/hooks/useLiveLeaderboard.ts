@@ -1,101 +1,34 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import { useGlobalWebSocket } from '../context/GlobalWebSocketProvider';
 
-export function useLiveLeaderboard(onUpdate?: (data: any) => void) {
-  const [isConnected, setIsConnected] = useState(false);
-  const [lastMessage, setLastMessage] = useState<any>(null);
-  const onUpdateRef = useRef(onUpdate);
+export function useLiveLeaderboard(callback?: (data: any) => void) {
+  const { isConnected, registerCallback, unregisterCallback } = useGlobalWebSocket();
+  
+  // Stable ID — never changes for the lifetime of this hook instance
+  const idRef = useRef(`hook-${Math.random().toString(36).substr(2, 9)}`);
+  
+  // Stable ref for the callback — always holds the latest callback without causing re-registration
+  const callbackRef = useRef(callback);
+  useEffect(() => {
+    callbackRef.current = callback;
+  });
 
   useEffect(() => {
-    onUpdateRef.current = onUpdate;
-  }, [onUpdate]);
-
-  useEffect(() => {
-    let isMounted = true;
-    let socket: WebSocket | null = null;
-    let pingInterval: ReturnType<typeof setInterval> | null = null;
-    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-
-    const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
-    let wsUrl: string;
-
-    if (envUrl) {
-      const targetHost = envUrl.replace(/^https?:\/\//, '').replace(/\/api\/?$/, '').replace(/\/+$/, '');
-      const protocol = envUrl.startsWith('https') ? 'wss:' : 'ws:';
-      wsUrl = `${protocol}//${targetHost}/ws/leaderboard`;
-    } else {
-      const loc = window.location;
-      wsUrl = `${loc.protocol === 'https:' ? 'wss:' : 'ws:'}//${loc.host}/ws/leaderboard`;
-    }
-
-    const connect = () => {
-      if (!isMounted) return;
-
-      try {
-        socket = new WebSocket(wsUrl);
-
-        socket.onopen = () => {
-          if (!isMounted) {
-            socket?.close();
-            return;
-          }
-          setIsConnected(true);
-          if (pingInterval) clearInterval(pingInterval);
-          pingInterval = setInterval(() => {
-            if (socket && socket.readyState === WebSocket.OPEN) {
-              socket.send('ping');
-            }
-          }, 30000);
-        };
-
-        socket.onmessage = (event) => {
-          if (!isMounted || event.data === 'pong') return;
-          try {
-            const data = JSON.parse(event.data);
-            setLastMessage(data);
-            if (onUpdateRef.current) onUpdateRef.current(data);
-          } catch (e) {
-            console.error('WebSocket parse error:', e);
-          }
-        };
-
-        socket.onclose = () => {
-          if (pingInterval) clearInterval(pingInterval);
-          if (!isMounted) return;
-
-          setIsConnected(false);
-          // Auto reconnect after 5s if still mounted
-          reconnectTimer = setTimeout(connect, 5000);
-        };
-
-        socket.onerror = (err) => {
-          if (!isMounted) return;
-          console.warn('WebSocket connection note:', err);
-        };
-      } catch (err) {
-        if (!isMounted) return;
-        console.warn('WebSocket init exception:', err);
-        reconnectTimer = setTimeout(connect, 5000);
-      }
+    if (!callbackRef.current) return;
+    
+    // Register a stable wrapper that always calls the latest callback via ref
+    // This prevents re-registration on every render when an inline function is passed
+    const stableWrapper = (data: any) => {
+      if (callbackRef.current) callbackRef.current(data);
     };
-
-    connect();
-
+    
+    registerCallback(idRef.current, stableWrapper);
+    
     return () => {
-      isMounted = false;
-      if (pingInterval) clearInterval(pingInterval);
-      if (reconnectTimer) clearTimeout(reconnectTimer);
-      if (socket) {
-        // Remove event handlers to prevent triggering onclose/onerror during cleanup teardown
-        socket.onopen = null;
-        socket.onmessage = null;
-        socket.onclose = null;
-        socket.onerror = null;
-        socket.close();
-      }
-      setIsConnected(false);
+      unregisterCallback(idRef.current);
     };
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [registerCallback, unregisterCallback]); // intentionally omit callback — managed via ref
 
-  return { isConnected, lastMessage };
+  return { isConnected };
 }
-

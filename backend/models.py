@@ -377,6 +377,8 @@ class User(Base):
     __tablename__ = "users"
     
     id = Column(Integer, primary_key=True, index=True)
+    full_name = Column(String(150), nullable=True)
+    designation = Column(String(100), nullable=True)
     institutional_id = Column(String(50), unique=True, index=True, nullable=True) # e.g. NEC-CSE-STF-001
     username = Column(String(100), unique=True, index=True, nullable=False)
     email = Column(String(150), unique=True, nullable=False, index=True)
@@ -400,6 +402,8 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     department = relationship("Department", back_populates="users")
+    reporting_manager_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    reporting_manager = relationship("User", remote_side=[id], backref="subordinates")
     assigned_students = relationship(
         "FacultyStudentAssignment",
         foreign_keys="FacultyStudentAssignment.faculty_id",

@@ -31,11 +31,11 @@ STUDENT_IMPORT_COLUMNS = [
     "LEETCODE PROFILE LINK"
 ]
 
-def validate_excel_import(db: Session, file_bytes: bytes) -> Dict[str, Any]:
+def run_high_speed_excel_import(db: Session, file_bytes: bytes, job_id: str, tracker: Any) -> Dict[str, Any]:
     try:
         df = pd.read_excel(io.BytesIO(file_bytes))
     except Exception as e:
-        return {"error": f"Failed to parse Excel file: {str(e)}"}
+        raise ValueError(f"Failed to parse Excel file: {str(e)}")
 
     col_mapping = {col: str(col).strip().upper() for col in df.columns}
     df = df.rename(columns=col_mapping)
@@ -43,146 +43,115 @@ def validate_excel_import(db: Session, file_bytes: bytes) -> Dict[str, Any]:
     required_cols = STUDENT_IMPORT_COLUMNS
     missing_req = [c for c in required_cols if c not in df.columns]
     if missing_req:
-        return {"error": f"Missing required columns in Excel: {', '.join(missing_req)}"}
+        raise ValueError(f"Missing required columns in Excel: {', '.join(missing_req)}")
 
-    valid_rows = []
-    invalid_rows = []
-    seen_reg_nos = set()
-    seen_urls = set()
-
-    dept_map = {d.name.upper(): d for d in db.query(Department).all()}
-    dept_code_map = {d.code.upper(): d for d in db.query(Department).all()}
+    # Standardize column values
+    if "REG NO" in df.columns:
+        df["REG NO"] = df["REG NO"].astype(str).str.strip().str.upper()
+    if "NAME" in df.columns:
+        df["NAME"] = df["NAME"].astype(str).str.strip()
+    if "DEPT" in df.columns:
+        df["DEPT"] = df["DEPT"].astype(str).str.strip().str.upper()
+    if "YEAR" in df.columns:
+        df["YEAR"] = df["YEAR"].astype(str).str.strip().str.upper()
     
-    custom_aliases = {
-        "CSE": "CSE",
-        "COMPUTER SCIENCE": "CSE",
-        "COMPUTER SCIENCE AND ENGINEERING": "CSE",
-        "CSE(CS)": "CSE(CS)",
-        "CSE-CS": "CSE(CS)",
-        "CSE_CS": "CSE(CS)",
-        "CYBER SECURITY": "CSE(CS)",
-        "COMPUTER SCIENCE AND ENGINEERING (CYBER SECURITY)": "CSE(CS)",
-        "CSE(IOT)": "CSE(IOT)",
-        "ECE-IOT": "CSE(IOT)",
-        "IOT": "CSE(IOT)",
-        "COMPUTER SCIENCE AND ENGINEERING (IOT)": "CSE(IOT)",
-        "IT": "IT",
-        "INFORMATION TECHNOLOGY": "IT",
-        "AIDS": "AIDS",
-        "AI&DS": "AIDS",
-        "AI & DS": "AIDS",
-        "ARTIFICIAL INTELLIGENCE AND DATA SCIENCE": "AIDS",
-        "AIML": "AIML",
-        "AI&ML": "AIML",
-        "AI & ML": "AIML",
-        "ARTIFICIAL INTELLIGENCE AND MACHINE LEARNING": "AIML",
-        "ECE": "ECE",
-        "ELECTRONICS AND COMMUNICATION ENGINEERING": "ECE",
-        "EEE": "EEE",
-        "ELECTRICAL AND ELECTRONICS ENGINEERING": "EEE",
-        "AGRI": "AGRI",
-        "AGRICULTURAL ENGINEERING": "AGRI",
-        "AGRICULTURE": "AGRI",
-        "MECH": "MECH",
-        "MECHANICAL": "MECH",
-        "MECHANICAL ENGINEERING": "MECH",
-        "CIVIL": "CIVIL",
-        "CIVIL ENGINEERING": "CIVIL",
-        "BME": "BME",
-        "BIOMEDICAL": "BME",
-        "BIOMEDICAL ENGINEERING": "BME"
-    }
+    # Remove empty rows based on REG NO and NAME
+    df = df[df["REG NO"].notna() & (df["REG NO"] != "") & (df["REG NO"] != "NAN")]
+    df = df[df["NAME"].notna() & (df["NAME"] != "") & (df["NAME"] != "NAN")]
 
-    for idx, row in df.iterrows():
-        row_num = idx + 2
-        reg_no = str(row.get("REG NO", "")).strip().upper()
-        name = str(row.get("NAME", "")).strip()
-        dept_str = str(row.get("DEPT", "")).strip().upper()
-        year_str = str(row.get("YEAR", "")).strip().upper()
-        sec_str = str(row.get("SECTION", "A")).strip().upper() if "SECTION" in df.columns and pd.notna(row.get("SECTION")) else "A"
-        email = str(row.get("EMAIL", "")).strip() if "EMAIL" in df.columns and pd.notna(row.get("EMAIL")) else ""
-        url = str(row.get("LEETCODE PROFILE LINK", "")).strip() if pd.notna(row.get("LEETCODE PROFILE LINK")) else ""
-
-        errors = []
-        if not reg_no or reg_no == "NAN":
-            errors.append("Missing Register Number")
-        elif reg_no in seen_reg_nos:
-            errors.append("Duplicate Register Number in file")
-
-        if not name or name == "NAN":
-            errors.append("Missing Name")
-
-        target_code = custom_aliases.get(dept_str, dept_str)
-        dept_obj = dept_map.get(target_code) or dept_code_map.get(target_code) or dept_map.get(dept_str) or dept_code_map.get(dept_str)
-        if not dept_obj:
-            errors.append(f"Invalid Department '{dept_str}'")
-
-
-        valid_years = ["II", "III", "IV", "2", "3", "4", "2ND", "3RD", "4TH"]
-        if year_str not in valid_years:
-            errors.append(f"Invalid Year '{year_str}' (Expected II, III, IV)")
-        else:
-            if year_str in ["2", "2ND"]: year_str = "II"
-            elif year_str in ["3", "3RD"]: year_str = "III"
-            elif year_str in ["4", "4TH"]: year_str = "IV"
-
-        username, std_url, url_status = extract_leetcode_username(url)
-
-        if errors:
-            invalid_rows.append({
-                "row": row_num,
-                "reg_no": reg_no,
-                "name": name,
-                "dept": dept_str,
-                "year": year_str,
-                "section": sec_str,
-                "errors": "; ".join(errors)
-            })
-        else:
-            seen_reg_nos.add(reg_no)
-            valid_rows.append({
-                "reg_no": reg_no,
-                "name": name,
-                "dept_id": dept_obj.id if dept_obj else None,
-                "dept_name": dept_obj.name if dept_obj else dept_str,
-                "year_level": year_str,
-                "section_name": sec_str,
-                "email": email,
-                "leetcode_url": url,
-                "username": username
-            })
-
-    return {
-        "total_rows": len(df),
-        "valid_count": len(valid_rows),
-        "invalid_count": len(invalid_rows),
-        "valid_rows": valid_rows,
-        "invalid_rows": invalid_rows
-    }
-
-def commit_excel_import(db: Session, valid_rows: List[dict]) -> Tuple[int, List[int]]:
-    count = 0
-    student_ids = []
+    total_rows = len(df)
+    if total_rows == 0:
+        raise ValueError("Excel file contains no valid data rows.")
     
-    # Bulk fetch existing students
-    reg_nos = [row.get("reg_no") for row in valid_rows if row.get("reg_no") and row.get("name")]
-    existing_students = db.query(Student).filter(Student.reg_no.in_(reg_nos)).all()
+    tracker.total_rows = total_rows
+    
+    # 1. Dynamic Department Registration
+    unique_depts = df["DEPT"].unique()
+    existing_depts = {d.code.upper(): d for d in db.query(Department).all()}
+    existing_dept_names = {d.name.upper(): d for d in db.query(Department).all()}
+    
+    for dept_str in unique_depts:
+        if not dept_str or dept_str == "NAN":
+            continue
+        if dept_str not in existing_depts and dept_str not in existing_dept_names:
+            # Create new department
+            new_dept = Department(name=dept_str, code=dept_str)
+            db.add(new_dept)
+            db.commit()
+            db.refresh(new_dept)
+            existing_depts[dept_str] = new_dept
+            tracker.new_departments.append(dept_str)
+            tracker.update(processed_inc=0, log_msg=f"Registered new department: {dept_str}")
+            
+    # Refresh dept map
+    existing_depts = {d.code.upper(): d for d in db.query(Department).all()}
+    for d in db.query(Department).all():
+        if d.name:
+            existing_depts[d.name.upper()] = d
+
+    # 2. Bulk Fetch Existing Students
+    all_reg_nos = df["REG NO"].tolist()
+    existing_students = db.query(Student).filter(Student.reg_no.in_(all_reg_nos)).all()
     existing_map = {s.reg_no: s for s in existing_students}
     
     new_students = []
+    updated_students_count = 0
+    new_student_ids = []
     
-    for row in valid_rows:
-        reg_no = row.get("reg_no")
-        name = row.get("name")
-        dept_id = row.get("dept_id")
-        year_level = row.get("year_level")
-        sec_id = row.get("section_id")
-        email = row.get("email")
-        leetcode_url = row.get("leetcode_url")
-        username = row.get("username")
+    # Process rows
+    batch_size = 500
+    current_batch = []
+    
+    def process_batch(batch):
+        nonlocal updated_students_count
+        db.commit() # Commit updates
+        if new_students:
+            db.add_all(new_students)
+            db.commit()
+            
+            # Add stats rows for new students
+            new_stats = []
+            for s in new_students:
+                new_stats.append(LeetCodeProfileStats(student_id=s.id, status="not_started", sync_status="pending"))
+                new_student_ids.append(s.id)
+            db.add_all(new_stats)
+            db.commit()
+            new_students.clear()
 
-        if not reg_no or not name:
+    seen_reg_nos_in_file = set()
+
+    for idx, row in df.iterrows():
+        reg_no = row.get("REG NO")
+        if reg_no in seen_reg_nos_in_file:
+            tracker.update(processed_inc=1, failed_inc=1, log_msg=f"Skipped duplicate REG NO in file: {reg_no}")
             continue
+            
+        seen_reg_nos_in_file.add(reg_no)
+        name = row.get("NAME")
+        dept_str = row.get("DEPT")
+        year_str = row.get("YEAR")
+        
+        # Clean up year
+        valid_years = ["II", "III", "IV"]
+        if year_str in ["2", "2ND"]: year_str = "II"
+        elif year_str in ["3", "3RD"]: year_str = "III"
+        elif year_str in ["4", "4TH"]: year_str = "IV"
+        elif year_str not in valid_years:
+            # Dynamic year - let's just accept it if it's alphanumeric
+            if not str(year_str).isalnum():
+                year_str = "I" # Fallback
+
+        url = str(row.get("LEETCODE PROFILE LINK", "")).strip() if pd.notna(row.get("LEETCODE PROFILE LINK")) else ""
+        username, std_url, url_status = extract_leetcode_username(url)
+        if username:
+            username = username.lower()
+            std_url = f"https://leetcode.com/u/{username}/"
+            
+        sec_str = str(row.get("SECTION", "A")).strip().upper() if "SECTION" in df.columns and pd.notna(row.get("SECTION")) else "A"
+        email = str(row.get("EMAIL", "")).strip() if "EMAIL" in df.columns and pd.notna(row.get("EMAIL")) else ""
+
+        dept_obj = existing_depts.get(dept_str)
+        dept_id = dept_obj.id if dept_obj else None
 
         student = existing_map.get(reg_no)
         if not student:
@@ -190,39 +159,47 @@ def commit_excel_import(db: Session, valid_rows: List[dict]) -> Tuple[int, List[
                 reg_no=reg_no,
                 name=name,
                 department_id=dept_id,
-                year_level=year_level,
-                section_id=sec_id,
+                year_level=year_str,
                 email=email,
-                leetcode_url=leetcode_url,
+                leetcode_url=std_url if std_url else url,
                 username=username,
                 is_active=True
             )
             new_students.append(new_student)
-            count += 1
+            tracker.update(processed_inc=1, success_inc=1)
         else:
             student.name = name
             if dept_id: student.department_id = dept_id
-            if year_level: student.year_level = year_level
-            if sec_id: student.section_id = sec_id
+            if year_str: student.year_level = year_str
             if email: student.email = email
-            if leetcode_url: student.leetcode_url = leetcode_url
-            if username: student.username = username
+            if url: 
+                student.leetcode_url = std_url if std_url else url
+                student.username = username
             student.is_active = True
-            count += 1
-            student_ids.append(student.id)
+            updated_students_count += 1
+            tracker.update(processed_inc=1, success_inc=1)
             
-    if new_students:
-        db.add_all(new_students)
-        db.flush()
+        current_batch.append(reg_no)
+        if len(current_batch) >= batch_size:
+            process_batch(current_batch)
+            current_batch.clear()
+            
+    # Process remaining
+    if current_batch:
+        process_batch(current_batch)
         
-        new_stats = []
-        for s in new_students:
-            new_stats.append(LeetCodeProfileStats(student_id=s.id, status="NOT STARTED"))
-            student_ids.append(s.id)
-        db.add_all(new_stats)
-        
-    db.commit()
-    return count, student_ids
+    # Re-calculate ranks after bulk import
+    from backend.ranking import update_all_rankings_and_badges
+    update_all_rankings_and_badges(db)
+
+    return {
+        "total_processed": tracker.processed_rows,
+        "new_students": len(new_student_ids),
+        "updated_students": updated_students_count,
+        "new_departments": tracker.new_departments,
+        "new_student_ids": new_student_ids
+    }
+
 
 def create_nandha_official_department_sheet(ws, dept: Department, db: Session):
     ws.sheet_view.showGridLines = True
@@ -248,32 +225,52 @@ def create_nandha_official_department_sheet(ws, dept: Department, db: Session):
     ws["C1"].alignment = center_align
 
     ws.merge_cells("C2:K2")
-    ws["C2"] = f"Department of {dept.name}"
-    ws["C2"].font = font_bold_11
-    ws["C2"].alignment = left_align
+    ws["C2"] = "(An Autonomous Institution, Affiliated to Anna University, Chennai)"
+    ws["C2"].font = font_bold_10
+    ws["C2"].alignment = center_align
 
     ws.merge_cells("C3:K3")
-    ws["C3"] = f"Date: {datetime.date.today().strftime('%d.%m.%Y')}"
+    ws["C3"] = f"Department of {dept.name}"
     ws["C3"].font = font_bold_11
     ws["C3"].alignment = left_align
 
+    ws.merge_cells("C4:K4")
+    ws["C4"] = f"Date: {datetime.date.today().strftime('%d-%m-%Y')}"
+    ws["C4"].font = font_bold_11
+    ws["C4"].alignment = left_align
+
     ws.merge_cells("C5:K5")
-    ws["C5"] = "Leetcode Performance - Weekly Report"
+    ws["C5"] = "Leetcode Performance — Weekly Report"
     ws["C5"].font = font_bold_11
     ws["C5"].alignment = left_align
 
-    ws.merge_cells("C6:K6")
-    ws["C6"] = "Name & Designation of the Academic Coordinator:"
+    # Dynamic Academic Coordinator resolution
+    coord_str = ""
+    from backend.models import User
+    coord_user = db.query(User).filter(User.department_id == dept.id, User.role.in_(["staff", "faculty", "hod"])).first()
+    if coord_user:
+        coord_str = coord_user.username
+    else:
+        if "Cyber Security" in dept.name or "CS" in dept.code:
+            coord_str = "M. Santhoshkumar, AP / CSE (Cyber Security)"
+        elif "IoT" in dept.name or "IOT" in dept.code:
+            coord_str = "Mohan Gandhi S"
+        else:
+            coord_str = f"Academic Coordinator / {dept.code or dept.name}"
+
+    ws.merge_cells("C6:M6")
+    ws["C6"] = f"Name & Designation of the Academic Coordinator: {coord_str}"
     ws["C6"].font = font_bold_11
     ws["C6"].alignment = left_align
 
+    # Table Headers
     ws.merge_cells("A8:A9")
     ws["A8"] = "Batch"
     ws["A8"].font = font_bold_10
     ws["A8"].alignment = center_align
 
     ws.merge_cells("B8:B9")
-    ws["B8"] = "Number of Students\n(Total Count)"
+    ws["B8"] = "No. of Students\n(Total Count)"
     ws["B8"].font = font_bold_10
     ws["B8"].alignment = center_align
 
@@ -283,7 +280,7 @@ def create_nandha_official_department_sheet(ws, dept: Department, db: Session):
     ws["C8"].alignment = center_align
 
     ws.merge_cells("H8:K8")
-    ws["H8"] = "Weekly Contest Attended: (give the count here)"
+    ws["H8"] = "Weekly Contest Attended"
     ws["H8"].font = font_bold_10
     ws["H8"].alignment = center_align
 
@@ -293,10 +290,10 @@ def create_nandha_official_department_sheet(ws, dept: Department, db: Session):
     ws["L8"].alignment = center_align
 
     sub_headers = {
-        "C9": "Above 500", "D9": "250 - 500", "E9": "Less than 250",
-        "F9": "Less than 100", "G9": "Not yet started",
-        "H9": "4 Q Solved", "I9": "3 Q Solved", "J9": "2 Q Solved", "K9": "1 Q Solved",
-        "L9": "Rating: Above 1500", "M9": "Ranking: Below 20000"
+        "C9": "Above 500", "D9": "250 - 500", "E9": "100 - 249",
+        "F9": "1 - 99", "G9": "0",
+        "H9": "4Q", "I9": "3Q", "J9": "2Q", "K9": "1Q",
+        "L9": "Rating > 1500", "M9": "Ranking < 20000"
     }
 
     for col_ref, text in sub_headers.items():
@@ -308,9 +305,48 @@ def create_nandha_official_department_sheet(ws, dept: Department, db: Session):
         for c in range(1, 14):
             ws.cell(row=r, column=c).border = thin_border
 
-    batches = [("2023 - 2027", "IV"), ("2024 - 2028", "III"), ("2025 - 2029", "II")]
+    batches = [("2025 - 2029", "II"), ("2024 - 2028", "III"), ("2023 - 2027", "IV")]
     current_row = 10
-    latest_session = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+
+    from backend.models import WeeklySession, WeeklyPublicResult, ContestParticipation
+    recent_sessions = db.query(WeeklySession).order_by(WeeklySession.id.desc()).limit(2).all()
+    curr_session = recent_sessions[0] if len(recent_sessions) > 0 else None
+    last_session = recent_sessions[1] if len(recent_sessions) > 1 else None
+
+    def calculate_contest_counts(session_obj, student_ids):
+        q4, q3, q2, q1 = 0, 0, 0, 0
+        if not session_obj or not student_ids:
+            return q4, q3, q2, q1
+
+        # 1. Query WeeklyPublicResult
+        pub_results = db.query(WeeklyPublicResult).filter(
+            WeeklyPublicResult.session_id == session_obj.id,
+            WeeklyPublicResult.student_id.in_(student_ids)
+        ).all()
+
+        found_ids = set()
+        for pr in pub_results:
+            found_ids.add(pr.student_id)
+            tot = pr.total_contest_solved or 0
+            if tot >= 4: q4 += 1
+            elif tot == 3: q3 += 1
+            elif tot == 2: q2 += 1
+            elif tot == 1: q1 += 1
+
+        # 2. Fallback to ContestParticipation for remaining students
+        missing_ids = student_ids - found_ids
+        if missing_ids:
+            cps = db.query(ContestParticipation).filter(
+                ContestParticipation.student_id.in_(missing_ids)
+            ).all()
+            for cp in cps:
+                tot = cp.problems_solved or 0
+                if tot >= 4: q4 += 1
+                elif tot == 3: q3 += 1
+                elif tot == 2: q2 += 1
+                elif tot == 1: q1 += 1
+
+        return q4, q3, q2, q1
 
     for batch_label, year_lvl in batches:
         students = db.query(Student).filter(
@@ -320,41 +356,37 @@ def create_nandha_official_department_sheet(ws, dept: Department, db: Session):
         ).all()
         
         total_count = len(students)
+        student_ids = {s.id for s in students}
+
         above_500 = sum(1 for s in students if s.stats and (s.stats.total_solved or 0) > 500)
         between_250_500 = sum(1 for s in students if s.stats and 250 <= (s.stats.total_solved or 0) <= 500)
-        less_250 = sum(1 for s in students if s.stats and 100 <= (s.stats.total_solved or 0) < 250)
-        less_100 = sum(1 for s in students if s.stats and 0 < (s.stats.total_solved or 0) < 100)
-        not_started = sum(1 for s in students if not s.stats or (s.stats.total_solved or 0) == 0)
-
-        q4_cnt, q3_cnt, q2_cnt, q1_cnt = 0, 0, 0, 0
-        if latest_session:
-            stud_ids = {s.id for s in students}
-            pub_results = db.query(WeeklyPublicResult).filter(
-                WeeklyPublicResult.session_id == latest_session.id,
-                WeeklyPublicResult.student_id.in_(stud_ids)
-            ).all()
-            for pr in pub_results:
-                if pr.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL", "VIRTUAL_ATTENDED"):
-                    tot_s = pr.total_contest_solved or 0
-                    if tot_s >= 4: q4_cnt += 1
-                    elif tot_s == 3: q3_cnt += 1
-                    elif tot_s == 2: q2_cnt += 1
-                    elif tot_s == 1: q1_cnt += 1
+        between_100_249 = sum(1 for s in students if s.stats and 100 <= (s.stats.total_solved or 0) <= 249)
+        between_1_99 = sum(1 for s in students if s.stats and 1 <= (s.stats.total_solved or 0) <= 99)
+        zero_solved = sum(1 for s in students if not s.stats or (s.stats.total_solved or 0) == 0)
 
         rating_above_1500 = sum(1 for s in students if s.stats and s.stats.contest_rating and s.stats.contest_rating > 1500)
         rank_below_20000 = sum(1 for s in students if s.stats and ((s.stats.contest_global_ranking and s.stats.contest_global_ranking < 20000) or (s.stats.public_profile_ranking and s.stats.public_profile_ranking < 20000)))
 
-        ws.cell(row=current_row, column=1, value=f"{batch_label}\n(Last Week)").alignment = center_align
+        q4_curr, q3_curr, q2_curr, q1_curr = calculate_contest_counts(curr_session, student_ids)
+        q4_last, q3_last, q2_last, q1_last = calculate_contest_counts(last_session, student_ids)
+
+        # Row 1: Last Week
+        ws.cell(row=current_row, column=1, value=f"{batch_label} (Last Week)").alignment = center_align
         ws.cell(row=current_row, column=1).font = font_bold_10
-        ws.cell(row=current_row, column=2, value=total_count if total_count > 0 else "")
+        ws.cell(row=current_row, column=2, value=total_count if total_count > 0 else 0)
 
-        ws.cell(row=current_row+1, column=1, value=f"{batch_label}\n(Current Week)").alignment = center_align
+        last_row_vals = [above_500, between_250_500, between_100_249, between_1_99, zero_solved, q4_last, q3_last, q2_last, q1_last, rating_above_1500, rank_below_20000]
+        for c_offset, val in enumerate(last_row_vals, start=3):
+            ws.cell(row=current_row, column=c_offset, value=val)
+
+        # Row 2: Current Week
+        ws.cell(row=current_row+1, column=1, value=f"{batch_label} (Current Week)").alignment = center_align
         ws.cell(row=current_row+1, column=1).font = font_bold_10
-        ws.cell(row=current_row+1, column=2, value=total_count if total_count > 0 else "")
+        ws.cell(row=current_row+1, column=2, value=total_count if total_count > 0 else 0)
 
-        row_vals = [above_500, between_250_500, less_250, less_100, not_started, q4_cnt, q3_cnt, q2_cnt, q1_cnt, rating_above_1500, rank_below_20000]
-        for c_offset, val in enumerate(row_vals, start=3):
-            ws.cell(row=current_row+1, column=c_offset, value=val if val > 0 else "")
+        curr_row_vals = [above_500, between_250_500, between_100_249, between_1_99, zero_solved, q4_curr, q3_curr, q2_curr, q1_curr, rating_above_1500, rank_below_20000]
+        for c_offset, val in enumerate(curr_row_vals, start=3):
+            ws.cell(row=current_row+1, column=c_offset, value=val)
 
         for r_idx in range(current_row, current_row + 2):
             for c_idx in range(1, 14):
@@ -365,7 +397,12 @@ def create_nandha_official_department_sheet(ws, dept: Department, db: Session):
 
         current_row += 2
 
-    ws.column_dimensions['A'].width = 16
+    # Verified Signatures Footer
+    ws.cell(row=current_row+2, column=1, value="Verified Signatures:").font = font_bold_10
+    ws.cell(row=current_row+4, column=1, value="Academic Coordinator").font = font_bold_10
+    ws.cell(row=current_row+4, column=8, value="Head of Department").font = font_bold_10
+
+    ws.column_dimensions['A'].width = 24
     ws.column_dimensions['B'].width = 16
     for col_let in ['C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M']:
         ws.column_dimensions[col_let].width = 14

@@ -794,13 +794,35 @@ def get_session_matrix(
 
 @router.get("/sessions/{session_id}/data-quality")
 def get_session_data_quality_board(
-    session_id: int, 
-    db: Session = Depends(get_db)
+    session_id: int,
+    dept: Optional[str] = Query(None),
+    year: Optional[str] = Query(None),
+    attendance: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     """
     Fetches Data Quality Error Board table tracking failed fetches.
+    Filters by the canonical dataset engine to ensure mathematical consistency.
     """
-    logs = db.query(WeeklyContestErrorLog).filter(WeeklyContestErrorLog.session_id == session_id).all()
+    canonical_data = get_normalized_contest_data(
+        session_id=session_id, 
+        dept=dept, 
+        year=year, 
+        attendance=attendance, 
+        db=db, 
+        current_user=current_user
+    )
+    filtered_student_ids = [r["student_id"] for r in canonical_data["rows"]]
+
+    if not filtered_student_ids:
+        return []
+
+    logs = db.query(WeeklyContestErrorLog).filter(
+        WeeklyContestErrorLog.session_id == session_id,
+        WeeklyContestErrorLog.student_id.in_(filtered_student_ids)
+    ).all()
+
     return [{
         "id": l.id,
         "student_id": l.student_id,

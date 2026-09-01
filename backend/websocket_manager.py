@@ -2,7 +2,13 @@ from typing import List, Dict, Any, Optional
 from fastapi import WebSocket, WebSocketDisconnect
 from backend.logger import logger
 import json
+import time
 import asyncio
+import os
+try:
+    import redis.asyncio as redis
+except ImportError:
+    redis = None
 
 class ConnectionManager:
     def __init__(self):
@@ -10,11 +16,42 @@ class ConnectionManager:
         self._message_queue = []
         self._batch_task: Optional[asyncio.Task] = None
         self._batch_interval = 0.5  # 500ms
+        
+        self.redis_url = os.environ.get("REDIS_URL")
+        self.redis_client = None
+        self.redis_pubsub = None
+        self._redis_task = None
+
+    async def _init_redis(self):
+        if self.redis_url and redis and not self.redis_client:
+            try:
+                self.redis_client = redis.from_url(self.redis_url)
+                self.redis_pubsub = self.redis_client.pubsub()
+                await self.redis_pubsub.subscribe("live_events")
+                self._redis_task = asyncio.create_task(self._redis_listener())
+                logger.info("Connected to Redis Pub/Sub for WebSockets")
+            except Exception as e:
+                logger.error(f"Failed to connect to Redis: {e}")
+                self.redis_url = None # fallback to memory
+
+    async def _redis_listener(self):
+        try:
+            async for message in self.redis_pubsub.listen():
+                if message["type"] == "message":
+                    data = message["data"]
+                    payload = data.decode("utf-8") if isinstance(data, bytes) else data
+                    await self._broadcast_to_local_connections(payload)
+        except Exception as e:
+            logger.error(f"Redis listener failed: {e}")
+
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.append(websocket)
         logger.info(f"WebSocket client connected. Total clients: {len(self.active_connections)}")
+        
+        if self.redis_url and not self.redis_client:
+            await self._init_redis()
         
         # Start background batch flush if not running
         if self._batch_task is None or self._batch_task.done():
@@ -43,6 +80,16 @@ class ConnectionManager:
 
     async def broadcast(self, message: dict):
         payload = json.dumps(message)
+        if self.redis_client:
+            try:
+                await self.redis_client.publish("live_events", payload)
+            except Exception as e:
+                logger.error(f"Redis publish failed: {e}")
+                await self._broadcast_to_local_connections(payload)
+        else:
+            await self._broadcast_to_local_connections(payload)
+
+    async def _broadcast_to_local_connections(self, payload: str):
         disconnected = []
         for connection in list(self.active_connections):
             try:
@@ -130,6 +177,39 @@ class ConnectionManager:
             "contestId": contest_id,
             "metrics": metrics,
             "datasetVersion": dataset_version
+        }
+        self._message_queue.append(payload)
+
+
+    async def broadcast_entity_created(self, entity_type: str, entity_id: Any, data: Dict[str, Any], version: int = 1):
+        """Broadcasts that a new entity was created."""
+        payload = {
+            "type": f"{entity_type.upper()}_CREATED",
+            "entityId": entity_id,
+            "data": data,
+            "version": version,
+            "server_timestamp": int(time.time() * 1000)
+        }
+        self._message_queue.append(payload)
+
+    async def broadcast_entity_updated(self, entity_type: str, entity_id: Any, changes: Dict[str, Any], version: int = 1):
+        """Broadcasts that an entity was updated."""
+        payload = {
+            "type": f"{entity_type.upper()}_UPDATED",
+            "entityId": entity_id,
+            "changes": changes,
+            "version": version,
+            "server_timestamp": int(time.time() * 1000)
+        }
+        self._message_queue.append(payload)
+
+    async def broadcast_entity_deleted(self, entity_type: str, entity_id: Any, version: int = 1):
+        """Broadcasts that an entity was deleted."""
+        payload = {
+            "type": f"{entity_type.upper()}_DELETED",
+            "entityId": entity_id,
+            "version": version,
+            "server_timestamp": int(time.time() * 1000)
         }
         self._message_queue.append(payload)
 

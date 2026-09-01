@@ -443,7 +443,9 @@ export const GrowthIntelligencePage: React.FC = () => {
         <div className="glass-card p-5 rounded-3xl border border-emerald-500/20 bg-white dark:bg-navy-900 shadow-xl space-y-2">
           <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">
             <span className="text-emerald-600 dark:text-emerald-400">Easy Solved</span>
-            <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></span>
+            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+              <TrendingUp className="w-5 h-5 stroke-[2.5]" />
+            </div>
           </div>
           <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
             +{collegeDelta?.easy_solved ?? 0}
@@ -454,7 +456,9 @@ export const GrowthIntelligencePage: React.FC = () => {
         <div className="glass-card p-5 rounded-3xl border border-amber-500/20 bg-white dark:bg-navy-900 shadow-xl space-y-2">
           <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">
             <span className="text-amber-600 dark:text-amber-400">Medium Solved</span>
-            <span className="w-3 h-3 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50"></span>
+            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              <TrendingUp className="w-5 h-5 stroke-[2.5]" />
+            </div>
           </div>
           <div className="text-3xl font-black text-amber-600 dark:text-amber-400">
             +{collegeDelta?.medium_solved ?? 0}
@@ -465,7 +469,9 @@ export const GrowthIntelligencePage: React.FC = () => {
         <div className="glass-card p-5 rounded-3xl border border-rose-500/20 bg-white dark:bg-navy-900 shadow-xl space-y-2">
           <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">
             <span className="text-rose-600 dark:text-rose-400">Hard Solved</span>
-            <span className="w-3 h-3 rounded-full bg-rose-500 shadow-sm shadow-rose-500/50"></span>
+            <div className="p-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400">
+              <TrendingUp className="w-5 h-5 stroke-[2.5]" />
+            </div>
           </div>
           <div className="text-3xl font-black text-rose-600 dark:text-rose-400">
             +{collegeDelta?.hard_solved ?? 0}

@@ -10,6 +10,7 @@ from backend.models import AdminAuditLog, EmailDelivery, EmailAttachment, Report
 from backend.routes.auth import get_current_user, get_current_user_from_request
 from backend.services.audit_service import log_admin_action
 from backend.logger import logger
+from backend.websocket_manager import connection_manager
 
 router = APIRouter(prefix="/api/admin", tags=["Admin Operations & Audit"])
 
@@ -551,27 +552,32 @@ def send_admin_test_report_email(
 
 class CreateStaffRequest(BaseModel):
     institutional_id: Optional[str] = None
+    full_name: str
     username: str
     email: str
-    password: str = "Staff@123"
-    role: str = "Staff"
+    phone_number: str
+    designation: Optional[str] = None
+    role: str = "Faculty"
     department_id: Optional[int] = None
     section_id: Optional[int] = None
     academic_year: Optional[str] = None
     mentoring_role: Optional[str] = None
     date_of_birth: Optional[str] = None
-    phone_number: Optional[str] = None
+    password: Optional[str] = None
     is_active: bool = True
-    require_password_change: bool = False
+    require_password_change: bool = True
 
 class UpdateStaffRequest(BaseModel):
     institutional_id: Optional[str] = None
+    full_name: Optional[str] = None
     username: Optional[str] = None
     email: Optional[str] = None
+    phone_number: Optional[str] = None
+    designation: Optional[str] = None
     role: Optional[str] = None
     department_id: Optional[int] = None
+    reporting_manager_id: Optional[int] = None
     section_id: Optional[int] = None
-    phone_number: Optional[str] = None
     mentoring_role: Optional[str] = None
     is_active: Optional[bool] = None
 
@@ -674,23 +680,28 @@ def create_staff_user(
     if existing:
         raise HTTPException(status_code=400, detail="A user with this username or email already exists.")
 
-    raw_pwd = payload.password.strip() if payload.password else "Staff@123456!"
-    if len(raw_pwd) < 6:
-        raise HTTPException(status_code=400, detail="Password must be at least 6 characters.")
+    import secrets
+    import string
+    
+    # Auto-generate password if none provided
+    raw_pwd = payload.password.strip() if payload.password else "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
 
     staff_user = User(
         institutional_id=inst_id,
+        full_name=payload.full_name.strip(),
         username=payload.username.strip(),
         email=payload.email.strip().lower(),
+        phone_number=payload.phone_number.strip(),
+        designation=payload.designation.strip() if payload.designation else None,
         hashed_password=get_password_hash(raw_pwd),
-        role=payload.role if payload.role in ["Super Admin", "Admin", "Faculty", "Staff", "HOD", "Viewer"] else "Staff",
+        role=payload.role if payload.role in ["Super Admin", "Administrator", "Department HOD", "Staff Mentor", "Faculty Mentor", "Admin", "Faculty", "Staff", "HOD", "Viewer"] else "Faculty Mentor",
         department_id=payload.department_id,
         section_id=payload.section_id,
         academic_year=payload.academic_year.strip() if payload.academic_year else None,
         mentoring_role=payload.mentoring_role.strip() if payload.mentoring_role else None,
         date_of_birth=payload.date_of_birth.strip() if payload.date_of_birth else None,
         require_password_change=payload.require_password_change,
-        is_active=True
+        is_active=payload.is_active
     )
     db.add(staff_user)
     db.commit()
@@ -767,6 +778,21 @@ def update_staff_user(
                 changes_made['institutional_id'] = "Removed"
                 staff_user.institutional_id = None
 
+    if payload.full_name is not None and payload.full_name.strip():
+        if staff_user.full_name != payload.full_name.strip():
+            changes_made['full_name'] = payload.full_name.strip()
+            staff_user.full_name = payload.full_name.strip()
+
+    if payload.designation is not None:
+        if staff_user.designation != payload.designation.strip():
+            changes_made['designation'] = payload.designation.strip()
+            staff_user.designation = payload.designation.strip()
+
+    if payload.reporting_manager_id is not None:
+        if staff_user.reporting_manager_id != payload.reporting_manager_id:
+            changes_made['reporting_manager_id'] = str(payload.reporting_manager_id)
+            staff_user.reporting_manager_id = payload.reporting_manager_id
+
     if payload.username is not None and payload.username.strip():
         existing_username = db.query(User).filter(User.username.ilike(payload.username.strip()), User.id != staff_id).first()
         if existing_username:
@@ -786,7 +812,7 @@ def update_staff_user(
 
     if payload.role is not None and payload.role.strip():
         r_cleaned = payload.role.strip()
-        valid_roles = {"super admin": "Super Admin", "admin": "Admin", "faculty": "Faculty", "staff": "Staff", "hod": "HOD", "viewer": "Viewer"}
+        valid_roles = {"super admin": "Super Admin", "administrator": "Administrator", "department hod": "Department HOD", "staff mentor": "Staff Mentor", "faculty mentor": "Faculty Mentor", "admin": "Admin", "faculty": "Faculty", "staff": "Staff", "hod": "HOD", "viewer": "Viewer"}
         matched_role = valid_roles.get(r_cleaned.lower(), r_cleaned)
         if staff_user.role != matched_role:
             changes_made['role'] = matched_role
@@ -847,6 +873,91 @@ def update_staff_user(
             "department_id": staff_user.department_id,
             "is_active": staff_user.is_active
         }
+    }
+
+@router.post("/staff/{staff_id}/force-reset")
+def force_staff_password_reset(
+    staff_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user_or_default)
+):
+    """Admin: Force a staff member to reset their password on next login."""
+    staff_user = db.query(User).filter(User.id == staff_id).first()
+    if not staff_user:
+        raise HTTPException(status_code=404, detail="Staff member not found.")
+    
+    staff_user.require_password_change = True
+    db.commit()
+    return {"success": True, "message": "User will be forced to reset password on next login."}
+
+@router.post("/staff/{staff_id}/send-reset-link")
+def send_staff_password_reset_link(
+    staff_id: int,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user_or_default)
+):
+    """Admin: Reset staff member's password to a default one and force reset on next login."""
+    staff_user = db.query(User).filter(User.id == staff_id).first()
+    if not staff_user:
+        raise HTTPException(status_code=404, detail="Staff member not found.")
+    if not staff_user.email:
+        raise HTTPException(status_code=400, detail="Staff member does not have a registered email.")
+        
+    import secrets
+    from backend.routes.auth import get_password_hash
+    from backend.services.email_notifications import notify_default_password_reset
+    
+    try:
+        # Generate a random default password e.g. Nec@8492
+        plain_password = f"Nec@{secrets.randbelow(10000):04d}"
+        
+        staff_user.hashed_password = get_password_hash(plain_password)
+        staff_user.require_password_change = True
+        
+        db.commit()
+        
+        background_tasks.add_task(
+            notify_default_password_reset, 
+            staff_user.email, 
+            staff_user.full_name or staff_user.username, 
+            plain_password
+        )
+        
+        return {"success": True, "message": f"Password reset to default and emailed to {staff_user.email}."}
+    except Exception as e:
+        db.rollback()
+        import logging
+        logging.getLogger(__name__).error(f"Failed to reset password and send email: {e}")
+        raise HTTPException(status_code=500, detail="Failed to reset password and send email.")
+
+@router.get("/staff/{staff_id}/audit")
+def get_staff_audit_log(
+    staff_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user_or_default)
+):
+    """Admin: Get the recent audit log and activity for a staff member."""
+    from backend.models import AdminAuditLog
+    # Fetch where this user is the target, OR actions taken by this user.
+    # For now, just actions taken BY this user or where they were the target.
+    # We will search AdminAuditLog where user_id == staff_id OR (target_type == 'User' and target_id == staff_id)
+    logs = db.query(AdminAuditLog).filter(
+        (AdminAuditLog.user_id == staff_id) | 
+        ((AdminAuditLog.target_type == 'User') & (AdminAuditLog.target_id == str(staff_id)))
+    ).order_by(AdminAuditLog.created_at.desc()).limit(15).all()
+    
+    return {
+        "success": True,
+        "logs": [
+            {
+                "id": log.id,
+                "action": log.action,
+                "description": log.description,
+                "created_at": log.created_at
+            }
+            for log in logs
+        ]
     }
 
 @router.delete("/staff/{staff_id}")

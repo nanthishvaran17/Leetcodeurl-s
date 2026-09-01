@@ -510,7 +510,7 @@ class CollegeReportGenerator:
         <head>
             <meta charset="utf-8">
             <style>
-                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; color: #333; }}
+                body {{ font-family: Arial, Helvetica, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; color: #333; }}
                 .container {{ max-width: 900px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid #e1e4e8; }}
                 .header {{ background: #002060; color: #ffffff; padding: 28px 20px; text-align: center; }}
                 .header h1 {{ margin: 0; font-size: 20px; letter-spacing: 0.5px; font-weight: bold; }}

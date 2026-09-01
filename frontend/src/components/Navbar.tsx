@@ -6,6 +6,7 @@ import { Sun, Moon, User, LogOut, Activity, Menu, X, LayoutDashboard, Users, Bar
 import { CollegeLogo } from './CollegeLogo';
 import { getDataFreshness } from '../services/api';
 import { SyncStatusModal } from './SyncStatusModal';
+import { LiveIndicator } from './LiveIndicator';
 
 interface NavbarProps {
   currentSessionStatus?: string;
@@ -48,7 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <header className="sticky top-0 z-[100000] bg-white dark:bg-navy-900 border-b border-slate-200 dark:border-navy-800 transition-colors shadow-sm">
+      <header className="sticky top-0 z-40 bg-white dark:bg-navy-900 border-b border-slate-200 dark:border-navy-800 transition-colors shadow-sm">
         <div className="w-full max-w-[1800px] mx-auto px-3 sm:px-5 lg:px-8">
           <div className="flex items-center justify-between h-16">
             
@@ -76,7 +77,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       NANDHA LEETCODE INTELLIGENCE
                     </span>
                     <span className="hidden sm:inline-flex px-1.5 py-0.2 text-[9px] font-black rounded bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
-                      1500+ STUDENTS
+                      {freshness?.total_students ? `${freshness.total_students} STUDENTS` : '1500+ STUDENTS'}
                     </span>
                   </div>
                   <span className="text-[11px] text-gray-500 dark:text-gray-400 font-semibold tracking-wide">
@@ -114,6 +115,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Right: Actions */}
             <div className="flex items-center space-x-2 sm:space-x-3">
               
+              <LiveIndicator />
+
               {/* Sync Status Button */}
               <button
                 type="button"

@@ -51,24 +51,35 @@ interface NavSection {
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, onClose }) => {
   const { user } = useAuth();
   const roleClean = (user?.role || '').trim().toLowerCase();
-  const isFaculty = roleClean === 'staff' || roleClean === 'faculty' || roleClean === 'professor';
-  const isHOD = roleClean === 'hod';
-  const isAdmin = roleClean === 'admin' || roleClean === 'super admin' || roleClean === 'super_admin';
+  const isFaculty = ['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(roleClean);
+  const isHOD = ['hod', 'department hod', 'department_hod'].includes(roleClean);
+  const isAdmin = ['admin', 'administrator', 'super admin', 'super_admin'].includes(roleClean);
   const isStudent = roleClean === 'student';
 
-  // ── FACULTY/STAFF: Strict isolation — NO HOD/Admin navigation items ────────
+  // ── FACULTY / STAFF MENTOR: Full Academic, Contest & Mentoring Access ────────
   const facultySections: NavSection[] = [
     {
-      title: 'FACULTY PORTAL',
+      title: 'FACULTY & MENTOR PORTAL',
       items: [
         { id: 'dashboard', label: 'My Dashboard', icon: LayoutDashboard, badge: 'MENTOR', badgeColor: 'indigo' },
         { id: 'faculty-action-center', label: 'Faculty Action Center', icon: Zap, badge: 'LIVE', badgeColor: 'rose', pulse: true },
+        { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
       ]
     },
     {
-      title: 'ACADEMIC TOOLS',
+      title: 'ACADEMIC & CONTEST TRACKING',
       items: [
+        { id: 'departments', label: 'Departments & Sections', icon: Layers },
         { id: 'weekly-contest', label: 'Weekly Contest Tracker', icon: Calendar, pulse: true, badge: 'LIVE', badgeColor: 'emerald' },
+        { id: 'students', label: 'Student Leaderboard', icon: Users },
+        { id: 'compare', label: 'Student Comparison', icon: BarChart3 },
+        { id: 'quality', label: 'Data Quality Board', icon: CheckCircle2 },
+        { id: 'data-issues', label: 'Student Data Issues', icon: AlertOctagon, badge: 'RECOVERY', badgeColor: 'rose' },
+      ]
+    },
+    {
+      title: 'REPORTS & EXPORT',
+      items: [
         { id: 'reports', label: 'Reports & Export', icon: FileSpreadsheet },
         { id: 'public', label: 'Public Shareable View', icon: Globe },
       ]
@@ -87,10 +98,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       ]
     },
     {
-      title: 'ACADEMIC & CONTEST',
+      title: 'ACADEMIC & CONTEST TRACKING',
       items: [
         { id: 'departments', label: 'Departments & Sections', icon: Layers },
         { id: 'weekly-contest', label: 'Weekly Contest Tracker', icon: Calendar, pulse: true, badge: 'LIVE', badgeColor: 'emerald' },
+        { id: 'students', label: 'Student Leaderboard', icon: Users },
         { id: 'compare', label: 'Student Comparison', icon: BarChart3 },
         { id: 'quality', label: 'Data Quality Board', icon: CheckCircle2 },
         { id: 'data-issues', label: 'Student Data Issues', icon: AlertOctagon, badge: 'RECOVERY', badgeColor: 'rose' },

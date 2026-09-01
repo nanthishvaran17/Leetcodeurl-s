@@ -479,7 +479,7 @@ export const ComparePage: React.FC = () => {
                           key={s.id}
                           type="button"
                           onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => { handleSelectA(s.id); setFighterAOpen(false); }}
+                          onClick={() => { handleSelectA(Number(s.id)); setFighterAOpen(false); }}
                           className={`w-full flex items-center justify-between gap-2 px-4 py-3 text-left transition-colors ${
                             studentAId === s.id ? 'bg-brand-50/70 dark:bg-brand-950/60' : 'hover:bg-gray-50 dark:hover:bg-navy-800'
                           }`}
@@ -515,7 +515,7 @@ export const ComparePage: React.FC = () => {
                 <span className="text-[10px] text-gray-400 font-bold">Quick Select:</span>
                 {students[0] && (
                   <button
-                    onClick={() => handleSelectA(students[0].id)}
+                    onClick={() => handleSelectA(Number(students[0].id))}
                     className="px-2.5 py-1 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 text-[10px] font-black border border-brand-500/20 hover:bg-brand-500 hover:text-white transition-all cursor-pointer flex items-center space-x-1"
                   >
                     <span>{students[0].name} (#1)</span>
@@ -582,7 +582,7 @@ export const ComparePage: React.FC = () => {
                           key={s.id}
                           type="button"
                           onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => { handleSelectB(s.id); setFighterBOpen(false); }}
+                          onClick={() => { handleSelectB(Number(s.id)); setFighterBOpen(false); }}
                           className={`w-full flex items-center justify-between gap-2 px-4 py-3 text-left transition-colors ${
                             studentBId === s.id ? 'bg-indigo-50/70 dark:bg-indigo-950/60' : 'hover:bg-gray-50 dark:hover:bg-navy-800'
                           }`}
@@ -618,7 +618,7 @@ export const ComparePage: React.FC = () => {
                 <span className="text-[10px] text-gray-400 font-bold">Quick Select:</span>
                 {students.length > 1 && students[1] && (
                   <button
-                    onClick={() => handleSelectB(students[1].id)}
+                    onClick={() => handleSelectB(Number(students[1].id))}
                     className="px-2.5 py-1 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-black border border-indigo-500/20 hover:bg-indigo-500 hover:text-white transition-all cursor-pointer flex items-center space-x-1"
                   >
                     <span>{students[1].name} (#2)</span>

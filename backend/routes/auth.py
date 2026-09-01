@@ -4,9 +4,11 @@ import secrets
 import hashlib
 import json
 import asyncio
+import random
 import bcrypt
 import jwt
 from typing import Optional, Any, cast
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response, BackgroundTasks
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -1147,9 +1149,49 @@ def forgot_password_reset(req: ResetPasswordSubmitRequest, background_tasks: Bac
         
         if user.email:
             from backend.services.email_notifications import notify_password_changed
-            background_tasks.add_task(notify_password_changed, staff_email=user.email, staff_name=user.username)
+            background_tasks.add_task(notify_password_changed, staff_email=user.email, staff_name=user.username, new_password=req.new_password)
             
         return {"success": True, "message": "Password reset successfully."}
         
     raise HTTPException(status_code=400, detail="User account not found for password reset.")
+
+
+class AdminResetStaffPasswordRequest(BaseModel):
+    staff_id: int
+    temp_password: Optional[str] = None
+
+
+@router.post("/admin/reset-staff-password")
+def admin_reset_staff_password(req: AdminResetStaffPasswordRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    """
+    POST /api/auth/admin/reset-staff-password
+    Generates or assigns a temporary password for staff account, logs audit action, and dispatches notification.
+    """
+    staff_user = db.query(User).filter(User.id == req.staff_id).first()
+    if not staff_user:
+        raise HTTPException(status_code=404, detail="Staff account not found.")
+
+    temp_pass = req.temp_password or f"NEC@Temp{random.randint(1000, 9999)}"
+    staff_user.hashed_password = get_password_hash(temp_pass)
+    db.commit()
+
+    from backend.services.audit_service import log_admin_action
+    log_admin_action(
+        db, action="STAFF_PASSWORD_RESET_ADMIN", action_type="SECURITY",
+        description=f"Admin reset password for staff user {staff_user.username}",
+        current_user=None, target_type="User", target_id=str(staff_user.id)
+    )
+
+    if staff_user.email:
+        from backend.services.email_notifications import notify_password_changed
+        background_tasks.add_task(notify_password_changed, staff_email=staff_user.email, staff_name=staff_user.username, new_password=temp_pass)
+
+    return {
+        "status": "success",
+        "message": f"Temporary password successfully generated and set for {staff_user.username}",
+        "temp_password": temp_pass,
+        "email": staff_user.email,
+        "username": staff_user.username
+    }
+
 
