@@ -1418,7 +1418,7 @@ export const StaffManagement: React.FC = () => {
                   </button>
                 </div>
               </div>
-            </div>
+              </GlobalModalBackdrop>
           )}
         </>,
         document.body

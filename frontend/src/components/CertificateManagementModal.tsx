@@ -35,6 +35,7 @@ import {
   Crown,
   Lock
 } from 'lucide-react';
+import { GlobalModalBackdrop } from './GlobalModalBackdrop';
 import api from '../services/api';
 import { syncCertificateToFirestoreWeb } from '../services/firebaseSync';
 import { useNotification } from '../context/NotificationContext';
@@ -1617,7 +1618,7 @@ export const CertificateManagementModal: React.FC<{
       {/* ── REVIEW & CONFIRM ISSUANCE MODAL ─────────────────────────────────── */}
       <AnimatePresence>
         {showConfirmIssueModal && selectedStudent && (
-          <GlobalModalBackdrop isOpen={true} onClose={() => setShowPreviewModal(false)} className="flex items-center justify-center p-4">
+          <GlobalModalBackdrop isOpen={true} onClose={() => setShowConfirmIssueModal(false)} className="flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.92, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1690,7 +1691,7 @@ export const CertificateManagementModal: React.FC<{
                 </button>
               </div>
             </motion.div>
-          </div>
+          </GlobalModalBackdrop>
         )}
       </AnimatePresence>
 

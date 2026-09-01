@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { studentLiveStore, useStudentListIds, useStudentStoreVersion } from '../../stores/studentLiveStore';
+import { studentLiveStore, useStudentListIds, useStudentStoreVersion } from '../stores/studentLiveStore';
 import { GlobalModalBackdrop } from './GlobalModalBackdrop';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNotification } from '../context/NotificationContext';
