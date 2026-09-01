@@ -22,6 +22,8 @@ def run_db_migrations():
         pg_migrations = [
             # ── users table ─────────────────────────────────────────────────
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS institutional_id VARCHAR(50)",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(200)",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS designation VARCHAR(100)",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_number VARCHAR(30)",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp_verified BOOLEAN DEFAULT FALSE",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS date_of_birth DATE",
@@ -35,6 +37,7 @@ def run_db_migrations():
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret VARCHAR(64)",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_2fa_enabled BOOLEAN DEFAULT FALSE",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS reporting_manager_id INTEGER",
             # ── students table ───────────────────────────────────────────────
             "ALTER TABLE students ADD COLUMN IF NOT EXISTS phone_number VARCHAR(30)",
             "ALTER TABLE students ADD COLUMN IF NOT EXISTS whatsapp_verified BOOLEAN DEFAULT FALSE",
