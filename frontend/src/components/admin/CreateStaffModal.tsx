@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { User, Shield, CheckCircle, Building2, Key, Check, Loader2, FileCheck, X, Briefcase, ChevronRight, Hash, Mail, Phone, Calendar, Search, Sparkles } from 'lucide-react';
+import { User, Shield, CheckCircle, Building2, Key, Check, Loader2, FileCheck, X, Briefcase, ChevronRight, Hash, Mail, Phone, Calendar, Search, Sparkles, Eye, EyeOff, AlertCircle, GraduationCap, ChevronDown } from 'lucide-react';
 import api from '../../services/api';
 import { CustomDropdown, DropdownOption } from '../CustomDropdown';
 import { GlobalModalBackdrop } from '../GlobalModalBackdrop';
@@ -84,12 +84,23 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
   }, [staffList]);
 
   const roleOptions: DropdownOption[] = [
-    { value: 'Faculty Mentor', label: 'Faculty Mentor', badge: 'FAC' },
-    { value: 'Staff Mentor', label: 'Staff Mentor', badge: 'STF' },
-    { value: 'Department HOD', label: 'Department HOD', badge: 'HOD' },
-    { value: 'Administrator', label: 'Administrator', badge: 'ADM' },
-    { value: 'Super Admin', label: 'Super Admin', badge: 'S-ADM' }
+    { value: 'Faculty Mentor', label: 'Faculty Mentor', badge: 'FAC', sublabel: 'Student mentoring & intervention access', icon: GraduationCap },
+    { value: 'Staff Mentor', label: 'Staff Mentor', badge: 'STF', sublabel: 'Student support & academic guidance', icon: User },
+    { value: 'Department HOD', label: 'Department HOD', badge: 'HOD', sublabel: 'Department-level academic oversight', icon: Building2 },
+    { value: 'Administrator', label: 'Administrator', badge: 'ADM', sublabel: 'Institutional administration & management', icon: Key },
+    { value: 'Super Admin', label: 'Super Admin', badge: 'S-ADM', sublabel: 'Full system control & root access', icon: Shield }
   ];
+
+  const getRoleConfig = (role: string) => {
+    const map: Record<string, { icon: React.ElementType; color: string; bgColor: string; borderColor: string; badgeColor: string; desc: string }> = {
+      'Faculty Mentor': { icon: GraduationCap, color: 'text-indigo-600 dark:text-indigo-400', bgColor: 'bg-indigo-50 dark:bg-indigo-500/10', borderColor: 'border-indigo-200 dark:border-indigo-500/30', badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/30', desc: 'Student mentoring & intervention access' },
+      'Staff Mentor': { icon: User, color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-50 dark:bg-blue-500/10', borderColor: 'border-blue-200 dark:border-blue-500/30', badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 border-blue-200 dark:border-blue-500/30', desc: 'Student support & academic guidance' },
+      'Department HOD': { icon: Building2, color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-50 dark:bg-purple-500/10', borderColor: 'border-purple-200 dark:border-purple-500/30', badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 border-purple-200 dark:border-purple-500/30', desc: 'Department-level academic oversight' },
+      'Administrator': { icon: Key, color: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-50 dark:bg-amber-500/10', borderColor: 'border-amber-200 dark:border-amber-500/30', badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border-amber-200 dark:border-amber-500/30', desc: 'Institutional administration & management' },
+      'Super Admin': { icon: Shield, color: 'text-rose-600 dark:text-rose-400', bgColor: 'bg-rose-50 dark:bg-rose-500/10', borderColor: 'border-rose-200 dark:border-rose-500/30', badgeColor: 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 border-rose-200 dark:border-rose-500/30', desc: 'Full system control & root access' },
+    };
+    return map[role] || map['Faculty Mentor'];
+  };
 
   const statusOptions: DropdownOption[] = [
     { value: 'Active', label: 'Active', badge: 'ON' },
@@ -112,12 +123,56 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
     require_password_change: true,
     reporting_manager: 'none',
     account_status: 'Active',
-    consent_checked: false
+    consent_checked: false,
+    send_email: true
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [idProofFile, setIdProofFile] = useState<File | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // DOB Formatter
+  const handleDOBChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/\D/g, ''); // strip non-digits
+    if (val.length > 8) val = val.substring(0, 8);
+    let formatted = val;
+    if (val.length > 2) {
+      formatted = val.substring(0, 2) + '/' + val.substring(2);
+    }
+    if (val.length > 4) {
+      formatted = val.substring(0, 2) + '/' + val.substring(2, 4) + '/' + val.substring(4);
+    }
+    setFormData({ ...formData, date_of_birth: formatted });
+  };
+
+  // Date validator
+  const isValidDate = (dateStr: string) => {
+    if (dateStr.length !== 10) return false;
+    const [dd, mm, yyyy] = dateStr.split('/');
+    const d = parseInt(dd, 10);
+    const m = parseInt(mm, 10);
+    const y = parseInt(yyyy, 10);
+    if (m < 1 || m > 12) return false;
+    const daysInMonth = new Date(y, m, 0).getDate();
+    return d > 0 && d <= daysInMonth && y > 1900 && y < 2100;
+  };
+
+  // Password Validator
+  const getPasswordReqs = (pw: string) => ({
+    length: pw.length >= 8,
+    upper: /[A-Z]/.test(pw),
+    lower: /[a-z]/.test(pw),
+    number: /[0-9]/.test(pw),
+    special: /[^A-Za-z0-9]/.test(pw),
+  });
+
+  const pwReqs = getPasswordReqs(formData.password);
+  const allReqsMet = formData.password && Object.values(pwReqs).every(Boolean);
+  const strengthScore = Object.values(pwReqs).filter(Boolean).length;
+  const strengthStr = strengthScore <= 2 ? 'Weak' : strengthScore <= 4 ? 'Medium' : 'Strong';
+  const passwordsMatch = formData.password && formData.password === formData.confirm_password;
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,7 +188,15 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
       errors.academic_year = 'Required for Mentors';
     }
 
-    if (formData.password && formData.password !== formData.confirm_password) {
+    if (formData.date_of_birth && !isValidDate(formData.date_of_birth)) {
+      errors.date_of_birth = 'Invalid calendar date';
+    }
+
+    if (!allReqsMet) {
+      errors.password = 'Password does not meet requirements';
+    }
+
+    if (formData.password && !passwordsMatch) {
       errors.confirm_password = 'Passwords do not match';
     }
 
@@ -153,6 +216,13 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
       const rawDeptId = formData.department_id ? parseInt(formData.department_id, 10) : 0;
       const deptIdToSend = (rawDeptId > 0 && !isGlobalAdmin) ? rawDeptId : null;
 
+      // Convert DD/MM/YYYY to YYYY-MM-DD for backend
+      let formattedDOB = undefined;
+      if (formData.date_of_birth && formData.date_of_birth.length === 10) {
+        const [dd, mm, yyyy] = formData.date_of_birth.split('/');
+        formattedDOB = `${yyyy}-${mm}-${dd}`;
+      }
+
       const payload = {
         institutional_id: formData.institutional_id?.trim() || undefined,
         username: formData.username.trim(),
@@ -161,12 +231,14 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
         phone_number: formData.phone_number.trim(),
         password: formData.password?.trim() || undefined,
         role: formData.role,
-        department_id: deptIdToSend,
-        academic_year: formData.academic_year || undefined,
+        department_id: isGlobalRole ? 0 : deptIdToSend,
+        academic_year: isGlobalRole ? 'All Years' : (formData.academic_year || undefined),
         designation: formData.designation || undefined,
-        date_of_birth: formData.date_of_birth || undefined,
+        date_of_birth: formattedDOB,
         is_active: formData.account_status === 'Active',
-        require_password_change: true
+        require_password_change: true,
+        reporting_manager_id: formData.reporting_manager === 'none' ? undefined : parseInt(formData.reporting_manager, 10),
+        send_email: formData.send_email
       };
 
       await api.post('/admin/staff', payload);
@@ -181,6 +253,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
   };
 
   const isGlobalRole = ['Administrator', 'Super Admin'].includes(formData.role);
+  const isFormValid = formData.full_name && formData.username && formData.email && formData.phone_number && allReqsMet && passwordsMatch && formData.consent_checked && (formData.date_of_birth ? isValidDate(formData.date_of_birth) : true);
 
   return (
     <GlobalModalBackdrop isOpen={true} onClose={onClose} className="flex items-center justify-center p-4 sm:p-6">
@@ -215,51 +288,153 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
                 <Building2 className="w-4 h-4 mr-2 text-brand-500" /> 1. Role & Academic Scope
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                
-                <div className="space-y-1.5 relative z-[105]">
-                  <CustomDropdown
-                    label="Staff Role"
-                    options={roleOptions}
-                    value={formData.role}
-                    onChange={(val) => setFormData({...formData, role: val})}
-                    icon={Briefcase}
-                  />
-                </div>
 
+                {/* ── STAFF ROLE ── Premium trigger with custom face */}
+                {(() => {
+                  const rc = getRoleConfig(formData.role);
+                  const RoleIcon = rc.icon;
+                  const [roleOpen, setRoleOpen] = React.useState(false);
+                  const roleRef = React.useRef<HTMLDivElement>(null);
+                  React.useEffect(() => {
+                    const handler = (e: MouseEvent) => {
+                      if (roleRef.current && !roleRef.current.contains(e.target as Node)) setRoleOpen(false);
+                    };
+                    if (roleOpen) document.addEventListener('mousedown', handler);
+                    return () => document.removeEventListener('mousedown', handler);
+                  }, [roleOpen]);
+                  return (
+                    <div className="space-y-1.5 relative z-[105]" ref={roleRef}>
+                      <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Staff Role</label>
+                      <button
+                        type="button"
+                        onClick={() => setRoleOpen(o => !o)}
+                        className={`w-full flex items-center justify-between px-4 py-0 rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer group shadow-sm min-h-[56px] ${
+                          roleOpen
+                            ? `${rc.bgColor} ${rc.borderColor} ring-2 ring-offset-1 ring-current/10`
+                            : `bg-white dark:bg-navy-900/80 border-gray-200 dark:border-navy-700 hover:${rc.borderColor}`
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 py-3">
+                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${rc.bgColor} border ${rc.borderColor}`}>
+                            <RoleIcon className={`w-4 h-4 ${rc.color}`} />
+                          </div>
+                          <div className="flex flex-col items-start">
+                            <div className="flex items-center gap-2">
+                              <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border ${rc.badgeColor}`}>
+                                {roleOptions.find(r => r.value === formData.role)?.badge}
+                              </span>
+                              <span className="text-sm font-black text-gray-900 dark:text-gray-100">{formData.role}</span>
+                            </div>
+                            <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium mt-0.5 leading-tight">{rc.desc}</span>
+                          </div>
+                        </div>
+                        <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-200 ${rc.color} ${roleOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      {roleOpen && (
+                        <div className="absolute left-0 right-0 z-[9999] mt-1.5 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 shadow-2xl p-1.5 space-y-0.5" style={{ boxShadow: '0 25px 50px -12px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.06)' }}>
+                          {roleOptions.map(opt => {
+                            const cfg = getRoleConfig(opt.value);
+                            const OptIcon = cfg.icon;
+                            const isSel = formData.role === opt.value;
+                            return (
+                              <button key={opt.value} type="button"
+                                onClick={() => { setFormData({...formData, role: opt.value}); setRoleOpen(false); }}
+                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all cursor-pointer group ${
+                                  isSel ? `${cfg.bgColor} border ${cfg.borderColor}` : 'hover:bg-gray-50 dark:hover:bg-navy-800'
+                                }`}
+                              >
+                                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${cfg.bgColor} border ${cfg.borderColor}`}>
+                                  <OptIcon className={`w-3.5 h-3.5 ${cfg.color}`} />
+                                </div>
+                                <div className="flex flex-col flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border ${cfg.badgeColor}`}>{opt.badge}</span>
+                                    <span className={`text-xs font-black truncate ${isSel ? cfg.color : 'text-gray-800 dark:text-gray-100'}`}>{opt.label}</span>
+                                  </div>
+                                  <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium truncate mt-0.5">{opt.sublabel}</span>
+                                </div>
+                                {isSel && <Check className={`w-3.5 h-3.5 shrink-0 ${cfg.color} stroke-[2.5]`} />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* ── DEPARTMENT ── Rich display for global, dropdown for scoped */}
                 <div className="space-y-1.5 relative z-[104]">
-                  <CustomDropdown
-                    label="Department"
-                    options={departmentOptions}
-                    value={isGlobalRole ? '' : formData.department_id}
-                    onChange={(val) => setFormData({...formData, department_id: val})}
-                    placeholder={isGlobalRole ? "All Departments (Global)" : "Select Department..."}
-                    icon={Building2}
-                  />
-                  {isGlobalRole && <p className="text-[10px] text-gray-500 ml-1">Disabled for Admins</p>}
+                  <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Department</label>
+                  {isGlobalRole ? (
+                    <div className="w-full min-h-[56px] flex items-center px-4 py-2 rounded-2xl border-2 border-dashed border-brand-300 dark:border-brand-500/40 bg-brand-50/60 dark:bg-brand-500/5 shadow-sm">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300 border-brand-200 dark:border-brand-500/30">ALL</span>
+                          <span className="text-sm font-black text-brand-800 dark:text-brand-200">All Departments</span>
+                        </div>
+                        <span className="text-[10px] text-brand-600/70 dark:text-brand-400/70 font-medium mt-0.5">Institution-wide access</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <CustomDropdown
+                      options={departmentOptions}
+                      label=""
+                      value={formData.department_id}
+                      onChange={(val) => setFormData({...formData, department_id: val})}
+                      placeholder="Select Department..."
+                      icon={Building2}
+                    />
+                  )}
+                  {isGlobalRole && (
+                    <p className="text-[10px] text-brand-500/80 dark:text-brand-400/70 ml-1">
+                      Managed automatically for {formData.role}
+                    </p>
+                  )}
                 </div>
 
+                {/* ── ACADEMIC YEAR ── Rich display for global, dropdown for scoped */}
                 <div className="space-y-1.5 relative z-[103]">
-                  <CustomDropdown
-                    label="Academic Year"
-                    options={academicYearOptions}
-                    value={isGlobalRole ? '' : formData.academic_year}
-                    onChange={(val) => setFormData({...formData, academic_year: val})}
-                    placeholder={isGlobalRole ? "Global Scope" : "Select Year Cohort..."}
-                    icon={Calendar}
-                  />
+                  <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Academic Year</label>
+                  {isGlobalRole ? (
+                    <div className="w-full min-h-[56px] flex items-center px-4 py-2 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/30 shadow-sm">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600">ALL</span>
+                          <span className="text-sm font-black text-slate-700 dark:text-slate-200">All Years</span>
+                        </div>
+                        <span className="text-[10px] text-slate-400 font-medium mt-0.5">Institution-wide academic access</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <CustomDropdown
+                      options={academicYearOptions}
+                      label=""
+                      value={formData.academic_year}
+                      onChange={(val) => setFormData({...formData, academic_year: val})}
+                      placeholder="Select Year Cohort..."
+                      icon={Calendar}
+                    />
+                  )}
                   {formErrors.academic_year && <p className="text-[10px] text-red-500 ml-1 font-semibold">{formErrors.academic_year}</p>}
                 </div>
 
+                {/* ── MENTORING DESIGNATION ── N/A for global roles */}
                 <div className="space-y-1.5">
                   <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Mentoring Designation</label>
-                  <input 
-                    type="text" 
-                    value={formData.designation} 
-                    onChange={e => setFormData({...formData, designation: e.target.value})} 
-                    className="w-full h-11 px-4 rounded-2xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all" 
-                    
-                    autoComplete="off"
-                  />
+                  {isGlobalRole ? (
+                    <div className="w-full min-h-[56px] flex items-center px-4 py-2 rounded-2xl border border-dashed border-gray-200 dark:border-navy-700 bg-gray-50/50 dark:bg-navy-900/30">
+                      <span className="text-[11px] text-gray-400 dark:text-gray-500 font-medium italic">— Not applicable for this role</span>
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      value={formData.designation}
+                      onChange={e => setFormData({...formData, designation: e.target.value})}
+                      className="w-full h-11 px-4 rounded-2xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all"
+                      autoComplete="off"
+                    />
+                  )}
                 </div>
 
               </div>
@@ -333,11 +508,12 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
                   <input 
                     type="text" 
                     value={formData.date_of_birth} 
-                    onChange={e => setFormData({...formData, date_of_birth: e.target.value})} 
-                    className="w-full h-11 px-4 rounded-2xl border border-gray-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 bg-gray-50 dark:bg-navy-800 text-sm font-bold text-gray-900 dark:text-white outline-none transition-all" 
-                    placeholder="YYYY-MM-DD"
+                    onChange={handleDOBChange} 
+                    className={`w-full h-11 px-4 rounded-2xl border ${formErrors.date_of_birth ? 'border-red-400 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-gray-50 dark:bg-navy-800 text-sm font-bold text-gray-900 dark:text-white outline-none transition-all`} 
+                    placeholder="DD/MM/YYYY"
                     autoComplete="off"
                   />
+                  {formErrors.date_of_birth && <p className="text-[10px] text-red-500 ml-1 font-semibold">{formErrors.date_of_birth}</p>}
                 </div>
 
                 <div className="space-y-1.5 sm:col-span-2">
@@ -374,14 +550,21 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
               </h3>
               <div className="space-y-1.5">
                 <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Employee ID Proof / Document (Optional)</label>
-                <div className="flex items-center justify-center w-full">
-                  <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 dark:border-navy-700 border-dashed rounded-2xl cursor-pointer bg-gray-50 dark:bg-navy-800 hover:bg-gray-100 dark:hover:bg-navy-700/80 transition-all">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <FileCheck className="w-6 h-6 mb-2 text-gray-400" />
-                      <p className="mb-1 text-[11px] font-bold text-gray-500 dark:text-gray-400">
-                        {idProofFile ? idProofFile.name : <><span className="text-brand-500 font-extrabold">Click to upload</span> or drag and drop</>}
+                <div className="flex items-center justify-center w-full group">
+                  <label className="relative flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 dark:border-navy-700 rounded-2xl cursor-pointer bg-gray-50 dark:bg-navy-800 hover:bg-brand-50 dark:hover:bg-brand-500/10 hover:border-brand-400 dark:hover:border-brand-500/50 transition-all duration-300 overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-brand-500/5 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div className="flex flex-col items-center justify-center relative z-10 transform group-hover:-translate-y-1 transition-transform duration-300">
+                      <div className="w-12 h-12 mb-3 rounded-full bg-white dark:bg-navy-900 shadow-sm flex items-center justify-center group-hover:shadow-md group-hover:scale-110 transition-all duration-300">
+                        <FileCheck className="w-6 h-6 text-gray-400 group-hover:text-brand-500 transition-colors duration-300" />
+                      </div>
+                      <p className="mb-1 text-xs font-bold text-gray-500 dark:text-gray-400">
+                        {idProofFile ? (
+                          <span className="text-emerald-500 flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5" /> {idProofFile.name}</span>
+                        ) : (
+                          <><span className="text-brand-500 font-extrabold group-hover:underline">Click to upload</span> or drag and drop</>
+                        )}
                       </p>
-                      <p className="text-[9px] text-gray-500 font-semibold uppercase tracking-wider">PDF, JPG or PNG (MAX. 5MB)</p>
+                      <p className="text-[10px] text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wider mt-1">PDF, JPG or PNG (MAX. 5MB)</p>
                     </div>
                     <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={e => setIdProofFile(e.target.files?.[0] || null)} />
                   </label>
@@ -395,38 +578,92 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
                 <Key className="w-4 h-4 mr-2 text-rose-500" /> 4. Security & Password
               </h3>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Initial Password</label>
-                  <input 
-                    type="password" 
-                    value={formData.password} 
-                    onChange={e => setFormData({...formData, password: e.target.value})} 
-                    className="w-full h-11 px-4 rounded-2xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm font-bold text-gray-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all" 
-                    
-                    autoComplete="new-password"
-                  />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="space-y-1.5 relative">
+                    <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Initial Password</label>
+                    <div className="relative">
+                      <input 
+                        type={showPassword ? "text" : "password"} 
+                        value={formData.password} 
+                        onChange={e => setFormData({...formData, password: e.target.value})} 
+                        className={`w-full h-11 pl-4 pr-10 rounded-2xl border ${!allReqsMet && formData.password ? 'border-orange-400' : 'border-gray-200 dark:border-navy-700'} bg-gray-50 dark:bg-navy-800 text-sm font-bold text-gray-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all`} 
+                        autoComplete="new-password"
+                      />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-500 p-1">
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Password Checklist */}
+                  <div className="bg-gray-50 dark:bg-navy-900 rounded-xl p-3 border border-gray-100 dark:border-navy-800 select-none">
+                    <p className="text-[10px] font-bold text-gray-500 mb-2 uppercase tracking-wider">Password requirements</p>
+                    <div className="space-y-1.5">
+                      <div className={`flex items-center space-x-2 text-xs font-semibold ${pwReqs.length ? 'text-emerald-500' : 'text-gray-400'}`}>
+                        {pwReqs.length ? <Check className="w-3.5 h-3.5" /> : <div className="w-3.5 h-3.5 rounded-full border border-gray-300 dark:border-gray-600" />}
+                        <span>At least 8 characters</span>
+                      </div>
+                      <div className={`flex items-center space-x-2 text-xs font-semibold ${pwReqs.upper ? 'text-emerald-500' : 'text-gray-400'}`}>
+                        {pwReqs.upper ? <Check className="w-3.5 h-3.5" /> : <div className="w-3.5 h-3.5 rounded-full border border-gray-300 dark:border-gray-600" />}
+                        <span>One uppercase letter</span>
+                      </div>
+                      <div className={`flex items-center space-x-2 text-xs font-semibold ${pwReqs.lower ? 'text-emerald-500' : 'text-gray-400'}`}>
+                        {pwReqs.lower ? <Check className="w-3.5 h-3.5" /> : <div className="w-3.5 h-3.5 rounded-full border border-gray-300 dark:border-gray-600" />}
+                        <span>One lowercase letter</span>
+                      </div>
+                      <div className={`flex items-center space-x-2 text-xs font-semibold ${pwReqs.number ? 'text-emerald-500' : 'text-gray-400'}`}>
+                        {pwReqs.number ? <Check className="w-3.5 h-3.5" /> : <div className="w-3.5 h-3.5 rounded-full border border-gray-300 dark:border-gray-600" />}
+                        <span>One number</span>
+                      </div>
+                      <div className={`flex items-center space-x-2 text-xs font-semibold ${pwReqs.special ? 'text-emerald-500' : 'text-gray-400'}`}>
+                        {pwReqs.special ? <Check className="w-3.5 h-3.5" /> : <div className="w-3.5 h-3.5 rounded-full border border-gray-300 dark:border-gray-600" />}
+                        <span>One special character</span>
+                      </div>
+                    </div>
+                    {formData.password && (
+                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-navy-700 flex justify-between items-center">
+                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Strength</span>
+                        <span className={`text-xs font-bold ${strengthStr === 'Strong' ? 'text-emerald-500' : strengthStr === 'Medium' ? 'text-amber-500' : 'text-rose-500'}`}>{strengthStr}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
-                <div className="space-y-1.5">
-                  <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Confirm Password</label>
-                  <input 
-                    type="password" 
-                    value={formData.confirm_password} 
-                    onChange={e => setFormData({...formData, confirm_password: e.target.value})} 
-                    className={`w-full h-11 px-4 rounded-2xl border ${formErrors.confirm_password ? 'border-red-400 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-gray-50 dark:bg-navy-800 text-sm font-bold text-gray-900 dark:text-white outline-none transition-all`} 
-                    
-                    autoComplete="new-password"
-                  />
-                  {formErrors.confirm_password && <p className="text-[10px] text-red-500 ml-1 font-semibold">{formErrors.confirm_password}</p>}
-                </div>
-
-                <div className="col-span-1 sm:col-span-2">
-                  <div className="flex items-center space-x-3 p-3 rounded-xl bg-gray-50 dark:bg-navy-800 border border-gray-200 dark:border-navy-700">
-                    <div className="w-5 h-5 rounded flex items-center justify-center bg-gray-200 dark:bg-navy-700">
-                      <Check className="w-3 h-3 text-gray-500" />
+                <div className="space-y-4">
+                  <div className="space-y-1.5 relative">
+                    <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Confirm Password</label>
+                    <div className="relative">
+                      <input 
+                        type={showConfirmPassword ? "text" : "password"} 
+                        value={formData.confirm_password} 
+                        onChange={e => setFormData({...formData, confirm_password: e.target.value})} 
+                        className={`w-full h-11 pl-4 pr-10 rounded-2xl border ${formData.confirm_password && !passwordsMatch ? 'border-red-400 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-gray-50 dark:bg-navy-800 text-sm font-bold text-gray-900 dark:text-white outline-none transition-all`} 
+                        autoComplete="new-password"
+                      />
+                      <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-500 p-1">
+                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
                     </div>
-                    <span className="text-[11px] font-bold text-gray-600 dark:text-gray-400">Force password reset on first login (Always ON for security compliance)</span>
+                    {formData.confirm_password && (
+                      <div className="pt-1 flex items-center space-x-1.5">
+                        {passwordsMatch ? (
+                          <><CheckCircle className="w-3.5 h-3.5 text-emerald-500" /><span className="text-xs font-bold text-emerald-500">Passwords match</span></>
+                        ) : (
+                          <><AlertCircle className="w-3.5 h-3.5 text-red-500" /><span className="text-xs font-bold text-red-500">Passwords do not match</span></>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-start space-x-2.5 p-3 mt-2 rounded-xl border border-blue-200 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-900/10 select-none pointer-events-none">
+                    <div className="flex shrink-0 items-center justify-center w-4 h-4 mt-0.5 rounded bg-blue-500 border border-blue-600">
+                      <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-blue-900 dark:text-blue-100 leading-tight">Force password reset on first login</p>
+                      <p className="text-[9px] font-bold text-blue-700/80 dark:text-blue-300/80 mt-1 uppercase tracking-wider">Required for security compliance</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -459,20 +696,36 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
                       icon={Search}
                     />
                   </div>
-                  
-                  <div className="flex items-start space-x-3 mt-4 pt-2">
+
+                  <div className="flex items-center space-x-3 mt-2 px-1">
                     <input 
                       type="checkbox" 
-                      id="consent-check"
-                      checked={formData.consent_checked} 
-                      onChange={e => setFormData({...formData, consent_checked: e.target.checked})} 
-                      className="mt-1 w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer" 
+                      id="send-email-check"
+                      checked={formData.send_email} 
+                      onChange={e => setFormData({...formData, send_email: e.target.checked})} 
+                      className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer" 
                     />
-                    <label htmlFor="consent-check" className="cursor-pointer select-none">
+                    <label htmlFor="send-email-check" className="cursor-pointer select-none">
+                      <p className="text-sm font-bold text-gray-900 dark:text-white">Send Welcome Email</p>
+                      <p className="text-[10px] text-gray-500 mt-0.5">Email login credentials to the user.</p>
+                    </label>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3 mt-4 pt-2 group cursor-pointer" onClick={() => setFormData({...formData, consent_checked: !formData.consent_checked})}>
+                    <div className="pt-0.5 shrink-0">
+                      <input 
+                        type="checkbox" 
+                        id="consent-check"
+                        checked={formData.consent_checked} 
+                        onChange={e => setFormData({...formData, consent_checked: e.target.checked})} 
+                        className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer pointer-events-none" 
+                      />
+                    </div>
+                    <div className="select-none flex-1">
                       <p className="text-sm font-bold text-gray-900 dark:text-white">Consent & Compliance Acknowledgment *</p>
                       <p className="text-[10px] text-gray-500 mt-1 leading-relaxed">I verify that this staff member is authorized to access student academic records and agree to adhere strictly to the institution's data privacy & security policies.</p>
                       {formErrors.consent && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.consent}</p>}
-                    </label>
+                    </div>
                   </div>
                 </div>
 
@@ -518,8 +771,8 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
           <button
             form="create-staff-form"
             type="submit"
-            disabled={isSubmitting}
-            className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 disabled:bg-brand-400 dark:disabled:bg-brand-800 transition-all shadow-md shadow-brand-500/20 flex items-center cursor-pointer active:scale-95"
+            disabled={isSubmitting || !isFormValid}
+            className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 dark:disabled:bg-navy-700 disabled:text-slate-500 dark:disabled:text-navy-400 transition-all shadow-md flex items-center cursor-pointer active:scale-95"
           >
             {isSubmitting ? (
               <>

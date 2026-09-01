@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Search, UserPlus, Edit2, Shield, Ban, CheckCircle, RefreshCcw, UserX, AlertCircle, ArrowRight, Building2, GraduationCap, Award, Sparkles, Key, Mail, User, Calendar, Check, X, Trash2, Phone, Briefcase, Activity, ShieldAlert, FileText, Database, Lock, KeyRound, Loader2 } from 'lucide-react';
 import api from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
+import { useAuth } from '../../context/AuthContext';
 import { CustomDropdown, DropdownOption } from '../CustomDropdown';
 import { GlobalModalBackdrop } from '../GlobalModalBackdrop';
 import { CreateStaffModal } from './CreateStaffModal';
@@ -36,6 +37,8 @@ export const StaffManagement: React.FC = () => {
     date_of_birth: ''
   });
   const { notify } = useNotification();
+  const { user: currentUser } = useAuth();
+  const isSuperAdmin = currentUser?.role?.toLowerCase() === 'super admin';
   const [tempPasswordResult, setTempPasswordResult] = useState<{ password: string; email: string } | null>(null);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
 
@@ -965,7 +968,7 @@ export const StaffManagement: React.FC = () => {
                                   <span>Date of Birth</span>
                                   <span className="text-[10px] text-gray-400 font-normal">(Optional)</span>
                                 </label>
-                                {editFormData.date_of_birth && (
+                                {editFormData.date_of_birth && !editDobDisplay && (
                                   <div className="flex items-center gap-1.5">
                                     <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded-md border border-teal-500/20">
                                       {new Date(editFormData.date_of_birth).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -1103,19 +1106,27 @@ export const StaffManagement: React.FC = () => {
                           ].map(r => {
                             const Icon = r.icon;
                             const isSelected = editFormData.role === r.id;
+                            const isAdminRole = r.id === 'Admin';
+                            const isDisabled = isAdminRole && !isSuperAdmin;
                             return (
                               <button
                                 key={r.id}
                                 type="button"
-                                onClick={() => setEditFormData({ ...editFormData, role: r.id })}
-                                className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col gap-2 ${isSelected
-                                  ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10 shadow-sm ring-2 ring-brand-500/20'
-                                  : 'border-gray-200 dark:border-navy-700 hover:border-gray-300 dark:hover:border-navy-600 bg-gray-50 dark:bg-navy-950'
-                                  }`}
+                                disabled={isDisabled}
+                                onClick={() => !isDisabled && setEditFormData({ ...editFormData, role: r.id })}
+                                title={isDisabled ? 'Only Super Admins can assign this role' : ''}
+                                className={`p-3 rounded-2xl border text-left transition-all flex flex-col gap-2 ${
+                                  isDisabled
+                                    ? 'border-gray-100 dark:border-navy-800 bg-gray-50 dark:bg-navy-950 opacity-40 cursor-not-allowed'
+                                    : isSelected
+                                      ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10 shadow-sm ring-2 ring-brand-500/20 cursor-pointer'
+                                      : 'border-gray-200 dark:border-navy-700 hover:border-gray-300 dark:hover:border-navy-600 bg-gray-50 dark:bg-navy-950 cursor-pointer'
+                                }`}
                               >
                                 <div className="flex items-center justify-between">
                                   <Icon className={`w-4 h-4 ${isSelected ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400'}`} />
                                   {isSelected && <CheckCircle className="w-4 h-4 text-brand-500" />}
+                                  {isDisabled && <Shield className="w-3.5 h-3.5 text-gray-300" />}
                                 </div>
                                 <div>
                                   <div className={`text-xs font-black ${isSelected ? 'text-brand-700 dark:text-brand-300' : 'text-gray-700 dark:text-gray-300'}`}>{r.label}</div>

@@ -566,6 +566,8 @@ class CreateStaffRequest(BaseModel):
     password: Optional[str] = None
     is_active: bool = True
     require_password_change: bool = True
+    reporting_manager_id: Optional[int] = None
+    send_email: bool = True
 
 class UpdateStaffRequest(BaseModel):
     institutional_id: Optional[str] = None
@@ -701,7 +703,8 @@ def create_staff_user(
         mentoring_role=payload.mentoring_role.strip() if payload.mentoring_role else None,
         date_of_birth=payload.date_of_birth.strip() if payload.date_of_birth else None,
         require_password_change=payload.require_password_change,
-        is_active=payload.is_active
+        is_active=payload.is_active,
+        reporting_manager_id=payload.reporting_manager_id
     )
     db.add(staff_user)
     db.commit()
@@ -720,7 +723,7 @@ def create_staff_user(
         dept = db.query(Department).filter(Department.id == staff_user.department_id).first()
         dept_name = dept.name if dept else "N/A"
         
-    if staff_user.email:
+    if staff_user.email and payload.send_email:
         background_tasks.add_task(
             notify_staff_created,
             staff_email=staff_user.email,

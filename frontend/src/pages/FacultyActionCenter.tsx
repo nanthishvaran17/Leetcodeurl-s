@@ -577,6 +577,8 @@ export const FacultyActionCenter: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState('');
   const [filterYear, setFilterYear] = useState('');
   const [search, setSearch] = useState('');
+  const [filterOverdue, setFilterOverdue] = useState(false);
+  const [filterEscalated, setFilterEscalated] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
 
@@ -602,8 +604,17 @@ export const FacultyActionCenter: React.FC = () => {
       if (filterStatus) params.status = filterStatus;
       if (filterYear) params.year_level = filterYear;
       if (search.trim()) params.search = search.trim();
+      if (filterOverdue) params.is_overdue = true;
+      if (filterEscalated) params.is_escalated = true;
 
-      const [kpiRes, listRes] = await Promise.all([getFacultyActionKPIs(), getFacultyActionsList(params)]);
+      const kpiParams: any = {};
+      if (filterYear) kpiParams.year_level = filterYear;
+      if (search.trim()) kpiParams.search = search.trim();
+
+      const [kpiRes, listRes] = await Promise.all([
+        getFacultyActionKPIs(kpiParams),
+        getFacultyActionsList(params)
+      ]);
       setKpis(kpiRes);
       setItems(listRes.items);
       setTotal(listRes.total);
@@ -612,15 +623,26 @@ export const FacultyActionCenter: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, sortBy, sortDir, filterPriority, filterStatus, filterYear, search]);
+  }, [page, pageSize, sortBy, sortDir, filterPriority, filterStatus, filterYear, search, filterOverdue, filterEscalated]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  const applyKPIFilter = (key: string, type: 'priority' | 'status') => {
+  const applyKPIFilter = (key: string, type: 'priority' | 'status' | 'overdue' | 'escalated') => {
     const next = kpiFilter === key ? '' : key;
     setKpiFilter(next);
-    if (type === 'priority') { setFilterPriority(next); setFilterStatus(''); }
-    else { setFilterStatus(next); setFilterPriority(''); }
+    
+    // Reset all mutual exclusive toggles first
+    setFilterPriority('');
+    setFilterStatus('');
+    setFilterOverdue(false);
+    setFilterEscalated(false);
+
+    if (next) {
+      if (type === 'priority') setFilterPriority(next);
+      else if (type === 'status') setFilterStatus(next);
+      else if (type === 'overdue') setFilterOverdue(true);
+      else if (type === 'escalated') setFilterEscalated(true);
+    }
     setPage(1);
   };
 
@@ -714,21 +736,29 @@ export const FacultyActionCenter: React.FC = () => {
           <KPICard label="Resolved" value={kpis.resolved_count} colorTheme="emerald"
             icon={<CheckCircle2 size={14} strokeWidth={2.5} />} active={kpiFilter === 'Resolved'} onClick={() => applyKPIFilter('Resolved', 'status')} />
           <KPICard label="Overdue" value={kpis.overdue_count} colorTheme="pink"
-            icon={<Bell size={14} strokeWidth={2.5} />} active={false} onClick={() => {}} subtitle="Follow-up missed" />
+            icon={<Bell size={14} strokeWidth={2.5} />} active={kpiFilter === 'Overdue'} onClick={() => applyKPIFilter('Overdue', 'overdue')} subtitle="Follow-up missed" />
           <KPICard label="Escalated" value={kpis.escalated_count} colorTheme="violet"
-            icon={<ArrowUpRight size={14} strokeWidth={2.5} />} active={false} onClick={() => {}} />
+            icon={<ArrowUpRight size={14} strokeWidth={2.5} />} active={kpiFilter === 'Escalated'} onClick={() => applyKPIFilter('Escalated', 'escalated')} />
         </div>
       )}
 
       {/* ── Filters ── */}
       <div className="relative z-20 flex flex-wrap gap-3 items-center p-4 rounded-3xl bg-white/70 dark:bg-navy-800/70 border border-slate-200 dark:border-navy-700 backdrop-blur-md shadow-sm">
-        <div className="flex items-center gap-2 flex-1 min-w-[250px] bg-white dark:bg-navy-900 rounded-xl px-4 py-3 border border-slate-200 dark:border-navy-700 focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-500/10 shadow-sm transition-all group">
-          <Search size={16} className="text-slate-400 group-focus-within:text-brand-500 transition-colors flex-shrink-0" />
-          <input
-            value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
-            placeholder="Search by name, reg no, username..."
-            className="flex-1 bg-transparent text-sm font-bold text-slate-700 dark:text-slate-200 outline-none placeholder:text-slate-400 placeholder:font-medium"
-          />
+        <div className="relative group flex-1 min-w-[250px]">
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-brand-500 via-purple-500 to-indigo-500 rounded-full blur opacity-20 group-focus-within:opacity-75 transition duration-500 group-hover:opacity-40"></div>
+          <div className="relative flex items-center gap-3 bg-white dark:bg-navy-900 rounded-full px-5 py-3 border border-slate-200 dark:border-navy-700 focus-within:border-transparent shadow-sm">
+            <Search size={18} className="text-slate-400 group-focus-within:text-brand-500 transition-colors flex-shrink-0" />
+            <input
+              value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
+              placeholder="Search by name, reg no, username..."
+              className="flex-1 bg-transparent border-none focus:ring-0 focus:border-transparent focus:outline-none !outline-none !ring-0 !border-none text-sm font-bold text-slate-700 dark:text-slate-200 placeholder:text-slate-400 placeholder:font-medium p-0 m-0"
+            />
+            {search && (
+              <button onClick={() => { setSearch(''); setPage(1); }} className="text-slate-400 hover:text-rose-500 transition-colors p-1 rounded-full hover:bg-slate-100 dark:hover:bg-navy-800">
+                <X size={14} />
+              </button>
+            )}
+          </div>
         </div>
         <CustomSelect
           value={filterPriority}
@@ -769,7 +799,7 @@ export const FacultyActionCenter: React.FC = () => {
           ]}
         />
         {hasFilters && (
-          <button onClick={() => { setFilterPriority(''); setFilterStatus(''); setFilterYear(''); setSearch(''); setKpiFilter(''); setPage(1); }}
+          <button onClick={() => { setFilterPriority(''); setFilterStatus(''); setFilterYear(''); setSearch(''); setFilterOverdue(false); setFilterEscalated(false); setKpiFilter(''); setPage(1); }}
             className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/25 text-red-400 text-xs font-semibold hover:bg-red-500/20 transition">
             <X size={11} /> Clear
           </button>
@@ -804,8 +834,10 @@ export const FacultyActionCenter: React.FC = () => {
       ) : items.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 text-emerald-500">
           <CheckCircle2 size={48} className="opacity-40 mb-4" />
-          <div className="text-xl font-bold">🎉 All Clear</div>
-          <div className="text-sm text-slate-500 dark:text-navy-400 mt-2">No students currently require faculty intervention.</div>
+          <div className="text-xl font-bold">{hasFilters || kpiFilter ? 'No Students Found' : '🎉 All Clear'}</div>
+          <div className="text-sm text-slate-500 dark:text-navy-400 mt-2">
+            {hasFilters || kpiFilter ? 'Try adjusting or clearing your filters to see more results.' : 'No students currently require faculty intervention.'}
+          </div>
         </div>
       ) : (
         <div className="rounded-2xl bg-white/80 dark:bg-navy-800/80 border border-slate-200 dark:border-navy-700 backdrop-blur-sm overflow-hidden">

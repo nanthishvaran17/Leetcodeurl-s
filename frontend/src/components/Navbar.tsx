@@ -50,16 +50,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <>
       <header className="sticky top-0 z-40 bg-white dark:bg-navy-900 border-b border-slate-200 dark:border-navy-800 transition-colors shadow-sm">
-        <div className="w-full max-w-[1800px] mx-auto px-3 sm:px-5 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+        <div className="w-full max-w-[1800px] mx-auto px-2 sm:px-5 lg:px-8">
+          <div className="flex items-center justify-between h-[64px] sm:h-[72px]">
             
             {/* Left: Hamburger Button (Mobile/Tablet) + Branding */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
               {isAuthenticated && (
                 <button
                   type="button"
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  className="p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors cursor-pointer"
+                  className="p-1.5 sm:p-2 flex-shrink-0 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors cursor-pointer"
                   title="Toggle Navigation Menu"
                 >
                   {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -68,27 +68,30 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               <div
                 onClick={() => setActiveTab('landing')}
-                className="flex items-center space-x-2.5 cursor-pointer group"
+                className="flex items-center space-x-2 sm:space-x-2.5 cursor-pointer group min-w-0"
               >
-                <CollegeLogo size={34} className="transition-transform group-hover:scale-105" />
-                <div className="flex flex-col">
-                  <div className="flex items-center space-x-1.5">
-                    <span className="font-black text-sm sm:text-base tracking-tight text-gray-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                      NANDHA LEETCODE INTELLIGENCE
+                <div className="flex-shrink-0 flex items-center justify-center">
+                  <div className="sm:hidden"><CollegeLogo size={28} className="transition-transform group-hover:scale-105" /></div>
+                  <div className="hidden sm:block"><CollegeLogo size={34} className="transition-transform group-hover:scale-105" /></div>
+                </div>
+                <div className="flex flex-col justify-center min-w-0">
+                  <div className="flex items-center space-x-1.5 min-w-0">
+                    <span className="font-black text-[11px] leading-[1.1] sm:text-base sm:leading-tight tracking-tight text-gray-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors truncate">
+                      <span className="hidden sm:inline">NANDHA </span>LEETCODE INTELLIGENCE
                     </span>
-                    <span className="hidden sm:inline-flex px-1.5 py-0.2 text-[9px] font-black rounded bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+                    <span className="hidden sm:inline-flex px-1.5 py-0.2 text-[9px] font-black rounded bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 whitespace-nowrap flex-shrink-0">
                       {freshness?.total_students ? `${freshness.total_students} STUDENTS` : '1500+ STUDENTS'}
                     </span>
                   </div>
-                  <span className="text-[11px] text-gray-500 dark:text-gray-400 font-semibold tracking-wide">
-                    Nandha Engineering College • Erode
+                  <span className="text-[9px] leading-[1.1] sm:text-[11px] sm:leading-snug text-gray-500 dark:text-gray-400 font-semibold tracking-wide truncate">
+                    Nandha Engineering College<span className="hidden sm:inline"> • Erode</span>
                   </span>
                 </div>
               </div>
             </div>
 
             {/* Middle: Quick Status Indicator */}
-            <div className="hidden md:flex items-center space-x-4">
+            <div className="hidden md:flex items-center space-x-4 flex-shrink-0 mx-2">
               <div className="flex items-center space-x-2.5 px-3.5 py-1.5 rounded-2xl bg-slate-100/90 dark:bg-navy-950/90 border border-slate-200 dark:border-navy-800 text-xs shadow-inner">
                 <div className={`w-2.5 h-2.5 rounded-full ${
                   currentSessionStatus === 'ACTIVE' || currentSessionStatus === 'LIVE' || currentSessionStatus === 'RUNNING'
@@ -113,7 +116,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             {/* Right: Actions */}
-            <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="flex items-center space-x-1.5 sm:space-x-3 flex-shrink-0">
               
               <LiveIndicator />
 
@@ -131,28 +134,28 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={toggleTheme}
-                className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-navy-800 transition-all duration-200 cursor-pointer active:scale-90"
+                className="p-1.5 sm:p-2 flex-shrink-0 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-navy-800 transition-all duration-200 cursor-pointer active:scale-90"
                 title="Toggle Dark / Light Mode"
               >
                 {theme === 'dark' ? (
-                  <Sun className="w-4 h-4 text-amber-400 transition-transform duration-300 hover:rotate-90" />
+                  <Sun className="w-4 h-4 sm:w-4 sm:h-4 text-amber-400 transition-transform duration-300 hover:rotate-90" />
                 ) : (
-                  <Moon className="w-4 h-4 text-navy-700 transition-transform duration-300 hover:-rotate-12" />
+                  <Moon className="w-4 h-4 sm:w-4 sm:h-4 text-navy-700 transition-transform duration-300 hover:-rotate-12" />
                 )}
               </button>
 
               {/* Auth Profile / Login */}
               {isAuthenticated && user ? (
-                <div className="flex items-center space-x-3 pl-2 border-l border-gray-200 dark:border-navy-700">
-                  <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 sm:space-x-3 pl-1 sm:pl-2 border-l border-gray-200 dark:border-navy-700">
+                  <div className="flex items-center space-x-2 flex-shrink-0">
                     {user.photoURL ? (
                       <img
                         src={user.photoURL}
                         alt={user.name}
-                        className="w-8 h-8 rounded-full border-2 border-brand-500 object-cover"
+                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-brand-500 object-cover"
                       />
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-brand-600 text-white font-black text-xs flex items-center justify-center">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-brand-600 text-white font-black text-xs flex items-center justify-center">
                         {user.name ? user.name[0] : 'U'}
                       </div>
                     )}
@@ -168,10 +171,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowLogoutConfirm(true)}
-                    className="p-2 rounded-xl text-gray-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors flex items-center space-x-1 cursor-pointer"
+                    className="p-1.5 sm:p-2 flex-shrink-0 rounded-xl text-gray-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors flex items-center space-x-1 cursor-pointer"
                     title="Sign Out"
                   >
-                    <LogOut className="w-4 h-4 text-rose-500" />
+                    <LogOut className="w-4 h-4 sm:w-4 sm:h-4 text-rose-500" />
                     <span className="hidden sm:inline text-rose-600 font-bold text-xs">Sign Out</span>
                   </button>
                 </div>
@@ -179,10 +182,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={onOpenLogin}
-                  className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md shadow-brand-600/30 transition-all flex items-center space-x-1.5 cursor-pointer"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md shadow-brand-600/30 transition-all flex items-center space-x-1.5 cursor-pointer flex-shrink-0"
                 >
                   <User className="w-4 h-4" />
-                  <span>Portal Sign In</span>
+                  <span className="hidden sm:inline">Portal Sign In</span>
+                  <span className="sm:hidden">Sign In</span>
                 </button>
               )}
 

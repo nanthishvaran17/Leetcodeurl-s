@@ -290,7 +290,9 @@ def get_faculty_actions_list(
     search: Optional[str] = None,
     limit: int = 100,
     offset: int = 0,
-    faculty_id: Optional[int] = None  # Scope to assigned students only
+    faculty_id: Optional[int] = None,  # Scope to assigned students only
+    is_overdue: Optional[bool] = None,
+    is_escalated: Optional[bool] = None
 ) -> Dict[str, Any]:
     """
     Returns filtered and sorted faculty action queue items with real student context.
@@ -318,6 +320,16 @@ def get_faculty_actions_list(
 
     if year_level and year_level.upper() != "ALL":
         query = query.filter(Student.year_level.ilike(f"%{year_level}%"))
+
+    if is_overdue:
+        now = datetime.datetime.utcnow()
+        query = query.filter(
+            FacultyActionQueueItem.follow_up_date < now,
+            FacultyActionQueueItem.status.notin_(["Completed", "Resolved"])
+        )
+
+    if is_escalated:
+        query = query.filter(FacultyActionQueueItem.is_escalated == True)
 
     if search and search.strip():
         term = f"%{search.strip().lower()}%"
@@ -423,11 +435,18 @@ def get_faculty_actions_list(
 
 
 # ── Top KPI Aggregator ────────────────────────────────────────────────────────
-def get_faculty_kpis(db: Session, department_id: Optional[int] = None, faculty_id: Optional[int] = None) -> Dict[str, Any]:
+def get_faculty_kpis(
+    db: Session, 
+    department_id: Optional[int] = None, 
+    faculty_id: Optional[int] = None,
+    year_level: Optional[str] = None,
+    search: Optional[str] = None
+) -> Dict[str, Any]:
     """
     Computes real database KPI card metrics for Faculty Action Center:
     🔴 Critical, 🟠 High, 🟡 Monitoring, 🔵 In Progress, 🟢 Completed, ✅ Resolved.
     When faculty_id is provided, scopes to that faculty's assigned students only.
+    Applies year_level and search filters if provided so counts match the filtered list.
     """
     query = db.query(FacultyActionQueueItem).join(Student, FacultyActionQueueItem.student_id == Student.id)
     if department_id and department_id > 0:
@@ -440,6 +459,21 @@ def get_faculty_kpis(db: Session, department_id: Optional[int] = None, faculty_i
             FacultyStudentAssignment.is_active == True
         ).scalar_subquery()
         query = query.filter(FacultyActionQueueItem.student_id.in_(assigned_ids))
+
+    if year_level and year_level.upper() != "ALL":
+        query = query.filter(Student.year_level.ilike(f"%{year_level}%"))
+
+    if search and search.strip():
+        term = f"%{search.strip().lower()}%"
+        query = query.filter(
+            or_(
+                Student.name.ilike(term),
+                Student.reg_no.ilike(term),
+                Student.username.ilike(term),
+                FacultyActionQueueItem.reason.ilike(term),
+                FacultyActionQueueItem.assigned_faculty_name.ilike(term)
+            )
+        )
 
     total_actions = query.count()
     critical_count = query.filter(FacultyActionQueueItem.priority == "Critical").count()

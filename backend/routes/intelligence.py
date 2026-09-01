@@ -144,6 +144,8 @@ class FacultyEscalateRequest(BaseModel):
 @router.get("/faculty/actions/kpis")
 def get_faculty_kpis_endpoint(
     dept_id: Optional[int] = None,
+    year_level: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("faculty", "staff", "hod", "admin", "super_admin", "super admin"))
 ):
@@ -163,7 +165,7 @@ def get_faculty_kpis_endpoint(
             return {"Critical": 0, "High": 0, "Monitoring": 0, "In Progress": 0, "Completed": 0, "Resolved": 0, "Overdue": 0, "Escalated": 0, "total": 0}
         eff_dept_id = current_user.department_id
 
-    return get_faculty_kpis(db, department_id=eff_dept_id, faculty_id=faculty_id)
+    return get_faculty_kpis(db, department_id=eff_dept_id, faculty_id=faculty_id, year_level=year_level, search=search)
 
 
 @router.get("/faculty/actions")
@@ -174,6 +176,8 @@ def get_faculty_actions_endpoint(
     dept_id: Optional[int] = Query(None),
     year_level: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
+    is_overdue: Optional[bool] = Query(None),
+    is_escalated: Optional[bool] = Query(None),
     sort_by: Optional[str] = Query("priority_score"),
     sort_dir: Optional[str] = Query("desc"),
     page: int = Query(1, ge=1),
@@ -212,7 +216,9 @@ def get_faculty_actions_endpoint(
         search=search,
         limit=eff_limit,
         offset=eff_offset,
-        faculty_id=faculty_id
+        faculty_id=faculty_id,
+        is_overdue=is_overdue,
+        is_escalated=is_escalated
     )
     if data["total"] == 0 and not search and not priority and not status:
         detect_and_sync_faculty_signals(db)
@@ -225,7 +231,9 @@ def get_faculty_actions_endpoint(
             search=search,
             limit=eff_limit,
             offset=eff_offset,
-            faculty_id=faculty_id
+            faculty_id=faculty_id,
+            is_overdue=is_overdue,
+            is_escalated=is_escalated
         )
     data["page"] = page
     data["page_size"] = eff_limit
