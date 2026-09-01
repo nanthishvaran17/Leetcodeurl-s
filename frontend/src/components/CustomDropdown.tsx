@@ -105,7 +105,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={triggerClassName || `w-full h-10 flex items-center justify-between px-3.5 rounded-2xl border transition-all duration-200 text-left cursor-pointer group shadow-sm ${
+        className={triggerClassName || `w-full h-11 flex items-center justify-between px-4 rounded-2xl border transition-all duration-200 text-left cursor-pointer group shadow-sm ${
           isOpen
             ? 'bg-white dark:bg-slate-800 border-brand-500 ring-2 ring-brand-500/20 shadow-md shadow-brand-500/10'
             : 'bg-white dark:bg-slate-800/90 hover:bg-gray-50 dark:hover:bg-slate-800 border-gray-200 dark:border-gray-700/80 hover:border-brand-500/40'
@@ -125,7 +125,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
                 {selectedOption.badge}
               </span>
             )}
-            <span className={`text-xs truncate ${
+            <span className={`text-sm truncate ${
               selectedOption ? 'font-bold text-gray-900 dark:text-gray-100' : 'font-semibold text-gray-400 dark:text-gray-500'
             }`}>
               {selectedOption ? selectedOption.label : (placeholder || label || 'Select...')}
@@ -161,7 +161,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
                   key={opt.value}
                   type="button"
                   onClick={() => handleSelect(opt.value)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs font-bold transition-all cursor-pointer group ${
+                  className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-sm font-bold transition-all cursor-pointer group ${
                     isSelected
                       ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-600/30'
                       : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-800'

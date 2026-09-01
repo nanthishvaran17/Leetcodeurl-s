@@ -188,7 +188,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
           <form id="create-staff-form" onSubmit={handleCreate} className="space-y-6 max-w-[100%]">
             
             {/* SECTION 1: Role & Academic Scope */}
-            <section className="bg-white dark:bg-navy-900/80 rounded-2xl p-5 border border-gray-200 dark:border-navy-800 shadow-sm">
+            <section className="relative z-50 bg-white dark:bg-navy-900/80 rounded-2xl p-5 border border-gray-200 dark:border-navy-800 shadow-sm">
               <h3 className="text-xs font-bold text-brand-700 dark:text-brand-300 mb-4 flex items-center uppercase tracking-wider bg-brand-50 dark:bg-brand-500/10 p-2.5 rounded-xl">
                 <Building2 className="w-4 h-4 mr-2 text-brand-500" /> 1. Role & Academic Scope
               </h3>
@@ -244,7 +244,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
             </section>
 
             {/* SECTION 2: User Identity & Credentials */}
-            <section className="bg-white dark:bg-navy-900/80 rounded-2xl p-5 border border-gray-200 dark:border-navy-800 shadow-sm">
+            <section className="relative z-40 bg-white dark:bg-navy-900/80 rounded-2xl p-5 border border-gray-200 dark:border-navy-800 shadow-sm">
               <h3 className="text-xs font-bold text-indigo-700 dark:text-indigo-300 mb-4 flex items-center uppercase tracking-wider bg-indigo-50 dark:bg-indigo-500/10 p-2.5 rounded-xl">
                 <User className="w-4 h-4 mr-2 text-indigo-500" /> 2. User Identity & Credentials
               </h3>
@@ -346,7 +346,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
             </section>
 
             {/* SECTION 3: Staff Verification */}
-            <section className="bg-white dark:bg-navy-900/80 rounded-2xl p-5 border border-gray-200 dark:border-navy-800 shadow-sm">
+            <section className="relative z-30 bg-white dark:bg-navy-900/80 rounded-2xl p-5 border border-gray-200 dark:border-navy-800 shadow-sm">
               <h3 className="text-xs font-bold text-emerald-700 dark:text-emerald-300 mb-4 flex items-center uppercase tracking-wider bg-emerald-50 dark:bg-emerald-500/10 p-2.5 rounded-xl">
                 <FileCheck className="w-4 h-4 mr-2 text-emerald-500" /> 3. Staff Verification
               </h3>
@@ -368,7 +368,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
             </section>
 
             {/* SECTION 4: Security & Password */}
-            <section className="bg-white dark:bg-navy-900/80 rounded-2xl p-5 border border-gray-200 dark:border-navy-800 shadow-sm">
+            <section className="relative z-20 bg-white dark:bg-navy-900/80 rounded-2xl p-5 border border-gray-200 dark:border-navy-800 shadow-sm">
               <h3 className="text-xs font-bold text-rose-700 dark:text-rose-300 mb-4 flex items-center uppercase tracking-wider bg-rose-50 dark:bg-rose-500/10 p-2.5 rounded-xl">
                 <Key className="w-4 h-4 mr-2 text-rose-500" /> 4. Security & Password
               </h3>
@@ -411,7 +411,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
             </section>
 
             {/* SECTION 5: Account Status & Agreement */}
-            <section className="bg-brand-50/40 dark:bg-navy-900/80 rounded-2xl p-5 border border-brand-100 dark:border-navy-800 shadow-sm">
+            <section className="relative z-10 bg-brand-50/40 dark:bg-navy-900/80 rounded-2xl p-5 border border-brand-100 dark:border-navy-800 shadow-sm">
               <h3 className="text-xs font-bold text-sky-700 dark:text-sky-300 mb-4 flex items-center uppercase tracking-wider bg-sky-50 dark:bg-sky-500/10 p-2.5 rounded-xl">
                 <CheckCircle className="w-4 h-4 mr-2 text-sky-500" /> 5. Account Status & Agreement
               </h3>
