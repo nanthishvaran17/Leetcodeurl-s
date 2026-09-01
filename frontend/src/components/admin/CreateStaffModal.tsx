@@ -16,10 +16,17 @@ interface CreateStaffModalProps {
 export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onSuccess, departments, staffList, notify }) => {
   const storeVersion = useStudentStoreVersion(); // Triggers re-render when live data changes
 
-  // Derive dynamic Academic Year options from live students
+  // Derive dynamic Academic Year options from live students, with fallback if store is empty
   const academicYearOptions = useMemo(() => {
     const students = Object.values(studentLiveStore.getAllEntities());
     const years = new Set<string>();
+    
+    // Add standard fallbacks so the dropdown is never empty
+    years.add('2023-2027');
+    years.add('2024-2028');
+    years.add('2025-2029');
+    years.add('2026-2030');
+
     students.forEach((s: any) => {
       if (s.academic_year) {
         years.add(s.academic_year.trim());
@@ -41,13 +48,28 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
     return options;
   }, [storeVersion]);
 
+
   // Transform Departments into DropdownOptions
   const departmentOptions: DropdownOption[] = useMemo(() => {
-    return departments.map(d => ({
-      value: String(d.id),
-      label: d.name,
-      badge: d.code || 'DEPT'
-    }));
+    const opts: DropdownOption[] = [
+      {
+        value: '0',
+        label: 'All Departments (Global)',
+        badge: 'ALL',
+        badgeColor: 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300 border border-brand-200 dark:border-brand-500/30'
+      }
+    ];
+    
+    departments.forEach(d => {
+      opts.push({
+        value: String(d.id),
+        label: d.name,
+        badge: d.code || 'DEP',
+        badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30'
+      });
+    });
+    
+    return opts;
   }, [departments]);
 
   const staffOptions: DropdownOption[] = useMemo(() => {

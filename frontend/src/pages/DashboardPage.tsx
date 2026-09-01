@@ -504,7 +504,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   </td>
                 </tr>
               ) : (
-                departments.map((dept) => (
+                [...departments]
+                  .sort((a, b) => {
+                    const isACse = a.department_code?.startsWith('CSE');
+                    const isBCse = b.department_code?.startsWith('CSE');
+                    if (isACse && !isBCse) return -1;
+                    if (!isACse && isBCse) return 1;
+                    return (a.department_code || '').localeCompare(b.department_code || '');
+                  })
+                  .map((dept) => (
                   <tr key={dept.department_code || dept.department_id} className="hover:bg-gray-50 dark:hover:bg-navy-800/50 transition-colors">
                     <td className="py-3 px-4">
                       <div className="font-black text-gray-900 dark:text-white">{dept.department_code}</div>
