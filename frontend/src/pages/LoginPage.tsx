@@ -403,13 +403,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
   
   return (
     <div className="login-page-container">
-      {/* Mobile Branding Header */}
+      {/* Mobile Branding Header with Official College Image & Premium Institutional Card */}
       <div className="mobile-header hide-on-desktop">
-        <CollegeLogo className="mobile-brand-mark" size={40} />
-        <div className="mobile-brand-text">
-          <p className="mobile-eyebrow">INSTITUTIONAL PORTAL</p>
+        <div className="mobile-header-bg">
+          <img src="/nandha_gate_bg.jpg" alt="Nandha Engineering College" className="mobile-header-img" />
+          <div className="mobile-header-overlay" />
+        </div>
+        <div className="mobile-header-content">
+          <div className="mobile-badge-row">
+            <CollegeLogo className="mobile-brand-mark" size={44} />
+            <span className="mobile-eyebrow">NANDHA ENGINEERING COLLEGE</span>
+          </div>
           <h1 className="mobile-name">Nandha LeetCode Intelligence</h1>
-          <p className="mobile-sub">Nandha Engineering College (Autonomous) · Erode</p>
+          <p className="mobile-sub">Official Algorithmic Performance & Forensic Portal · Erode</p>
         </div>
       </div>
 
