@@ -52,15 +52,13 @@ export const FastStudentRow = memo(({
   onDelete 
 }: any) => {
   const student = useStudentEntity(studentId);
-  
-  if (!student) return null;
 
-  const syncState = getSyncState(student.stats?.sync_status, student.stats?.last_verified_at);
+  const syncState = getSyncState(student?.stats?.sync_status, student?.stats?.last_verified_at);
   const isVerified = syncState === 'verified' || syncState === 'stale';
-  const totalSolved = isVerified ? (student.stats?.total_solved ?? 0) : null;
+  const totalSolved = (student && isVerified) ? (student.stats?.total_solved ?? 0) : null;
   const isSolver = isVerified && (totalSolved ?? 0) > 0;
   
-  const effectiveCollegeRank = student.college_rank || (isSolver ? index + 1 : undefined);
+  const effectiveCollegeRank = student?.college_rank || (isSolver ? index + 1 : undefined);
   const isSyncing = syncState === 'fetching';
 
   const [flashSolved, setFlashSolved] = React.useState(false);
@@ -75,6 +73,8 @@ export const FastStudentRow = memo(({
     }
     prevSolvedRef.current = totalSolved;
   }, [totalSolved]);
+
+  if (!student) return null;
 
   return (
     <div 
