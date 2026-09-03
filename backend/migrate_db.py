@@ -258,6 +258,32 @@ def run_db_migrations():
         except Exception:
             pass  # Already exists
 
+        # Ensure students table has people_id column in SQLite
+        try:
+            cursor.execute("PRAGMA table_info(students)")
+            stud_cols = [info[1] for info in cursor.fetchall()]
+            if "people_id" not in stud_cols:
+                cursor.execute("ALTER TABLE students ADD COLUMN people_id VARCHAR(50)")
+                conn.commit()
+                print("[DB Migration] Added people_id column to students table in SQLite.")
+        except Exception as _stud_col_err:
+            print(f"[DB Migration] students people_id migration note: {_stud_col_err}")
+
+        # Ensure scheduled_job_executions table has error_message, last_error, next_run in SQLite
+        try:
+            cursor.execute("PRAGMA table_info(scheduled_job_executions)")
+            job_cols = [info[1] for info in cursor.fetchall()]
+            if "error_message" not in job_cols:
+                cursor.execute("ALTER TABLE scheduled_job_executions ADD COLUMN error_message TEXT")
+            if "last_error" not in job_cols:
+                cursor.execute("ALTER TABLE scheduled_job_executions ADD COLUMN last_error TEXT")
+            if "next_run" not in job_cols:
+                cursor.execute("ALTER TABLE scheduled_job_executions ADD COLUMN next_run TIMESTAMP")
+            conn.commit()
+            print("[DB Migration] Added missing columns to scheduled_job_executions table in SQLite.")
+        except Exception as _job_col_err:
+            print(f"[DB Migration] scheduled_job_executions column migration note: {_job_col_err}")
+
         columns_to_add = [
             ("recent_contest_name",  "VARCHAR(150)"),
             ("recent_contest_score", "VARCHAR(20)"),
