@@ -2179,6 +2179,8 @@ class ScheduledJobExecution(Base):
     completed_at = Column(DateTime, nullable=True)
     status = Column(String(50), default="PENDING")
     error_message = Column(Text, nullable=True)
+    last_error = Column(Text, nullable=True)
+    next_run = Column(DateTime, nullable=True)
 
 
 class ContestConfig(Base):

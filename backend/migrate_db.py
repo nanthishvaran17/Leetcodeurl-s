@@ -39,6 +39,7 @@ def run_db_migrations():
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS reporting_manager_id INTEGER",
             # ── students table ───────────────────────────────────────────────
+            "ALTER TABLE students ADD COLUMN IF NOT EXISTS people_id VARCHAR(50)",
             "ALTER TABLE students ADD COLUMN IF NOT EXISTS phone_number VARCHAR(30)",
             "ALTER TABLE students ADD COLUMN IF NOT EXISTS whatsapp_verified BOOLEAN DEFAULT FALSE",
             "ALTER TABLE students ADD COLUMN IF NOT EXISTS date_of_birth DATE",
@@ -142,6 +143,10 @@ def run_db_migrations():
             "ALTER TABLE official_weekly_snapshots ADD COLUMN IF NOT EXISTS session_data_hash VARCHAR(128)",
             "ALTER TABLE official_weekly_snapshots ADD COLUMN IF NOT EXISTS reconciliation_summary TEXT",
             "ALTER TABLE official_weekly_snapshots ADD COLUMN IF NOT EXISTS snapshot_version INTEGER DEFAULT 1",
+            # ── scheduled_job_executions table ───────────────────────────────
+            "ALTER TABLE scheduled_job_executions ADD COLUMN IF NOT EXISTS error_message TEXT",
+            "ALTER TABLE scheduled_job_executions ADD COLUMN IF NOT EXISTS last_error TEXT",
+            "ALTER TABLE scheduled_job_executions ADD COLUMN IF NOT EXISTS next_run TIMESTAMP",
             
             # ── Session Recovery ─────────────────────────────────────────────
             "UPDATE weekly_sessions SET status = 'SCHEDULED' WHERE status = 'FINALIZED' AND id NOT IN (SELECT session_id FROM official_weekly_snapshots)",

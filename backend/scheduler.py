@@ -102,6 +102,7 @@ def apscheduler_listener(event):
             scheduled_at=event.scheduled_run_time if hasattr(event, 'scheduled_run_time') else None,
             completed_at=datetime.datetime.utcnow(),
             status=status,
+            error_message=str(event.exception) if hasattr(event, 'exception') and event.exception else None,
             last_error=str(event.exception) if hasattr(event, 'exception') and event.exception else None,
             next_run=next_run
         )
