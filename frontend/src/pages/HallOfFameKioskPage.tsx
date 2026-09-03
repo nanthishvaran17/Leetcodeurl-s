@@ -250,7 +250,7 @@ export const HallOfFameKioskPage: React.FC = () => {
               {/* Gold (Rank 1) */}
               <div className="bg-gradient-to-b from-amber-500/20 to-slate-900/90 rounded-3xl p-8 border-2 border-amber-400 text-center shadow-lg shadow-amber-500/20 scale-105">
                 <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-yellow-300 to-amber-500 text-slate-950 font-black text-3xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-amber-500/40 animate-bounce">
-                  👑 1
+                  1
                 </div>
                 <span className="text-xs font-extrabold uppercase px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
                   COLLEGE TOPPER
@@ -346,10 +346,10 @@ export const HallOfFameKioskPage: React.FC = () => {
 
             <div className="grid grid-cols-4 gap-4">
               {[
-                { title: "100-Day Streak Knight", icon: "🔥", desc: "100+ consecutive days active", holders: 48, grad: "from-orange-500 to-amber-600" },
-                { title: "Speed Demon", icon: "⚡", desc: "Q1+Q2 in < 10 mins", holders: 34, grad: "from-cyan-500 to-blue-600" },
-                { title: "Algorithm Master", icon: "🧠", desc: "30+ Hard problems solved", holders: 22, grad: "from-purple-500 to-indigo-600" },
-                { title: "Grandmaster", icon: "💎", desc: "2000+ Contest Rating", holders: 9, grad: "from-emerald-500 to-teal-600" }
+                { title: "100-Day Streak Knight", icon: "", desc: "100+ consecutive days active", holders: 48, grad: "from-orange-500 to-amber-600" },
+                { title: "Speed Demon", icon: "", desc: "Q1+Q2 in < 10 mins", holders: 34, grad: "from-cyan-500 to-blue-600" },
+                { title: "Algorithm Master", icon: "", desc: "30+ Hard problems solved", holders: 22, grad: "from-purple-500 to-indigo-600" },
+                { title: "Grandmaster", icon: "", desc: "2000+ Contest Rating", holders: 9, grad: "from-emerald-500 to-teal-600" }
               ].map((badge) => (
                 <div key={badge.title} className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 text-center backdrop-blur-xl relative overflow-hidden">
                   <div className={`w-16 h-16 rounded-2xl bg-gradient-to-tr ${badge.grad} text-3xl flex items-center justify-center mx-auto mb-3 shadow-lg`}>
@@ -375,7 +375,7 @@ export const HallOfFameKioskPage: React.FC = () => {
           </span>
           <div className="overflow-hidden whitespace-nowrap w-full">
             <p className="inline-block animate-marquee text-slate-300 font-medium">
-              🔥 Next LeetCode Sunday Weekly Contest starts sharp at 08:00 AM IST • Mandatory for all 2nd, 3rd, and 4th Year Engineering students • Automated Anti-Cheat & Plagiarism Engine is actively monitoring • Top 3 winners receive College Honor Certificates • 1:20 Faculty Mentoring sessions scheduled for Wednesday afternoon.
+              Next LeetCode Sunday Weekly Contest starts sharp at 08:00 AM IST • Mandatory for all 2nd, 3rd, and 4th Year Engineering students • Automated Anti-Cheat & Plagiarism Engine is actively monitoring • Top 3 winners receive College Honor Certificates • 1:20 Faculty Mentoring sessions scheduled for Wednesday afternoon.
             </p>
           </div>
         </div>

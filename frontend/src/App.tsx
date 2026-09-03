@@ -1,5 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
+import { App as CapacitorApp } from '@capacitor/app';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
@@ -19,6 +20,7 @@ import { useAuth } from './context/AuthContext';
 import { useKeyboardContext } from './context/KeyboardContext';
 import { CommandPalette } from './components/CommandPalette';
 import { useGlobalKeyboardShortcuts } from './hooks/useGlobalKeyboardShortcuts';
+import { initPushNotifications } from './services/pushNotifications';
 
 // Lazy-loaded heavy page modules for 60%+ smaller initial bundle size & ultra-fast initial load
 const ComparePage = lazy(() => import('./pages/ComparePage').then(m => ({ default: m.ComparePage })));
@@ -41,6 +43,7 @@ const StudentDataIssuesPage = lazy(() => import('./pages/StudentDataIssuesPage')
 const HallOfFameKioskPage = lazy(() => import('./pages/HallOfFameKioskPage').then(m => ({ default: m.HallOfFameKioskPage })));
 const AccreditationStudioPage = lazy(() => import('./pages/AccreditationStudioPage').then(m => ({ default: m.AccreditationStudioPage })));
 const AccessDeniedPage = lazy(() => import('./pages/AccessDeniedPage').then(m => ({ default: m.AccessDeniedPage })));
+const ContestIntegrityMonitor = lazy(() => import('./pages/ContestIntegrityMonitor').then(m => ({ default: m.ContestIntegrityMonitor })));
 
 const PageSkeleton = () => (
   <div className="p-8 text-center py-20 text-brand-600 dark:text-brand-400 font-bold space-y-3 animate-pulse">
@@ -117,6 +120,43 @@ export const App: React.FC = () => {
       document.body.style.overflow = 'unset';
     };
   }, [showLoginModal]);
+
+  // Initialize Native FCM Push Notifications
+  useEffect(() => {
+    initPushNotifications();
+  }, []);
+
+  // Handle Capacitor Android Hardware Back Button
+  useEffect(() => {
+    const initBackButton = async () => {
+      try {
+        await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+          if (selectedStudent) {
+            setSelectedStudent(null);
+          } else if (showLoginModal) {
+            setShowLoginModal(false);
+          } else if (showAlertCenterModal) {
+            setShowAlertCenterModal(false);
+          } else if (showImportModal) {
+            setShowImportModal(false);
+          } else if (activeTab !== 'landing' && activeTab !== 'dashboard') {
+            setActiveTab(isAuthenticated ? 'dashboard' : 'landing');
+          } else if (canGoBack) {
+            window.history.back();
+          } else {
+            CapacitorApp.exitApp();
+          }
+        });
+      } catch (e) {
+        // Not running in capacitor, ignore
+      }
+    };
+    initBackButton();
+    return () => {
+      CapacitorApp.removeAllListeners();
+    };
+  }, [selectedStudent, showLoginModal, showAlertCenterModal, showImportModal, activeTab, isAuthenticated]);
+
 
 
   const fetchSummary = async () => {
@@ -412,6 +452,12 @@ export const App: React.FC = () => {
                 isTabAllowed('faculty-action-center')
                   ? <FacultyActionCenter />
                   : renderAccessDenied('Faculty Action Center')
+              )}
+
+              {activeTab === 'integrity-monitor' && (
+                isTabAllowed('integrity-monitor')
+                  ? <ContestIntegrityMonitor />
+                  : renderAccessDenied('Contest Integrity Monitor')
               )}
 
               {activeTab === 'growth' && (

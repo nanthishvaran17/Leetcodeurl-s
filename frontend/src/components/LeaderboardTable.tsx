@@ -150,18 +150,19 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
 }) => {
   // Use the WebSocket hook (which now manages the external store)
   const { isConnected } = useLiveLeaderboard();
-  const filteredStudents = useFilteredStudents();
+  const globalFilteredStudents = useFilteredStudents();
   const { isFilteringActive } = useFilters();
 
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: 'solved', direction: 'desc' });
 
-  // Note: We no longer call studentLiveStore.reconcile(students) here.
-  // It caused bugs when a paginated/filtered slice was passed in, deleting the rest of the store.
-  // Reconciliation is now handled globally inside useStudentsQuery.ts.
+  // Use explicit `students` prop if provided by parent component (e.g. DepartmentDashboard), otherwise fallback to global FilterContext
+  const effectiveStudents = useMemo(() => {
+    return (students && Array.isArray(students)) ? students : globalFilteredStudents;
+  }, [students, globalFilteredStudents]);
 
-  // Apply Sort on top of Filtered List
+  // Apply Sort on top of effective Student List
   const sortedStudents = useMemo(() => {
-    const list = [...filteredStudents];
+    const list = [...effectiveStudents];
     list.sort((a, b) => {
       let valA: any = 0;
       let valB: any = 0;
@@ -182,7 +183,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
       return 0;
     });
     return list;
-  }, [filteredStudents, sortConfig]);
+  }, [effectiveStudents, sortConfig]);
 
   const { notify, confirmAction } = useNotification();
   const queryClient = useQueryClient();
@@ -232,13 +233,13 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   }, [totalPages, currentPage]);
 
   const paginatedStudents = useMemo(() => {
-    if (isServerPaginated) return students; // The server already paginated them!
+    if (isServerPaginated) return effectiveStudents; // The server already paginated them!
     
     if (pageSize === 'All') return sortedStudents;
     const size = Number(pageSize);
     const start = (currentPage - 1) * size;
     return sortedStudents.slice(start, start + size);
-  }, [sortedStudents, students, currentPage, pageSize, isServerPaginated]);
+  }, [sortedStudents, effectiveStudents, currentPage, pageSize, isServerPaginated]);
 
   const handlePageChange = (newPage: number) => {
     if (isServerPaginated && onServerPageChange) {
@@ -336,9 +337,9 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
 
   const getRankBadge = (rank?: number) => {
     if (!rank) return null;
-    if (rank === 1) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300">🥇 #1</span>;
-    if (rank === 2) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-300">🥈 #2</span>;
-    if (rank === 3) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-800/20 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 border border-amber-600/30">🥉 #3</span>;
+    if (rank === 1) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300">#1</span>;
+    if (rank === 2) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-300">#2</span>;
+    if (rank === 3) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-800/20 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 border border-amber-600/30">#3</span>;
     return <span className="text-xs font-semibold text-gray-500">#{rank}</span>;
   };
 
@@ -545,10 +546,10 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
       </div>
 
       {/* Sleek Ultra-Fast Pagination Bar */}
-      {students.length > 0 && (
+      {effectiveStudents.length > 0 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 mt-3 bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 rounded-2xl text-xs font-semibold text-gray-600 dark:text-gray-300 shadow-sm">
           <div className="flex items-center space-x-2">
-            <span>Showing <strong className="text-gray-900 dark:text-white font-extrabold">{pageSize === 'All' ? 1 : (currentPage - 1) * Number(pageSize) + 1}</strong> to <strong className="text-gray-900 dark:text-white font-extrabold">{pageSize === 'All' ? students.length : Math.min(currentPage * Number(pageSize), students.length)}</strong> of <strong className="text-brand-600 dark:text-brand-400 font-extrabold">{students.length}</strong> solvers</span>
+            <span>Showing <strong className="text-gray-900 dark:text-white font-extrabold">{pageSize === 'All' ? 1 : (currentPage - 1) * Number(pageSize) + 1}</strong> to <strong className="text-gray-900 dark:text-white font-extrabold">{pageSize === 'All' ? effectiveStudents.length : Math.min(currentPage * Number(pageSize), effectiveStudents.length)}</strong> of <strong className="text-brand-600 dark:text-brand-400 font-extrabold">{effectiveStudents.length}</strong> solvers</span>
           </div>
 
           <div className="flex items-center space-x-4">
@@ -664,7 +665,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                 Are you sure you want to deactivate <strong className="text-gray-900 dark:text-white">{deletingStudent.name}</strong> ({deletingStudent.reg_no})?
               </p>
               <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold bg-amber-50 dark:bg-amber-950/40 p-2 rounded-xl border border-amber-200 dark:border-amber-900/40">
-                ⚠️ Soft Delete: Record will be hidden from public leaderboard but preserved in audit logs.
+                Soft Delete: Record will be hidden from public leaderboard but preserved in audit logs.
               </p>
             </div>
             <div className="flex items-center space-x-3 pt-2">

@@ -210,7 +210,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
                 <span>{isCompleted ? 'Excel Import Complete' : isImporting ? 'High-Speed Excel Import Active' : 'Import Students from Excel'}</span>
                 {isImporting && (
                   <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-black uppercase tracking-wider animate-pulse">
-                    ⚡ LIVE PROCESSING
+                    LIVE PROCESSING
                   </span>
                 )}
               </h3>
@@ -256,7 +256,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
                   onClick={handleDownloadSample}
                   className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl shadow-md transition-all flex items-center space-x-1.5 cursor-pointer text-xs shrink-0"
                 >
-                  <span>📥</span>
+                  <span></span>
                   <span>Download Sample</span>
                 </button>
               </div>

@@ -400,9 +400,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     }
   };
 
+  
   return (
     <div className="login-page-container">
+      {/* Mobile Branding Header */}
+      <div className="mobile-header hide-on-desktop">
+        <CollegeLogo className="mobile-brand-mark" size={40} />
+        <div className="mobile-brand-text">
+          <p className="mobile-eyebrow">INSTITUTIONAL PORTAL</p>
+          <h1 className="mobile-name">Nandha LeetCode Intelligence</h1>
+          <p className="mobile-sub">Nandha Engineering College (Autonomous) · Erode</p>
+        </div>
+      </div>
+
       <div className="login-frame">
+
         {/* LEFT PANEL */}
         <div className="panel-left cinematic-bg-anim">
           <div className="grid-texture"></div>
@@ -517,13 +529,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                 <form onSubmit={handlePasswordLogin}>
                   <div className="field">
                     <label htmlFor="userId">Institutional Email or User ID</label>
-                    <input id="userId" type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username or email@nandha.edu.in" autoComplete="username" required disabled={loading} />
+                    <div className="input-wrap">
+                      <User className="input-icon" size={18} />
+                      <input id="userId" type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="id, username or faculty@nandhaengg.org" autoComplete="username" required disabled={loading} style={{ paddingLeft: '2.5rem' }} />
+                    </div>
                   </div>
 
                   <div className="field">
                     <label htmlFor="password">Password</label>
                     <div className="input-wrap">
-                      <input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete="current-password" required disabled={loading} />
+                      <Lock className="input-icon" size={18} />
+                      <input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete="current-password" required disabled={loading} style={{ paddingLeft: '2.5rem' }} />
                       <button type="button" className="toggle-visibility" onClick={() => setShowPassword(!showPassword)} aria-label="Toggle password visibility">
                         {showPassword ? (
                           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><line x1="3" y1="3" x2="21" y2="21"/></svg>
@@ -550,7 +566,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                 <form onSubmit={otpStep === 'email' ? handleSendOtp : handleVerifyOtp}>
                   <div className="field">
                     <label htmlFor="otpEmail">Institutional Email</label>
-                    <input id="otpEmail" type="email" value={otpEmail} onChange={(e) => setOtpEmail(e.target.value)} placeholder="email@nandha.edu.in" required disabled={loading || otpStep === 'verify'} />
+                    <input id="otpEmail" type="email" value={otpEmail} onChange={(e) => setOtpEmail(e.target.value)} placeholder="email@nandhaengg.org" required disabled={loading || otpStep === 'verify'} />
                   </div>
 
                   {otpStep === 'verify' && (
@@ -599,15 +615,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
 
               <div className="divider"><span>Or continue with</span></div>
 
-              <button className="google-btn" type="button" onClick={() => {
-                const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '';
-                if (!envUrl) { alert('Production API URL is not configured. Please set VITE_API_URL.'); return; }
-                const baseUrl = envUrl.replace(/\/api\/?$/, '').replace(/\/+$/, '');
-                window.location.href = `${baseUrl}/api/v1/auth/google/login`;
-              }} disabled={loading}>
-                <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.5 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.47a5.6 5.6 0 0 1-2.4 3.62v3.01h3.86c2.26-2.09 3.57-5.17 3.57-8.87z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.07 7.93-2.9l-3.86-3a7.2 7.2 0 0 1-10.7-3.79H1.4v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.37 14.31A7.2 7.2 0 0 1 5 12c0-.8.14-1.58.37-2.31v-3.1H1.4a12 12 0 0 0 0 10.82z"/><path fill="#EA4335" d="M12 4.77c1.76 0 3.34.6 4.58 1.79l3.43-3.43C17.94 1.19 15.24 0 12 0A12 12 0 0 0 1.4 6.59l3.97 3.1A7.2 7.2 0 0 1 12 4.77z"/></svg>
-                Continue with Google
-              </button>
+              <GoogleSignInButton onSuccess={onSuccess} />
 
               <div className="footer-links"><button type="button" onClick={() => { setCurrentView('help'); setError(''); }}>Need help accessing your account?</button></div>
             </motion.div>
@@ -633,7 +641,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                       }}
                       className={active ? 'step-indicator-active' : ''}
                       >
-                        {done ? '✓' : i + 1}
+                        {done ? '' : i + 1}
                       </div>
                       {i < 3 && <div style={{ flex: 1, height: 2, background: done ? 'var(--verify-green)' : 'var(--field-border)', margin: '0 4px', transition: 'all 0.3s' }} />}
                     </div>
@@ -665,7 +673,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                       type="email"
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
-                      placeholder="email@nandha.edu.in"
+                      placeholder="email@nandhaengg.org"
                       required
                       disabled={loading}
                     />
@@ -704,7 +712,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
               {forgotStep === 'verify_otp' && (
                 <form onSubmit={handleForgotVerifyOtp}>
                   <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                    <div style={{ fontSize: '28px', marginBottom: '6px' }}>📧</div>
+                    <div style={{ fontSize: '28px', marginBottom: '6px' }}></div>
                     <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.6 }}>
                       A 6-digit code was sent to<br />
                       <strong style={{ color: 'var(--text-primary)' }}>{forgotEmail}</strong>.<br />
@@ -745,7 +753,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
               {forgotStep === 'reset_password' && (
                 <form onSubmit={handleForgotResetPassword}>
                   <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px', lineHeight: 1.5 }}>
-                    Code verified ✓ — Choose a new secure password for your account.
+                    Code verified — Choose a new secure password for your account.
                   </p>
                   <div className="field">
                     <label>New Password</label>
@@ -795,7 +803,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                     />
                     {confirmPassword.length > 0 && (
                       <p style={{ fontSize: '11px', marginTop: '4px', color: newPassword === confirmPassword ? 'var(--verify-green)' : '#ef4444' }}>
-                        {newPassword === confirmPassword ? '✓ Passwords match' : '✗ Does not match'}
+                        {newPassword === confirmPassword ? 'Passwords match' : 'Does not match'}
                       </p>
                     )}
                   </div>
@@ -808,7 +816,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
               {/* STEP 4: Success */}
               {forgotStep === 'success' && (
                 <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                  <div style={{ fontSize: '48px', marginBottom: '12px' }}>🎉</div>
+                  <div style={{ fontSize: '48px', marginBottom: '12px' }}></div>
                   <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
                     Password Updated!
                   </h3>

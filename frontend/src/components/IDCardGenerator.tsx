@@ -160,7 +160,7 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
 
     ctx.fillStyle = '#F87171';
     ctx.font = '900 20px sans-serif';
-    ctx.fillText(`🔥 ${streakCount} Days`, 632, 304);
+    ctx.fillText(`${streakCount} Days`, 632, 304);
 
     // 6. Dual Digital Signature & Seal Bar (Bottom)
     const sigLineY = 375;

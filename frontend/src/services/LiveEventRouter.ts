@@ -307,7 +307,7 @@ export class LiveEventRouter {
         const cacheUpdateTime = performance.now() - batchStartTime;
         
         devLog(
-          `⚡ ${events.length} events | Network: ~${Math.max(0, totalNetworkLatency).toFixed(0)}ms | ` +
+          `${events.length} events | Network: ~${Math.max(0, totalNetworkLatency).toFixed(0)}ms | ` +
           `Cache patch: ${cacheUpdateTime.toFixed(1)}ms | TOTAL: ~${(Math.max(0, totalNetworkLatency) + cacheUpdateTime).toFixed(0)}ms`
         );
     }

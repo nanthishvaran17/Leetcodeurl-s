@@ -47,7 +47,7 @@ function LcValidationChip({ state }: { state: LcValidationState }) {
       <div className="flex flex-col gap-0.5 mt-1.5">
         <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
           <CheckCircle className="w-3.5 h-3.5" />
-          <span className="font-bold">Account verified ✓ — <span className="font-black">{state.username}</span></span>
+          <span className="font-bold">Account verified — <span className="font-black">{state.username}</span></span>
         </div>
         {(state.total_solved != null || state.contest_rating != null) && (
           <div className="text-xs text-gray-500 dark:text-gray-400 pl-5">
@@ -594,7 +594,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
             <div className="p-5 border-b border-gray-100 dark:border-gray-800 shrink-0 bg-gray-50/50 dark:bg-navy-900/50 flex items-center justify-between">
               <h3 className="text-base font-extrabold text-gray-900 dark:text-white">Add New Student Record</h3>
               <button onClick={handleCloseAddModal} className="p-1 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors cursor-pointer">
-                ✕
+               
               </button>
             </div>
 

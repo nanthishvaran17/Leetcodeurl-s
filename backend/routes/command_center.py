@@ -151,7 +151,12 @@ def get_command_center_summary(
             "assigned_count": assigned_cnt,
             "active_count": active_cnt,
             "max_allowed": MAX_STUDENTS_PER_FACULTY,
-            "workload_status": "NORMAL" if assigned_cnt < 20 else ("AT_RATIO" if assigned_cnt == 20 else "HIGH_WORKLOAD")
+            "workload_status": "NORMAL" if assigned_cnt < 20 else ("AT_RATIO" if assigned_cnt == 20 else "HIGH_WORKLOAD"),
+            "role": u.role or "Faculty",
+            "is_active": u.is_active,
+            "joined_date": u.created_at.strftime("%Y-%m-%d") if u.created_at else "N/A",
+            "last_active": u.last_activity.strftime("%Y-%m-%d") if u.last_activity else "N/A",
+            "coding_activity": sum(st.total_solved or 0 for s, st in assigned_rows if st)
         })
 
     # Unassigned student count in this scope
@@ -671,7 +676,7 @@ def get_departments(db: Session = Depends(get_db), current_user: User = Depends(
     if role_clean == "hod" and current_user.department_id:
         depts = db.query(Department).filter(Department.id == current_user.department_id).all()
     else:
-        depts = db.query(Department).all()
+        depts = db.query(Department).filter(Department.code.in_(["CSE(CS)", "CSE(IOT)"])).all()
 
     # Optimize: Pre-fetch all active student counts per department using GROUP BY
     dept_counts_query = db.query(
@@ -705,3 +710,54 @@ def get_year_matrix(db: Session = Depends(get_db), current_user: User = Depends(
 def post_ai_query(req: AIQueryRequest, db: Session = Depends(get_db)):
     from backend.services.ai_query_engine import answer_ai_department_query
     return answer_ai_department_query(db, query_text=req.query)
+
+@router.get("/department/{dept_id}/details")
+def get_department_details(dept_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    from backend.models import Student, LeetCodeProfileStats, StudentRiskProfile
+    
+    # 1. Top Performers (Top 10 by total_solved)
+    top_students = db.query(Student, LeetCodeProfileStats).outerjoin(
+        LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id
+    ).filter(
+        Student.department_id == dept_id,
+        Student.is_active == True
+    ).order_by(LeetCodeProfileStats.total_solved.desc().nulls_last()).limit(10).all()
+    
+    performers = []
+    for rank, (s, stats) in enumerate(top_students):
+        performers.append({
+            "rank": rank + 1,
+            "student_id": s.id,
+            "name": s.name,
+            "register_number": s.register_number,
+            "total_solved": stats.total_solved if stats else 0,
+            "last_active": stats.last_updated.isoformat() if stats and stats.last_updated else None
+        })
+        
+    # 2. At-Risk Students
+    risk_students = db.query(Student, StudentRiskProfile, LeetCodeProfileStats).join(
+        StudentRiskProfile, Student.id == StudentRiskProfile.student_id
+    ).outerjoin(
+        LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id
+    ).filter(
+        Student.department_id == dept_id,
+        StudentRiskProfile.risk_level.in_(["HIGH", "CRITICAL"])
+    ).order_by(StudentRiskProfile.risk_score.desc()).all()
+    
+    at_risk = []
+    for s, risk, stats in risk_students:
+        at_risk.append({
+            "student_id": s.id,
+            "name": s.name,
+            "register_number": s.register_number,
+            "risk_level": risk.risk_level,
+            "risk_score": risk.risk_score,
+            "explanation": risk.explanation,
+            "total_solved": stats.total_solved if stats else 0,
+            "last_active": stats.last_updated.isoformat() if stats and stats.last_updated else None
+        })
+        
+    return {
+        "top_performers": performers,
+        "at_risk_students": at_risk
+    }

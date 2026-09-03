@@ -61,7 +61,7 @@ export function getIstSessionTiming(): {
           isLive: true,
           secondsRemaining: Math.max(0, endSec - secondsToday),
           phase: 'LIVE_NOW',
-          headerTitle: '🟢 SUNDAY SESSION LIVE NOW',
+          headerTitle: 'SUNDAY SESSION LIVE NOW',
           subTitle: 'Official Monitoring Window: 08:00 AM – 09:30 AM IST (Remaining Time)'
         };
       } else {
@@ -150,7 +150,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
           <div>
             <div className="flex items-center space-x-2">
               <h4 className="font-black text-base text-gray-900 dark:text-white">
-                {isSessionLive ? '🟢 SUNDAY SESSION LIVE NOW' : timing.headerTitle}
+                {isSessionLive ? 'SUNDAY SESSION LIVE NOW' : timing.headerTitle}
               </h4>
               {isSessionLive ? (
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 animate-pulse">

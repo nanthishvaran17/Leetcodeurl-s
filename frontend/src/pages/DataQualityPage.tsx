@@ -69,6 +69,7 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
 
     if (!matchesSearch) return false;
     if (filterCategory === 'ALL') return true;
+    if (filterCategory === 'VALID') return item.status === 'VALID_PROFILE';
     if (filterCategory === 'MISSING') return item.status === 'MISSING_USERNAME';
     if (filterCategory === 'NOT_FOUND') return item.status === 'PROFILE_NOT_FOUND';
     if (filterCategory === 'INVALID') return item.status === 'INVALID_PROFILE_URL';
@@ -141,13 +142,13 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
         </div>
 
         <div 
-          onClick={() => setFilterCategory('ALL')}
-          className="p-5 rounded-3xl border shadow-xl text-center space-y-1 transition-all cursor-pointer hover:scale-[1.01]"
-          style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)', borderColor: 'rgba(100,116,139,0.3)' }}
+          onClick={() => setFilterCategory('VALID')}
+          className={`p-5 rounded-3xl border shadow-xl text-center space-y-1 transition-all cursor-pointer ${filterCategory === 'VALID' ? 'ring-2 ring-emerald-400 scale-[1.03]' : 'hover:scale-[1.01]'}`}
+          style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)', borderColor: 'rgba(16,185,129,0.4)' }}
         >
-          <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#94a3b8' }}>Valid Profiles</p>
+          <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#34d399' }}>Valid Profiles</p>
           <p className="text-3xl font-black text-white">{data?.valid_profiles || 0}</p>
-          <p className="text-[11px] font-bold" style={{ color: '#6b7280' }}>Strictly Identity Mapped</p>
+          <p className="text-[11px] font-bold text-emerald-400">Strictly Identity Mapped (Click to View)</p>
         </div>
 
         <div 
@@ -187,7 +188,7 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
           <div className="space-y-1">
             <h3 className="text-sm font-black uppercase text-gray-900 dark:text-white flex items-center space-x-2">
               <AlertCircle className="w-4 h-4 text-amber-500" />
-              <span>Profile Attention & Data Quality Issues List ({filteredIssues.length} Items Displayed)</span>
+              <span>Profile Attention & Data Quality Roster ({filteredIssues.length} Items Displayed)</span>
             </h3>
             <p className="text-xs text-gray-500 font-medium">Filter by category or search name, register number, or issue flag.</p>
           </div>
@@ -213,6 +214,12 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
                 All ({issuesList.length})
               </button>
               <button
+                onClick={() => setFilterCategory('VALID')}
+                className={`px-2.5 py-1 rounded-lg transition-all ${filterCategory === 'VALID' ? 'bg-emerald-500/20 text-emerald-400 font-black' : 'text-gray-500 hover:text-emerald-400'}`}
+              >
+                Valid Profiles ({data?.valid_profiles || 0})
+              </button>
+              <button
                 onClick={() => setFilterCategory('MISSING')}
                 className={`px-2.5 py-1 rounded-lg transition-all ${filterCategory === 'MISSING' ? 'bg-amber-500/20 text-amber-400 font-black' : 'text-gray-500 hover:text-amber-400'}`}
               >
@@ -234,7 +241,7 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
 
             {data?.source_status === 'UNAVAILABLE' && (
               <span className="px-3 py-1 rounded-full text-xs font-black bg-rose-500/20 text-rose-600 border border-rose-500/30 animate-pulse">
-                🔴 LEETCODE SOURCE UNAVAILABLE
+                LEETCODE SOURCE UNAVAILABLE
               </span>
             )}
           </div>
@@ -248,7 +255,7 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
                   <th className="px-4 py-3">Register No</th>
                   <th className="px-4 py-3">Student Name</th>
                   <th className="px-4 py-3 text-center">Dept</th>
-                  <th className="px-4 py-3">Issue Flag</th>
+                  <th className="px-4 py-3">Status / Flag</th>
                   <th className="px-4 py-3 text-right">Action Required</th>
                 </tr>
               </thead>
@@ -260,7 +267,9 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
                     <td className="px-4 py-2.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{item.dept}</td>
                     <td className="px-4 py-2.5">
                       <span className={`px-3 py-1 rounded-full font-black text-[10px] ${
-                        item.status === 'MISSING_USERNAME' || item.status === 'INVALID_PROFILE_URL'
+                        item.status === 'VALID_PROFILE'
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/30'
+                          : item.status === 'MISSING_USERNAME' || item.status === 'INVALID_PROFILE_URL'
                           ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-500/30'
                           : item.status === 'NETWORK_ERROR'
                           ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-500/30'
@@ -270,7 +279,7 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-right font-bold text-gray-700 dark:text-gray-300">
-                      {item.action_required || (item.status === 'MISSING_USERNAME' || item.status === 'INVALID_PROFILE_URL' ? 'Verify LeetCode URL' : 'Audit Profile')}
+                      {item.action_required || (item.status === 'VALID_PROFILE' ? 'Verified Record' : item.status === 'MISSING_USERNAME' || item.status === 'INVALID_PROFILE_URL' ? 'Verify LeetCode URL' : 'Audit Profile')}
                     </td>
                   </tr>
                 ))}
@@ -282,7 +291,7 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
             <Sparkles className="w-8 h-8 text-emerald-500 mx-auto" />
             <h4 className="text-base font-black text-emerald-700 dark:text-emerald-300">No Matching Issues Found</h4>
             <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-              🎉 Zero data quality anomalies match your active filter parameters.
+               Zero data quality anomalies match your active filter parameters.
             </p>
           </div>
         )}

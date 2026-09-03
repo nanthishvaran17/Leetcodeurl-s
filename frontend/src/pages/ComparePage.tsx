@@ -57,8 +57,7 @@ export const ComparePage: React.FC = () => {
   }, [selectedDept, selectedYear]);
 
   const DEFAULT_DEPARTMENTS = [
-    { id: 1, name: 'Computer Science and Engineering (Cyber Security)', code: 'CSE(CS)' },
-    { id: 2, name: 'Computer Science and Engineering (IoT)', code: 'CSE(IOT)' }
+
   ];
 
   const fetchDepartments = async () => {

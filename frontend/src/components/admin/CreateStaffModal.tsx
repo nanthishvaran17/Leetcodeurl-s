@@ -1,5 +1,10 @@
-import React, { useState, useMemo } from 'react';
-import { User, Shield, CheckCircle, Building2, Key, Check, Loader2, FileCheck, X, Briefcase, ChevronRight, Hash, Mail, Phone, Calendar, Search, Sparkles, Eye, EyeOff, AlertCircle, GraduationCap, ChevronDown } from 'lucide-react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { 
+  User, Shield, CheckCircle, Building2, Key, Check, Loader2, FileCheck, 
+  X, Briefcase, ChevronRight, ChevronLeft, Hash, Mail, Phone, Calendar, 
+  Search, Sparkles, Eye, EyeOff, AlertCircle, GraduationCap, ChevronDown,
+  Lock, AlertTriangle, ArrowRight, UploadCloud, FileText, CheckCircle2, ShieldCheck
+} from 'lucide-react';
 import api from '../../services/api';
 import { CustomDropdown, DropdownOption } from '../CustomDropdown';
 import { GlobalModalBackdrop } from '../GlobalModalBackdrop';
@@ -13,15 +18,18 @@ interface CreateStaffModalProps {
   notify: any;
 }
 
-export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onSuccess, departments, staffList, notify }) => {
-  const storeVersion = useStudentStoreVersion(); // Triggers re-render when live data changes
+export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ 
+  onClose, onSuccess, departments, staffList, notify 
+}) => {
+  const storeVersion = useStudentStoreVersion();
+  const [activeStep, setActiveStep] = useState<number>(1);
+  const [createdStaffSummary, setCreatedStaffSummary] = useState<any | null>(null);
 
-  // Derive dynamic Academic Year options from live students, with fallback if store is empty
+  // Derive dynamic Academic Year options from live students, with fallback
   const academicYearOptions = useMemo(() => {
     const students = Object.values(studentLiveStore.getAllEntities());
     const years = new Set<string>();
     
-    // Add standard fallbacks so the dropdown is never empty
     years.add('2023-2027');
     years.add('2024-2028');
     years.add('2025-2029');
@@ -33,11 +41,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
       }
     });
     
-    // Sort logic (e.g., "I", "II", "III", "IV" or "2024-2028")
-    const sortedYears = Array.from(years).sort((a, b) => {
-      if (a === b) return 0;
-      return a > b ? 1 : -1;
-    });
+    const sortedYears = Array.from(years).sort((a, b) => (a > b ? 1 : -1));
 
     const options: DropdownOption[] = sortedYears.map(y => ({
       value: y,
@@ -47,7 +51,6 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
 
     return options;
   }, [storeVersion]);
-
 
   // Transform Departments into DropdownOptions
   const departmentOptions: DropdownOption[] = useMemo(() => {
@@ -128,14 +131,27 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [idProofFile, setIdProofFile] = useState<File | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [roleOpen, setRoleOpen] = useState(false);
+  const roleRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (roleRef.current && !roleRef.current.contains(e.target as Node)) {
+        setRoleOpen(false);
+      }
+    };
+    if (roleOpen) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [roleOpen]);
 
   // DOB Formatter
   const handleDOBChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value.replace(/\D/g, ''); // strip non-digits
+    let val = e.target.value.replace(/\D/g, '');
     if (val.length > 8) val = val.substring(0, 8);
     let formatted = val;
     if (val.length > 2) {
@@ -144,7 +160,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
     if (val.length > 4) {
       formatted = val.substring(0, 2) + '/' + val.substring(2, 4) + '/' + val.substring(4);
     }
-    setFormData({ ...formData, date_of_birth: formatted });
+    setFormData(prev => ({ ...prev, date_of_birth: formatted }));
   };
 
   // Date validator
@@ -171,36 +187,70 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
   const pwReqs = getPasswordReqs(formData.password);
   const allReqsMet = formData.password && Object.values(pwReqs).every(Boolean);
   const strengthScore = Object.values(pwReqs).filter(Boolean).length;
-  const strengthStr = strengthScore <= 2 ? 'Weak' : strengthScore <= 4 ? 'Medium' : 'Strong';
+  const strengthStr = strengthScore <= 2 ? 'Weak' : strengthScore <= 4 ? 'Fair' : 'Strong';
   const passwordsMatch = formData.password && formData.password === formData.confirm_password;
+
+  const isGlobalRole = ['Administrator', 'Super Admin'].includes(formData.role);
+
+  // Validate step completion
+  const validateCurrentStep = (step: number): boolean => {
+    const errors: Record<string, string> = {};
+    if (step === 1) {
+      if (['Faculty Mentor', 'Staff Mentor'].includes(formData.role) && !formData.academic_year) {
+        errors.academic_year = 'Academic Year is required for Mentors';
+      }
+    } else if (step === 2) {
+      if (!formData.full_name.trim()) errors.full_name = 'Full legal name is required';
+      if (!formData.username.trim()) errors.username = 'Username is required';
+      if (!formData.password) errors.password = 'Initial password is required';
+      else if (!allReqsMet) errors.password = 'Password does not meet institutional requirements';
+      if (formData.password && !passwordsMatch) errors.confirm_password = 'Passwords do not match';
+    } else if (step === 3) {
+      if (!formData.email.trim() || !formData.email.includes('@')) errors.email = 'Valid official college email required';
+      if (!formData.phone_number.trim()) errors.phone_number = 'Phone number is required';
+      if (formData.date_of_birth && !isValidDate(formData.date_of_birth)) errors.date_of_birth = 'Invalid calendar date (DD/MM/YYYY)';
+    } else if (step === 5) {
+      if (!formData.consent_checked) errors.consent = 'You must accept compliance & authorization terms';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleNextStep = () => {
+    if (validateCurrentStep(activeStep)) {
+      if (activeStep < 5) setActiveStep(prev => prev + 1);
+    }
+  };
+
+  const handlePrevStep = () => {
+    if (activeStep > 1) setActiveStep(prev => prev - 1);
+  };
+
+  const handleStepClick = (stepIndex: number) => {
+    setFormErrors({});
+    setActiveStep(stepIndex);
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const errors: Record<string, string> = {};
+    setSubmitError(null);
 
+    // Validate all required steps before submit
+    const errors: Record<string, string> = {};
     if (!formData.full_name.trim()) errors.full_name = 'Required';
     if (!formData.username.trim()) errors.username = 'Required';
     if (!formData.email.trim()) errors.email = 'Required';
     if (!formData.phone_number.trim()) errors.phone_number = 'Required';
-    
-    // Check academic year for mentor roles
     if (['Faculty Mentor', 'Staff Mentor'].includes(formData.role) && !formData.academic_year) {
       errors.academic_year = 'Required for Mentors';
     }
-
     if (formData.date_of_birth && !isValidDate(formData.date_of_birth)) {
       errors.date_of_birth = 'Invalid calendar date';
     }
-
-    if (!allReqsMet) {
-      errors.password = 'Password does not meet requirements';
-    }
-
-    if (formData.password && !passwordsMatch) {
-      errors.confirm_password = 'Passwords do not match';
-    }
-
-    if (!formData.consent_checked) errors.consent = 'Required';
+    if (!allReqsMet) errors.password = 'Password does not meet requirements';
+    if (formData.password && !passwordsMatch) errors.confirm_password = 'Passwords do not match';
+    if (!formData.consent_checked) errors.consent = 'Authorization consent required';
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
@@ -216,7 +266,6 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
       const rawDeptId = formData.department_id ? parseInt(formData.department_id, 10) : 0;
       const deptIdToSend = (rawDeptId > 0 && !isGlobalAdmin) ? rawDeptId : null;
 
-      // Convert DD/MM/YYYY to YYYY-MM-DD for backend
       let formattedDOB = undefined;
       if (formData.date_of_birth && formData.date_of_birth.length === 10) {
         const [dd, mm, yyyy] = formData.date_of_birth.split('/');
@@ -241,552 +290,791 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ onClose, onS
         send_email: formData.send_email
       };
 
-      await api.post('/admin/staff', payload);
+      const res = await api.post('/admin/staff', payload);
+      const createdStaff = res.data?.staff || payload;
+
+      setCreatedStaffSummary(createdStaff);
       notify.success(`Staff account '${formData.username}' created successfully!`, '', { category: 'ADMIN' });
       onSuccess();
     } catch (err: any) {
-      console.error(err);
-      notify.error(err.response?.data?.detail || 'Failed to create staff account', '', { category: 'ADMIN' });
+      console.error('Failed to create staff account:', err);
+      const safeErrMsg = err.response?.data?.detail || 'Unable to complete staff account provisioning. Please try again.';
+      setSubmitError(safeErrMsg);
+      notify.error(safeErrMsg, '', { category: 'ADMIN' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const isGlobalRole = ['Administrator', 'Super Admin'].includes(formData.role);
-  const isFormValid = formData.full_name && formData.username && formData.email && formData.phone_number && allReqsMet && passwordsMatch && formData.consent_checked && (formData.date_of_birth ? isValidDate(formData.date_of_birth) : true);
+  const stepsList = [
+    { num: 1, id: '01', title: 'Role & Academic Scope', icon: Building2, desc: 'Institutional role & scope' },
+    { num: 2, id: '02', title: 'Identity & Credentials', icon: User, desc: 'Name, login & password' },
+    { num: 3, id: '03', title: 'Contact Information', icon: Mail, desc: 'Email, phone & DOB' },
+    { num: 4, id: '04', title: 'Staff Verification', icon: FileCheck, desc: 'ID proof & reporting line' },
+    { num: 5, id: '05', title: 'Permissions & Agreement', icon: Shield, desc: 'Permissions & authorization' },
+  ];
+
+  const progressPercent = Math.round((activeStep / 5) * 100);
 
   return (
-    <GlobalModalBackdrop isOpen={true} onClose={onClose} className="flex items-center justify-center p-4 sm:p-6">
-      <div className="bg-slate-50 dark:bg-navy-900 rounded-[2rem] w-full max-w-[850px] shadow-2xl flex flex-col max-h-full overflow-hidden border border-white/20 dark:border-navy-800">
+    <GlobalModalBackdrop isOpen={true} onClose={onClose} className="flex items-center justify-center p-3 sm:p-6 bg-navy-950/70 backdrop-blur-md overflow-y-auto">
+      <div className="bg-white dark:bg-navy-900 rounded-[2rem] w-full max-w-[1050px] shadow-2xl flex flex-col h-[92vh] max-h-[850px] overflow-hidden border border-slate-200/80 dark:border-navy-700/80 animate-fade-in-up">
         
-        {/* Fixed Header */}
-        <div className="px-6 py-5 bg-white dark:bg-navy-900 border-b border-gray-200 dark:border-navy-800 flex items-center justify-between shrink-0 z-10 shadow-sm">
+        {/* HEADER */}
+        <div className="px-6 py-4 bg-slate-50/90 dark:bg-navy-950/80 border-b border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0 z-20">
           <div className="flex items-center space-x-3.5">
-            <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center border border-brand-100 dark:border-brand-500/20">
-              <Shield className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-brand-500/20">
+              <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white tracking-tight">Create Institutional Account</h2>
-              <p className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold mt-0.5">Provision a new staff access profile</p>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300 border border-brand-200 dark:border-brand-500/30">
+                  Nandha Engineering College
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Secure Provisioning
+                </span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5">
+                Create Institutional Account
+              </h2>
             </div>
           </div>
-          <button 
-            onClick={onClose} 
-            className="p-2 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:text-gray-200 dark:hover:bg-navy-800 transition-all cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
+
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-200/60 dark:bg-navy-800 text-slate-600 dark:text-slate-300 text-xs font-mono font-bold">
+              <Lock className="w-3.5 h-3.5 text-indigo-500" /> SECURE ADMINISTRATION
+            </div>
+            <button 
+              onClick={onClose} 
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 dark:hover:text-white dark:hover:bg-navy-800 transition-all cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        {/* Scrollable Form Body */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar bg-slate-50 dark:bg-navy-950/30">
-          <form id="create-staff-form" onSubmit={handleCreate} className="space-y-6 max-w-[100%]">
+        {/* SUCCESS CONFIRMATION STATE OVERLAY */}
+        {createdStaffSummary ? (
+          <div className="flex-1 p-8 sm:p-12 overflow-y-auto flex flex-col items-center justify-center text-center space-y-6 bg-slate-50/50 dark:bg-navy-950/40">
+            <div className="w-20 h-20 rounded-3xl bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-xl shadow-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 animate-bounce-short">
+              <CheckCircle2 className="w-10 h-10" />
+            </div>
             
-            {/* SECTION 1: Role & Academic Scope */}
-            <section className="relative z-50 bg-white dark:bg-navy-900/80 rounded-2xl p-5 border border-gray-200 dark:border-navy-800 shadow-sm">
-              <h3 className="text-xs font-bold text-brand-700 dark:text-brand-300 mb-4 flex items-center uppercase tracking-wider bg-brand-50 dark:bg-brand-500/10 p-2.5 rounded-xl">
-                <Building2 className="w-4 h-4 mr-2 text-brand-500" /> 1. Role & Academic Scope
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="max-w-md space-y-2">
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white">Account Created Successfully</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                The institutional staff account has been provisioned and added to the official Nandha Engineering College registry.
+              </p>
+            </div>
 
-                {/* ── STAFF ROLE ── Premium trigger with custom face */}
-                {(() => {
-                  const rc = getRoleConfig(formData.role);
-                  const RoleIcon = rc.icon;
-                  const [roleOpen, setRoleOpen] = React.useState(false);
-                  const roleRef = React.useRef<HTMLDivElement>(null);
-                  React.useEffect(() => {
-                    const handler = (e: MouseEvent) => {
-                      if (roleRef.current && !roleRef.current.contains(e.target as Node)) setRoleOpen(false);
-                    };
-                    if (roleOpen) document.addEventListener('mousedown', handler);
-                    return () => document.removeEventListener('mousedown', handler);
-                  }, [roleOpen]);
+            {/* Non-sensitive details card */}
+            <div className="w-full max-w-lg bg-white dark:bg-navy-900 rounded-2xl p-5 border border-slate-200 dark:border-navy-700 text-left space-y-3 shadow-md">
+              <div className="flex justify-between items-center pb-2.5 border-b border-slate-100 dark:border-navy-800 text-xs">
+                <span className="text-slate-500 font-bold">Staff Member Name:</span>
+                <span className="font-black text-slate-900 dark:text-white">{createdStaffSummary.full_name || createdStaffSummary.username}</span>
+              </div>
+              <div className="flex justify-between items-center pb-2.5 border-b border-slate-100 dark:border-navy-800 text-xs">
+                <span className="text-slate-500 font-bold">Username:</span>
+                <span className="font-mono font-bold text-brand-600 dark:text-brand-400">{createdStaffSummary.username}</span>
+              </div>
+              <div className="flex justify-between items-center pb-2.5 border-b border-slate-100 dark:border-navy-800 text-xs">
+                <span className="text-slate-500 font-bold">Official Email:</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{createdStaffSummary.email}</span>
+              </div>
+              <div className="flex justify-between items-center pb-2.5 border-b border-slate-100 dark:border-navy-800 text-xs">
+                <span className="text-slate-500 font-bold">Institutional Role:</span>
+                <span className="px-2 py-0.5 rounded font-black text-[10px] bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
+                  {createdStaffSummary.role}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-500 font-bold">Academic Scope:</span>
+                <span className="font-bold text-slate-700 dark:text-slate-300">
+                  {createdStaffSummary.academic_year || 'All Years'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex gap-4 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-8 py-3 rounded-xl font-black text-xs text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 shadow-lg shadow-brand-500/25 transition-all cursor-pointer"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* MAIN TWO-COLUMN BODY */
+          <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-slate-50/50 dark:bg-navy-950/30">
+            
+            {/* LEFT STEPPER SIDEBAR */}
+            <div className="w-full md:w-72 bg-white dark:bg-navy-900 border-r border-slate-200/80 dark:border-navy-800 p-4 sm:p-6 shrink-0 overflow-x-auto md:overflow-y-auto custom-scrollbar">
+              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-4 hidden md:block">
+                Provisioning Steps
+              </div>
+              
+              <div className="flex md:flex-col gap-2 min-w-max md:min-w-0">
+                {stepsList.map(s => {
+                  const isCurrent = activeStep === s.num;
+                  const isCompleted = activeStep > s.num;
+                  const Icon = s.icon;
                   return (
-                    <div className="space-y-1.5 relative z-[105]" ref={roleRef}>
-                      <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Staff Role</label>
-                      <button
-                        type="button"
-                        onClick={() => setRoleOpen(o => !o)}
-                        className={`w-full flex items-center justify-between px-4 py-0 rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer group shadow-sm min-h-[56px] ${
-                          roleOpen
-                            ? `${rc.bgColor} ${rc.borderColor} ring-2 ring-offset-1 ring-current/10`
-                            : `bg-white dark:bg-navy-900/80 border-gray-200 dark:border-navy-700 hover:${rc.borderColor}`
-                        }`}
-                      >
-                        <div className="flex items-center gap-3 py-3">
-                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${rc.bgColor} border ${rc.borderColor}`}>
-                            <RoleIcon className={`w-4 h-4 ${rc.color}`} />
-                          </div>
-                          <div className="flex flex-col items-start">
-                            <div className="flex items-center gap-2">
-                              <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border ${rc.badgeColor}`}>
-                                {roleOptions.find(r => r.value === formData.role)?.badge}
-                              </span>
-                              <span className="text-sm font-black text-gray-900 dark:text-gray-100">{formData.role}</span>
-                            </div>
-                            <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium mt-0.5 leading-tight">{rc.desc}</span>
-                          </div>
-                        </div>
-                        <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-200 ${rc.color} ${roleOpen ? 'rotate-180' : ''}`} />
-                      </button>
-                      {roleOpen && (
-                        <div className="absolute left-0 right-0 z-[9999] mt-1.5 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 shadow-2xl p-1.5 space-y-0.5" style={{ boxShadow: '0 25px 50px -12px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.06)' }}>
-                          {roleOptions.map(opt => {
-                            const cfg = getRoleConfig(opt.value);
-                            const OptIcon = cfg.icon;
-                            const isSel = formData.role === opt.value;
-                            return (
-                              <button key={opt.value} type="button"
-                                onClick={() => { setFormData({...formData, role: opt.value}); setRoleOpen(false); }}
-                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all cursor-pointer group ${
-                                  isSel ? `${cfg.bgColor} border ${cfg.borderColor}` : 'hover:bg-gray-50 dark:hover:bg-navy-800'
-                                }`}
-                              >
-                                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${cfg.bgColor} border ${cfg.borderColor}`}>
-                                  <OptIcon className={`w-3.5 h-3.5 ${cfg.color}`} />
-                                </div>
-                                <div className="flex flex-col flex-1 min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border ${cfg.badgeColor}`}>{opt.badge}</span>
-                                    <span className={`text-xs font-black truncate ${isSel ? cfg.color : 'text-gray-800 dark:text-gray-100'}`}>{opt.label}</span>
-                                  </div>
-                                  <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium truncate mt-0.5">{opt.sublabel}</span>
-                                </div>
-                                {isSel && <Check className={`w-3.5 h-3.5 shrink-0 ${cfg.color} stroke-[2.5]`} />}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
-
-                {/* ── DEPARTMENT ── Rich display for global, dropdown for scoped */}
-                <div className="space-y-1.5 relative z-[104]">
-                  <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Department</label>
-                  {isGlobalRole ? (
-                    <div className="w-full min-h-[56px] flex items-center px-4 py-2 rounded-2xl border-2 border-dashed border-brand-300 dark:border-brand-500/40 bg-brand-50/60 dark:bg-brand-500/5 shadow-sm">
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300 border-brand-200 dark:border-brand-500/30">ALL</span>
-                          <span className="text-sm font-black text-brand-800 dark:text-brand-200">All Departments</span>
-                        </div>
-                        <span className="text-[10px] text-brand-600/70 dark:text-brand-400/70 font-medium mt-0.5">Institution-wide access</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <CustomDropdown
-                      options={departmentOptions}
-                      label=""
-                      value={formData.department_id}
-                      onChange={(val) => setFormData({...formData, department_id: val})}
-                      placeholder="Select Department..."
-                      icon={Building2}
-                    />
-                  )}
-                  {isGlobalRole && (
-                    <p className="text-[10px] text-brand-500/80 dark:text-brand-400/70 ml-1">
-                      Managed automatically for {formData.role}
-                    </p>
-                  )}
-                </div>
-
-                {/* ── ACADEMIC YEAR ── Rich display for global, dropdown for scoped */}
-                <div className="space-y-1.5 relative z-[103]">
-                  <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Academic Year</label>
-                  {isGlobalRole ? (
-                    <div className="w-full min-h-[56px] flex items-center px-4 py-2 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/30 shadow-sm">
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600">ALL</span>
-                          <span className="text-sm font-black text-slate-700 dark:text-slate-200">All Years</span>
-                        </div>
-                        <span className="text-[10px] text-slate-400 font-medium mt-0.5">Institution-wide academic access</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <CustomDropdown
-                      options={academicYearOptions}
-                      label=""
-                      value={formData.academic_year}
-                      onChange={(val) => setFormData({...formData, academic_year: val})}
-                      placeholder="Select Year Cohort..."
-                      icon={Calendar}
-                    />
-                  )}
-                  {formErrors.academic_year && <p className="text-[10px] text-red-500 ml-1 font-semibold">{formErrors.academic_year}</p>}
-                </div>
-
-                {/* ── MENTORING DESIGNATION ── N/A for global roles */}
-                <div className="space-y-1.5">
-                  <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Mentoring Designation</label>
-                  {isGlobalRole ? (
-                    <div className="w-full min-h-[56px] flex items-center px-4 py-2 rounded-2xl border border-dashed border-gray-200 dark:border-navy-700 bg-gray-50/50 dark:bg-navy-900/30">
-                      <span className="text-[11px] text-gray-400 dark:text-gray-500 font-medium italic">— Not applicable for this role</span>
-                    </div>
-                  ) : (
-                    <input
-                      type="text"
-                      value={formData.designation}
-                      onChange={e => setFormData({...formData, designation: e.target.value})}
-                      className="w-full h-11 px-4 rounded-2xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800 text-sm font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all"
-                      autoComplete="off"
-                    />
-                  )}
-                </div>
-
-              </div>
-            </section>
-
-            {/* SECTION 2: User Identity & Credentials */}
-            <section className="relative z-40 bg-white dark:bg-navy-900/80 rounded-2xl p-5 border border-gray-200 dark:border-navy-800 shadow-sm">
-              <h3 className="text-xs font-bold text-indigo-700 dark:text-indigo-300 mb-4 flex items-center uppercase tracking-wider bg-indigo-50 dark:bg-indigo-500/10 p-2.5 rounded-xl">
-                <User className="w-4 h-4 mr-2 text-indigo-500" /> 2. User Identity & Credentials
-              </h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                
-                <div className="space-y-1.5 sm:col-span-2">
-                  <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Full Legal Name *</label>
-                  <input 
-                    type="text" 
-                    value={formData.full_name} 
-                    onChange={e => {
-                      const val = e.target.value;
-                      setFormData({...formData, full_name: val, username: val.toLowerCase().replace(/\s+/g, '.')});
-                    }} 
-                    className={`w-full h-11 px-4 rounded-2xl border ${formErrors.full_name ? 'border-red-400 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-gray-50 dark:bg-navy-800 text-sm font-bold text-gray-900 dark:text-white outline-none transition-all`} 
-                    
-                    autoComplete="name"
-                  />
-                  {formErrors.full_name && <p className="text-[10px] text-red-500 ml-1 font-semibold">{formErrors.full_name}</p>}
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center"><Hash className="w-3 h-3 mr-1"/> Username *</label>
-                  <input 
-                    type="text" 
-                    value={formData.username} 
-                    onChange={e => setFormData({...formData, username: e.target.value})} 
-                    className={`w-full h-11 px-4 rounded-2xl border ${formErrors.username ? 'border-red-400 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-gray-50 dark:bg-navy-800 text-sm font-bold text-gray-900 dark:text-white outline-none transition-all`} 
-                    
-                    autoComplete="username"
-                  />
-                  {formErrors.username && <p className="text-[10px] text-red-500 ml-1 font-semibold">{formErrors.username}</p>}
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center"><Mail className="w-3 h-3 mr-1"/> Official Email *</label>
-                  <input 
-                    type="email" 
-                    value={formData.email} 
-                    onChange={e => setFormData({...formData, email: e.target.value})} 
-                    className={`w-full h-11 px-4 rounded-2xl border ${formErrors.email ? 'border-red-400 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-gray-50 dark:bg-navy-800 text-sm font-bold text-gray-900 dark:text-white outline-none transition-all`} 
-                    
-                    autoComplete="email"
-                  />
-                  {formErrors.email && <p className="text-[10px] text-red-500 ml-1 font-semibold">{formErrors.email}</p>}
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center"><Phone className="w-3 h-3 mr-1"/> Phone Number *</label>
-                  <input 
-                    type="tel" 
-                    value={formData.phone_number} 
-                    onChange={e => setFormData({...formData, phone_number: e.target.value})} 
-                    className={`w-full h-11 px-4 rounded-2xl border ${formErrors.phone_number ? 'border-red-400 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-gray-50 dark:bg-navy-800 text-sm font-bold text-gray-900 dark:text-white outline-none transition-all`} 
-                    
-                    autoComplete="tel"
-                  />
-                  {formErrors.phone_number && <p className="text-[10px] text-red-500 ml-1 font-semibold">{formErrors.phone_number}</p>}
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center"><Calendar className="w-3 h-3 mr-1"/> Date of Birth</label>
-                  <input 
-                    type="text" 
-                    value={formData.date_of_birth} 
-                    onChange={handleDOBChange} 
-                    className={`w-full h-11 px-4 rounded-2xl border ${formErrors.date_of_birth ? 'border-red-400 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-gray-50 dark:bg-navy-800 text-sm font-bold text-gray-900 dark:text-white outline-none transition-all`} 
-                    placeholder="DD/MM/YYYY"
-                    autoComplete="off"
-                  />
-                  {formErrors.date_of_birth && <p className="text-[10px] text-red-500 ml-1 font-semibold">{formErrors.date_of_birth}</p>}
-                </div>
-
-                <div className="space-y-1.5 sm:col-span-2">
-                  <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Institutional ID</label>
-                  <div className="flex space-x-2">
-                    <input 
-                      type="text" 
-                      value={formData.institutional_id} 
-                      onChange={e => setFormData({...formData, institutional_id: e.target.value})} 
-                      className="flex-1 h-11 px-4 rounded-2xl border border-gray-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 bg-gray-50 dark:bg-navy-800 text-sm font-bold text-gray-900 dark:text-white outline-none transition-all" 
-                      autoComplete="off"
-                    />
                     <button
+                      key={s.num}
                       type="button"
-                      onClick={() => {
-                        const randomHex = Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
-                        const prefix = formData.department_id ? formData.department_id.toUpperCase().substring(0, 3) : 'GLB';
-                        const rolePrefix = formData.role === 'Administrator' || formData.role === 'Super Admin' ? 'ADM' : 'FAC';
-                        setFormData({...formData, institutional_id: `NEC-${prefix}-${rolePrefix}-${randomHex}`});
-                      }}
-                      className="h-11 px-4 rounded-2xl bg-brand-100 dark:bg-brand-500/20 text-brand-700 dark:text-brand-300 text-xs font-bold hover:bg-brand-200 dark:hover:bg-brand-500/30 transition-all flex items-center shrink-0"
+                      onClick={() => handleStepClick(s.num)}
+                      className={`flex items-center gap-3.5 p-3 rounded-2xl transition-all duration-200 text-left cursor-pointer w-full ${
+                        isCurrent
+                          ? 'bg-brand-50 dark:bg-brand-500/10 border border-brand-200 dark:border-brand-500/30 shadow-sm ring-1 ring-brand-500/20'
+                          : isCompleted
+                          ? 'bg-slate-50 dark:bg-navy-800/60 hover:bg-slate-100 dark:hover:bg-navy-800 border border-slate-200/60 dark:border-navy-700/60'
+                          : 'hover:bg-slate-50 dark:hover:bg-navy-800/40 border border-transparent opacity-60'
+                      }`}
                     >
-                      <Sparkles className="w-3 h-3 mr-1.5" /> Generate ID
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 font-mono text-xs font-black transition-all ${
+                        isCurrent
+                          ? 'bg-brand-600 text-white shadow-md shadow-brand-500/30'
+                          : isCompleted
+                          ? 'bg-emerald-500 text-white'
+                          : 'bg-slate-200 dark:bg-navy-700 text-slate-500 dark:text-slate-400'
+                      }`}>
+                        {isCompleted ? <Check className="w-4 h-4 stroke-[3]" /> : s.id}
+                      </div>
+
+                      <div className="hidden md:flex flex-col min-w-0">
+                        <span className={`text-xs font-black truncate ${
+                          isCurrent
+                            ? 'text-brand-900 dark:text-brand-200'
+                            : isCompleted
+                            ? 'text-slate-800 dark:text-slate-200'
+                            : 'text-slate-500 dark:text-slate-400'
+                        }`}>
+                          {s.title}
+                        </span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate">
+                          {s.desc}
+                        </span>
+                      </div>
                     </button>
-                  </div>
-                </div>
+                  );
+                })}
               </div>
-            </section>
 
-            {/* SECTION 3: Staff Verification */}
-            <section className="relative z-30 bg-white dark:bg-navy-900/80 rounded-2xl p-5 border border-gray-200 dark:border-navy-800 shadow-sm">
-              <h3 className="text-xs font-bold text-emerald-700 dark:text-emerald-300 mb-4 flex items-center uppercase tracking-wider bg-emerald-50 dark:bg-emerald-500/10 p-2.5 rounded-xl">
-                <FileCheck className="w-4 h-4 mr-2 text-emerald-500" /> 3. Staff Verification
-              </h3>
-              <div className="space-y-1.5">
-                <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Employee ID Proof / Document (Optional)</label>
-                <div className="flex items-center justify-center w-full group">
-                  <label className="relative flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 dark:border-navy-700 rounded-2xl cursor-pointer bg-gray-50 dark:bg-navy-800 hover:bg-brand-50 dark:hover:bg-brand-500/10 hover:border-brand-400 dark:hover:border-brand-500/50 transition-all duration-300 overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-brand-500/5 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    <div className="flex flex-col items-center justify-center relative z-10 transform group-hover:-translate-y-1 transition-transform duration-300">
-                      <div className="w-12 h-12 mb-3 rounded-full bg-white dark:bg-navy-900 shadow-sm flex items-center justify-center group-hover:shadow-md group-hover:scale-110 transition-all duration-300">
-                        <FileCheck className="w-6 h-6 text-gray-400 group-hover:text-brand-500 transition-colors duration-300" />
-                      </div>
-                      <p className="mb-1 text-xs font-bold text-gray-500 dark:text-gray-400">
-                        {idProofFile ? (
-                          <span className="text-emerald-500 flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5" /> {idProofFile.name}</span>
-                        ) : (
-                          <><span className="text-brand-500 font-extrabold group-hover:underline">Click to upload</span> or drag and drop</>
-                        )}
-                      </p>
-                      <p className="text-[10px] text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wider mt-1">PDF, JPG or PNG (MAX. 5MB)</p>
-                    </div>
-                    <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={e => setIdProofFile(e.target.files?.[0] || null)} />
-                  </label>
+              {/* SECURITY SUMMARY PANEL */}
+              <div className="mt-8 hidden md:block p-4 rounded-2xl bg-indigo-50/60 dark:bg-navy-950/50 border border-indigo-100 dark:border-navy-800 space-y-2">
+                <div className="flex items-center gap-2 text-xs font-black text-indigo-900 dark:text-indigo-300">
+                  <Lock className="w-4 h-4 text-indigo-500" /> Institutional Security
                 </div>
+                <p className="text-[10px] text-indigo-700/70 dark:text-indigo-400/70 leading-relaxed font-medium">
+                  This account will be protected by the college authentication system:
+                </p>
+                <ul className="text-[10px] font-bold text-slate-600 dark:text-slate-400 space-y-1 pt-1">
+                  <li className="flex items-center gap-1.5"><Check className="w-3 h-3 text-emerald-500" /> Secure authentication</li>
+                  <li className="flex items-center gap-1.5"><Check className="w-3 h-3 text-emerald-500" /> Role-based access</li>
+                  <li className="flex items-center gap-1.5"><Check className="w-3 h-3 text-emerald-500" /> Activity auditing</li>
+                  <li className="flex items-center gap-1.5"><Check className="w-3 h-3 text-emerald-500" /> Institutional controls</li>
+                </ul>
               </div>
-            </section>
+            </div>
 
-            {/* SECTION 4: Security & Password */}
-            <section className="relative z-20 bg-white dark:bg-navy-900/80 rounded-2xl p-5 border border-gray-200 dark:border-navy-800 shadow-sm">
-              <h3 className="text-xs font-bold text-rose-700 dark:text-rose-300 mb-4 flex items-center uppercase tracking-wider bg-rose-50 dark:bg-rose-500/10 p-2.5 rounded-xl">
-                <Key className="w-4 h-4 mr-2 text-rose-500" /> 4. Security & Password
-              </h3>
+            {/* RIGHT FORM CONTENT PANEL */}
+            <div className="flex-1 overflow-y-auto p-6 sm:p-8 custom-scrollbar">
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="space-y-1.5 relative">
-                    <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Initial Password</label>
-                    <div className="relative">
-                      <input 
-                        type={showPassword ? "text" : "password"} 
-                        value={formData.password} 
-                        onChange={e => setFormData({...formData, password: e.target.value})} 
-                        className={`w-full h-11 pl-4 pr-10 rounded-2xl border ${!allReqsMet && formData.password ? 'border-orange-400' : 'border-gray-200 dark:border-navy-700'} bg-gray-50 dark:bg-navy-800 text-sm font-bold text-gray-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all`} 
-                        autoComplete="new-password"
-                      />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-500 p-1">
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {/* Password Checklist */}
-                  <div className="bg-gray-50 dark:bg-navy-900 rounded-xl p-3 border border-gray-100 dark:border-navy-800 select-none">
-                    <p className="text-[10px] font-bold text-gray-500 mb-2 uppercase tracking-wider">Password requirements</p>
-                    <div className="space-y-1.5">
-                      <div className={`flex items-center space-x-2 text-xs font-semibold ${pwReqs.length ? 'text-emerald-500' : 'text-gray-400'}`}>
-                        {pwReqs.length ? <Check className="w-3.5 h-3.5" /> : <div className="w-3.5 h-3.5 rounded-full border border-gray-300 dark:border-gray-600" />}
-                        <span>At least 8 characters</span>
-                      </div>
-                      <div className={`flex items-center space-x-2 text-xs font-semibold ${pwReqs.upper ? 'text-emerald-500' : 'text-gray-400'}`}>
-                        {pwReqs.upper ? <Check className="w-3.5 h-3.5" /> : <div className="w-3.5 h-3.5 rounded-full border border-gray-300 dark:border-gray-600" />}
-                        <span>One uppercase letter</span>
-                      </div>
-                      <div className={`flex items-center space-x-2 text-xs font-semibold ${pwReqs.lower ? 'text-emerald-500' : 'text-gray-400'}`}>
-                        {pwReqs.lower ? <Check className="w-3.5 h-3.5" /> : <div className="w-3.5 h-3.5 rounded-full border border-gray-300 dark:border-gray-600" />}
-                        <span>One lowercase letter</span>
-                      </div>
-                      <div className={`flex items-center space-x-2 text-xs font-semibold ${pwReqs.number ? 'text-emerald-500' : 'text-gray-400'}`}>
-                        {pwReqs.number ? <Check className="w-3.5 h-3.5" /> : <div className="w-3.5 h-3.5 rounded-full border border-gray-300 dark:border-gray-600" />}
-                        <span>One number</span>
-                      </div>
-                      <div className={`flex items-center space-x-2 text-xs font-semibold ${pwReqs.special ? 'text-emerald-500' : 'text-gray-400'}`}>
-                        {pwReqs.special ? <Check className="w-3.5 h-3.5" /> : <div className="w-3.5 h-3.5 rounded-full border border-gray-300 dark:border-gray-600" />}
-                        <span>One special character</span>
-                      </div>
-                    </div>
-                    {formData.password && (
-                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-navy-700 flex justify-between items-center">
-                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Strength</span>
-                        <span className={`text-xs font-bold ${strengthStr === 'Strong' ? 'text-emerald-500' : strengthStr === 'Medium' ? 'text-amber-500' : 'text-rose-500'}`}>{strengthStr}</span>
-                      </div>
-                    )}
+              {submitError && (
+                <div className="mb-6 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 flex items-start gap-3 text-rose-800 dark:text-rose-300 animate-fade-in">
+                  <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-wider">Unable to Create Account</h4>
+                    <p className="text-xs font-medium mt-0.5">{submitError}</p>
                   </div>
                 </div>
+              )}
+
+              <form id="create-staff-form" onSubmit={handleCreate} className="space-y-6 max-w-3xl">
                 
-                <div className="space-y-4">
-                  <div className="space-y-1.5 relative">
-                    <label className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Confirm Password</label>
-                    <div className="relative">
-                      <input 
-                        type={showConfirmPassword ? "text" : "password"} 
-                        value={formData.confirm_password} 
-                        onChange={e => setFormData({...formData, confirm_password: e.target.value})} 
-                        className={`w-full h-11 pl-4 pr-10 rounded-2xl border ${formData.confirm_password && !passwordsMatch ? 'border-red-400 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-gray-50 dark:bg-navy-800 text-sm font-bold text-gray-900 dark:text-white outline-none transition-all`} 
-                        autoComplete="new-password"
-                      />
-                      <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-500 p-1">
-                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
+                {/* ── STEP 1: ROLE & ACADEMIC SCOPE ── */}
+                {activeStep === 1 && (
+                  <section className="space-y-6 animate-fade-in">
+                    <div>
+                      <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                        <Building2 className="w-5 h-5 text-brand-500" /> 1. Role & Academic Scope
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+                        Define the staff member's institutional role and academic responsibility within Nandha Engineering College.
+                      </p>
                     </div>
-                    {formData.confirm_password && (
-                      <div className="pt-1 flex items-center space-x-1.5">
-                        {passwordsMatch ? (
-                          <><CheckCircle className="w-3.5 h-3.5 text-emerald-500" /><span className="text-xs font-bold text-emerald-500">Passwords match</span></>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      
+                      {/* Staff Role Trigger */}
+                      {(() => {
+                        const rc = getRoleConfig(formData.role);
+                        const RoleIcon = rc.icon;
+                        return (
+                          <div className="space-y-1.5 relative col-span-1 sm:col-span-2" ref={roleRef}>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">
+                              Institutional Role *
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => setRoleOpen(o => !o)}
+                              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer group shadow-sm ${
+                                roleOpen
+                                  ? `${rc.bgColor} ${rc.borderColor} ring-2 ring-brand-500/20`
+                                  : `bg-white dark:bg-navy-900 border-slate-200 dark:border-navy-700 hover:${rc.borderColor}`
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${rc.bgColor} border ${rc.borderColor}`}>
+                                  <RoleIcon className={`w-5 h-5 ${rc.color}`} />
+                                </div>
+                                <div className="flex flex-col">
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border ${rc.badgeColor}`}>
+                                      {roleOptions.find(r => r.value === formData.role)?.badge}
+                                    </span>
+                                    <span className="text-sm font-black text-slate-900 dark:text-white">{formData.role}</span>
+                                  </div>
+                                  <span className="text-xs text-slate-400 font-medium mt-0.5">{rc.desc}</span>
+                                </div>
+                              </div>
+                              <ChevronDown className={`w-4 h-4 shrink-0 ${rc.color} transition-transform duration-200 ${roleOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {roleOpen && (
+                              <div className="absolute left-0 right-0 z-[9999] mt-2 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xl p-2 space-y-1">
+                                {roleOptions.map(opt => {
+                                  const cfg = getRoleConfig(opt.value);
+                                  const OptIcon = cfg.icon;
+                                  const isSel = formData.role === opt.value;
+                                  return (
+                                    <button
+                                      key={opt.value}
+                                      type="button"
+                                      onClick={() => { setFormData({...formData, role: opt.value}); setRoleOpen(false); }}
+                                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                                        isSel ? `${cfg.bgColor} border ${cfg.borderColor}` : 'hover:bg-slate-50 dark:hover:bg-navy-800'
+                                      }`}
+                                    >
+                                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${cfg.bgColor} border ${cfg.borderColor}`}>
+                                        <OptIcon className={`w-4 h-4 ${cfg.color}`} />
+                                      </div>
+                                      <div className="flex flex-col flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                          <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border ${cfg.badgeColor}`}>{opt.badge}</span>
+                                          <span className={`text-xs font-black truncate ${isSel ? cfg.color : 'text-slate-800 dark:text-slate-100'}`}>{opt.label}</span>
+                                        </div>
+                                        <span className="text-[10px] text-slate-400 font-medium truncate mt-0.5">{opt.sublabel}</span>
+                                      </div>
+                                      {isSel && <Check className={`w-4 h-4 ${cfg.color} stroke-[2.5]`} />}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+
+                      {/* Department */}
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Department / Academic Scope *</label>
+                        {isGlobalRole ? (
+                          <div className="w-full min-h-[48px] flex items-center px-4 py-2.5 rounded-2xl border-2 border-dashed border-brand-300 dark:border-brand-500/40 bg-brand-50/50 dark:bg-brand-500/5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">ALL</span>
+                              <span className="text-xs font-black text-brand-900 dark:text-brand-200">All Departments (Global Scope)</span>
+                            </div>
+                          </div>
                         ) : (
-                          <><AlertCircle className="w-3.5 h-3.5 text-red-500" /><span className="text-xs font-bold text-red-500">Passwords do not match</span></>
+                          <CustomDropdown
+                            options={departmentOptions}
+                            label=""
+                            value={formData.department_id}
+                            onChange={(val) => setFormData({...formData, department_id: val})}
+                            placeholder="Select Department..."
+                            icon={Building2}
+                          />
                         )}
                       </div>
-                    )}
-                  </div>
 
-                  <div className="flex items-start space-x-2.5 p-3 mt-2 rounded-xl border border-blue-200 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-900/10 select-none pointer-events-none">
-                    <div className="flex shrink-0 items-center justify-center w-4 h-4 mt-0.5 rounded bg-blue-500 border border-blue-600">
-                      <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                      {/* Academic Year Cohort */}
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Academic Year Cohort *</label>
+                        {isGlobalRole ? (
+                          <div className="w-full min-h-[48px] flex items-center px-4 py-2.5 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-navy-800/40">
+                            <span className="text-xs font-black text-slate-600 dark:text-slate-300">All Years (Global Access)</span>
+                          </div>
+                        ) : (
+                          <CustomDropdown
+                            options={academicYearOptions}
+                            label=""
+                            value={formData.academic_year}
+                            onChange={(val) => setFormData({...formData, academic_year: val})}
+                            placeholder="Select Academic Year..."
+                            icon={GraduationCap}
+                          />
+                        )}
+                        {formErrors.academic_year && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.academic_year}</p>}
+                      </div>
+
+                      {/* Mentoring Designation */}
+                      <div className="space-y-1.5 col-span-1 sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Mentoring Designation</label>
+                        <input
+                          type="text"
+                          value={formData.designation}
+                          onChange={e => setFormData({...formData, designation: e.target.value})}
+                          placeholder="e.g. Assistant Professor / CSE"
+                          className="w-full h-12 px-4 rounded-2xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all"
+                        />
+                      </div>
                     </div>
+                  </section>
+                )}
+
+                {/* ── STEP 2: IDENTITY & CREDENTIALS ── */}
+                {activeStep === 2 && (
+                  <section className="space-y-6 animate-fade-in">
                     <div>
-                      <p className="text-xs font-bold text-blue-900 dark:text-blue-100 leading-tight">Force password reset on first login</p>
-                      <p className="text-[9px] font-bold text-blue-700/80 dark:text-blue-300/80 mt-1 uppercase tracking-wider">Required for security compliance</p>
+                      <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                        <User className="w-5 h-5 text-indigo-500" /> 2. Identity & Credentials
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+                        Enter the official identity and login credentials for the institutional staff member.
+                      </p>
                     </div>
-                  </div>
-                </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      
+                      {/* Full Legal Name */}
+                      <div className="space-y-1.5 col-span-1 sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Full Legal Name *</label>
+                        <input
+                          type="text"
+                          value={formData.full_name}
+                          onChange={e => {
+                            const val = e.target.value;
+                            setFormData(prev => ({
+                              ...prev,
+                              full_name: val,
+                              username: prev.username || val.toLowerCase().trim().replace(/\s+/g, '.')
+                            }));
+                          }}
+                          placeholder="e.g. Dr. A. Ramanathan"
+                          className={`w-full h-12 px-4 rounded-2xl border ${formErrors.full_name ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all`}
+                        />
+                        {formErrors.full_name && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.full_name}</p>}
+                      </div>
+
+                      {/* Username */}
+                      <div className="space-y-1.5 col-span-1 sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Username *</label>
+                        <input
+                          type="text"
+                          value={formData.username}
+                          onChange={e => setFormData({...formData, username: e.target.value})}
+                          placeholder="e.g. ramanathan.cse"
+                          className={`w-full h-12 px-4 rounded-2xl border ${formErrors.username ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all`}
+                        />
+                        {formErrors.username && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.username}</p>}
+                      </div>
+
+                      {/* Password */}
+                      <div className="space-y-3">
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Initial Password *</label>
+                          <div className="relative">
+                            <input
+                              type={showPassword ? "text" : "password"}
+                              value={formData.password}
+                              onChange={e => setFormData({...formData, password: e.target.value})}
+                              placeholder="••••••••"
+                              className={`w-full h-12 pl-4 pr-10 rounded-2xl border ${formErrors.password ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-500 p-1 cursor-pointer"
+                            >
+                              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                          {formErrors.password && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.password}</p>}
+                        </div>
+
+                        {/* Password Checklist & Strength */}
+                        <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] font-black uppercase text-slate-400">Password Strength</span>
+                            <span className={`text-xs font-black ${strengthStr === 'Strong' ? 'text-emerald-500' : strengthStr === 'Fair' ? 'text-amber-500' : 'text-rose-500'}`}>
+                              {formData.password ? strengthStr : 'None'}
+                            </span>
+                          </div>
+
+                          <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-navy-800 overflow-hidden">
+                            <div
+                              className={`h-full transition-all duration-300 ${
+                                strengthScore <= 2 ? 'bg-rose-500 w-1/3' : strengthScore <= 4 ? 'bg-amber-500 w-2/3' : 'bg-emerald-500 w-full'
+                              }`}
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-1.5 pt-1 text-[11px] font-bold">
+                            <div className={`flex items-center gap-1.5 ${pwReqs.length ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                              {pwReqs.length ? <Check className="w-3.5 h-3.5" /> : <div className="w-3 h-3 rounded-full border border-slate-300" />} Min 8 chars
+                            </div>
+                            <div className={`flex items-center gap-1.5 ${pwReqs.upper ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                              {pwReqs.upper ? <Check className="w-3.5 h-3.5" /> : <div className="w-3 h-3 rounded-full border border-slate-300" />} Uppercase
+                            </div>
+                            <div className={`flex items-center gap-1.5 ${pwReqs.lower ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                              {pwReqs.lower ? <Check className="w-3.5 h-3.5" /> : <div className="w-3 h-3 rounded-full border border-slate-300" />} Lowercase
+                            </div>
+                            <div className={`flex items-center gap-1.5 ${pwReqs.number ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                              {pwReqs.number ? <Check className="w-3.5 h-3.5" /> : <div className="w-3 h-3 rounded-full border border-slate-300" />} Number
+                            </div>
+                            <div className={`flex items-center gap-1.5 col-span-2 ${pwReqs.special ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                              {pwReqs.special ? <Check className="w-3.5 h-3.5" /> : <div className="w-3 h-3 rounded-full border border-slate-300" />} Special character (@#$%)
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Confirm Password */}
+                      <div className="space-y-3">
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Confirm Password *</label>
+                          <div className="relative">
+                            <input
+                              type={showConfirmPassword ? "text" : "password"}
+                              value={formData.confirm_password}
+                              onChange={e => setFormData({...formData, confirm_password: e.target.value})}
+                              placeholder="••••••••"
+                              className={`w-full h-12 pl-4 pr-10 rounded-2xl border ${formData.confirm_password && !passwordsMatch ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-500 p-1 cursor-pointer"
+                            >
+                              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                          {formErrors.confirm_password && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.confirm_password}</p>}
+                        </div>
+
+                        {formData.confirm_password && (
+                          <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 flex items-center gap-2">
+                            {passwordsMatch ? (
+                              <><CheckCircle className="w-4 h-4 text-emerald-500" /><span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Passwords match</span></>
+                            ) : (
+                              <><AlertCircle className="w-4 h-4 text-rose-500" /><span className="text-xs font-bold text-rose-500">Passwords do not match</span></>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+                  </section>
+                )}
+
+                {/* ── STEP 3: CONTACT INFORMATION ── */}
+                {activeStep === 3 && (
+                  <section className="space-y-6 animate-fade-in">
+                    <div>
+                      <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                        <Mail className="w-5 h-5 text-blue-500" /> 3. Contact Information
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+                        Provide official contact details and institutional identity numbers.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      
+                      {/* Official Email */}
+                      <div className="space-y-1.5 col-span-1 sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Official College Email *</label>
+                        <input
+                          type="email"
+                          value={formData.email}
+                          onChange={e => setFormData({...formData, email: e.target.value})}
+                          placeholder="faculty@nandhaengg.org"
+                          className={`w-full h-12 px-4 rounded-2xl border ${formErrors.email ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all`}
+                        />
+                        {formErrors.email && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.email}</p>}
+                      </div>
+
+                      {/* Phone Number */}
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Phone Number *</label>
+                        <input
+                          type="tel"
+                          value={formData.phone_number}
+                          onChange={e => setFormData({...formData, phone_number: e.target.value})}
+                          placeholder="+91 98765 43210"
+                          className={`w-full h-12 px-4 rounded-2xl border ${formErrors.phone_number ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all`}
+                        />
+                        {formErrors.phone_number && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.phone_number}</p>}
+                      </div>
+
+                      {/* Date of Birth */}
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Date of Birth (Optional)</label>
+                        <input
+                          type="text"
+                          value={formData.date_of_birth}
+                          onChange={handleDOBChange}
+                          placeholder="DD / MM / YYYY"
+                          className={`w-full h-12 px-4 rounded-2xl border ${formErrors.date_of_birth ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all`}
+                        />
+                        {formErrors.date_of_birth && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.date_of_birth}</p>}
+                      </div>
+
+                      {/* Institutional ID */}
+                      <div className="space-y-1.5 col-span-1 sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Institutional Staff ID</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={formData.institutional_id}
+                            onChange={e => setFormData({...formData, institutional_id: e.target.value})}
+                            placeholder="e.g. NEC-STAFF-098"
+                            className="flex-1 h-12 px-4 rounded-2xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const randomHex = Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+                              const rolePrefix = isGlobalRole ? 'ADM' : 'FAC';
+                              setFormData(prev => ({ ...prev, institutional_id: `NEC-STAFF-${rolePrefix}-${randomHex}` }));
+                            }}
+                            className="h-12 px-4 rounded-2xl bg-brand-100 dark:bg-brand-500/20 text-brand-700 dark:text-brand-300 text-xs font-bold hover:bg-brand-200 transition-all flex items-center shrink-0 cursor-pointer"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 mr-1.5" /> Generate ID
+                          </button>
+                        </div>
+                      </div>
+
+                    </div>
+                  </section>
+                )}
+
+                {/* ── STEP 4: STAFF VERIFICATION ── */}
+                {activeStep === 4 && (
+                  <section className="space-y-6 animate-fade-in">
+                    <div>
+                      <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                        <FileCheck className="w-5 h-5 text-emerald-500" /> 4. Staff Verification
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+                        Upload employee verification credentials and specify institutional reporting hierarchy.
+                      </p>
+                    </div>
+
+                    <div className="space-y-5">
+                      
+                      {/* Document Upload Card */}
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">
+                          Employee ID Proof / Document (Optional)
+                        </label>
+                        <label className="relative flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-slate-300 dark:border-navy-700 rounded-3xl cursor-pointer bg-white dark:bg-navy-950 hover:bg-slate-50 dark:hover:bg-navy-900 transition-all group overflow-hidden">
+                          <div className="flex flex-col items-center justify-center text-center p-4">
+                            <UploadCloud className="w-8 h-8 text-slate-400 group-hover:text-brand-500 transition-colors mb-2" />
+                            {idProofFile ? (
+                              <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs">
+                                <CheckCircle className="w-4 h-4" /> {idProofFile.name} ({(idProofFile.size / (1024 * 1024)).toFixed(2)} MB)
+                              </div>
+                            ) : (
+                              <>
+                                <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                                  <span className="text-brand-600 dark:text-brand-400 underline">Upload Verification Document</span> or drag and drop
+                                </p>
+                                <p className="text-[10px] text-slate-400 mt-1 font-semibold">PDF, JPG, PNG • Max 5 MB</p>
+                              </>
+                            )}
+                          </div>
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onChange={e => setIdProofFile(e.target.files?.[0] || null)}
+                          />
+                        </label>
+                      </div>
+
+                      {/* Reporting Manager */}
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Reporting Manager / HOD (Optional)</label>
+                        <CustomDropdown
+                          options={staffOptions}
+                          label=""
+                          value={formData.reporting_manager}
+                          onChange={(val) => setFormData({...formData, reporting_manager: val})}
+                          placeholder="Select Reporting Manager..."
+                          icon={User}
+                        />
+                      </div>
+
+                    </div>
+                  </section>
+                )}
+
+                {/* ── STEP 5: PERMISSIONS & AGREEMENT ── */}
+                {activeStep === 5 && (
+                  <section className="space-y-6 animate-fade-in">
+                    <div>
+                      <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                        <Shield className="w-5 h-5 text-indigo-500" /> 5. Permissions & Agreement
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+                        Review automatically assigned institutional permissions and accept compliance terms.
+                      </p>
+                    </div>
+
+                    <div className="space-y-5">
+                      
+                      {/* Permissions List */}
+                      <div className="bg-white dark:bg-navy-900 rounded-2xl p-5 border border-slate-200 dark:border-navy-800 space-y-3">
+                        <h4 className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+                          Inherited Role Permissions
+                        </h4>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          <div className="flex items-center gap-2.5 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 text-emerald-800 dark:text-emerald-400 text-xs font-bold">
+                            <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" /> View Student Profiles
+                          </div>
+                          <div className="flex items-center gap-2.5 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 text-emerald-800 dark:text-emerald-400 text-xs font-bold">
+                            <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" /> View LeetCode Progress
+                          </div>
+                          <div className="flex items-center gap-2.5 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 text-emerald-800 dark:text-emerald-400 text-xs font-bold">
+                            <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" /> View Analytics & Reports
+                          </div>
+
+                          {isGlobalRole ? (
+                            <div className="flex items-center gap-2.5 p-3 rounded-xl bg-brand-50 dark:bg-brand-950/20 border border-brand-100 dark:border-brand-900/30 text-brand-800 dark:text-brand-400 text-xs font-bold">
+                              <CheckCircle className="w-4 h-4 text-brand-500 shrink-0" /> Global Administrative Actions
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200/60 dark:border-navy-800 text-slate-400 text-xs font-bold opacity-60">
+                              <X className="w-4 h-4 text-slate-400 shrink-0" /> Global Admin Actions (Restricted)
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Options Checkboxes */}
+                      <div className="space-y-3">
+                        <label className="flex items-center gap-3 p-3.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.send_email}
+                            onChange={e => setFormData({...formData, send_email: e.target.checked})}
+                            className="w-4 h-4 text-brand-600 rounded"
+                          />
+                          <div>
+                            <span className="text-xs font-bold text-slate-900 dark:text-white block">Send Welcome Credentials Email</span>
+                            <span className="text-[10px] text-slate-400">Dispatch login setup instructions to official email.</span>
+                          </div>
+                        </label>
+
+                        <label className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.consent_checked}
+                            onChange={e => setFormData({...formData, consent_checked: e.target.checked})}
+                            className="w-4 h-4 text-brand-600 rounded mt-0.5"
+                          />
+                          <div>
+                            <span className="text-xs font-bold text-slate-900 dark:text-white block">Institutional Compliance & Authorization Acknowledgment *</span>
+                            <span className="text-[10px] text-slate-500 leading-relaxed block mt-1">
+                              I verify that this staff member is authorized to access student academic records for Nandha Engineering College and agree to strictly enforce institutional data privacy regulations.
+                            </span>
+                            {formErrors.consent && <p className="text-[10px] text-rose-500 font-bold mt-1">{formErrors.consent}</p>}
+                          </div>
+                        </label>
+                      </div>
+
+                    </div>
+                  </section>
+                )}
+
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* FOOTER ACTIONS */}
+        {!createdStaffSummary && (
+          <div className="px-6 py-4 bg-slate-50/90 dark:bg-navy-950/80 border-t border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0 z-20">
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-mono font-bold text-slate-500 dark:text-slate-400">
+                Step {activeStep} of 5
+              </span>
+              <div className="w-24 sm:w-36 h-2 rounded-full bg-slate-200 dark:bg-navy-800 overflow-hidden">
+                <div className="h-full bg-brand-600 transition-all duration-300" style={{ width: `${progressPercent}%` }} />
               </div>
-            </section>
+              <span className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400">
+                {progressPercent}%
+              </span>
+            </div>
 
-            {/* SECTION 5: Account Status & Agreement */}
-            <section className="relative z-10 bg-brand-50/40 dark:bg-navy-900/80 rounded-2xl p-5 border border-brand-100 dark:border-navy-800 shadow-sm">
-              <h3 className="text-xs font-bold text-sky-700 dark:text-sky-300 mb-4 flex items-center uppercase tracking-wider bg-sky-50 dark:bg-sky-500/10 p-2.5 rounded-xl">
-                <CheckCircle className="w-4 h-4 mr-2 text-sky-500" /> 5. Account Status & Agreement
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="space-y-1.5 relative z-[101]">
-                    <CustomDropdown
-                      label="Account Status"
-                      options={statusOptions}
-                      value={formData.account_status}
-                      onChange={(val) => setFormData({...formData, account_status: val})}
-                    />
-                  </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isSubmitting}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-navy-800 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
 
-                  <div className="space-y-1.5 relative z-[100]">
-                    <CustomDropdown
-                      label="Reporting Manager (Optional)"
-                      options={staffOptions}
-                      value={formData.reporting_manager}
-                      onChange={(val) => setFormData({...formData, reporting_manager: val})}
-                      placeholder="Select reporting manager..."
-                      icon={Search}
-                    />
-                  </div>
+              {activeStep > 1 && (
+                <button
+                  type="button"
+                  onClick={handlePrevStep}
+                  disabled={isSubmitting}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-navy-800 border border-slate-200 dark:border-navy-700 hover:bg-slate-50 transition-all flex items-center gap-1 cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" /> Back
+                </button>
+              )}
 
-                  <div className="flex items-center space-x-3 mt-2 px-1">
-                    <input 
-                      type="checkbox" 
-                      id="send-email-check"
-                      checked={formData.send_email} 
-                      onChange={e => setFormData({...formData, send_email: e.target.checked})} 
-                      className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer" 
-                    />
-                    <label htmlFor="send-email-check" className="cursor-pointer select-none">
-                      <p className="text-sm font-bold text-gray-900 dark:text-white">Send Welcome Email</p>
-                      <p className="text-[10px] text-gray-500 mt-0.5">Email login credentials to the user.</p>
-                    </label>
-                  </div>
-                  
-                  <div className="flex items-start space-x-3 mt-4 pt-2 group cursor-pointer" onClick={() => setFormData({...formData, consent_checked: !formData.consent_checked})}>
-                    <div className="pt-0.5 shrink-0">
-                      <input 
-                        type="checkbox" 
-                        id="consent-check"
-                        checked={formData.consent_checked} 
-                        onChange={e => setFormData({...formData, consent_checked: e.target.checked})} 
-                        className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer pointer-events-none" 
-                      />
-                    </div>
-                    <div className="select-none flex-1">
-                      <p className="text-sm font-bold text-gray-900 dark:text-white">Consent & Compliance Acknowledgment *</p>
-                      <p className="text-[10px] text-gray-500 mt-1 leading-relaxed">I verify that this staff member is authorized to access student academic records and agree to adhere strictly to the institution's data privacy & security policies.</p>
-                      {formErrors.consent && <p className="text-[10px] text-red-500 mt-1 font-bold">{formErrors.consent}</p>}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white dark:bg-navy-950/60 rounded-2xl p-4 border border-gray-200 dark:border-navy-800 h-full flex flex-col">
-                  <h4 className="text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Role Permissions Map</h4>
-                  <div className="space-y-2.5 flex-1 overflow-y-auto custom-scrollbar max-h-48 pr-2">
-                    {['View Student Profiles', 'View LeetCode Progress', 'View Gamification Analytics'].map((perm, i) => (
-                      <div key={i} className="flex items-center space-x-2.5 opacity-90">
-                        <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                        <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300">{perm}</span>
-                      </div>
-                    ))}
-                    {isGlobalRole && ['Assign Interventions', 'Export Global Reports', 'Manage Staff Accounts'].map((perm, i) => (
-                       <div key={'g'+i} className="flex items-center space-x-2.5 opacity-90">
-                        <CheckCircle className="w-3.5 h-3.5 text-brand-500 shrink-0" />
-                        <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300">{perm}</span>
-                      </div>
-                    ))}
-                    {!isGlobalRole && (
-                      <div className="flex items-center space-x-2.5 opacity-60 mt-3 pt-3 border-t border-gray-100 dark:border-navy-800">
-                        <X className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                        <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 line-through">Global Admin Actions</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </section>
-
-          </form>
-        </div>
-
-        {/* Fixed Footer Actions */}
-        <div className="px-6 py-4 bg-gray-50 dark:bg-navy-900 border-t border-gray-200 dark:border-navy-800 flex items-center justify-end space-x-3 shrink-0 z-10">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-5 py-2.5 rounded-xl text-xs font-bold text-gray-600 hover:text-gray-900 bg-white hover:bg-gray-100 dark:bg-navy-800 dark:text-gray-300 dark:hover:text-white dark:hover:bg-navy-700 border border-gray-200 dark:border-navy-700 transition-all cursor-pointer"
-            disabled={isSubmitting}
-          >
-            Cancel
-          </button>
-          <button
-            form="create-staff-form"
-            type="submit"
-            disabled={isSubmitting || !isFormValid}
-            className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 dark:disabled:bg-navy-700 disabled:text-slate-500 dark:disabled:text-navy-400 transition-all shadow-md flex items-center cursor-pointer active:scale-95"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Creating...
-              </>
-            ) : (
-              <>
-                Create Account
-                <ChevronRight className="w-4 h-4 ml-1.5" />
-              </>
-            )}
-          </button>
-        </div>
+              {activeStep < 5 ? (
+                <button
+                  type="button"
+                  onClick={handleNextStep}
+                  className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 transition-all shadow-md shadow-brand-500/20 flex items-center gap-1.5 cursor-pointer"
+                >
+                  Continue <ChevronRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  form="create-staff-form"
+                  type="submit"
+                  disabled={isSubmitting || !formData.consent_checked}
+                  className="px-6 py-2.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 transition-all shadow-lg shadow-brand-500/25 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Creating Account...
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-4 h-4" />
+                      Create Institutional Account
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
       </div>
     </GlobalModalBackdrop>

@@ -72,7 +72,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
             <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
             <span>{errorMsg}</span>
           </div>
-          <button onClick={() => setErrorMsg('')} className="text-gray-400 hover:text-rose-600 text-sm font-bold ml-2">✕</button>
+          <button onClick={() => setErrorMsg('')} className="text-gray-400 hover:text-rose-600 text-sm font-bold ml-2"></button>
         </div>
       )}
 

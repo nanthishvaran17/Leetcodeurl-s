@@ -21,6 +21,7 @@
     text-rendering: optimizeSpeed;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
@@ -32,6 +33,10 @@
     min-height: 100vh;
     min-height: 100dvh;
     overflow-x: hidden;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
   }
   /* GPU Hardware Acceleration for Zero-Lag Smooth Interactions */
   button, input, select, table, tr, div[role="dialog"] {
@@ -51,9 +56,26 @@
     max-width: 100%;
     min-width: 0;
   }
-  button {
+  button, a, select, input[type="button"], input[type="submit"] {
     touch-action: manipulation;
+    min-height: 38px;
   }
+}
+
+/* Safe Area Padding Utilities for Android Display Cutouts & Notches */
+.safe-area-pt {
+  padding-top: max(0.75rem, env(safe-area-inset-top, 0.75rem));
+}
+.safe-area-pb {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0.75rem));
+}
+.safe-area-px {
+  padding-left: max(1rem, env(safe-area-inset-left, 1rem));
+  padding-right: max(1rem, env(safe-area-inset-right, 1rem));
+}
+.touch-target-min {
+  min-height: 44px;
+  min-width: 44px;
 }
 
 /* Professional Keyboard Focus & Accessibility Ring System */

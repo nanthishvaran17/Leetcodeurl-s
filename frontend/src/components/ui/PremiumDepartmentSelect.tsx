@@ -3,6 +3,8 @@ import { Building2 } from 'lucide-react';
 import api from '../../services/api';
 import { GlobalFilter } from '../GlobalFilter';
 
+import { isProductionDepartment, PRODUCTION_DEPARTMENTS } from '../../constants/departments';
+
 interface Department {
   id: number;
   code: string;
@@ -30,18 +32,20 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
     const fetchDepartments = async () => {
       try {
         const res = await api.get('/departments');
-        setDepartments(res.data);
+        const valid = (res.data || []).filter((d: any) => isProductionDepartment(d));
+        setDepartments(valid.length > 0 ? valid : (PRODUCTION_DEPARTMENTS as any[]));
       } catch (err) {
         console.error('Failed to fetch departments', err);
+        setDepartments(PRODUCTION_DEPARTMENTS as any[]);
       }
     };
     fetchDepartments();
   }, []);
 
   const options = [
-    { value: 'ALL', label: 'All Departments', pillText: 'ALL' },
-    ...departments.map(d => ({
-      value: useIdAsValue ? String(d.id) : d.code,
+    { value: 'ALL', label: 'All Departments (CS & IOT)', pillText: 'ALL' },
+    ...departments.filter(d => isProductionDepartment(d)).map(d => ({
+      value: useIdAsValue ? String(d.id || '') : d.code,
       label: d.name,
       pillText: d.code
     }))

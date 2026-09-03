@@ -1,4 +1,5 @@
 import os
+import json
 import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Response, Depends, WebSocket, WebSocketDisconnect
@@ -10,7 +11,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from backend.config import settings
-from backend.database import engine, Base, get_db
+from backend.database import engine, Base, get_db, SessionLocal
 from backend.seed import seed_database
 try:
     from backend.scheduler import start_scheduler
@@ -27,7 +28,7 @@ from backend.routes import (
     audit, public, sync, history, risk, goals, system_health, weekly_contests,
     scheduled_reports, certificates, data_issues, faculty_assignments, institutional_dashboards,
     email_campaigns, bot_notifications, anti_cheat, placement_eligibility, gamification, accreditation,
-    whatsapp_webhook, deep_tech_intelligence
+    whatsapp_webhook, deep_tech_intelligence, url_import, contest_integrity
 )
 from backend.routes import admin, email_reports, ai_assistant, leetcode, ai_control_center, intelligence
 from backend.routes import command_center, scheduler
@@ -309,7 +310,10 @@ origins = [
     "http://localhost:5173",
     "http://localhost:3000",
     "http://127.0.0.1:5173",
-    "http://127.0.0.1:3000"
+    "http://127.0.0.1:3000",
+    "http://localhost",
+    "capacitor://localhost",
+    "ionic://localhost"
 ]
 if getattr(settings, "FRONTEND_ORIGIN", None) and settings.FRONTEND_ORIGIN.strip() not in origins:
     origins.append(settings.FRONTEND_ORIGIN.strip())
@@ -438,6 +442,8 @@ app.include_router(scheduler.router)
 from backend.routes import stats_snapshot
 app.include_router(stats_snapshot.router, prefix="/api")
 app.include_router(stats_snapshot.router)
+app.include_router(url_import.router, prefix="/api")
+app.include_router(contest_integrity.router, prefix="/api")
 # Mount Static File Directories
 is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")
 if is_vercel:
@@ -466,6 +472,60 @@ async def websocket_leaderboard_endpoint(websocket: WebSocket):
                 await websocket.send_text("pong")
     except WebSocketDisconnect:
         manager.disconnect(websocket)
+
+@app.websocket("/ws/contest/{contest_id}")
+async def websocket_contest_endpoint(websocket: WebSocket, contest_id: str):
+    """
+    Persistent WebSocket Endpoint for True Live Contest Monitoring.
+    Supports initial snapshot push, GET_SNAPSHOT, and GET_MISSED_EVENTS version recovery.
+    """
+    await manager.connect(websocket)
+    db = SessionLocal()
+    try:
+        from backend.services.live_contest_monitor_engine import live_contest_monitor_engine
+        # Push initial snapshot immediately on connect
+        snapshot = live_contest_monitor_engine.get_live_snapshot(db, contest_id)
+        await websocket.send_text(json.dumps(snapshot))
+
+        while True:
+            raw_msg = await websocket.receive_text()
+            if raw_msg == "ping":
+                await websocket.send_text("pong")
+                continue
+            try:
+                msg = json.loads(raw_msg)
+                msg_type = msg.get("type")
+                if msg_type == "GET_SNAPSHOT":
+                    snap = live_contest_monitor_engine.get_live_snapshot(db, contest_id)
+                    await websocket.send_text(json.dumps(snap))
+                elif msg_type == "GET_MISSED_EVENTS":
+                    last_ver = msg.get("last_received_version", 0)
+                    missed = live_contest_monitor_engine.get_missed_events(db, contest_id, last_ver)
+                    await websocket.send_text(json.dumps({
+                        "event": "MISSED_EVENTS_RESPONSE",
+                        "type": "MISSED_EVENTS_RESPONSE",
+                        "contest_id": contest_id,
+                        "events": missed
+                    }))
+            except Exception as parse_err:
+                logger.warning(f"[WS_CONTEST] Error processing message: {parse_err}")
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+    finally:
+        db.close()
+
+@app.post("/api/contests/{contest_id}/start-live-monitor")
+async def start_live_contest_monitor_api(contest_id: str):
+    """Triggers backend live monitoring engine for all registered students."""
+    from backend.services.live_contest_monitor_engine import live_contest_monitor_engine
+    return await live_contest_monitor_engine.start_monitoring(contest_id)
+
+@app.get("/api/contests/{contest_id}/live-snapshot")
+def get_live_contest_snapshot_api(contest_id: str, db: Session = Depends(get_db)):
+    """REST fallback endpoint returning live snapshot."""
+    from backend.services.live_contest_monitor_engine import live_contest_monitor_engine
+    return live_contest_monitor_engine.get_live_snapshot(db, contest_id)
+
 
 # Production Static Build Mount (Serves Frontend SPA bundle on single port)
 FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")

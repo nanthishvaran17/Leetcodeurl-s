@@ -91,6 +91,8 @@ report_*.docx
 Contest*_Full_Reconciliation.csv
 scratch_output_report.docx
 Nandha_LeetCode_Engine_Complete_Manual.pdf
+# Capacitor Android project
+frontend/android/
 production_verification_report.*
 verification_10_10_final_report.*
 

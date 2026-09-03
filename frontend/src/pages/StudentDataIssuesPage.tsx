@@ -444,7 +444,7 @@ export const StudentDataIssuesPage: React.FC = () => {
         } else {
           failedCount++;
         }
-        setBulkProgress(`Checked ${i + 1}/${selectedStudentIds.length} (✓ ${verifiedCount} Verified, ⚠ ${failedCount} Issues)`);
+        setBulkProgress(`Checked ${i + 1}/${selectedStudentIds.length} (${verifiedCount} Verified, ${failedCount} Issues)`);
       }
 
       notify.success('Bulk Check Complete', `Completed verification: ${verifiedCount} valid, ${failedCount} issues.`, { category: 'BULK VALIDATOR' });
@@ -699,13 +699,8 @@ export const StudentDataIssuesPage: React.FC = () => {
               placeholder="All Departments"
               icon={<Building2 size={16} />}
               options={[
-                { label: 'Computer Science and Engineering', value: 'CSE', badge: 'CSE', badgeColor: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
-                { label: 'Computer Science and Engineering (Cyber Security)', value: 'CSE(CS)', badge: 'CSE(CS)', badgeColor: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' },
-                { label: 'Computer Science and Engineering (IoT)', value: 'CSE(IOT)', badge: 'CSE(IOT)', badgeColor: 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400' },
-                { label: 'Information Technology', value: 'IT', badge: 'IT', badgeColor: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' },
-                { label: 'Artificial Intelligence and Data Science', value: 'AIDS', badge: 'AIDS', badgeColor: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' },
-                { label: 'Electronics and Communication Engineering', value: 'ECE', badge: 'ECE', badgeColor: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' },
-                { label: 'Electrical and Electronics Engineering', value: 'EEE', badge: 'EEE', badgeColor: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' },
+                { label: 'CSE (Cyber Security)', value: 'CSE(CS)', badge: 'CYBER', badgeColor: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' },
+                { label: 'CSE (Internet of Things - IoT)', value: 'CSE(IoT)', badge: 'IOT', badgeColor: 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400' },
               ]}
             />
           </div>
@@ -809,7 +804,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                   className="text-gray-400 hover:text-rose-500 ml-1"
                   title="Delete preset"
                 >
-                  ✕
+                 
                 </span>
               )}
             </button>
@@ -1073,7 +1068,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                                 ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-500/30'
                                 : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-500/30'
                             }`}>
-                              {student.url_status === 'VERIFIED' ? '✓ Verified URL' : student.url_status === 'INVALID' ? '✕ Invalid URL' : '⚠ Needs Check'}
+                              {student.url_status === 'VERIFIED' ? 'Verified URL' : student.url_status === 'INVALID' ? 'Invalid URL' : 'Needs Check'}
                             </span>
 
                             <button
@@ -1108,7 +1103,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                       <td className="py-3.5 px-4 max-w-xs">
                         <p className="text-xs text-gray-800 dark:text-slate-300 font-bold leading-snug">{student.error_description}</p>
                         <p className="text-[10px] text-amber-600 dark:text-amber-300 mt-1 font-semibold">
-                          ➔ Action: {student.recommended_action}
+                          Action: {student.recommended_action}
                         </p>
                       </td>
 
@@ -1198,7 +1193,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                   onClick={() => setRepairStudent(null)}
                   className="text-slate-400 hover:text-white font-black text-xs p-1"
                 >
-                  ✕
+                 
                 </button>
               </div>
 
@@ -1255,7 +1250,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                 }`}>
                   <div className="flex items-center space-x-1.5 font-black text-sm">
                     {verifyResult.valid ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <XCircle className="w-4 h-4 text-rose-400" />}
-                    <span>{verifyResult.valid ? '✓ Profile Verified on LeetCode' : '✕ Verification Failed'}</span>
+                    <span>{verifyResult.valid ? 'Profile Verified on LeetCode' : 'Verification Failed'}</span>
                   </div>
                   {verifyResult.valid ? (
                     <div className="text-[11.5px] space-y-1 pt-1">

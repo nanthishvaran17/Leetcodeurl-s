@@ -174,6 +174,12 @@ def log_user_activity(
     ip_addr = request.client.host if request.client else "127.0.0.1"
     user_agent = request.headers.get("user-agent", "Browser")
 
+    meta = dict(req.metadata) if req.metadata else {}
+    meta.setdefault("request_path", request.url.path)
+    meta.setdefault("request_method", request.method)
+    meta.setdefault("environment", "Production")
+    meta.setdefault("actor_type", "Administrator" if user and user.role in ("Admin", "Super Admin", "MANAGEMENT", "HOD") else "User")
+
     entry = log_admin_action(
         db=db,
         action=req.action,
@@ -183,7 +189,7 @@ def log_user_activity(
         target_type=req.target_type,
         target_id=req.target_id,
         status="SUCCESS",
-        metadata_json=req.metadata,
+        metadata_json=meta,
         ip_address=ip_addr,
         user_agent=user_agent
     )
@@ -580,7 +586,9 @@ class UpdateStaffRequest(BaseModel):
     department_id: Optional[int] = None
     reporting_manager_id: Optional[int] = None
     section_id: Optional[int] = None
+    academic_year: Optional[str] = None
     mentoring_role: Optional[str] = None
+    date_of_birth: Optional[str] = None
     is_active: Optional[bool] = None
 
 class BulkAssignRequest(BaseModel):
@@ -762,9 +770,9 @@ def update_staff_user(
     if not staff_user:
         raise HTTPException(status_code=404, detail="Staff member not found.")
 
-    # Privilege escalation protection
-    if payload.role and payload.role.strip().lower() in ["super admin", "admin"] and current_user.role.lower() not in ["super admin"]:
-        raise HTTPException(status_code=403, detail="Only Super Admins can promote users to Admin roles.")
+    # Privilege escalation protection — Allow Admins and Super Admins to perform staff updates
+    if current_user.role.lower() not in ["super admin", "admin", "administrator", "super_admin"]:
+        raise HTTPException(status_code=403, detail="Only Admins and Super Admins can update staff accounts and roles.")
 
     changes_made = {}
 
@@ -838,6 +846,14 @@ def update_staff_user(
         staff_user.mentoring_role = payload.mentoring_role
         changes_made["mentoring_role"] = payload.mentoring_role
 
+    if payload.academic_year is not None:
+        staff_user.academic_year = payload.academic_year.strip() if payload.academic_year else None
+        changes_made["academic_year"] = staff_user.academic_year
+
+    if payload.date_of_birth is not None:
+        staff_user.date_of_birth = payload.date_of_birth.strip() if payload.date_of_birth else None
+        changes_made["date_of_birth"] = staff_user.date_of_birth
+
     if payload.is_active is not None and staff_user.is_active != payload.is_active:
         changes_made['status'] = "Active" if payload.is_active else "Inactive"
         staff_user.is_active = payload.is_active
@@ -870,10 +886,16 @@ def update_staff_user(
         "staff": {
             "id": staff_user.id,
             "institutional_id": staff_user.institutional_id,
+            "full_name": staff_user.full_name or staff_user.username,
             "username": staff_user.username,
             "email": staff_user.email,
+            "phone_number": staff_user.phone_number or "",
+            "designation": staff_user.designation or "",
+            "date_of_birth": staff_user.date_of_birth or "",
             "role": staff_user.role,
             "department_id": staff_user.department_id,
+            "academic_year": staff_user.academic_year or "",
+            "mentoring_role": staff_user.mentoring_role or "",
             "is_active": staff_user.is_active
         }
     }
@@ -1080,11 +1102,17 @@ def get_all_staff_users(
         {
             "id": s.id,
             "institutional_id": s.institutional_id or f"NEC-STAFF-{s.id:03d}",
+            "full_name": s.full_name or s.username,
             "username": s.username,
             "email": s.email,
+            "phone_number": s.phone_number or "",
+            "designation": s.designation or "",
+            "date_of_birth": s.date_of_birth or "",
             "role": s.role,
             "department_id": s.department_id,
             "department": s.department.code if s.department else ("CSE(CS)" if s.department_id == 1 else ("CSE(IOT)" if s.department_id == 2 else "INSTITUTIONAL")),
+            "academic_year": s.academic_year or "",
+            "mentoring_role": s.mentoring_role or "",
             "is_active": s.is_active,
             "assigned_count": counts_map.get(s.id, 0),
             "max_capacity": 30,

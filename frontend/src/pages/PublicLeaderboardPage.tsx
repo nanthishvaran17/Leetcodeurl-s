@@ -76,9 +76,9 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
   const uniqueDepts = ['CSE(CS)', 'CSE(IOT)'];
 
   const MEDAL_CONFIGS = [
-    { rank: 2, color: 'from-slate-400 to-slate-500', borderColor: 'border-slate-300', textColor: 'text-slate-300', emoji: '🥈', label: 'SILVER', size: 'scale-90', order: 'order-1' },
-    { rank: 1, color: 'from-amber-400 to-yellow-500', borderColor: 'border-amber-400', textColor: 'text-amber-300', emoji: '🥇', label: 'GOLD', size: 'scale-110', order: 'order-2' },
-    { rank: 3, color: 'from-orange-500 to-amber-600', borderColor: 'border-orange-400', textColor: 'text-orange-300', emoji: '🥉', label: 'BRONZE', size: 'scale-90', order: 'order-3' },
+    { rank: 2, color: 'from-slate-400 to-slate-500', borderColor: 'border-slate-300', textColor: 'text-slate-300', emoji: '', label: 'SILVER', size: 'scale-90', order: 'order-1' },
+    { rank: 1, color: 'from-amber-400 to-yellow-500', borderColor: 'border-amber-400', textColor: 'text-amber-300', emoji: '', label: 'GOLD', size: 'scale-110', order: 'order-2' },
+    { rank: 3, color: 'from-orange-500 to-amber-600', borderColor: 'border-orange-400', textColor: 'text-orange-300', emoji: '', label: 'BRONZE', size: 'scale-90', order: 'order-3' },
   ];
 
   return (
@@ -101,7 +101,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
               LeetCode Performance <span className="text-brand-400">Leaderboard</span>
             </h1>
             <p className="text-sm text-gray-300 font-semibold">
-              Real-time institutional performance rankings — All Engineering Departments (CSE, IT, ECE, EEE, MECH, CIVIL, AIML, AIDS, Cyber Security &amp; IoT)
+              Real-time institutional performance rankings — Academic Departments (Cyber Security &amp; IoT)
             </p>
             <div className="flex items-center space-x-2 text-[11px] text-gray-400 font-mono">
               <Shield className="w-3.5 h-3.5 text-emerald-400" />

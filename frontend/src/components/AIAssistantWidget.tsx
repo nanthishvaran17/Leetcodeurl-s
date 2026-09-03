@@ -196,13 +196,13 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
 
   const launcherCategories = [
     {
-      title: "👨‍🎓 Student Operations",
+      title: "Student Operations",
       icon: Users,
       color: "from-blue-500/10 to-indigo-500/10 border-blue-500/30 text-blue-400",
       actions: [
-        { label: "🔎 Lookup Student Profile", query: "Lookup Bharath K profile details" },
-        { label: "📊 Filter CSE(CS) III Year", query: "Show Cyber Security III Year students" },
-        { label: "⚖️ Compare Top Solvers", query: "Compare Nanthish S and Bharath K" }
+        { label: "Lookup Student Profile", query: "Lookup Bharath K profile details" },
+        { label: "Filter CSE(CS) III Year", query: "Show Cyber Security III Year students" },
+        { label: "Compare Top Solvers", query: "Compare Nanthish S and Bharath K" }
       ]
     },
     {

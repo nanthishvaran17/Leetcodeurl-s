@@ -341,7 +341,7 @@ export const StaffDashboardView: React.FC = () => {
             </div>
             <div>
               <h4 className="text-sm font-black text-white flex items-center space-x-2">
-                <span>🟠 Post-Session Activity Detected</span>
+                <span>Post-Session Activity Detected</span>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950">
                   {summary.post_930_solvers_count} Students
                 </span>

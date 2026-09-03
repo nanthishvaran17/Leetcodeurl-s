@@ -19,23 +19,23 @@ export const LiveStatusBar: React.FC<LiveStatusBarProps> = ({
   lastEventTime
 }) => {
   let statusColor = 'text-gray-400 bg-gray-900 border-gray-700';
-  let statusText = '🔒 FINALIZED';
+  let statusText = 'FINALIZED';
   let syncStatus = 'OFFLINE';
   
   if (isLive) {
     syncStatus = 'LIVE';
     if (!workerState || workerState === 'OFFLINE' || workerState === 'ERROR' || workerState === 'IDLE' || workerState === 'DISCONNECTED') {
       statusColor = 'text-rose-500 bg-rose-500/10 border-rose-500/30';
-      statusText = '🔴 SOURCE OFFLINE';
+      statusText = 'SOURCE OFFLINE';
     } else if (workerState === 'WAITING' || workerState === 'POLLING') {
       statusColor = 'text-amber-500 bg-amber-500/10 border-amber-500/30';
-      statusText = '🟡 WAITING FOR LIVE EVENTS';
+      statusText = 'WAITING FOR LIVE EVENTS';
     } else if (workerState === 'STALE') {
       statusColor = 'text-orange-500 bg-orange-500/10 border-orange-500/30';
-      statusText = '🟠 DATA STALE';
+      statusText = 'DATA STALE';
     } else {
       statusColor = 'text-emerald-500 bg-emerald-500/10 border-emerald-500/30';
-      statusText = '🔴 LIVE';
+      statusText = 'LIVE';
     }
   }
 

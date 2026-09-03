@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { Sun, Moon, User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, Zap, AlertOctagon } from 'lucide-react';
+import { Sun, Moon, User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, Zap, AlertOctagon, Bell } from 'lucide-react';
 import { CollegeLogo } from './CollegeLogo';
 import { getDataFreshness } from '../services/api';
 import { SyncStatusModal } from './SyncStatusModal';
 import { LiveIndicator } from './LiveIndicator';
+import { NotificationPanel } from './NotificationPanel';
+import { useNotifications } from '../hooks/useNotifications';
 
 interface NavbarProps {
   currentSessionStatus?: string;
@@ -31,6 +33,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [freshness, setFreshness] = useState<any>(null);
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState<boolean>(false);
+  const [showNotifications, setShowNotifications] = useState<boolean>(false);
+  const { unreadCount } = useNotifications();
 
   useEffect(() => {
     loadFreshness();
@@ -49,7 +53,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white dark:bg-navy-900 border-b border-slate-200 dark:border-navy-800 transition-colors shadow-sm">
+      <header className="sticky top-0 z-40 bg-white dark:bg-navy-900 border-b border-slate-200 dark:border-navy-800 transition-colors shadow-sm pt-[env(safe-area-inset-top,0px)]">
         <div className="w-full max-w-[1800px] mx-auto px-2 sm:px-5 lg:px-8">
           <div className="flex items-center justify-between h-[64px] sm:h-[72px]">
             
@@ -129,6 +133,24 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <Activity className={`w-3.5 h-3.5 ${currentSessionStatus === 'ACTIVE' ? 'text-brand-500 animate-sync-spin' : 'text-brand-500'}`} />
                 <span>Sync Engine Status</span>
               </button>
+
+              {/* Notifications */}
+              {isAuthenticated && (
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowNotifications(!showNotifications)}
+                    className="relative p-1.5 sm:p-2 flex-shrink-0 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-navy-800 transition-all duration-200 cursor-pointer active:scale-90"
+                    title="Notifications"
+                  >
+                    <Bell className="w-4 h-4 sm:w-4 sm:h-4" />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-navy-900"></span>
+                    )}
+                  </button>
+                  <NotificationPanel isOpen={showNotifications} onClose={() => setShowNotifications(false)} />
+                </div>
+              )}
 
               {/* Theme Toggle */}
               <button

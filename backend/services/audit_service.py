@@ -35,6 +35,25 @@ def log_admin_action(
     admin_email = current_user.email if current_user else "system@nandhaengg.org"
     admin_role = current_user.role if current_user else "SYSTEM"
 
+    # Deeply enrich metadata payload dictionary with complete audit telemetry
+    meta = dict(metadata_json) if metadata_json else {}
+    meta.setdefault("admin_id", admin_id)
+    meta.setdefault("admin_name", admin_name)
+    meta.setdefault("admin_email", admin_email)
+    meta.setdefault("admin_role", admin_role)
+    meta.setdefault("action", action)
+    meta.setdefault("action_type", action_type)
+    meta.setdefault("status", status)
+    if target_type:
+        meta.setdefault("target_type", target_type)
+    if target_id:
+        meta.setdefault("target_id", str(target_id))
+    if ip_address:
+        meta.setdefault("ip_address", ip_address)
+    if user_agent:
+        meta.setdefault("user_agent", user_agent)
+    meta.setdefault("timestamp_utc", datetime.datetime.utcnow().isoformat() + "Z")
+
     audit_entry = AdminAuditLog(
         audit_id=audit_id,
         admin_user_id=admin_id,
@@ -49,7 +68,7 @@ def log_admin_action(
         ip_address=ip_address,
         user_agent=user_agent,
         status=status,
-        metadata_json=metadata_json,
+        metadata_json=meta,
         created_at=datetime.datetime.utcnow()
     )
 

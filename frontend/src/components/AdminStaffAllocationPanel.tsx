@@ -607,7 +607,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
              : isFull ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400'
              : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
            }`}>
-             {!st.is_active ? '⊘ DISABLED' : isFull ? '⚠ FULL' : '● AVAILABLE'}
+             {!st.is_active ? '⊘ DISABLED' : isFull ? 'FULL' : '● AVAILABLE'}
            </span>
            <div className="flex items-center space-x-1">
              <button onClick={() => handleOpenStaffRoster(st)}
@@ -796,7 +796,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
         <tr><td colSpan={7} className="p-8 text-center">
          <div className="flex flex-col items-center gap-2">
           <CheckCircle2 className="w-8 h-8 text-emerald-500" />
-          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">All students are currently assigned to primary mentors! 🎉</p>
+          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">All students are currently assigned to primary mentors! </p>
          </div>
         </td></tr>
        ) : (

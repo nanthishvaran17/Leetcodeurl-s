@@ -8,8 +8,10 @@ import {
   HelpCircle, Eye, Compass, Target, PieChart, Layers, BrainCircuit,
   Award, Flame, Filter, ChevronDown, Check, AlertCircle, ArrowRight,
   Sliders, User, CheckCircle, XCircle, ExternalLink, Calendar, Info,
-  UserPlus, UserMinus, Shuffle, Printer, Share2
+  UserPlus, UserMinus, Shuffle, Printer, Share2, TrendingDown, Minus
 } from 'lucide-react';
+import { StaffDetailDrawer } from '../components/admin/StaffDetailDrawer';
+import { DepartmentDetailDrawer } from '../components/admin/DepartmentDetailDrawer';
 import { GlobalFilter } from '../components/GlobalFilter';
 import {
   getCommandCenterSummary, getCommandCenterStudents, addStudent, updateStudent,
@@ -283,7 +285,7 @@ const StaffAllocationModal: React.FC<{
             <GlobalFilter
               value={selectedDeptId.toString()}
               onChange={val => setSelectedDeptId(Number(val))}
-              dropdownWidth="w-64"
+              dropdownWidth="w-max min-w-full"
               options={departments.map((d: any) => ({ value: String(d.id), label: `${d.name} (${d.code})`, pillText: d.code }))}
               icon={<Building2 className="w-4 h-4" />}
             />
@@ -305,14 +307,7 @@ const StaffAllocationModal: React.FC<{
               <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">Unassigned Students Queue: </span>
               <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold font-mono">{unassignedStudents.length}</span>
             </div>
-            <button
-              onClick={handleAutoDistribute}
-              disabled={actionLoading || unassignedStudents.length === 0}
-              className="px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold inline-flex items-center gap-1.5 disabled:opacity-50 transition"
-            >
-              <Shuffle size={13} />
-              <span>Auto-Distribute to Active Faculty (1:20)</span>
-            </button>
+            {/* Auto-distribute button removed as per user request to handle allocations manually */}
           </div>
 
           {/* Faculty Workload Grid */}
@@ -508,9 +503,9 @@ const ReportHubModal: React.FC<{
                 onChange={val => setSelectedReportType(val)}
                 dropdownWidth="w-full"
                 options={[
-                  { value: "EXECUTIVE", label: "📑 Executive Department Coding Health Report" },
-                  { value: "FACULTY_ALLOCATION", label: "👥 Faculty Mentorship & Allocation Audit Report" },
-                  { value: "INACTIVE_AT_RISK", label: "⚠️ Inactive & At-Risk Intervention Report" }
+                  { value: "EXECUTIVE", label: "Executive Department Coding Health Report" },
+                  { value: "FACULTY_ALLOCATION", label: "Faculty Mentorship & Allocation Audit Report" },
+                  { value: "INACTIVE_AT_RISK", label: "Inactive & At-Risk Intervention Report" }
                 ]}
                 icon={<FileText className="w-4 h-4" />}
               />
@@ -688,6 +683,8 @@ export const HODCommandCenter: React.FC = () => {
   const [studentsSearch, setStudentsSearch] = useState<string>('');
   const [studentsLoading, setStudentsLoading] = useState<boolean>(false);
   const [selectedStudentDetail, setSelectedStudentDetail] = useState<StudentRecord | null>(null);
+  const [selectedStaffDetail, setSelectedStaffDetail] = useState<StaffRecord | null>(null);
+  const [selectedDeptIntelligence, setSelectedDeptIntelligence] = useState<DeptBenchmark | null>(null);
   const [selectedStudentIds, setSelectedStudentIds] = useState<number[]>([]);
   const [batchTargetFaculty, setBatchTargetFaculty] = useState<number | null>(null);
 
@@ -1209,7 +1206,7 @@ export const HODCommandCenter: React.FC = () => {
             {[
               {
                 color: 'text-rose-600 bg-rose-50 border-rose-200',
-                badge: '🔴 INACTIVE',
+                badge: 'INACTIVE',
                 count: inactiveInScope,
                 title: 'Inactive Solvers',
                 sub: '0 problems solved in current cycle',
@@ -1217,7 +1214,7 @@ export const HODCommandCenter: React.FC = () => {
               },
               {
                 color: 'text-amber-600 bg-amber-50 border-amber-200',
-                badge: '🟡 DECLINING',
+                badge: 'DECLINING',
                 count: needsAtt?.declining_count || 0,
                 title: 'Declining Weekly Velocity',
                 sub: 'Submissions decreased vs last cycle',
@@ -1225,7 +1222,7 @@ export const HODCommandCenter: React.FC = () => {
               },
               {
                 color: 'text-blue-600 bg-blue-50 border-blue-200',
-                badge: '🔵 IMPROVING',
+                badge: 'IMPROVING',
                 count: improvingInScope,
                 title: 'Accelerating Solvers',
                 sub: 'Rating velocity increased this week',
@@ -1441,43 +1438,139 @@ export const HODCommandCenter: React.FC = () => {
       {/* ── 7. DEPARTMENT MATRIX & YEAR BENCHMARKS ──────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Department Matrix */}
-        <Card className="lg:col-span-8 p-5 space-y-3.5">
+        <Card className="lg:col-span-12 p-5 space-y-3.5">
           <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-navy-800">
-            <h3 className="font-display text-sm font-bold text-slate-900 dark:text-white">
-              Department Performance Matrix (All 11 Departments)
-            </h3>
-            <span className="text-xs text-slate-400 font-mono">Click row to set scope</span>
+            <div>
+              <h3 className="font-display text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Building2 size={16} className="text-brand-500" />
+                <span>Department Performance & Intelligence Matrix</span>
+              </h3>
+              <p className="text-xs text-slate-500">Comprehensive real-time view of departmental health, engagement, and mentorship.</p>
+            </div>
+            <span className="text-[10px] text-slate-400 font-mono bg-slate-50 dark:bg-navy-900 px-2 py-1 rounded-md border border-slate-100 dark:border-navy-700">
+              Click row to inspect details
+            </span>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
+          <div className="overflow-x-auto stylish-scrollbar">
+            <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
               <thead>
-                <tr className="text-[10px] font-bold uppercase text-slate-400 font-mono border-b border-slate-100 dark:border-navy-800">
-                  <th className="py-2 px-2">Dept</th>
-                  <th className="py-2 px-2 text-right">Roster</th>
-                  <th className="py-2 px-2 text-right">Active</th>
-                  <th className="py-2 px-2 text-right">Part %</th>
-                  <th className="py-2 px-2 text-right">Avg Solved</th>
-                  <th className="py-2 px-2 text-right">Health</th>
+                <tr className="text-[10px] font-bold uppercase text-slate-500 font-mono border-b border-slate-100 dark:border-navy-800 bg-slate-50 dark:bg-navy-900/50">
+                  <th className="py-2.5 px-3 rounded-tl-lg">Rank</th>
+                  <th className="py-2.5 px-3">Dept</th>
+                  <th className="py-2.5 px-3 text-right">Roster</th>
+                  <th className="py-2.5 px-3 text-right">Active Score</th>
+                  <th className="py-2.5 px-3 text-center">Engagement</th>
+                  <th className="py-2.5 px-3 text-right">Avg Solved</th>
+                  <th className="py-2.5 px-3 text-right">Completion</th>
+                  <th className="py-2.5 px-3 text-right">At-Risk</th>
+                  <th className="py-2.5 px-3 text-right">Mentors</th>
+                  <th className="py-2.5 px-3 text-center">Health</th>
+                  <th className="py-2.5 px-3 text-center rounded-tr-lg">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50 dark:divide-navy-800 font-mono">
-                {deptMatrix.map(d => (
-                  <tr
-                    key={d.department_id}
-                    onClick={() => setSelectedDept(String(d.department_id))}
-                    className={`hover:bg-brand-50/50 dark:hover:bg-navy-800 cursor-pointer transition ${selectedDept === String(d.department_id) ? 'bg-brand-50/80 font-bold' : ''}`}
-                  >
-                    <td className="py-2 px-2 font-bold text-slate-800 dark:text-slate-200">{d.department_code}</td>
-                    <td className="py-2 px-2 text-right text-slate-500">{d.student_count}</td>
-                    <td className="py-2 px-2 text-right text-emerald-600 font-bold">{d.active_count}</td>
-                    <td className="py-2 px-2 text-right">{d.participation_rate_pct}%</td>
-                    <td className="py-2 px-2 text-right">{d.avg_solved}</td>
-                    <td className="py-2 px-2 text-right font-bold text-brand-600">{d.health_score}</td>
-                  </tr>
-                ))}
+              <tbody className="divide-y divide-slate-50 dark:divide-navy-800/50 font-mono">
+                {deptMatrix.map(d => {
+                  const isSelected = selectedDept === String(d.department_id);
+                  return (
+                    <tr
+                      key={d.department_id}
+                      onClick={() => {
+                        setSelectedDept(String(d.department_id));
+                        setSelectedDeptIntelligence(d);
+                      }}
+                      className={`hover:bg-slate-50 dark:hover:bg-navy-800/50 cursor-pointer transition ${isSelected ? 'bg-brand-50/50 dark:bg-brand-900/10' : ''}`}
+                    >
+                      <td className="py-3 px-3 font-bold text-slate-400">
+                        {d.rank ? `#${d.rank}` : '-'}
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="font-bold text-slate-800 dark:text-slate-200">{d.department_code}</div>
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        <div className="text-slate-900 dark:text-white font-bold">{d.student_count}</div>
+                        <div className="text-[10px] text-slate-400">{d.active_count} active</div>
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="font-bold text-slate-700 dark:text-slate-300">{d.active_score || 0}/100</span>
+                          <div className="w-16 bg-slate-100 dark:bg-navy-900 rounded-full h-1">
+                            <div className="bg-brand-500 h-1 rounded-full" style={{ width: `${d.active_score || 0}%` }} />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          d.coding_engagement === 'HIGH' ? 'bg-emerald-100 text-emerald-800' :
+                          d.coding_engagement === 'MEDIUM' ? 'bg-blue-100 text-blue-800' :
+                          'bg-rose-100 text-rose-800'
+                        }`}>
+                          {d.coding_engagement || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <span className="font-bold text-slate-700 dark:text-slate-300">{d.avg_solved}</span>
+                          <span className={`text-[10px] flex items-center ${d.performance_trend === '↑' ? 'text-emerald-500' : d.performance_trend === '↓' ? 'text-rose-500' : 'text-slate-400'}`}>
+                            {d.performance_trend === '↑' ? <TrendingUp size={12} /> : d.performance_trend === '↓' ? <TrendingDown size={12} /> : <Minus size={12} />}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="font-bold text-slate-700 dark:text-slate-300">{d.completion_rate || 0}%</span>
+                          <div className="w-16 bg-slate-100 dark:bg-navy-900 rounded-full h-1">
+                            <div className="bg-blue-500 h-1 rounded-full" style={{ width: `${d.completion_rate || 0}%` }} />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        {d.at_risk_students ? (
+                          <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 font-bold text-[10px] border border-rose-100">
+                            {d.at_risk_students}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 text-[10px]">-</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        <div className="font-bold text-slate-700 dark:text-slate-300">{d.faculty_mentors || 0}</div>
+                        {d.faculty_mentors && d.faculty_mentors > 0 && d.student_count > 0 ? (
+                          <div className="text-[10px] text-slate-400">
+                            1:{Math.round(d.student_count / d.faculty_mentors)} ratio
+                          </div>
+                        ) : null}
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold whitespace-nowrap ${
+                          d.health_status === 'Excellent' ? 'bg-emerald-100 text-emerald-800' :
+                          d.health_status === 'Healthy' ? 'bg-blue-100 text-blue-800' :
+                          d.health_status === 'Needs Attention' ? 'bg-amber-100 text-amber-800' :
+                          'bg-rose-100 text-rose-800'
+                        }`}>
+                          {d.health_status || 'Unknown'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setSelectedDeptIntelligence(d); }}
+                          className="p-1.5 rounded-lg text-slate-400 hover:bg-brand-50 hover:text-brand-600 transition"
+                          title="Inspect Details"
+                        >
+                          <Activity size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
+            
+            {deptMatrix.length === 0 && !loading && (
+              <div className="p-8 text-center text-slate-500 font-mono text-sm border-t border-slate-100 dark:border-navy-800">
+                No department data available.
+              </div>
+            )}
           </div>
         </Card>
 
@@ -1566,7 +1659,7 @@ export const HODCommandCenter: React.FC = () => {
                   return (
                     <tr
                       key={s.id}
-                      onClick={() => setSelectedStaff(isSelected ? 'ALL' : String(s.id))}
+                      onClick={() => setSelectedStaffDetail(s)}
                       className={`hover:bg-brand-50/50 dark:hover:bg-navy-800 cursor-pointer transition ${isSelected ? 'bg-brand-50/80 font-bold' : ''}`}
                     >
                       <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-white font-sans flex items-center gap-2">
@@ -1605,10 +1698,10 @@ export const HODCommandCenter: React.FC = () => {
                       <td className="py-2.5 px-3 text-center" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-center gap-1.5">
                           <button
-                            onClick={() => setSelectedStaff(isSelected ? 'ALL' : String(s.id))}
+                            onClick={(e) => { e.stopPropagation(); setSelectedStaffDetail(s); }}
                             className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer ${isSelected ? 'bg-brand-600 text-white' : 'bg-slate-100 hover:bg-brand-50 hover:text-brand-600 text-slate-600 dark:bg-navy-800 dark:text-slate-300'}`}
                           >
-                            {isSelected ? 'Reset Filter' : 'Inspect Cohort →'}
+                            Inspect Details →
                           </button>
                           <button
                             onClick={() => setShowStaffAllocationModal(true)}
@@ -1623,7 +1716,7 @@ export const HODCommandCenter: React.FC = () => {
                               className="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 text-[10px] font-bold transition cursor-pointer border border-rose-200 dark:border-rose-900/50"
                               title="Unassign All Mentees from this Staff Mentor"
                             >
-                              Unassign 🗑
+                              Unassign 
                             </button>
                           )}
                         </div>
@@ -1645,6 +1738,23 @@ export const HODCommandCenter: React.FC = () => {
         onReassign={handleReassign}
       />
 
+      {/* Department Detail Drawer */}
+      <DepartmentDetailDrawer
+        department={selectedDeptIntelligence}
+        onClose={() => setSelectedDeptIntelligence(null)}
+      />
+
+      {/* ── Staff Detail Drawer ── */}
+      <StaffDetailDrawer
+        staff={selectedStaffDetail}
+        studentList={students}
+        onClose={() => setSelectedStaffDetail(null)}
+        onManageAllocation={() => {
+          setSelectedStaffDetail(null);
+          setShowStaffAllocationModal(true);
+        }}
+      />
+
       {/* ── HOD Staff Allocation Manager Modal ── */}
       <StaffAllocationModal
         isOpen={showStaffAllocationModal}
@@ -1664,7 +1774,7 @@ export const HODCommandCenter: React.FC = () => {
             {/* Red warning header */}
             <div className="bg-rose-50 dark:bg-rose-900/30 px-6 py-4 border-b border-rose-100 dark:border-rose-800/50 flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-rose-100 dark:bg-rose-800/60 flex items-center justify-center flex-shrink-0">
-                <span className="text-rose-600 dark:text-rose-400 text-lg">⚠</span>
+                <span className="text-rose-600 dark:text-rose-400 text-lg"></span>
               </div>
               <div>
                 <div className="font-display text-sm font-bold text-rose-800 dark:text-rose-200">Unassign All Mentees</div>

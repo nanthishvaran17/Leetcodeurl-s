@@ -68,3 +68,47 @@ def get_bot_logs(
 ):
     """Returns recent bot dispatch logs."""
     return bot_notification_service.get_recent_bot_logs(limit)
+
+
+class RegisterDeviceTokenRequest(BaseModel):
+    token: str
+    topic: Optional[str] = "all_app_users"
+    platform: Optional[str] = "android"
+
+
+@router.post("/register-token")
+def register_device_token(payload: RegisterDeviceTokenRequest):
+    """Registers client FCM token and subscribes to topic 'all_app_users'."""
+    from backend.services.notification_service import NotificationService
+    return NotificationService.subscribe_device_token_to_topic(
+        token=payload.token,
+        topic=payload.topic or "all_app_users"
+    )
+
+
+class PublishAppUpdateRequest(BaseModel):
+    title: str
+    message: str
+    feature_version: Optional[str] = "2.0.0"
+    action_route: Optional[str] = "/dashboard"
+
+
+@router.post("/publish-app-update")
+def publish_app_update_notification(
+    payload: PublishAppUpdateRequest,
+    current_user: User = Depends(require_role("Admin", "Super Admin", "super admin"))
+):
+    """
+    Publishes a new update/feature notification to Firebase Cloud Messaging (FCM) 
+    topic 'all_app_users', dispatching push notifications to all subscribed users.
+    """
+    from backend.services.notification_service import NotificationService
+    return NotificationService.send_app_update_broadcast(
+        title=payload.title,
+        message=payload.message,
+        feature_version=payload.feature_version or "2.0.0",
+        action_route=payload.action_route or "/dashboard",
+        created_by=f"{current_user.username} ({current_user.role})"
+    )
+
+

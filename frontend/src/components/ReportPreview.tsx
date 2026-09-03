@@ -137,24 +137,24 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
   const getStatusBadge = (status: string) => {
     const s = (status || '').toUpperCase();
     if (s === 'PUBLIC_ATTENDED' || s === 'PUBLIC') {
-      return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">🟢 PUBLIC ATTENDED</span>;
+      return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">PUBLIC ATTENDED</span>;
     }
     if (s === 'VIRTUAL_ATTENDED' || s === 'VIRTUAL') {
-      return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">🟣 VIRTUAL ATTENDED</span>;
+      return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">VIRTUAL ATTENDED</span>;
     }
     if (s === 'NOT_ATTENDED' || s === 'PUBLIC_NOT_ATTENDED') {
-      return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">🔴 NOT ATTENDED</span>;
+      return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">NOT ATTENDED</span>;
     }
     if (s === 'PENDING_USERNAME' || s === 'PENDING') {
-      return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">🟡 PENDING USERNAME</span>;
+      return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">PENDING USERNAME</span>;
     }
     if (s === 'FETCH_FAILED' || s === 'FETCH_ERROR') {
-      return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">🔴 FETCH FAILED</span>;
+      return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">FETCH FAILED</span>;
     }
     if (s === 'INVALID_USERNAME' || s === 'USERNAME_NOT_FOUND') {
-      return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">🟠 INVALID USERNAME</span>;
+      return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">INVALID USERNAME</span>;
     }
-    return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20">⚪ UNKNOWN</span>;
+    return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20">UNKNOWN</span>;
   };
 
   return (
@@ -174,7 +174,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
               <h2 className="font-black text-base sm:text-lg text-white flex items-center space-x-2 truncate">
                 <span className="truncate">{report.title || (isContestReport ? `${report.contestName || 'Contest'} Performance Report` : 'Report Preview')}</span>
                 <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-extrabold shrink-0">
-                  🟢 READY
+                  READY
                 </span>
               </h2>
               <p className="text-xs text-blue-200/80 font-medium mt-0.5 truncate">
@@ -218,7 +218,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
               <span className="flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-[11px] font-black">
                 <Filter className="w-3 h-3" />
                 <span>Filtered: {displayedStudents.length} of {allRows.length} rows</span>
-                <button onClick={() => setActiveFilter(null)} className="ml-1 hover:text-rose-500 font-black">✕</button>
+                <button onClick={() => setActiveFilter(null)} className="ml-1 hover:text-rose-500 font-black"></button>
               </span>
             )}
           </div>

@@ -24,7 +24,7 @@ export const BadgeShowcase: React.FC<BadgeShowcaseProps> = ({ badges, unlockedCo
     {
       id: "streak_100",
       title: "100-Day Streak Knight",
-      icon: "🔥",
+      icon: "",
       category: "STREAK",
       rarity: "LEGENDARY",
       gradient: "from-amber-500 via-orange-500 to-red-600",
@@ -36,7 +36,7 @@ export const BadgeShowcase: React.FC<BadgeShowcaseProps> = ({ badges, unlockedCo
     {
       id: "contest_champ",
       title: "Contest Champion",
-      icon: "🏆",
+      icon: "",
       category: "CONTEST",
       rarity: "LEGENDARY",
       gradient: "from-yellow-400 via-amber-500 to-yellow-600",
@@ -48,7 +48,7 @@ export const BadgeShowcase: React.FC<BadgeShowcaseProps> = ({ badges, unlockedCo
     {
       id: "speed_demon",
       title: "Speed Demon",
-      icon: "⚡",
+      icon: "",
       category: "SPEED",
       rarity: "EPIC",
       gradient: "from-cyan-400 via-blue-500 to-indigo-600",
@@ -60,7 +60,7 @@ export const BadgeShowcase: React.FC<BadgeShowcaseProps> = ({ badges, unlockedCo
     {
       id: "algo_master",
       title: "Algorithm Master",
-      icon: "🧠",
+      icon: "",
       category: "MASTERY",
       rarity: "EPIC",
       gradient: "from-purple-500 via-indigo-500 to-violet-600",
@@ -72,7 +72,7 @@ export const BadgeShowcase: React.FC<BadgeShowcaseProps> = ({ badges, unlockedCo
     {
       id: "grandmaster",
       title: "Grandmaster",
-      icon: "💎",
+      icon: "",
       category: "RATING",
       rarity: "MYTHIC",
       gradient: "from-emerald-400 via-teal-500 to-cyan-600",
@@ -84,7 +84,7 @@ export const BadgeShowcase: React.FC<BadgeShowcaseProps> = ({ badges, unlockedCo
     {
       id: "century_club",
       title: "Century Club",
-      icon: "🎯",
+      icon: "",
       category: "MILESTONE",
       rarity: "RARE",
       gradient: "from-blue-500 via-indigo-500 to-purple-600",

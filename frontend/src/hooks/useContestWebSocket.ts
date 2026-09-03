@@ -1,14 +1,10 @@
-import { useEffect, useCallback, useRef, useState } from 'react';
-import { useLiveLeaderboard } from './useLiveLeaderboard';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 export interface ContestWSEvent {
-  type: string;
   studentId?: number;
-  studentName?: string;
   regNo?: string;
-  dept?: string;
-  departmentName?: string;
-  yearLevel?: string;
+  studentName?: string;
+  username?: string;
   contestId?: string;
   sessionId?: number;
   q1?: number;
@@ -17,91 +13,217 @@ export interface ContestWSEvent {
   q4?: number;
   solvedCount?: number;
   officialRank?: number;
+  finishTime?: string;
   participationStatus?: string;
-  metrics?: Record<string, any>;
-  detail?: string;
-  rank?: number;
-  rankChange?: number;
   timestamp?: string;
-  events?: ContestWSEvent[]; // for BATCH_UPDATES
 }
 
-interface UseContestWebSocketProps {
-  sessionId: number | null;
-  onResultUpdate?: (event: ContestWSEvent) => void;
-  onSummaryUpdate?: (event: ContestWSEvent) => void;
-  onBatchUpdate?: (events: ContestWSEvent[]) => void;
-  onSyncCompleted?: (event: ContestWSEvent) => void;
+export interface LiveActivityEvent {
+  event_id: string;
+  version: number;
+  timestamp: string;
+  student_name: string;
+  people_id: string;
+  username: string;
+  solved_count: number;
+  text: string;
 }
 
-export function useContestWebSocket({ sessionId, onResultUpdate, onSummaryUpdate, onBatchUpdate, onSyncCompleted }: UseContestWebSocketProps) {
-  const onResultRef = useRef(onResultUpdate);
-  const onSummaryRef = useRef(onSummaryUpdate);
-  const onBatchRef = useRef(onBatchUpdate);
-  const onSyncCompletedRef = useRef(onSyncCompleted);
+export interface StudentActivityUpdatePayload {
+  event: string;
+  type: string;
+  contest_id: string;
+  people_id: string;
+  student_id: number;
+  student_name: string;
+  reg_no: string;
+  account_id: string;
+  event_id: string;
+  version: number;
+  timestamp: string;
+  activity: {
+    type: string;
+    count: number;
+    previousCount: number;
+    q1: number;
+    q2: number;
+    q3: number;
+    q4: number;
+    score_display: string;
+    activity_timeline_entry: {
+      time: string;
+      text: string;
+    };
+  };
+}
 
-  useEffect(() => { onResultRef.current = onResultUpdate; }, [onResultUpdate]);
-  useEffect(() => { onSummaryRef.current = onSummaryUpdate; }, [onSummaryUpdate]);
-  useEffect(() => { onBatchRef.current = onBatchUpdate; }, [onBatchUpdate]);
-  useEffect(() => { onSyncCompletedRef.current = onSyncCompleted; }, [onSyncCompleted]);
+export type ConnectionStatus = 'LIVE' | 'RECONNECTING' | 'OFFLINE';
 
-  const [lastEvent, setLastEvent] = useState<ContestWSEvent | null>(null);
-  const [eventCount, setEventCount] = useState(0);
+export interface UseContestWebSocketOptions {
+  sessionId?: number | string | null;
+  contestId?: string | null;
+  onBatchUpdate?: (events: any[]) => void;
+  onSyncCompleted?: (event: any) => void;
+}
 
-  const handleMessage = useCallback((data: ContestWSEvent) => {
-    if (!data?.type) return;
+export function useContestWebSocket(options: string | UseContestWebSocketOptions) {
+  const targetId = typeof options === 'string' 
+    ? options 
+    : String(options?.contestId || options?.sessionId || '518');
 
-    if (data.type === 'SYNC_COMPLETED') {
-      if (onSyncCompletedRef.current) onSyncCompletedRef.current(data);
-      return;
-    }
+  const onBatchUpdate = typeof options === 'object' ? options?.onBatchUpdate : undefined;
+  const onSyncCompleted = typeof options === 'object' ? options?.onSyncCompleted : undefined;
 
-    if (data.type === 'BATCH_UPDATES' && data.events) {
-      // Filter events by session ID if required
-      const validEvents = sessionId 
-        ? data.events.filter(e => !e.sessionId || Number(e.sessionId) === Number(sessionId))
-        : data.events;
-      
-      if (validEvents.length === 0) return;
+  const [status, setStatus] = useState<ConnectionStatus>('OFFLINE');
+  const [syncState, setSyncState] = useState<string>('IDLE');
+  const [initialProgress, setInitialProgress] = useState<{ processed: number; total: number; percent: number } | null>(null);
+  const [latestUpdate, setLatestUpdate] = useState<StudentActivityUpdatePayload | null>(null);
+  const [liveFeed, setLiveFeed] = useState<LiveActivityEvent[]>([]);
+  const [snapshotData, setSnapshotData] = useState<any>(null);
 
-      const resultEvents = validEvents.filter(e => e.type === 'CONTEST_RESULT_UPDATED');
-      const summaryEvents = validEvents.filter(e => e.type === 'CONTEST_SUMMARY_UPDATED');
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<any>(null);
+  const retryCountRef = useRef<number>(0);
+  const lastVersionRef = useRef<number>(0);
+  const processedEventsRef = useRef<Set<string>>(new Set());
 
-      if (resultEvents.length > 0) {
-        setEventCount(prev => prev + resultEvents.length);
-        setLastEvent(resultEvents[resultEvents.length - 1]);
-        if (onBatchRef.current) {
-          onBatchRef.current(resultEvents);
-        } else if (onResultRef.current) {
-          // Fallback if no batch handler is provided
-          resultEvents.forEach(e => onResultRef.current!(e));
+  const getWsUrl = useCallback(() => {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
+    return `${protocol}//${host}/ws/contest/${targetId}`;
+  }, [targetId]);
+
+  const connect = useCallback(() => {
+    if (!targetId) return;
+
+    try {
+      setStatus('RECONNECTING');
+      const wsUrl = getWsUrl();
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        setStatus('LIVE');
+        retryCountRef.current = 0;
+
+        if (lastVersionRef.current > 0) {
+          ws.send(JSON.stringify({
+            type: 'GET_MISSED_EVENTS',
+            last_received_version: lastVersionRef.current
+          }));
+        } else {
+          ws.send(JSON.stringify({ type: 'GET_SNAPSHOT' }));
         }
-      }
+      };
 
-      if (summaryEvents.length > 0 && onSummaryRef.current) {
-        // Typically summaries are just the latest aggregates, so we just process them
-        summaryEvents.forEach(e => onSummaryRef.current!(e));
-      }
-      return;
+      ws.onmessage = (event) => {
+        try {
+          if (event.data === 'pong') return;
+          const data = JSON.parse(event.data);
+          
+          if (!data) return;
+
+          if (data.type === 'BATCH_UPDATES' && Array.isArray(data.events)) {
+            if (onBatchUpdate) onBatchUpdate(data.events);
+            return;
+          }
+
+          if (data.type === 'SYNC_COMPLETED') {
+            if (onSyncCompleted) onSyncCompleted(data);
+            return;
+          }
+
+          if (data.event_id) {
+            if (processedEventsRef.current.has(data.event_id)) {
+              return;
+            }
+            processedEventsRef.current.add(data.event_id);
+            if (processedEventsRef.current.size > 200) {
+              const items = Array.from(processedEventsRef.current);
+              processedEventsRef.current = new Set(items.slice(50));
+            }
+          }
+
+          if (data.version && data.version > lastVersionRef.current) {
+            lastVersionRef.current = data.version;
+          }
+
+          if (data.type === 'SNAPSHOT_RESPONSE') {
+            setSnapshotData(data);
+            setSyncState(data.sync_state || 'LIVE_SYNC_ACTIVE');
+            if (data.live_feed) {
+              setLiveFeed(data.live_feed);
+            }
+          } else if (data.type === 'INITIAL_SYNC_PROGRESS') {
+            setSyncState('INITIAL_SYNC');
+            setInitialProgress({
+              processed: data.processed,
+              total: data.total,
+              percent: data.progress_percent
+            });
+          } else if (data.type === 'INITIAL_SYNC_COMPLETE') {
+            setSyncState('LIVE_SYNC_ACTIVE');
+            setInitialProgress(null);
+          } else if (data.type === 'STUDENT_ACTIVITY_UPDATED') {
+            setLatestUpdate(data);
+            
+            const feedItem: LiveActivityEvent = {
+              event_id: data.event_id,
+              version: data.version,
+              timestamp: data.timestamp,
+              student_name: data.student_name,
+              people_id: data.people_id,
+              username: data.account_id,
+              solved_count: data.activity.count,
+              text: data.activity.activity_timeline_entry.text
+            };
+            setLiveFeed(prev => [feedItem, ...prev.slice(0, 49)]);
+          } else if (data.type === 'MISSED_EVENTS_RESPONSE') {
+            if (Array.isArray(data.events)) {
+              data.events.forEach((evt: StudentActivityUpdatePayload) => {
+                setLatestUpdate(evt);
+              });
+            }
+          }
+        } catch (err) {
+          console.warn('[WS_PARSE_ERR]', err);
+        }
+      };
+
+      ws.onclose = () => {
+        setStatus('OFFLINE');
+        wsRef.current = null;
+        
+        const backoffMs = Math.min(8000, Math.pow(2, retryCountRef.current) * 1000);
+        retryCountRef.current += 1;
+        reconnectTimeoutRef.current = setTimeout(() => {
+          connect();
+        }, backoffMs);
+      };
+
+      ws.onerror = () => {
+        setStatus('OFFLINE');
+        ws.close();
+      };
+    } catch (e) {
+      setStatus('OFFLINE');
     }
+  }, [targetId, getWsUrl, onBatchUpdate, onSyncCompleted]);
 
-    // Handle legacy single events
-    if (sessionId && data.sessionId && Number(data.sessionId) !== Number(sessionId)) return;
-    setLastEvent(data);
-    
-    if (data.type === 'CONTEST_RESULT_UPDATED') {
-      setEventCount(prev => prev + 1);
-      if (onBatchRef.current) {
-        onBatchRef.current([data]);
-      } else if (onResultRef.current) {
-        onResultRef.current(data);
-      }
-    } else if (data.type === 'CONTEST_SUMMARY_UPDATED') {
-      if (onSummaryRef.current) onSummaryRef.current(data);
-    }
-  }, [sessionId]);
+  useEffect(() => {
+    connect();
+    return () => {
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+      if (wsRef.current) wsRef.current.close();
+    };
+  }, [connect]);
 
-  const { isConnected } = useLiveLeaderboard(handleMessage);
-  return { isConnected, lastEvent, eventCount, wsStatus: isConnected ? 'connected' : 'disconnected' };
+  return {
+    status,
+    syncState,
+    initialProgress,
+    latestUpdate,
+    liveFeed,
+    snapshotData
+  };
 }
-

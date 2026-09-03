@@ -257,18 +257,20 @@ def get_data_issues_students(
 
     # 1. Filter by Department
     if department and department.lower() != "all":
-        dept_lower = department.lower()
+        dept_upper = department.strip().upper()
         classified = [
             c for c in classified
-            if dept_lower in c["department_code"].lower() or dept_lower in c["department_name"].lower()
+            if c["department_code"].upper() == dept_upper or
+               dept_upper in c["department_code"].upper() or
+               dept_upper in c["department_name"].upper()
         ]
 
-    # 2. Filter by Academic Year
+    # 2. Filter by Academic Year (Exact Roman numeral matching to prevent "II" matching "III" or "I" matching "III"/"IV")
     if year_level and year_level.lower() != "all":
-        y_clean = year_level.replace("Year", "").strip().lower()
+        y_clean = year_level.replace("Year", "").replace("1st", "I").replace("2nd", "II").replace("3rd", "III").replace("Final", "IV").strip().upper()
         classified = [
             c for c in classified
-            if y_clean in c["year_level"].lower()
+            if c["year_level"].replace("Year", "").strip().upper() == y_clean or c["year_level"].strip().upper() == y_clean
         ]
 
     # 3. Filter by Issue Category

@@ -193,7 +193,23 @@ def build_weekly_performance_pdf(data: Dict[str, Any], dept_id: Optional[int] = 
             ('RIGHTPADDING', (0, 0), (-1, -1), 2),
         ]))
         story.append(t)
-        story.append(Spacer(1, 18))
+        story.append(Spacer(1, 10))
+
+        # Metadata Audit Section
+        report_id = data.get("report_id", "N/A")
+        file_hash = data.get("file_hash", "N/A")[:16]
+        disc_contests = data.get("discovered_contests", {})
+        lw_c = disc_contests.get("last_week_contests_str", "N/A")
+        cw_c = disc_contests.get("current_week_contests_str", "N/A")
+
+        meta_p = Paragraph(
+            f"<font size=6 color='#64748b'><b>Audit Metadata:</b> Report ID: {report_id} | Timezone: Asia/Kolkata | Status: VALIDATED | "
+            f"Last Week Contests: {lw_c} | Current Week Contests: {cw_c} | Hash: {file_hash}</font>",
+            sub_style
+        )
+        story.append(meta_p)
+        story.append(Spacer(1, 12))
+
         story.append(Paragraph(
             "<b>Verified Signatures:</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "
             "<b>Academic Coordinator</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "
@@ -202,6 +218,7 @@ def build_weekly_performance_pdf(data: Dict[str, Any], dept_id: Optional[int] = 
 
     doc.build(story)
     return buffer.getvalue()
+
 
 
 def generate_pdf_report(db, dept_id: Optional[int] = None, *args, **kwargs) -> bytes:

@@ -97,7 +97,7 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
       }
 
       if (isManual) {
-        setRefreshBadge('✓ Updated');
+        setRefreshBadge('Updated');
         setTimeout(() => setRefreshBadge(''), 2000);
       }
     } catch (err: any) {
@@ -158,10 +158,10 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
       return { text: '● Sync Engine Running', color: 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/30' };
     }
     if (syncStatus?.operation === 'COMPLETED' || syncStatus?.status === 'COMPLETED') {
-      return { text: '✓ Synchronization Complete', color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/30' };
+      return { text: 'Synchronization Complete', color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/30' };
     }
     if (syncStatus?.operation === 'FAILED' || syncStatus?.status === 'FAILED') {
-      return { text: '⚠ Sync Engine Error', color: 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/30' };
+      return { text: 'Sync Engine Error', color: 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/30' };
     }
     return { text: '● Sync Engine Ready', color: 'text-brand-600 dark:text-brand-400 bg-brand-500/10 border-brand-500/30' };
   };
@@ -219,7 +219,7 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
             <div className="p-6 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-center space-y-3">
               <AlertTriangle className="w-8 h-8 text-rose-500 mx-auto" />
               <h4 className="text-sm font-black text-rose-700 dark:text-rose-300">
-                ⚠ Unable to retrieve synchronization status
+                Unable to retrieve synchronization status
               </h4>
               <p className="text-xs text-rose-600 dark:text-rose-400">
                 {error}
@@ -328,7 +328,7 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
                         <div key={idx} className="flex items-center justify-between text-[10.5px] py-0.5 border-b border-gray-800/60 last:border-0">
                           <div className="flex items-center space-x-2 truncate">
                             <span className={isOk ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
-                              {isOk ? '✓' : '✕'}
+                              {isOk ? '' : ''}
                             </span>
                             <span className="text-gray-100 font-sans font-bold truncate">{rec.student_name}</span>
                             {rec.username && (

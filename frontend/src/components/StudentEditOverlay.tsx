@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Edit3, X, CheckCircle, XCircle, Loader2, AlertTriangle, WifiOff, Save, Building2, User, Code2, Mail, Calendar } from 'lucide-react';
+import { Edit3, X, CheckCircle, XCircle, Loader2, AlertTriangle, WifiOff, Save, Building2, User, Code2, Mail, Calendar, Plus, Trash2 } from 'lucide-react';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { CustomDropdown } from './CustomDropdown';
@@ -10,6 +10,12 @@ export interface StudentEditOverlayProps {
   student: any | null;
   onClose: () => void;
   onSaveSuccess?: (updatedStudent: any) => void;
+}
+
+export interface SecondaryAccountItem {
+  id?: number;
+  username: string;
+  url: string;
 }
 
 // ─── LeetCode Validation State Machine ───────────────────────────────────────
@@ -41,7 +47,7 @@ function LcValidationChip({ state }: { state: LcValidationState }) {
       <div className="flex flex-col gap-0.5 mt-1.5">
         <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
           <CheckCircle className="w-3.5 h-3.5" />
-          <span className="font-bold">Account verified ✓ — <span className="font-black">{state.username}</span></span>
+          <span className="font-bold">Account verified — <span className="font-black">{state.username}</span></span>
         </div>
         {(state.total_solved != null || state.contest_rating != null) && (
           <div className="text-xs text-gray-500 dark:text-gray-400 pl-5">
@@ -119,6 +125,8 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   const [leetcodeUrl, setLeetcodeUrl] = useState('');
   const [email, setEmail] = useState('');
 
+  const [secondaryAccounts, setSecondaryAccounts] = useState<SecondaryAccountItem[]>([]);
+
   const [departments, setDepartments] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -137,10 +145,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         if (Array.isArray(res.data) && res.data.length > 0) {
           setDepartments(res.data);
         } else {
-          setDepartments([
-            { id: 1, name: 'Computer Science and Engineering (Cyber Security)', code: 'CSE(CS)' },
-            { id: 2, name: 'Computer Science and Engineering (IoT)', code: 'CSE(IOT)' }
-          ]);
+          setDepartments([]);
         }
       } catch (e) {
         console.warn('Failed to load departments in edit overlay:', e);
@@ -162,6 +167,12 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       const initUrl = student.leetcode_url || student.profile_url || '';
       const initEmail = student.email || '';
 
+      const initSecAccounts: SecondaryAccountItem[] = (student.leetcode_accounts || []).map((acc: any) => ({
+        id: acc.id,
+        username: acc.leetcode_username || acc.username || '',
+        url: acc.profile_url || (acc.leetcode_username || acc.username ? `https://leetcode.com/u/${acc.leetcode_username || acc.username}/` : '')
+      }));
+
       setName(initName);
       setRegNo(initRegNo);
       setDeptId(initDeptId);
@@ -170,8 +181,19 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       setUsername(initUser);
       setLeetcodeUrl(initUrl);
       setEmail(initEmail);
+      setSecondaryAccounts(initSecAccounts);
 
-      initialRef.current = { name: initName, regNo: initRegNo, deptId: initDeptId, yearLevel: initYear, section: initSec, username: initUser, leetcodeUrl: initUrl, email: initEmail };
+      initialRef.current = {
+        name: initName,
+        regNo: initRegNo,
+        deptId: initDeptId,
+        yearLevel: initYear,
+        section: initSec,
+        username: initUser,
+        leetcodeUrl: initUrl,
+        email: initEmail,
+        secondaryAccounts: JSON.stringify(initSecAccounts)
+      };
       setErrorMessage(null);
       setShowUnsavedPrompt(false);
       setLcValidation({ status: 'idle' });
@@ -181,8 +203,49 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   const hasUnsavedChanges = useCallback(() => {
     if (!initialRef.current) return false;
     const init = initialRef.current;
-    return name !== init.name || regNo !== init.regNo || deptId !== init.deptId || yearLevel !== init.yearLevel || section !== init.section || username !== init.username || leetcodeUrl !== init.leetcodeUrl || email !== init.email;
-  }, [name, regNo, deptId, yearLevel, section, username, leetcodeUrl, email]);
+    return name !== init.name ||
+      regNo !== init.regNo ||
+      deptId !== init.deptId ||
+      yearLevel !== init.yearLevel ||
+      section !== init.section ||
+      username !== init.username ||
+      leetcodeUrl !== init.leetcodeUrl ||
+      email !== init.email ||
+      JSON.stringify(secondaryAccounts) !== init.secondaryAccounts;
+  }, [name, regNo, deptId, yearLevel, section, username, leetcodeUrl, email, secondaryAccounts]);
+
+  const handleAddSecondaryAccount = () => {
+    setSecondaryAccounts(prev => [...prev, { username: '', url: '' }]);
+  };
+
+  const handleRemoveSecondaryAccount = (idx: number) => {
+    setSecondaryAccounts(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleSecondaryUsernameChange = (idx: number, val: string) => {
+    setSecondaryAccounts(prev => {
+      const copy = [...prev];
+      copy[idx] = { ...copy[idx], username: val };
+      const trimmed = val.trim();
+      if (trimmed && !trimmed.includes('leetcode.com')) {
+        copy[idx].url = `https://leetcode.com/u/${trimmed}/`;
+      }
+      return copy;
+    });
+  };
+
+  const handleSecondaryUrlChange = (idx: number, val: string) => {
+    setSecondaryAccounts(prev => {
+      const copy = [...prev];
+      copy[idx] = { ...copy[idx], url: val };
+      const trimmed = val.trim();
+      const match = trimmed.match(/leetcode\.com\/(?:u\/)?([a-zA-Z0-9_-]+)/i);
+      if (match && match[1]) {
+        copy[idx].username = match[1];
+      }
+      return copy;
+    });
+  };
 
   const handleAttemptClose = useCallback(() => {
     if (hasUnsavedChanges()) {
@@ -275,6 +338,14 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
     setErrorMessage(null);
 
     try {
+      const formattedSecondary = secondaryAccounts
+        .filter(a => a.username.trim() || a.url.trim())
+        .map(a => {
+          const u = a.username.trim() || (a.url.match(/leetcode\.com\/(?:u\/)?([a-zA-Z0-9_-]+)/i)?.[1] || '');
+          const url = a.url.trim() || (u ? `https://leetcode.com/u/${u}/` : '');
+          return { leetcode_username: u, profile_url: url };
+        });
+
       const payload = {
         name: name.trim(),
         reg_no: regNo.trim(),
@@ -284,6 +355,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         username: username.trim() || undefined,
         leetcode_url: leetcodeUrl.trim() || undefined,
         email: email.trim() || undefined,
+        secondary_accounts: formattedSecondary,
         version: student.version
       };
 
@@ -405,20 +477,111 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
             </div>
           </div>
 
+          {/* Primary LeetCode Account Section */}
           <div className="p-4 rounded-2xl bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/40 shadow-sm space-y-3">
-            <div className="flex items-center space-x-2">
-              <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-amber-500 text-white font-black text-[10px]">2</span>
-              <h4 className="text-xs font-black text-amber-700 dark:text-amber-300 uppercase">LeetCode Information</h4>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-amber-500 text-white font-black text-[10px]">2</span>
+                <h4 className="text-xs font-black text-amber-700 dark:text-amber-300 uppercase tracking-wide">Primary LeetCode Account</h4>
+              </div>
+              <span className="px-2.5 py-1 text-[10px] font-black uppercase rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                Primary Account
+              </span>
             </div>
+            
+            <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
+              This is the Primary LeetCode account used for problem-solving metrics, weekly progress reports, and college rankings.
+            </p>
+
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-700 dark:text-gray-200">LeetCode Username Handle</label>
+              <label className="text-xs font-bold text-gray-700 dark:text-gray-200">Primary LeetCode Username Handle</label>
               <input type="text" value={username} onChange={(e) => handleUsernameChange(e.target.value)} className="w-full h-10 px-3.5 text-xs font-mono bg-white dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-2xl text-gray-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-amber-500 shadow-sm" />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-700 dark:text-gray-200">LeetCode Profile URL</label>
+              <label className="text-xs font-bold text-gray-700 dark:text-gray-200">Primary LeetCode Profile URL</label>
               <input type="text" value={leetcodeUrl} onChange={(e) => handleUrlChange(e.target.value)} className="w-full h-10 px-3.5 text-xs bg-white dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-2xl text-gray-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-amber-500 shadow-sm" />
               <LcValidationChip state={lcValidation} />
             </div>
+          </div>
+
+          {/* Secondary LeetCode Accounts Section */}
+          <div className="p-4 rounded-2xl bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-200/50 dark:border-indigo-800/40 shadow-sm space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center space-x-2">
+                <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-indigo-500 text-white font-black text-[10px]">3</span>
+                <h4 className="text-xs font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-wide">Secondary LeetCode Accounts</h4>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={handleAddSecondaryAccount}
+                  className="px-2.5 py-1 text-[10px] font-black uppercase rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-all cursor-pointer flex items-center space-x-1"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>Add Secondary Account</span>
+                </button>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
+              Secondary accounts are tracked for live contest participation and integrity verification. They do not increase primary problem-solving totals.
+            </p>
+
+            {secondaryAccounts.length > 0 ? (
+              <div className="space-y-3">
+                {secondaryAccounts.map((acc, idx) => (
+                  <div key={idx} className="p-3.5 rounded-2xl bg-white dark:bg-navy-950 border border-indigo-100 dark:border-navy-700 space-y-3 shadow-xs relative">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/40">
+                        Secondary Account #{idx + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSecondaryAccount(idx)}
+                        className="p-1 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all cursor-pointer"
+                        title="Remove Secondary Account"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-gray-700 dark:text-gray-200">Secondary LeetCode Username Handle</label>
+                      <input
+                        type="text"
+                        value={acc.username}
+                        onChange={(e) => handleSecondaryUsernameChange(idx, e.target.value)}
+                        placeholder="e.g. Spidy_contest_sec"
+                        className="w-full h-9 px-3 text-xs font-mono bg-gray-50 dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-xl text-gray-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-gray-700 dark:text-gray-200">Secondary LeetCode Profile URL</label>
+                      <input
+                        type="text"
+                        value={acc.url}
+                        onChange={(e) => handleSecondaryUrlChange(idx, e.target.value)}
+                        placeholder="https://leetcode.com/u/Spidy_contest_sec/"
+                        className="w-full h-9 px-3 text-xs bg-gray-50 dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-xl text-gray-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-4 rounded-2xl bg-white/60 dark:bg-navy-950/60 border border-dashed border-gray-300 dark:border-navy-700 text-center space-y-2">
+                <span className="block text-xs text-gray-500 dark:text-gray-400 font-medium">No secondary LeetCode accounts linked to this student.</span>
+                <button
+                  type="button"
+                  onClick={handleAddSecondaryAccount}
+                  className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/40 rounded-xl text-xs font-bold transition-all cursor-pointer inline-flex items-center space-x-1.5"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Secondary LeetCode Account</span>
+                </button>
+              </div>
+            )}
           </div>
         </form>
 

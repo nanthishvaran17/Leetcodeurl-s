@@ -519,8 +519,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <CheckCircle2 className={`w-4 h-4 ${verifiedCount > 0 ? 'text-emerald-400' : 'text-amber-400'}`} />
                   <span>
                     {totalStudents !== null
-                      ? (verifiedCount > 0 ? `🟢 ${verifiedCount}/${totalStudents} Verified • ${formattedLastFetched}` : `⏳ ${verifiedCount}/${totalStudents} Verified • Pending Sync`)
-                      : '⏳ Loading roster status...'}
+                      ? (verifiedCount > 0 ? `${verifiedCount}/${totalStudents} Verified • ${formattedLastFetched}` : `${verifiedCount}/${totalStudents} Verified • Pending Sync`)
+                      : 'Loading roster status...'}
                   </span>
                 </div>
               );
@@ -585,9 +585,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <p className="text-xs font-bold text-gray-500 dark:text-gray-400">Verified Profiles</p>
                 {(pending > 0 || failed > 0 || noUsername > 0) && (
                   <p className="text-[10px] font-bold text-gray-400 flex flex-wrap gap-1 mt-1">
-                    {pending > 0 && <span>⏳ {pending} Pending</span>}
-                    {noUsername > 0 && <span>• 🚫 {noUsername} No Username</span>}
-                    {failed > 0 && <span>• 🔴 {failed} Failed</span>}
+                    {pending > 0 && <span>{pending} Pending</span>}
+                    {noUsername > 0 && <span>• {noUsername} No Username</span>}
+                    {failed > 0 && <span>• {failed} Failed</span>}
                   </p>
                 )}
               </motion.div>
@@ -927,7 +927,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     onClick={() => setDisplayCount(prev => prev + 32)}
                     className="px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-black text-xs shadow-xl shadow-brand-600/30 transition-all cursor-pointer"
                   >
-                    <span>👇 Load More Students (+32)</span>
+                    <span>Load More Students (+32)</span>
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.04 }}

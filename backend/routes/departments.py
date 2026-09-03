@@ -8,6 +8,8 @@ from backend.schemas import DepartmentOut, DepartmentCreate, SectionOut, Section
 from backend.routes.auth import get_current_user
 from backend.security import require_security_access
 
+from backend.constants import ALLOWED_PRODUCTION_DEPT_CODES
+
 router = APIRouter(prefix="/api/departments", tags=["Departments"])
 
 @router.get("", response_model=List[DepartmentOut])
@@ -15,9 +17,7 @@ def get_departments(
     all_depts: bool = False,
     db: Session = Depends(get_db)
 ):
-    if not all_depts:
-        return db.query(Department).filter(Department.code.in_(["CSE(CS)", "CSE(IOT)"])).order_by(Department.id).all()
-    return db.query(Department).order_by(Department.name).all()
+    return db.query(Department).filter(Department.code.in_(ALLOWED_PRODUCTION_DEPT_CODES)).order_by(Department.id).all()
 
 @router.post("", response_model=DepartmentOut)
 def create_department(

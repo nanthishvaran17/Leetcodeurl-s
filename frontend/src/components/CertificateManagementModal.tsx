@@ -583,7 +583,7 @@ export const CertificateManagementModal: React.FC<{
               onClick={onClose}
               className="px-4 py-2 rounded-2xl bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white border border-rose-500/30 transition-all font-black text-xs flex items-center space-x-1.5 cursor-pointer shadow-sm"
             >
-              <span>✕ Close Studio</span>
+              <span>Close Studio</span>
             </button>
           </div>
         </div>
@@ -655,7 +655,7 @@ export const CertificateManagementModal: React.FC<{
                             ? 'bg-emerald-500 text-slate-950'
                             : 'bg-gray-100 dark:bg-navy-800 text-gray-500 dark:text-gray-400'
                         }`}>
-                          {isCompleted ? '✓' : s.step}
+                          {isCompleted ? '' : s.step}
                         </span>
                         <div className="text-left">
                           <span className="block text-[11px] font-black tracking-tight">{s.label}</span>
@@ -732,12 +732,12 @@ export const CertificateManagementModal: React.FC<{
                                 <div className="flex items-center space-x-2">
                                   {st.stats?.total_solved !== undefined && (
                                     <span className="text-emerald-400 font-black">
-                                      🟢 {st.stats.total_solved} Solved
+                                      {st.stats.total_solved} Solved
                                     </span>
                                   )}
                                   {st.stats?.contest_rating && (
                                     <span className="text-amber-400 font-mono">
-                                      ★ {st.stats.contest_rating.toFixed(1)}
+                                      {st.stats.contest_rating.toFixed(1)}
                                     </span>
                                   )}
                                 </div>
@@ -753,7 +753,7 @@ export const CertificateManagementModal: React.FC<{
                           <div className="flex items-center justify-between border-b border-gray-200/80 dark:border-navy-700/80 pb-2.5">
                             <span className="text-[11px] font-black text-gray-500 dark:text-gray-400 uppercase">Selected Identity Card</span>
                             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                              ✓ Verified Record
+                              Verified Record
                             </span>
                           </div>
 
@@ -884,11 +884,11 @@ export const CertificateManagementModal: React.FC<{
                             <span className="text-xs font-black text-gray-900 dark:text-white">1. PRINCIPAL SIGNATURE</span>
                             {principalSig?.image_preview ? (
                               <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                                ✓ CONFIGURED ({principalSig.version})
+                                CONFIGURED ({principalSig.version})
                               </span>
                             ) : (
                               <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                                ⚠ MISSING
+                                MISSING
                               </span>
                             )}
                           </div>
@@ -907,11 +907,11 @@ export const CertificateManagementModal: React.FC<{
                             <span className="text-xs font-black text-gray-900 dark:text-white">2. HOD SIGNATURE ({selectedStudent?.department?.code?.includes('IOT') ? 'IoT' : 'Cyber Security'})</span>
                             {currentHodSig?.image_preview ? (
                               <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                                ✓ CONFIGURED ({currentHodSig.version})
+                                CONFIGURED ({currentHodSig.version})
                               </span>
                             ) : (
                               <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                                ⚠ MISSING
+                                MISSING
                               </span>
                             )}
                           </div>
@@ -961,7 +961,7 @@ export const CertificateManagementModal: React.FC<{
                               ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                               : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
                           }`}>
-                            {eligibilityChecks.allPassed ? '✓ ELIGIBLE FOR ISSUANCE' : '⚠ REQUIRES ATTENTION'}
+                            {eligibilityChecks.allPassed ? 'ELIGIBLE FOR ISSUANCE' : 'REQUIRES ATTENTION'}
                           </span>
                         </div>
 
@@ -982,27 +982,27 @@ export const CertificateManagementModal: React.FC<{
                         <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 space-y-2 text-xs">
                           <div className="flex items-center justify-between">
                             <span className="text-gray-700 dark:text-gray-300">Student Record Exists</span>
-                            <span className="text-emerald-400 font-bold">✓ Verified</span>
+                            <span className="text-emerald-400 font-bold">Verified</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-gray-700 dark:text-gray-300">LeetCode Performance Data</span>
-                            <span className="text-emerald-400 font-bold">✓ Verified ({selectedStudent?.stats?.total_solved ?? 0} Solved)</span>
+                            <span className="text-emerald-400 font-bold">Verified ({selectedStudent?.stats?.total_solved ?? 0} Solved)</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-gray-700 dark:text-gray-300">Principal Signature Configured</span>
                             <span className={principalSig?.image_preview ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
-                              {principalSig?.image_preview ? '✓ Configured' : '⚠ Missing'}
+                              {principalSig?.image_preview ? 'Configured' : 'Missing'}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-gray-700 dark:text-gray-300">HOD Signature Configured</span>
                             <span className={currentHodSig?.image_preview ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
-                              {currentHodSig?.image_preview ? '✓ Configured' : '⚠ Missing'}
+                              {currentHodSig?.image_preview ? 'Configured' : 'Missing'}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-gray-700 dark:text-gray-300">QR Verification Endpoint</span>
-                            <span className="text-emerald-400 font-bold">✓ Active (Public Verification Ledger)</span>
+                            <span className="text-emerald-400 font-bold">Active (Public Verification Ledger)</span>
                           </div>
                         </div>
 
@@ -1198,7 +1198,7 @@ export const CertificateManagementModal: React.FC<{
                         {currentTypeMeta.desc}
                       </p>
                       <div className="inline-block px-3 py-0.5 rounded-full bg-[#065F46]/10 text-[#065F46] border border-[#065F46]/30 text-[8px] font-black uppercase tracking-wider">
-                        ★ {currentTypeMeta.badge} ★
+                        {currentTypeMeta.badge}
                       </div>
                     </div>
 
@@ -1283,11 +1283,11 @@ export const CertificateManagementModal: React.FC<{
                     </div>
                     {principalSig?.image_preview ? (
                       <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                        ✓ ACTIVE ({principalSig.version})
+                        ACTIVE ({principalSig.version})
                       </span>
                     ) : (
                       <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                        ⚠ NOT CONFIGURED
+                        NOT CONFIGURED
                       </span>
                     )}
                   </div>
@@ -1369,7 +1369,7 @@ export const CertificateManagementModal: React.FC<{
                         uploadType === 'HOD_CSE_CS' ? 'bg-emerald-600 text-white shadow' : 'text-gray-500 dark:text-gray-400 hover:text-white'
                       }`}
                     >
-                      Cyber Security {csHodSig ? `(${csHodSig.version})` : '⚠'}
+                      Cyber Security {csHodSig ? `(${csHodSig.version})` : ''}
                     </button>
                     <button
                       onClick={() => setUploadType('HOD_CSE_IOT')}
@@ -1377,7 +1377,7 @@ export const CertificateManagementModal: React.FC<{
                         uploadType === 'HOD_CSE_IOT' ? 'bg-sky-600 text-white shadow' : 'text-gray-500 dark:text-gray-400 hover:text-white'
                       }`}
                     >
-                      IoT {iotHodSig ? `(${iotHodSig.version})` : '⚠'}
+                      IoT {iotHodSig ? `(${iotHodSig.version})` : ''}
                     </button>
                   </div>
 
@@ -1659,18 +1659,18 @@ export const CertificateManagementModal: React.FC<{
                 <div className="flex justify-between">
                   <span className="text-gray-500 dark:text-gray-400 font-bold">Principal Signature:</span>
                   <span className={principalSig?.image_preview ? 'text-emerald-400 font-bold' : 'text-amber-400'}>
-                    {principalSig?.image_preview ? '✓ Configured' : '⚠ Missing'}
+                    {principalSig?.image_preview ? 'Configured' : 'Missing'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500 dark:text-gray-400 font-bold">HOD Signature:</span>
                   <span className={currentHodSig?.image_preview ? 'text-emerald-400 font-bold' : 'text-amber-400'}>
-                    {currentHodSig?.image_preview ? '✓ Configured' : '⚠ Missing'}
+                    {currentHodSig?.image_preview ? 'Configured' : 'Missing'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500 dark:text-gray-400 font-bold">QR Verification:</span>
-                  <span className="text-emerald-400 font-bold">✓ Ready & Sealed</span>
+                  <span className="text-emerald-400 font-bold">Ready & Sealed</span>
                 </div>
               </div>
 

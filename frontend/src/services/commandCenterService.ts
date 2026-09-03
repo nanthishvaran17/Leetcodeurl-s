@@ -52,6 +52,35 @@ export interface DeptBenchmark {
   participation_rate_pct: number;
   health_score: number;
   growth_rate_pct: string;
+  rank?: number;
+  active_score?: number;
+  coding_engagement?: string;
+  completion_rate?: number;
+  at_risk_students?: number;
+  faculty_mentors?: number;
+  performance_trend?: string;
+  health_status?: string;
+}
+
+export interface DepartmentIntelligenceDetails {
+  top_performers: {
+    rank: number;
+    student_id: number;
+    name: string;
+    register_number: string;
+    total_solved: number;
+    last_active: string | null;
+  }[];
+  at_risk_students: {
+    student_id: number;
+    name: string;
+    register_number: string;
+    risk_level: string;
+    risk_score: number;
+    explanation: string;
+    total_solved: number;
+    last_active: string | null;
+  }[];
 }
 
 export interface YearBenchmark {
@@ -76,6 +105,11 @@ export interface StaffRecord {
   active_count?: number;
   max_allowed?: number;
   workload_status?: string;
+  role?: string;
+  is_active?: boolean;
+  joined_date?: string;
+  last_active?: string;
+  coding_activity?: number;
 }
 
 export interface FacultyWorkloadItem {
@@ -238,6 +272,16 @@ export async function deleteStudent(regNo: string): Promise<{ success: boolean; 
 
 export async function getCommandCenterDepartments(): Promise<DepartmentRecord[]> {
   const res = await api.get<DepartmentRecord[]>('/command-center/departments');
+  return res.data;
+}
+
+export async function getYearMatrix() {
+  const res = await api.get('/command-center/year-matrix');
+  return res.data;
+}
+
+export async function getDepartmentIntelligenceDetails(deptId: number): Promise<DepartmentIntelligenceDetails> {
+  const res = await api.get(`/command-center/department/${deptId}/details`);
   return res.data;
 }
 

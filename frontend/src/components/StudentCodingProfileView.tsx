@@ -304,7 +304,7 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
           </div>
 
           <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-navy-950/60 p-3 rounded-2xl border border-gray-200 dark:border-navy-800">
-            💡 <strong>Recommendation:</strong> {contest_readiness.recommendation}
+            <strong>Recommendation:</strong> {contest_readiness.recommendation}
           </p>
         </div>
 

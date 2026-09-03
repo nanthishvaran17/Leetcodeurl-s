@@ -18,7 +18,7 @@ import { queryClient } from './lib/react-query'
 
 import { startSafeHeartbeat } from './services/heartbeat'
 
-// ⚡ Safe Cold-Start Mitigation & Health Heartbeat
+// Safe Cold-Start Mitigation & Health Heartbeat
 startSafeHeartbeat();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

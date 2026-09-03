@@ -511,7 +511,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                 }`}
               >
-                Total Solved 🏆
+                Total Solved 
               </button>
               <button
                 onClick={() => { setSortMode('growth'); setImprovers(prev => sortImprovers(prev, 'growth')); }}
@@ -521,7 +521,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                 }`}
               >
-                Growth (+Delta) ⚡
+                Growth (+Delta) 
               </button>
             </div>
 
@@ -591,15 +591,15 @@ export const GrowthIntelligencePage: React.FC = () => {
                         <td className="py-4 px-4 font-black text-gray-900 dark:text-white">
                           {idx === 0 ? (
                             <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black shadow-md shadow-amber-500/30 text-xs">
-                              🥇 #1
+                              #1
                             </span>
                           ) : idx === 1 ? (
                             <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-gradient-to-r from-slate-200 to-gray-300 text-slate-900 font-black shadow-sm text-xs">
-                              🥈 #2
+                              #2
                             </span>
                           ) : idx === 2 ? (
                             <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-gradient-to-r from-amber-700 to-amber-800 text-amber-100 font-black shadow-sm text-xs">
-                              🥉 #3
+                              #3
                             </span>
                           ) : (
                             <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 font-extrabold text-xs">
@@ -727,7 +727,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                                   onClick={(e) => { e.stopPropagation(); setExpandedStudentId(null); }}
                                   className="px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-navy-800 hover:bg-rose-500 hover:text-white transition-colors text-xs font-bold flex items-center space-x-1"
                                 >
-                                  <span>✕ Close Details</span>
+                                  <span>Close Details</span>
                                 </button>
                               </div>
 
@@ -863,7 +863,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                                   </div>
                                 ) : (
                                   <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-300 text-xs font-bold text-center">
-                                    ⚠️ Historical snapshot data unavailable for this student yet.
+                                    Historical snapshot data unavailable for this student yet.
                                   </div>
                                 )}
                               </div>

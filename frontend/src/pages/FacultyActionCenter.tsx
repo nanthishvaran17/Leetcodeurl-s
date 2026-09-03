@@ -371,7 +371,7 @@ const StudentViewModal: React.FC<{
                               {ev.new_value && <span className="text-emerald-400 font-bold">{ev.new_value}</span>}
                             </div>
                           )}
-                          {ev.reason && <div className="text-[11px] text-slate-400 italic pt-1">💡 {ev.reason}</div>}
+                          {ev.reason && <div className="text-[11px] text-slate-400 italic pt-1">{ev.reason}</div>}
                         </div>
                       </div>
                     );
@@ -416,9 +416,9 @@ const UpdateModal: React.FC<{
     setSaving(true);
     try {
       await updateFacultyAction(item.id, form);
-      setMsg('✅ Saved');
+      setMsg('Saved');
       setTimeout(() => { onSaved(); onClose(); }, 700);
-    } catch { setMsg('❌ Failed'); }
+    } catch { setMsg('Failed'); }
     finally { setSaving(false); }
   };
 
@@ -426,9 +426,9 @@ const UpdateModal: React.FC<{
     setEscalating(true);
     try {
       await escalateAction(item.id, escalateTo, escalateReason, form.updated_by_name);
-      setMsg(`✅ Escalated to ${escalateTo}`);
+      setMsg(`Escalated to ${escalateTo}`);
       setTimeout(() => { onSaved(); onClose(); }, 700);
-    } catch { setMsg('❌ Escalation failed'); }
+    } catch { setMsg('Escalation failed'); }
     finally { setEscalating(false); }
   };
 
@@ -448,7 +448,7 @@ const UpdateModal: React.FC<{
             <div className="flex items-center gap-2 flex-wrap">
               <PriorityBadge priority={item.priority} score={item.priority_score} reason={item.priority_score_reason} />
               {item.is_escalated && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/25 font-bold">🔺 ESCALATED</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/25 font-bold">ESCALATED</span>
               )}
             </div>
             <div className="text-lg font-bold mt-2 text-slate-800 dark:text-slate-100">{item.student_name}</div>
@@ -457,10 +457,10 @@ const UpdateModal: React.FC<{
               <span className="text-brand-500">@{item.leetcode_username}</span>
             </div>
             <div className="flex gap-4 mt-1.5 text-xs text-slate-400 dark:text-navy-400">
-              <span>🧩 {item.total_solved} solved</span>
-              <span>⭐ {item.current_rating} rating</span>
-              <span>🏆 {item.contests_attended} contests</span>
-              <span>🕐 {item.last_active_days_ago}d ago</span>
+              <span>{item.total_solved} solved</span>
+              <span>{item.current_rating} rating</span>
+              <span>{item.contests_attended} contests</span>
+              <span>{item.last_active_days_ago}d ago</span>
             </div>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-1">
@@ -472,7 +472,7 @@ const UpdateModal: React.FC<{
         <div className="px-5 py-3 bg-slate-50 dark:bg-navy-900/50 border-b border-slate-200 dark:border-navy-700">
           <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Signal</div>
           <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">{item.signal_type}</div>
-          <div className="text-xs text-brand-500 mt-1 italic">💡 {item.recommended_action}</div>
+          <div className="text-xs text-brand-500 mt-1 italic">{item.recommended_action}</div>
         </div>
 
         {/* Form */}
@@ -542,20 +542,20 @@ const UpdateModal: React.FC<{
                   </div>
                 </div>
                 <button onClick={handleEscalate} disabled={escalating} className="self-start px-4 py-2 rounded-xl bg-red-500/15 border border-red-500/30 text-red-400 text-sm font-semibold hover:bg-red-500/25 transition">
-                  {escalating ? '⏳ Escalating...' : '🔺 Confirm Escalation'}
+                  {escalating ? 'Escalating...' : 'Confirm Escalation'}
                 </button>
               </div>
             )}
           </div>
 
-          {msg && <div className={`text-sm font-semibold ${msg.startsWith('✅') ? 'text-emerald-400' : 'text-red-400'}`}>{msg}</div>}
+          {msg && <div className={`text-sm font-semibold ${msg.startsWith('') ? 'text-emerald-400' : 'text-red-400'}`}>{msg}</div>}
         </div>
 
         {/* Footer */}
         <div className="flex justify-end gap-3 px-5 py-4 border-t border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-900/30">
           <button onClick={onClose} className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 text-sm font-semibold hover:bg-slate-200 dark:hover:bg-navy-700 transition">Cancel</button>
           <button onClick={handleSave} disabled={saving} className="px-5 py-2 rounded-xl bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 transition flex items-center gap-2 shadow-md">
-            {saving ? '⏳ Saving...' : <><Send size={13} /> Save Changes</>}
+            {saving ? 'Saving...' : <><Send size={13} /> Save Changes</>}
           </button>
         </div>
       </div>
@@ -650,9 +650,9 @@ export const FacultyActionCenter: React.FC = () => {
     setSyncing(true); setSyncMsg('');
     try {
       const res = await triggerSignalDetection();
-      setSyncMsg(`✅ ${res.new_signals_created} new, ${res.existing_signals_updated} updated`);
+      setSyncMsg(`${res.new_signals_created} new, ${res.existing_signals_updated} updated`);
       await loadData();
-    } catch { setSyncMsg('❌ Sync failed'); }
+    } catch { setSyncMsg('Sync failed'); }
     finally { setSyncing(false); }
   };
 
@@ -697,7 +697,7 @@ export const FacultyActionCenter: React.FC = () => {
 
           <div className="flex items-center gap-2 flex-wrap">
             {syncMsg && (
-              <span className={`text-xs font-bold px-3 py-1.5 rounded-xl bg-navy-900/90 border border-gray-700/80 ${syncMsg.startsWith('✅') ? 'text-emerald-400' : 'text-rose-400'}`}>
+              <span className={`text-xs font-bold px-3 py-1.5 rounded-xl bg-navy-900/90 border border-gray-700/80 ${syncMsg.startsWith('') ? 'text-emerald-400' : 'text-rose-400'}`}>
                 {syncMsg}
               </span>
             )}
@@ -834,7 +834,7 @@ export const FacultyActionCenter: React.FC = () => {
       ) : items.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 text-emerald-500">
           <CheckCircle2 size={48} className="opacity-40 mb-4" />
-          <div className="text-xl font-bold">{hasFilters || kpiFilter ? 'No Students Found' : '🎉 All Clear'}</div>
+          <div className="text-xl font-bold">{hasFilters || kpiFilter ? 'No Students Found' : ' All Clear'}</div>
           <div className="text-sm text-slate-500 dark:text-navy-400 mt-2">
             {hasFilters || kpiFilter ? 'Try adjusting or clearing your filters to see more results.' : 'No students currently require faculty intervention.'}
           </div>
@@ -885,8 +885,8 @@ export const FacultyActionCenter: React.FC = () => {
                       {/* Stats */}
                       <td className={tdCls}>
                         <div className="text-[11px] text-slate-500 dark:text-navy-400 space-y-0.5">
-                          <div>⭐ {item.current_rating}</div>
-                          <div>🧩 {item.total_solved}</div>
+                          <div>{item.current_rating}</div>
+                          <div>{item.total_solved}</div>
                         </div>
                       </td>
 
@@ -894,8 +894,8 @@ export const FacultyActionCenter: React.FC = () => {
                       <td className={tdCls}>
                         <div className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug line-clamp-2">{item.signal_type}</div>
                         <div className="flex gap-1 flex-wrap mt-0.5">
-                          {item.is_escalated && <span className="text-[9px] text-red-400 font-bold">🔺 ESC</span>}
-                          {item.is_overdue_followup && <span className="text-[9px] text-pink-400 font-bold">⏰ {item.days_overdue}d overdue</span>}
+                          {item.is_escalated && <span className="text-[9px] text-red-400 font-bold">ESC</span>}
+                          {item.is_overdue_followup && <span className="text-[9px] text-pink-400 font-bold">{item.days_overdue}d overdue</span>}
                         </div>
                       </td>
 

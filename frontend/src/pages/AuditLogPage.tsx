@@ -319,14 +319,34 @@ export const AuditLogPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Metadata JSON Inspector */}
+              {/* Detailed Key-Value Event Payload Grid */}
+              {selectedLog.metadata && Object.keys(selectedLog.metadata).length > 0 && (
+                <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-800 space-y-2">
+                  <span className="font-extrabold text-gray-400 uppercase tracking-wider text-[10px] flex items-center gap-1">
+                    <Terminal className="w-3 h-3 text-indigo-500" />
+                    <span>Structured Event Attributes ({Object.keys(selectedLog.metadata).length} Parameters)</span>
+                  </span>
+                  <div className="grid grid-cols-2 gap-2 text-[11px]">
+                    {Object.entries(selectedLog.metadata).map(([key, val]) => (
+                      <div key={key} className="p-2 rounded-xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-navy-800 flex flex-col justify-center">
+                        <span className="text-[9.5px] font-extrabold uppercase text-gray-400 font-mono tracking-wider">{key}</span>
+                        <span className="font-mono font-bold text-gray-900 dark:text-gray-100 truncate mt-0.5">
+                          {typeof val === 'object' ? JSON.stringify(val) : String(val)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Metadata JSON Raw Inspector */}
               {selectedLog.metadata && Object.keys(selectedLog.metadata).length > 0 && (
                 <div className="p-4 rounded-2xl bg-slate-950 text-slate-200 border border-slate-800 space-y-1.5 font-mono">
                   <span className="font-extrabold text-slate-400 uppercase tracking-wider text-[10px] flex items-center gap-1">
                     <Terminal className="w-3 h-3 text-emerald-400" />
-                    <span>Event Payload Metadata (JSON)</span>
+                    <span>Raw Event Payload Metadata (JSON)</span>
                   </span>
-                  <pre className="text-[10.5px] text-emerald-400 overflow-x-auto p-2 bg-black/40 rounded-xl max-h-40 no-scrollbar">
+                  <pre className="text-[10.5px] text-emerald-400 overflow-x-auto p-2.5 bg-black/50 rounded-xl max-h-48 no-scrollbar leading-relaxed">
                     {JSON.stringify(selectedLog.metadata, null, 2)}
                   </pre>
                 </div>

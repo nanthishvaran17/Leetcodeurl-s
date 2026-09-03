@@ -275,16 +275,47 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     });
   }, []);
 
-  useContestWebSocket({
-    sessionId: selectedSessionId,
-    onBatchUpdate: handleWebSocketBatch,
-    onSyncCompleted: (event) => {
-      // Silently refresh the dashboard metrics after sync completes
-      if (selectedSessionId) {
-        fetchSessionDetails(selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, true);
+  const activeContestIdStr = selectedSessionId ? String(selectedSessionId) : '518';
+  const { 
+    status: wsStatus, 
+    syncState: wsSyncState, 
+    initialProgress: wsProgress, 
+    latestUpdate: wsLatestUpdate, 
+    liveFeed: wsLiveFeed 
+  } = useContestWebSocket(activeContestIdStr);
+
+  // Incremental row update on WebSocket STUDENT_ACTIVITY_UPDATED event
+  useEffect(() => {
+    if (!wsLatestUpdate) return;
+    const evt = wsLatestUpdate;
+    setMatrixRows(prev => {
+      const updated = [...prev];
+      let idx = evt.student_id != null ? updated.findIndex(r => (r.student_id || r.id) === evt.student_id) : -1;
+      if (idx === -1 && evt.people_id) idx = updated.findIndex(r => r.people_id === evt.people_id);
+      if (idx === -1 && evt.student_name) idx = updated.findIndex(r => r.name === evt.student_name || r.username === evt.account_id);
+      
+      if (idx !== -1) {
+        const oldRow = updated[idx];
+        const timeline = oldRow.timeline || [];
+        const newEntry = evt.activity?.activity_timeline_entry;
+
+        updated[idx] = {
+          ...oldRow,
+          q1: evt.activity?.q1 ?? oldRow.q1,
+          q2: evt.activity?.q2 ?? oldRow.q2,
+          q3: evt.activity?.q3 ?? oldRow.q3,
+          q4: evt.activity?.q4 ?? oldRow.q4,
+          total_solved: evt.activity?.count ?? oldRow.total_solved,
+          score_display: evt.activity?.score_display ?? oldRow.score_display,
+          last_updated: evt.timestamp,
+          is_recently_updated: true,
+          timeline: newEntry ? [newEntry, ...timeline] : timeline
+        };
       }
-    }
-  });
+      return updated;
+    });
+  }, [wsLatestUpdate]);
+
 
   // 1-second Countdown & Time Remaining Ticker
   useEffect(() => {
@@ -1030,7 +1061,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               {isLive ? (
                 <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center space-x-1.5 shadow-md bg-rose-600 text-white animate-pulse">
                   <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
-                  <span>🔴 LIVE NOW • CONTEST WINDOW</span>
+                  <span>LIVE NOW • CONTEST WINDOW</span>
                 </span>
               ) : isScheduled ? (
                 <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center space-x-1.5 shadow-sm bg-amber-500 text-slate-950">
@@ -1059,24 +1090,22 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <span>08:00 AM – 09:30 AM IST</span>
               </span>
 
-              {activeSessionObj?.status === 'LIVE' && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-mono font-bold">
-                  <Radio className="w-3 h-3 text-emerald-400 animate-pulse" />
-                  <span>● LIVE SYNCING</span>
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold border shadow-sm ${
+                wsStatus === 'LIVE' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' :
+                wsStatus === 'RECONNECTING' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse' :
+                'bg-rose-500/20 text-rose-300 border-rose-500/40'
+              }`}>
+                <Radio className={`w-3.5 h-3.5 ${wsStatus === 'LIVE' ? 'text-emerald-400 animate-pulse' : 'text-amber-400'}`} />
+                <span>{wsStatus === 'LIVE' ? 'LIVE' : wsStatus === 'RECONNECTING' ? 'RECONNECTING...' : 'OFFLINE'}</span>
+              </span>
+
+              {wsSyncState === 'INITIAL_SYNC' && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-xs font-mono font-bold animate-pulse">
+                  <RefreshCw className="w-3 h-3 text-indigo-400 animate-spin" />
+                  <span>INITIAL SYNCING</span>
                 </span>
               )}
-              {activeSessionObj?.status === 'FINALIZING' && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-mono font-bold">
-                  <Clock className="w-3 h-3 text-amber-400 animate-pulse" />
-                  <span>● FINALIZING</span>
-                </span>
-              )}
-              {activeSessionObj?.status === 'SCHEDULED' && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/40 text-xs font-mono font-bold">
-                  <Clock className="w-3 h-3 text-sky-400" />
-                  <span>UPCOMING</span>
-                </span>
-              )}
+
             </div>
 
             <div className="flex flex-col gap-1.5 md:gap-2">
@@ -1199,6 +1228,45 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           </div>
         </div>
       </div>
+
+      {/* ── INITIAL SYNC PROGRESS BANNER (1/297 -> 297/297) ── */}
+      {wsProgress && (
+        <div className="p-4 rounded-2xl bg-indigo-950/80 border border-indigo-500/40 text-indigo-200 flex items-center justify-between shadow-xl animate-pulse">
+          <div className="flex items-center space-x-3">
+            <RefreshCw className="w-5 h-5 animate-spin text-indigo-400" />
+            <div>
+              <h4 className="text-sm font-bold uppercase tracking-wider">Initial Synchronization In Progress</h4>
+              <p className="text-xs text-indigo-300">Fetching baseline contest state for all {wsProgress.total} registered students...</p>
+            </div>
+          </div>
+          <div className="text-right font-mono font-bold text-lg text-indigo-300">
+            {wsProgress.processed}/{wsProgress.total} ({wsProgress.percent}%)
+          </div>
+        </div>
+      )}
+
+      {/* ── GLOBAL LIVE ACTIVITY FEED (ZERO MANUAL REFRESH) ── */}
+      {wsLiveFeed.length > 0 && (
+        <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-emerald-500/30 text-slate-200 shadow-xl overflow-hidden">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+              GLOBAL LIVE ACTIVITY FEED (AUTOMATIC REALTIME UPDATES)
+            </span>
+            <span className="text-[10px] text-slate-400 font-mono">WebSocket Persistent Connection</span>
+          </div>
+          <div className="flex space-x-3 overflow-x-auto py-1 scrollbar-thin">
+            {wsLiveFeed.slice(0, 10).map((feed, idx) => (
+              <div key={feed.event_id || idx} className="shrink-0 px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs flex items-center space-x-2.5 shadow-md border-l-4 border-l-emerald-500">
+                <span className="font-bold text-indigo-300">{feed.student_name} ({feed.people_id})</span>
+                <span className="text-emerald-300 font-bold">{feed.text}</span>
+                <span className="text-[10px] text-slate-400 font-mono bg-slate-900 px-1.5 py-0.5 rounded">{feed.timestamp}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
 
       {/* ── 1B. SCHEDULED MODE COUNTDOWN BANNER (BEFORE SUNDAY 08:00 AM IST) ── */}
       {isScheduled && (
@@ -1745,32 +1813,32 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                     <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
                       <span className="text-gray-300">1. Master Roster Size</span>
-                      <span className="font-mono font-bold text-emerald-400">{invariantResults.masterRosterCount} Students ✓</span>
+                      <span className="font-mono font-bold text-emerald-400">{invariantResults.masterRosterCount} Students</span>
                     </div>
 
                     <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
                       <span className="text-gray-300">2. Total Classification Sum</span>
-                      <span className="font-mono font-bold text-emerald-400">100% Parity ✓</span>
+                      <span className="font-mono font-bold text-emerald-400">100% Parity</span>
                     </div>
 
                     <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
                       <span className="text-gray-300">3. Data Errors Contract</span>
-                      <span className="font-mono font-bold text-emerald-400">CONFLICT + SRC_ERR ✓</span>
+                      <span className="font-mono font-bold text-emerald-400">CONFLICT + SRC_ERR</span>
                     </div>
 
                     <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
                       <span className="text-gray-300">4. Token Bucket Limiter</span>
-                      <span className="font-mono font-bold text-emerald-400">&le; 3.0 req/s ✓</span>
+                      <span className="font-mono font-bold text-emerald-400">&le; 3.0 req/s</span>
                     </div>
 
                     <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
                       <span className="text-gray-300">5. Snapshot Immutability</span>
-                      <span className="font-mono font-bold text-emerald-400">TRIGGER ACTIVE ✓</span>
+                      <span className="font-mono font-bold text-emerald-400">TRIGGER ACTIVE</span>
                     </div>
 
                     <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
                       <span className="text-gray-300">6. Verification Window</span>
-                      <span className="font-mono font-bold text-emerald-400">3-Day Bound ✓</span>
+                      <span className="font-mono font-bold text-emerald-400">3-Day Bound</span>
                     </div>
                   </div>
                 </div>
@@ -3111,7 +3179,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                               onClick={() => handleOpenEditStudent(errStudent)}
                               className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow transition-all cursor-pointer active:scale-95"
                             >
-                              ✏️ Add Username
+                              Add Username
                             </button>
                           </td>
                         </tr>
@@ -3371,7 +3439,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     Attendance: <b className="text-emerald-600">{selectedAttendanceFilter}</b>
                   </span>
                   <span className="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-black">
-                    ✓ {matrixRows.length} Students Selected
+                    {matrixRows.length} Students Selected
                   </span>
                 </div>
               </div>

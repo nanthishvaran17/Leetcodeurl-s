@@ -563,7 +563,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-indigo-300 bg-indigo-500/20 border border-indigo-400/30 hover:bg-indigo-500/30 cursor-pointer transition-all"
                 title="Open Command Palette"
               >
-                <span>⌘K / Ctrl+K</span>
+                <span>Ctrl+K / Ctrl+K</span>
               </button>
             </div>
 
@@ -692,7 +692,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
               <div>
                 <h4 className="text-xs font-black text-emerald-900 dark:text-emerald-200">
-                  ✓ NO ACTION REQUIRED — All Systems Operating at 100% Integrity
+                  NO ACTION REQUIRED — All Systems Operating at 100% Integrity
                 </h4>
                 <p className="text-[11px] text-emerald-700 dark:text-emerald-300 mt-0.5">
                   Database verified, report parity confirmed, and upcoming Sunday automation session is fully armed.
@@ -851,7 +851,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 <div key={idx} className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1">
                   <span className="text-[10px] font-black uppercase text-gray-400">{pillar.category}</span>
                   <p className="text-xs font-black text-white">{pillar.records}</p>
-                  <p className="text-[10px] text-emerald-400 font-bold">✓ 0 Conflicts Detected</p>
+                  <p className="text-[10px] text-emerald-400 font-bold">0 Conflicts Detected</p>
                 </div>
               ))}
             </div>
@@ -1112,7 +1112,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 <RefreshCw className="w-5 h-5 animate-spin" />
                 <div>
                   <h4 className="text-xs font-black uppercase tracking-wider">
-                    🔍 Running Forensic Verification Pipeline…
+                    Running Forensic Verification Pipeline…
                   </h4>
                   <p className="text-[11px] text-indigo-600/80 dark:text-indigo-400/80">
                     Resolving student identity, contest standings, GraphQL evidence payload, and canonical states.
@@ -1154,7 +1154,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               </div>
               <p className="text-xs text-rose-600 dark:text-rose-400 font-bold">{forensicError}</p>
               <div className="flex items-center justify-between pt-2 border-t border-rose-200 dark:border-rose-900/50 text-[11px] text-gray-500">
-                <span>Data safety: ✓ Zero existing canonical data modified.</span>
+                <span>Data safety: Zero existing canonical data modified.</span>
                 <button
                   type="button"
                   onClick={handleClearForensicTrace}
@@ -1298,11 +1298,11 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 text-xs font-bold">
                   <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-gray-800">
                     <span className="text-[9.5px] text-gray-400 block uppercase">Student Identity</span>
-                    <span className="text-emerald-600 dark:text-emerald-400 font-black">✓ Matched</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-black">Matched</span>
                   </div>
                   <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-gray-800">
                     <span className="text-[9.5px] text-gray-400 block uppercase">Contest Identity</span>
-                    <span className="text-emerald-600 dark:text-emerald-400 font-black">✓ Matched</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-black">Matched</span>
                   </div>
                   <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-gray-800">
                     <span className="text-[9.5px] text-gray-400 block uppercase">Public Participation</span>
@@ -1318,7 +1318,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                   </div>
                   <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-gray-800">
                     <span className="text-[9.5px] text-gray-400 block uppercase">Database Record</span>
-                    <span className="text-emerald-600 dark:text-emerald-400 font-black">✓ Matched</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-black">Matched</span>
                   </div>
                   <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-gray-800">
                     <span className="text-[9.5px] text-gray-400 block uppercase">Canonical Resolution</span>
@@ -1409,7 +1409,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-black text-indigo-600 dark:text-indigo-400">{stg.stage}</span>
                     <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md">
-                      ✓ {stg.status}
+                      {stg.status}
                     </span>
                   </div>
                   <p className="text-xs font-black text-gray-900 dark:text-white">{stg.subsystem}</p>
@@ -1454,7 +1454,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                       <td className="py-2.5 px-3 text-center text-emerald-600 font-black">{s.public}</td>
                       <td className="py-2.5 px-3 text-center text-rose-600 font-black">{s.notAttended}</td>
                       <td className="py-2.5 px-3 text-center text-amber-600 font-black">{s.errors}</td>
-                      <td className="py-2.5 px-3 text-right text-emerald-600 font-black">✓ {s.parity}</td>
+                      <td className="py-2.5 px-3 text-right text-emerald-600 font-black">{s.parity}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1719,7 +1719,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                   onClick={() => handleAskCopilot(q)}
                   className="px-3.5 py-2 rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 text-xs font-bold text-gray-700 dark:text-gray-300 hover:border-indigo-400 hover:text-indigo-600 transition-all cursor-pointer text-left"
                 >
-                  💬 {q}
+                  {q}
                 </button>
               ))}
             </div>
@@ -1779,7 +1779,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 onClick={() => setShowTrustModal(false)}
                 className="text-gray-400 hover:text-gray-600 cursor-pointer"
               >
-                ✕
+               
               </button>
             </div>
 
@@ -1944,25 +1944,25 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                   <div className="p-2 rounded-lg bg-white border border-slate-300">
                     <span className="text-[10px] text-slate-500 block">Q1 (Easy)</span>
                     <span className={`font-black ${forensicResult.result.q1 === 1 ? 'text-emerald-700' : 'text-slate-400'}`}>
-                      {forensicResult.result.q1 === 1 ? '✓ Accepted' : 'Not Solved'}
+                      {forensicResult.result.q1 === 1 ? 'Accepted' : 'Not Solved'}
                     </span>
                   </div>
                   <div className="p-2 rounded-lg bg-white border border-slate-300">
                     <span className="text-[10px] text-slate-500 block">Q2 (Medium)</span>
                     <span className={`font-black ${forensicResult.result.q2 === 1 ? 'text-emerald-700' : 'text-slate-400'}`}>
-                      {forensicResult.result.q2 === 1 ? '✓ Accepted' : 'Not Solved'}
+                      {forensicResult.result.q2 === 1 ? 'Accepted' : 'Not Solved'}
                     </span>
                   </div>
                   <div className="p-2 rounded-lg bg-white border border-slate-300">
                     <span className="text-[10px] text-slate-500 block">Q3 (Medium)</span>
                     <span className={`font-black ${forensicResult.result.q3 === 1 ? 'text-emerald-700' : 'text-slate-400'}`}>
-                      {forensicResult.result.q3 === 1 ? '✓ Accepted' : 'Not Solved'}
+                      {forensicResult.result.q3 === 1 ? 'Accepted' : 'Not Solved'}
                     </span>
                   </div>
                   <div className="p-2 rounded-lg bg-white border border-slate-300">
                     <span className="text-[10px] text-slate-500 block">Q4 (Hard)</span>
                     <span className={`font-black ${forensicResult.result.q4 === 1 ? 'text-emerald-700' : 'text-slate-400'}`}>
-                      {forensicResult.result.q4 === 1 ? '✓ Accepted' : 'Not Solved'}
+                      {forensicResult.result.q4 === 1 ? 'Accepted' : 'Not Solved'}
                     </span>
                   </div>
                 </div>

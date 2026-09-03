@@ -13,17 +13,17 @@ from sqlalchemy import func, desc, and_, or_
 
 from backend.models import (
     Student, Department, Section, WeeklySession, WeeklyPublicResult,
-    LeetCodeProfileStats, StudentRiskProfile, FacultyStudentAssignment, User
+    LeetCodeProfileStats, StudentRiskProfile, FacultyStudentAssignment, User, StudentGoal
 )
 from backend.services.authorization_service import apply_role_based_student_filter
 from backend.logger import logger
 
-EXCLUDE_DEPT_CODES = {"CSE_TEST", "CSE_AI_TEST", "TEST"}
+from backend.constants import ALLOWED_PRODUCTION_DEPT_CODES, is_production_department
 
 def _is_real_dept(dept_code: Optional[str]) -> bool:
     if not dept_code:
         return True
-    return dept_code.upper() not in EXCLUDE_DEPT_CODES and "TEST" not in dept_code.upper()
+    return is_production_department(dept_code)
 
 def calculate_department_health_score(
     db: Session,
@@ -177,9 +177,30 @@ def get_institutional_benchmarks(db: Session, current_user: Optional[User] = Non
             dept_stats[did].append(stats)
 
     dept_matrix = []
+    
+    # Pre-fetch risk profiles for active students to calculate At-Risk count
+    risk_profiles = db.query(StudentRiskProfile).filter(
+        StudentRiskProfile.risk_level.in_(["HIGH", "CRITICAL"])
+    ).all()
+    risk_map = {r.student_id: True for r in risk_profiles}
+    
+    # Pre-fetch faculty counts per department
+    faculty_users = db.query(User).filter(
+        User.role.ilike("%Faculty%"), User.is_active == True
+    ).all()
+    faculty_map = {}
+    for f in faculty_users:
+        if f.department_id:
+            faculty_map[f.department_id] = faculty_map.get(f.department_id, 0) + 1
+            
+    # Pre-fetch student goals for completion rate
+    completed_goals = db.query(StudentGoal).filter(StudentGoal.status == "COMPLETED").all()
+    completed_map = {g.student_id: True for g in completed_goals}
+
     for did, d in dept_map.items():
         stats_rows = dept_stats.get(did, [])
-        cnt = sum(1 for s, _ in student_stats if s.department_id == did)
+        dept_students = [s for s, _ in student_stats if s.department_id == did]
+        cnt = len(dept_students)
         if cnt == 0:
             continue
 
@@ -204,6 +225,38 @@ def get_institutional_benchmarks(db: Session, current_user: Optional[User] = Non
             perf_score * 0.20 + diff_score * 0.15, 1
         )
 
+        active_score = round(part_pct, 1)
+        
+        # Calculate Coding Engagement
+        if part_pct >= 75:
+            engagement_status = "HIGH"
+        elif part_pct >= 40:
+            engagement_status = "MEDIUM"
+        else:
+            engagement_status = "LOW"
+            
+        # At-risk students
+        at_risk_students = sum(1 for s in dept_students if s.id in risk_map)
+        
+        # Faculty Mentors
+        faculty_mentors = faculty_map.get(did, 0)
+        
+        # Completion Rate
+        completed_students = sum(1 for s in dept_students if s.id in completed_map)
+        completion_rate = round((completed_students / cnt) * 100, 1) if cnt > 0 else 0
+        
+        # Performance Trend
+        growth_val = round(min(30.0, avg_solved / 10.0), 1)
+        trend = "→"
+        if growth_val > 5.0: trend = "↑"
+        elif growth_val < -1.0: trend = "↓"
+        
+        # Health Status
+        if health_score >= 85: health_status = "Excellent"
+        elif health_score >= 70: health_status = "Healthy"
+        elif health_score >= 50: health_status = "Needs Attention"
+        else: health_status = "Critical"
+
         dept_matrix.append({
             "department_id":       d.id,
             "department_name":     d.name,
@@ -216,10 +269,20 @@ def get_institutional_benchmarks(db: Session, current_user: Optional[User] = Non
             "avg_solved":          avg_solved,
             "participation_rate_pct": part_pct,
             "health_score":        health_score,
-            "growth_rate_pct":     f"+{round(min(30.0, avg_solved / 10.0), 1)}%",
+            "growth_rate_pct":     f"+{growth_val}%",
+            "active_score":        active_score,
+            "coding_engagement":   engagement_status,
+            "completion_rate":     completion_rate,
+            "at_risk_students":    at_risk_students,
+            "faculty_mentors":     faculty_mentors,
+            "performance_trend":   trend,
+            "health_status":       health_status,
         })
 
     dept_matrix.sort(key=lambda x: x["health_score"], reverse=True)
+    # Assign Rank
+    for idx, dm in enumerate(dept_matrix):
+        dm["rank"] = idx + 1
     year_matrix = calculate_year_matrix(db, current_user)
 
     return {

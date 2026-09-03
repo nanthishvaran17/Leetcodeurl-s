@@ -255,7 +255,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             className="px-3 py-2 rounded-xl bg-white/10 hover:bg-rose-500 text-white transition-all font-black text-[10px] flex items-center space-x-1 cursor-pointer"
             title="Close Modal"
           >
-            <span className="text-sm leading-none">✕</span>
+            <span className="text-sm leading-none"></span>
             <span className="hidden lg:inline">Close</span>
           </button>
         </div>
@@ -290,7 +290,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
 
         <div className="glass-card p-5 rounded-2xl border text-center shadow-md">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Active Streak</p>
-          <h3 className="text-2xl font-extrabold text-amber-500 mt-1">🔥 {detail?.lc_activity?.current_streak || detail?.streak_count || 0} Days</h3>
+          <h3 className="text-2xl font-extrabold text-amber-500 mt-1">{detail?.lc_activity?.current_streak || detail?.streak_count || 0} Days</h3>
         </div>
 
       </div>
@@ -314,8 +314,8 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
                   : 'bg-gray-100 text-gray-600 dark:bg-navy-950 dark:text-gray-400 border border-gray-300/30'
               }`}>
                 {(detail?.stats?.virtual_contest_status === 'ATTENDED' || detail?.has_virtual || (detail?.stats?.virtual_contests && detail.stats.virtual_contests > 0))
-                  ? '🔵 Attended'
-                  : '⚪ Not Attended'}
+                  ? 'Attended'
+                  : 'Not Attended'}
               </span>
             </div>
           </div>

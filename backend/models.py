@@ -41,6 +41,7 @@ class Student(Base):
     )
     
     id = Column(Integer, primary_key=True, index=True)
+    people_id = Column(String(50), unique=True, index=True, nullable=True)
     reg_no = Column(String(50), unique=True, index=True, nullable=False)
     name = Column(String(150), nullable=False)
     department_id = Column(Integer, ForeignKey("departments.id"), nullable=False, index=True)
@@ -788,6 +789,13 @@ class StudentContestParticipation(Base):
     attended = Column(Boolean, default=False)
     status = Column(String(30), default="UNKNOWN", index=True) # PARTICIPATED, NOT_PARTICIPATED, SOURCE_UNAVAILABLE, UNKNOWN, FETCH_FAILED
 
+    # Master Attendance & Freeze Fields
+    official_attendance_state = Column(String(30), nullable=True, index=True) # ATTENDED, NOT_ATTENDED, UNKNOWN
+    is_frozen = Column(Boolean, default=False, index=True)
+    frozen_at = Column(DateTime(timezone=True), nullable=True)
+    post_contest_solves_count = Column(Integer, default=0)
+
+
     started_at = Column(DateTime, nullable=True)
     submitted_at = Column(DateTime, nullable=True)
     fetched_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
@@ -1483,7 +1491,7 @@ class LeetCodeAccount(Base):
     __table_args__ = {"extend_existing": True}
 
     id = Column(Integer, primary_key=True, index=True)
-    student_id = Column(Integer, ForeignKey("students.id"), unique=True, nullable=False)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
     leetcode_username = Column(String(100), unique=True, nullable=False, index=True)
     normalized_username = Column(String(100), nullable=True, index=True)
     profile_url = Column(String(500), nullable=True)
@@ -1491,7 +1499,56 @@ class LeetCodeAccount(Base):
     profile_data = Column(JSON, nullable=True)
     updated_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
-    student = relationship("Student", backref=backref("leetcode_account", uselist=False))
+    student = relationship("Student", backref=backref("leetcode_accounts"))
+
+
+class IntegrityCase(Base):
+    """
+    Tracks Contest Integrity Dual-ID detection cases.
+    Created when a single People ID is linked to multiple contest accounts that violated rules.
+    """
+    __tablename__ = "integrity_cases"
+
+    id = Column(Integer, primary_key=True, index=True)
+    case_id = Column(String(100), unique=True, nullable=False, index=True)
+    people_id = Column(String(50), nullable=False, index=True)
+    contest_id = Column(String(100), nullable=False, index=True)
+    account_ids = Column(JSON, nullable=False) # Array of account usernames
+    participation_statuses = Column(JSON, nullable=False) # Array of objects
+    status = Column(String(50), default="PENDING", index=True) # PENDING, CONFIRMED, DISMISSED
+    created_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow)
+    reviewed_by = Column(String(100), nullable=True)
+    reviewed_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Idempotency & Notification Dispatch tracking
+    student_email_sent = Column(Boolean, default=False)
+    staff_email_sent = Column(Boolean, default=False)
+    staff_push_sent = Column(Boolean, default=False)
+    idempotency_key = Column(String(120), nullable=True, unique=True, index=True)
+    audit_history = Column(JSON, nullable=True)
+    
+    __table_args__ = (
+        UniqueConstraint("people_id", "contest_id", name="uix_integrity_people_contest"),
+    )
+
+
+class AuditLogRecord(Base):
+    """
+    Comprehensive lifecycle & integrity system audit log table.
+    Stores events: Contest sync started, Contest sync completed, Final attendance calculated,
+    Attendance frozen, Account mapping performed, Duplicate account detected, Integrity case created,
+    Student email sent, Staff email sent, Staff notification sent, Staff opened case, Staff resolved case.
+    """
+    __tablename__ = "integrity_audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    event_type = Column(String(100), nullable=False, index=True)
+    contest_id = Column(String(100), nullable=True, index=True)
+    people_id = Column(String(50), nullable=True, index=True)
+    details = Column(JSON, nullable=True)
+    created_by = Column(String(100), default="SYSTEM")
+    created_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, index=True)
+
 
 
 class ContestParticipationRecord(Base):
@@ -2120,9 +2177,194 @@ class ScheduledJobExecution(Base):
     scheduled_at = Column(DateTime, nullable=True)
     started_at = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)
-    status = Column(String(20), default="PENDING") # PENDING, RUNNING, COMPLETED, MISSED, ERROR
-    attempt = Column(Integer, default=1)
-    last_error = Column(Text, nullable=True)
+    status = Column(String(50), default="PENDING")
+    error_message = Column(Text, nullable=True)
+
+
+class ContestConfig(Base):
+    """
+    Configurable contest timing and parameters model.
+    Enforces server-authoritative time and freeze boundaries.
+    """
+    __tablename__ = "contest_configs"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    contest_id = Column(String(100), unique=True, index=True, nullable=False)
+    contest_name = Column(String(150), nullable=False)
+    contest_start_time = Column(DateTime(timezone=True), nullable=False) # e.g. 08:00:00 IST
+    contest_end_time = Column(DateTime(timezone=True), nullable=False)   # e.g. 09:30:00 IST
+    final_sync_end_time = Column(DateTime(timezone=True), nullable=False) # e.g. 09:35:00 IST
+    timezone = Column(String(50), default="Asia/Kolkata", nullable=False)
+    is_frozen = Column(Boolean, default=False, index=True)
+    attendance_frozen_at = Column(DateTime(timezone=True), nullable=True)
+    algorithm_version = Column(String(30), default="2.0.0")
+    created_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow)
+
+
+class AttendanceSnapshot(Base):
+    """
+    Immutable frozen snapshot of official contest attendance.
+    Written at 09:35 AM IST freeze and never silently mutated.
+    """
+    __tablename__ = "attendance_snapshots"
+    __table_args__ = (
+        UniqueConstraint("contest_id", "people_id", "leetcode_username", name="uix_att_snapshot_user"),
+        {"extend_existing": True},
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    contest_id = Column(String(100), nullable=False, index=True)
+    people_id = Column(String(50), nullable=False, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    leetcode_username = Column(String(100), nullable=False, index=True)
+    official_attendance_state = Column(String(30), nullable=False, index=True) # ATTENDED, NOT_ATTENDED, UNKNOWN
+    source = Column(String(100), default="official_contest_sync")
+    calculated_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow)
+    frozen_at = Column(DateTime(timezone=True), nullable=False)
+    algorithm_version = Column(String(30), default="2.0.0")
+    snapshot_version = Column(Integer, default=1)
+
+
+class CorrectionEvent(Base):
+    """
+    Audit log record for legitimate administrative corrections to frozen snapshots.
+    """
+    __tablename__ = "attendance_correction_events"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    audit_id = Column(String(100), unique=True, index=True, nullable=False)
+    snapshot_id = Column(Integer, ForeignKey("attendance_snapshots.id"), nullable=False, index=True)
+    contest_id = Column(String(100), nullable=False, index=True)
+    people_id = Column(String(50), nullable=False, index=True)
+    old_value = Column(String(30), nullable=False)
+    new_value = Column(String(30), nullable=False)
+    reason = Column(Text, nullable=False)
+    staff_id = Column(String(100), nullable=False)
+    timestamp = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, index=True)
+
+
+class PostContestActivityRecord(Base):
+    """
+    Persistent storage for solves/submissions occurring after official cutoff (09:30 AM IST).
+    Does NOT alter frozen official attendance.
+    """
+    __tablename__ = "post_contest_activity_records"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    submission_id = Column(String(120), unique=True, index=True, nullable=False)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    people_id = Column(String(50), nullable=False, index=True)
+    contest_id = Column(String(100), nullable=False, index=True)
+    account_id = Column(String(100), nullable=False) # LeetCode username
+    submission_time = Column(DateTime(timezone=True), nullable=False, index=True)
+    activity_type = Column(String(30), nullable=False, index=True) # IN_CONTEST, POST_CONTEST, VIRTUAL
+    problem_slug = Column(String(150), nullable=True)
+    result = Column(String(50), nullable=True)
+    source = Column(String(100), default="leetcode_post_sync")
+    server_received_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow)
+
+
+class NotificationEvent(Base):
+    """
+    Transactional Outbox model for idempotent notifications.
+    Guarantees exactly 1 Student Email, 1 Staff Email, 1 Staff Push per case.
+    """
+    __tablename__ = "notification_outbox_events"
+    __table_args__ = (
+        UniqueConstraint("case_id", "recipient_type", "channel", name="uix_notif_outbox_case_rec_chan"),
+        {"extend_existing": True},
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    notification_event_id = Column(String(120), unique=True, index=True, nullable=False)
+    case_id = Column(String(100), nullable=False, index=True)
+    people_id = Column(String(50), nullable=False, index=True)
+    recipient_type = Column(String(30), nullable=False) # STUDENT, STAFF_EMAIL, STAFF_PUSH
+    channel = Column(String(30), nullable=False)        # EMAIL, FCM_PUSH, FIRESTORE
+    recipient_target = Column(String(255), nullable=False) # email address, FCM token, or UID
+    payload = Column(JSON, nullable=False)
+    status = Column(String(30), default="PENDING", index=True) # PENDING, PROCESSING, SENT, FAILED, RETRYING
+    attempt_count = Column(Integer, default=0)
+    max_attempts = Column(Integer, default=3)
+    idempotency_key = Column(String(120), unique=True, index=True, nullable=False)
+    provider_message_id = Column(String(100), nullable=True)
+    error_message = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, index=True)
+    sent_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class LiveContestEvent(Base):
+    """
+    Persistent sequence store for real-time WebSocket contest activity events.
+    Enables missed event recovery (via version > last_received_version) and deduplication.
+    """
+    __tablename__ = "live_contest_events"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    event_id = Column(String(120), unique=True, index=True, nullable=False)
+    version = Column(Integer, index=True, nullable=False)
+    contest_id = Column(String(100), index=True, nullable=False)
+    people_id = Column(String(50), index=True, nullable=False)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    account_id = Column(String(100), nullable=False)
+    event_type = Column(String(50), nullable=False, default="STUDENT_ACTIVITY_UPDATED")
+    payload = Column(JSON, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, index=True)
+
     next_run = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+
+class WeeklyStudentSnapshot(Base):
+    """
+    Immutable historical student snapshot captured per reporting period for official college reports.
+    Ensures Last Week calculations represent the student's problem-solving state at that cutoff.
+    """
+    __tablename__ = "weekly_student_snapshots"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    reporting_period_id = Column(String(100), index=True, nullable=False)
+    people_id = Column(String(100), index=True, nullable=False)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    primary_account_id = Column(String(100), nullable=True)
+    primary_solved_count = Column(Integer, default=0, nullable=False)
+    solved_bucket = Column(String(50), nullable=False)
+    contest_attended = Column(Boolean, default=False)
+    contest_data = Column(Text, nullable=True)
+    contest_rating = Column(Float, nullable=True)
+    contest_ranking = Column(Integer, nullable=True)
+    verification_status = Column(String(50), default="VERIFIED")
+    captured_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    student = relationship("Student", backref="weekly_snapshots")
+
+
+class WeeklyReportAudit(Base):
+    """
+    Audit log record generated for every official college report export.
+    Proves exactly how a report was generated, including discovered contest IDs and validation results.
+    """
+    __tablename__ = "weekly_report_audits"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    report_id = Column(String(100), unique=True, index=True, nullable=False)
+    reporting_period_id = Column(String(100), index=True, nullable=False)
+    report_date = Column(String(50), nullable=False)
+    generated_by = Column(String(100), default="System")
+    contests_included = Column(Text, nullable=False)
+    total_students = Column(Integer, nullable=False)
+    total_batches = Column(Integer, nullable=False)
+    validation_status = Column(String(50), nullable=False, default="VALID")
+    validation_details = Column(Text, nullable=True)
+    file_hash = Column(String(128), nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+

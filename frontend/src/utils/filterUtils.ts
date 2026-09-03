@@ -14,7 +14,7 @@ export const normalizeSearchValue = (value: unknown) =>
 
 /**
  * Normalizes any department reference (object, ID, name, code, string) to a canonical key.
- * Handles all 12+ institutional departments accurately.
+ * Production Website operates strictly on CSE(CS) and CSE(IOT).
  */
 export function normalizeDepartment(dept: any): string {
   if (!dept || dept === 'ALL' || dept === 'all' || dept === 'all_departments' || dept === 'ALL DEPARTMENTS') {
@@ -27,31 +27,23 @@ export function normalizeDepartment(dept: any): string {
     const name = (dept.name || '').trim().toUpperCase();
     const combined = `${code} ${name}`.trim();
 
-    if (combined.includes('CYBER') || combined.includes('CSE(CS)') || combined.includes('CSE-CS') || combined.includes('CSE (CS)')) {
+    if (dept.id === 1 || combined.includes('CYBER') || combined.includes('CSE(CS)') || combined.includes('CSE-CS') || combined.includes('CSE (CS)')) {
       return 'cse_cs';
     }
-    if (combined.includes('IOT') || combined.includes('CSE(IOT)') || combined.includes('CSE-IOT') || combined.includes('CSE (IOT)') || combined.includes('INTERNET')) {
+    if (dept.id === 2 || combined.includes('IOT') || combined.includes('CSE(IOT)') || combined.includes('CSE-IOT') || combined.includes('CSE (IOT)') || combined.includes('INTERNET')) {
       return 'cse_iot';
     }
-    if (code === 'CSE' || combined.includes('COMPUTER SCIENCE')) return 'cse';
-    if (code === 'IT' || combined.includes('INFORMATION TECH')) return 'it';
-    if (code === 'AIDS' || code === 'AI&DS' || combined.includes('ARTIFICIAL INTELLIGENCE') || combined.includes('DATA SCIENCE')) return 'aids';
-    if (code === 'AIML' || code === 'AI&ML' || combined.includes('MACHINE LEARNING')) return 'aiml';
-    if (code === 'ECE' || combined.includes('ELECTRONICS AND COMM')) return 'ece';
-    if (code === 'EEE' || combined.includes('ELECTRICAL AND ELECT')) return 'eee';
-    if (code === 'AGRI' || combined.includes('AGRICULTUR')) return 'agri';
-    if (code === 'MECH' || combined.includes('MECHANICAL')) return 'mech';
-    if (code === 'CIVIL' || combined.includes('CIVIL')) return 'civil';
-    if (code === 'BME' || combined.includes('BIOMEDICAL')) return 'bme';
-    if (code === 'CHEM' || combined.includes('CHEMICAL')) return 'chem';
 
     if (code) return code.toLowerCase().replace(/[^a-z0-9]/g, '_');
     if (name) return name.toLowerCase().replace(/[^a-z0-9]/g, '_');
     if (dept.id) return String(dept.id);
   }
 
-  // If numeric ID
-  if (typeof dept === 'number') {
+  // If numeric ID (1 = Cyber Security, 2 = IoT)
+  if (typeof dept === 'number' || (!isNaN(Number(dept)) && String(dept).trim() !== '')) {
+    const numId = Number(dept);
+    if (numId === 1) return 'cse_cs';
+    if (numId === 2) return 'cse_iot';
     return String(dept);
   }
 
@@ -66,17 +58,6 @@ export function normalizeDepartment(dept: any): string {
     if (clean.includes('IOT') || clean.includes('CSE(IOT)') || clean.includes('CSE-IOT') || clean.includes('CSE (IOT)') || clean.includes('INTERNET')) {
       return 'cse_iot';
     }
-    if (clean === 'CSE' || clean.includes('COMPUTER SCIENCE')) return 'cse';
-    if (clean === 'IT' || clean.includes('INFORMATION TECHNOLOGY') || clean.includes('INFORMATION TECH')) return 'it';
-    if (clean === 'AIDS' || clean === 'AI&DS' || clean === 'AI-DS' || clean.includes('ARTIFICIAL INTELLIGENCE') || clean.includes('DATA SCIENCE')) return 'aids';
-    if (clean === 'AIML' || clean === 'AI&ML' || clean.includes('MACHINE LEARNING')) return 'aiml';
-    if (clean === 'ECE' || clean.includes('ELECTRONICS AND COMMUNICATION') || clean.includes('ELECTRONICS & COMM')) return 'ece';
-    if (clean === 'EEE' || clean.includes('ELECTRICAL AND ELECTRONICS') || clean.includes('ELECTRICAL & ELECT')) return 'eee';
-    if (clean === 'AGRI' || clean.includes('AGRICULTURE') || clean.includes('AGRICULTURAL')) return 'agri';
-    if (clean === 'MECH' || clean.includes('MECHANICAL')) return 'mech';
-    if (clean === 'CIVIL' || clean.includes('CIVIL')) return 'civil';
-    if (clean === 'BME' || clean.includes('BIOMEDICAL')) return 'bme';
-    if (clean === 'CHEM' || clean.includes('CHEMICAL')) return 'chem';
 
     return clean.toLowerCase().replace(/[^a-z0-9]/g, '_');
   }

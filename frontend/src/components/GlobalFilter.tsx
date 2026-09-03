@@ -49,16 +49,17 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Auto-generate pill text if not provided (fallback logic)
-  const getPillText = (opt: GlobalFilterOption) => {
+  const getPillText = (opt: GlobalFilterOption | undefined) => {
+    if (!opt) return 'ALL';
     if (opt.pillText) return opt.pillText;
     if (opt.value === 'ALL' || opt.value === '' || opt.value === 'all') return 'ALL';
     if (opt.value.length <= 6) return opt.value.toUpperCase();
     return opt.value.substring(0, 3).toUpperCase();
   };
 
-  const getPillColor = (opt: GlobalFilterOption, isSelected: boolean) => {
+  const getPillColor = (opt: GlobalFilterOption | undefined, isSelected: boolean) => {
     if (isSelected) return 'bg-white/20 text-white border border-white/30';
+    if (!opt) return 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300';
     if (opt.pillColorClass) return opt.pillColorClass;
     if (opt.value === 'ALL' || opt.value === '' || opt.value === 'all') return 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300';
     

@@ -344,7 +344,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
                       <span>Participation Status</span>
                     </span>
                     <strong className="text-emerald-400 block font-bold">
-                      ✓ {data.participation_status || 'PUBLIC_ATTENDED'}
+                      {data.participation_status || 'PUBLIC_ATTENDED'}
                     </strong>
                   </div>
 
@@ -482,7 +482,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
                       <span>Recognition Distinction</span>
                     </span>
                     <strong className="text-emerald-400 block font-bold">
-                      ★ {data.recognition || 'Top Performer'}
+                      {data.recognition || 'Top Performer'}
                     </strong>
                   </div>
 
@@ -563,7 +563,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
 
               <div className="space-y-2">
                 <span className="px-3.5 py-1 rounded-full text-xs font-black bg-rose-500/20 text-rose-400 border border-rose-500/30">
-                  ❌ CERTIFICATE REVOKED
+                  CERTIFICATE REVOKED
                 </span>
                 <h3 className="text-xl font-black text-white">This Credential Has Been Officially Revoked</h3>
                 <p className="text-xs text-rose-300 max-w-md mx-auto">
@@ -587,7 +587,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
 
               <div className="space-y-2">
                 <span className="px-3.5 py-1 rounded-full text-xs font-black bg-red-500/20 text-red-400 border border-red-500/30">
-                  ⚠️ SERVICE TEMPORARILY UNAVAILABLE
+                  SERVICE TEMPORARILY UNAVAILABLE
                 </span>
                 <h3 className="text-xl font-black text-white">Verification Service Temporarily Unavailable</h3>
                 <p className="text-xs text-slate-400 max-w-md mx-auto">
@@ -615,7 +615,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
 
               <div className="space-y-2">
                 <span className="px-3.5 py-1 rounded-full text-xs font-black bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                  ❌ CERTIFICATE NOT VERIFIED
+                  CERTIFICATE NOT VERIFIED
                 </span>
                 <h3 className="text-xl font-black text-white">Certificate Not Found</h3>
                 <p className="text-xs text-slate-400 max-w-md mx-auto">

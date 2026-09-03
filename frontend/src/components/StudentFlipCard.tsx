@@ -94,49 +94,49 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
   const SyncBadge = () => {
     if (state === 'pending_username') return (
       <span className="flex items-center space-x-1 text-xs font-bold text-amber-600 dark:text-amber-400">
-        <span>⏳ Pending username</span>
+        <span>Pending username</span>
       </span>
     );
     if (state === 'invalid_profile') return (
       <span className="flex items-center space-x-1 text-xs font-bold text-gray-400 dark:text-gray-500">
-        <span>⚪ Profile unavailable</span>
+        <span>Profile unavailable</span>
       </span>
     );
     if (state === 'syncing') return (
       <span className="flex items-center space-x-1 text-xs font-bold text-blue-500 dark:text-blue-400">
         <Loader className="w-3.5 h-3.5 animate-spin" />
-        <span>🔄 Syncing...</span>
+        <span>Syncing...</span>
       </span>
     );
     if (state === 'pending') return (
       <span className="flex items-center space-x-1 text-xs font-bold text-gray-400 dark:text-gray-500">
         <Clock className="w-3.5 h-3.5" />
-        <span>⏳ Awaiting sync</span>
+        <span>Awaiting sync</span>
       </span>
     );
     if (state === 'failed') return (
       <span className="flex items-center space-x-1 text-xs font-bold text-rose-500 dark:text-rose-400">
         <AlertCircle className="w-3.5 h-3.5" />
-        <span>🔴 Sync failed{lastVerifiedAt ? ` • ${verifiedAgo}` : ''}</span>
+        <span>Sync failed{lastVerifiedAt ? ` • ${verifiedAgo}` : ''}</span>
       </span>
     );
     if (state === 'mismatch') return (
       <span className="flex items-center space-x-1 text-xs font-bold text-amber-500">
         <AlertCircle className="w-3.5 h-3.5" />
-        <span>🟡 Data mismatch</span>
+        <span>Data mismatch</span>
       </span>
     );
     if (state === 'stale') return (
       <span className="flex items-center space-x-1 text-xs font-bold text-amber-600 dark:text-amber-400">
         <Clock className="w-3.5 h-3.5" />
-        <span>🟡 Synced • {verifiedAgo}</span>
+        <span>Synced • {verifiedAgo}</span>
       </span>
     );
     // verified
     return (
       <span className="flex items-center space-x-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
         <CheckCircle2 className="w-3.5 h-3.5" />
-        <span>🟢 Synced • {verifiedAgo}</span>
+        <span>Synced • {verifiedAgo}</span>
       </span>
     );
   };
@@ -150,13 +150,13 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
     );
     if (state === 'invalid_profile') return (
       <div className="flex items-center space-x-1.5 font-bold text-gray-400 bg-gray-50 dark:bg-gray-900 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-800">
-        <span className="text-sm">⚪ Profile unavailable</span>
+        <span className="text-sm">Profile unavailable</span>
       </div>
     );
     if (state === 'syncing') return (
       <div className="flex items-center space-x-1.5 font-bold text-blue-500 bg-blue-50 dark:bg-blue-950/40 px-3 py-1.5 rounded-xl border border-blue-200 dark:border-blue-800/60">
         <Loader className="w-4 h-4 animate-spin" />
-        <span className="text-sm">🔄 Syncing...</span>
+        <span className="text-sm">Syncing...</span>
       </div>
     );
     if (state === 'pending') return (
@@ -287,9 +287,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 state === 'mismatch' ? 'bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800' :
                 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800'
               }`}>
-                <div className="text-2xl">
-                  {state === 'pending_username' ? '⏳' : state === 'pending' ? '⏳' : state === 'mismatch' ? '🟡' : '🔴'}
-                </div>
+                  {state === 'pending_username' ? 'PENDING' : state === 'pending' ? 'WAITING' : ''}
                 <p className="font-extrabold text-sm text-gray-700 dark:text-gray-300">
                   {state === 'pending_username' ? 'Pending LeetCode Username' :
                    state === 'pending' ? 'Awaiting Scheduled Sync' :
@@ -372,7 +370,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                   <span className="text-[10.5px] font-medium">Source: LeetCode Public Profile</span>
                 </span>
                 <span className="text-[10.5px] font-mono font-bold whitespace-nowrap text-emerald-600 dark:text-emerald-400">
-                  {state === 'stale' ? `🟡 Stale • ${verifiedAgo}` : lastVerifiedAt ? `🟢 Verified ${verifiedAgo}` : '—'}
+                  {state === 'stale' ? `Stale • ${verifiedAgo}` : lastVerifiedAt ? `Verified ${verifiedAgo}` : '—'}
                 </span>
               </div>
             )}

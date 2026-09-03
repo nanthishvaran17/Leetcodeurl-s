@@ -433,12 +433,12 @@ export const SettingsPage: React.FC = () => {
         notify.success('Integrity Audit Passed', res.data.summary, { category: 'DATA INTEGRITY' });
         fetchAuditLogs();
       } else {
-        setIntegrityAuditResult('⚠️ Integrity Audit Warning: Potential data inconsistency detected.');
+        setIntegrityAuditResult('Integrity Audit Warning: Potential data inconsistency detected.');
         notify.error('Integrity Audit Warning', 'Integrity rule violations detected.', { category: 'DATA INTEGRITY' });
       }
     } catch (err: any) {
       console.error('Integrity audit request failed:', err);
-      setIntegrityAuditResult('❌ Live integrity audit call failed. Check server logs.');
+      setIntegrityAuditResult('Live integrity audit call failed. Check server logs.');
       notify.error('Audit Failed', 'Server error while running integrity audit.', { category: 'DATA INTEGRITY' });
     } finally {
       setIntegrityAuditing(false);
@@ -1038,7 +1038,7 @@ export const SettingsPage: React.FC = () => {
                   <div className="flex items-center space-x-2">
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                      <span>SMTP Transport: {emailDiag?.transportVerified ? '✓ VERIFIED' : 'ACTIVE'}</span>
+                      <span>SMTP Transport: {emailDiag?.transportVerified ? 'VERIFIED' : 'ACTIVE'}</span>
                     </span>
                   </div>
                 </div>
@@ -1061,7 +1061,7 @@ export const SettingsPage: React.FC = () => {
 
                   <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-navy-800">
                     <div className="text-gray-400 text-[9px] uppercase font-sans font-bold">Last SMTP Result</div>
-                    <div className="font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{lastOtpTestResult?.status || '✓ ACCEPTED'}</div>
+                    <div className="font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{lastOtpTestResult?.status || 'ACCEPTED'}</div>
                   </div>
                 </div>
 

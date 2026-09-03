@@ -125,7 +125,7 @@ export const AllocationConfirmationModal: React.FC<AllocationConfirmationModalPr
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                ✓ Assignment Completed
+                Assignment Completed
               </h3>
               <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
                 {selectedCount} {studentPlural} assigned successfully to <strong className="text-indigo-600 dark:text-indigo-400">{targetStaff.username}</strong>.
@@ -184,21 +184,21 @@ export const AllocationConfirmationModal: React.FC<AllocationConfirmationModalPr
               <div className="space-y-2 pt-1">
                 <div className="flex items-center space-x-2 text-xs font-bold text-slate-700 dark:text-slate-200">
                   <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[10px] shrink-0 font-black">
-                    ✓
+                   
                   </span>
                   <span>{selectedCount} {studentPlural} selected for allocation</span>
                 </div>
 
                 <div className="flex items-center space-x-2 text-xs font-bold text-slate-700 dark:text-slate-200">
                   <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[10px] shrink-0 font-black">
-                    ✓
+                   
                   </span>
                   <span>Assignment will be saved securely in database</span>
                 </div>
 
                 <div className="flex items-center space-x-2 text-xs font-bold text-slate-700 dark:text-slate-200">
                   <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[10px] shrink-0 font-black">
-                    ✓
+                   
                   </span>
                   <span>Staff scope will update immediately</span>
                 </div>

@@ -69,13 +69,13 @@ export const ReportsPage: React.FC = () => {
         created_at: new Date().toISOString(),
         metrics: res.data.metrics || {}
       };
-      setToastMessage("✓ HOD Executive Snapshot captured successfully!");
+      setToastMessage("HOD Executive Snapshot captured successfully!");
       setTimeout(() => setToastMessage(null), 4000);
       setHodSnapshots(prev => [newSnapshot, ...prev.filter(s => s.snapshot_id !== newSnapshot.snapshot_id)]);
       setSelectedSnapshotPreview(newSnapshot);
       fetchHodSnapshots();
     } catch (err: any) {
-      setToastMessage(`⚠ ${err.response?.data?.detail || "Failed to generate HOD snapshot."}`);
+      setToastMessage(`${err.response?.data?.detail || "Failed to generate HOD snapshot."}`);
       setTimeout(() => setToastMessage(null), 5000);
     } finally {
       setIsGeneratingSnapshot(false);
@@ -104,7 +104,7 @@ export const ReportsPage: React.FC = () => {
         setSelectedSnapshotPreview(null);
       }
       setDeleteModalItem(null);
-      setToastMessage("✓ HOD Snapshot deleted successfully");
+      setToastMessage("HOD Snapshot deleted successfully");
       setTimeout(() => setToastMessage(null), 4000);
     } catch (err: any) {
       setDeleteError(err.response?.data?.detail || err.message || "Failed to delete snapshot.");
@@ -113,7 +113,7 @@ export const ReportsPage: React.FC = () => {
     }
   };
   const downloadReportFile = async (endpoint: string, filename: string) => {
-    setToastMessage("⏳ Generating report dataset from database...");
+    setToastMessage("Generating report dataset from database...");
     try {
       const res = await api.get(endpoint, { responseType: 'blob' });
       const blobUrl = window.URL.createObjectURL(new Blob([res.data]));
@@ -124,7 +124,7 @@ export const ReportsPage: React.FC = () => {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(blobUrl);
-      setToastMessage(`✓ ${filename} downloaded successfully.`);
+      setToastMessage(`${filename} downloaded successfully.`);
       setTimeout(() => setToastMessage(null), 4000);
     } catch (err: any) {
       console.error('Download error:', err);
@@ -141,7 +141,7 @@ export const ReportsPage: React.FC = () => {
         errMsg = err.response.data.detail;
       }
 
-      setToastMessage(`⚠ ${errMsg}`);
+      setToastMessage(`${errMsg}`);
       setTimeout(() => setToastMessage(null), 5000);
 
       if (statusCode === 401) {
@@ -261,7 +261,7 @@ export const ReportsPage: React.FC = () => {
     {
       id: 'csv-export',
       title: 'Student Performance CSV Export',
-      badge: '📑 RAW SPREADSHEET (CSV)',
+      badge: 'RAW SPREADSHEET (CSV)',
       badgeColor: 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20',
       description: 'Direct CSV file format containing all student performance metrics: S.No, Register No, Name, Department, Year, LeetCode URL, Username, Easy, Medium, Hard, Total Solved, Rating, Global Rank. Openable in any spreadsheet software.',
       filename: 'LeetCode_Student_Performance_Report.csv',
@@ -661,7 +661,7 @@ export const ReportsPage: React.FC = () => {
                   onClick={() => setToastMessage(null)}
                   className="text-slate-400 hover:text-white text-xs font-bold pl-2 cursor-pointer"
                 >
-                  ✕
+                 
                 </button>
               </div>
             </div>

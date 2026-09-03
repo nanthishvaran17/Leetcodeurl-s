@@ -85,35 +85,35 @@ const STATUS_BADGES: Record<string, { icon: React.ReactNode; bg: string; text: s
     bg: 'bg-emerald-50 dark:bg-emerald-950/40',
     text: 'text-emerald-700 dark:text-emerald-300',
     border: 'border-emerald-200 dark:border-emerald-800',
-    label: '🟢 Delivered'
+    label: 'Delivered'
   },
   QUEUED: {
     icon: <Clock className="w-3.5 h-3.5 animate-pulse" />,
     bg: 'bg-amber-50 dark:bg-amber-950/40',
     text: 'text-amber-700 dark:text-amber-300',
     border: 'border-amber-200 dark:border-amber-800',
-    label: '⏳ Queued'
+    label: 'Queued'
   },
   SENDING: {
     icon: <Loader2 className="w-3.5 h-3.5 animate-spin" />,
     bg: 'bg-blue-50 dark:bg-blue-950/40',
     text: 'text-blue-700 dark:text-blue-300',
     border: 'border-blue-200 dark:border-blue-800',
-    label: '📤 Sending'
+    label: 'Sending'
   },
   RETRYING: {
     icon: <RefreshCw className="w-3.5 h-3.5 animate-spin" />,
     bg: 'bg-orange-50 dark:bg-orange-950/40',
     text: 'text-orange-700 dark:text-orange-300',
     border: 'border-orange-200 dark:border-orange-800',
-    label: '🔄 Retrying'
+    label: 'Retrying'
   },
   FAILED: {
     icon: <XCircle className="w-3.5 h-3.5" />,
     bg: 'bg-red-50 dark:bg-red-950/40',
     text: 'text-red-700 dark:text-red-300',
     border: 'border-red-200 dark:border-red-800',
-    label: '🔴 Failed'
+    label: 'Failed'
   },
 };
 
@@ -500,7 +500,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
       setNotification({
         isOpen: true,
         type: 'success',
-        title: nextState ? 'Automation Resumed 🟢' : 'Automation Paused ⏸',
+        title: nextState ? 'Automation Resumed ' : 'Automation Paused ',
         message: res.data?.message || `Sunday report automation is now ${nextState ? 'ENABLED' : 'PAUSED'}.`
       });
       await fetchAllData(true);
@@ -534,7 +534,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
       setNotification({
         isOpen: true,
         type: 'success',
-        title: 'Schedule Settings Saved 🟢',
+        title: 'Schedule Settings Saved ',
         message: `Next automated dispatch: ${res.data?.next_run || 'Sunday 09:45 AM IST'}`
       });
       await fetchAllData(true);
@@ -669,14 +669,14 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
       const res = await api.post(endpoint, payload);
       setTestResult({
         success: true,
-        message: `🟢 ${isFullReport ? 'Test report email' : 'Provider test email'} sent successfully to ${testRecipient}!`,
+        message: `${isFullReport ? 'Test report email' : 'Provider test email'} sent successfully to ${testRecipient}!`,
         provider: providerInfo?.active_provider || 'BREVO_API'
       });
       await fetchAllData(true);
     } catch (err: any) {
       setTestResult({
         success: false,
-        message: '🔴 Diagnostics Test Failed',
+        message: 'Diagnostics Test Failed',
         error: err.response?.data?.detail || err.message || 'Connection error'
       });
     } finally {
@@ -868,11 +868,11 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           <div className="text-lg font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mt-0.5">
             {scheduleEnabled ? (
               <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-black">
-                🟢 ACTIVE
+                ACTIVE
               </span>
             ) : (
               <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-black">
-                ⏸ PAUSED
+                PAUSED
               </span>
             )}
           </div>
@@ -939,7 +939,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           }`}
         >
           <Settings className="w-4 h-4 text-indigo-400" />
-          <span>🧪 Diagnostics &amp; Test Tools</span>
+          <span>Diagnostics &amp; Test Tools</span>
         </button>
       </div>
 
@@ -949,10 +949,10 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           <div className="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-800">
             <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 font-black text-sm">
               <Settings className="w-4 h-4" />
-              <span>🧪 Provider Diagnostics &amp; Sandbox Test Tools</span>
+              <span>Provider Diagnostics &amp; Sandbox Test Tools</span>
             </div>
             <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
-              ⚠ Test Mode Active (Does not alter Sunday schedule)
+              Test Mode Active (Does not alter Sunday schedule)
             </span>
           </div>
 
@@ -1282,11 +1282,11 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               {scheduleEnabled ? (
                 <span className="px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-black flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-                  🟢 AUTOMATION ACTIVE
+                  AUTOMATION ACTIVE
                 </span>
               ) : (
                 <span className="px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-black flex items-center gap-1.5">
-                  ⏸ AUTOMATION PAUSED
+                  AUTOMATION PAUSED
                 </span>
               )}
             </div>
@@ -1338,7 +1338,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               <div className="pt-2 flex items-center justify-between text-xs border-t border-brand-500/20">
                 <span className="text-gray-400">Status:</span>
                 <span className="font-black text-emerald-600 dark:text-emerald-400">
-                  🟢 Scheduled
+                  Scheduled
                 </span>
               </div>
             </div>
@@ -1359,7 +1359,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                 <div className="flex justify-between py-1 border-b border-gray-100 dark:border-gray-800">
                   <span className="text-gray-400">Status:</span>
                   <span className="font-black text-emerald-600 dark:text-emerald-400">
-                    🟢 {scheduleConfig?.schedule?.last_status || 'SUCCESS'}
+                    {scheduleConfig?.schedule?.last_status || 'SUCCESS'}
                   </span>
                 </div>
                 <div className="flex justify-between py-1">
@@ -1393,7 +1393,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                 }`}
               >
                 {scheduleEnabled ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                <span>{scheduleEnabled ? '⏸ Pause Automation' : '▶ Resume Automation'}</span>
+                <span>{scheduleEnabled ? 'Pause Automation' : '▶ Resume Automation'}</span>
               </button>
             </div>
 
@@ -1402,7 +1402,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               className="px-5 py-3 bg-gray-200 dark:bg-navy-800 hover:bg-gray-300 dark:hover:bg-navy-700 text-gray-900 dark:text-white rounded-2xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer"
             >
               <Settings className="w-4 h-4" />
-              <span>⚙ Schedule Settings</span>
+              <span>Schedule Settings</span>
             </button>
           </div>
         </div>
@@ -1414,7 +1414,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           <div className="flex items-center justify-between flex-wrap gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
             <div>
               <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">
-                👥 Report Recipients Management
+                Report Recipients Management
               </h2>
               <p className="text-xs text-gray-500 dark:text-gray-400 font-bold">
                 Configure authorized management, HOD, and coordinator contact emails for institutional report dispatches.
@@ -1464,7 +1464,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                         : 'bg-gray-200 dark:bg-navy-800 text-gray-500'
                     }`}
                   >
-                    {r.is_active ? '🟢 Active' : '⚪ Inactive'}
+                    {r.is_active ? 'Active' : 'Inactive'}
                   </button>
                 </div>
 
@@ -1489,7 +1489,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           <div className="flex items-center justify-between flex-wrap gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
             <div>
               <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">
-                📊 Delivery Audit Logs &amp; Traceability
+                Delivery Audit Logs &amp; Traceability
               </h2>
               <p className="text-xs text-gray-500 dark:text-gray-400 font-bold">
                 Real-time delivery audit logs, retry execution, message IDs, and provider response diagnostics.
@@ -1865,7 +1865,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                       : 'bg-amber-500/10 text-amber-600 border-amber-500/30'
                   }`}
                 >
-                  {scheduleEnabled ? '🟢 AUTOMATION ENABLED' : '⏸ AUTOMATION PAUSED'}
+                  {scheduleEnabled ? 'AUTOMATION ENABLED' : 'AUTOMATION PAUSED'}
                 </button>
               </div>
 

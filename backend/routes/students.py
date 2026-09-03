@@ -896,6 +896,10 @@ def bulk_delete_students(
 
     return {"message": msg, "count": count}
 
+class SecondaryAccountSchema(BaseModel):
+    leetcode_username: str
+    profile_url: Optional[str] = None
+
 class StudentUpdateSchema(BaseModel):
     name: Optional[str] = None
     department_id: Optional[int] = None
@@ -907,6 +911,7 @@ class StudentUpdateSchema(BaseModel):
     username: Optional[str] = None
     is_active: Optional[bool] = True
     version: Optional[int] = None
+    secondary_accounts: Optional[List[SecondaryAccountSchema]] = None
 
 
 @router.patch("/{student_id}")
@@ -995,6 +1000,22 @@ def update_student(
 
     if payload.is_active is not None:
         student.is_active = payload.is_active
+
+    if payload.secondary_accounts is not None:
+        from backend.models import LeetCodeAccount
+        db.query(LeetCodeAccount).filter(LeetCodeAccount.student_id == student.id).delete()
+        for sec in payload.secondary_accounts:
+            u_clean = (sec.leetcode_username or "").strip().lower()
+            if u_clean:
+                url_clean = (sec.profile_url or "").strip() or f"https://leetcode.com/u/{u_clean}/"
+                sec_account = LeetCodeAccount(
+                    student_id=student.id,
+                    leetcode_username=u_clean,
+                    normalized_username=u_clean,
+                    profile_url=url_clean,
+                    is_verified=True
+                )
+                db.add(sec_account)
 
     old_u_norm = (old_username or "").strip().lower()
     new_u_norm = (student.username or "").strip().lower()

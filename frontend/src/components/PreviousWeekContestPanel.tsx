@@ -541,7 +541,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 shrink-0" />
-            <span>⚠ Live WebSocket connection interrupted • Last valid update: {lastLiveUpdate}</span>
+            <span>Live WebSocket connection interrupted • Last valid update: {lastLiveUpdate}</span>
           </div>
           <button
             onClick={connectWebSocket}
@@ -675,14 +675,9 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
               placeholder="All Departments"
               icon={<Building2 size={16} />}
               options={[
-                { label: 'Computer Science and Engineering', value: 'CSE', badge: 'CSE', badgeColor: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
-                { label: 'Computer Science and Engineering (Cyber Security)', value: 'CSE(CS)', badge: 'CSE(CS)', badgeColor: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' },
-                { label: 'Computer Science and Engineering (IoT)', value: 'CSE(IOT)', badge: 'CSE(IOT)', badgeColor: 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400' },
-                { label: 'Information Technology', value: 'IT', badge: 'IT', badgeColor: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' },
-                { label: 'Artificial Intelligence and Data Science', value: 'AIDS', badge: 'AIDS', badgeColor: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' },
-                { label: 'Electronics and Communication Engineering', value: 'ECE', badge: 'ECE', badgeColor: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' },
-                { label: 'Electrical and Electronics Engineering', value: 'EEE', badge: 'EEE', badgeColor: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' },
-              ].filter(opt => uniqueDepartments.includes(opt.value))}
+                { label: 'CSE (Cyber Security)', value: 'CSE(CS)', badge: 'CYBER', badgeColor: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' },
+                { label: 'CSE (Internet of Things - IoT)', value: 'CSE(IoT)', badge: 'IOT', badgeColor: 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400' },
+              ]}
             />
           </div>
         </div>

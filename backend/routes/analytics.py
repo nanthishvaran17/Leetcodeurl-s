@@ -16,12 +16,14 @@ from fastapi import Request
 
 router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
 
+from backend.constants import ALLOWED_PRODUCTION_DEPT_CODES
+
 @router.get("/department-comparison")
 def compare_departments(request: Request, db: Session = Depends(get_db)):
     current_user = get_current_user_optional(request, db)
     cache_key = f"dept_comparison:{current_user.id if current_user else 'anon'}"
     
-    departments = db.query(Department).all()
+    departments = db.query(Department).filter(Department.code.in_(ALLOWED_PRODUCTION_DEPT_CODES)).order_by(Department.id).all()
     if not departments:
         return []
 
@@ -228,6 +230,13 @@ def get_data_quality_dashboard(request: Request, force_refresh: bool = Query(Fal
         elif st and error_code and error_code in ("NETWORK_ERROR", "TIMEOUT", "RATE_LIMITED") and sync_st == "success":
             # These are self-healing — the student is verified but had a past transient error
             ok_count += 1
+            issues_list.append({
+                "student_id": s.id, "reg_no": s.reg_no, "name": s.name,
+                "dept": dept_code, "username": username or None,
+                "total_solved": st.total_solved if (st and st.total_solved is not None) else 0,
+                "issue": f"Verified & Active (@{username or 'verified'})", "status": "VALID_PROFILE",
+                "action_required": "Verified Record (Active)"
+            })
 
         # 6. Verified & healthy
         elif (
@@ -239,6 +248,13 @@ def get_data_quality_dashboard(request: Request, force_refresh: bool = Query(Fal
             )
         ):
             ok_count += 1
+            issues_list.append({
+                "student_id": s.id, "reg_no": s.reg_no, "name": s.name,
+                "dept": dept_code, "username": username or None,
+                "total_solved": st.total_solved if (st and st.total_solved is not None) else 0,
+                "issue": f"Verified & Active (@{username or 'verified'})", "status": "VALID_PROFILE",
+                "action_required": "Verified Record (Active)"
+            })
 
         # 7. Everything else
         else:
