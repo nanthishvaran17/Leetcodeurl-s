@@ -31,7 +31,8 @@ class NotificationService:
         year_level: Optional[str] = None,
         section_name: Optional[str] = None,
         created_by: str = 'Admin',
-        action_route: Optional[str] = None
+        action_route: Optional[str] = None,
+        staff_app_push_only: bool = True
     ):
         db = SessionLocal()
         try:
@@ -93,14 +94,15 @@ class NotificationService:
                 
             batch.commit()
             
-            # 3. Dispatch FCM Push Notifications to Staff App & Student App Topics
+            # 3. Dispatch FCM Push Notifications: EXCLUSIVELY to Staff App topic when staff_app_push_only=True
             try:
-                fcm_student_msg = messaging.Message(
-                    notification=messaging.Notification(title=title, body=message),
-                    topic="all_app_users",
-                    data={"type": notification_type, "actionRoute": str(action_route or "/dashboard")}
-                )
-                messaging.send(fcm_student_msg)
+                if not staff_app_push_only:
+                    fcm_student_msg = messaging.Message(
+                        notification=messaging.Notification(title=title, body=message),
+                        topic="all_app_users",
+                        data={"type": notification_type, "actionRoute": str(action_route or "/dashboard")}
+                    )
+                    messaging.send(fcm_student_msg)
 
                 fcm_staff_msg = messaging.Message(
                     notification=messaging.Notification(title=f"Staff Alert: {title}", body=message),
