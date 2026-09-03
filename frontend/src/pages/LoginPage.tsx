@@ -572,7 +572,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                 <form onSubmit={otpStep === 'email' ? handleSendOtp : handleVerifyOtp}>
                   <div className="field">
                     <label htmlFor="otpEmail">Institutional Email</label>
-                    <input id="otpEmail" type="email" value={otpEmail} onChange={(e) => setOtpEmail(e.target.value)} placeholder="email@nandhaengg.org" required disabled={loading || otpStep === 'verify'} />
+                    <input id="otpEmail" type="email" value={otpEmail} onChange={(e) => setOtpEmail(e.target.value)} placeholder="faculty@nandhaengg.org" required disabled={loading || otpStep === 'verify'} />
                   </div>
 
                   {otpStep === 'verify' && (

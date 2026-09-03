@@ -1119,12 +1119,12 @@
     bottom: 0;
     background: linear-gradient(
       180deg, 
-      rgba(11, 19, 41, 0.78) 0%, 
-      rgba(15, 23, 42, 0.92) 60%, 
-      rgba(2, 6, 23, 0.98) 100%
+      rgba(11, 19, 41, 0.28) 0%, 
+      rgba(15, 23, 42, 0.52) 55%, 
+      rgba(2, 6, 23, 0.85) 100%
     );
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
   }
   
   .mobile-header-content {
