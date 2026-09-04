@@ -132,12 +132,24 @@ class NotificationService:
 
         if scope in ("INDIVIDUAL", "USER"):
             if recipient_target:
-                # Check user table
-                u = db.query(User).filter((User.email == recipient_target) | (User.username == recipient_target) | (User.id == recipient_target)).first()
+                clean_target = str(recipient_target).strip()
+                # Check user table safely without type casting error in Postgres
+                user_filters = [User.email == clean_target, User.username == clean_target]
+                if clean_target.isdigit():
+                    user_filters.append(User.id == int(clean_target))
+                elif clean_target.startswith("STAFF_") and clean_target.replace("STAFF_", "").isdigit():
+                    user_filters.append(User.id == int(clean_target.replace("STAFF_", "")))
+                
+                u = db.query(User).filter(or_(*user_filters)).first()
                 if u:
                     recipients.append({"user_id": u.email or f"STAFF_{u.id}", "email": u.email, "user_type": "STAFF"})
                 
-                s = db.query(Student).filter((Student.email == recipient_target) | (Student.reg_no == recipient_target) | (Student.username == recipient_target) | (Student.id == recipient_target)).first()
+                # Check student table safely
+                student_filters = [Student.email == clean_target, Student.reg_no == clean_target, Student.username == clean_target]
+                if clean_target.isdigit():
+                    student_filters.append(Student.id == int(clean_target))
+                    
+                s = db.query(Student).filter(or_(*student_filters)).first()
                 if s:
                     recipients.append({"user_id": s.email or s.reg_no, "email": s.email, "user_type": "STUDENT"})
                     

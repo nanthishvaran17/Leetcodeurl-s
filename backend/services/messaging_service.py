@@ -12,6 +12,15 @@ from backend.logger import logger
 
 class MessagingService:
     @staticmethod
+    def _format_utc_iso(dt) -> str:
+        if not dt:
+            return None
+        iso = dt.isoformat()
+        if not iso.endswith("Z") and "+" not in iso and "-" not in iso[10:]:
+            return iso + "Z"
+        return iso
+
+    @staticmethod
     def _get_user_id(user_obj) -> str:
         """Helper to extract a consistent ID for messaging. Uses email, reg_no, or STAFF_{id}."""
         if hasattr(user_obj, "email") and user_obj.email:
@@ -160,7 +169,7 @@ class MessagingService:
             "content": msg.content,
             "status": msg.status,
             "attachmentFileId": msg.attachment_file_id,
-            "createdAt": msg.created_at.isoformat() if msg.created_at else None
+            "createdAt": MessagingService._format_utc_iso(msg.created_at)
         }
 
         # WebSocket Broadcast for real-time delivery
@@ -208,7 +217,7 @@ class MessagingService:
                 "conversationId": c.conversation_id,
                 "otherUser": other_info,
                 "lastMessagePreview": c.last_message_preview,
-                "lastMessageAt": c.last_message_at.isoformat() if c.last_message_at else None,
+                "lastMessageAt": MessagingService._format_utc_iso(c.last_message_at),
                 "unreadCount": unread
             })
         return result
@@ -235,8 +244,8 @@ class MessagingService:
                 "content": m.content,
                 "status": m.status,
                 "attachmentFileId": m.attachment_file_id,
-                "readAt": m.read_at.isoformat() if m.read_at else None,
-                "createdAt": m.created_at.isoformat() if m.created_at else None
+                "readAt": MessagingService._format_utc_iso(m.read_at),
+                "createdAt": MessagingService._format_utc_iso(m.created_at)
             })
         return result
 

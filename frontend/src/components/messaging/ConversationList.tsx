@@ -35,9 +35,17 @@ export const ConversationList: React.FC<Props> = ({
     c.otherUser.department.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const parseSafeDate = (dateStr: string) => {
+    if (!dateStr) return new Date();
+    if (typeof dateStr === 'string' && !dateStr.endsWith('Z') && !dateStr.includes('+')) {
+      return new Date(dateStr + 'Z');
+    }
+    return new Date(dateStr);
+  };
+
   const formatTime = (dateStr: string | null) => {
     if (!dateStr) return '';
-    const d = new Date(dateStr);
+    const d = parseSafeDate(dateStr);
     const today = new Date();
     if (d.toDateString() === today.toDateString()) {
       return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });

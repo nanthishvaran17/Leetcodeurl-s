@@ -105,8 +105,16 @@ export const ChatWindow: React.FC<Props> = ({
     setInputText(prev => prev + emojiData.emoji);
   };
 
+  const parseSafeDate = (dateStr: string) => {
+    if (!dateStr) return new Date();
+    if (typeof dateStr === 'string' && !dateStr.endsWith('Z') && !dateStr.includes('+')) {
+      return new Date(dateStr + 'Z');
+    }
+    return new Date(dateStr);
+  };
+
   const formatTime = (dateStr: string) => {
-    return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return parseSafeDate(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
@@ -129,59 +137,52 @@ export const ChatWindow: React.FC<Props> = ({
             </div>
             <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-navy-950 rounded-full"></div>
           </div>
-          <div className="cursor-pointer group" onClick={onToggleInfo}>
-            <h2 className="text-[15px] md:text-base font-bold text-slate-900 dark:text-slate-100 leading-tight group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors truncate max-w-[200px] sm:max-w-xs">
+          <div>
+            <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
               {conversation.otherUser.name}
-            </h2>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 px-1.5 rounded-sm">
+              <span className={clsx(
+                "text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider",
+                conversation.otherUser.type === 'STAFF' ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/30" : "bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 border border-brand-200/50 dark:border-brand-800/30"
+              )}>
                 {conversation.otherUser.role}
               </span>
-              <span className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate max-w-[120px] sm:max-w-[200px]">
-                {conversation.otherUser.department}
-              </span>
-            </div>
+            </h3>
+            <p className="text-xs text-slate-400 font-medium">
+              {conversation.otherUser.department}
+            </p>
           </div>
         </div>
 
-        {/* Header Actions */}
-        <div className="flex items-center gap-1">
-          {onToggleInfo && (
-            <button 
-              onClick={onToggleInfo}
-              className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-xl transition-colors"
-              title="View Profile"
-            >
-              <Info className="w-5 h-5" />
-            </button>
-          )}
-        </div>
+        {onToggleInfo && (
+          <button
+            onClick={onToggleInfo}
+            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+          >
+            <Info className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 bg-[#f8fafc] dark:bg-transparent">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
         {isLoading ? (
           <div className="flex justify-center items-center h-full">
             <Loader2 className="w-6 h-6 animate-spin text-brand-500" />
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-slate-500 dark:text-slate-400 space-y-2">
-            <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-2">
-              <Send className="w-5 h-5 text-slate-400" />
-            </div>
-            <p className="text-sm font-medium">This is the beginning of your secure conversation.</p>
-            <p className="text-xs opacity-75">Messages are end-to-end institutional strictly confidential.</p>
+          <div className="text-center text-slate-400 py-12">
+            No messages yet. Send a greeting to start the institutional dialogue!
           </div>
         ) : (
           messages.map((msg, idx) => {
             const isMe = msg.senderId === currentUserId;
             
-            // Show date separator if day changed
+            // Format dates for dividers
             let showDate = false;
             if (idx === 0) showDate = true;
             else {
-              const prevDate = new Date(messages[idx-1].createdAt).toDateString();
-              const currDate = new Date(msg.createdAt).toDateString();
+              const prevDate = parseSafeDate(messages[idx-1].createdAt).toDateString();
+              const currDate = parseSafeDate(msg.createdAt).toDateString();
               if (prevDate !== currDate) showDate = true;
             }
 
@@ -190,7 +191,7 @@ export const ChatWindow: React.FC<Props> = ({
                 {showDate && (
                   <div className="flex justify-center my-6">
                     <span className="text-[11px] font-bold uppercase tracking-wider bg-slate-200/50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 px-3 py-1 rounded-md">
-                      {new Date(msg.createdAt).toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })}
+                      {parseSafeDate(msg.createdAt).toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })}
                     </span>
                   </div>
                 )}
