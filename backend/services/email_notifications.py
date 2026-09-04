@@ -41,7 +41,7 @@ def notify_staff_created(staff_email: str, staff_name: str, role: str, departmen
     </table>
 
     <div class="security-notice">
-        <strong>⚠️ Security Notice:</strong> Please log in and change your temporary password immediately after your first access.
+        <strong>Security Notice:</strong> Please log in and change your temporary password immediately after your first access.
     </div>
     """
 
@@ -250,7 +250,7 @@ def notify_default_password_reset(staff_email: str, staff_name: str, temp_passwo
     </table>
 
     <div class="security-notice">
-        <strong>⚠️ Mandatory Action Required:</strong> You will be forced to change this temporary password immediately upon your next login.
+        <strong>Mandatory Action Required:</strong> You will be forced to change this temporary password immediately upon your next login.
     </div>
     """
 

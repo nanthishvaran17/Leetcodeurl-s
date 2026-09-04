@@ -543,7 +543,7 @@ class AutomaticNotificationEngine:
                 assignments = db.query(FacultyStudentAssignment).filter_by(student_id=student_id).all()
                 fac_user_ids = [str(a.faculty_id) for a in assignments]
 
-                title = f"🎉 Student Milestone Reached: {student.name}"
+                title = f"Student Milestone Reached: {student.name}"
                 body = (
                     f"Student {student.name} ({student.reg_no}) has officially reached "
                     f"the {m_val} LeetCode Problems Solved milestone! (Current total: {new_solved})"
@@ -583,7 +583,7 @@ class AutomaticNotificationEngine:
 
         return NotificationService.emit_event(
             event_type="SYSTEM_AUTOMATION_ALERT",
-            title=f"⚠️ System Alert: {alert_title}",
+            title=f"System Alert: {alert_title}",
             body=f"{alert_message}\n\nDetails: {error_details or 'None'}",
             priority="critical",
             recipient_scope="ROLE",

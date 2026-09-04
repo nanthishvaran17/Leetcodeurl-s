@@ -191,7 +191,7 @@ class WhatsAppQueryEngine:
                     f"Status: {sess_status}\n\n"
                     f"✅ *Status:* Attended ({snap.status})\n"
                     f"🎯 *Problems Solved:* {solved} / 4\n"
-                    f"🔥 *Performance:* {'Superb! 🌟' if solved >= 3 else ('Good Job! 👍' if solved >= 1 else 'Keep Practicing! 💪')}"
+                    f"Performance: {'Superb' if solved >= 3 else ('Good Job' if solved >= 1 else 'Keep Practicing')}"
                 )
             return {"success": True, "role": "STUDENT", "message": msg}
 

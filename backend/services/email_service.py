@@ -1114,7 +1114,7 @@ def build_institutional_email_body(
     if unverified > 0:
         warning_block = f"""
         <div style="background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
-            <strong>⚠️ Data Quality Notice:</strong> {verified} students fully verified. {unverified} students could not be freshly updated and have preserved previous verified values.
+            <strong>Data Quality Notice:</strong> {verified} students fully verified. {unverified} students could not be freshly updated and have preserved previous verified values.
         </div>
         """
 
@@ -1137,7 +1137,7 @@ def build_institutional_email_body(
             {custom_block}
             {warning_block}
 
-            <h3 style="color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;">📊 Weekly Summary Highlights</h3>
+            <h3 style="color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;">Weekly Summary Highlights</h3>
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
                 <tr><td style="padding: 8px 0; color: #64748b;">Total Enrolled Students:</td><td style="font-weight: bold; text-align: right;">{total_students}</td></tr>
                 <tr><td style="padding: 8px 0; color: #64748b;">Verified Active Solvers:</td><td style="font-weight: bold; text-align: right; color: #16a34a;">{active_solvers}</td></tr>
@@ -1190,9 +1190,7 @@ def queue_weekly_report_dispatches(
     skipped_count = 0
     date_str = session.session_date if session else datetime.date.today().strftime("%Y-%m-%d")
 
-    unverified = sum(1 for s in students_data if s.status != "VERIFIED")
-    subject_prefix = "⚠️ " if unverified > 0 else ""
-    subject = f"{subject_prefix}Nandha Engineering College – Weekly LeetCode Report – {date_str}"
+    subject = f"Nandha Engineering College – Weekly LeetCode Report – {date_str}"
 
     for r in recipients:
         idempotency_key = f"{session_id or 'OFFICIAL'}-{r.email}-{report_type}"
@@ -1428,7 +1426,7 @@ def send_manual_report_email(
     {custom_block}
 
     <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 20px 0;">
-        <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">📊 Report Scope & Summary</h4>
+        <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Report Scope & Summary</h4>
         <table class="data-table" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%;">
             <tr>
                 <td>Contest Name</td>
