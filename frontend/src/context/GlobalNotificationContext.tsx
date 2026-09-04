@@ -166,6 +166,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
 
   const handleIncomingNotification = useCallback((payload: any) => {
     if (!payload) return;
+    console.log('[NOTIF-DEBUG] RAW_EVENT_RECEIVED:', payload);
 
     const eventType = payload.type || payload.eventType;
     if (eventType !== 'NEW_NOTIFICATION' && eventType !== 'notification') {
@@ -176,7 +177,9 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
     const notifId = notif.id || notif.notification_id || notif.eventId || notif.event_id;
     if (!notifId) return;
 
-    if (seenNotificationIdsRef.current.has(String(notifId))) {
+    const alreadySeen = seenNotificationIdsRef.current.has(String(notifId));
+    console.log(`[NOTIF-DEBUG] DEDUPLICATION_CHECK notifId=${notifId} already_seen=${alreadySeen} set_size=${seenNotificationIdsRef.current.size}`);
+    if (alreadySeen) {
       return;
     }
     seenNotificationIdsRef.current.add(String(notifId));
@@ -186,6 +189,8 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
     const category = notif.category || notif.event_type || 'announcements';
     const priority = notif.priority || 'normal';
     const actionRoute = notif.action_url || notif.action_route || notif.actionRoute || '/dashboard';
+
+    console.log(`[NOTIF-DEBUG] PROVIDER_HANDLED notifId=${notifId} title="${title}" category="${category}"`);
 
     const newNotificationItem: Notification = {
       id: String(notifId),
@@ -207,21 +212,25 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
     };
 
     setAllNotifications(prev => [newNotificationItem, ...prev.filter(n => n.id !== String(notifId))]);
-    setUnreadCount(prev => prev + 1);
+    setUnreadCount(prev => {
+      console.log(`[NOTIF-DEBUG] UNREAD_INCREMENT old=${prev} new=${prev + 1}`);
+      return prev + 1;
+    });
 
     // Immediate Foreground Popup / Toast
-    if (!document.hidden) {
-      notify.info(title, message, {
-        category: category.toUpperCase(),
-        duration: priority === 'high' || priority === 'critical' ? 7000 : 5000,
-        actionLabel: 'Open',
-        onAction: () => {
-          if (actionRoute) {
-            window.location.href = actionRoute;
-          }
+    console.log(`[NOTIF-DEBUG] TOAST_TRIGGERED title="${title}" document_hidden=${document.hidden}`);
+    notify.info(title, message, {
+      category: category.toUpperCase(),
+      duration: priority === 'high' || priority === 'critical' ? 7000 : 5000,
+      actionLabel: 'Open',
+      onAction: () => {
+        if (actionRoute) {
+          window.location.href = actionRoute;
         }
-      });
-    } else {
+      }
+    });
+
+    if (document.hidden) {
       // Browser background tab notification
       if ('Notification' in window && Notification.permission === 'granted') {
         try {

@@ -30,11 +30,16 @@ const connect = (wsUrl: string) => {
     try {
       const data = JSON.parse(event.data);
       
-      // We buffer and deduplicate events that have an ID
+      // Real-time notifications bypass micro-batching for instant delivery (<1ms)
+      if (data.type === 'NEW_NOTIFICATION' || data.type === 'notification') {
+        self.postMessage({ type: 'WS_MESSAGE', data });
+        return;
+      }
+
+      // We buffer and deduplicate entity events that have an ID
       const entityId = data.entityId || data.student_id || data.staff_id || data.id;
       
       if (entityId) {
-        // Use a composite key to deduplicate identical entity updates for the same event type
         const dedupKey = `${data.type}:${entityId}`;
         eventBuffer.set(dedupKey, data);
         
@@ -42,7 +47,6 @@ const connect = (wsUrl: string) => {
           batchTimeout = setTimeout(flushBatch, BATCH_WINDOW_MS);
         }
       } else {
-        // Other events (like generic sync broadcasts) pass through immediately
         self.postMessage({ type: 'WS_MESSAGE', data });
       }
     } catch (e) {

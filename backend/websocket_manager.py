@@ -85,30 +85,58 @@ class ConnectionManager:
             self._batch_task = asyncio.create_task(self._flush_loop())
 
     def _decode_ws_token(self, token: str) -> Dict[str, Any]:
-        """Validate a JWT token and return user context dict. Raises on invalid token."""
+        """Validate a JWT token and return user context dict. Accepts standard app JWT and Firebase ID tokens."""
+        if not token:
+            raise ValueError("Token is empty")
+
+        # 1. Try standard app secret JWT
+        import os
         try:
-            from backend.routes.auth import decode_access_token
-            payload = decode_access_token(token)
-            return {
-                "user_id": payload.get("sub"),
-                "role": payload.get("role", "anonymous"),
-                "department_id": payload.get("department_id"),
-                "authenticated": True
-            }
-        except ImportError:
-            # Fallback: try jose/jwt directly
-            import os
-            try:
-                from jose import jwt as jose_jwt
-                SECRET = os.environ.get("SECRET_KEY", "")
-                payload = jose_jwt.decode(token, SECRET, algorithms=["HS256"])
+            from backend.config.settings import settings
+            secret_keys = [settings.SECRET_KEY, os.environ.get("SECRET_KEY", "")]
+        except Exception:
+            secret_keys = [os.environ.get("SECRET_KEY", "")]
+        secret_keys = [s for s in secret_keys if s]
+
+        for s_key in secret_keys:
+            for algo in ["HS256", "RS256"]:
+                try:
+                    import jwt
+                    payload = jwt.decode(token, s_key, algorithms=[algo])
+                    sub = payload.get("sub") or payload.get("user_id") or payload.get("email")
+                    email = payload.get("email")
+                    role = payload.get("role", "authenticated")
+                    dept_id = payload.get("department_id")
+                    logger.info(f"[WS-AUTH] Successfully decoded JWT token. sub={sub} email={email} role={role}")
+                    return {
+                        "user_id": sub,
+                        "email": email,
+                        "role": role,
+                        "department_id": dept_id,
+                        "authenticated": True
+                    }
+                except Exception:
+                    pass
+
+        # 2. Try Firebase ID Token
+        try:
+            import firebase_admin
+            from firebase_admin import auth as firebase_auth
+            if firebase_admin._apps:
+                fb_decoded = firebase_auth.verify_id_token(token)
+                fb_email = (fb_decoded.get("email") or "").strip().lower()
+                fb_uid = fb_decoded.get("uid") or fb_email
+                logger.info(f"[WS-AUTH] Successfully decoded Firebase token. uid={fb_uid} email={fb_email}")
                 return {
-                    "user_id": payload.get("sub"),
-                    "role": payload.get("role", "anonymous"),
+                    "user_id": fb_uid,
+                    "email": fb_email,
+                    "role": "authenticated",
                     "authenticated": True
                 }
-            except Exception:
-                raise
+        except Exception as _fb_err:
+            logger.warning(f"[WS-AUTH] Firebase token verify notice: {_fb_err}")
+
+        raise ValueError("Could not decode or verify WebSocket auth token")
 
     def subscribe_session(self, websocket: WebSocket, session_id: int):
         """Subscribe a WebSocket to a specific contest session's events."""
@@ -214,22 +242,40 @@ class ConnectionManager:
                 logger.warning(f"Could not broadcast sync event: {inner_e}")
 
     async def send_to_user(self, user_id: str, message: dict):
-        """Sends a WebSocket message to all active connections matching user_id or email."""
+        """Sends a WebSocket message to all active connections matching user_id, email, or username."""
         if not user_id:
             return
         target = str(user_id).strip().lower()
         payload = json.dumps(message)
         disconnected = []
+        sent_count = 0
+
+        logger.info(f"[NOTIF-DEBUG] WEBSOCKET_SEND_STARTED target={target} active_total={len(self.active_connections)}")
 
         for ws, ctx in list(self._ws_user.items()):
             ws_uid = str(ctx.get("user_id") or "").strip().lower()
             ws_email = str(ctx.get("email") or "").strip().lower()
-            if ws_uid == target or ws_email == target or (ws_uid and target in ws_uid):
+            
+            # Check match against user_id, email, or substring match
+            is_match = (
+                ws_uid == target or 
+                ws_email == target or 
+                (ws_uid and target in ws_uid) or 
+                (ws_email and target in ws_email) or
+                (target.startswith("staff_") and target.replace("staff_", "") == ws_uid)
+            )
+
+            if is_match:
                 try:
                     await ws.send_text(payload)
+                    sent_count += 1
+                    logger.info(f"[NOTIF-DEBUG] WEBSOCKET_SEND_SUCCESS target={target} ws_uid={ws_uid} ws_email={ws_email}")
                 except Exception as e:
                     logger.warning(f"[WS_SEND_USER] Error sending to user {user_id}: {e}")
                     disconnected.append(ws)
+
+        if sent_count == 0:
+            logger.warning(f"[NOTIF-DEBUG] WEBSOCKET_SEND_FAILED target={target} - No active matching WebSocket connection found!")
 
         for conn in disconnected:
             self.disconnect(conn)

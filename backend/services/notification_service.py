@@ -281,6 +281,8 @@ class NotificationService:
         """
         db = SessionLocal()
         try:
+            logger.info(f"[NOTIF-DEBUG] EVENT_CREATED type={event_type} scope={recipient_scope} target={recipient_target} actor={actor_user_id}")
+
             # 1. Idempotency Check (Duplicate Prevention)
             eff_event_id = event_id or f"{event_type}_{entity_id or 'GEN'}_{int(datetime.datetime.utcnow().timestamp())}"
             
@@ -288,14 +290,16 @@ class NotificationService:
             if event_id:
                 existing = db.query(NotificationRecord).filter_by(event_id=event_id).first()
                 if existing:
-                    logger.info(f"[NOTIF_ENGINE] Duplicate event prevented: {event_id}")
+                    logger.info(f"[NOTIF-DEBUG] DUPLICATE_EVENT_PREVENTED event_id={event_id}")
                     return {"success": True, "duplicate_prevented": True, "event_id": event_id}
 
             category = NotificationService.resolve_category(event_type)
             recipients = NotificationService.resolve_recipients(db, recipient_scope, recipient_target)
             
+            logger.info(f"[NOTIF-DEBUG] RECIPIENTS_RESOLVED count={len(recipients)} targets={[r['user_id'] for r in recipients]}")
+
             if not recipients:
-                logger.info(f"[NOTIF_ENGINE] No recipients resolved for scope={recipient_scope}, target={recipient_target}")
+                logger.info(f"[NOTIF-DEBUG] NO_RECIPIENTS_FOUND scope={recipient_scope}, target={recipient_target}")
                 return {"success": True, "created_count": 0, "event_id": eff_event_id}
 
             # Enrich payload based on Central Destination Resolution Map
@@ -357,6 +361,7 @@ class NotificationService:
                 })
 
             db.commit()
+            logger.info(f"[NOTIF-DEBUG] DB_SAVED created_count={len(notif_records)} event_id={eff_event_id}")
 
             # 1.5 Real-Time WebSocket Delivery
             try:
@@ -387,12 +392,13 @@ class NotificationService:
                             "is_read": False
                         }
                     }
+                    logger.info(f"[NOTIF-DEBUG] WEBSOCKET_DISPATCH_TRIGGERED recipient={item['recipientUserId']} notif_id={item['id']}")
                     if (recipient_scope or "").upper() in ("ALL", "GLOBAL"):
                         manager.broadcast_sync(ws_payload)
                     else:
                         manager.send_to_user_sync(item["recipientUserId"], ws_payload)
             except Exception as _ws_err:
-                logger.warning(f"[NOTIF_ENGINE] WebSocket dispatch notice: {_ws_err}")
+                logger.warning(f"[NOTIF-DEBUG] WEBSOCKET_DISPATCH_ERROR: {_ws_err}")
 
             # 2. Firestore Real-time Sync
             if FIREBASE_ADMIN_AVAILABLE and firestore and firebase_admin and firebase_admin._apps:

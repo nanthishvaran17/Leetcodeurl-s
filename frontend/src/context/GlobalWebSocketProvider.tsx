@@ -77,6 +77,7 @@ export const GlobalWebSocketProvider: React.FC<{ children: React.ReactNode }> = 
         const { type, connected, updates, data } = event.data;
 
         if (type === 'WS_STATUS') {
+          console.log(`[WS] Status changed: connected=${connected}`);
           setIsConnected(connected);
           if (connected && !wasConnected) {
              requestAnimationFrame(() => eventRouter.handleReconnect());
@@ -90,6 +91,9 @@ export const GlobalWebSocketProvider: React.FC<{ children: React.ReactNode }> = 
             });
           });
         } else if (type === 'WS_MESSAGE') {
+            if (data && (data.type === 'NEW_NOTIFICATION' || data.type === 'notification')) {
+              console.log('[NOTIF-DEBUG] WS_MESSAGE_RECEIVED_IN_PROVIDER:', data);
+            }
             eventRouter.handleMessage(data);
             callbacksRef.current.forEach(cb => cb(data));
         }
